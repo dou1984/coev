@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION 3.14.0)
+
+add_subdirectory(./channel)
+add_subdirectory(./client)
+add_subdirectory(./mutex)
+add_subdirectory(./mysql)
+add_subdirectory(./redis)
+add_subdirectory(./server)
+add_subdirectory(./sleep)
+add_subdirectory(./task)
+add_subdirectory(./udpclient)
+add_subdirectory(./udpserver)
+add_subdirectory(./http)
