@@ -1,3 +1,10 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2022, Zhao Yun Shan
+ *	All rights reserved.
+ *
+ */
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/socket.h>

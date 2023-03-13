@@ -1,3 +1,10 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2022, Zhao Yun Shan
+ *	All rights reserved.
+ *
+ */
 #include <sys/signal.h>
 #include <unistd.h>
 #include "Loop.h"

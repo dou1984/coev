@@ -1,3 +1,10 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2022, Zhao Yun Shan
+ *	All rights reserved.
+ *
+ */
 #include "Chain.h"
 
 namespace coev
