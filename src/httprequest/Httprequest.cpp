@@ -2,7 +2,7 @@
 
 namespace coev
 {
-	http_parser_settings Httprequest::m_settings = {
+	static http_parser_settings g_settings = {
 		.on_message_begin = Httprequest::on_message_begin,
 		.on_url = Httprequest::on_url,
 		.on_status = 0,		
@@ -18,7 +18,7 @@ namespace coev
 	}
 	int Httprequest::parse(const char *buffer, int size)
 	{
-		return http_parser_execute(this, &m_settings, buffer, size);
+		return http_parser_execute(this, &g_settings, buffer, size);
 	}
 	int Httprequest::on_message_begin(http_parser *_)
 	{

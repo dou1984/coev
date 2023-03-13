@@ -4,7 +4,7 @@ using namespace coev;
 
 Awaiter<int> co_dail(const char *ip, int port)
 {
-	Connect c;
+	Client c;
 	co_await connect(c, ip, port);
 	if (!c)
 	{
@@ -24,7 +24,6 @@ Awaiter<int> co_dail(const char *ip, int port)
 		r = co_await recv(c, buffer, sizeof(buffer));
 		if (r == INVALID)
 		{
-
 			LOG_ERR("close %d\n", c.m_fd);
 			co_await close(c);
 			co_return 0;

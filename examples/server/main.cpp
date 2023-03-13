@@ -6,15 +6,13 @@ ServerPool pool;
 
 Awaiter<int> dispatch(int fd)
 {
-	TRACE();
-	Client c(fd);
+	IOContext c(fd);
 	while (c)
 	{
 		char buffer[0x1000];
 		auto r = co_await recv(c, buffer, sizeof(buffer));
 		if (r == INVALID)
 		{
-			TRACE();
 			close(c);
 			co_return 0;
 		}
@@ -22,7 +20,6 @@ Awaiter<int> dispatch(int fd)
 		r = co_await send(c, buffer, r);
 		if (r == INVALID)
 		{
-			TRACE();
 			close(c);
 			co_return 0;
 		}

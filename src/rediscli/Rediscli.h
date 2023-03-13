@@ -16,11 +16,11 @@ namespace coev
 	struct Redisresult
 	{
 		int last_error = 0;
-		const char *last_msg = 0;
 		int num_rows = 0;
 		union
 		{
 			const char *str;
+			const char *last_msg;
 			struct redisReply **rows;
 			int integer;
 		};
@@ -31,13 +31,12 @@ namespace coev
 		Rediscli(const char *ip, int port, const char *auth);
 		Awaiter<int> connect();
 		Awaiter<int> query(const char *, const std::function<void(Redisresult &)> &);
-
 		operator bool() const { return m_context != nullptr; }
 
 	private:
 		int m_tag;
 		ev_io m_Read;
-		ev_io m_Write;		
+		ev_io m_Write;
 		redisAsyncContext *m_context = nullptr;
 		Redisresult m_result;
 

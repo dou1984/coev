@@ -1,7 +1,5 @@
 #include "Mysqlcli.h"
 
-#define WHILE(...) while (__VA_ARGS__)
-
 namespace coev
 {
 	bool is_network_error(uint errorno)
@@ -158,38 +156,30 @@ namespace coev
 			LOG_CORE("error %d %d %s\n", status, mysql_errno(m_mysql), mysql_error(m_mysql));
 			co_return INVALID;
 		}
-		TRACE();
 		co_await wait_for<EVRecv>(*this);
-		TRACE();
 		WHILE((status = mysql_real_query_nonblocking(m_mysql, sql, size)) == NET_ASYNC_NOT_READY);
-		TRACE();
 		if (__isneterror(status) == INVALID)
 		{
 			LOG_CORE("error %d %d %s\n", status, mysql_errno(m_mysql), mysql_error(m_mysql));
 			co_return INVALID;
 		}
-		TRACE();
 		if (__isqueryerror(status) == INVALID)
 		{
 			LOG_CORE("error %d %d %s\n", status, mysql_errno(m_mysql), mysql_error(m_mysql));
 			co_return 0;
 		}
-		TRACE();
 		MYSQL_RES *results = nullptr;
 		WHILE((status = mysql_store_result_nonblocking(m_mysql, &results)) == NET_ASYNC_NOT_READY);
-		TRACE();
 		int num_rows = mysql_affected_rows(m_mysql);
 		if (results != nullptr)
 		{
 			int i = 0;
 			MYSQL_ROW rows;
-			TRACE();
 			WHILE((status = mysql_fetch_row_nonblocking(results, &rows)) == NET_ASYNC_COMPLETE && rows)
 			{
 				assert(mysql_errno(m_mysql) == 0);
 				callback(i++, rows);
 			}
-			TRACE();
 			WHILE((status = mysql_free_result_nonblocking(results)) != NET_ASYNC_COMPLETE);
 			co_return num_rows;
 		}

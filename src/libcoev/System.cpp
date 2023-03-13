@@ -24,7 +24,7 @@ namespace coev
 		}
 		co_return fd;
 	}
-	Awaiter<int> connect(Connect &c, const char *ip, int port)
+	Awaiter<int> connect(Client &c, const char *ip, int port)
 	{
 		int fd = c.connect(ip, port);
 		if (fd == INVALID)
@@ -40,7 +40,7 @@ namespace coev
 		}
 		co_return c.close();
 	}
-	Awaiter<int> send(Client &_client, const char *buffer, int size)
+	Awaiter<int> send(IOContext &_client, const char *buffer, int size)
 	{
 		while (_client)
 		{
@@ -59,7 +59,7 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	Awaiter<int> recv(Client &_client, char *buffer, int size)
+	Awaiter<int> recv(IOContext &_client, char *buffer, int size)
 	{
 		while (_client)
 		{
@@ -73,7 +73,7 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	Awaiter<int> recvfrom(Client &_client, char *buffer, int size, ipaddress &info)
+	Awaiter<int> recvfrom(IOContext &_client, char *buffer, int size, ipaddress &info)
 	{
 		while (_client)
 		{
@@ -90,7 +90,7 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	Awaiter<int> sendto(Client &_client, const char *buffer, int size, ipaddress &info)
+	Awaiter<int> sendto(IOContext &_client, const char *buffer, int size, ipaddress &info)
 	{
 		while (_client)
 		{
@@ -108,7 +108,7 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	Awaiter<int> close(Client &_client)
+	Awaiter<int> close(IOContext &_client)
 	{
 		_client.close();
 		co_return 0;

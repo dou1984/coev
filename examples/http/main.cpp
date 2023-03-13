@@ -6,7 +6,7 @@ using namespace coev;
 
 ServerPool pool;
 
-Task echo(Client &c, Httprequest &req)
+Task echo(IOContext &c, Httprequest &req)
 {
 	TRACE();
 	co_await wait_for<EVRecv>(req);
@@ -29,7 +29,7 @@ Content-Type: text/html; charset=utf-8)";
 	TRACE();
 	co_return 0;
 }
-Task get_request(Client &c, Httprequest &req)
+Task get_request(IOContext &c, Httprequest &req)
 {
 	while (c)
 	{
@@ -46,7 +46,7 @@ Task get_request(Client &c, Httprequest &req)
 }
 Awaiter<int> dispatch(int fd)
 {
-	Client c(fd);
+	IOContext c(fd);
 	Httprequest req;
 	co_await wait_for_any(get_request(c, req), echo(c, req));
 	co_return 0;

@@ -15,7 +15,7 @@ namespace coev
 			co_return 0;
 		}
 		EVMutex *ev = this;
-		Event _event(ev, Loop::tag());
+		Event _event(ev);
 		m_lock.unlock();
 		co_await _event;
 		co_return 0;

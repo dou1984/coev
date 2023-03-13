@@ -1,25 +1,25 @@
 #pragma once
-#include "Client.h"
+#include "IOContext.h"
 #include "Awaiter.h"
 #include "Server.h"
-#include "Connect.h"
+#include "Client.h"
 #include "Timer.h"
 #include "Async.h"
 #include "OSSignal.h"
 #include "Task.h"
 #include "Mutex.h"
-#include "Connect.h"
+#include "Client.h"
 
 namespace coev
 {
 	
 	Awaiter<int> accept(Server &, ipaddress &);
-	Awaiter<int> connect(Connect &, const char *, int);
-	Awaiter<int> send(Client &, const char *, int);
-	Awaiter<int> recv(Client &, char *, int);
-	Awaiter<int> recvfrom(Client &, char *, int, ipaddress &);
-	Awaiter<int> sendto(Client &, const char *, int, ipaddress &);
-	Awaiter<int> close(Client &);
+	Awaiter<int> connect(Client &, const char *, int);
+	Awaiter<int> send(IOContext &, const char *, int);
+	Awaiter<int> recv(IOContext &, char *, int);
+	Awaiter<int> recvfrom(IOContext &, char *, int, ipaddress &);
+	Awaiter<int> sendto(IOContext &, const char *, int, ipaddress &);
+	Awaiter<int> close(IOContext &);
 	Awaiter<int> sleep_for(long);
 	Awaiter<int> usleep_for(long);
 

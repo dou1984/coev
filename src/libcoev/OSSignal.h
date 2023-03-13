@@ -7,7 +7,6 @@
 namespace coev
 {
 	void ingore_signal(int sign);
-
 	struct OSSignal final : EVRecv
 	{	
 		OSSignal(uint32_t id);

@@ -90,12 +90,10 @@ namespace coev
 		__connect_insert();
 		redisAsyncSetConnectCallback(m_context, &Rediscli::__connected);
 		redisAsyncSetDisconnectCallback(m_context, &Rediscli::__disconnected);
-		TRACE();
 		return 0;
 	}
 	int Rediscli::__connect_insert()
 	{
-		TRACE();
 		m_Read.data = this;
 		ev_io_init(&m_Read, &Rediscli::cb_connect, fd(), EV_READ | EV_WRITE);
 		ev_io_start(Loop::at(m_tag), &m_Read);
@@ -103,13 +101,11 @@ namespace coev
 	}
 	int Rediscli::__connect_remove()
 	{
-		TRACE();
 		ev_io_stop(Loop::at(m_tag), &m_Read);
 		return 0;
 	}
 	int Rediscli::__process_insert()
 	{
-		TRACE();
 		assert(fd() != INVALID);
 		m_Read.data = this;
 		ev_io_init(&m_Read, &Rediscli::cb_read, fd(), EV_READ);
@@ -120,7 +116,6 @@ namespace coev
 	}
 	int Rediscli::__process_remove()
 	{
-		TRACE();
 		m_result.last_error = INVALID;
 		m_result.last_msg = STRING_CLOSED;
 		if (m_context)
@@ -133,7 +128,6 @@ namespace coev
 	}
 	void Rediscli::__clearup(void *privdata)
 	{
-		TRACE();
 		auto _this = (Rediscli *)(privdata);
 		_this->__process_remove();
 	}

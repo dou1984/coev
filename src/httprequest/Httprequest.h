@@ -6,8 +6,6 @@ namespace coev
 {
 	struct Httprequest : http_parser,  EVRecv
 	{
-		static http_parser_settings m_settings;
-
 		Httprequest();
 		virtual ~Httprequest() = default;
 		int parse(const char*, int);

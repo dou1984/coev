@@ -5,8 +5,7 @@
 #include "Spinlock.h"
 
 namespace coev
-{	
-
+{
 	struct Mutex : EVMutex
 	{
 		const int on = 1;

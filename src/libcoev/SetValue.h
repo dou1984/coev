@@ -3,7 +3,7 @@
 namespace coev
 {
 	template <class T>
-	void __SetValue(const char *v, T &value)
+	void __SetValue(T &value, const char *v)
 	{
 		char *end = nullptr;
 		if constexpr (std::is_same<T, std::string>::value)

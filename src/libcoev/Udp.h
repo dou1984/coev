@@ -1,12 +1,12 @@
 #pragma once
 #include "Loop.h"
-#include "Client.h"
+#include "IOContext.h"
 
 namespace coev
 {
 	struct Udp final
 	{
-		static Client bind(const char *ip, int port);
-		static Client socket();
+		static IOContext bind(const char *ip, int port);
+		static IOContext socket();
 	};
 }
