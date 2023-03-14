@@ -39,7 +39,7 @@ Awaiter<int> go()
 			<< e() << e() << "','" << e() << e() << "','" << e() << e() << "')";
 	};
 	f();
-	for (int i = 0; i < 20000; i++)
+	for (int i = 0; i < 50000; i++)
 	{
 		oss << ",";
 		f();
@@ -53,7 +53,7 @@ Awaiter<int> go()
 		throw("error");
 	}
 	t_test_table t;
-	for (int i = 0; i < 1000; i++)
+	for (int i = 0; i < 3; i++)
 	{
 		oss.str("");
 		oss << "SELECT * FROM t_test_table;";
@@ -88,11 +88,30 @@ Awaiter<int> go()
 	LOG_FATAL("SUCCESS\n");
 	co_return 0;
 }
+Awaiter<int> clear()
+{
+	Mysqlcli c("127.0.01", 3306, "ashan", "12345678", "test");
+	auto r = co_await c.connect();
+	if (r == INVALID)
+	{
+		co_return INVALID;
+	}
+	std::ostringstream oss;
+	oss << "truncate table t_test_table;";
+	auto s = oss.str();
+	r = co_await c.query(s.c_str(), s.size(), [](auto, auto) {});
+	if (r == INVALID)
+	{
+		throw("error");
+	}
+	co_return 0;
+}
 int main()
 {
-	set_log_level(LOG_LEVEL_ERROR);
+	set_log_level(LOG_LEVEL_CORE);
 	Routine r;
 	r.add(go);
+	// r.add(clear);
 	r.join();
 	return 0;
 }

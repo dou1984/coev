@@ -163,6 +163,7 @@ namespace coev
 			LOG_CORE("error %d %d %s\n", status, mysql_errno(m_mysql), mysql_error(m_mysql));
 			co_return INVALID;
 		}
+		LOG_CORE("real_query error %d %d %d %s\n", status, errno, mysql_errno(m_mysql), mysql_error(m_mysql));
 		co_await wait_for<EVRecv>(*this);
 		WHILE((status = mysql_real_query_nonblocking(m_mysql, sql, size)) == NET_ASYNC_NOT_READY);
 		if (__isneterror(status) == INVALID)
