@@ -29,6 +29,7 @@ namespace coev
 
 		Awaiter<int> connect();
 		Awaiter<int> query(const char *sql, int size, const std::function<void(int, MYSQL_ROW)> &);
+		Awaiter<int> query(const char *sql, int size);
 
 	private:
 		MYSQL *m_mysql = nullptr;

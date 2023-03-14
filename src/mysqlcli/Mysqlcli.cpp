@@ -155,15 +155,27 @@ namespace coev
 		}
 		co_return fd();
 	}
-	Awaiter<int> Mysqlcli::query(const char *sql, int size, const std::function<void(int, MYSQL_ROW)> &callback)
+	Awaiter<int> Mysqlcli::query(const char *sql, int size)
 	{
-		int status = mysql_real_query_nonblocking(m_mysql, sql, size);
+		int status = 0;
+		WHILE((status = mysql_send_query_nonblocking(m_mysql, sql, size)) == NET_ASYNC_NOT_READY)
+		{
+			if (__isneterror(status) == INVALID)
+			{
+				co_return INVALID;
+			}
+			if (isInprocess())
+			{
+				ev_io_start(Loop::at(m_tag), &m_Write);
+				co_await wait_for<EVSend>(*this);
+				ev_io_stop(Loop::at(m_tag), &m_Write);
+			}
+		}
 		if (__isneterror(status) == INVALID)
 		{
 			LOG_CORE("error %d %d %s\n", status, mysql_errno(m_mysql), mysql_error(m_mysql));
 			co_return INVALID;
 		}
-		LOG_CORE("real_query error %d %d %d %s\n", status, errno, mysql_errno(m_mysql), mysql_error(m_mysql));
 		co_await wait_for<EVRecv>(*this);
 		WHILE((status = mysql_real_query_nonblocking(m_mysql, sql, size)) == NET_ASYNC_NOT_READY);
 		if (__isneterror(status) == INVALID)
@@ -174,8 +186,18 @@ namespace coev
 		if (__isqueryerror(status) == INVALID)
 		{
 			LOG_CORE("error %d %d %s\n", status, mysql_errno(m_mysql), mysql_error(m_mysql));
-			co_return 0;
+			co_return INVALID;
 		}
+		co_return 0;
+	}
+	Awaiter<int> Mysqlcli::query(const char *sql, int size, const std::function<void(int, MYSQL_ROW)> &callback)
+	{
+		auto r = co_await query(sql, size);
+		if (r == INVALID)
+		{
+			co_return r;
+		}
+		int status = 0;
 		MYSQL_RES *results = nullptr;
 		WHILE((status = mysql_store_result_nonblocking(m_mysql, &results)) == NET_ASYNC_NOT_READY);
 		int num_rows = mysql_affected_rows(m_mysql);

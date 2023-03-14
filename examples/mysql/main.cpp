@@ -26,10 +26,8 @@ Awaiter<int> go()
 	Mysqlcli c("127.0.01", 3306, "ashan", "12345678", "test");
 	auto r = co_await c.connect();
 
-	assert(r != INVALID);
-	std::default_random_engine e;
-
 	std::ostringstream oss;
+	std::default_random_engine e;
 	oss << "INSERT INTO t_test_table "
 		<< "(`f_username`,`f_password`,`f_mobile`,`f_state`,`f_content`) "
 		<< "VALUES ";
