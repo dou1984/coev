@@ -21,6 +21,7 @@ namespace coev
 		Chain() = default;
 		Chain(Chain &&) = delete;
 		Chain(const Chain &) = delete;
+		virtual ~Chain() = default;
 		void push_front(Chain *_new) { __list_add(_new, this, m_next); }
 		void push_back(Chain *_new) { __list_add(_new, m_prev, this); }
 		bool empty() const { return m_prev == this && m_next == this; }

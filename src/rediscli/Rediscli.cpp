@@ -24,7 +24,7 @@ namespace coev
 			return;
 		auto _this = (Rediscli *)(w->data);
 		assert(_this != nullptr);
-		_this->EVConnect::resume_ex();
+		_this->EVRecv::resume_ex();
 	}
 	void Rediscli::cb_write(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
@@ -220,7 +220,7 @@ namespace coev
 	Awaiter<int> Rediscli::connect()
 	{
 		__connect();
-		co_await wait_for<EVConnect>(*this);
+		co_await wait_for<EVRecv>(*this);
 		__connect_remove();
 		__process_insert();
 		co_return 0;

@@ -32,7 +32,7 @@ namespace coev
 			int integer;
 		};
 	};
-	class Rediscli : Redisconf, public EVConnect, public EVRecv
+	class Rediscli : Redisconf, public EVRecv
 	{
 	public:
 		Rediscli(const char *ip, int port, const char *auth);

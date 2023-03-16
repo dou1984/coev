@@ -24,10 +24,11 @@ namespace coev
 	{
 		resume_ex();
 	}
-	void TaskSet::insert_task(Task *_task)
-	{			
+	void TaskSet::insert_task(TaskExt *_task)
+	{
 		EVTask::push_back(_task);
 		_task->m_TaskSet = this;
+		TRACE();
 	}
 	void TaskSet::destroy()
 	{

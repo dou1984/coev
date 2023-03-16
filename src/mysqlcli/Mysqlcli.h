@@ -21,7 +21,7 @@ namespace coev
 		std::string m_db;
 		int m_port;
 	};
-	class Mysqlcli : Mysqlconf, public EVRecv, public EVSend, public EVConnect
+	class Mysqlcli : Mysqlconf, public EVRecv, public EVSend
 	{
 	public:
 		Mysqlcli(const char *ip, int port, const char *username, const char *password, const char *db);

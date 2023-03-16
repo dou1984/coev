@@ -25,14 +25,6 @@ namespace coev
 		}
 		return INVALID;
 	}
-	void Mysqlcli::cb_connect(struct ev_loop *loop, struct ev_io *w, int revents)
-	{
-		if (EV_ERROR & revents)
-			return;
-		Mysqlcli *_this = (Mysqlcli *)(w->data);
-		assert(_this != nullptr);
-		_this->EVConnect::resume_ex();
-	}
 	void Mysqlcli::cb_write(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
 		if (EV_ERROR & revents)
@@ -103,7 +95,7 @@ namespace coev
 		assert(fd() != INVALID);
 		TRACE();
 		m_Read.data = this;
-		ev_io_init(&m_Read, &Mysqlcli::cb_connect, fd(), EV_READ | EV_WRITE);
+		ev_io_init(&m_Read, &Mysqlcli::cb_read, fd(), EV_READ | EV_WRITE);
 		ev_io_start(Loop::at(m_tag), &m_Read);
 		return 0;
 	}
@@ -143,7 +135,7 @@ namespace coev
 	{
 		if (__connect() == INVALID)
 			co_return INVALID;
-		co_await wait_for<EVConnect>(*this);
+		co_await wait_for<EVRecv>(*this);
 		__connect_remove();
 		__query_insert();
 		co_await wait_for<EVRecv>(*this);
@@ -176,8 +168,10 @@ namespace coev
 			LOG_CORE("error %d %d %s\n", status, mysql_errno(m_mysql), mysql_error(m_mysql));
 			co_return INVALID;
 		}
-		co_await wait_for<EVRecv>(*this);
-		WHILE((status = mysql_real_query_nonblocking(m_mysql, sql, size)) == NET_ASYNC_NOT_READY);
+		do
+		{
+			co_await wait_for<EVRecv>(*this);
+		} while ((status = mysql_real_query_nonblocking(m_mysql, sql, size)) == NET_ASYNC_NOT_READY);
 		if (__isneterror(status) == INVALID)
 		{
 			LOG_CORE("error %d %d %s\n", status, mysql_errno(m_mysql), mysql_error(m_mysql));

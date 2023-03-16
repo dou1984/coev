@@ -35,9 +35,21 @@ Awaiter<int> co_task(bool for_all)
 	co_return 0;
 }
 
-int main()
+void co_task_t()
+{
+	co_task(true);
+}
+void co_task_f()
 {
 	co_task(false);
-	coev::Loop::start();
+}
+
+int main()
+{
+	set_log_level(LOG_LEVEL_CORE);
+	Routine r;
+	r.add(co_task_t);
+	r.add(co_task_f);
+	r.join();
 	return 0;
 }

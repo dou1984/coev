@@ -23,6 +23,7 @@ struct t_test_table
 };
 Awaiter<int> go()
 {
+	LOG_ERR("begin\n");
 	Mysqlcli c("127.0.01", 3306, "ashan", "12345678", "test");
 	auto r = co_await c.connect();
 
@@ -77,7 +78,6 @@ Awaiter<int> go()
 	oss << "truncate table t_test_table;";
 	s = oss.str();
 	r = co_await c.query(s.c_str(), s.size(), [](auto, auto) {});
-
 	if (r == INVALID)
 	{
 		throw("error");
@@ -106,7 +106,7 @@ Awaiter<int> clear()
 }
 int main()
 {
-	set_log_level(LOG_LEVEL_CORE);
+	set_log_level(LOG_LEVEL_ERROR);
 	Routine r;
 	r.add(go);
 	// r.add(clear);

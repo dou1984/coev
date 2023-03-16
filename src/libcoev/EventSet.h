@@ -28,7 +28,6 @@ namespace coev
 
 	using EVRecv = EventSet<RECV>;
 	using EVSend = EventSet<SEND>;
-	using EVConnect = EventSet<CONNECT>;
 	using EVChannel = EventSet<CHANNEL>;
 	using EVEvent = EventSet<EVENT>;
 	using EVTask = EventSet<TASK>;

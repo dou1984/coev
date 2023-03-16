@@ -19,9 +19,10 @@ namespace coev
 		std::coroutine_handle<> m_awaiting = nullptr;
 		uint32_t m_tag = 0;
 		Event(Chain *obj, uint32_t _tag);
-		Event(Chain* obj);
-		~Event();
+		Event(Chain *obj);
+		virtual ~Event();
 		Event(Event &&) = delete;
+		Event(const Event &) = delete;
 		void await_resume();
 		bool await_ready();
 		void await_suspend(std::coroutine_handle<> awaiting);

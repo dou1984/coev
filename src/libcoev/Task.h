@@ -15,10 +15,10 @@ namespace coev
 	struct TaskExt;
 	struct TaskSet;
 
-	using Task = Awaiter<int, TaskExt>;	
+	using Task = Awaiter<int, TaskExt>;
 	struct TaskSet : EVTask, EVEvent
 	{
-		void insert_task(Task *_task);
+		void insert_task(TaskExt *_task);
 		void destroy();
 		operator bool();
 	};

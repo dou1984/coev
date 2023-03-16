@@ -18,11 +18,11 @@
 		{                                                       \
 			auto now = std::chrono::system_clock::now();        \
 			auto t = std::chrono::system_clock::to_time_t(now); \
-			auto d = std::gmtime(&t);                           \
+			auto d = std::localtime(&t);                        \
 			auto f = strrchr(__FILE__, '/');                    \
 			f = f ? f + 1 : __FILE__;                           \
-			PRINT("[%d/%d/%d %d:%d:%d %s:%d/%s]",               \
-				  d->tm_year, d->tm_mon, d->tm_mday,            \
+			PRINT("[%d/%d/%d %02d:%02d:%02d %s:%d/%s]",         \
+				  d->tm_year + 1900, d->tm_mon + 1, d->tm_mday, \
 				  d->tm_hour, d->tm_min, d->tm_sec,             \
 				  f, __LINE__, __FUNCTION__);                   \
 		}                                                       \
