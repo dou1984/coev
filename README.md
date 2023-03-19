@@ -74,7 +74,7 @@ Awaiter<int> co_channel_output()
 
 ## mysql
 
-coev 可以查询mysql数据库。
+coev can query the mysql database.
 ```
 Awaiter<int> test_mysql()
 {
@@ -96,7 +96,7 @@ Awaiter<int> test_mysql()
 
 ## redis
 
-coev 可以查询redis库。
+coev can query the redis library.
 ```
 Awaiter<int> test_redis()
 {
