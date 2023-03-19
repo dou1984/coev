@@ -9,7 +9,7 @@ c++20的协程是无栈协程，相较于传统的有栈协程，大大提升了
 
 c++20的协程开发具有难度，因此coev封装了3种常用的Awaiter，降低了理解c++20协程的难度，提升开发效率，coev也能快速将异步过程转为协程。
 
----
+## Awaiter
 
 Awaiter是coev的协程类，Awaiter使用起来很方便，把Awaiter定义为函数返回既可以创建一个协程，同时Awaiter可以定义返回值类型。
 
@@ -34,7 +34,7 @@ Awaiter<int> test_upper()
 }
 ```
 
----
+## Task
 
 Task 用于等待协程完成, Task可以选择两种模式，一种是等所有task完成再退出，一种是只要一个task完成就退出。
 
@@ -49,7 +49,7 @@ Awaiter<int> test_all()
 }
 ```
 
----
+## Channel
 
 channel用于数据传输。
 

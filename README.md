@@ -9,7 +9,7 @@ The coroutine of c++20 is a stackless coroutine, which greatly improves the swit
 
 The development of c++20 coroutines is difficult, so coev encapsulates three commonly used Awaiters, which reduces the difficulty of understanding c++20 coroutines and improves development efficiency. coev can also quickly convert asynchronous processes into coroutines.
 
----
+## Awaiter
 
 Awaiter is a coroutine class of coev. Awaiter is very convenient to use. Defining Awaiter as a function return can create a coroutine, and Awaiter can define the return value type.
 
@@ -35,7 +35,8 @@ Awaiter<int> test_upper()
 }
 ```
 
----
+
+## Task
 
 
 Task is used to wait for the completion of the coroutine. Task can choose two modes, one is to wait for all tasks to complete before exiting, and the other is to exit as long as one task is completed.
@@ -51,7 +52,7 @@ Awaiter<int> test_all()
 }
 ```
 
----
+## Channel
 
 Channel is used for data transmission.
 
