@@ -15,9 +15,7 @@ ServerPool pool;
 
 Task echo(IOContext &c, Httprequest &req)
 {
-	TRACE();
 	co_await wait_for<EVRecv>(req);
-	TRACE();
 	std::ostringstream oss;
 	oss << R"(HTTP/1.1 200 OK
 Date: Sun, 17 Mar 2017 08:12:54 GMT
