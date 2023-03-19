@@ -26,11 +26,12 @@ namespace coev
 	public:
 		Mysqlcli(const char *ip, int port, const char *username, const char *password, const char *db);
 		virtual ~Mysqlcli();
+		operator MYSQL *() { return m_mysql; }
 
 		Awaiter<int> connect();
 		Awaiter<int> query(const char *sql, int size, const std::function<void(int, MYSQL_ROW)> &);
 		Awaiter<int> query(const char *sql, int size);
-
+		
 	private:
 		MYSQL *m_mysql = nullptr;
 		int m_tag = 0;
