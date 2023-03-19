@@ -31,7 +31,7 @@ Awaiter<int> test_lower()
 }
 Awaiter<int> test_upper()
 {
-	co_await  test_lower();
+	co_await test_lower();
 }
 ```
 
@@ -39,6 +39,17 @@ Awaiter<int> test_upper()
 
 
 Task is used to wait for the completion of the coroutine. Task can choose two modes, one is to wait for all tasks to complete before exiting, and the other is to exit as long as one task is completed.
+
+```
+Awaiter<int> test_any()
+{
+	co_await wait_for_all(co_sleep(1), co_sleep(2));
+}
+Awaiter<int> test_all()
+{
+	co_await wait_for_any(co_sleep(1), co_sleep(2));
+}
+```
 
 ---
 
