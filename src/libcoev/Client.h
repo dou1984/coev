@@ -9,7 +9,7 @@
 #include <ev.h>
 #include "Socket.h"
 #include "Event.h"
-#include "EventSet.h"
+#include "EventChain.h"
 #include "IOContext.h"
 
 namespace coev

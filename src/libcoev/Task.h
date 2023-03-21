@@ -8,7 +8,7 @@
 #pragma once
 #include "Chain.h"
 #include "Awaiter.h"
-#include "EventSet.h"
+#include "EventChain.h"
 
 namespace coev
 {

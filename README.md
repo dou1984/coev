@@ -9,6 +9,30 @@ The coroutine of c++20 is a stackless coroutine, which greatly improves the swit
 
 The development of c++20 coroutines is difficult, so coev encapsulates three commonly used Awaiters, which reduces the difficulty of understanding c++20 coroutines and improves development efficiency. coev can also quickly convert asynchronous processes into coroutines.
 
+
+## Event
+
+Event is the smallest coroutine class, used to quickly convert asynchronous calls into coroutines. "EventChain" and"wait_for<EventChain>" cooperate with each other to quickly implement coroutines.
+
+```cpp
+using EVRecv = EventChain<RECV>;//give a new name
+struct Trigger :  EVRecv
+{
+} g_trigger;
+
+Awaiter<int> co_waiting()
+{ 
+ co_await wait_for<EVRecv>(g_trigger);
+ co_return 0;
+}
+Awaiter<int> co_trigger()
+{
+ co_await sleep_for(5);
+ g_trigger.EVRecv::resume_ex();
+ co_return 0;
+}
+```
+
 ## Awaiter
 
 Awaiter is a coroutine class of coev. Awaiter is very convenient to use. Defining Awaiter as a function return can create a coroutine, and Awaiter can define the return value type.

@@ -9,7 +9,7 @@
 #include <ev.h>
 #include <mutex>
 #include "Event.h"
-#include "EventSet.h"
+#include "EventChain.h"
 
 namespace coev
 {

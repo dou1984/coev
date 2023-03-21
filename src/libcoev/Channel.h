@@ -11,7 +11,7 @@
 #include <mutex>
 #include "Loop.h"
 #include "Event.h"
-#include "EventSet.h"
+#include "EventChain.h"
 
 namespace coev
 {

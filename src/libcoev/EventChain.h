@@ -13,7 +13,7 @@
 namespace coev
 {
 	template <class TYPE>
-	struct EventSet : Chain, TYPE
+	struct EventChain : Chain, TYPE
 	{
 		bool resume_ex()
 		{
@@ -26,11 +26,11 @@ namespace coev
 		}
 	};
 
-	using EVRecv = EventSet<RECV>;
-	using EVSend = EventSet<SEND>;
-	using EVChannel = EventSet<CHANNEL>;
-	using EVEvent = EventSet<EVENT>;
-	using EVTask = EventSet<TASK>;
-	using EVTimer = EventSet<TIMER>;
-	using EVMutex = EventSet<MUTEX>;
+	using EVRecv = EventChain<RECV>;
+	using EVSend = EventChain<SEND>;
+	using EVChannel = EventChain<CHANNEL>;
+	using EVEvent = EventChain<EVENT>;
+	using EVTask = EventChain<TASK>;
+	using EVTimer = EventChain<TIMER>;
+	using EVMutex = EventChain<MUTEX>;
 }
