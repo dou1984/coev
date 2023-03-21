@@ -19,9 +19,8 @@ Task echo(IOContext &c, Httprequest &req)
 	std::ostringstream oss;
 	oss << R"(HTTP/1.1 200 OK
 Date: Sun, 17 Mar 2017 08:12:54 GMT
-Server: Apache/2.2.8 (Win32) PHP/5.2.5
-X-Powered-By: PHP/5.2.5
-Set-Cookie: PHPSESSID=c0huq7pdkmm5gg6osoe3mgjmm3; path=/
+Server: coev
+Set-Cookie: COEV=0000000000000000`; path=/
 Expires: Thu, 19 Nov 1981 08:52:00 GMT
 Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0
 Pragma: no-cache
