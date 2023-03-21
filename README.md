@@ -12,7 +12,7 @@ The development of c++20 coroutines is difficult, so coev encapsulates three com
 
 ## Event
 
-Event is the smallest coroutine class, used to quickly convert asynchronous calls into coroutines. "EventChain" and"wait_for<EventChain>" cooperate with each other to quickly implement coroutines.
+Event is the smallest coroutine class, used to quickly convert asynchronous calls into coroutines. "EventChain" and "wait_for<EventChain>" cooperate with each other to quickly implement coroutines.
 
 ```cpp
 using EVRecv = EventChain<RECV>;//give a new name
@@ -37,10 +37,10 @@ Awaiter<int> co_trigger()
 
 Awaiter is a coroutine class of coev. Awaiter is very convenient to use. Defining Awaiter as a function return can create a coroutine, and Awaiter can define the return value type.
 
-```
-Awaiter<int> co_sleep()  
+```cpp
+Awaiter<int> co_sleep(int t)  
 {  
-	co_await sleep_for(1); 
+	co_await sleep_for(t); 
 	co_return 0；  
 }  
 ```
@@ -48,7 +48,7 @@ Awaiter<int> co_sleep()
 Awaiter can be called hierarchically, which solves the most commonly used multi-level calling problem in coroutine.
 
 
-```
+```cpp
 Awaiter<int> test_lower()
 {
 	co_await co_sleep(1);
@@ -65,7 +65,7 @@ Awaiter<int> test_upper()
 
 Task is used to wait for the completion of the coroutine. Task can choose two modes, one is to wait for all tasks to complete before exiting, and the other is to exit as long as one task is completed.
 
-```
+```cpp
 Awaiter<int> test_any()
 {
 	co_await wait_for_all(co_sleep(1), co_sleep(2));
@@ -80,7 +80,7 @@ Awaiter<int> test_all()
 
 Channel is used for data transmission.
 
-```
+```cpp
 Channel<int> ch;  
 Awaiter<int> co_channel_input()  
 {  
@@ -99,7 +99,7 @@ Awaiter<int> co_channel_output()
 ## mysql
 
 coev can query the mysql database.
-```
+```cpp
 Awaiter<int> test_mysql()
 {
 	Mysqlcli c("127.0.0.1", 3306, "root", "12345678", "test");
@@ -121,7 +121,7 @@ Awaiter<int> test_mysql()
 ## redis
 
 coev can query the redis library.
-```
+```cpp
 Awaiter<int> test_redis()
 {
 	Rediscli c("127.0.0.1", 6379, "");
