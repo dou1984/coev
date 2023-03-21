@@ -33,16 +33,25 @@ Awaiter<int> co_timer()
 	}
 	co_return 0;
 }
+
+Awaiter<int> co_iterator(int t)
+{
+	if (t > 0)
+	{
+		co_await co_iterator(t - 1);
+		co_await sleep_for(1);
+		LOG_DBG("sleep for 1\n");
+	}
+	co_return 0;
+}
 int main()
 {
 
 	Routine r;
-	r.add(
-		[]()
-		{
-			co_sleep();
-			co_timer();
-		});
+	r.add(co_sleep);
+	r.add(co_timer);
+	r.add([]()
+		  { co_iterator(10); });
 	r.join();
 	return 0;
 }
