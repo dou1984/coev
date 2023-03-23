@@ -19,4 +19,5 @@
 #include "libcoev/SetValue.h"
 #include "libcoev/ServerPool.h"
 #include "libcoev/Local.h"
+#include "libcoev/Mempool.h"
 

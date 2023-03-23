@@ -14,8 +14,8 @@
 
 namespace coev
 {
-	template <class Ret = int, class Base = AWAITER>
-	struct Awaiter : Base
+	template <class Ret = int, class Ext = AWAITER>
+	struct Awaiter : Ext
 	{
 		struct promise_type : Promise
 		{
@@ -41,32 +41,32 @@ namespace coev
 			}
 		};
 		Awaiter() = default;
-		Awaiter(std::coroutine_handle<promise_type> h) : m_coro(h)
+		Awaiter(std::coroutine_handle<promise_type> h) : m_coroutine(h)
 		{
-			m_coro.promise()._this = this;
+			m_coroutine.promise()._this = this;
 		}
 		Awaiter(Awaiter &&o) = delete;
 		Awaiter(const Awaiter &) = delete;
 		const Awaiter &operator=(Awaiter &&) = delete;
 		~Awaiter()
 		{
-			if (m_coro != nullptr)
-				m_coro.promise()._this = nullptr;
+			if (m_coroutine != nullptr)
+				m_coroutine.promise()._this = nullptr;
 		}
 		void resume()
 		{
-			if (m_coro && !m_coro.done())
-				m_coro.resume();
+			if (m_coroutine && !m_coroutine.done())
+				m_coroutine.resume();
 		}
 		void resume_ex()
 		{
 			if (m_awaiting && !m_awaiting.done())
 				m_awaiting.resume();
-			Base::resume_ex();
+			Ext::resume_ex();
 		}
 		bool done()
 		{
-			return m_coro ? m_coro.done() : true;
+			return m_coroutine ? m_coroutine.done() : true;
 		}
 		bool await_ready()
 		{
@@ -80,20 +80,20 @@ namespace coev
 		}
 		auto await_resume()
 		{
-			return m_coro ? m_coro.promise().value : Ret{};
+			return m_coroutine ? m_coroutine.promise().value : Ret{};
 		}
 		void destroy()
 		{
-			if (m_coro)
+			if (m_coroutine)
 			{
 				TRACE();
-				m_coro.promise()._this = nullptr;
-				m_coro.destroy();
-				m_coro = nullptr;
+				m_coroutine.promise()._this = nullptr;
+				m_coroutine.destroy();
+				m_coroutine = nullptr;
 				m_awaiting = nullptr;
 			}
 		}
-		std::coroutine_handle<promise_type> m_coro = nullptr;
+		std::coroutine_handle<promise_type> m_coroutine = nullptr;
 		std::coroutine_handle<> m_awaiting = nullptr;
 		bool m_ready = false;
 	};

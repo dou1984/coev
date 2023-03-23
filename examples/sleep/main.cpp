@@ -19,7 +19,8 @@ Awaiter<int> co_sleep()
 		LOG_DBG("sleep_for %d\n", t);
 	}
 	auto r = std::chrono::system_clock::now() - now;
-	LOG_DBG("co_sleep %ld\n", r.count());
+	LOG_DBG("co_sleep %ld.%ld\n", r.count() / 1000000000, r.count() % 1000000000);
+	co_return 0;
 }
 
 Awaiter<int> co_timer()
@@ -46,12 +47,13 @@ Awaiter<int> co_iterator(int t)
 }
 int main()
 {
-
+	set_log_level(LOG_LEVEL_CORE);
 	Routine r;
 	r.add(co_sleep);
 	r.add(co_timer);
 	r.add([]()
 		  { co_iterator(10); });
+
 	r.join();
 	return 0;
 }
