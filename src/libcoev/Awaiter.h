@@ -41,6 +41,11 @@ namespace coev
 				value = std::move(v);
 				return {};
 			}
+			std::suspend_never yield_value(Ret &&v)
+			{
+				value = std::move(v);
+				return {};
+			}
 		};
 		Awaiter() = default;
 		Awaiter(std::coroutine_handle<promise_type> h) : m_coroutine(h)

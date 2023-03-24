@@ -17,7 +17,7 @@ namespace coev
 	extern void FILL_ADDR(sockaddr_in &addr, const char *ip, int port);
 	extern void PARSE_ADDR(sockaddr_in &addr, ipaddress &info);
 
-	Awaiter<IO> accept(Server &_server, ipaddress &peer)
+	Awaiter<SharedIOC> accept(Server &_server, ipaddress &peer)
 	{
 		if (!_server)
 		{
