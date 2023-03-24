@@ -11,9 +11,9 @@ using namespace coev;
 
 ServerPool pool;
 
-Awaiter<int> dispatch(int fd)
+Awaiter<int> dispatch(IO io)
 {
-	IOContext c(fd);
+	auto& c = *io;
 	while (c)
 	{
 		char buffer[0x1000];
@@ -39,10 +39,10 @@ Awaiter<int> co_server()
 	while (s)
 	{
 		ipaddress addr;
-		auto fd = co_await accept(s, addr);
-		if (fd != INVALID)
+		auto io = co_await accept(s, addr);
+		if (*io)
 		{
-			dispatch(fd);
+			dispatch(io);
 		}
 	}
 	co_return INVALID;

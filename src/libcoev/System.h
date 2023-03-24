@@ -6,6 +6,7 @@
  *
  */
 #pragma once
+#include <memory>
 #include "IOContext.h"
 #include "Awaiter.h"
 #include "Server.h"
@@ -15,12 +16,11 @@
 #include "OSSignal.h"
 #include "Task.h"
 #include "Mutex.h"
-#include "Client.h"
 
 namespace coev
 {
-	
-	Awaiter<int> accept(Server &, ipaddress &);
+	using IO = std::shared_ptr<IOContext>;
+	Awaiter<IO> accept(Server &, ipaddress &);
 	Awaiter<int> connect(Client &, const char *, int);
 	Awaiter<int> send(IOContext &, const char *, int);
 	Awaiter<int> recv(IOContext &, char *, int);

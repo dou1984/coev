@@ -42,7 +42,7 @@ Awaiter<int> co_dail(const char *ip, int port)
 			co_await close(c);
 			co_return 0;
 		}
-		if (count++ > 10000)
+		if (count++ > 100000)
 		{
 			co_return 0;
 		}

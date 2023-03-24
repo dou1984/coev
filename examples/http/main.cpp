@@ -47,9 +47,9 @@ Task get_request(IOContext &c, Httprequest &req)
 	}
 	co_return 0;
 }
-Awaiter<int> dispatch(int fd)
+Awaiter<int> dispatch(IO io)
 {
-	IOContext c(fd);
+	auto &c = *io;
 	Httprequest req;
 	co_await wait_for_any(get_request(c, req), echo(c, req));
 	co_return 0;
@@ -60,9 +60,9 @@ Awaiter<int> co_httpserver()
 	while (s)
 	{
 		ipaddress addr;
-		auto fd = co_await accept(s, addr);
-		if (fd != INVALID)		
-			dispatch(fd);		
+		auto io = co_await accept(s, addr);
+		if (*io)
+			dispatch(io);
 	}
 	co_return INVALID;
 }

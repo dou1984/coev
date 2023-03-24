@@ -17,11 +17,11 @@ namespace coev
 	extern void FILL_ADDR(sockaddr_in &addr, const char *ip, int port);
 	extern void PARSE_ADDR(sockaddr_in &addr, ipaddress &info);
 
-	Awaiter<int> accept(Server &_server, ipaddress &peer)
+	Awaiter<IO> accept(Server &_server, ipaddress &peer)
 	{
 		if (!_server)
 		{
-			co_return INVALID;
+			co_return std::make_shared<IOContext>(INVALID);
 		}
 		co_await wait_for<EVRecv>(_server);
 		auto fd = acceptTCP(_server.m_fd, peer);
@@ -29,7 +29,7 @@ namespace coev
 		{
 			setNoBlock(fd, true);
 		}
-		co_return fd;
+		co_return std::make_shared<IOContext>(fd);
 	}
 	Awaiter<int> connect(Client &c, const char *ip, int port)
 	{
