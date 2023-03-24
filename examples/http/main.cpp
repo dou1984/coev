@@ -18,10 +18,10 @@ Task echo(IOContext &c, Httprequest &req)
 	co_await wait_for<EVRecv>(req);
 	std::ostringstream oss;
 	oss << R"(HTTP/1.1 200 OK
-Date: Sun, 17 Mar 2017 08:12:54 GMT
+Date: Sun, 26 OCT 1984 10:00:00 GMT
 Server: coev
 Set-Cookie: COEV=0000000000000000`; path=/
-Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Expires: Sun, 26 OCT 2022 10:00:00 GMT
 Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0
 Pragma: no-cache
 Content-Length: 0
@@ -30,7 +30,6 @@ Connection: Keep-Alive
 Content-Type: text/html; charset=utf-8)";
 	auto s = oss.str();
 	co_await send(c, s.data(), s.size());
-	TRACE();
 	co_return 0;
 }
 Task get_request(IOContext &c, Httprequest &req)

@@ -11,9 +11,11 @@
 #include "Promise.h"
 #include "Log.h"
 #include "Object.h"
+#include "Hook.h"
 
 namespace coev
 {
+
 	template <class Ret = int, class Extend = AWAITER>
 	struct Awaiter : Extend
 	{
@@ -39,6 +41,17 @@ namespace coev
 				value = std::move(v);
 				return {};
 			}
+			/*
+			void *operator new(size_t _size)
+			{
+				return tlmp::instance().alloc(_size);
+			}
+			void operator delete(void *_ptr)
+			{
+				auto _buf = __inner::cast(_ptr);
+				tlmp::instance().release(_buf);
+			}
+			*/
 		};
 		Awaiter() = default;
 		Awaiter(std::coroutine_handle<promise_type> h) : m_coroutine(h)

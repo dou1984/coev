@@ -22,10 +22,12 @@ namespace coev
 
 		IOContext() = default;
 		IOContext(int fd);
+		IOContext(IOContext &&);
 		virtual ~IOContext();
 		int close();
 		operator bool() const;
 
+		int __finally();
 		int __init();
 		static void cb_write(struct ev_loop *loop, struct ev_io *w, int revents);
 		static void cb_read(struct ev_loop *loop, struct ev_io *w, int revents);

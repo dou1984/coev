@@ -10,8 +10,7 @@ namespace coev::__inner
 	}
 	void *alloc(size_t _size)
 	{
-		auto _buf = (Buffer *)__real_malloc(sizeof(Buffer) + _size);
-		new (_buf) Buffer(_size);
+		auto _buf = new (__real_malloc(sizeof(Buffer) + _size)) Buffer(_size);
 		return _buf->m_data;
 	}
 	void *alloc(Buffer &o, size_t _size)
@@ -21,18 +20,19 @@ namespace coev::__inner
 			return alloc(_size);
 		}
 		auto _buf = static_cast<Buffer *>(o.pop_front());
+		assert(_buf->m_verify == MAGICWORD);
 		o.m_size--;
 		return _buf->m_data;
 	}
 	void release(Buffer &o, Buffer *_buf)
 	{
-		assert(_buf->m_verify == 0xabcdef);
+		assert(_buf->m_verify == MAGICWORD);
 		o.push_back(_buf);
 		o.m_size++;
 	}
 	void release(Buffer *_buf)
 	{
-		assert(_buf->m_verify == 0xabcdef);
+		assert(_buf->m_verify == MAGICWORD);
 		__real_free(_buf);
 	}
 	void clear(Buffer &o)

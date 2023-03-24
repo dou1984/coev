@@ -22,6 +22,6 @@ namespace coev
 		else if constexpr (std::is_floating_point<T>::value)
 			value = std::strtod(v, &end);
 		else
-			throw("unpack type is error");
+			throw("SetValue type is error");
 	}
 }

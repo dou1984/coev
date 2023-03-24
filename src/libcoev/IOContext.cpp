@@ -34,8 +34,7 @@ namespace coev
 		if (m_fd != INVALID)
 		{
 			TRACE();
-			ev_io_stop(Loop::at(m_tag), &m_Read);
-			ev_io_stop(Loop::at(m_tag), &m_Write);
+			__finally();
 			::close(m_fd);
 			m_fd = INVALID;
 			while (EVRecv::resume_ex())
@@ -56,6 +55,13 @@ namespace coev
 		m_tag = Loop::tag();
 		__init();
 	}
+	IOContext::IOContext(IOContext &&o)
+	{
+		m_tag = Loop::tag();
+		o.__finally();
+		std::swap(m_fd, o.m_fd);
+		__init();
+	}
 	int IOContext::__init()
 	{
 		if (m_fd != INVALID)
@@ -69,14 +75,19 @@ namespace coev
 		}
 		return 0;
 	}
+	int IOContext::__finally()
+	{
+		ev_io_stop(Loop::at(m_tag), &m_Read);
+		ev_io_stop(Loop::at(m_tag), &m_Write);
+		return 0;
+	}
 	IOContext::~IOContext()
 	{
 		assert(EVRecv::empty());
 		assert(EVSend::empty());
 		if (m_fd != INVALID)
 		{
-			ev_io_stop(Loop::at(m_tag), &m_Read);
-			ev_io_stop(Loop::at(m_tag), &m_Write);
+			__finally();
 			::close(m_fd);
 			m_fd = INVALID;
 		}

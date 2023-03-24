@@ -11,12 +11,13 @@
 
 namespace coev
 {
+#define MAGICWORD 0x89abcdef
 	namespace __inner
 	{
 		struct Buffer : Chain
 		{
 			int m_size = 0;
-			int m_verify = 0xabcdef;
+			int m_verify = MAGICWORD;
 			char m_data[0];
 			Buffer() = default;
 			Buffer(int _size);
@@ -61,7 +62,7 @@ namespace coev
 		void *alloc(size_t s)
 		{
 			if (s <= _Size)
-				return __inner::alloc(_Size);
+				return __inner::alloc(m_data, _Size);
 			return Mempool<_Res...>::alloc(s);
 		}
 		void release(__inner::Buffer *_buf)
