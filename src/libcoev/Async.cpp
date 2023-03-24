@@ -43,7 +43,7 @@ namespace coev
 	int Async::resume_event(Event *ev)
 	{
 		std::lock_guard<decltype(m_lock)> _(m_lock);
-		this->EVRecv::push_back(ev);
+		EVRecv::push_back(ev);
 		return resume();
 	}
 	int Async::__resume()
@@ -51,7 +51,7 @@ namespace coev
 		EVRecv _list;
 		{
 			std::lock_guard<decltype(m_lock)> _(m_lock);
-			this->EVRecv::moveto(&_list);
+			EVRecv::moveto(&_list);
 		}
 		while (_list.resume_ex())
 		{

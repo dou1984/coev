@@ -75,8 +75,7 @@ namespace coev
 		}
 		else
 		{
-			auto __loop = static_cast<__this_ev_loop *>(all_loops[ev->m_tag]);
-			assert(__loop);
+			auto __loop = static_cast<__this_ev_loop *>(all_loops[ev->m_tag]);			
 			__loop->Async::resume_event(ev);
 		}
 	}

@@ -60,6 +60,8 @@ namespace coev
 		m_tag = Loop::tag();
 		o.__finally();
 		std::swap(m_fd, o.m_fd);
+		o.EVRecv::moveto(static_cast<EVRecv *>(this));
+		o.EVSend::moveto(static_cast<EVSend *>(this));
 		__init();
 	}
 	int IOContext::__init()

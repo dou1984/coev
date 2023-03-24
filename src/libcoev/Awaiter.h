@@ -41,17 +41,6 @@ namespace coev
 				value = std::move(v);
 				return {};
 			}
-			/*
-			void *operator new(size_t _size)
-			{
-				return tlmp::instance().alloc(_size);
-			}
-			void operator delete(void *_ptr)
-			{
-				auto _buf = __inner::cast(_ptr);
-				tlmp::instance().release(_buf);
-			}
-			*/
 		};
 		Awaiter() = default;
 		Awaiter(std::coroutine_handle<promise_type> h) : m_coroutine(h)
