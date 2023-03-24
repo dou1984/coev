@@ -22,10 +22,11 @@ namespace coev
 
 		IOContext() = default;
 		IOContext(int fd);
-		IOContext(IOContext &&);
+		IOContext(IOContext &&) = delete;
 		virtual ~IOContext();
 		int close();
 		operator bool() const;
+		const IOContext &operator=(IOContext &&);
 
 		int __finally();
 		int __init();

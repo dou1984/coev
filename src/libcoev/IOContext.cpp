@@ -55,15 +55,6 @@ namespace coev
 		m_tag = Loop::tag();
 		__init();
 	}
-	IOContext::IOContext(IOContext &&o)
-	{
-		m_tag = Loop::tag();
-		o.__finally();
-		std::swap(m_fd, o.m_fd);
-		o.EVRecv::moveto(static_cast<EVRecv *>(this));
-		o.EVSend::moveto(static_cast<EVSend *>(this));
-		__init();
-	}
 	int IOContext::__init()
 	{
 		if (m_fd != INVALID)
@@ -79,8 +70,11 @@ namespace coev
 	}
 	int IOContext::__finally()
 	{
-		ev_io_stop(Loop::at(m_tag), &m_Read);
-		ev_io_stop(Loop::at(m_tag), &m_Write);
+		if (m_fd != INVALID)
+		{
+			ev_io_stop(Loop::at(m_tag), &m_Read);
+			ev_io_stop(Loop::at(m_tag), &m_Write);
+		}
 		return 0;
 	}
 	IOContext::~IOContext()
@@ -93,5 +87,15 @@ namespace coev
 			::close(m_fd);
 			m_fd = INVALID;
 		}
+	}
+	const IOContext &IOContext::operator=(IOContext &&o)
+	{
+		m_tag = Loop::tag();
+		o.__finally();
+		std::swap(m_fd, o.m_fd);
+		o.EVRecv::moveto(static_cast<EVRecv *>(this));
+		o.EVSend::moveto(static_cast<EVSend *>(this));
+		__init();
+		return *this;
 	}
 }
