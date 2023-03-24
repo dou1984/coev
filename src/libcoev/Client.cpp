@@ -39,7 +39,6 @@ namespace coev
 	}
 	Client::~Client()
 	{
-		//assert(EVConnect::empty());
 		close();
 	}
 	int Client::connect_insert()

@@ -21,10 +21,10 @@ namespace coev
 			Buffer() = default;
 			Buffer(int _size);
 		};
-		void *create(size_t _size);
-		void *create(Buffer &o, size_t _size);
-		void destroy(Buffer &o, Buffer *_ptr);
-		void destroy(Buffer *_ptr);
+		void *alloc(size_t _size);
+		void *alloc(Buffer &o, size_t _size);
+		void release(Buffer &o, Buffer *_ptr);
+		void release(Buffer *_ptr);
 		void clear(Buffer &o);
 		Buffer *cast(void *_ptr);
 	}
@@ -38,17 +38,17 @@ namespace coev
 
 	public:
 		virtual ~Mempool() { __inner::clear(m_data); }
-		void *create(size_t s)
+		void *alloc(size_t s)
 		{
 			if (s <= _Size)
-				return __inner::create(m_data, _Size);
-			return __inner::create(s);
+				return __inner::alloc(m_data, _Size);
+			return __inner::alloc(s);
 		}
-		void destroy(__inner::Buffer *_buf)
+		void release(__inner::Buffer *_buf)
 		{
 			if (_buf->m_size <= _Size)
-				return __inner::destroy(m_data, _buf);
-			__inner::destroy(_buf);
+				return __inner::release(m_data, _buf);
+			__inner::release(_buf);
 		}
 	};
 	template <size_t _Size, size_t... _Res>
@@ -58,17 +58,17 @@ namespace coev
 
 	public:
 		~Mempool() { __inner::clear(m_data); }
-		void *create(size_t s)
+		void *alloc(size_t s)
 		{
 			if (s <= _Size)
-				return __inner::create(_Size);
-			return Mempool<_Res...>::create(s);
+				return __inner::alloc(_Size);
+			return Mempool<_Res...>::alloc(s);
 		}
-		void destroy(__inner::Buffer *_buf)
+		void release(__inner::Buffer *_buf)
 		{
 			if (_buf->m_size <= _Size)
-				return __inner::destroy(m_data, _buf);
-			return Mempool<_Res...>::destroy(_buf);
+				return __inner::release(m_data, _buf);
+			return Mempool<_Res...>::release(_buf);
 		}
 	};
 }

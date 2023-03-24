@@ -140,7 +140,9 @@ namespace coev
 		__query_insert();
 		co_await wait_for<EVRecv>(*this);
 		int status = 0;
-		WHILE((status = __tryconnect()) == NET_ASYNC_NOT_READY);
+		while ((status = __tryconnect()) == NET_ASYNC_NOT_READY)
+		{
+		}
 		if (__isneterror(NET_ASYNC_ERROR) == INVALID)
 		{
 			co_return INVALID;
@@ -150,7 +152,7 @@ namespace coev
 	Awaiter<int> Mysqlcli::query(const char *sql, int size)
 	{
 		int status = 0;
-		WHILE((status = mysql_send_query_nonblocking(m_mysql, sql, size)) == NET_ASYNC_NOT_READY)
+		while ((status = mysql_send_query_nonblocking(m_mysql, sql, size)) == NET_ASYNC_NOT_READY)
 		{
 			if (__isneterror(status) == INVALID)
 			{
@@ -193,18 +195,23 @@ namespace coev
 		}
 		int status = 0;
 		MYSQL_RES *results = nullptr;
-		WHILE((status = mysql_store_result_nonblocking(m_mysql, &results)) == NET_ASYNC_NOT_READY);
+		while ((status = mysql_store_result_nonblocking(m_mysql, &results)) == NET_ASYNC_NOT_READY)
+		{
+		}
 		int num_rows = mysql_affected_rows(m_mysql);
 		if (results != nullptr)
 		{
 			int i = 0;
 			MYSQL_ROW rows;
-			WHILE((status = mysql_fetch_row_nonblocking(results, &rows)) == NET_ASYNC_COMPLETE && rows)
+			while ((status = mysql_fetch_row_nonblocking(results, &rows)) == NET_ASYNC_COMPLETE && rows)
 			{
 				assert(mysql_errno(m_mysql) == 0);
 				callback(i++, rows);
 			}
-			WHILE((status = mysql_free_result_nonblocking(results)) != NET_ASYNC_COMPLETE);
+			while ((status = mysql_free_result_nonblocking(results)) != NET_ASYNC_COMPLETE)
+			{
+			}
+
 			co_return num_rows;
 		}
 		else

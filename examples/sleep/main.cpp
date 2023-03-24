@@ -19,7 +19,7 @@ Awaiter<int> co_sleep()
 		LOG_DBG("sleep_for %d\n", t);
 	}
 	auto r = std::chrono::system_clock::now() - now;
-	LOG_DBG("co_sleep %ld.%ld\n", r.count() / 1000000000, r.count() % 1000000000);
+	LOG_DBG("co_sleep %ld.%09ld\n", r.count() / 1000000000, r.count() % 1000000000);
 	co_return 0;
 }
 

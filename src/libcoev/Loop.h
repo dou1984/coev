@@ -12,9 +12,6 @@
 #include "Event.h"
 #define max_ev_loop (0x1000)
 
-#define WHILE(...) while(__VA_ARGS__)
-
-
 namespace coev
 {
 	struct Loop final

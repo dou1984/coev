@@ -9,13 +9,14 @@
 
 using namespace coev;
 
+Awaiter<int> co_mempool()
+{
+	co_await sleep_for(5);
+	co_return 0;
+}
 int main()
 {
-	const int hp = 16 + 4;
-	Mempool<128 - hp, 2048 - hp, 4096 - hp> mp;
-	auto p = mp.create(100);
-
-	auto _buf = __inner::cast(p);
-	mp.destroy(_buf);
+	co_mempool();
+	Loop::start();
 	return 0;
 }

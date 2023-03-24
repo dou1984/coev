@@ -5,7 +5,7 @@
 
 using namespace coev;
 const int _shift = sizeof(__inner::Buffer);
-using mpool = Mempool<512 - _shift, 2048 - _shift, 8192 - _shift>;
+using mpool = Mempool<0x100 - _shift, 0x400 - _shift, 0x1000 - _shift>;
 using tlmp = ThreadLocal<mpool>;
 
 extern "C"
@@ -18,14 +18,16 @@ extern "C"
 		__real_free = (t_free)dlsym(RTLD_NEXT, "free");
 		return 0;
 	}
+	/*
 	void *malloc(size_t size)
 	{
 		static auto _init = init_hook();
-		return tlmp::instance().create(size);
+		return tlmp::instance().alloc(size);
 	}
 	void free(void *ptr)
 	{
 		auto _buf = __inner::cast(ptr);
-		tlmp::instance().destroy(_buf);
+		tlmp::instance().release(_buf);
 	}
+	*/
 }

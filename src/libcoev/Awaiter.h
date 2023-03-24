@@ -14,8 +14,8 @@
 
 namespace coev
 {
-	template <class Ret = int, class Ext = AWAITER>
-	struct Awaiter : Ext
+	template <class Ret = int, class Extend = AWAITER>
+	struct Awaiter : Extend
 	{
 		struct promise_type : Promise
 		{
@@ -62,7 +62,7 @@ namespace coev
 		{
 			if (m_awaiting && !m_awaiting.done())
 				m_awaiting.resume();
-			Ext::resume_ex();
+			Extend::resume_ex();
 		}
 		bool done()
 		{
@@ -70,12 +70,10 @@ namespace coev
 		}
 		bool await_ready()
 		{
-			TRACE();
 			return m_ready;
 		}
 		void await_suspend(std::coroutine_handle<> awaiting)
 		{
-			TRACE();
 			m_awaiting = awaiting;
 		}
 		auto await_resume()
@@ -86,7 +84,6 @@ namespace coev
 		{
 			if (m_coroutine)
 			{
-				TRACE();
 				m_coroutine.promise()._this = nullptr;
 				m_coroutine.destroy();
 				m_coroutine = nullptr;

@@ -38,8 +38,12 @@ namespace coev
 			ev_io_stop(Loop::at(m_tag), &m_Write);
 			::close(m_fd);
 			m_fd = INVALID;
-			WHILE(EVRecv::resume_ex());
-			WHILE(EVSend::resume_ex());
+			while (EVRecv::resume_ex())
+			{
+			}
+			while (EVSend::resume_ex())
+			{
+			}
 		}
 		return 0;
 	}
