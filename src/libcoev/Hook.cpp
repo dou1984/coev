@@ -15,6 +15,7 @@ using namespace coev;
 
 extern "C"
 {
+	bool enable_mempool = true;
 	t_malloc __real_malloc;
 	t_free __real_free;
 	t_realloc __real_realloc;
@@ -35,11 +36,19 @@ extern "C"
 	void *malloc(size_t size)
 	{
 		static auto _init = init_hook();
+		if (!enable_mempool)
+		{
+			return __real_malloc(size);
+		}
 		return tlmp::instance().alloc(size);
 	}
 	void *realloc(void *ptr, size_t size)
 	{
 		static auto _init = init_hook();
+		if (!enable_mempool)
+		{
+			return __real_realloc(ptr, size);
+		}
 		auto _buf = __inner::cast(ptr);
 		if (size <= _buf->m_size)
 		{
@@ -51,6 +60,10 @@ extern "C"
 	void *calloc(size_t nitems, size_t size)
 	{
 		static auto _init = init_hook();
+		if (!enable_mempool)
+		{
+			return __real_calloc(nitems, size);
+		}
 		int total = nitems * size;
 		auto ptr = tlmp::instance().alloc(total);
 		memset(ptr, 0, total);
@@ -58,6 +71,11 @@ extern "C"
 	}
 	void free(void *ptr)
 	{
+		if (!enable_mempool)
+		{
+			__real_free(ptr);
+			return;
+		}
 		auto _buf = __inner::cast(ptr);
 		tlmp::instance().release(_buf);
 	}
