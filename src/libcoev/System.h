@@ -19,8 +19,8 @@
 
 namespace coev
 {
-	using SharedIOC = std::shared_ptr<IOContext>;
-	Awaiter<SharedIOC> accept(Server &, ipaddress &);
+	using SharedIO = std::shared_ptr<IOContext>;
+	Awaiter<SharedIO> accept(Server &, ipaddress &);
 	Awaiter<int> connect(Client &, const char *, int);
 	Awaiter<int> send(IOContext &, const char *, int);
 	Awaiter<int> recv(IOContext &, char *, int);

@@ -47,7 +47,7 @@ Task get_request(IOContext &c, Httprequest &req)
 	}
 	co_return 0;
 }
-Awaiter<int> dispatch(SharedIOC io)
+Awaiter<int> dispatch(SharedIO io)
 {
 	auto &c = *io;
 	Httprequest req;

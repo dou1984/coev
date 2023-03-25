@@ -17,7 +17,7 @@ namespace coev
 	extern void FILL_ADDR(sockaddr_in &addr, const char *ip, int port);
 	extern void PARSE_ADDR(sockaddr_in &addr, ipaddress &info);
 
-	Awaiter<SharedIOC> accept(Server &_server, ipaddress &peer)
+	Awaiter<SharedIO> accept(Server &_server, ipaddress &peer)
 	{
 		if (!_server)
 		{
@@ -47,17 +47,17 @@ namespace coev
 		}
 		co_return c.close();
 	}
-	Awaiter<int> send(IOContext &_client, const char *buffer, int size)
+	Awaiter<int> send(IOContext &io, const char *buffer, int size)
 	{
-		while (_client)
+		while (io)
 		{
-			auto r = ::send(_client.m_fd, buffer, size, 0);
+			auto r = ::send(io.m_fd, buffer, size, 0);
 			if (r == INVALID && isInprocess())
 			{
-				ev_io_start(Loop::at(_client.m_tag), &_client.m_Write);
-				co_await wait_for<EVSend>(_client);
-				if (_client.EVSend::empty())
-					ev_io_stop(Loop::at(_client.m_tag), &_client.m_Write);
+				ev_io_start(Loop::at(io.m_tag), &io.m_Write);
+				co_await wait_for<EVSend>(io);
+				if (io.EVSend::empty())
+					ev_io_stop(Loop::at(io.m_tag), &io.m_Write);
 			}
 			else
 			{
@@ -66,12 +66,12 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	Awaiter<int> recv(IOContext &_client, char *buffer, int size)
+	Awaiter<int> recv(IOContext &io, char *buffer, int size)
 	{
-		while (_client)
+		while (io)
 		{
-			co_await wait_for<EVRecv>(_client);
-			auto r = ::recv(_client.m_fd, buffer, size, 0);
+			co_await wait_for<EVRecv>(io);
+			auto r = ::recv(io.m_fd, buffer, size, 0);
 			if (r == INVALID && isInprocess())
 			{
 				continue;
@@ -80,14 +80,14 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	Awaiter<int> recvfrom(IOContext &_client, char *buffer, int size, ipaddress &info)
+	Awaiter<int> recvfrom(IOContext &io, char *buffer, int size, ipaddress &info)
 	{
-		while (_client)
+		while (io)
 		{
-			co_await wait_for<EVRecv>(_client);
+			co_await wait_for<EVRecv>(io);
 			sockaddr_in addr;
 			socklen_t addrsize = sizeof(addr);
-			int r = ::recvfrom(_client.m_fd, buffer, size, 0, (struct sockaddr *)&addr, &addrsize);
+			int r = ::recvfrom(io.m_fd, buffer, size, 0, (struct sockaddr *)&addr, &addrsize);
 			if (r == INVALID && isInprocess())
 			{
 				continue;
@@ -97,27 +97,27 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	Awaiter<int> sendto(IOContext &_client, const char *buffer, int size, ipaddress &info)
+	Awaiter<int> sendto(IOContext &io, const char *buffer, int size, ipaddress &info)
 	{
-		while (_client)
+		while (io)
 		{
 			sockaddr_in addr;
 			FILL_ADDR(addr, info.ip, info.port);
-			int r = ::sendto(_client.m_fd, buffer, size, 0, (struct sockaddr *)&addr, sizeof(addr));
+			int r = ::sendto(io.m_fd, buffer, size, 0, (struct sockaddr *)&addr, sizeof(addr));
 			if (r == INVALID && isInprocess())
 			{
-				ev_io_start(Loop::at(_client.m_tag), &_client.m_Write);
-				co_await wait_for<EVSend>(_client);
-				if (_client.EVSend::empty())
-					ev_io_stop(Loop::at(_client.m_tag), &_client.m_Write);
+				ev_io_start(Loop::at(io.m_tag), &io.m_Write);
+				co_await wait_for<EVSend>(io);
+				if (io.EVSend::empty())
+					ev_io_stop(Loop::at(io.m_tag), &io.m_Write);
 			}
 			co_return r;
 		}
 		co_return INVALID;
 	}
-	Awaiter<int> close(IOContext &_client)
+	Awaiter<int> close(IOContext &io)
 	{
-		_client.close();
+		io.close();
 		co_return 0;
 	}
 	Awaiter<int> sleep_for(long t)
