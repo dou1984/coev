@@ -16,7 +16,7 @@
 #include "libcoev/System.h"
 #include "libcoev/routine.h"
 #include "libcoev/Udp.h"
-#include "libcoev/SetValue.h"
+#include "libcoev/setvalue.h"
 #include "libcoev/ServerPool.h"
 #include "libcoev/Local.h"
 #include "libcoev/Mempool.h"

@@ -10,7 +10,7 @@
 namespace coev
 {
 	template <class T>
-	void __SetValue(T &value, const char *v)
+	void __setvalue(T &value, const char *v)
 	{
 		char *end = nullptr;
 		if constexpr (std::is_same<T, std::string>::value)
@@ -22,6 +22,6 @@ namespace coev
 		else if constexpr (std::is_floating_point<T>::value)
 			value = std::strtod(v, &end);
 		else
-			throw("SetValue type is error");
+			throw("setvalue type is error");
 	}
 }

@@ -10,10 +10,10 @@
 #include "iocontext.h"
 #include "awaiter.h"
 #include "Server.h"
-#include "Client.h"
+#include "client.h"
 #include "Timer.h"
 #include "async.h"
-#include "OSSignal.h"
+#include "ossignal.h"
 #include "task.h"
 #include "Mutex.h"
 

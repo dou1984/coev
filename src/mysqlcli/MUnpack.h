@@ -15,6 +15,6 @@ namespace coev
 	void unpack(MYSQL_ROW rows, TYPE &...value)
 	{
 		int i = 0;
-		(__SetValue(value, rows[i++]), ...);
+		(__setvalue(value, rows[i++]), ...);
 	}
 }

@@ -5,7 +5,7 @@
  *	All rights reserved.
  *
  */
-#include "Client.h"
+#include "client.h"
 #include "loop.h"
 
 namespace coev

@@ -14,6 +14,6 @@ namespace coev
 	void unpack(redisReply **rows, TYPE &...value)
 	{
 		int i = 0;
-		(__SetValue(value, rows[i++]->str), ...);
+		(__setvalue(value, rows[i++]->str), ...);
 	}
 }

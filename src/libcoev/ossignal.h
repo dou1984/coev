@@ -14,10 +14,10 @@
 namespace coev
 {
 	void ingore_signal(int sign);
-	struct OSSignal final : EVRecv
+	struct ossignal final : EVRecv
 	{	
-		OSSignal(uint32_t id);
-		virtual ~OSSignal();
+		ossignal(uint32_t id);
+		virtual ~ossignal();
 		int resume();
 		int max() const { return SIGNALMAX; }
 		int min() const { return SIGNALMIN; }

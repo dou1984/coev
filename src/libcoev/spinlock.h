@@ -11,7 +11,7 @@
 
 namespace coev
 {
-	struct Spinlock
+	struct spinlock
 	{
 		const int on = 1;
 		const int off = 0;
