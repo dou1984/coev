@@ -8,7 +8,7 @@
 #include <memory>
 #include "loop.h"
 #include "ThreadLocal.h"
-#include "Local.h"
+#include "local.h"
 #include "System.h"
 
 namespace coev
