@@ -12,7 +12,7 @@
 #include "ThreadLocal.h"
 #include "Loop.h"
 #include "Log.h"
-#include "Async.h"
+#include "async.h"
 
 #define g_loop ThreadLocal<__this_ev_loop>::instance()
 
@@ -42,9 +42,9 @@ namespace coev
 			return __ev_loop::m_tag;
 		}
 	};
-	struct __this_ev_loop : __ev_loop, Async
+	struct __this_ev_loop : __ev_loop, async
 	{
-		__this_ev_loop() : __ev_loop(), Async(__ev_loop::m_loop, __ev_loop::m_tag)
+		__this_ev_loop() : __ev_loop(), async(__ev_loop::m_loop, __ev_loop::m_tag)
 		{
 		}
 	};
@@ -67,7 +67,7 @@ namespace coev
 	{
 		return g_loop.tag();
 	}
-	void Loop::resume(Event *ev)
+	void Loop::resume(event *ev)
 	{
 		if (ev->m_tag == g_loop.tag())
 		{
@@ -76,7 +76,7 @@ namespace coev
 		else
 		{
 			auto __loop = static_cast<__this_ev_loop *>(all_loops[ev->m_tag]);			
-			__loop->Async::resume_event(ev);
+			__loop->async::resume_event(ev);
 		}
 	}
 }

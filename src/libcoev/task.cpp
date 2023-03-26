@@ -5,12 +5,12 @@
  *	All rights reserved.
  *
  */
-#include "Event.h"
-#include "Task.h"
+#include "event.h"
+#include "task.h"
 
 namespace coev
 {
-	void TaskExt::resume_ex()
+	void taskext::resume_ex()
 	{
 		if (m_TaskSet)
 		{
@@ -20,27 +20,27 @@ namespace coev
 			m_TaskSet = nullptr;
 		}
 	}
-	TaskExt::~TaskExt()
+	taskext::~taskext()
 	{
 		resume_ex();
 	}
-	void TaskSet::insert_task(TaskExt *_task)
+	void taskchain::insert_task(taskext *_task)
 	{
 		EVTask::push_back(_task);
 		_task->m_TaskSet = this;
 		TRACE();
 	}
-	void TaskSet::destroy()
+	void taskchain::destroy()
 	{
 		while (!EVTask::empty())
 		{
 			TRACE();
-			auto c = static_cast<Task *>(EVTask::pop_front());
-			c->TaskExt::m_TaskSet = nullptr;
+			auto c = static_cast<task *>(EVTask::pop_front());
+			c->taskext::m_TaskSet = nullptr;
 			c->destroy();
 		}
 	}
-	TaskSet::operator bool()
+	taskchain::operator bool()
 	{
 		return !EVTask::empty();
 	}

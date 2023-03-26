@@ -9,12 +9,12 @@
 
 namespace coev
 {
-	IOContext Udp::bind(const char *ip, int port)
+	iocontext Udp::bind(const char *ip, int port)
 	{
 		int fd = ::socket(AF_INET, SOCK_DGRAM, 0);
 		if (fd == INVALID)
 		{
-			return IOContext(fd);
+			return iocontext(fd);
 		}
 		int on = 1;
 		if (setReuseAddr(fd, on) < 0)
@@ -22,7 +22,7 @@ namespace coev
 		__error_return__:
 			::close(fd);
 			fd = INVALID;
-			return IOContext(fd);
+			return iocontext(fd);
 		}
 		if (bindAddress(fd, ip, port) < 0)
 		{
@@ -32,21 +32,21 @@ namespace coev
 		{
 			goto __error_return__;
 		}
-		return IOContext(fd);
+		return iocontext(fd);
 	}
-	IOContext Udp::socket()
+	iocontext Udp::socket()
 	{
 		int fd = ::socket(AF_INET, SOCK_DGRAM, 0);
 		if (fd == INVALID)
 		{
-			return IOContext(fd);
+			return iocontext(fd);
 		}
 		if (setNoBlock(fd, true) < 0)
 		{
 			::close(fd);
 			fd = INVALID;
-			return IOContext(fd);
+			return iocontext(fd);
 		}
-		return IOContext(fd);
+		return iocontext(fd);
 	}
 }

@@ -9,9 +9,9 @@
 
 using namespace coev;
 
-Awaiter<int> co_task(bool for_all)
+awaiter<int> co_task(bool for_all)
 {
-	auto t0 = []() -> Task
+	auto t0 = []() -> task
 	{
 		TRACE();
 		co_await sleep_for(2);
@@ -19,7 +19,7 @@ Awaiter<int> co_task(bool for_all)
 		co_return 0;
 	}();
 
-	auto t1 = []() -> Task
+	auto t1 = []() -> task
 	{
 		TRACE();
 		co_await sleep_for(5);

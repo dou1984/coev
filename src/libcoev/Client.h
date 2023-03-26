@@ -8,13 +8,13 @@
 #pragma once
 #include <ev.h>
 #include "Socket.h"
-#include "Event.h"
-#include "EventChain.h"
+#include "event.h"
+#include "eventchain.h"
 #include "IOContext.h"
 
 namespace coev
 {	
-	struct Client : IOContext
+	struct Client : iocontext
 	{		
 		Client();
 		virtual ~Client();

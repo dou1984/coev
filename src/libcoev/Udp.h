@@ -13,7 +13,7 @@ namespace coev
 {
 	struct Udp final
 	{
-		static IOContext bind(const char *ip, int port);
-		static IOContext socket();
+		static iocontext bind(const char *ip, int port);
+		static iocontext socket();
 	};
 }

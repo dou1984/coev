@@ -7,14 +7,14 @@
  */
 #pragma once
 #include <array>
-#include "Chain.h"
+#include "chain.h"
 
 namespace coev
 {
 #define MAGICWORD 0x89abcdef
 	namespace __inner
 	{
-		struct Buffer : Chain
+		struct Buffer : chain
 		{
 			int m_size = 0;
 			int m_verify = MAGICWORD;
@@ -30,15 +30,15 @@ namespace coev
 		Buffer *cast(void *_ptr);
 	}
 	template <size_t... _Size>
-	class Mempool;
+	class mempool;
 
 	template <size_t _Size>
-	class Mempool<_Size>
+	class mempool<_Size>
 	{
 		__inner::Buffer m_data;
 
 	public:
-		virtual ~Mempool() { __inner::clear(m_data); }
+		virtual ~mempool() { __inner::clear(m_data); }
 		void *alloc(size_t s)
 		{
 			if (s <= _Size)
@@ -53,23 +53,23 @@ namespace coev
 		}
 	};
 	template <size_t _Size, size_t... _Res>
-	class Mempool<_Size, _Res...> : public Mempool<_Res...>
+	class mempool<_Size, _Res...> : public mempool<_Res...>
 	{
 		__inner::Buffer m_data;
 
 	public:
-		~Mempool() { __inner::clear(m_data); }
+		~mempool() { __inner::clear(m_data); }
 		void *alloc(size_t s)
 		{
 			if (s <= _Size)
 				return __inner::alloc(m_data, _Size);
-			return Mempool<_Res...>::alloc(s);
+			return mempool<_Res...>::alloc(s);
 		}
 		void release(__inner::Buffer *_buf)
 		{
 			if (_buf->m_size <= _Size)
 				return __inner::release(m_data, _buf);
-			return Mempool<_Res...>::release(_buf);
+			return mempool<_Res...>::release(_buf);
 		}
 	};
 }

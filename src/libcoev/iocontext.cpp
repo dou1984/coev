@@ -15,21 +15,21 @@
 
 namespace coev
 {
-	void IOContext::cb_read(struct ev_loop *loop, struct ev_io *w, int revents)
+	void iocontext::cb_read(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
-		auto _this = (IOContext *)w->data;
+		auto _this = (iocontext *)w->data;
 		assert(_this != NULL);
 		assert(*_this);
 		_this->EVRecv::resume_ex();
 	}
-	void IOContext::cb_write(struct ev_loop *loop, struct ev_io *w, int revents)
+	void iocontext::cb_write(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
-		auto _this = (IOContext *)w->data;
+		auto _this = (iocontext *)w->data;
 		assert(_this != NULL);
 		assert(*_this);
 		_this->EVSend::resume_ex();
 	}
-	int IOContext::close()
+	int iocontext::close()
 	{
 		if (m_fd != INVALID)
 		{
@@ -46,29 +46,29 @@ namespace coev
 		}
 		return 0;
 	}
-	IOContext::operator bool() const
+	iocontext::operator bool() const
 	{
 		return m_fd != INVALID;
 	}
-	IOContext::IOContext(int fd) : m_fd(fd)
+	iocontext::iocontext(int fd) : m_fd(fd)
 	{
 		m_tag = Loop::tag();
 		__init();
 	}
-	int IOContext::__init()
+	int iocontext::__init()
 	{
 		if (m_fd != INVALID)
 		{
 			m_Read.data = this;
-			ev_io_init(&m_Read, IOContext::cb_read, m_fd, EV_READ);
+			ev_io_init(&m_Read, iocontext::cb_read, m_fd, EV_READ);
 			ev_io_start(Loop::at(m_tag), &m_Read);
 
 			m_Write.data = this;
-			ev_io_init(&m_Write, IOContext::cb_write, m_fd, EV_WRITE);
+			ev_io_init(&m_Write, iocontext::cb_write, m_fd, EV_WRITE);
 		}
 		return 0;
 	}
-	int IOContext::__finally()
+	int iocontext::__finally()
 	{
 		if (m_fd != INVALID)
 		{
@@ -77,7 +77,7 @@ namespace coev
 		}
 		return 0;
 	}
-	IOContext::~IOContext()
+	iocontext::~iocontext()
 	{
 		assert(EVRecv::empty());
 		assert(EVSend::empty());
@@ -88,7 +88,7 @@ namespace coev
 			m_fd = INVALID;
 		}
 	}
-	const IOContext &IOContext::operator=(IOContext &&o)
+	const iocontext &iocontext::operator=(iocontext &&o)
 	{
 		m_tag = Loop::tag();
 		o.__finally();

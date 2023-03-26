@@ -7,9 +7,8 @@
  */
 #pragma once
 #include <atomic>
-#include "Awaiter.h"
-#include "EventChain.h"
-#include "Spinlock.h"
+#include "awaiter.h"
+#include "eventchain.h"
 
 namespace coev
 {
@@ -19,7 +18,7 @@ namespace coev
 		const int off = 0;
 		std::mutex m_lock;
 		int m_flag = 0;
-		Awaiter<int> lock();
-		Awaiter<int> unlock();
+		awaiter<int> lock();
+		awaiter<int> unlock();
 	};
 }

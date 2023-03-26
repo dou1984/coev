@@ -9,7 +9,7 @@
 #include <stdint.h>
 #include <ev.h>
 #include "Log.h"
-#include "Event.h"
+#include "event.h"
 #define max_ev_loop (0x1000)
 
 namespace coev
@@ -20,6 +20,6 @@ namespace coev
 		static struct ev_loop *data();
 		static struct ev_loop *at(uint32_t);
 		static uint32_t tag();
-		static void resume(Event *);
+		static void resume(event *);
 	};
 }

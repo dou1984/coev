@@ -8,8 +8,8 @@
 #pragma once
 #include <memory>
 #include <atomic>
-#include "Event.h"
-#include "Task.h"
+#include "event.h"
+#include "task.h"
 
 namespace coev
 {
@@ -27,5 +27,5 @@ namespace coev
 		~LocalExt();
 	};
 
-	Awaiter<int> wait_for_local();
+	awaiter<int> wait_for_local();
 }

@@ -13,7 +13,7 @@ using namespace coev;
 
 ServerPool pool;
 
-Task echo(IOContext &c, Httprequest &req)
+task echo(iocontext &c, Httprequest &req)
 {
 	co_await wait_for<EVRecv>(req);
 	std::ostringstream oss;
@@ -32,7 +32,7 @@ Content-Type: text/html; charset=utf-8)";
 	co_await send(c, s.data(), s.size());
 	co_return 0;
 }
-Task get_request(IOContext &c, Httprequest &req)
+task get_request(iocontext &c, Httprequest &req)
 {
 	while (c)
 	{
@@ -47,14 +47,14 @@ Task get_request(IOContext &c, Httprequest &req)
 	}
 	co_return 0;
 }
-Awaiter<int> dispatch(SharedIO io)
+awaiter<int> dispatch(SharedIO io)
 {
 	auto &c = *io;
 	Httprequest req;
 	co_await wait_for_any(get_request(c, req), echo(c, req));
 	co_return 0;
 }
-Awaiter<int> co_httpserver()
+awaiter<int> co_httpserver()
 {
 	Server &s = pool;
 	while (s)

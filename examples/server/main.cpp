@@ -11,7 +11,7 @@ using namespace coev;
 
 ServerPool pool;
 
-Awaiter<int> dispatch(SharedIO io)
+awaiter<int> dispatch(SharedIO io)
 {
 	auto& c = *io;
 	while (c)
@@ -33,7 +33,7 @@ Awaiter<int> dispatch(SharedIO io)
 	}
 	co_return INVALID;
 }
-Awaiter<int> co_server()
+awaiter<int> co_server()
 {
 	Server& s = pool;
 	while (s)

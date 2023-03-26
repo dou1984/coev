@@ -8,19 +8,19 @@
 #pragma once
 #include <ev.h>
 #include <mutex>
-#include "Event.h"
-#include "EventChain.h"
+#include "event.h"
+#include "eventchain.h"
 
 namespace coev
 {
-	class Async : public EVRecv
+	class async : public EVRecv
 	{
 	public:
-		Async();
-		Async(struct ev_loop *, int);
-		~Async();
+		async();
+		async(struct ev_loop *, int);
+		~async();
 
-		int resume_event(Event *ev);
+		int resume_event(event *ev);
 
 	private:
 		ev_async m_Async;

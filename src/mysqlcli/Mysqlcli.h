@@ -28,9 +28,9 @@ namespace coev
 		virtual ~Mysqlcli();
 		operator MYSQL *() { return m_mysql; }
 
-		Awaiter<int> connect();
-		Awaiter<int> query(const char *sql, int size, const std::function<void(int, MYSQL_ROW)> &);
-		Awaiter<int> query(const char *sql, int size);
+		awaiter<int> connect();
+		awaiter<int> query(const char *sql, int size, const std::function<void(int, MYSQL_ROW)> &);
+		awaiter<int> query(const char *sql, int size);
 		
 	private:
 		MYSQL *m_mysql = nullptr;

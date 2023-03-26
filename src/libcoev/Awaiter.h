@@ -7,22 +7,22 @@
  */
 #pragma once
 #include <coroutine>
-#include "Chain.h"
+#include "chain.h"
 #include "Promise.h"
 #include "Log.h"
 #include "Object.h"
-#include "Hook.h"
+#include "hook.h"
 
 namespace coev
 {
 
 	template <class Ret = int, class Extend = AWAITER>
-	struct Awaiter : Extend
+	struct awaiter : Extend
 	{
-		struct promise_type : Promise
+		struct promise_type : promise
 		{
 			Ret value;
-			Awaiter *_this = nullptr;
+			awaiter *_this = nullptr;
 			promise_type() = default;
 			~promise_type()
 			{
@@ -32,7 +32,7 @@ namespace coev
 					_this->resume_ex();
 				}
 			}
-			Awaiter get_return_object()
+			awaiter get_return_object()
 			{
 				return {std::coroutine_handle<promise_type>::from_promise(*this)};
 			}
@@ -47,15 +47,15 @@ namespace coev
 				return {};
 			}
 		};
-		Awaiter() = default;
-		Awaiter(std::coroutine_handle<promise_type> h) : m_coroutine(h)
+		awaiter() = default;
+		awaiter(std::coroutine_handle<promise_type> h) : m_coroutine(h)
 		{
 			m_coroutine.promise()._this = this;
 		}
-		Awaiter(Awaiter &&o) = delete;
-		Awaiter(const Awaiter &) = delete;
-		const Awaiter &operator=(Awaiter &&) = delete;
-		~Awaiter()
+		awaiter(awaiter &&o) = delete;
+		awaiter(const awaiter &) = delete;
+		const awaiter &operator=(awaiter &&) = delete;
+		~awaiter()
 		{
 			if (m_coroutine != nullptr)
 				m_coroutine.promise()._this = nullptr;

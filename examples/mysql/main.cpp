@@ -21,7 +21,7 @@ struct t_test_table
 	std::string create_time;
 	std::string update_time;
 };
-Awaiter<int> go()
+awaiter<int> go()
 {
 	LOG_ERR("begin\n");
 	Mysqlcli c("127.0.01", 3306, "ashan", "12345678", "test");
@@ -86,7 +86,7 @@ Awaiter<int> go()
 	LOG_FATAL("SUCCESS\n");
 	co_return 0;
 }
-Awaiter<int> clear()
+awaiter<int> clear()
 {
 	Mysqlcli c("127.0.01", 3306, "ashan", "12345678", "test");
 	auto r = co_await c.connect();

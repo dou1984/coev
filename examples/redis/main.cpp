@@ -12,7 +12,7 @@
 
 using namespace coev;
 
-Awaiter<int> go()
+awaiter<int> go()
 {
 	set_log_level(LOG_LEVEL_CORE);
 

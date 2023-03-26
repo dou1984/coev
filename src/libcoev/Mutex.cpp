@@ -12,7 +12,7 @@
 
 namespace coev
 {
-	Awaiter<int> Mutex::lock()
+	awaiter<int> Mutex::lock()
 	{
 		m_lock.lock();
 		if (m_flag == off)
@@ -22,12 +22,12 @@ namespace coev
 			co_return 0;
 		}
 		EVMutex *ev = this;
-		Event _event(ev);
+		event _event(ev);
 		m_lock.unlock();
 		co_await _event;
 		co_return 0;
 	}
-	Awaiter<int> Mutex::unlock()
+	awaiter<int> Mutex::unlock()
 	{
 		m_lock.lock();
 		if (m_flag == off)
@@ -41,7 +41,7 @@ namespace coev
 		}
 		else
 		{
-			auto c = static_cast<Event *>(EVMutex::pop_front());
+			auto c = static_cast<event *>(EVMutex::pop_front());
 			m_lock.unlock();
 			Loop::resume(c);
 		}

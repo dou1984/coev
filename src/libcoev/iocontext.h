@@ -8,25 +8,25 @@
 #pragma once
 #include <ev.h>
 #include "Socket.h"
-#include "Event.h"
-#include "EventChain.h"
+#include "event.h"
+#include "eventchain.h"
 
 namespace coev
 {
-	struct IOContext : EVRecv, EVSend
+	struct iocontext : EVRecv, EVSend
 	{
 		int m_fd = INVALID;
 		uint32_t m_tag = 0;
 		ev_io m_Read;
 		ev_io m_Write;
 
-		IOContext() = default;
-		IOContext(int fd);
-		IOContext(IOContext &&) = delete;
-		virtual ~IOContext();
+		iocontext() = default;
+		iocontext(int fd);
+		iocontext(iocontext &&) = delete;
+		virtual ~iocontext();
 		int close();
 		operator bool() const;
-		const IOContext &operator=(IOContext &&);
+		const iocontext &operator=(iocontext &&);
 
 		int __finally();
 		int __init();

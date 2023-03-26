@@ -8,21 +8,21 @@
 #pragma once
 #include <coroutine>
 #include "Log.h"
-#include "Chain.h"
+#include "chain.h"
 #include "Promise.h"
 
 namespace coev
 {
-	struct Event final : Chain
+	struct event final : chain
 	{
-		Chain *m_object = nullptr;
+		chain *m_object = nullptr;
 		std::coroutine_handle<> m_awaiting = nullptr;
 		uint32_t m_tag = 0;
-		Event(Chain *obj, uint32_t _tag);
-		Event(Chain *obj);
-		virtual ~Event();
-		Event(Event &&) = delete;
-		Event(const Event &) = delete;
+		event(chain *obj, uint32_t _tag);
+		event(chain *obj);
+		virtual ~event();
+		event(event &&) = delete;
+		event(const event &) = delete;
 		void await_resume();
 		bool await_ready();
 		void await_suspend(std::coroutine_handle<> awaiting);

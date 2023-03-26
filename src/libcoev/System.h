@@ -8,47 +8,47 @@
 #pragma once
 #include <memory>
 #include "IOContext.h"
-#include "Awaiter.h"
+#include "awaiter.h"
 #include "Server.h"
 #include "Client.h"
 #include "Timer.h"
-#include "Async.h"
+#include "async.h"
 #include "OSSignal.h"
-#include "Task.h"
+#include "task.h"
 #include "Mutex.h"
 
 namespace coev
 {
-	using SharedIO = std::shared_ptr<IOContext>;
-	Awaiter<SharedIO> accept(Server &, ipaddress &);
-	Awaiter<int> connect(Client &, const char *, int);
-	Awaiter<int> send(IOContext &, const char *, int);
-	Awaiter<int> recv(IOContext &, char *, int);
-	Awaiter<int> recvfrom(IOContext &, char *, int, ipaddress &);
-	Awaiter<int> sendto(IOContext &, const char *, int, ipaddress &);
-	Awaiter<int> close(IOContext &);
-	Awaiter<int> sleep_for(long);
-	Awaiter<int> usleep_for(long);
+	using SharedIO = std::shared_ptr<iocontext>;
+	awaiter<SharedIO> accept(Server &, ipaddress &);
+	awaiter<int> connect(Client &, const char *, int);
+	awaiter<int> send(iocontext &, const char *, int);
+	awaiter<int> recv(iocontext &, char *, int);
+	awaiter<int> recvfrom(iocontext &, char *, int, ipaddress &);
+	awaiter<int> sendto(iocontext &, const char *, int, ipaddress &);
+	awaiter<int> close(iocontext &);
+	awaiter<int> sleep_for(long);
+	awaiter<int> usleep_for(long);
 
 	template <class EV, class OBJ>
-	Event wait_for(OBJ &obj)
+	event wait_for(OBJ &obj)
 	{
 		EV *ev = &obj;
-		return Event{ev};
+		return event{ev};
 	}
 	template <class... T>
-	Awaiter<int> wait_for_any(T &&..._task)
+	awaiter<int> wait_for_any(T &&..._task)
 	{
-		TaskSet w;
+		taskchain w;
 		(w.insert_task(&_task), ...);
 		co_await wait_for<EVEvent>(w);
 		w.destroy();
 		co_return 0;
 	}
 	template <class... T>
-	Awaiter<int> wait_for_all(T &&..._task)
+	awaiter<int> wait_for_all(T &&..._task)
 	{
-		TaskSet w;
+		taskchain w;
 		(w.insert_task(&_task), ...);
 		while (w)
 			co_await wait_for<EVEvent>(w);

@@ -13,10 +13,10 @@
 
 namespace coev
 {
-	struct Promise
+	struct promise
 	{
-		Promise() = default;
-		~Promise() = default;
+		promise() = default;
+		~promise() = default;
 		void unhandled_exception();
 		std::suspend_never initial_suspend();
 		std::suspend_never final_suspend() noexcept;

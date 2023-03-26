@@ -31,7 +31,7 @@ namespace coev
 	{
 		return std::make_unique<LocalExt>(g_local);
 	}
-	Awaiter<int> wait_for_local()
+	awaiter<int> wait_for_local()
 	{
 		auto _this = g_local;
 		g_local = std::make_shared<Local>();

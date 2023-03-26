@@ -17,11 +17,11 @@ namespace coev
 	extern void FILL_ADDR(sockaddr_in &addr, const char *ip, int port);
 	extern void PARSE_ADDR(sockaddr_in &addr, ipaddress &info);
 
-	Awaiter<SharedIO> accept(Server &_server, ipaddress &peer)
+	awaiter<SharedIO> accept(Server &_server, ipaddress &peer)
 	{
 		if (!_server)
 		{
-			co_return std::make_shared<IOContext>(INVALID);
+			co_return std::make_shared<iocontext>(INVALID);
 		}
 		co_await wait_for<EVRecv>(_server);
 		auto fd = acceptTCP(_server.m_fd, peer);
@@ -29,9 +29,9 @@ namespace coev
 		{
 			setNoBlock(fd, true);
 		}
-		co_return std::make_shared<IOContext>(fd);
+		co_return std::make_shared<iocontext>(fd);
 	}
-	Awaiter<int> connect(Client &c, const char *ip, int port)
+	awaiter<int> connect(Client &c, const char *ip, int port)
 	{
 		int fd = c.connect(ip, port);
 		if (fd == INVALID)
@@ -47,7 +47,7 @@ namespace coev
 		}
 		co_return c.close();
 	}
-	Awaiter<int> send(IOContext &io, const char *buffer, int size)
+	awaiter<int> send(iocontext &io, const char *buffer, int size)
 	{
 		while (io)
 		{
@@ -66,7 +66,7 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	Awaiter<int> recv(IOContext &io, char *buffer, int size)
+	awaiter<int> recv(iocontext &io, char *buffer, int size)
 	{
 		while (io)
 		{
@@ -80,7 +80,7 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	Awaiter<int> recvfrom(IOContext &io, char *buffer, int size, ipaddress &info)
+	awaiter<int> recvfrom(iocontext &io, char *buffer, int size, ipaddress &info)
 	{
 		while (io)
 		{
@@ -97,7 +97,7 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	Awaiter<int> sendto(IOContext &io, const char *buffer, int size, ipaddress &info)
+	awaiter<int> sendto(iocontext &io, const char *buffer, int size, ipaddress &info)
 	{
 		while (io)
 		{
@@ -115,19 +115,19 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	Awaiter<int> close(IOContext &io)
+	awaiter<int> close(iocontext &io)
 	{
 		io.close();
 		co_return 0;
 	}
-	Awaiter<int> sleep_for(long t)
+	awaiter<int> sleep_for(long t)
 	{
 		Timer _timer(t, 0);
 		_timer.active();
 		co_await wait_for<EVTimer>(_timer);
 		co_return 0;
 	}
-	Awaiter<int> usleep_for(long t)
+	awaiter<int> usleep_for(long t)
 	{
 		Timer _timer((float)t / 1000000, 0);
 		_timer.active();

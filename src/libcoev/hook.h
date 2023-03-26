@@ -19,7 +19,7 @@ extern "C"
 	namespace coev
 	{
 		using namespace __inner;
-		using mpool = Mempool<0x100 - sizeof(Buffer), 0x400 - sizeof(Buffer), 0x1000 - sizeof(Buffer)>;
+		using mpool = mempool<0x100 - sizeof(Buffer), 0x400 - sizeof(Buffer), 0x1000 - sizeof(Buffer)>;
 		using tlmp = ThreadLocal<mpool>;
 	}
 }

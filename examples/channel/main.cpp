@@ -11,10 +11,10 @@
 
 using namespace coev;
 
-Channel<int> ch;
+channel<int> ch;
 
 std::atomic<int> total = 0;
-Awaiter<int> go()
+awaiter<int> go()
 {
 	int x = 0;
 	for (int i = 0; i < 100000; i++)

@@ -7,7 +7,7 @@
  */
 #include <string.h>
 #include <dlfcn.h>
-#include "Hook.h"
+#include "hook.h"
 #include "ThreadLocal.h"
 #include "Mempool.h"
 
@@ -71,12 +71,15 @@ extern "C"
 	}
 	void free(void *ptr)
 	{
+		static auto _init = init_hook();
 		if (!enable_mempool)
 		{
 			__real_free(ptr);
-			return;
 		}
-		auto _buf = __inner::cast(ptr);
-		tlmp::instance().release(_buf);
+		else
+		{
+			auto _buf = __inner::cast(ptr);
+			tlmp::instance().release(_buf);
+		}
 	}
 }

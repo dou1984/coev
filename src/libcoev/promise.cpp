@@ -9,15 +9,15 @@
 
 namespace coev
 {
-	void Promise::unhandled_exception()
+	void promise::unhandled_exception()
 	{
 		throw std::current_exception();
 	}
-	std::suspend_never Promise::initial_suspend()
+	std::suspend_never promise::initial_suspend()
 	{
 		return {};
 	}
-	std::suspend_never Promise::final_suspend() noexcept
+	std::suspend_never promise::final_suspend() noexcept
 	{
 		return {};
 	}

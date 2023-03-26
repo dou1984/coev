@@ -7,8 +7,8 @@
  */
 #pragma once
 #include <ev.h>
-#include "Event.h"
-#include "EventChain.h"
+#include "event.h"
+#include "eventchain.h"
 
 namespace coev
 {

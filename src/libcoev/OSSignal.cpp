@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include "Loop.h"
 #include "OSSignal.h"
-#include "Event.h"
+#include "event.h"
 
 namespace coev
 {

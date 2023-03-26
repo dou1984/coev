@@ -7,7 +7,7 @@
  */
 #pragma once
 #include <memory.h>
-#include "EventChain.h"
+#include "eventchain.h"
 
 #define SIGNALMIN (60)
 #define SIGNALMAX (64)
