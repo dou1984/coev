@@ -14,7 +14,7 @@
 
 namespace coev
 {
-	struct Loop final
+	struct loop final
 	{
 		static void start();
 		static struct ev_loop *data();

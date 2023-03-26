@@ -5,14 +5,14 @@
  *	All rights reserved.
  *
  */
-#include "Loop.h"
+#include "loop.h"
 #include "ServerPool.h"
 
 namespace coev
 {
 	ServerPool::operator Server &()
 	{
-		auto _tag = Loop::tag();
+		auto _tag = loop::tag();
 		if (_tag < m_pool.size())
 		{
 			std::lock_guard<std::mutex> _(m_mutex);
@@ -28,7 +28,7 @@ namespace coev
 	}
 	int ServerPool::start(const char *ip, int size)
 	{
-		auto _tag = Loop::tag();
+		auto _tag = loop::tag();
 		if (_tag < m_pool.size())
 		{
 			auto &s = m_pool[_tag];

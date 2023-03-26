@@ -17,6 +17,6 @@ awaiter<int> co_mempool()
 int main()
 {
 	co_mempool();
-	Loop::start();
+	loop::start();
 	return 0;
 }

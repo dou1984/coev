@@ -59,6 +59,6 @@ int main()
 	r.add(co_server);
 	r.add(co_server);
 	r.add(co_server);
-	coev::Loop::start();
+	coev::loop::start();
 	return 0;
 }

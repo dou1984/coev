@@ -6,7 +6,7 @@
  *
  */
 #include "Server.h"
-#include "Loop.h"
+#include "loop.h"
 
 namespace coev
 {
@@ -55,14 +55,14 @@ namespace coev
 		{
 			goto __error_return__;
 		}
-		__insert(Loop::tag());
+		__insert(loop::tag());
 		return m_fd;
 	}
 	int Server::stop()
 	{
 		if (m_fd != INVALID)
 		{
-			__remove(Loop::tag());
+			__remove(loop::tag());
 			::close(m_fd);
 			m_fd = INVALID;
 		}
@@ -72,12 +72,12 @@ namespace coev
 	{
 		m_Reav.data = this;
 		ev_io_init(&m_Reav, Server::cb_accept, m_fd, EV_READ);
-		ev_io_start(Loop::at(_tag), &m_Reav);
+		ev_io_start(loop::at(_tag), &m_Reav);
 		return m_fd;
 	}
 	int Server::__remove(uint32_t _tag)
 	{
-		ev_io_stop(Loop::at(_tag), &m_Reav);
+		ev_io_stop(loop::at(_tag), &m_Reav);
 		return m_fd;
 	}
 }

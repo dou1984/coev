@@ -11,7 +11,7 @@ using namespace coev;
 
 awaiter<int> test_sleep(int x)
 {
-	auto c = Local::ref();
+	auto c = local::ref();
 	LOG_DBG("sleep begin %d\n", x);
 	co_await sleep_for(x);
 	LOG_DBG("sleep end %d\n", x);

@@ -5,7 +5,7 @@
  *	All rights reserved.
  *
  */
-#include "Loop.h"
+#include "loop.h"
 #include "Routine.h"
 
 namespace coev
@@ -16,7 +16,7 @@ namespace coev
 			[=]()
 			{
 				f();
-				Loop::start();
+				loop::start();
 			});
 	}
 	void Routine::join()

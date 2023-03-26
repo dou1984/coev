@@ -10,7 +10,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include "Loop.h"
+#include "loop.h"
 #include "IOContext.h"
 
 namespace coev
@@ -52,7 +52,7 @@ namespace coev
 	}
 	iocontext::iocontext(int fd) : m_fd(fd)
 	{
-		m_tag = Loop::tag();
+		m_tag = loop::tag();
 		__init();
 	}
 	int iocontext::__init()
@@ -61,7 +61,7 @@ namespace coev
 		{
 			m_Read.data = this;
 			ev_io_init(&m_Read, iocontext::cb_read, m_fd, EV_READ);
-			ev_io_start(Loop::at(m_tag), &m_Read);
+			ev_io_start(loop::at(m_tag), &m_Read);
 
 			m_Write.data = this;
 			ev_io_init(&m_Write, iocontext::cb_write, m_fd, EV_WRITE);
@@ -72,8 +72,8 @@ namespace coev
 	{
 		if (m_fd != INVALID)
 		{
-			ev_io_stop(Loop::at(m_tag), &m_Read);
-			ev_io_stop(Loop::at(m_tag), &m_Write);
+			ev_io_stop(loop::at(m_tag), &m_Read);
+			ev_io_stop(loop::at(m_tag), &m_Write);
 		}
 		return 0;
 	}
@@ -90,7 +90,7 @@ namespace coev
 	}
 	const iocontext &iocontext::operator=(iocontext &&o)
 	{
-		m_tag = Loop::tag();
+		m_tag = loop::tag();
 		o.__finally();
 		std::swap(m_fd, o.m_fd);
 		o.EVRecv::moveto(static_cast<EVRecv *>(this));

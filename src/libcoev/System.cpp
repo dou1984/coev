@@ -7,7 +7,7 @@
  */
 #include <ev.h>
 #include "Socket.h"
-#include "Loop.h"
+#include "loop.h"
 #include "System.h"
 #include "Timer.h"
 
@@ -31,7 +31,7 @@ namespace coev
 		}
 		co_return std::make_shared<iocontext>(fd);
 	}
-	awaiter<int> connect(Client &c, const char *ip, int port)
+	awaiter<int> connect(client &c, const char *ip, int port)
 	{
 		int fd = c.connect(ip, port);
 		if (fd == INVALID)
@@ -54,10 +54,10 @@ namespace coev
 			auto r = ::send(io.m_fd, buffer, size, 0);
 			if (r == INVALID && isInprocess())
 			{
-				ev_io_start(Loop::at(io.m_tag), &io.m_Write);
+				ev_io_start(loop::at(io.m_tag), &io.m_Write);
 				co_await wait_for<EVSend>(io);
 				if (io.EVSend::empty())
-					ev_io_stop(Loop::at(io.m_tag), &io.m_Write);
+					ev_io_stop(loop::at(io.m_tag), &io.m_Write);
 			}
 			else
 			{
@@ -106,10 +106,10 @@ namespace coev
 			int r = ::sendto(io.m_fd, buffer, size, 0, (struct sockaddr *)&addr, sizeof(addr));
 			if (r == INVALID && isInprocess())
 			{
-				ev_io_start(Loop::at(io.m_tag), &io.m_Write);
+				ev_io_start(loop::at(io.m_tag), &io.m_Write);
 				co_await wait_for<EVSend>(io);
 				if (io.EVSend::empty())
-					ev_io_stop(Loop::at(io.m_tag), &io.m_Write);
+					ev_io_stop(loop::at(io.m_tag), &io.m_Write);
 			}
 			co_return r;
 		}

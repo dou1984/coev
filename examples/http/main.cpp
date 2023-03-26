@@ -78,6 +78,6 @@ int main()
 	r.add(co_httpserver);
 	r.add(co_httpserver);
 	r.add(co_httpserver);
-	Loop::start();
+	loop::start();
 	return 0;
 }

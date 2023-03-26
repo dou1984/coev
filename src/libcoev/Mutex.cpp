@@ -7,12 +7,12 @@
  */
 #include <chrono>
 #include <thread>
-#include "Loop.h"
+#include "loop.h"
 #include "Mutex.h"
 
 namespace coev
 {
-	awaiter<int> Mutex::lock()
+	awaiter<int> mutex::lock()
 	{
 		m_lock.lock();
 		if (m_flag == off)
@@ -27,7 +27,7 @@ namespace coev
 		co_await _event;
 		co_return 0;
 	}
-	awaiter<int> Mutex::unlock()
+	awaiter<int> mutex::unlock()
 	{
 		m_lock.lock();
 		if (m_flag == off)
@@ -43,7 +43,7 @@ namespace coev
 		{
 			auto c = static_cast<event *>(EVMutex::pop_front());
 			m_lock.unlock();
-			Loop::resume(c);
+			loop::resume(c);
 		}
 		co_return 0;
 	}

@@ -9,7 +9,7 @@
 #include <coroutine>
 #include <list>
 #include <mutex>
-#include "Loop.h"
+#include "loop.h"
 #include "event.h"
 #include "eventchain.h"
 
@@ -37,7 +37,7 @@ namespace coev
 		{
 			if (auto c = __set(d))
 			{
-				Loop::resume(c);
+				loop::resume(c);
 			}
 			co_return 0;
 		}
@@ -52,7 +52,7 @@ namespace coev
 					m_lock.unlock();
 					co_return 0;
 				}
-				event e(static_cast<EVChannel *>(this), Loop::tag());
+				event e(static_cast<EVChannel *>(this), loop::tag());
 				m_lock.unlock();
 				co_await e;
 			}

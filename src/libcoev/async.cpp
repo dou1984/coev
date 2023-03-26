@@ -8,7 +8,7 @@
 #include <array>
 #include "Log.h"
 #include "async.h"
-#include "Loop.h"
+#include "loop.h"
 
 namespace coev
 {
@@ -21,7 +21,7 @@ namespace coev
 			_this->__resume();
 		}
 	}
-	async::async() : async(Loop::data(), Loop::tag())
+	async::async() : async(loop::data(), loop::tag())
 	{
 	}
 	async::async(struct ev_loop *__loop, int __tag)
@@ -33,11 +33,11 @@ namespace coev
 	}
 	async::~async()
 	{
-		ev_async_stop(Loop::at(m_tag), &m_Async);
+		ev_async_stop(loop::at(m_tag), &m_Async);
 	}
 	int async::resume()
 	{
-		ev_async_send(Loop::at(m_tag), &m_Async);
+		ev_async_send(loop::at(m_tag), &m_Async);
 		return 0;
 	}
 	int async::resume_event(event *ev)

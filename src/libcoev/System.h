@@ -21,7 +21,7 @@ namespace coev
 {
 	using SharedIO = std::shared_ptr<iocontext>;
 	awaiter<SharedIO> accept(Server &, ipaddress &);
-	awaiter<int> connect(Client &, const char *, int);
+	awaiter<int> connect(client &, const char *, int);
 	awaiter<int> send(iocontext &, const char *, int);
 	awaiter<int> recv(iocontext &, char *, int);
 	awaiter<int> recvfrom(iocontext &, char *, int, ipaddress &);

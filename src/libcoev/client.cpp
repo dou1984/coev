@@ -6,23 +6,23 @@
  *
  */
 #include "Client.h"
-#include "Loop.h"
+#include "loop.h"
 
 namespace coev
 {
-	void Client::cb_connect(struct ev_loop *loop, struct ev_io *w, int revents)
+	void client::cb_connect(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
 		if (EV_ERROR & revents)
 		{
 			return;
 		}
-		Client *_this = (Client *)(w->data);
+		client *_this = (client *)(w->data);
 		assert(_this != nullptr);
 		assert(*_this);
 		_this->connect_remove();
 		_this->EVRecv::resume_ex();
 	}
-	Client::Client()
+	client::client()
 	{
 		m_fd = ::socket(AF_INET, SOCK_STREAM, 0);
 		if (m_fd == INVALID)
@@ -34,26 +34,26 @@ namespace coev
 			::close(m_fd);
 			return;
 		}
-		m_tag = Loop::tag();
+		m_tag = loop::tag();
 		connect_insert();
 	}
-	Client::~Client()
+	client::~client()
 	{
 		close();
 	}
-	int Client::connect_insert()
+	int client::connect_insert()
 	{
 		m_Read.data = this;
-		ev_io_init(&m_Read, &Client::cb_connect, m_fd, EV_READ | EV_WRITE);
-		ev_io_start(Loop::at(m_tag), &m_Read);
+		ev_io_init(&m_Read, &client::cb_connect, m_fd, EV_READ | EV_WRITE);
+		ev_io_start(loop::at(m_tag), &m_Read);
 		return 0;
 	}
-	int Client::connect_remove()
+	int client::connect_remove()
 	{
-		ev_io_stop(Loop::at(m_tag), &m_Read);
+		ev_io_stop(loop::at(m_tag), &m_Read);
 		return 0;
 	}
-	int Client::connect(const char *ip, int port)
+	int client::connect(const char *ip, int port)
 	{
 		if (connectTCP(m_fd, ip, port) < 0)
 		{

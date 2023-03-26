@@ -14,10 +14,10 @@
 
 namespace coev
 {	
-	struct Client : iocontext
+	struct client : iocontext
 	{		
-		Client();
-		virtual ~Client();
+		client();
+		virtual ~client();
 		int connect(const char *ip, int port);	
 		int connect_insert();
 		int connect_remove();	

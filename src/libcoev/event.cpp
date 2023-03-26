@@ -6,7 +6,7 @@
  *
  */
 #include "event.h"
-#include "Loop.h"
+#include "loop.h"
 
 namespace coev
 {
@@ -15,7 +15,7 @@ namespace coev
 		if (m_object != nullptr)
 			m_object->push_back(this);
 	}
-	event::event(chain *obj) : event(obj, Loop::tag())
+	event::event(chain *obj) : event(obj, loop::tag())
 	{
 	}
 	event::~event()

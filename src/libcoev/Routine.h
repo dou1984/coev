@@ -9,7 +9,7 @@
 #include <thread>
 #include <list>
 #include <functional>
-#include "Loop.h"
+#include "loop.h"
 
 namespace coev
 {

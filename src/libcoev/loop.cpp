@@ -10,7 +10,7 @@
 #include <list>
 #include <mutex>
 #include "ThreadLocal.h"
-#include "Loop.h"
+#include "loop.h"
 #include "Log.h"
 #include "async.h"
 
@@ -49,25 +49,25 @@ namespace coev
 		}
 	};
 
-	void Loop::start()
+	void loop::start()
 	{
 		ev_run(g_loop.m_loop, 0);
 	}
-	struct ev_loop *Loop::data()
+	struct ev_loop *loop::data()
 	{
 		return g_loop.m_loop;
 	}
-	struct ev_loop *Loop::at(uint32_t _tag)
+	struct ev_loop *loop::at(uint32_t _tag)
 	{
 		if (_tag < max_ev_loop)
 			return all_loops[_tag]->m_loop;
 		return nullptr;
 	}
-	uint32_t Loop::tag()
+	uint32_t loop::tag()
 	{
 		return g_loop.tag();
 	}
-	void Loop::resume(event *ev)
+	void loop::resume(event *ev)
 	{
 		if (ev->m_tag == g_loop.tag())
 		{

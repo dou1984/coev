@@ -7,7 +7,7 @@
  */
 #include <sys/signal.h>
 #include <unistd.h>
-#include "Loop.h"
+#include "loop.h"
 #include "OSSignal.h"
 #include "event.h"
 
@@ -35,12 +35,12 @@ namespace coev
 		}
 		m_Signal.data = this;
 		ev_signal_init(&m_Signal, OSSignal::cb_signal, m_id);
-		ev_signal_start(Loop::data(), &m_Signal);
-		m_tag = Loop::tag();
+		ev_signal_start(loop::data(), &m_Signal);
+		m_tag = loop::tag();
 	}
 	OSSignal::~OSSignal()
 	{
-		ev_signal_stop(Loop::at(m_tag), &m_Signal);
+		ev_signal_stop(loop::at(m_tag), &m_Signal);
 	}
 	int OSSignal::resume()
 	{

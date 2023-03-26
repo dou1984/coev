@@ -13,18 +13,18 @@
 
 namespace coev
 {
-	struct LocalExt;
-	struct Local : EVRecv
+	struct localext;
+	struct local : EVRecv
 	{
 		std::atomic<int> m_ref{0};
-		static std::unique_ptr<LocalExt> ref();
+		static std::unique_ptr<localext> ref();
 	};
-	struct LocalExt
+	struct localext
 	{
-		std::shared_ptr<Local> m_current = nullptr;
-		LocalExt(std::shared_ptr<Local> &_);
-		LocalExt(LocalExt &&) = delete;
-		~LocalExt();
+		std::shared_ptr<local> m_current = nullptr;
+		localext(std::shared_ptr<local> &_);
+		localext(localext &&) = delete;
+		~localext();
 	};
 
 	awaiter<int> wait_for_local();
