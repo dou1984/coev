@@ -9,11 +9,8 @@
 #include "loop.h"
 #include "iocontext.h"
 
-namespace coev
+namespace coev::udp
 {
-	struct Udp final
-	{
-		static iocontext bind(const char *ip, int port);
-		static iocontext socket();
-	};
+	iocontext bind(const char *ip, int port);
+	iocontext socket();
 }

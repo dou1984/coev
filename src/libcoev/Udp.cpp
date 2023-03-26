@@ -5,11 +5,11 @@
  *	All rights reserved.
  *
  */
-#include "Udp.h"
+#include "udp.h"
 
-namespace coev
+namespace coev::udp
 {
-	iocontext Udp::bind(const char *ip, int port)
+	iocontext bind(const char *ip, int port)
 	{
 		int fd = ::socket(AF_INET, SOCK_DGRAM, 0);
 		if (fd == INVALID)
@@ -34,7 +34,7 @@ namespace coev
 		}
 		return iocontext(fd);
 	}
-	iocontext Udp::socket()
+	iocontext socket()
 	{
 		int fd = ::socket(AF_INET, SOCK_DGRAM, 0);
 		if (fd == INVALID)

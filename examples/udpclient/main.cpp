@@ -12,7 +12,7 @@ using namespace coev;
 awaiter<int> go()
 {
 	ipaddress addr = {"127.0.0.1", 9998};
-	auto c = Udp::socket();
+	auto c = udp::socket();
 	while (c)
 	{
 		char buffer[1000] = "hello world";
