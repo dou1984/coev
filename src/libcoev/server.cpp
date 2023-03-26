@@ -5,29 +5,29 @@
  *	All rights reserved.
  *
  */
-#include "Server.h"
+#include "server.h"
 #include "loop.h"
 
-namespace coev
+namespace coev::tcp
 {
-	void Server::cb_accept(struct ev_loop *loop, struct ev_io *w, int revents)
+	void server::cb_accept(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
 		if (EV_ERROR & revents)
 			return;
-		Server *_this = (Server *)(w->data);
+		server *_this = (server *)(w->data);
 		assert(_this != nullptr);
 		assert(*_this);
 		_this->EVRecv::resume_ex();
 	}
-	Server::~Server()
+	server::~server()
 	{
 		stop();
 	}
-	Server::operator bool() const
+	server::operator bool() const
 	{
 		return m_fd != INVALID;
 	}
-	int Server::start(const char *ip, int port)
+	int server::start(const char *ip, int port)
 	{
 		assert(m_fd == INVALID);
 		m_fd = ::socket(AF_INET, SOCK_STREAM, 0);
@@ -58,7 +58,7 @@ namespace coev
 		__insert(loop::tag());
 		return m_fd;
 	}
-	int Server::stop()
+	int server::stop()
 	{
 		if (m_fd != INVALID)
 		{
@@ -68,14 +68,14 @@ namespace coev
 		}
 		return 0;
 	}
-	int Server::__insert(uint32_t _tag)
+	int server::__insert(uint32_t _tag)
 	{
 		m_Reav.data = this;
-		ev_io_init(&m_Reav, Server::cb_accept, m_fd, EV_READ);
+		ev_io_init(&m_Reav, server::cb_accept, m_fd, EV_READ);
 		ev_io_start(loop::at(_tag), &m_Reav);
 		return m_fd;
 	}
-	int Server::__remove(uint32_t _tag)
+	int server::__remove(uint32_t _tag)
 	{
 		ev_io_stop(loop::at(_tag), &m_Reav);
 		return m_fd;

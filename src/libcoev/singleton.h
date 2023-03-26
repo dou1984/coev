@@ -10,7 +10,7 @@
 namespace coev
 {
 	template <class _Type>
-	struct Singleton final
+	struct singleton final
 	{
 		static _Type &instance()
 		{

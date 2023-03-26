@@ -11,15 +11,15 @@
 #include "event.h"
 #include "eventchain.h"
 
-namespace coev
+namespace coev ::tcp
 {
-	struct Server final : EVRecv
+	struct server final : EVRecv
 	{
 		int m_fd = INVALID;
 		ev_io m_Reav;
 
-		Server() = default;
-		virtual ~Server();
+		server() = default;
+		virtual ~server();
 		int start(const char *ip, int port);
 		int stop();
 		int __insert(uint32_t _tag);

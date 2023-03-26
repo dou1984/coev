@@ -9,7 +9,7 @@
 
 using namespace coev;
 
-ServerPool pool;
+tcp::serverpool pool;
 
 awaiter<int> dispatch(SharedIO io)
 {
@@ -35,7 +35,7 @@ awaiter<int> dispatch(SharedIO io)
 }
 awaiter<int> co_server()
 {
-	Server& s = pool;
+	tcp::server& s = pool;
 	while (s)
 	{
 		ipaddress addr;

@@ -11,7 +11,7 @@
 
 using namespace coev;
 
-ServerPool pool;
+tcp::serverpool pool;
 
 task echo(iocontext &c, Httprequest &req)
 {
@@ -56,7 +56,7 @@ awaiter<int> dispatch(SharedIO io)
 }
 awaiter<int> co_httpserver()
 {
-	Server &s = pool;
+	tcp::server &s = pool;
 	while (s)
 	{
 		ipaddress addr;

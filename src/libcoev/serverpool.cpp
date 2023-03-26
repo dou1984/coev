@@ -6,11 +6,11 @@
  *
  */
 #include "loop.h"
-#include "ServerPool.h"
+#include "serverpool.h"
 
-namespace coev
+namespace coev::tcp
 {
-	ServerPool::operator Server &()
+	serverpool::operator server &()
 	{
 		auto _tag = loop::tag();
 		if (_tag < m_pool.size())
@@ -26,7 +26,7 @@ namespace coev
 		}
 		throw(" server pool error");
 	}
-	int ServerPool::start(const char *ip, int size)
+	int serverpool::start(const char *ip, int size)
 	{
 		auto _tag = loop::tag();
 		if (_tag < m_pool.size())
@@ -41,7 +41,7 @@ namespace coev
 		}
 		return 0;
 	}
-	int ServerPool::stop()
+	int serverpool::stop()
 	{
 		for (size_t i = 0; i < m_pool.size(); i++)
 		{

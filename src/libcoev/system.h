@@ -9,7 +9,7 @@
 #include <memory>
 #include "iocontext.h"
 #include "awaiter.h"
-#include "Server.h"
+#include "server.h"
 #include "client.h"
 #include "Timer.h"
 #include "async.h"
@@ -20,7 +20,7 @@
 namespace coev
 {
 	using SharedIO = std::shared_ptr<iocontext>;
-	awaiter<SharedIO> accept(Server &, ipaddress &);
+	awaiter<SharedIO> accept(tcp::server &, ipaddress &);
 	awaiter<int> connect(client &, const char *, int);
 	awaiter<int> send(iocontext &, const char *, int);
 	awaiter<int> recv(iocontext &, char *, int);

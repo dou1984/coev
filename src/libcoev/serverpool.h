@@ -8,18 +8,18 @@
 #pragma once
 #include <array>
 #include <mutex>
-#include "Server.h"
+#include "server.h"
 
-namespace coev
+namespace coev::tcp
 {
-	class ServerPool final
+	class serverpool final
 	{
 		int m_fd = INVALID;
-		std::array<Server, 0x40> m_pool;
+		std::array<server, 0x40> m_pool;
 		std::mutex m_mutex;
 
 	public:
-		operator Server &();
+		operator server &();
 		int start(const char *, int);
 		int stop();
 	};
