@@ -25,7 +25,7 @@ awaiter<int> go()
 int main()
 {
 
-	Routine r;
+	routine r;
 	r.add(go);
 	r.join();
 	return 0;

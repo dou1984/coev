@@ -13,7 +13,7 @@
 
 namespace coev
 {
-	class Routine 
+	class routine 
 	{
 		std::list<std::thread> m_list;
 		void __add(const std::function<void()> &);

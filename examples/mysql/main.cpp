@@ -107,7 +107,7 @@ awaiter<int> clear()
 int main()
 {
 	set_log_level(LOG_LEVEL_ERROR);
-	Routine r;
+	routine r;
 	r.add(go);
 	// r.add(clear);
 	r.join();

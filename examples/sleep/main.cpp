@@ -48,7 +48,7 @@ awaiter<int> co_iterator(int t)
 int main()
 {
 	set_log_level(LOG_LEVEL_CORE);
-	Routine r;
+	routine r;
 	r.add(co_sleep);
 	r.add(co_timer);
 	r.add([]()

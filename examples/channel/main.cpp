@@ -32,7 +32,7 @@ int main()
 {
 	ingore_signal(SIGPIPE);
 
-	Routine r;
+	routine r;
 	for (int i = 0; i < 8; i++)
 		r.add(go);
 	r.join();

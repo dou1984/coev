@@ -54,7 +54,7 @@ int main()
 	set_log_level(LOG_LEVEL_ERROR);
 
 	pool.start("127.0.0.1", 9960);
-	Routine r;
+	routine r;
 	r.add(co_server);
 	r.add(co_server);
 	r.add(co_server);

@@ -6,11 +6,11 @@
  *
  */
 #include "loop.h"
-#include "Routine.h"
+#include "routine.h"
 
 namespace coev
 {
-	void Routine::__add(const std::function<void()> &f)
+	void routine::__add(const std::function<void()> &f)
 	{
 		m_list.emplace_back(
 			[=]()
@@ -19,7 +19,7 @@ namespace coev
 				loop::start();
 			});
 	}
-	void Routine::join()
+	void routine::join()
 	{
 		for (auto &it : m_list)
 			it.join();

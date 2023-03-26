@@ -34,7 +34,7 @@ awaiter<int> test()
 int main()
 {
 	set_log_level(LOG_LEVEL_CORE);
-	Routine r;
+	routine r;
 	r.add(test);
 	r.join();
 	return 0;

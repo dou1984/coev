@@ -47,7 +47,7 @@ void co_task_f()
 int main()
 {
 	set_log_level(LOG_LEVEL_CORE);
-	Routine r;
+	routine r;
 	r.add(co_task_t);
 	r.add(co_task_f);
 	r.join();

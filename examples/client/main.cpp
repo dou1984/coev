@@ -62,7 +62,7 @@ int main()
 	ingore_signal(SIGPIPE);
 	set_log_level(LOG_LEVEL_ERROR);
 
-	Routine r;
+	routine r;
 	r.add(co_test);
 	r.add(co_test);
 	r.add(co_test);
