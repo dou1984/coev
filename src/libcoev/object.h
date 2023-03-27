@@ -18,16 +18,10 @@ namespace coev
 		{
 		}
 	};
-	struct CONNECT
-	{
-	};
 	struct RECV
 	{
 	};
 	struct SEND
-	{
-	};
-	struct CLOSE
 	{
 	};
 	struct EVENT
@@ -39,22 +33,10 @@ namespace coev
 	struct CHANNEL
 	{
 	};
-	struct ASYNC
-	{
-	};
-	struct SIGNAL
-	{
-	};
-	struct ACCEPT
-	{
-	};
 	struct TIMER
 	{
 	};
 	struct MUTEX
-	{
-	};
-	struct ASYNCEVENT
 	{
 	};	
 }

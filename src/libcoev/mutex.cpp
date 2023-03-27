@@ -8,7 +8,7 @@
 #include <chrono>
 #include <thread>
 #include "loop.h"
-#include "Mutex.h"
+#include "mutex.h"
 
 namespace coev
 {

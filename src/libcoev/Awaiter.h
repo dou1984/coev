@@ -10,7 +10,7 @@
 #include "chain.h"
 #include "Promise.h"
 #include "log.h"
-#include "Object.h"
+#include "object.h"
 #include "hook.h"
 
 namespace coev
