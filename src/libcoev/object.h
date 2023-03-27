@@ -9,10 +9,10 @@
 
 namespace coev
 {
-	struct Object
+	struct OBJECT
 	{
 	};
-	struct AWAITER : Object
+	struct AWAITER : OBJECT
 	{
 		void resume_ex()
 		{

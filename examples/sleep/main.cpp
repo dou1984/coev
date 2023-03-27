@@ -25,7 +25,7 @@ awaiter<int> co_sleep()
 
 awaiter<int> co_timer()
 {
-	Timer t(3.0, 3.0);
+	timer t(3.0, 3.0);
 	t.active();
 	while (true)
 	{

@@ -9,7 +9,7 @@
 #include "Socket.h"
 #include "loop.h"
 #include "System.h"
-#include "Timer.h"
+#include "timer.h"
 
 namespace coev
 {
@@ -122,14 +122,14 @@ namespace coev
 	}
 	awaiter<int> sleep_for(long t)
 	{
-		Timer _timer(t, 0);
+		timer _timer(t, 0);
 		_timer.active();
 		co_await wait_for<EVTimer>(_timer);
 		co_return 0;
 	}
 	awaiter<int> usleep_for(long t)
 	{
-		Timer _timer((float)t / 1000000, 0);
+		timer _timer((float)t / 1000000, 0);
 		_timer.active();
 		co_await wait_for<EVTimer>(_timer);
 		co_return 0;

@@ -6,48 +6,48 @@
  *
  */
 #include "log.h"
-#include "Timer.h"
+#include "timer.h"
 #include "loop.h"
 
 namespace coev
 {
-	void Timer::cb_timer(struct ev_loop *loop, struct ev_timer *w, int revents)
+	void timer::cb_timer(struct ev_loop *loop, struct ev_timer *w, int revents)
 	{
 		if (EV_ERROR & revents)
 			return;
-		Timer *_this = (Timer *)(w->data);
+		timer *_this = (timer *)(w->data);
 		assert(_this != NULL);
 		_this->EVTimer::resume_ex();
 	}
-	Timer::Timer(ev_tstamp itimer, ev_tstamp rtimer)
+	timer::timer(ev_tstamp itimer, ev_tstamp rtimer)
 	{
 		m_data.data = this;
-		ev_timer_init(&m_data, Timer::cb_timer, itimer, rtimer);
+		ev_timer_init(&m_data, timer::cb_timer, itimer, rtimer);
 		m_tag = loop::tag();
 	}
-	Timer::~Timer()
+	timer::~timer()
 	{
 		if (ev_is_active(&m_data))
 			ev_timer_stop(loop::at(m_tag), &m_data);
 		assert(EVTimer::empty());
 	}
-	int Timer::stop()
+	int timer::stop()
 	{
 		if (ev_is_active(&m_data))
 			ev_timer_stop(loop::at(m_tag), &m_data);
 		return 0;
 	}
-	int Timer::active()
+	int timer::active()
 	{
 		if (!ev_is_active(&m_data))
 			ev_timer_start(loop::at(m_tag), &m_data);
 		return 0;
 	}
-	bool Timer::is_active()
+	bool timer::is_active()
 	{
 		return ev_is_active(&m_data);
 	}
-	ev_tstamp Timer::remaining()
+	ev_tstamp timer::remaining()
 	{
 		return ev_timer_remaining(loop::at(m_tag), &m_data);
 	}

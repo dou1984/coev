@@ -12,13 +12,13 @@
 
 namespace coev
 {
-	struct Timer final : EVTimer
+	struct timer final : EVTimer
 	{
 		ev_timer m_data;
 		uint32_t m_tag = 0;
 
-		Timer(ev_tstamp itimer, ev_tstamp rtimer);
-		virtual ~Timer();
+		timer(ev_tstamp itimer, ev_tstamp rtimer);
+		virtual ~timer();
 		int active();
 		int stop();
 		bool is_active();
