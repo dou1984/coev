@@ -43,6 +43,15 @@ awaiter<int> co_sleep(int t)
   co_await sleep_for(t);
   co_return 0；
 }
+awaiter<int> co_iterator(int t)
+{
+  if (t-- > 0)
+  {
+    co_await co_iterator(t);
+    co_await sleep_for(1);
+  }
+  co_return 0;
+} 
 ```
 
 awaiter可以用分级调用，这解决了coroutine中最常用的多级调用问题。
@@ -63,13 +72,18 @@ awaiter<int> test_upper()
 task 用于等待协程完成, task可以选择两种模式，一种是等所有task完成再退出，一种是只要一个task完成就退出。
 
 ```cpp
+task co_sleep(int t)
+{
+  co_await sleep_for(t);
+  co_return 0；
+}
 awaiter<int> test_any()
 {
- co_await wait_for_all(co_sleep(1), co_sleep(2));
+ co_await wait_for_any(co_sleep(1), co_sleep(2));
 }
 awaiter<int> test_all()
 {
-  co_await wait_for_any(co_sleep(1), co_sleep(2));
+  co_await wait_for_all(co_sleep(1), co_sleep(2));
 }
 ```
 

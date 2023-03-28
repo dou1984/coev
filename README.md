@@ -42,7 +42,16 @@ awaiter<int> co_sleep(int t)
 {  
  co_await sleep_for(t); 
  co_return 0；  
-}  
+} 
+awaiter<int> co_iterator(int t)
+{  
+  if (t-- > 0)
+  {
+    co_await co_iterator(t);
+    co_await sleep_for(1);
+  }
+  co_return 0;
+} 
 ```
 
 awaiter can be called hierarchically, which solves the most commonly used multi-level calling problem in coroutine.
@@ -63,13 +72,18 @@ awaiter<int> test_upper()
 task is used to wait for the completion of the coroutine. task can choose two modes, one is to wait for all tasks to complete before exiting, and the other is to exit as long as one task is completed.
 
 ```cpp
+task co_sleep(int t)
+{
+  co_await sleep_for(t);
+  co_return 0；
+}
 awaiter<int> test_any()
 {
- co_await wait_for_all(co_sleep(1), co_sleep(2));
+ co_await wait_for_any(co_sleep(1), co_sleep(2));
 }
 awaiter<int> test_all()
 {
- co_await wait_for_any(co_sleep(1), co_sleep(2));
+ co_await wait_for_all(co_sleep(1), co_sleep(2));
 }
 ```
 
