@@ -11,7 +11,7 @@ using namespace coev;
 
 tcp::serverpool pool;
 
-awaiter<int> dispatch(SharedIO io)
+awaiter<int> dispatch(sharedIOContext io)
 {
 	auto& c = *io;
 	while (c)

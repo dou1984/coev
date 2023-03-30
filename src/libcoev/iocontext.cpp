@@ -19,14 +19,12 @@ namespace coev
 	{
 		auto _this = (iocontext *)w->data;
 		assert(_this != NULL);
-		assert(*_this);
 		_this->EVRecv::resume_ex();
 	}
 	void iocontext::cb_write(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
 		auto _this = (iocontext *)w->data;
 		assert(_this != NULL);
-		assert(*_this);
 		_this->EVSend::resume_ex();
 	}
 	int iocontext::close()

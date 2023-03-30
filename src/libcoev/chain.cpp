@@ -15,6 +15,7 @@ namespace coev
 		_old->__list_clear();
 		return _old;
 	}
+	/*
 	chain *chain::append(chain *_new)
 	{
 		if (!_new->empty())
@@ -24,6 +25,7 @@ namespace coev
 		}
 		return this;
 	}
+	*/
 	bool chain::moveto(chain *_new)
 	{
 		if (empty())
@@ -45,6 +47,7 @@ namespace coev
 		next->m_prev = prev;
 		prev->m_next = next;
 	}
+	/*
 	void chain::__list_append(chain *p, chain *n, chain *prev, chain *next)
 	{
 		p->m_next = next;
@@ -52,6 +55,7 @@ namespace coev
 		next->m_prev = p;
 		prev->m_next = n;
 	}
+	*/
 	void chain::__list_move(chain *prev, chain *next)
 	{
 		assert(empty());

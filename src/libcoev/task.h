@@ -24,7 +24,7 @@ namespace coev
 	};
 	struct taskext : chain
 	{
-		taskchain *m_TaskSet = nullptr;
+		taskchain *m_taskchain = nullptr;
 		void resume_ex();
 		virtual ~taskext();
 	};

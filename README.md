@@ -44,14 +44,14 @@ awaiter<int> co_sleep(int t)
  co_return 0；  
 } 
 awaiter<int> co_iterator(int t)
-{  
-  if (t-- > 0)
-  {
-    co_await co_iterator(t);
-    co_await sleep_for(1);
-  }
-  co_return 0;
-} 
+{
+ if (t > 0)
+ {
+  co_await co_iterator(t - 1);
+  co_await sleep_for(1);
+ }
+ co_return 0;
+}
 ```
 
 awaiter can be called hierarchically, which solves the most commonly used multi-level calling problem in coroutine.

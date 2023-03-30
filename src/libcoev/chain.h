@@ -32,13 +32,13 @@ namespace coev
 		chain *begin() { return m_next; }
 		chain *end() { return this; }
 		chain *erase(chain *_old);
-		chain *append(chain *_new);
+		// chain *append(chain *_new);
 		bool moveto(chain *_new);
 
 	private:
 		void __list_add(chain *cur, chain *prev, chain *next);
 		void __list_del(chain *prev, chain *next);
-		void __list_append(chain *p, chain *n, chain *prev, chain *next);
+		// void __list_append(chain *p, chain *n, chain *prev, chain *next);
 		void __list_move(chain *prev, chain *next);
 		void __list_clear();
 	};

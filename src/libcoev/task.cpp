@@ -12,12 +12,12 @@ namespace coev
 {
 	void taskext::resume_ex()
 	{
-		if (m_TaskSet)
+		if (m_taskchain)
 		{
 			TRACE();
-			m_TaskSet->EVTask::erase(this);
-			m_TaskSet->EVEvent::resume_ex();
-			m_TaskSet = nullptr;
+			m_taskchain->EVTask::erase(this);
+			m_taskchain->EVEvent::resume_ex();
+			m_taskchain = nullptr;
 		}
 	}
 	taskext::~taskext()
@@ -27,7 +27,7 @@ namespace coev
 	void taskchain::insert_task(taskext *_task)
 	{
 		EVTask::push_back(_task);
-		_task->m_TaskSet = this;
+		_task->m_taskchain = this;
 		TRACE();
 	}
 	void taskchain::destroy()
@@ -36,7 +36,7 @@ namespace coev
 		{
 			TRACE();
 			auto c = static_cast<task *>(EVTask::pop_front());
-			c->taskext::m_TaskSet = nullptr;
+			c->taskext::m_taskchain = nullptr;
 			c->destroy();
 		}
 	}
