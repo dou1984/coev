@@ -171,8 +171,8 @@ namespace coev
 		socklen_t addr_len = sizeof(addr);
 		int ret = ::getpeername(fd, (struct sockaddr *)&addr, &addr_len);
 		if (ret == 0)
-		{			
-			PARSE_ADDR(addr, info);			
+		{
+			PARSE_ADDR(addr, info);
 		}
 		return ret;
 	}
@@ -184,7 +184,7 @@ namespace coev
 			return INVALID;
 		}
 		auto addr = (struct in_addr *)host->h_addr_list[0];
-		inet_ntop(AF_INET, addr, info.ip, sizeof(info.ip));		
+		inet_ntop(AF_INET, addr, info.ip, sizeof(info.ip));
 		return 0;
 	}
 	bool isInprocess()
