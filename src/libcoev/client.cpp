@@ -10,6 +10,12 @@
 
 namespace coev
 {
+	int client::__connect(int fd, const char *ip, int port)
+	{
+		sockaddr_in addr;
+		fillAddr(addr, ip, port);
+		return ::connect(fd, (sockaddr *)&addr, sizeof(addr));
+	}
 	void client::cb_connect(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
 		if (EV_ERROR & revents)
@@ -18,7 +24,6 @@ namespace coev
 		}
 		client *_this = (client *)(w->data);
 		assert(_this != nullptr);
-		assert(*_this);
 		_this->connect_remove();
 		_this->EVRecv::resume_ex();
 	}
@@ -55,7 +60,7 @@ namespace coev
 	}
 	int client::connect(const char *ip, int port)
 	{
-		if (connectTCP(m_fd, ip, port) < 0)
+		if (__connect(m_fd, ip, port) < 0)
 		{
 			if (isInprocess())
 			{

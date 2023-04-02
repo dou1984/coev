@@ -16,7 +16,6 @@ namespace coev::tcp
 			return;
 		server *_this = (server *)(w->data);
 		assert(_this != nullptr);
-		assert(*_this);
 		_this->EVRecv::resume_ex();
 	}
 	server::~server()
@@ -43,7 +42,7 @@ namespace coev::tcp
 			m_fd = INVALID;
 			return m_fd;
 		}
-		if (bindAddress(m_fd, ip, port) < 0)
+		if (bindAddr(m_fd, ip, port) < 0)
 		{
 			goto __error_return__;
 		}

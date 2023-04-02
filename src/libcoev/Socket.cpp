@@ -15,14 +15,14 @@ namespace coev
 		unsigned long long *ptr = (unsigned long long *)sin_zero;
 		*ptr = 0;
 	}
-	void FILL_ADDR(sockaddr_in &addr, const char *ip, int port)
+	void fillAddr(sockaddr_in &addr, const char *ip, int port)
 	{
 		addr.sin_family = AF_INET;
 		addr.sin_port = htons(port);
 		inet_pton(addr.sin_family, ip, &addr.sin_addr);
 		SIN_ZERO(addr.sin_zero);
 	}
-	void PARSE_ADDR(sockaddr_in &addr, ipaddress &info)
+	void parseAddr(sockaddr_in &addr, ipaddress &info)
 	{
 		inet_ntop(AF_INET, &(addr.sin_addr), info.ip, sizeof(info.ip));
 		info.port = ntohs(addr.sin_port);
@@ -35,10 +35,10 @@ namespace coev
 		strcpy(addr.sun_path + 1, ip);
 		return ::bind(fd, (sockaddr *)&addr, sizeof(addr.sun_family) + strlen(ip) + 1);
 	}
-	int bindAddress(int fd, const char *ip, int port)
+	int bindAddr(int fd, const char *ip, int port)
 	{
 		sockaddr_in addr;
-		FILL_ADDR(addr, ip, port);
+		fillAddr(addr, ip, port);
 		return ::bind(fd, (sockaddr *)&addr, (int)sizeof(addr));
 	}
 	int connectLocal(int fd, const char *ip)
@@ -48,29 +48,12 @@ namespace coev
 		addr.sun_path[0] = '\0';
 		strcpy(addr.sun_path + 1, ip);
 		return ::connect(fd, (sockaddr *)&addr, sizeof(addr.sun_family) + strlen(ip) + 1);
-	}
-	int connectTCP(int fd, const char *ip, int port)
-	{
-		sockaddr_in addr;
-		FILL_ADDR(addr, ip, port);
-		return ::connect(fd, (sockaddr *)&addr, sizeof(addr));
-	}
+	}	
 	int getSocketError(int fd)
 	{
 		int error_value = 0;
 		socklen_t len = sizeof(socklen_t);
 		return getsockopt(fd, SOL_SOCKET, SO_ERROR, (char *)&error_value, &len) == -1 ? -1 : error_value;
-	}
-	int acceptTCP(int fd, ipaddress &info)
-	{
-		sockaddr_in addr;
-		socklen_t addr_len = sizeof(sockaddr_in);
-		int rfd = accept(fd, (sockaddr *)&addr, &addr_len);
-		if (rfd != INVALID)
-		{
-			PARSE_ADDR(addr, info);
-		}
-		return rfd;
 	}
 	int acceptLocal(int fd, ipaddress &info)
 	{
@@ -161,7 +144,7 @@ namespace coev
 		int ret = ::getsockname(fd, (struct sockaddr *)&addr, &addr_len);
 		if (ret == 0)
 		{
-			PARSE_ADDR(addr, info);
+			parseAddr(addr, info);
 		}
 		return ret;
 	}
@@ -172,7 +155,7 @@ namespace coev
 		int ret = ::getpeername(fd, (struct sockaddr *)&addr, &addr_len);
 		if (ret == 0)
 		{
-			PARSE_ADDR(addr, info);
+			parseAddr(addr, info);
 		}
 		return ret;
 	}

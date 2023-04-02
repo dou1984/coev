@@ -13,10 +13,17 @@
 
 namespace coev
 {
-	extern void SIN_ZERO(void *sin_zero);
-	extern void FILL_ADDR(sockaddr_in &addr, const char *ip, int port);
-	extern void PARSE_ADDR(sockaddr_in &addr, ipaddress &info);
-
+	static int __accept(int fd, ipaddress &info)
+	{
+		sockaddr_in addr;
+		socklen_t addr_len = sizeof(sockaddr_in);
+		int rfd = accept(fd, (sockaddr *)&addr, &addr_len);
+		if (rfd != INVALID)
+		{
+			parseAddr(addr, info);
+		}
+		return rfd;
+	}
 	awaiter<sharedIOContext> accept(tcp::server &_server, ipaddress &peer)
 	{
 		if (!_server)
@@ -24,7 +31,7 @@ namespace coev
 			co_return std::make_shared<iocontext>(INVALID);
 		}
 		co_await wait_for<EVRecv>(_server);
-		auto fd = acceptTCP(_server.m_fd, peer);
+		auto fd = __accept(_server.m_fd, peer);
 		if (fd != INVALID)
 		{
 			setNoBlock(fd, true);
@@ -92,7 +99,7 @@ namespace coev
 			{
 				continue;
 			}
-			PARSE_ADDR(addr, info);
+			parseAddr(addr, info);
 			co_return r;
 		}
 		co_return INVALID;
@@ -102,7 +109,7 @@ namespace coev
 		while (io)
 		{
 			sockaddr_in addr;
-			FILL_ADDR(addr, info.ip, info.port);
+			fillAddr(addr, info.ip, info.port);
 			int r = ::sendto(io.m_fd, buffer, size, 0, (struct sockaddr *)&addr, sizeof(addr));
 			if (r == INVALID && isInprocess())
 			{

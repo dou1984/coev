@@ -28,19 +28,16 @@ namespace coev
 		char ip[64];
 		int port;
 	};
+
 	int bindLocal(int fd, const char *ip);
 
-	int bindAddress(int fd, const char *ip, int port);
+	int bindAddr(int fd, const char *ip, int port);
 
 	int connectLocal(int fd, const char *ip);
 
-	int connectTCP(int fd, const char *ip, int port);
+	int acceptLocal(int fd, ipaddress &);
 
 	int getSocketError(int fd);
-
-	int acceptTCP(int fd, ipaddress &);
-
-	int acceptLocal(int fd, ipaddress &);
 
 	int setNoBlock(int fd, bool block);
 
@@ -73,4 +70,8 @@ namespace coev
 	int getHostName(const char *name, char *ip, int len);
 
 	bool isInprocess();
+
+	void fillAddr(sockaddr_in &addr, const char *ip, int port);
+
+	void parseAddr(sockaddr_in &addr, ipaddress &info);
 }

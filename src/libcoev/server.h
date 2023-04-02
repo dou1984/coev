@@ -11,7 +11,7 @@
 #include "event.h"
 #include "eventchain.h"
 
-namespace coev ::tcp
+namespace coev::tcp
 {
 	struct server final : EVRecv
 	{

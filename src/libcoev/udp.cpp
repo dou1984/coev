@@ -24,7 +24,7 @@ namespace coev::udp
 			fd = INVALID;
 			return iocontext(fd);
 		}
-		if (bindAddress(fd, ip, port) < 0)
+		if (bindAddr(fd, ip, port) < 0)
 		{
 			goto __error_return__;
 		}
