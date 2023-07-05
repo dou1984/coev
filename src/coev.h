@@ -17,7 +17,9 @@
 #include "libcoev/routine.h"
 #include "libcoev/udp.h"
 #include "libcoev/setvalue.h"
+#include "libcoev/server.h"
 #include "libcoev/serverpool.h"
 #include "libcoev/local.h"
 #include "libcoev/Mempool.h"
+#include "libcoev/client.h"
 

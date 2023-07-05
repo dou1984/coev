@@ -13,32 +13,7 @@
 
 namespace coev
 {
-	static int __accept(int fd, ipaddress &info)
-	{
-		sockaddr_in addr;
-		socklen_t addr_len = sizeof(sockaddr_in);
-		int rfd = accept(fd, (sockaddr *)&addr, &addr_len);
-		if (rfd != INVALID)
-		{
-			parseAddr(addr, info);
-		}
-		return rfd;
-	}
-	awaiter<sharedIOContext> accept(tcp::server &_server, ipaddress &peer)
-	{
-		if (!_server)
-		{
-			co_return std::make_shared<iocontext>(INVALID);
-		}
-		co_await wait_for<EVRecv>(_server);
-		auto fd = __accept(_server.m_fd, peer);
-		if (fd != INVALID)
-		{
-			setNoBlock(fd, true);
-		}
-		co_return std::make_shared<iocontext>(fd);
-	}
-	
+
 	
 	awaiter<int> sleep_for(long t)
 	{

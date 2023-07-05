@@ -60,7 +60,7 @@ awaiter<int> co_httpserver()
 	while (s)
 	{
 		ipaddress addr;
-		auto io = co_await accept(s, addr);
+		auto io = co_await s.accept(addr);
 		if (*io)
 			dispatch(io);
 	}

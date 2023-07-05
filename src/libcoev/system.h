@@ -9,8 +9,6 @@
 #include <memory>
 #include "iocontext.h"
 #include "awaiter.h"
-#include "server.h"
-#include "client.h"
 #include "timer.h"
 #include "async.h"
 #include "ossignal.h"
@@ -19,8 +17,8 @@
 
 namespace coev
 {
-	using sharedIOContext = std::shared_ptr<iocontext>;
-	awaiter<sharedIOContext> accept(tcp::server &, ipaddress &);
+
+	
 
 	awaiter<int> sleep_for(long);
 	awaiter<int> usleep_for(long);

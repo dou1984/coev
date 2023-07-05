@@ -9,6 +9,7 @@
 
 using namespace coev;
 
+
 // tcp::serverpool pool;
 tcp::server srv;
 awaiter<int> dispatch(sharedIOContext io)
@@ -39,7 +40,7 @@ awaiter<int> co_server()
 	while (srv)
 	{
 		ipaddress addr;
-		auto io = co_await accept(srv, addr);
+		auto io = co_await srv.accept(addr);
 		if (*io)
 		{
 			dispatch(io);

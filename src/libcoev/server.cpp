@@ -7,9 +7,21 @@
  */
 #include "server.h"
 #include "loop.h"
+#include "system.h"
 
 namespace coev::tcp
 {
+	static int __accept(int fd, ipaddress &info)
+	{
+		sockaddr_in addr;
+		socklen_t addr_len = sizeof(sockaddr_in);
+		int rfd = accept(fd, (sockaddr *)&addr, &addr_len);
+		if (rfd != INVALID)
+		{
+			parseAddr(addr, info);
+		}
+		return rfd;
+	}
 	void server::cb_accept(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
 		if (EV_ERROR & revents)
@@ -79,4 +91,23 @@ namespace coev::tcp
 		ev_io_stop(loop::at(_tag), &m_Reav);
 		return m_fd;
 	}
+	bool server::__valid() const
+	{
+		return m_fd != INVALID;
+	}
+	awaiter<sharedIOContext> server::accept(ipaddress &peer)
+	{
+		if (!__valid())
+		{
+			co_return std::make_shared<iocontext>(INVALID);
+		}
+		co_await wait_for<EVRecv>(*this);
+		auto fd = __accept(m_fd, peer);
+		if (fd != INVALID)
+		{
+			setNoBlock(fd, true);
+		}
+		co_return std::make_shared<iocontext>(fd);
+	}
+
 }
