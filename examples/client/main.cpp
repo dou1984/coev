@@ -12,34 +12,33 @@ using namespace coev;
 awaiter<int> co_dail(const char *ip, int port)
 {
 	client c;
-	co_await connect(c, ip, port);
+	co_await c.connect(ip, port);
 	if (!c)
 	{
 		co_return INVALID;
 	}
 	char sayhi[] = "helloworld";
-	auto r = co_await send(c, sayhi, sizeof(sayhi));
+	auto r = co_await c.send(sayhi, sizeof(sayhi));
 	if (r == INVALID)
 	{
-		co_await close(c);
+		co_await c.close();
 		co_return 0;
 	}
 	int count = 0;
 	while (c)
 	{
 		char buffer[0x1000];
-		r = co_await recv(c, buffer, sizeof(buffer));
+		r = co_await c.recv(buffer, sizeof(buffer));
 		if (r == INVALID)
 		{
-			LOG_ERR("close %d\n", c.m_fd);
-			co_await close(c);
+			co_await c.close();
 			co_return 0;
 		}
 		LOG_DBG("%s\n", buffer);
-		r = co_await send(c, buffer, r);
+		r = co_await c.send(buffer, r);
 		if (r == INVALID)
 		{
-			co_await close(c);
+			co_await c.close();
 			co_return 0;
 		}
 		if (count++ > 100000)
@@ -47,7 +46,6 @@ awaiter<int> co_dail(const char *ip, int port)
 			co_return 0;
 		}
 	}
-	LOG_FATAL("finish %d\n", c.m_fd);
 	co_return 0;
 }
 void co_test()

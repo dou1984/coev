@@ -11,7 +11,7 @@ using namespace coev;
 
 awaiter<int> co_task(bool for_all)
 {
-	auto t0 = []() -> task
+	auto t0 = []() -> awaiter<int>
 	{
 		TRACE();
 		co_await sleep_for(2);
@@ -19,7 +19,7 @@ awaiter<int> co_task(bool for_all)
 		co_return 0;
 	}();
 
-	auto t1 = []() -> task
+	auto t1 = []() -> awaiter<int>
 	{
 		TRACE();
 		co_await sleep_for(5);
@@ -35,6 +35,15 @@ awaiter<int> co_task(bool for_all)
 	co_return 0;
 }
 
+awaiter<int> co_task_short(bool for_all)
+{
+	if (for_all)
+		co_await wait_for_all(sleep_for(2), sleep_for(3));
+	else
+		co_await wait_for_any(sleep_for(2), sleep_for(3));
+	TRACE();
+	co_return 0;
+}
 void co_task_t()
 {
 	co_task(true);
@@ -43,13 +52,22 @@ void co_task_f()
 {
 	co_task(false);
 }
-
+void co_task_u()
+{
+	co_task_short(true);
+}
+void co_task_v()
+{
+	co_task_short(false);
+}
 int main()
 {
 	set_log_level(LOG_LEVEL_CORE);
 	routine r;
 	r.add(co_task_t);
 	r.add(co_task_f);
+	r.add(co_task_u);
+	r.add(co_task_v);
 	r.join();
 	return 0;
 }

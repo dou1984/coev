@@ -16,9 +16,9 @@ awaiter<int> go()
 	while (c)
 	{
 		char buffer[1000] = "hello world";
-		co_await sendto(c, buffer, strlen(buffer) + 1, addr);
+		co_await c.sendto(buffer, strlen(buffer) + 1, addr);
 		LOG_DBG("send to %s:%d %s\n", addr.ip, addr.port, buffer);
-		co_await recvfrom(c, buffer, sizeof(buffer), addr);
+		co_await c.recvfrom(buffer, sizeof(buffer), addr);
 		LOG_DBG("recv from %s:%d %s\n", addr.ip, addr.port, buffer);
 	}
 }

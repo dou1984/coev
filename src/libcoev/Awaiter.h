@@ -12,12 +12,13 @@
 #include "log.h"
 #include "object.h"
 #include "hook.h"
+#include "taskext.h"
 
 namespace coev
 {
 
-	template <class Ret = int, class Extend = AWAITER>
-	struct awaiter : Extend
+	template <class Ret = int>
+	struct awaiter : taskext
 	{
 		struct promise_type : promise
 		{
@@ -60,16 +61,11 @@ namespace coev
 			if (m_coroutine != nullptr)
 				m_coroutine.promise()._this = nullptr;
 		}
-		void resume()
-		{
-			if (m_coroutine && !m_coroutine.done())
-				m_coroutine.resume();
-		}
 		void resume_ex()
 		{
 			if (m_awaiting && !m_awaiting.done())
 				m_awaiting.resume();
-			Extend::resume_ex();
+			taskext::__resume();
 		}
 		bool done()
 		{

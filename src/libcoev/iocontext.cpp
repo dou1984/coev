@@ -12,6 +12,7 @@
 #include <arpa/inet.h>
 #include "loop.h"
 #include "iocontext.h"
+#include "system.h"
 
 namespace coev
 {
@@ -27,7 +28,7 @@ namespace coev
 		assert(_this != NULL);
 		_this->EVSend::resume_ex();
 	}
-	int iocontext::close()
+	int iocontext::__close()
 	{
 		if (m_fd != INVALID)
 		{
@@ -42,6 +43,10 @@ namespace coev
 			}
 		}
 		return 0;
+	}
+	bool iocontext::__valid() const
+	{
+		return m_fd != INVALID;
 	}
 	iocontext::operator bool() const
 	{
@@ -94,5 +99,80 @@ namespace coev
 		o.EVSend::moveto(static_cast<EVSend *>(this));
 		__init();
 		return *this;
+	}
+
+	awaiter<int> iocontext::send(const char *buffer, int size)
+	{
+		while (__valid())
+		{
+			auto r = ::send(m_fd, buffer, size, 0);
+			if (r == INVALID && isInprocess())
+			{
+				ev_io_start(loop::at(m_tag), &m_Write);
+				co_await wait_for<EVSend>(*this);
+				if (EVSend::empty())
+					ev_io_stop(loop::at(m_tag), &m_Write);
+			}
+			else
+			{
+				co_return r;
+			}
+		}
+		co_return INVALID;
+	}
+	awaiter<int> iocontext::recv(char *buffer, int size)
+	{
+		while (__valid())
+		{
+			co_await wait_for<EVRecv>(*this);
+			auto r = ::recv(m_fd, buffer, size, 0);
+			if (r == INVALID && isInprocess())
+			{
+				continue;
+			}
+			co_return r;
+		}
+		co_return INVALID;
+	}
+	awaiter<int> iocontext::recvfrom(char *buffer, int size, ipaddress &info)
+	{
+		while (__valid())
+		{
+			co_await wait_for<EVRecv>(*this);
+			sockaddr_in addr;
+			socklen_t addrsize = sizeof(addr);
+			int r = ::recvfrom(m_fd, buffer, size, 0, (struct sockaddr *)&addr, &addrsize);
+			if (r == INVALID && isInprocess())
+			{
+				continue;
+			}
+			parseAddr(addr, info);
+			co_return r;
+		}
+		co_return INVALID;
+	}
+	awaiter<int> iocontext::sendto(const char *buffer, int size, ipaddress &info)
+	{
+		while (__valid())
+		{
+			sockaddr_in addr;
+			fillAddr(addr, info.ip, info.port);
+			int r = ::sendto(m_fd, buffer, size, 0, (struct sockaddr *)&addr, sizeof(addr));
+			if (r == INVALID && isInprocess())
+			{
+				ev_io_start(loop::at(m_tag), &m_Write);
+				co_await wait_for<EVSend>(*this);
+				if (EVSend::empty())
+					ev_io_stop(loop::at(m_tag), &m_Write);
+			}
+			co_return r;
+		}
+		co_return INVALID;
+	}
+	awaiter<int> iocontext::close()
+	{
+		TRACE();
+		__close();
+		co_return 0;
 	}
 }

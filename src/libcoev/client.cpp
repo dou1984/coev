@@ -7,6 +7,7 @@
  */
 #include "client.h"
 #include "loop.h"
+#include "system.h"
 
 namespace coev
 {
@@ -58,7 +59,7 @@ namespace coev
 		ev_io_stop(loop::at(m_tag), &m_Read);
 		return 0;
 	}
-	int client::connect(const char *ip, int port)
+	int client::__connect(const char *ip, int port)
 	{
 		if (__connect(m_fd, ip, port) < 0)
 		{
@@ -67,6 +68,22 @@ namespace coev
 				return m_fd;
 			}
 		}
-		return close();
+		return __close();
+	}
+	awaiter<int> client::connect(const char *ip, int port)
+	{
+		int fd = __connect(ip, port);
+		if (fd == INVALID)
+		{
+			co_return fd;
+		}
+		co_await wait_for<EVRecv>(*this);
+		auto err = getSocketError(m_fd);
+		if (err == 0)
+		{
+			__init();
+			co_return fd;
+		}
+		co_return __close();
 	}
 }

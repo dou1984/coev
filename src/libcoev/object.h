@@ -12,12 +12,6 @@ namespace coev
 	struct OBJECT
 	{
 	};
-	struct AWAITER : OBJECT
-	{
-		void resume_ex()
-		{
-		}
-	};
 	struct RECV
 	{
 	};

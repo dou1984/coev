@@ -10,34 +10,22 @@
 
 namespace coev
 {
-	void taskext::resume_ex()
-	{
-		if (m_taskchain)
-		{
-			m_taskchain->EVTask::erase(this);
-			m_taskchain->EVEvent::resume_ex();
-			m_taskchain = nullptr;
-		}
-	}
-	taskext::~taskext()
-	{
-		resume_ex();
-	}
-	void taskchain::insert_task(taskext *_task)
+
+	void task::insert_task(taskext *_task)
 	{
 		EVTask::push_back(_task);
 		_task->m_taskchain = this;
 	}
-	void taskchain::destroy()
+	void task::destroy()
 	{
 		while (!EVTask::empty())
 		{
-			auto c = static_cast<task *>(EVTask::pop_front());
-			c->taskext::m_taskchain = nullptr;
+			auto c = static_cast<taskext *>(EVTask::pop_front());
+			c->m_taskchain = nullptr;
 			c->destroy();
 		}
 	}
-	taskchain::operator bool()
+	task::operator bool()
 	{
 		return !EVTask::empty();
 	}

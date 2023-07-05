@@ -7,16 +7,21 @@
  */
 #pragma once
 #include "chain.h"
-#include "awaiter.h"
 #include "eventchain.h"
 
 namespace coev
 {
-	struct task : EVTask, EVEvent
+	struct task;
+
+	class taskext : public chain
 	{
-		void insert_task(taskext *_task);
-		void destroy();
-		operator bool();
+	public:
+		task *m_taskchain = nullptr;
+		virtual void destroy() = 0;
+
+	protected:
+		void __resume();
+		virtual ~taskext();
 	};
 
 }

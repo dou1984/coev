@@ -13,18 +13,18 @@
 
 namespace coev::tcp
 {
-	struct server final : EVRecv
+	struct server final : public EVRecv
 	{
-		int m_fd = INVALID;
-		ev_io m_Reav;
-
 		server() = default;
 		virtual ~server();
 		int start(const char *ip, int port);
 		int stop();
+		operator bool() const;
+
+		int m_fd = INVALID;
+		ev_io m_Reav;
 		int __insert(uint32_t _tag);
 		int __remove(uint32_t _tag);
-		operator bool() const;
 		static void cb_accept(struct ev_loop *loop, struct ev_io *w, int revents);
 	};
 }
