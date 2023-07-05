@@ -31,7 +31,6 @@ namespace coev
 	{
 		if (m_fd != INVALID)
 		{
-			TRACE();
 			__finally();
 			::close(m_fd);
 			m_fd = INVALID;

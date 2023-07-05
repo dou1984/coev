@@ -16,8 +16,6 @@
 #include <string.h>
 #include <stdint.h>
 #include <assert.h>
-#include <sys/epoll.h>
-#include <sys/timerfd.h>
 
 #define INVALID (-1)
 

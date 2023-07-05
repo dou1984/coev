@@ -15,6 +15,7 @@ using namespace coev;
 
 extern "C"
 {
+#ifdef __MEMPOOL__
 	bool enable_mempool = true;
 	t_malloc __real_malloc;
 	t_free __real_free;
@@ -82,4 +83,5 @@ extern "C"
 			tlmp::instance().release(_buf);
 		}
 	}
+#endif
 }
