@@ -66,14 +66,14 @@ namespace coev::tcp
 		{
 			goto __error_return__;
 		}
-		__insert(thdtag());
+		__insert(ttag());
 		return m_fd;
 	}
 	int server::stop()
 	{
 		if (m_fd != INVALID)
 		{
-			__remove(thdtag());
+			__remove(ttag());
 			::close(m_fd);
 			m_fd = INVALID;
 		}

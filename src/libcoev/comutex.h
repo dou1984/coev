@@ -12,13 +12,16 @@
 
 namespace coev
 {
-	struct comutex final : EVMutex
+	class comutex final : EVMutex
 	{
+	public:
+		awaiter<int> lock();
+		awaiter<int> unlock();
+
+	private:
 		const int on = 1;
 		const int off = 0;
 		std::mutex m_lock;
 		int m_flag = 0;
-		awaiter<int> lock();
-		awaiter<int> unlock();
 	};
 }

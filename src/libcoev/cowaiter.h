@@ -13,12 +13,15 @@
 
 namespace coev
 {
-	struct cowaiter final : EVMutex
+	class cowaiter final : EVMutex
 	{
-		std::mutex m_lock;
-		int m_count = 0;
+	public:
 		int add();
 		int done();
 		awaiter<int> wait();
+
+	private:
+		std::mutex m_lock;
+		int m_count = 0;
 	};
 }

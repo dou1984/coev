@@ -15,7 +15,7 @@ namespace coev
 		if (m_eventchain != nullptr)
 			m_eventchain->push_back(this);
 	}
-	event::event(chain *obj) : event(obj, thdtag())
+	event::event(chain *obj) : event(obj, ttag())
 	{
 	}
 	event::~event()

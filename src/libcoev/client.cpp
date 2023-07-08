@@ -40,7 +40,7 @@ namespace coev
 			::close(m_fd);
 			return;
 		}
-		m_tag = thdtag();
+		m_tag = ttag();
 		connect_insert();
 	}
 	client::~client()

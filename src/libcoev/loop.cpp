@@ -28,7 +28,7 @@ namespace coev
 		struct ev_loop *m_loop = nullptr;
 		__ev_loop()
 		{
-			m_tag = thdtag();
+			m_tag = ttag();
 			all_loops[m_tag] = this;
 			m_loop = ev_loop_new();
 		}
@@ -61,7 +61,7 @@ namespace coev
 	}
 	void loop::resume(event *ev)
 	{
-		if (ev->m_tag == thdtag())
+		if (ev->m_tag == ttag())
 		{
 			ev->resume();
 		}

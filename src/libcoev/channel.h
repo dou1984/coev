@@ -53,7 +53,7 @@ namespace coev
 					m_lock.unlock();
 					co_return 0;
 				}
-				event e(static_cast<EVChannel *>(this), thdtag());
+				event e(static_cast<EVChannel *>(this), ttag());
 				m_lock.unlock();
 				co_await e;
 			}

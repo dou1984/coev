@@ -78,7 +78,7 @@ namespace coev
 	}
 	int Mysqlcli::__connect()
 	{
-		m_tag = thdtag();
+		m_tag = ttag();
 		auto status = __tryconnect();
 		if (status == NET_ASYNC_ERROR)
 		{
