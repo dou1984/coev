@@ -12,7 +12,7 @@ namespace coev::tcp
 {
 	server &serverpool::get()
 	{
-		auto _tag = loop::tag();
+		auto _tag = thdtag();
 		if (_tag < m_pool.size())
 		{
 			std::lock_guard<std::mutex> _(m_mutex);
@@ -28,7 +28,7 @@ namespace coev::tcp
 	}
 	int serverpool::start(const char *ip, int size)
 	{
-		auto _tag = loop::tag();
+		auto _tag = thdtag();
 		if (_tag < m_pool.size())
 		{
 			auto &s = m_pool[_tag];

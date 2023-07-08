@@ -7,12 +7,9 @@
  */
 #pragma once
 #include <memory>
-#include "iocontext.h"
 #include "awaiter.h"
-#include "timer.h"
-#include "async.h"
-#include "ossignal.h"
 #include "task.h"
+#include "event.h"
 
 namespace coev
 {

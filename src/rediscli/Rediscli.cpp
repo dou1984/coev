@@ -212,7 +212,7 @@ namespace coev
 	}
 	Rediscli::Rediscli(const char *ip, int port, const char *auth)
 	{
-		m_tag = loop::tag();
+		m_tag = thdtag();
 		m_ip = ip;
 		m_port = port;
 		m_auth = auth;

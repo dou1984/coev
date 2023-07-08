@@ -16,7 +16,7 @@
 namespace coev
 {
 	template <class TYPE>
-	class channel : EVChannel
+	class channel final : EVChannel
 	{
 		std::list<TYPE> m_data;
 		std::mutex m_lock;
@@ -32,6 +32,7 @@ namespace coev
 			m_data.emplace_back(std::move(d));
 			return !EVChannel::empty() ? static_cast<event *>(EVChannel::pop_front()) : nullptr;
 		}
+
 	public:
 		awaiter<int> set(TYPE &d)
 		{
@@ -52,7 +53,7 @@ namespace coev
 					m_lock.unlock();
 					co_return 0;
 				}
-				event e(static_cast<EVChannel *>(this), loop::tag());
+				event e(static_cast<EVChannel *>(this), thdtag());
 				m_lock.unlock();
 				co_await e;
 			}

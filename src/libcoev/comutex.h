@@ -12,7 +12,7 @@
 
 namespace coev
 {
-	struct comutex : EVMutex
+	struct comutex final : EVMutex
 	{
 		const int on = 1;
 		const int off = 0;

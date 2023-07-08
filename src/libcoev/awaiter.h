@@ -18,7 +18,7 @@ namespace coev
 {
 
 	template <class Ret = int>
-	struct awaiter : taskext
+	struct awaiter final : taskext
 	{
 		struct promise_type : promise
 		{

@@ -13,6 +13,7 @@
 #include "loop.h"
 #include "log.h"
 #include "async.h"
+#include "tag.h"
 
 #define g_loop threadlocal<__this_ev_loop>::instance()
 
@@ -20,7 +21,6 @@ namespace coev
 {
 	struct __ev_loop;
 	static std::array<struct __ev_loop *, max_ev_loop> all_loops = {nullptr};
-	static std::atomic<uint32_t> g_index{0};
 
 	struct __ev_loop
 	{
@@ -28,7 +28,7 @@ namespace coev
 		struct ev_loop *m_loop = nullptr;
 		__ev_loop()
 		{
-			m_tag = g_index++;
+			m_tag = thdtag();
 			all_loops[m_tag] = this;
 			m_loop = ev_loop_new();
 		}
@@ -36,10 +36,6 @@ namespace coev
 		{
 			ev_loop_destroy(m_loop);
 			all_loops[m_tag] = nullptr;
-		}
-		uint32_t tag()
-		{
-			return __ev_loop::m_tag;
 		}
 	};
 	struct __this_ev_loop : __ev_loop, async
@@ -63,19 +59,15 @@ namespace coev
 			return all_loops[_tag]->m_loop;
 		return nullptr;
 	}
-	uint32_t loop::tag()
-	{
-		return g_loop.tag();
-	}
 	void loop::resume(event *ev)
 	{
-		if (ev->m_tag == g_loop.tag())
+		if (ev->m_tag == thdtag())
 		{
 			ev->resume();
 		}
 		else
 		{
-			auto __loop = static_cast<__this_ev_loop *>(all_loops[ev->m_tag]);			
+			auto __loop = static_cast<__this_ev_loop *>(all_loops[ev->m_tag]);
 			__loop->async::resume_event(ev);
 		}
 	}

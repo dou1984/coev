@@ -13,7 +13,7 @@
 
 namespace coev
 {
-	struct cowaiter : EVMutex
+	struct cowaiter final : EVMutex
 	{
 		std::mutex m_lock;
 		int m_count = 0;

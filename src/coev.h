@@ -24,3 +24,4 @@
 #include "libcoev/client.h"
 #include "libcoev/comutex.h"
 #include "libcoev/cowaiter.h"
+#include "libcoev/timer.h"

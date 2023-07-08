@@ -9,9 +9,7 @@
 
 namespace coev
 {
-	struct OBJECT
-	{
-	};
+	
 	struct RECV
 	{
 	};

@@ -23,7 +23,7 @@ namespace coev
 	{
 		m_data.data = this;
 		ev_timer_init(&m_data, timer::cb_timer, itimer, rtimer);
-		m_tag = loop::tag();
+		m_tag = thdtag();
 	}
 	timer::~timer()
 	{

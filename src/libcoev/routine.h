@@ -14,7 +14,7 @@
 
 namespace coev
 {
-	class routine : public singleton<routine>
+	class routine final : public singleton<routine>
 	{
 		std::list<std::thread> m_list;
 		void __add(const std::function<void()> &);

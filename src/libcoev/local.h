@@ -14,7 +14,7 @@
 namespace coev
 {
 	struct localext;
-	struct local : EVRecv
+	struct local final : EVRecv
 	{
 		std::atomic<int> m_ref{0};
 		static std::unique_ptr<localext> ref();
