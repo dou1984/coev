@@ -15,7 +15,7 @@ namespace coev
 {
 	struct event final : chain
 	{
-		chain *m_object = nullptr;
+		chain *m_eventchain = nullptr;
 		std::coroutine_handle<> m_awaiting = nullptr;
 		uint32_t m_tag = 0;
 		event(chain *obj, uint32_t _tag);
@@ -26,6 +26,6 @@ namespace coev
 		void await_resume();
 		bool await_ready();
 		void await_suspend(std::coroutine_handle<> awaiting);
-		void resume_ex();
+		void resume();
 	};
 }

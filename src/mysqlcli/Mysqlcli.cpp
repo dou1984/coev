@@ -31,7 +31,7 @@ namespace coev
 			return;
 		Mysqlcli *_this = (Mysqlcli *)(w->data);
 		assert(_this != nullptr);
-		_this->EVSend::resume_ex();
+		_this->EVSend::resume();
 	}
 	void Mysqlcli::cb_read(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
@@ -39,7 +39,7 @@ namespace coev
 			return;
 		Mysqlcli *_this = (Mysqlcli *)(w->data);
 		assert(_this != nullptr);
-		_this->EVRecv::resume_ex();
+		_this->EVRecv::resume();
 	}
 	Mysqlcli::Mysqlcli(const char *ip, int port, const char *username, const char *password, const char *db)
 	{

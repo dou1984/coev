@@ -24,7 +24,7 @@ namespace coev
 			return;
 		auto _this = (Rediscli *)(w->data);
 		assert(_this != nullptr);
-		_this->EVRecv::resume_ex();
+		_this->EVRecv::resume();
 	}
 	void Rediscli::cb_write(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
@@ -86,7 +86,7 @@ namespace coev
 			m_result.last_error = INVALID;
 			m_result.last_msg = STRING_CLOSED;
 		}
-		EVRecv::resume_ex();
+		EVRecv::resume();
 	}
 	int Rediscli::__connect()
 	{
@@ -149,7 +149,7 @@ namespace coev
 		{
 			LOG_DBG("connected error fd:%d\n", _this->fd());
 			_this->__process_remove();
-			_this->EVRecv::resume_ex();
+			_this->EVRecv::resume();
 		}
 	}
 	void Rediscli::__disconnected(const redisAsyncContext *ac, int status)
@@ -163,7 +163,7 @@ namespace coev
 		{
 			LOG_DBG("disconnect fd:%d\n", _this->fd());
 			_this->__process_remove();
-			_this->EVRecv::resume_ex();
+			_this->EVRecv::resume();
 		}
 	}
 	void Rediscli::__onsend()

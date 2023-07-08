@@ -9,12 +9,12 @@
 #include <atomic>
 #include <list>
 #include <mutex>
-#include "ThreadLocal.h"
+#include "threadlocal.h"
 #include "loop.h"
 #include "log.h"
 #include "async.h"
 
-#define g_loop ThreadLocal<__this_ev_loop>::instance()
+#define g_loop threadlocal<__this_ev_loop>::instance()
 
 namespace coev
 {
@@ -71,7 +71,7 @@ namespace coev
 	{
 		if (ev->m_tag == g_loop.tag())
 		{
-			ev->resume_ex();
+			ev->resume();
 		}
 		else
 		{

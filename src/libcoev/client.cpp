@@ -26,7 +26,7 @@ namespace coev
 		client *_this = (client *)(w->data);
 		assert(_this != nullptr);
 		_this->connect_remove();
-		_this->EVRecv::resume_ex();
+		_this->EVRecv::resume();
 	}
 	client::client()
 	{

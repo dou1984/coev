@@ -15,13 +15,13 @@ namespace coev
 	template <class TYPE>
 	struct eventchain : chain, TYPE
 	{
-		bool resume_ex()
+		bool resume()
 		{
 			if (chain::empty())
 				return false;
 			TRACE();
 			auto c = static_cast<event *>(chain::pop_front());
-			c->resume_ex();
+			c->resume();
 			return true;
 		}
 	};

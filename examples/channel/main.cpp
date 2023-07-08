@@ -30,11 +30,9 @@ awaiter<int> go()
 }
 int main()
 {
-	ingore_signal(SIGPIPE);
 
-	routine r;
 	for (int i = 0; i < 8; i++)
-		r.add(go);
-	r.join();
+		routine::instance().add(go);
+	routine::instance().join();
 	return 0;
 }

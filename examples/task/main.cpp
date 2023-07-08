@@ -63,11 +63,11 @@ void co_task_v()
 int main()
 {
 	set_log_level(LOG_LEVEL_CORE);
-	routine r;
-	r.add(co_task_t);
-	r.add(co_task_f);
-	r.add(co_task_u);
-	r.add(co_task_v);
-	r.join();
+	
+	routine::instance().add(co_task_t);
+	routine::instance().add(co_task_f);
+	routine::instance().add(co_task_u);
+	routine::instance().add(co_task_v);
+	routine::instance().join();
 	return 0;
 }

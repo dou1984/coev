@@ -20,13 +20,13 @@ namespace coev
 	{
 		auto _this = (iocontext *)w->data;
 		assert(_this != NULL);
-		_this->EVRecv::resume_ex();
+		_this->EVRecv::resume();
 	}
 	void iocontext::cb_write(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
 		auto _this = (iocontext *)w->data;
 		assert(_this != NULL);
-		_this->EVSend::resume_ex();
+		_this->EVSend::resume();
 	}
 	int iocontext::__close()
 	{
@@ -35,10 +35,10 @@ namespace coev
 			__finally();
 			::close(m_fd);
 			m_fd = INVALID;
-			while (EVRecv::resume_ex())
+			while (EVRecv::resume())
 			{
 			}
-			while (EVSend::resume_ex())
+			while (EVSend::resume())
 			{
 			}
 		}

@@ -65,8 +65,7 @@ awaiter<int> go()
 
 int main()
 {
-	routine r;
-	r.add(go);
-	r.join();
+	routine::instance().add(go);
+	routine::instance().join();
 	return 0;
 }

@@ -48,12 +48,12 @@ awaiter<int> co_iterator(int t)
 int main()
 {
 	set_log_level(LOG_LEVEL_CORE);
-	routine r;
-	r.add(co_sleep);
-	r.add(co_timer);
-	r.add([]()
+	
+	routine::instance().add(co_sleep);
+	routine::instance().add(co_timer);
+	routine::instance().add([]()
 		  { co_iterator(10); });
 
-	r.join();
+	routine::instance().join();
 	return 0;
 }

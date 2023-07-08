@@ -10,15 +10,17 @@
 #include <list>
 #include <functional>
 #include "loop.h"
+#include "singleton.h"
 
 namespace coev
 {
-	class routine 
+	class routine : public singleton<routine>
 	{
 		std::list<std::thread> m_list;
 		void __add(const std::function<void()> &);
 
 	public:
+		routine();
 		template <class _F>
 		void add(const _F &_f)
 		{
@@ -27,4 +29,5 @@ namespace coev
 		}
 		void join();
 	};
+
 }

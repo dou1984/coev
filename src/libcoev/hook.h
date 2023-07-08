@@ -6,7 +6,7 @@
  *
  */
 #pragma once
-#include "ThreadLocal.h"
+#include "threadlocal.h"
 #include "Mempool.h"
 
 extern "C"
@@ -20,6 +20,6 @@ extern "C"
 	{
 		using namespace __inner;
 		using mpool = mempool<0x100 - sizeof(Buffer), 0x400 - sizeof(Buffer), 0x1000 - sizeof(Buffer)>;
-		using tlmp = ThreadLocal<mpool>;
+		using tlmp = threadlocal<mpool>;
 	}
 }

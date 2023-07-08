@@ -28,7 +28,7 @@ awaiter<int> co_waiting()
 awaiter<int> co_trigger()
 {
  co_await sleep_for(5);
- g_trigger.EVRecv::resume_ex();
+ g_trigger.EVRecv::resume();
  co_return 0;
 }
 ```

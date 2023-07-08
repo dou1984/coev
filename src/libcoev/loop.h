@@ -10,7 +10,7 @@
 #include <ev.h>
 #include "log.h"
 #include "event.h"
-#define max_ev_loop (0x1000)
+#define max_ev_loop (0x100)
 
 namespace coev
 {

@@ -13,19 +13,13 @@
 
 namespace coev
 {
-	void ingore_signal(int sign)
-	{
-		struct sigaction s = {};
-		s.sa_handler = SIG_IGN;
-		s.sa_flags = 0;
-		sigaction(sign, &s, NULL);
-	}
+	
 
 	void ossignal::cb_signal(struct ev_loop *loop, struct ev_signal *w, int revents)
 	{
 		ossignal *_this = (ossignal *)w->data;
 		assert(_this);
-		_this->EVRecv::resume_ex();
+		_this->EVRecv::resume();
 	}
 	ossignal::ossignal(uint32_t id) : m_id(id)
 	{

@@ -10,8 +10,9 @@
 namespace coev
 {
 	template <class _Type>
-	struct singleton final
+	class singleton
 	{
+	public:
 		static _Type &instance()
 		{
 			static _Type obj;

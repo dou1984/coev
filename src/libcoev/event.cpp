@@ -10,19 +10,19 @@
 
 namespace coev
 {
-	event::event(chain *obj, uint32_t _tag) : m_object(obj), m_tag(_tag)
+	event::event(chain *obj, uint32_t _tag) : m_eventchain(obj), m_tag(_tag)
 	{
-		if (m_object != nullptr)
-			m_object->push_back(this);
+		if (m_eventchain != nullptr)
+			m_eventchain->push_back(this);
 	}
 	event::event(chain *obj) : event(obj, loop::tag())
 	{
 	}
 	event::~event()
 	{
-		if (m_object != nullptr)
-			m_object->erase(this);
-		m_object = nullptr;
+		if (m_eventchain != nullptr)
+			m_eventchain->erase(this);
+		m_eventchain = nullptr;
 		m_awaiting = nullptr;
 	}
 	void event::await_resume()
@@ -30,13 +30,13 @@ namespace coev
 	}
 	bool event::await_ready()
 	{
-		return m_object == nullptr;
+		return m_eventchain == nullptr;
 	}
 	void event::await_suspend(std::coroutine_handle<> awaiting)
 	{
 		m_awaiting = awaiting;
 	}
-	void event::resume_ex()
+	void event::resume()
 	{
 		if (m_awaiting && !m_awaiting.done())
 			m_awaiting.resume();

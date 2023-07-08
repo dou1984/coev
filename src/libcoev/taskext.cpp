@@ -8,7 +8,7 @@ namespace coev
 		if (m_taskchain)
 		{
 			m_taskchain->EVTask::erase(this);
-			m_taskchain->EVEvent::resume_ex();
+			m_taskchain->EVEvent::resume();
 			m_taskchain = nullptr;
 		}
 	}

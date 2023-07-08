@@ -8,7 +8,7 @@
 #include <string.h>
 #include <dlfcn.h>
 #include "hook.h"
-#include "ThreadLocal.h"
+#include "threadlocal.h"
 #include "Mempool.h"
 
 using namespace coev;

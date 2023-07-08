@@ -20,7 +20,7 @@ namespace coev
 	int on_message_complete(http_parser *_)
 	{
 		auto _this = static_cast<Httprequest *>(_);
-		_this->EVRecv::resume_ex();
+		_this->EVRecv::resume();
 		return 0;
 	}
 	int on_url(http_parser *_, const char *at, size_t length)

@@ -13,7 +13,6 @@
 #include "async.h"
 #include "ossignal.h"
 #include "task.h"
-#include "comutex.h"
 
 namespace coev
 {

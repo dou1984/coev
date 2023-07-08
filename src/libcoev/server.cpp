@@ -28,7 +28,7 @@ namespace coev::tcp
 			return;
 		server *_this = (server *)(w->data);
 		assert(_this != nullptr);
-		_this->EVRecv::resume_ex();
+		_this->EVRecv::resume();
 	}
 	server::~server()
 	{

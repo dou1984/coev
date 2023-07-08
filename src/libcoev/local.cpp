@@ -7,7 +7,7 @@
  */
 #include <memory>
 #include "loop.h"
-#include "ThreadLocal.h"
+#include "threadlocal.h"
 #include "local.h"
 #include "System.h"
 
@@ -25,7 +25,7 @@ namespace coev
 		TRACE();
 		assert(m_current);
 		if (--m_current->m_ref == 0)
-			m_current->EVRecv::resume_ex();
+			m_current->EVRecv::resume();
 	}
 	std::unique_ptr<localext> local::ref()
 	{

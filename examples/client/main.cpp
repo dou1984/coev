@@ -57,15 +57,14 @@ void co_test()
 }
 int main()
 {
-	ingore_signal(SIGPIPE);
+
 	set_log_level(LOG_LEVEL_ERROR);
 
-	routine r;
-	r.add(co_test);
-	r.add(co_test);
-	r.add(co_test);
-	r.add(co_test);
-	r.join();
+	routine ::instance().add(co_test);
+	routine ::instance().add(co_test);
+	routine ::instance().add(co_test);
+	routine ::instance().add(co_test);
+	routine ::instance().join();
 
 	return 0;
 }

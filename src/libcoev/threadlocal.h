@@ -10,7 +10,7 @@
 namespace coev
 {
 	template <class _Type>
-	struct ThreadLocal final
+	struct threadlocal final
 	{
 		static _Type &instance()
 		{

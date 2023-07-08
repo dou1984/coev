@@ -10,7 +10,7 @@
 
 namespace coev::tcp
 {
-	serverpool::operator server &()
+	server &serverpool::get()
 	{
 		auto _tag = loop::tag();
 		if (_tag < m_pool.size())
@@ -24,7 +24,7 @@ namespace coev::tcp
 			}
 			return s;
 		}
-		throw(" server pool error");
+		throw("server pool error");
 	}
 	int serverpool::start(const char *ip, int size)
 	{

@@ -15,11 +15,11 @@ namespace coev::tcp
 	class serverpool final
 	{
 		int m_fd = INVALID;
-		std::array<server, 0x40> m_pool;
+		std::array<server, max_ev_loop> m_pool;
 		std::mutex m_mutex;
 
 	public:
-		operator server &();
+		server& get();
 		int start(const char *, int);
 		int stop();
 	};

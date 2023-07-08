@@ -13,7 +13,6 @@
 #define SIGNALMAX (64)
 namespace coev
 {
-	void ingore_signal(int sign);
 	struct ossignal final : EVRecv
 	{	
 		ossignal(uint32_t id);

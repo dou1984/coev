@@ -107,9 +107,8 @@ awaiter<int> clear()
 int main()
 {
 	set_log_level(LOG_LEVEL_ERROR);
-	routine r;
-	r.add(go);
+	routine::instance().add(go);
 	// r.add(clear);
-	r.join();
+	routine::instance().join();
 	return 0;
 }

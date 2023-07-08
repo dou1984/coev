@@ -11,7 +11,7 @@
 
 using namespace coev;
 
-tcp::server srv;
+tcp::serverpool pool;
 
 awaiter<int> echo(iocontext &c, Httprequest &req)
 {
@@ -40,6 +40,7 @@ awaiter<int> get_request(iocontext &io, Httprequest &req)
 		auto r = co_await io.recv(buffer, sizeof(buffer));
 		if (r == INVALID)
 		{
+			LOG_FATAL("close %d\n", errno)
 			co_await io.close();
 			co_return r;
 		}
@@ -55,6 +56,7 @@ awaiter<int> dispatch(const ipaddress &addr, iocontext &io)
 }
 awaiter<int> co_httpserver()
 {
+	auto &srv = pool.get();
 	while (srv)
 	{
 		co_await srv.accept(dispatch);
@@ -64,12 +66,11 @@ awaiter<int> co_httpserver()
 
 int main()
 {
-	ingore_signal(SIGPIPE);
+
 	set_log_level(LOG_LEVEL_ERROR);
 
-	srv.start("127.0.0.1", 9960);
-	routine r;
-	r.add(co_httpserver);
-	loop::start();
+	pool.start("127.0.0.1", 9960);
+	routine::instance().add(co_httpserver);
+	routine::instance().join();
 	return 0;
 }

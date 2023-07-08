@@ -34,11 +34,9 @@ awaiter<int> test_go()
 
 int main()
 {
-
 	for (int i = 0; i < 8; i++)
-		routine::instance().add(test_go);
-
-	routine::instance().join();
+		routine ::instance().add(test_go);
+	routine ::instance().join();
 
 	return 0;
 }

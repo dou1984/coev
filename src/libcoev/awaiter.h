@@ -30,7 +30,7 @@ namespace coev
 				if (_this != nullptr)
 				{
 					_this->m_ready = true;
-					_this->resume_ex();
+					_this->resume();
 				}
 			}
 			awaiter get_return_object()
@@ -61,7 +61,7 @@ namespace coev
 			if (m_coroutine != nullptr)
 				m_coroutine.promise()._this = nullptr;
 		}
-		void resume_ex()
+		void resume()
 		{
 			if (m_awaiting && !m_awaiting.done())
 				m_awaiting.resume();
