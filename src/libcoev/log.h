@@ -10,11 +10,13 @@
 #include <string.h>
 #include <chrono>
 #include <ctime>
+#include <mutex>
 
 #define PRINT(...) printf(__VA_ARGS__)
 #define LOG(LEVEL, ...)                                         \
 	if (get_log_level() <= LEVEL)                               \
 	{                                                           \
+		std::lock_guard<std::mutex> _(get_log_mutex());         \
 		{                                                       \
 			auto now = std::chrono::system_clock::now();        \
 			auto t = std::chrono::system_clock::to_time_t(now); \
@@ -55,4 +57,5 @@ namespace coev
 	};
 	int set_log_level(int);
 	int get_log_level();
+	std::mutex &get_log_mutex();
 }

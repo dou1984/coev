@@ -9,26 +9,23 @@
 
 using namespace coev;
 
-
-// tcp::serverpool pool;
 tcp::server srv;
-awaiter<int> dispatch(sharedIOContext io)
+awaiter<int> dispatch(const ipaddress &addr, iocontext &io)
 {
-	auto &c = *io;
-	while (c)
+	while (io)
 	{
 		char buffer[0x1000];
-		auto r = co_await c.recv(buffer, sizeof(buffer));
+		auto r = co_await io.recv(buffer, sizeof(buffer));
 		if (r == INVALID)
 		{
-			close(c);
+			co_await io.close();
 			co_return 0;
 		}
 		LOG_DBG("%s\n", buffer);
-		r = co_await c.send(buffer, r);
+		r = co_await io.send(buffer, r);
 		if (r == INVALID)
 		{
-			close(c);
+			co_await io.close();
 			co_return 0;
 		}
 	}
@@ -36,15 +33,9 @@ awaiter<int> dispatch(sharedIOContext io)
 }
 awaiter<int> co_server()
 {
-	// tcp::server &s = pool;
 	while (srv)
 	{
-		ipaddress addr;
-		auto io = co_await srv.accept(addr);
-		if (*io)
-		{
-			dispatch(io);
-		}
+		co_await srv.accept(dispatch);
 	}
 	co_return INVALID;
 }

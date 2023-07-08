@@ -19,4 +19,9 @@ namespace coev
 	{
 		return g_log_level;
 	}
+	std::mutex &get_log_mutex()
+	{
+		static std::mutex _;
+		return _;
+	}
 }

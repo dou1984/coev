@@ -17,9 +17,6 @@
 
 namespace coev
 {
-
-	
-
 	awaiter<int> sleep_for(long);
 	awaiter<int> usleep_for(long);
 

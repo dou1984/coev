@@ -43,5 +43,4 @@ namespace coev
 		static void cb_write(struct ev_loop *loop, struct ev_io *w, int revents);
 		static void cb_read(struct ev_loop *loop, struct ev_io *w, int revents);
 	};
-	using sharedIOContext = std::shared_ptr<coev::iocontext>;
 }

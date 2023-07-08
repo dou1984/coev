@@ -95,19 +95,27 @@ namespace coev::tcp
 	{
 		return m_fd != INVALID;
 	}
-	awaiter<sharedIOContext> server::accept(ipaddress &peer)
+	awaiter<int> server::accept(const fnaccept &__func)
 	{
 		if (!__valid())
 		{
-			co_return std::make_shared<iocontext>(INVALID);
+			co_return INVALID;
 		}
 		co_await wait_for<EVRecv>(*this);
+		ipaddress peer;
 		auto fd = __accept(m_fd, peer);
 		if (fd != INVALID)
 		{
 			setNoBlock(fd, true);
 		}
-		co_return std::make_shared<iocontext>(fd);
+
+		[=]() -> awaiter<int>
+		{
+			iocontext ctx(fd);
+			co_await __func(peer, ctx);
+			co_return 0;
+		}();
+		co_return fd;
 	}
 
 }

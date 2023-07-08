@@ -11,7 +11,7 @@
 
 using namespace coev;
 
-tcp::serverpool pool;
+tcp::server srv;
 
 awaiter<int> echo(iocontext &c, Httprequest &req)
 {
@@ -32,37 +32,32 @@ Content-Type: text/html; charset=utf-8)";
 	co_await c.send(s.data(), s.size());
 	co_return 0;
 }
-awaiter<int> get_request(iocontext &c, Httprequest &req)
+awaiter<int> get_request(iocontext &io, Httprequest &req)
 {
-	while (c)
+	while (io)
 	{
 		char buffer[0x1000];
-		auto r = co_await c.recv(buffer, sizeof(buffer));
+		auto r = co_await io.recv(buffer, sizeof(buffer));
 		if (r == INVALID)
 		{
-			close(c);
+			co_await io.close();
 			co_return r;
 		}
 		req.parse(buffer, r);
 	}
 	co_return 0;
 }
-awaiter<int> dispatch(sharedIOContext io)
+awaiter<int> dispatch(const ipaddress &addr, iocontext &io)
 {
-	auto &c = *io;
 	Httprequest req;
-	co_await wait_for_any(get_request(c, req), echo(c, req));
+	co_await wait_for_any(get_request(io, req), echo(io, req));
 	co_return 0;
 }
 awaiter<int> co_httpserver()
 {
-	tcp::server &s = pool;
-	while (s)
+	while (srv)
 	{
-		ipaddress addr;
-		auto io = co_await s.accept(addr);
-		if (*io)
-			dispatch(io);
+		co_await srv.accept(dispatch);
 	}
 	co_return INVALID;
 }
@@ -72,11 +67,8 @@ int main()
 	ingore_signal(SIGPIPE);
 	set_log_level(LOG_LEVEL_ERROR);
 
-	pool.start("127.0.0.1", 9960);
+	srv.start("127.0.0.1", 9960);
 	routine r;
-	r.add(co_httpserver);
-	r.add(co_httpserver);
-	r.add(co_httpserver);
 	r.add(co_httpserver);
 	loop::start();
 	return 0;

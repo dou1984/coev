@@ -15,15 +15,16 @@
 
 namespace coev::tcp
 {
-	
+
 	struct server final : public EVRecv
 	{
+		using fnaccept = std::function<awaiter<int>(const ipaddress &, iocontext &)>;
 		server() = default;
 		virtual ~server();
 		int start(const char *ip, int port);
 		int stop();
 		operator bool() const;
-		awaiter<sharedIOContext> accept(ipaddress &);
+		awaiter<int> accept(const fnaccept &);
 
 		int m_fd = INVALID;
 		ev_io m_Reav;
