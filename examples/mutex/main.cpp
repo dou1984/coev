@@ -13,7 +13,7 @@
 using namespace coev;
 
 int g_total = 0;
-mutex g_mutex;
+comutex g_mutex;
 
 awaiter<int> test_go()
 {

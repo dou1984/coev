@@ -8,16 +8,15 @@
 #include <chrono>
 #include <thread>
 #include "loop.h"
-#include "mutex.h"
+#include "comutex.h"
 
 namespace coev
 {
-	awaiter<int> mutex::lock()
+	awaiter<int> comutex::lock()
 	{
 		m_lock.lock();
 		if (m_flag == off)
 		{
-			m_flag = on;
 			m_lock.unlock();
 			co_return 0;
 		}
@@ -27,7 +26,7 @@ namespace coev
 		co_await _event;
 		co_return 0;
 	}
-	awaiter<int> mutex::unlock()
+	awaiter<int> comutex::unlock()
 	{
 		m_lock.lock();
 		if (m_flag == off)

@@ -67,22 +67,10 @@ namespace coev
 				m_awaiting.resume();
 			taskext::__resume();
 		}
-		bool done()
-		{
-			return m_coroutine ? m_coroutine.done() : true;
-		}
-		bool await_ready()
-		{
-			return m_ready;
-		}
-		void await_suspend(std::coroutine_handle<> awaiting)
-		{
-			m_awaiting = awaiting;
-		}
-		auto await_resume()
-		{
-			return m_coroutine ? m_coroutine.promise().value : Ret{};
-		}
+		bool done() { return m_coroutine ? m_coroutine.done() : true; }
+		bool await_ready() { return m_ready; }
+		void await_suspend(std::coroutine_handle<> awaiting) { m_awaiting = awaiting; }
+		auto await_resume() { return m_coroutine ? m_coroutine.promise().value : Ret{}; }
 		void destroy()
 		{
 			if (m_coroutine)
