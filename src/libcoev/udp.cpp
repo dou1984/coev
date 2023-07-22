@@ -10,7 +10,7 @@
 namespace coev::udp
 {
 
-	int bind(const char *ip, int port)
+	int bindfd(const char *ip, int port)
 	{
 		int fd = ::socket(AF_INET, SOCK_DGRAM, 0);
 		if (fd == INVALID)
@@ -35,23 +35,19 @@ namespace coev::udp
 		}
 		return fd;
 	}
-	iocontext bind_fd(int fd)
-	{
-		return iocontext(fd);
-	}
-	iocontext socket()
+	int socketfd()
 	{
 		int fd = ::socket(AF_INET, SOCK_DGRAM, 0);
 		if (fd == INVALID)
 		{
-			return iocontext(fd);
+			return fd;
 		}
 		if (setNoBlock(fd, true) < 0)
 		{
 			::close(fd);
 			fd = INVALID;
-			return iocontext(fd);
+			return fd;
 		}
-		return iocontext(fd);
+		return fd;
 	}
 }

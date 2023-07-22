@@ -28,7 +28,8 @@ Connection: Keep-Alive
 Content-Type: text/html; charset=utf-8)";
 
 	auto s = oss.str();
-	co_await c.send(s.data(), s.size());
+	req.m_response = oss.str();
+	co_await c.send(req.m_response.data(), req.m_response.size());
 	co_return 0;
 }
 

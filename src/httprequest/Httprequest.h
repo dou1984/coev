@@ -17,9 +17,10 @@ namespace coev
 		virtual ~Httprequest() = default;
 		int parse(const char *, int);
 
-		std::string last_header;
 		std::unordered_map<std::string, std::string> m_header;
+		std::string last_header;
 		std::string m_body;
 		std::string m_url;
+		std::string m_response;
 	};
 }

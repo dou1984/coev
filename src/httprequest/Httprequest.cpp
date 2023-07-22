@@ -28,13 +28,13 @@ namespace coev
 	{
 		auto _this = static_cast<Httprequest *>(_);
 		_this->m_url = std::string(at, length);
-		LOG_DBG("url:%s\n", _this->m_url.c_str());
+		LOG_CORE("url:%s\n", _this->m_url.c_str());
 		return 0;
 	}
 	int on_status(http_parser *_, const char *at, size_t length)
 	{
 		auto _this = static_cast<Httprequest *>(_);
-		LOG_DBG("status:%s\n", at);
+		LOG_CORE("status:%s\n", at);
 		return 0;
 	}
 	int on_header_field(http_parser *_, const char *at, size_t length)
@@ -47,14 +47,14 @@ namespace coev
 	{
 		auto _this = static_cast<Httprequest *>(_);
 		_this->m_header[_this->last_header] = std::string(at, length);
-		LOG_DBG("header:%s -> %s\n", _this->last_header.c_str(), _this->m_header[_this->last_header].c_str());
+		LOG_CORE("header:%s -> %s\n", _this->last_header.c_str(), _this->m_header[_this->last_header].c_str());
 		return 0;
 	}
 	int on_body(http_parser *_, const char *at, size_t length)
 	{
 		auto _this = static_cast<Httprequest *>(_);
 		_this->m_body = std::string(at, length);
-		LOG_DBG("body:%s\n", _this->m_body.c_str());
+		LOG_CORE("body:%s\n", _this->m_body.c_str());
 		return 0;
 	}
 	static http_parser_settings g_settings = {

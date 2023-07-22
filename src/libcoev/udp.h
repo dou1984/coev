@@ -11,7 +11,6 @@
 
 namespace coev::udp
 {
-	int bind(const char *ip, int port);
-	iocontext bind_fd(int);
-	iocontext socket();
+	int bindfd(const char *ip, int port);
+	int socketfd();
 }

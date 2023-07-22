@@ -26,7 +26,7 @@ awaiter go(int fd)
 }
 int main()
 {
-	auto fd = udp::bind("127.0.0.1", 9998);
+	auto fd = udp::bindfd("127.0.0.1", 9998);
 	routine::instance()
 		.add(4,
 			 [=]()
