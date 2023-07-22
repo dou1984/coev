@@ -10,6 +10,12 @@
 namespace coev
 {
 	int g_log_level = LOG_LEVEL_DEBUG;
+	const char *g_log_str[] = {
+		"CORE",
+		"DEBUG",
+		"WARN",
+		"ERROR",
+		"FATAL"};
 	int set_log_level(int _level)
 	{
 		g_log_level = _level;
@@ -23,5 +29,9 @@ namespace coev
 	{
 		static std::mutex _;
 		return _;
+	}
+	const char *get_log_str(int level)
+	{
+		return g_log_str[level];
 	}
 }

@@ -9,17 +9,16 @@
 
 using namespace coev;
 
-awaiter go()
+awaiter go(int fd)
 {
-	auto c = udp::bind("127.0.0.1", 9998);
-
-	while (c)
+	iocontext io(fd);
+	while (io)
 	{
 		ipaddress addr;
 		char buffer[1000];
-		auto r = co_await c.recvfrom(buffer, sizeof(buffer), addr);
+		auto r = co_await io.recvfrom(buffer, sizeof(buffer), addr);
 		LOG_DBG("recvfrom %s:%d %s\n", addr.ip, addr.port, buffer);
-		co_await c.sendto(buffer, r, addr);
+		co_await io.sendto(buffer, r, addr);
 		LOG_DBG("sendto %s:%d %s\n", addr.ip, addr.port, buffer);
 	}
 
@@ -27,8 +26,14 @@ awaiter go()
 }
 int main()
 {
+	auto fd = udp::bind("127.0.0.1", 9998);
+	routine::instance()
+		.add(4,
+			 [=]()
+			 {
+				 go(fd);
+			 })
+		.join();
 
-	routine::instance().add(go);
-	routine::instance().join();
 	return 0;
 }

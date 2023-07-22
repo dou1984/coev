@@ -22,9 +22,10 @@
 			auto d = std::localtime(&t);                        \
 			auto f = strrchr(__FILE__, '/');                    \
 			f = f ? f + 1 : __FILE__;                           \
-			PRINT("[%d/%d/%d %02d:%02d:%02d %s:%d/%s]",         \
+			PRINT("[%d/%d/%d %02d:%02d:%02d %s][%s:%d/%s]",     \
 				  d->tm_year + 1900, d->tm_mon + 1, d->tm_mday, \
 				  d->tm_hour, d->tm_min, d->tm_sec,             \
+				  get_log_str(LEVEL),                           \
 				  f, __LINE__, __FUNCTION__);                   \
 		}                                                       \
 		{                                                       \
@@ -57,4 +58,5 @@ namespace coev
 	int set_log_level(int);
 	int get_log_level();
 	std::mutex &get_log_mutex();
+	const char *get_log_str(int level);
 }

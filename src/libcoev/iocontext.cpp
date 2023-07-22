@@ -59,7 +59,7 @@ namespace coev
 	}
 	int iocontext::__init()
 	{
-		LOG_DBG("fd:%d\n", m_fd);
+		LOG_CORE("fd:%d\n", m_fd);
 		if (m_fd != INVALID)
 		{
 			m_Read.data = this;
@@ -73,7 +73,7 @@ namespace coev
 	}
 	int iocontext::__finally()
 	{
-		LOG_DBG("fd:%d\n", m_fd);
+		LOG_CORE("fd:%d\n", m_fd);
 		if (m_fd != INVALID)
 		{
 			ev_io_stop(loop::at(m_tag), &m_Read);

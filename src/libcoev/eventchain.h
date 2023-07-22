@@ -19,7 +19,6 @@ namespace coev
 		{
 			if (chain::empty())
 				return false;
-			TRACE();
 			auto c = static_cast<event *>(chain::pop_front());
 			c->resume();
 			return true;

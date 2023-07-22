@@ -34,8 +34,7 @@ awaiter test_go()
 
 int main()
 {
-	routine ::instance().add(8, test_go);
-	routine ::instance().join();
+	routine::instance().add(8, test_go).join();
 
 	return 0;
 }
