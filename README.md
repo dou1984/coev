@@ -67,12 +67,10 @@ awaiter test_upper()
 }
 ```
 
-## task
-
-task is used to wait for the completion of the coroutine. task can choose two modes, one is to wait for all tasks to complete before exiting, and the other is to exit as long as one task is completed.
+awaiter is used to wait for the completion of the coroutine. awaiter can choose two modes, one is to wait for all tasks to complete before exiting, and the other is to exit as long as one task is completed.
 
 ```cpp
-task co_sleep(int t)
+awaiter co_sleep(int t)
 {
   co_await sleep_for(t);
   co_return 0；
