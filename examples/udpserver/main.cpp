@@ -30,9 +30,7 @@ int main()
 	routine::instance()
 		.add(4,
 			 [=]()
-			 {
-				 go(fd);
-			 })
+			 { go(fd); })
 		.join();
 
 	return 0;

@@ -14,7 +14,6 @@ awaiter go()
 	ipaddress addr = {"127.0.0.1", 9998};
 	auto fd = udp::socketfd();
 	iocontext io(fd);
-	;
 	while (io)
 	{
 		char buffer[1000] = "hello world";
