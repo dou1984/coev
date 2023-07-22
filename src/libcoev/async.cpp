@@ -24,7 +24,7 @@ namespace coev
 	async::async() : async(loop::data(), ttag())
 	{
 	}
-	async::async(struct ev_loop *__loop, int __tag)
+	async::async(struct ev_loop *__loop, uint64_t __tag)
 	{
 		m_Async.data = this;
 		ev_async_init(&m_Async, async::cb_async);

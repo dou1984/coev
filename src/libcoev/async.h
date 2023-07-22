@@ -17,7 +17,7 @@ namespace coev
 	{
 	public:
 		async();
-		async(struct ev_loop *, int);
+		async(struct ev_loop *, uint64_t);
 		~async();
 
 		int resume_event(event *ev);
@@ -25,7 +25,7 @@ namespace coev
 	private:
 		ev_async m_Async;
 		std::mutex m_lock;
-		uint32_t m_tag = 0;
+		uint64_t m_tag = 0;
 		static void cb_async(struct ev_loop *loop, ev_async *w, int revents);
 		int __resume();
 		int resume();

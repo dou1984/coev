@@ -217,7 +217,7 @@ namespace coev
 		m_port = port;
 		m_auth = auth;
 	}
-	awaiter<int> Rediscli::connect()
+	awaiter Rediscli::connect()
 	{
 		__connect();
 		co_await wait_for<EVRecv>(*this);
@@ -225,7 +225,7 @@ namespace coev
 		__process_insert();
 		co_return 0;
 	}
-	awaiter<int> Rediscli::query(const char *message, const std::function<void(Redisresult &)> &callback)
+	awaiter Rediscli::query(const char *message, const std::function<void(Redisresult &)> &callback)
 	{
 		LOG_DBG("query %s\n", message);
 		redisAsyncCommand(m_context, Rediscli::__callback, this, message);

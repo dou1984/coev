@@ -9,7 +9,7 @@
 
 using namespace coev;
 
-awaiter<int> test_sleep(int x)
+awaiter test_sleep(int x)
 {
 	auto c = local::ref();
 	LOG_DBG("sleep begin %d\n", x);
@@ -23,7 +23,7 @@ int test_calc()
 	test_sleep(2);
 	return 0;
 }
-awaiter<int> test()
+awaiter test()
 {
 	test_calc();
 	LOG_DBG("wait_for_local begin\n");

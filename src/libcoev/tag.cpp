@@ -4,10 +4,10 @@
 
 namespace coev
 {
-	static std::atomic<uint32_t> g_index{0};
-	int ttag()
+	static std::atomic<uint64_t> g_index{0};
+	uint64_t ttag()
 	{
-		thread_local uint32_t _tag{g_index++};
+		thread_local uint64_t _tag{g_index++};
 		return _tag;
 	}
 }

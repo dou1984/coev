@@ -24,7 +24,7 @@ namespace coev
 
 	struct __ev_loop
 	{
-		uint32_t m_tag = 0;
+		uint64_t m_tag = 0;
 		struct ev_loop *m_loop = nullptr;
 		__ev_loop()
 		{
@@ -53,9 +53,9 @@ namespace coev
 	{
 		return g_loop.m_loop;
 	}
-	struct ev_loop *loop::at(uint32_t _tag)
+	struct ev_loop *loop::at(uint64_t _tag)
 	{
-		if (_tag < max_ev_loop)
+		if (_tag < max_ev_loop && data())
 			return all_loops[_tag]->m_loop;
 		return nullptr;
 	}

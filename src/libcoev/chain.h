@@ -14,9 +14,6 @@ namespace coev
 {
 	class chain
 	{
-		chain *m_prev = this;
-		chain *m_next = this;
-
 	public:
 		chain() = default;
 		chain(chain &&) = delete;
@@ -41,5 +38,8 @@ namespace coev
 		// void __list_append(chain *p, chain *n, chain *prev, chain *next);
 		void __list_move(chain *prev, chain *next);
 		void __list_clear();
+
+		chain *m_prev = this;
+		chain *m_next = this;
 	};
 }

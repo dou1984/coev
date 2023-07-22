@@ -12,10 +12,10 @@
 
 namespace coev
 {
-	int cowaiter::add()
+	int cowaiter::add(int c)
 	{
 		std::lock_guard<std::mutex> _(m_lock);
-		++m_count;
+		m_count += c;
 		return 0;
 	}
 	int cowaiter::done()
@@ -39,7 +39,7 @@ namespace coev
 		loop::resume(c);
 		return 0;
 	}
-	awaiter<int> cowaiter::wait()
+	awaiter cowaiter::wait()
 	{
 		m_lock.lock();
 		EVMutex *ev = this;

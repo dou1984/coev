@@ -9,7 +9,7 @@
 #include "loop.h"
 #include "threadlocal.h"
 #include "local.h"
-#include "System.h"
+#include "waitfor.h"
 
 namespace coev
 {
@@ -31,7 +31,7 @@ namespace coev
 	{
 		return std::make_unique<localext>(g_local);
 	}
-	awaiter<int> wait_for_local()
+	awaiter wait_for_local()
 	{
 		auto _this = g_local;
 		g_local = std::make_shared<local>();

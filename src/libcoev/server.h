@@ -18,19 +18,20 @@ namespace coev::tcp
 
 	struct server final : public EVRecv
 	{
-		using fnaccept = std::function<awaiter<int>(const ipaddress &, iocontext &)>;
+		using fnaccept = std::function<awaiter(const ipaddress &, iocontext &)>;
 		server() = default;
 		virtual ~server();
 		int start(const char *ip, int port);
 		int stop();
-		operator bool() const;
-		awaiter<int> accept(const fnaccept &);
+		awaiter accept(const fnaccept &dispatch);
 
 		int m_fd = INVALID;
 		ev_io m_Reav;
-		int __insert(uint32_t _tag);
-		int __remove(uint32_t _tag);
+
+		int __insert(uint64_t _tag);
+		int __remove(uint64_t _tag);
 		bool __valid() const;
+		awaiter __accept(const fnaccept &);
 		static void cb_accept(struct ev_loop *loop, struct ev_io *w, int revents);
 	};
 }

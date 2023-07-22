@@ -21,7 +21,7 @@ namespace coev
 		assert(_this);
 		_this->EVRecv::resume();
 	}
-	ossignal::ossignal(uint32_t id) : m_id(id)
+	ossignal::ossignal(uint64_t id) : m_id(id)
 	{
 		if (m_id >= SIGNALMAX)
 		{

@@ -13,13 +13,12 @@ namespace coev
 {
 	struct task;
 
-	class taskext : public chain
+	class taskext : protected chain
 	{
-	public:
-		task *m_taskchain = nullptr;
-		virtual void destroy() = 0;
-
 	protected:
+		friend struct task;
+
+		task *m_taskchain = nullptr;
 		void __resume();
 		virtual ~taskext();
 	};

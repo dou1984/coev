@@ -12,7 +12,7 @@
 
 namespace coev
 {
-	awaiter<int> comutex::lock()
+	awaiter comutex::lock()
 	{
 		m_lock.lock();
 		if (m_flag == off)
@@ -26,7 +26,7 @@ namespace coev
 		co_await _event;
 		co_return 0;
 	}
-	awaiter<int> comutex::unlock()
+	awaiter comutex::unlock()
 	{
 		m_lock.lock();
 		if (m_flag == off)

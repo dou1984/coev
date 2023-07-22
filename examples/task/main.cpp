@@ -9,9 +9,9 @@
 
 using namespace coev;
 
-awaiter<int> co_task(bool for_all)
+awaiter co_task(bool for_all)
 {
-	auto t0 = []() -> awaiter<int>
+	auto t0 = []() -> awaiter
 	{
 		TRACE();
 		co_await sleep_for(2);
@@ -19,7 +19,7 @@ awaiter<int> co_task(bool for_all)
 		co_return 0;
 	}();
 
-	auto t1 = []() -> awaiter<int>
+	auto t1 = []() -> awaiter
 	{
 		TRACE();
 		co_await sleep_for(5);
@@ -35,7 +35,7 @@ awaiter<int> co_task(bool for_all)
 	co_return 0;
 }
 
-awaiter<int> co_task_short(bool for_all)
+awaiter co_task_short(bool for_all)
 {
 	if (for_all)
 		co_await wait_for_all(sleep_for(2), sleep_for(3));
@@ -63,11 +63,7 @@ void co_task_v()
 int main()
 {
 	set_log_level(LOG_LEVEL_CORE);
-	
-	routine::instance().add(co_task_t);
-	routine::instance().add(co_task_f);
-	routine::instance().add(co_task_u);
-	routine::instance().add(co_task_v);
-	routine::instance().join();
+
+	routine::instance().add(co_task_t).add(co_task_f).add(co_task_u).add(co_task_v).join();
 	return 0;
 }

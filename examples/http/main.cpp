@@ -10,10 +10,9 @@
 #include <coapp.h>
 
 using namespace coev;
-
 tcp::serverpool pool;
 
-awaiter<int> echo(iocontext &c, Httprequest &req)
+awaiter echo(iocontext &c, Httprequest &req)
 {
 	co_await wait_for<EVRecv>(req);
 	std::ostringstream oss;
@@ -32,7 +31,7 @@ Content-Type: text/html; charset=utf-8)";
 	co_await c.send(s.data(), s.size());
 	co_return 0;
 }
-awaiter<int> get_request(iocontext &io, Httprequest &req)
+awaiter get_request(iocontext &io, Httprequest &req)
 {
 	while (io)
 	{
@@ -48,27 +47,21 @@ awaiter<int> get_request(iocontext &io, Httprequest &req)
 	}
 	co_return 0;
 }
-awaiter<int> dispatch(const ipaddress &addr, iocontext &io)
+awaiter dispatch(const ipaddress &addr, iocontext &io)
 {
 	Httprequest req;
 	co_await wait_for_any(get_request(io, req), echo(io, req));
 	co_return 0;
 }
-awaiter<int> co_httpserver()
+awaiter co_httpserver()
 {
-	auto &srv = pool.get();
-	while (srv)
-	{
-		co_await srv.accept(dispatch);
-	}
+	co_await pool.get().accept(dispatch);
 	co_return INVALID;
 }
 
 int main()
 {
-
 	set_log_level(LOG_LEVEL_ERROR);
-
 	pool.start("127.0.0.1", 9960);
 	routine::instance().add(co_httpserver);
 	routine::instance().join();

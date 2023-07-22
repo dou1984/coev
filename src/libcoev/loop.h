@@ -19,7 +19,7 @@ namespace coev
 	{
 		static void start();
 		static struct ev_loop *data();
-		static struct ev_loop *at(uint32_t);
+		static struct ev_loop *at(uint64_t);
 		static void resume(event *);
 	};
 }

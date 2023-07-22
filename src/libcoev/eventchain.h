@@ -28,7 +28,6 @@ namespace coev
 
 	using EVRecv = eventchain<RECV>;
 	using EVSend = eventchain<SEND>;
-	using EVChannel = eventchain<CHANNEL>;
 	using EVEvent = eventchain<EVENT>;
 	using EVTask = eventchain<TASK>;
 	using EVTimer = eventchain<TIMER>;

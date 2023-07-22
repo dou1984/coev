@@ -7,7 +7,7 @@
  */
 #include "client.h"
 #include "loop.h"
-#include "system.h"
+#include "waitfor.h"
 
 namespace coev
 {
@@ -70,7 +70,7 @@ namespace coev
 		}
 		return __close();
 	}
-	awaiter<int> client::connect(const char *ip, int port)
+	awaiter client::connect(const char *ip, int port)
 	{
 		int fd = __connect(ip, port);
 		if (fd == INVALID)

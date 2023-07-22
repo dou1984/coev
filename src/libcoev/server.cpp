@@ -7,7 +7,7 @@
  */
 #include "server.h"
 #include "loop.h"
-#include "system.h"
+#include "waitfor.h"
 
 namespace coev::tcp
 {
@@ -33,10 +33,6 @@ namespace coev::tcp
 	server::~server()
 	{
 		stop();
-	}
-	server::operator bool() const
-	{
-		return m_fd != INVALID;
 	}
 	int server::start(const char *ip, int port)
 	{
@@ -79,14 +75,14 @@ namespace coev::tcp
 		}
 		return 0;
 	}
-	int server::__insert(uint32_t _tag)
+	int server::__insert(uint64_t _tag)
 	{
 		m_Reav.data = this;
 		ev_io_init(&m_Reav, server::cb_accept, m_fd, EV_READ);
 		ev_io_start(loop::at(_tag), &m_Reav);
 		return m_fd;
 	}
-	int server::__remove(uint32_t _tag)
+	int server::__remove(uint64_t _tag)
 	{
 		ev_io_stop(loop::at(_tag), &m_Reav);
 		return m_fd;
@@ -95,7 +91,7 @@ namespace coev::tcp
 	{
 		return m_fd != INVALID;
 	}
-	awaiter<int> server::accept(const fnaccept &__func)
+	awaiter server::__accept(const fnaccept &__func)
 	{
 		if (!__valid())
 		{
@@ -103,13 +99,13 @@ namespace coev::tcp
 		}
 		co_await wait_for<EVRecv>(*this);
 		ipaddress peer;
-		auto fd = __accept(m_fd, peer);
+		auto fd = coev::tcp::__accept(m_fd, peer);
 		if (fd != INVALID)
 		{
 			setNoBlock(fd, true);
 		}
 
-		[=]() -> awaiter<int>
+		[=]() -> awaiter
 		{
 			iocontext ctx(fd);
 			co_await __func(peer, ctx);
@@ -117,5 +113,12 @@ namespace coev::tcp
 		}();
 		co_return fd;
 	}
-
+	awaiter server::accept(const fnaccept &dispatch)
+	{
+		while (__valid())
+		{
+			co_await __accept(dispatch);
+		}
+		co_return INVALID;
+	}
 }

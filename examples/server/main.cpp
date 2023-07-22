@@ -10,7 +10,7 @@
 using namespace coev;
 
 tcp::serverpool pool;
-awaiter<int> dispatch(const ipaddress &addr, iocontext &io)
+awaiter dispatch(const ipaddress &addr, iocontext &io)
 {
 	while (io)
 	{
@@ -31,13 +31,9 @@ awaiter<int> dispatch(const ipaddress &addr, iocontext &io)
 	}
 	co_return INVALID;
 }
-awaiter<int> co_server()
+awaiter co_server()
 {
-	auto &srv = pool.get();
-	while (srv)
-	{
-		co_await srv.accept(dispatch);
-	}
+	co_await pool.get().accept(dispatch);
 	co_return INVALID;
 }
 
@@ -48,10 +44,6 @@ int main()
 
 	pool.start("127.0.0.1", 9960);
 
-	routine::instance().add(co_server);
-	routine::instance().add(co_server);
-	routine::instance().add(co_server);
-	routine::instance().add(co_server);
-	routine::instance().join();
+	routine::instance().add(4, co_server).join();
 	return 0;
 }

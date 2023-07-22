@@ -16,7 +16,7 @@
 namespace coev
 {
 	template <class TYPE>
-	class channel final : EVChannel
+	class channel final : EVRecv
 	{
 		std::list<TYPE> m_data;
 		std::mutex m_lock;
@@ -26,23 +26,23 @@ namespace coev
 			d = std::move(m_data.front());
 			m_data.pop_front();
 		}
-		event *__set(TYPE &d)
+		event *__set(TYPE &&d)
 		{
 			std::lock_guard<decltype(m_lock)> _(m_lock);
 			m_data.emplace_back(std::move(d));
-			return !EVChannel::empty() ? static_cast<event *>(EVChannel::pop_front()) : nullptr;
+			return !EVRecv::empty() ? static_cast<event *>(EVRecv::pop_front()) : nullptr;
 		}
 
 	public:
-		awaiter<int> set(TYPE &d)
+		awaiter set(TYPE &&d)
 		{
-			if (auto c = __set(d))
+			if (auto c = __set(std::move(d)))
 			{
 				loop::resume(c);
 			}
 			co_return 0;
 		}
-		awaiter<int> get(TYPE &d)
+		awaiter get(TYPE &d)
 		{
 			while (true)
 			{
@@ -53,7 +53,7 @@ namespace coev
 					m_lock.unlock();
 					co_return 0;
 				}
-				event e(static_cast<EVChannel *>(this), ttag());
+				event e(static_cast<EVRecv *>(this), ttag());
 				m_lock.unlock();
 				co_await e;
 			}

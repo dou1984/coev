@@ -6,23 +6,21 @@
  *
  */
 #include <ev.h>
-#include "Socket.h"
 #include "loop.h"
-#include "system.h"
+#include "sleepfor.h"
 #include "timer.h"
+#include "waitfor.h"
 
 namespace coev
 {
-
-	
-	awaiter<int> sleep_for(long t)
+	awaiter sleep_for(long t)
 	{
 		timer _timer(t, 0);
 		_timer.active();
 		co_await wait_for<EVTimer>(_timer);
 		co_return 0;
 	}
-	awaiter<int> usleep_for(long t)
+	awaiter usleep_for(long t)
 	{
 		timer _timer((float)t / 1000000, 0);
 		_timer.active();

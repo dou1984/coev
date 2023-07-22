@@ -9,7 +9,7 @@
 
 using namespace coev;
 
-awaiter<int> go()
+awaiter go()
 {
 	auto c = udp::bind("127.0.0.1", 9998);
 

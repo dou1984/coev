@@ -22,9 +22,6 @@ namespace coev
 	struct TASK
 	{
 	};
-	struct CHANNEL
-	{
-	};
 	struct TIMER
 	{
 	};

@@ -5,6 +5,7 @@
  *	All rights reserved.
  *
  */
+#include <algorithm>
 #include "loop.h"
 #include "serverpool.h"
 
@@ -13,43 +14,39 @@ namespace coev::tcp
 	server &serverpool::get()
 	{
 		auto _tag = ttag();
-		if (_tag < m_pool.size())
+		if (auto it = m_pool.find(_tag); it != m_pool.end())
+		{
+			return it->second;
+		}
+		else
 		{
 			std::lock_guard<std::mutex> _(m_mutex);
 			auto &s = m_pool[_tag];
-			if (s.m_fd == INVALID)
-			{
-				s.m_fd = m_fd;
-				s.__insert(_tag);
-			}
+			s.m_fd = m_fd;
+			s.__insert(_tag);
 			return s;
 		}
-		throw("server pool error");
 	}
 	int serverpool::start(const char *ip, int size)
 	{
 		auto _tag = ttag();
-		if (_tag < m_pool.size())
+		auto &s = m_pool[_tag];
+		if (m_fd == INVALID)
 		{
-			auto &s = m_pool[_tag];
-			if (m_fd == INVALID)
-			{
-				std::lock_guard<std::mutex> _(m_mutex);
-				m_fd = s.start(ip, size);
-			}
-			return m_fd;
+			std::lock_guard<std::mutex> _(m_mutex);
+			m_fd = s.start(ip, size);
 		}
-		return 0;
+		return m_fd;
 	}
 	int serverpool::stop()
 	{
-		for (size_t i = 0; i < m_pool.size(); i++)
+		for (auto &it : m_pool)
 		{
 			std::lock_guard<std::mutex> _(m_mutex);
-			auto &s = m_pool[i];
+			auto &s = it.second;
 			if (s.m_fd != INVALID)
 			{
-				s.__remove(i);
+				s.__remove(it.first);
 				s.m_fd = INVALID;
 			}
 		}

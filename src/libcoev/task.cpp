@@ -7,6 +7,7 @@
  */
 #include "event.h"
 #include "task.h"
+#include "awaiter.h"
 
 namespace coev
 {
@@ -20,9 +21,10 @@ namespace coev
 	{
 		while (!EVTask::empty())
 		{
-			auto c = static_cast<taskext *>(EVTask::pop_front());
-			c->m_taskchain = nullptr;
-			c->destroy();
+			auto t = static_cast<taskext *>(EVTask::pop_front());
+			t->m_taskchain = nullptr;
+			auto a = static_cast<awaiter *>(t);
+			a->destroy();
 		}
 	}
 	task::operator bool()

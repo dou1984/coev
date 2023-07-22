@@ -16,9 +16,9 @@ namespace coev
 	class cowaiter final : EVMutex
 	{
 	public:
-		int add();
+		int add(int c = 1);
 		int done();
-		awaiter<int> wait();
+		awaiter wait();
 
 	private:
 		std::mutex m_lock;

@@ -13,8 +13,8 @@
 
 namespace coev
 {
-	awaiter<int> sleep_for(long);
-	awaiter<int> usleep_for(long);
+	awaiter sleep_for(long);
+	awaiter usleep_for(long);
 
 	template <class EV, class OBJ>
 	event wait_for(OBJ &obj)
@@ -23,7 +23,7 @@ namespace coev
 		return event{ev};
 	}
 	template <class... T>
-	awaiter<int> wait_for_any(T &&..._task)
+	awaiter wait_for_any(T &&..._task)
 	{
 		task w;
 		(w.insert_task(&_task), ...);
@@ -32,7 +32,7 @@ namespace coev
 		co_return 0;
 	}
 	template <class... T>
-	awaiter<int> wait_for_all(T &&..._task)
+	awaiter wait_for_all(T &&..._task)
 	{
 		task w;
 		(w.insert_task(&_task), ...);

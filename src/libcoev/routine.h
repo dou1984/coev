@@ -22,10 +22,19 @@ namespace coev
 	public:
 		routine();
 		template <class _F>
-		void add(const _F &_f)
+		routine &add(const _F &_f)
 		{
 			__add([=]()
 				  { _f(); });
+			return *this;
+		}
+		template <class _F>
+		routine &add(int count, const _F &_f)
+		{
+			for (int i = 0; i < count; i++)
+				__add([=]()
+					  { _f(); });
+			return *this;
 		}
 		void join();
 	};

@@ -131,7 +131,7 @@ namespace coev
 	{
 		return mysql_get_socket_descriptor(m_mysql);
 	}
-	awaiter<int> Mysqlcli::connect()
+	awaiter Mysqlcli::connect()
 	{
 		if (__connect() == INVALID)
 			co_return INVALID;
@@ -149,7 +149,7 @@ namespace coev
 		}
 		co_return fd();
 	}
-	awaiter<int> Mysqlcli::query(const char *sql, int size)
+	awaiter Mysqlcli::query(const char *sql, int size)
 	{
 		int status = 0;
 		while ((status = mysql_send_query_nonblocking(m_mysql, sql, size)) == NET_ASYNC_NOT_READY)
@@ -186,7 +186,7 @@ namespace coev
 		}
 		co_return 0;
 	}
-	awaiter<int> Mysqlcli::query(const char *sql, int size, const std::function<void(int, MYSQL_ROW)> &callback)
+	awaiter Mysqlcli::query(const char *sql, int size, const std::function<void(int, MYSQL_ROW)> &callback)
 	{
 		auto r = co_await query(sql, size);
 		if (r == INVALID)

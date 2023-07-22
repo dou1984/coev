@@ -14,13 +14,13 @@ using namespace coev;
 channel<int> ch;
 
 std::atomic<int> total = 0;
-awaiter<int> go()
+awaiter go()
 {
 	int x = 0;
 	for (int i = 0; i < 100000; i++)
 	{
 		x++;
-		co_await ch.set(x);
+		co_await ch.set(std::move(x));
 		co_await ch.get(x);
 	}
 	total += x;
@@ -31,8 +31,7 @@ awaiter<int> go()
 int main()
 {
 
-	for (int i = 0; i < 8; i++)
-		routine::instance().add(go);
+	routine::instance().add(8, go);
 	routine::instance().join();
 	return 0;
 }

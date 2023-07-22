@@ -6,8 +6,8 @@
  *
  */
 #pragma once
-#include <array>
 #include <mutex>
+#include <unordered_map>
 #include "server.h"
 
 namespace coev::tcp
@@ -15,11 +15,12 @@ namespace coev::tcp
 	class serverpool final
 	{
 		int m_fd = INVALID;
-		std::array<server, max_ev_loop> m_pool;
+		// std::array<server, max_ev_loop> m_pool;
+		std::unordered_map<uint64_t, server> m_pool;
 		std::mutex m_mutex;
 
 	public:
-		server& get();
+		server &get();
 		int start(const char *, int);
 		int stop();
 	};

@@ -27,5 +27,5 @@ namespace coev
 		~localext();
 	};
 
-	awaiter<int> wait_for_local();
+	awaiter wait_for_local();
 }

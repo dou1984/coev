@@ -9,5 +9,5 @@
 
 namespace coev
 {
-	int ttag();
+	uint64_t ttag();
 }

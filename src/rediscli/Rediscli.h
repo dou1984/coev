@@ -36,8 +36,8 @@ namespace coev
 	{
 	public:
 		Rediscli(const char *ip, int port, const char *auth);
-		awaiter<int> connect();
-		awaiter<int> query(const char *, const std::function<void(Redisresult &)> &);
+		awaiter connect();
+		awaiter query(const char *, const std::function<void(Redisresult &)> &);
 		operator bool() const { return m_context != nullptr; }
 
 	private:

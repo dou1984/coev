@@ -12,7 +12,7 @@
 #include <arpa/inet.h>
 #include "loop.h"
 #include "iocontext.h"
-#include "system.h"
+#include "waitfor.h"
 
 namespace coev
 {
@@ -103,7 +103,7 @@ namespace coev
 		return *this;
 	}
 
-	awaiter<int> iocontext::send(const char *buffer, int size)
+	awaiter iocontext::send(const char *buffer, int size)
 	{
 		while (__valid())
 		{
@@ -122,7 +122,7 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	awaiter<int> iocontext::recv(char *buffer, int size)
+	awaiter iocontext::recv(char *buffer, int size)
 	{
 		while (__valid())
 		{
@@ -136,7 +136,7 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	awaiter<int> iocontext::recvfrom(char *buffer, int size, ipaddress &info)
+	awaiter iocontext::recvfrom(char *buffer, int size, ipaddress &info)
 	{
 		while (__valid())
 		{
@@ -153,7 +153,7 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	awaiter<int> iocontext::sendto(const char *buffer, int size, ipaddress &info)
+	awaiter iocontext::sendto(const char *buffer, int size, ipaddress &info)
 	{
 		while (__valid())
 		{
@@ -171,7 +171,7 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	awaiter<int> iocontext::close()
+	awaiter iocontext::close()
 	{
 		TRACE();
 		__close();

@@ -15,7 +15,7 @@ using namespace coev;
 int g_total = 0;
 comutex g_mutex;
 
-awaiter<int> test_go()
+awaiter test_go()
 {
 	auto now = std::chrono::system_clock::now();
 	for (int i = 0; i < 100000; i++)
@@ -34,8 +34,7 @@ awaiter<int> test_go()
 
 int main()
 {
-	for (int i = 0; i < 8; i++)
-		routine ::instance().add(test_go);
+	routine ::instance().add(8, test_go);
 	routine ::instance().join();
 
 	return 0;

@@ -10,7 +10,7 @@
 
 namespace coev
 {
-	event::event(chain *obj, uint32_t _tag) : m_eventchain(obj), m_tag(_tag)
+	event::event(chain *obj, uint64_t _tag) : m_eventchain(obj), m_tag(_tag)
 	{
 		if (m_eventchain != nullptr)
 			m_eventchain->push_back(this);

@@ -15,8 +15,8 @@ namespace coev
 	class comutex final : EVMutex
 	{
 	public:
-		awaiter<int> lock();
-		awaiter<int> unlock();
+		awaiter lock();
+		awaiter unlock();
 
 	private:
 		const int on = 1;

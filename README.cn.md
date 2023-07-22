@@ -20,12 +20,12 @@ struct Trigger :  EVRecv
 {
 } g_trigger;
 
-awaiter<int> co_waiting()
+awaiter co_waiting()
 { 
  co_await wait_for<EVRecv>(g_trigger);
  co_return 0;
 }
-awaiter<int> co_trigger()
+awaiter co_trigger()
 {
  co_await sleep_for(5);
  g_trigger.EVRecv::resume();
@@ -38,12 +38,12 @@ awaiter<int> co_trigger()
 Awaiter是coev的协程类，Awaiter使用起来很方便，把Awaiter定义为函数返回既可以创建一个协程，同时Awaiter可以定义返回值类型。
 
 ```cpp
-awaiter<int> co_sleep(int t)
+awaiter co_sleep(int t)
 {
   co_await sleep_for(t);
   co_return 0；
 }
-awaiter<int> co_iterator(int t)
+awaiter co_iterator(int t)
 {
  if (t > 0)
  {
@@ -57,11 +57,11 @@ awaiter<int> co_iterator(int t)
 awaiter可以用分级调用，这解决了coroutine中最常用的多级调用问题。
 
 ```cpp
-awaiter<int> test_lower()
+awaiter test_lower()
 {
   co_await co_sleep(1);
 }
-awaiter<int> test_upper()
+awaiter test_upper()
 {
  co_await test_lower();
 }
@@ -77,11 +77,11 @@ task co_sleep(int t)
   co_await sleep_for(t);
   co_return 0；
 }
-awaiter<int> test_any()
+awaiter test_any()
 {
  co_await wait_for_any(co_sleep(1), co_sleep(2));
 }
-awaiter<int> test_all()
+awaiter test_all()
 {
   co_await wait_for_all(co_sleep(1), co_sleep(2));
 }
@@ -93,13 +93,13 @@ channel用于数据传输。
 
 ```cpp
 channel<int> ch;
-awaiter<int> co_channel_input()
+awaiter co_channel_input()
 {
   int x = 1;
  co_await ch.set(x); 
  co_return 0;
 }
-awaiter<int> co_channel_output()
+awaiter co_channel_output()
 {
  int x = 0;
  co_await ch.get(x);
@@ -112,7 +112,7 @@ awaiter<int> co_channel_output()
 coev 可以查询mysql数据库。
 
 ```cpp
-awaiter<int> test_mysql()
+awaiter test_mysql()
 {
  Mysqlcli c("127.0.0.1", 3306, "root", "12345678", "test");
  auto r = co_await c.connect();
@@ -135,7 +135,7 @@ awaiter<int> test_mysql()
 coev 可以查询redis。
 
 ```cpp
-awaiter<int> test_redis()
+awaiter test_redis()
 {
  Rediscli c("127.0.0.1", 6379, "");
 
