@@ -38,6 +38,7 @@ namespace coev
 	}
 	void event::resume()
 	{
+		LOG_CORE("event m_awaiting:%p\n", m_awaiting ? m_awaiting.address() : 0);
 		if (m_awaiting && !m_awaiting.done())
 			m_awaiting.resume();
 	}

@@ -16,8 +16,9 @@
 namespace coev::tcp
 {
 
-	struct server final : public EVRecv
+	class server final : public EVRecv
 	{
+	public:
 		using fnaccept = std::function<awaiter(const ipaddress &, iocontext &)>;
 		server() = default;
 		virtual ~server();
@@ -25,13 +26,16 @@ namespace coev::tcp
 		int stop();
 		awaiter accept(const fnaccept &dispatch);
 
+	private:
+		friend class serverpool;
 		int m_fd = INVALID;
 		ev_io m_Reav;
+		fnaccept m_dispatch;
 
 		int __insert(uint64_t _tag);
 		int __remove(uint64_t _tag);
 		bool __valid() const;
-		awaiter __accept(const fnaccept &);
+		awaiter __accept();
 		static void cb_accept(struct ev_loop *loop, struct ev_io *w, int revents);
 	};
 }

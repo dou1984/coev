@@ -22,6 +22,8 @@ namespace coev
 		while (!EVTask::empty())
 		{
 			auto t = static_cast<taskext *>(EVTask::pop_front());
+			assert(t->m_taskchain);
+			LOG_CORE("t:%p taskchain:%p\n", t, t->m_taskchain);
 			t->m_taskchain = nullptr;
 			auto a = static_cast<awaiter *>(t);
 			a->destroy();

@@ -10,11 +10,10 @@
 #include <coapp.h>
 
 using namespace coev;
-tcp::serverpool pool;
 
 awaiter echo(iocontext &c, Httprequest &req)
 {
-	co_await wait_for<EVRecv>(req);
+	LOG_DBG("recv echo\n");
 	std::ostringstream oss;
 	oss << R"(HTTP/1.1 200 OK
 Date: Sun, 26 OCT 1984 10:00:00 GMT
@@ -27,43 +26,18 @@ Content-Length: 0
 Keep-Alive: timeout=5, max=100
 Connection: Keep-Alive
 Content-Type: text/html; charset=utf-8)";
+
 	auto s = oss.str();
 	co_await c.send(s.data(), s.size());
 	co_return 0;
 }
-awaiter get_request(iocontext &io, Httprequest &req)
-{
-	while (io)
-	{
-		char buffer[0x1000];
-		auto r = co_await io.recv(buffer, sizeof(buffer));
-		if (r == INVALID)
-		{
-			LOG_FATAL("close %d\n", errno)
-			co_await io.close();
-			co_return r;
-		}
-		req.parse(buffer, r);
-	}
-	co_return 0;
-}
-awaiter dispatch(const ipaddress &addr, iocontext &io)
-{
-	Httprequest req;
-	co_await wait_for_any(get_request(io, req), echo(io, req));
-	co_return 0;
-}
-awaiter co_httpserver()
-{
-	co_await pool.get().accept(dispatch);
-	co_return INVALID;
-}
 
 int main()
 {
-	set_log_level(LOG_LEVEL_ERROR);
-	pool.start("127.0.0.1", 9960);
-	routine::instance().add(co_httpserver);
+	set_log_level(LOG_LEVEL_DEBUG);
+	Httpserver pool("0.0.0.0", 9999, 8);
+
+	pool.add_router("/echo", echo);
 	routine::instance().join();
 	return 0;
 }

@@ -14,35 +14,32 @@ namespace coev::tcp
 	server &serverpool::get()
 	{
 		auto _tag = ttag();
-		if (auto it = m_pool.find(_tag); it != m_pool.end())
+		std::lock_guard<std::mutex> _(m_mutex);
+		auto &s = m_pool[_tag];
+		if (s.m_fd == INVALID)
 		{
-			return it->second;
-		}
-		else
-		{
-			std::lock_guard<std::mutex> _(m_mutex);
-			auto &s = m_pool[_tag];
 			s.m_fd = m_fd;
 			s.__insert(_tag);
-			return s;
 		}
+		return s;
 	}
 	int serverpool::start(const char *ip, int size)
 	{
 		auto _tag = ttag();
+		std::lock_guard<std::mutex> _(m_mutex);
 		auto &s = m_pool[_tag];
 		if (m_fd == INVALID)
 		{
-			std::lock_guard<std::mutex> _(m_mutex);
 			m_fd = s.start(ip, size);
+			s.__insert(_tag);
 		}
 		return m_fd;
 	}
 	int serverpool::stop()
 	{
+		std::lock_guard<std::mutex> _(m_mutex);
 		for (auto &it : m_pool)
 		{
-			std::lock_guard<std::mutex> _(m_mutex);
 			auto &s = it.second;
 			if (s.m_fd != INVALID)
 			{

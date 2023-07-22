@@ -12,3 +12,4 @@
 #include "rediscli/Rediscli.h"
 #include "rediscli/RUnpack.h"
 #include "httprequest/Httprequest.h"
+#include "httprequest/Httpserver.h"

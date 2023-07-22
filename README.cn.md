@@ -67,23 +67,16 @@ awaiter test_upper()
 }
 ```
 
-## task
-
-task 用于等待协程完成, task可以选择两种模式，一种是等所有task完成再退出，一种是只要一个task完成就退出。
+awaiter 用于等待协程完成, awaiter可以选择两种模式，一种是等所有task完成再退出，一种是只要一个task完成就退出。
 
 ```cpp
-task co_sleep(int t)
-{
-  co_await sleep_for(t);
-  co_return 0；
-}
 awaiter test_any()
 {
- co_await wait_for_any(co_sleep(1), co_sleep(2));
+ co_await wait_for_any(sleep_for(1), sleep_for(2));
 }
 awaiter test_all()
 {
-  co_await wait_for_all(co_sleep(1), co_sleep(2));
+  co_await wait_for_all(sleep_for(1), sleep_for(2));
 }
 ```
 

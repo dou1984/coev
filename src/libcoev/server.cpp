@@ -62,7 +62,6 @@ namespace coev::tcp
 		{
 			goto __error_return__;
 		}
-		__insert(ttag());
 		return m_fd;
 	}
 	int server::stop()
@@ -91,7 +90,7 @@ namespace coev::tcp
 	{
 		return m_fd != INVALID;
 	}
-	awaiter server::__accept(const fnaccept &__func)
+	awaiter server::__accept()
 	{
 		if (!__valid())
 		{
@@ -104,20 +103,19 @@ namespace coev::tcp
 		{
 			setNoBlock(fd, true);
 		}
-
-		[=]() -> awaiter
+		[=, this]() -> awaiter
 		{
 			iocontext ctx(fd);
-			co_await __func(peer, ctx);
-			co_return 0;
+			co_return co_await m_dispatch(peer, ctx);
 		}();
 		co_return fd;
 	}
 	awaiter server::accept(const fnaccept &dispatch)
 	{
+		m_dispatch = dispatch;
 		while (__valid())
 		{
-			co_await __accept(dispatch);
+			co_await __accept();
 		}
 		co_return INVALID;
 	}

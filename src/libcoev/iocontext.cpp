@@ -173,7 +173,7 @@ namespace coev
 	}
 	awaiter iocontext::close()
 	{
-		TRACE();
+		LOG_CORE("m_fd:%d\n", m_fd);
 		__close();
 		co_return 0;
 	}

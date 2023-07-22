@@ -15,6 +15,7 @@ namespace coev
 	}
 	int on_headers_complete(http_parser *_)
 	{
+		auto _this = static_cast<Httprequest *>(_);
 		return 0;
 	}
 	int on_message_complete(http_parser *_)
@@ -25,24 +26,41 @@ namespace coev
 	}
 	int on_url(http_parser *_, const char *at, size_t length)
 	{
+		auto _this = static_cast<Httprequest *>(_);
+		_this->m_url = std::string(at, length);
+		LOG_DBG("url:%s\n", _this->m_url.c_str());
+		return 0;
+	}
+	int on_status(http_parser *_, const char *at, size_t length)
+	{
+		auto _this = static_cast<Httprequest *>(_);
+		LOG_DBG("status:%s\n", at);
 		return 0;
 	}
 	int on_header_field(http_parser *_, const char *at, size_t length)
 	{
+		auto _this = static_cast<Httprequest *>(_);
+		_this->last_header = std::string(at, length);
 		return 0;
 	}
 	int on_header_value(http_parser *_, const char *at, size_t length)
 	{
+		auto _this = static_cast<Httprequest *>(_);
+		_this->m_header[_this->last_header] = std::string(at, length);
+		LOG_DBG("header:%s -> %s\n", _this->last_header.c_str(), _this->m_header[_this->last_header].c_str());
 		return 0;
 	}
 	int on_body(http_parser *_, const char *at, size_t length)
 	{
+		auto _this = static_cast<Httprequest *>(_);
+		_this->m_body = std::string(at, length);
+		LOG_DBG("body:%s\n", _this->m_body.c_str());
 		return 0;
 	}
 	static http_parser_settings g_settings = {
 		.on_message_begin = on_message_begin,
 		.on_url = on_url,
-		.on_status = 0,
+		.on_status = on_status,
 		.on_header_field = on_header_field,
 		.on_header_value = on_header_value,
 		.on_headers_complete = on_headers_complete,

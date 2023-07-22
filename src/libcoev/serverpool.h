@@ -15,7 +15,6 @@ namespace coev::tcp
 	class serverpool final
 	{
 		int m_fd = INVALID;
-		// std::array<server, max_ev_loop> m_pool;
 		std::unordered_map<uint64_t, server> m_pool;
 		std::mutex m_mutex;
 
