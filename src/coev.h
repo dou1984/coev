@@ -11,6 +11,7 @@
 #include "libcoev/threadlocal.h"
 #include "libcoev/singleton.h"
 #include "libcoev/loop.h"
+#include "libcoev/awaiter.h"
 #include "libcoev/task.h"
 #include "libcoev/channel.h"
 #include "libcoev/waitfor.h"

@@ -19,6 +19,20 @@ namespace coev
 		EV *ev = &obj;
 		return event{ev};
 	}
+	template <class EV, class OBJ>
+	event wait_for(OBJ &obj, std::mutex &mtx)
+	{
+		std::lock_guard<std::mutex> _(mtx);
+		EV *ev = &obj;
+		return event{ev};
+	}
+	template <class OBJ>
+	void resume(OBJ &obj, std::mutex &mtx)
+	{
+		std::lock_guard<std::mutex> _(mtx);
+		auto c = static_cast<event *>(obj.pop_front());
+		c->resume();
+	}
 	template <class... T>
 	awaiter wait_for_any(T &&..._task)
 	{
@@ -37,5 +51,4 @@ namespace coev
 			co_await wait_for<EVEvent>(w);
 		co_return 0;
 	}
-
 }
