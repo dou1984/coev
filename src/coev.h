@@ -14,6 +14,7 @@
 #include "libcoev/task.h"
 #include "libcoev/channel.h"
 #include "libcoev/waitfor.h"
+#include "libcoev/sleepfor.h"
 #include "libcoev/routine.h"
 #include "libcoev/udp.h"
 #include "libcoev/setvalue.h"

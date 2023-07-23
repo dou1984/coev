@@ -8,7 +8,7 @@
 #pragma once
 #include <coroutine>
 #include "chain.h"
-#include "Promise.h"
+#include "promise.h"
 #include "log.h"
 #include "object.h"
 #include "hook.h"

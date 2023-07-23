@@ -13,24 +13,21 @@
 #include <mutex>
 
 #define PRINT(...) printf(__VA_ARGS__)
-#define LOG(LEVEL, ...)                                         \
-	if (get_log_level() <= LEVEL)                               \
-	{ /*std::lock_guard<std::mutex> _(get_log_mutex());   */    \
-		{                                                       \
-			auto now = std::chrono::system_clock::now();        \
-			auto t = std::chrono::system_clock::to_time_t(now); \
-			auto d = std::localtime(&t);                        \
-			auto f = strrchr(__FILE__, '/');                    \
-			f = f ? f + 1 : __FILE__;                           \
-			PRINT("[%d/%d/%d %02d:%02d:%02d %s][%s:%d/%s]",     \
-				  d->tm_year + 1900, d->tm_mon + 1, d->tm_mday, \
-				  d->tm_hour, d->tm_min, d->tm_sec,             \
-				  get_log_str(LEVEL),                           \
-				  f, __LINE__, __FUNCTION__);                   \
-		}                                                       \
-		{                                                       \
-			PRINT(__VA_ARGS__);                                 \
-		}                                                       \
+#define LOG(LEVEL, ...)                                        \
+	if (get_log_level() <= LEVEL)                              \
+	{                                                          \
+		auto now = std::chrono::system_clock::now();           \
+		auto t = std::chrono::system_clock::to_time_t(now);    \
+		auto d = std::localtime(&t);                           \
+		auto f = strrchr(__FILE__, '/');                       \
+		f = f ? f + 1 : __FILE__;                              \
+		/*std::lock_guard<std::mutex> _(get_log_mutex());   */ \
+		PRINT("[%d/%d/%d %02d:%02d:%02d %s][%s:%d/%s]",        \
+			  d->tm_year + 1900, d->tm_mon + 1, d->tm_mday,    \
+			  d->tm_hour, d->tm_min, d->tm_sec,                \
+			  get_log_str(LEVEL),                              \
+			  f, __LINE__, __FUNCTION__);                      \
+		PRINT(__VA_ARGS__);                                    \
 	}
 #define LOG_CORE(...) \
 	LOG(LOG_LEVEL_CORE, __VA_ARGS__)

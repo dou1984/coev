@@ -13,9 +13,6 @@
 
 namespace coev
 {
-	awaiter sleep_for(long);
-	awaiter usleep_for(long);
-
 	template <class EV, class OBJ>
 	event wait_for(OBJ &obj)
 	{

@@ -11,7 +11,6 @@
 
 namespace coev
 {
-
 	void task::insert_task(taskext *_task)
 	{
 		EVTask::push_back(_task);

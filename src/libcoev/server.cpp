@@ -105,8 +105,8 @@ namespace coev::tcp
 		}
 		[=, this]() -> awaiter
 		{
-			iocontext ctx(fd);
-			co_return co_await m_dispatch(peer, ctx);
+			iocontext io(fd);
+			co_return co_await m_dispatch(peer, io);
 		}();
 		co_return fd;
 	}
