@@ -40,7 +40,7 @@ namespace coev
 		return 0;
 	}
 	awaiter cowaiter::wait()
-	{
+	{		
 		m_lock.lock();
 		EVMutex *ev = this;
 		event _event(ev);

@@ -29,8 +29,11 @@ namespace coev
 	template <class OBJ>
 	void resume(OBJ &obj, std::mutex &mtx)
 	{
-		std::lock_guard<std::mutex> _(mtx);
-		auto c = static_cast<event *>(obj.pop_front());
+		event *c = nullptr;
+		{
+			std::lock_guard<std::mutex> _(mtx);
+			c = static_cast<event *>(obj.pop_front());
+		}
 		c->resume();
 	}
 	template <class... T>
