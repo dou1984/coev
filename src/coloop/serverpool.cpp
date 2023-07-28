@@ -38,12 +38,12 @@ namespace coev::tcp
 	int serverpool::stop()
 	{
 		std::lock_guard<std::mutex> _(m_mutex);
-		for (auto &it : m_pool)
+		for (auto it = m_pool.begin(); it != m_pool.end(); ++it)
 		{
-			auto &s = it.second;
+			auto &s = it->second;
 			if (s.m_fd != INVALID)
 			{
-				s.__remove(it.first);
+				s.__remove(it->first);
 				s.m_fd = INVALID;
 			}
 		}

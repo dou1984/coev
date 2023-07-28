@@ -5,10 +5,11 @@
  *	All rights reserved.
  *
  */
-#include <array>
 #include <atomic>
 #include <list>
 #include <mutex>
+#include <unordered_map>
+#include <algorithm>
 #include "loop.h"
 #include "async.h"
 
@@ -17,8 +18,8 @@
 namespace coev
 {
 	struct __ev_loop;
-	static std::array<struct __ev_loop *, max_ev_loop> all_loops = {nullptr};
-
+	static std::unordered_map<uint64_t, struct __ev_loop *> all_loops;
+	static std::mutex g_mutex;
 	struct __ev_loop
 	{
 		uint64_t m_tag = 0;
@@ -26,13 +27,15 @@ namespace coev
 		__ev_loop()
 		{
 			m_tag = ttag();
-			all_loops[m_tag] = this;
 			m_loop = ev_loop_new();
+			std::lock_guard<std::mutex> _(g_mutex);
+			all_loops[m_tag] = this;
 		}
 		~__ev_loop()
 		{
 			ev_loop_destroy(m_loop);
-			all_loops[m_tag] = nullptr;
+			std::lock_guard<std::mutex> _(g_mutex);
+			all_loops.erase(m_tag);
 		}
 	};
 	struct __this_ev_loop : __ev_loop, async
@@ -52,8 +55,13 @@ namespace coev
 	}
 	struct ev_loop *loop::at(uint64_t _tag)
 	{
-		if (_tag < max_ev_loop && data())
-			return all_loops[_tag]->m_loop;
+		if (data() == nullptr)
+		{
+			LOG_ERR("error g_loop.m_loop is nullptr\n");
+		}
+		std::lock_guard<std::mutex> _(g_mutex);
+		if (auto it = all_loops.find(_tag); it != all_loops.end())
+			return it->second->m_loop;
 		return nullptr;
 	}
 	void loop::resume(event *ev)
