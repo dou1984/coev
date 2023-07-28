@@ -6,12 +6,12 @@
  *
  */
 #include <sstream>
-#include <coev.h>
+#include <coloop.h>
 #include <coapp.h>
 
 using namespace coev;
 
-awaiter echo(iocontext &c, Httprequest &req)
+awaiter echo(iocontext &c, Httpparser &req)
 {
 	LOG_DBG("recv echo\n");
 	std::ostringstream oss;

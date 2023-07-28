@@ -10,7 +10,7 @@
 #include <string.h>
 #include <hiredis/hiredis.h>
 #include <hiredis/async.h>
-#include "../coev.h"
+#include "../coloop.h"
 
 namespace coev
 {

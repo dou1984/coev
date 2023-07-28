@@ -9,7 +9,7 @@
 #include <mysql/mysql.h>
 #include <mysql/mysqld_error.h>
 #include <ev.h>
-#include "../coev.h"
+#include "../coloop.h"
 
 namespace coev
 {

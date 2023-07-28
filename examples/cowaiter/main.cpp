@@ -8,11 +8,11 @@
 #include <thread>
 #include <atomic>
 #include <chrono>
-#include <coev.h>
+#include <coloop.h>
 
 using namespace coev;
 
-cowaiter g_waiter;
+waitgroup g_waiter;
 
 awaiter test_co()
 {

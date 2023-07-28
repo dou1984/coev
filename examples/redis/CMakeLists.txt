@@ -12,4 +12,4 @@ project(testredis)
 aux_source_directory(./ SRC_DIR)
 
 add_executable(${PROJECT_NAME} ${SRC_DIR})
-target_link_libraries(${PROJECT_NAME} coredis hiredis coev ev)
+target_link_libraries(${PROJECT_NAME} coredis hiredis coloop coev ev pthread)
