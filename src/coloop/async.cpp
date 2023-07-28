@@ -5,7 +5,6 @@
  *	All rights reserved.
  *
  */
-#include <array>
 #include "../coev.h"
 #include "async.h"
 #include "loop.h"

@@ -22,7 +22,7 @@ namespace coev
 		struct promise_type : promise
 		{
 			int value;
-			awaiter *_this = nullptr;
+			awaiter *_awaiter = nullptr;
 			promise_type() = default;
 			~promise_type();
 			awaiter get_return_object();

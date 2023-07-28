@@ -4,12 +4,12 @@ namespace coev
 {
 	awaiter::promise_type::~promise_type()
 	{
-		LOG_CORE("promise_type:%p awaiter:%p\n", this, _this);
-		if (_this)
+		LOG_CORE("promise_type:%p awaiter:%p\n", this, _awaiter);
+		if (_awaiter)
 		{
-			_this->m_ready = true;
-			_this->resume();
-			_this = nullptr;
+			_awaiter->m_ready = true;
+			_awaiter->resume();
+			_awaiter = nullptr;
 		}
 	}
 	awaiter awaiter::promise_type::get_return_object()
@@ -28,7 +28,7 @@ namespace coev
 	}
 	awaiter::awaiter(std::coroutine_handle<promise_type> h) : m_coroutine(h)
 	{
-		m_coroutine.promise()._this = this;
+		m_coroutine.promise()._awaiter = this;
 	}
 	awaiter::~awaiter()
 	{
@@ -36,7 +36,7 @@ namespace coev
 				 m_awaiting ? m_awaiting.address() : 0,
 				 m_coroutine ? m_coroutine.address() : 0);
 		if (m_coroutine)
-			m_coroutine.promise()._this = nullptr;
+			m_coroutine.promise()._awaiter = nullptr;
 	}
 	void awaiter::resume()
 	{
@@ -52,9 +52,9 @@ namespace coev
 		LOG_CORE("m_awaiting:%p m_coroutine:%p\n",
 				 m_awaiting ? m_awaiting.address() : 0,
 				 m_coroutine ? m_coroutine.address() : 0);
-		if (m_coroutine && m_coroutine.promise()._this)
+		if (m_coroutine && m_coroutine.promise()._awaiter)
 		{
-			m_coroutine.promise()._this = nullptr;
+			m_coroutine.promise()._awaiter = nullptr;
 			m_coroutine.destroy();
 		}
 		m_coroutine = nullptr;

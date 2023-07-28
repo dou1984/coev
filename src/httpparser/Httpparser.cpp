@@ -41,6 +41,7 @@ namespace coev
 	{
 		auto _this = static_cast<Httpparser *>(_);
 		_this->last_header = std::string(at, length);
+		LOG_CORE("header_field:%s\n", at);
 		return 0;
 	}
 	int on_header_value(http_parser *_, const char *at, size_t length)
