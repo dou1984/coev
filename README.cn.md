@@ -4,15 +4,11 @@ c++20 coroutine libev
 
 ---
 
-coev 是基于libev的c++20协程库。2019年时c++委员会就提出了协程草案，github上也有很多协程的实现方案，实现方案对于开发者并不友好，作者封装了一个较为简单的库，方便c++开发者使用。
-
-c++20的协程是无栈协程，相较于传统的有栈协程，大大提升了协程的切换效率。相对于经典的boost::context, boost::context, c++20协程对于开发模式改变较大。
-
-c++20的协程开发具有难度，因此coev封装了3种常用的Awaiter，降低了理解c++20协程的难度，提升开发效率，coev也能快速将异步过程转为协程。
+coev 是基高性能的c++20协程库, coev封装了2个c++20协程类awaiter、event, 这两个类大大降低了c++20协程的开发难度，提升效率效率，coev目的是快速将异步程序转为协程。
 
 ## event
 
-event 是最小的协程类，用于快速将异步调用转换成协程。与此匹配的是EventChain，wait_for<eventchain>，相互配合可以快速实现协程。
+event 是最小的协程类，用于快速将异步调用转换成协程。与此匹配的是eventchain，wait_for<eventchain>，相互配合可以快速实现协程。
 
 ```cpp
 using EVRecv = eventchain<RECV>;//起个新的名字
@@ -22,20 +18,35 @@ struct Trigger :  EVRecv
 
 awaiter co_waiting()
 { 
- co_await wait_for<EVRecv>(g_trigger);
+ co_await wait_for<EVRecv>(g_trigger); // 等待事件触发
  co_return 0;
 }
 awaiter co_trigger()
 {
  co_await sleep_for(5);
- g_trigger.EVRecv::resume();
+ g_trigger.EVRecv::resume();  // 触发事件，跳转协程到co_waiting
  co_return 0;
 }
 ```
 
 ## awaiter
 
-Awaiter是coev的协程类，Awaiter使用起来很方便，把Awaiter定义为函数返回既可以创建一个协程，同时Awaiter可以定义返回值类型。
+awaiter是coev的协程类，awaiter使用起来很方便，把awaiter定义为函数返回既可以创建一个协程。
+
+awaiter可以用分级调用，这解决了coroutine中最常用的多级调用问题。
+
+```cpp
+awaiter test_lower()
+{
+  co_await co_sleep(1);
+}
+awaiter test_upper()
+{
+ co_await test_lower();
+}
+```
+
+awaiter 协程类
 
 ```cpp
 awaiter co_sleep(int t)
@@ -54,20 +65,7 @@ awaiter co_iterator(int t)
 }
 ```
 
-awaiter可以用分级调用，这解决了coroutine中最常用的多级调用问题。
-
-```cpp
-awaiter test_lower()
-{
-  co_await co_sleep(1);
-}
-awaiter test_upper()
-{
- co_await test_lower();
-}
-```
-
-awaiter 用于等待协程完成, awaiter可以选择两种模式，一种是等所有task完成再退出，一种是只要一个task完成就退出。
+awaiter 也可用于多个协程的等待, 一种是wait_for_all 等待所有awaiter完成，一种是wait_for_any等待任意awaiter完成 。
 
 ```cpp
 awaiter test_any()
