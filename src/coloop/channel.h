@@ -30,7 +30,6 @@ namespace coev
 			m_data.emplace_back(std::move(d));
 			return !EVRecv::empty() ? static_cast<event *>(EVRecv::pop_front()) : nullptr;
 		}
-
 	public:
 		awaiter set(TYPE &&d)
 		{
