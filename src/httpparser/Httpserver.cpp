@@ -54,7 +54,7 @@ namespace coev
 					{ co_return co_await dispatch(addr, io); });
 			});
 	}
-	void Httpserver::add_router(const std::string &api, const fnrouter &f)
+	void Httpserver::add_router(const std::string &api, const frouter &f)
 	{
 		m_router.emplace(api, f);
 	}

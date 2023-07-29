@@ -7,8 +7,8 @@
  */
 #include <chrono>
 #include <thread>
-#include "loop.h"
 #include "waitgroup.h"
+#include "loop.h"
 
 namespace coev
 {
@@ -40,7 +40,7 @@ namespace coev
 		return 0;
 	}
 	awaiter waitgroup::wait()
-	{		
+	{
 		m_lock.lock();
 		EVMutex *ev = this;
 		event _event(ev);

@@ -16,18 +16,18 @@ namespace coev::tcp
 	class server final : public EVRecv
 	{
 	public:
-		using fnaccept = std::function<awaiter(const ipaddress &, iocontext &)>;
+		using faccept = std::function<awaiter(const ipaddress &, iocontext &)>;
 		server() = default;
 		virtual ~server();
 		int start(const char *ip, int port);
 		int stop();
-		awaiter accept(const fnaccept &dispatch);
+		awaiter accept(const faccept &dispatch);
 
 	private:
 		friend class serverpool;
 		int m_fd = INVALID;
 		ev_io m_Reav;
-		fnaccept m_dispatch;
+		faccept m_dispatch;
 
 		int __insert(uint64_t _tag);
 		int __remove(uint64_t _tag);

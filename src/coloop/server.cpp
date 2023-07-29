@@ -109,7 +109,7 @@ namespace coev::tcp
 		}();
 		co_return fd;
 	}
-	awaiter server::accept(const fnaccept &dispatch)
+	awaiter server::accept(const faccept &dispatch)
 	{
 		m_dispatch = dispatch;
 		while (__valid())

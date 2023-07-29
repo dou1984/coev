@@ -17,6 +17,7 @@
 
 namespace coev
 {
+
 	struct __ev_loop;
 	static std::unordered_map<uint64_t, struct __ev_loop *> all_loops;
 	static std::mutex g_mutex;
@@ -29,7 +30,7 @@ namespace coev
 			m_tag = ttag();
 			m_loop = ev_loop_new();
 			std::lock_guard<std::mutex> _(g_mutex);
-			all_loops[m_tag] = this;
+			all_loops.emplace(m_tag, this);
 		}
 		~__ev_loop()
 		{
@@ -72,8 +73,18 @@ namespace coev
 		}
 		else
 		{
-			auto __loop = static_cast<__this_ev_loop *>(all_loops[ev->m_tag]);
-			__loop->async::resume_event(ev);
+			__this_ev_loop *__loop = nullptr;
+			{
+				std::lock_guard<std::mutex> _(g_mutex);
+				if (auto it = all_loops.find(ev->m_tag); it != all_loops.end())
+				{
+					__loop = static_cast<__this_ev_loop *>(it->second);
+				}
+			}
+			if (__loop)
+			{
+				__loop->async::resume_event(ev);
+			}
 		}
 	}
 }

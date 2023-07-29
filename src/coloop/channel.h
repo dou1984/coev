@@ -10,7 +10,6 @@
 #include <list>
 #include <mutex>
 #include "../coev.h"
-#include "loop.h"
 
 namespace coev
 {
