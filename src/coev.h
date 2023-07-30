@@ -17,4 +17,4 @@
 #include "coev/setvalue.h"
 #include "coev/mempool.h"
 #include "coev/tag.h"
-
+#include "coev/channelimpl.h"

@@ -11,5 +11,5 @@
 #include "coloop/udp.h"
 #include "coloop/timer.h"
 #include "coloop/waitgroup.h"
-#include "coloop/channel.h"
 #include "coloop/comutex.h"
+#include "coloop/channel.h"

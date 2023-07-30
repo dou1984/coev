@@ -30,7 +30,6 @@ awaiter test_wait()
 	{
 		test_co();
 	}
-
 	co_await wait_for_all(g_waiter.wait(), g_waiter.wait(), g_waiter.wait());
 
 	LOG_FATAL("wait");
