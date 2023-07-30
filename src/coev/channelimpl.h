@@ -38,7 +38,6 @@ namespace coev
 		{
 			if (auto ev = __set(std::move(d)))
 			{
-				// loop::resume(ev);
 				loop_resume(ev);
 			}
 			co_return 0;
