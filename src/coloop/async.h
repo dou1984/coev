@@ -8,7 +8,7 @@
 #pragma once
 #include <ev.h>
 #include <mutex>
-#include "event.h"
+#include "../coev.h"
 
 namespace coev
 {

@@ -75,6 +75,7 @@ namespace coev
 			case REDIS_REPLY_STATUS:
 				m_result.last_error = INVALID;
 				m_result.last_msg = _reply->str;
+				m_result.num_rows = _reply->integer;
 				break;
 			default:
 				assert(false);
@@ -92,6 +93,10 @@ namespace coev
 	{
 		assert(m_context == nullptr);
 		m_context = redisAsyncConnect(m_ip.c_str(), m_port);
+		if (m_context->c.err != 0)
+		{
+			LOG_ERR("redisAsyncConnect error %s\n", m_context->c.errstr);
+		}
 		__attach(m_context);
 		LOG_CORE("__attach %d\n", fd());
 		__connect_insert();
@@ -161,7 +166,7 @@ namespace coev
 		}
 		else
 		{
-			LOG_DBG("disconnect fd:%d\n", _this->fd());
+			LOG_DBG("disconnect fd:%d %d %s\n", _this->fd(), ac->err, ac->errstr);
 			_this->__process_remove();
 			_this->EVRecv::resume();
 		}
@@ -234,5 +239,10 @@ namespace coev
 			co_return INVALID;
 		callback(m_result);
 		co_return 0;
-	}
+	}	
+	int Rediscli::send(const char *message)
+	{
+		LOG_DBG("send %s\n", message);
+		return redisAsyncCommand(m_context, Rediscli::__callback, this, message);
+	}	
 }

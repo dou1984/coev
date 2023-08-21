@@ -28,4 +28,6 @@ namespace coev
 		void await_suspend(std::coroutine_handle<> awaiting);
 		void resume();
 	};
+	using RESUME = void (*)(event *ev);
+
 }

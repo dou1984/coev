@@ -31,14 +31,23 @@ namespace coev
 			struct redisReply **rows;
 			int integer;
 		};
+		template <class... TYPE>
+		void unpack(TYPE &...value)
+		{
+			int i = 0;
+			(__setvalue(value, rows[i++]->str), ...);
+		}
 	};
 	class Rediscli : Redisconf, public EVRecv
 	{
 	public:
 		Rediscli(const char *ip, int port, const char *auth);
 		awaiter connect();
-		awaiter query(const char *, const std::function<void(Redisresult &)> &);
+		awaiter query(
+			const char *, const std::function<void(Redisresult &)> &_ = [](auto &) {});
 		operator bool() const { return m_context != nullptr; }
+		auto &result() { return m_result; }
+		int send(const char *);
 
 	private:
 		int m_tag;

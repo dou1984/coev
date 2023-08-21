@@ -9,12 +9,13 @@
 #include <coapp.h>
 #include <sstream>
 #include <random>
-
+#include <string_view>
+#include <vector>
 using namespace coev;
 
 awaiter go()
 {
-	set_log_level(LOG_LEVEL_CORE);
+	set_log_level(LOG_LEVEL_DEBUG);
 
 	Rediscli c("127.0.0.1", 6379, "");
 
@@ -63,9 +64,78 @@ awaiter go()
 	co_return 0;
 }
 
+auto __trim(const char *str, char c)
+{
+	std::vector<std::string> r;
+	std::string_view begin(str);
+	while (true)
+	{
+		if (auto p0 = begin.find_first_not_of(c); p0 == std::string_view::npos)
+		{
+			return r;
+		}
+		else if (auto p1 = begin.find_first_of(c, p0); p1 == std::string_view::npos)
+		{
+			r.emplace_back(begin.data() + p0);
+			return r;
+		}
+		else
+		{
+
+			r.emplace_back(begin.data() + p0, begin.data() + p1);
+			begin = std::string_view(begin.data() + p1);
+		}
+	}
+}
+awaiter test_sync()
+{
+	Rediscli c("127.0.0.1", 6379, "");
+	co_await c.connect();
+
+	co_await c.query("info server");
+
+	LOG_DBG("%s\n", c.result().str);
+
+	co_await c.query("PSYNC ? -1");
+	LOG_DBG("%s\n", c.result().str);
+
+	/*
+	auto vct = __trim(c.result()->last_msg, ' ');
+	*/
+
+	co_await c.query("SUBSCRIBE");
+	LOG_DBG("%s\n", c.result().str);
+
+	while (c)
+	{
+		co_await wait_for<EVRecv>(c);
+		LOG_DBG("%d\n%s\n", c.result().num_rows, c.result().str);
+	}
+	co_return 0;
+}
+awaiter test_subscirbe()
+{
+
+	Rediscli c("127.0.0.1", 6379, "");
+	co_await c.connect();
+
+	co_await c.query("PSUBSCRIBE KEY:*");
+	std::string out[3];
+	c.result().unpack(out[0], out[1], out[2]);
+	LOG_DBG("callback recv begin %s %s %s\n", out[0].data(), out[1].data(), out[2].data());
+
+	while (c)
+	{
+		co_await wait_for<EVRecv>(c);
+		std::string out[4];
+		c.result().unpack(out[0], out[1], out[2], out[3]);
+		LOG_DBG("recv %s %s %s %s\n", out[0].data(), out[1].data(), out[2].data(), out[3].data());
+	}
+
+	co_return 0;
+}
 int main()
 {
-	routine::instance().add(go);
-	routine::instance().join();
+	routine::instance().add(test_sync).join();
 	return 0;
 }

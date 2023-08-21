@@ -13,8 +13,7 @@
 
 namespace coev
 {
-	using RESUME = void (*)(event *ev);
-
+	
 	template <class TYPE, RESUME loop_resume>
 	class channelimpl : EVRecv
 	{

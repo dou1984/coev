@@ -1,5 +1,6 @@
 #include <atomic>
 #include <unordered_set>
+#include <mutex>
 #include "threadlocal.h"
 #include "tag.h"
 

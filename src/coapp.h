@@ -10,6 +10,5 @@
 #include "mysqlcli/Mysqlcli.h"
 #include "mysqlcli/MUnpack.h"
 #include "rediscli/Rediscli.h"
-#include "rediscli/RUnpack.h"
 #include "httpparser/Httpparser.h"
 #include "httpparser/Httpserver.h"

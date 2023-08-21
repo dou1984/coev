@@ -14,7 +14,7 @@ namespace coev
 	{
 		char *end = nullptr;
 		if constexpr (std::is_same<T, std::string>::value)
-			value = v;
+			value = v ? v : "";
 		else if constexpr (std::is_same<T, const char *>::value)
 			value = v;
 		else if constexpr (std::is_integral<T>::value)
