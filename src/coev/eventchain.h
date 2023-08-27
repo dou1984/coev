@@ -30,5 +30,4 @@ namespace coev
 	using EVEvent = eventchain<EVENT>;
 	using EVTask = eventchain<TASK>;
 	using EVTimer = eventchain<TIMER>;
-	using EVMutex = eventchain<MUTEX>;
 }
