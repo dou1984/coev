@@ -42,7 +42,7 @@ awaiter __call(int *x, int *y)
 int main()
 {
 	set_log_level(LOG_LEVEL_CORE);
-	routine::instance()
+	running::instance()
 		.add([]() -> awaiter
 			 { 
 				int x = 0;

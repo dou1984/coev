@@ -49,11 +49,11 @@ int main()
 {
 	set_log_level(LOG_LEVEL_CORE);
 	
-	routine::instance().add(co_sleep);
-	routine::instance().add(co_timer);
-	routine::instance().add([]()
+	running::instance().add(co_sleep);
+	running::instance().add(co_timer);
+	running::instance().add([]()
 		  { co_iterator(10); });
 
-	routine::instance().join();
+	running::instance().join();
 	return 0;
 }

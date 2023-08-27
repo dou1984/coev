@@ -12,22 +12,22 @@
 
 namespace coev
 {
-	class routine final : public singleton<routine>
+	class running final : public singleton<running>
 	{
 		std::list<std::thread> m_list;
 		void __add(const std::function<void()> &);
 
 	public:
-		routine();
+		running();
 		template <class _F>
-		routine &add(const _F &_f)
+		running &add(const _F &_f)
 		{
 			__add([=]()
 				  { _f(); });
 			return *this;
 		}
 		template <class _F>
-		routine &add(int count, const _F &_f)
+		running &add(int count, const _F &_f)
 		{
 			for (int i = 0; i < count; i++)
 				__add([=]()

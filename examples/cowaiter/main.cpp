@@ -38,7 +38,7 @@ awaiter test_wait()
 int main()
 {
 
-	routine::instance().add(test_wait).join();
+	running::instance().add(test_wait).join();
 
 	return 0;
 }

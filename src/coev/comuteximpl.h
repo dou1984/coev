@@ -13,7 +13,7 @@
 namespace coev
 {
 	template <RESUME loop_resume>
-	class comuteximpl : EVMutex
+	class comuteximpl : EVRecv
 	{
 	public:
 		awaiter lock()
@@ -24,7 +24,7 @@ namespace coev
 				m_lock.unlock();
 				co_return 0;
 			}
-			EVMutex *ev = this;
+			EVRecv *ev = this;
 			event _event(ev);
 			m_lock.unlock();
 			co_await _event;
@@ -37,14 +37,14 @@ namespace coev
 			{
 				m_lock.unlock();
 			}
-			else if (EVMutex::empty())
+			else if (EVRecv::empty())
 			{
 				m_flag = off;
 				m_lock.unlock();
 			}
 			else
 			{
-				auto c = static_cast<event *>(EVMutex::pop_front());
+				auto c = static_cast<event *>(EVRecv::pop_front());
 				m_lock.unlock();
 				loop_resume(c);
 			}

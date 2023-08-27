@@ -20,12 +20,9 @@ awaiter test_go()
 	auto now = std::chrono::system_clock::now();
 	for (int i = 0; i < 100000; i++)
 	{
-		TRACE();
 		co_await g_mutex.lock();
-		TRACE();
 		g_total += 1;
 		co_await g_mutex.unlock();
-		TRACE();
 	}
 	auto r = std::chrono::system_clock::now() - now;
 
@@ -36,7 +33,7 @@ awaiter test_go()
 
 int main()
 {
-	routine::instance().add(8, test_go).join();
+	running::instance().add(8, test_go).join();
 
 	return 0;
 }

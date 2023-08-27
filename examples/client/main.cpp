@@ -60,7 +60,7 @@ int main()
 
 	set_log_level(LOG_LEVEL_ERROR);
 
-	routine::instance().add(4, co_test).join();
+	running::instance().add(4, co_test).join();
 
 	return 0;
 }

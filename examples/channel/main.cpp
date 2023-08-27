@@ -31,7 +31,7 @@ awaiter go()
 int main()
 {
 
-	routine::instance().add(8, go);
-	routine::instance().join();
+	running::instance().add(8, go);
+	running::instance().join();
 	return 0;
 }

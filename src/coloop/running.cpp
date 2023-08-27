@@ -8,7 +8,7 @@
 #include <sys/signal.h>
 #include <unistd.h>
 #include "loop.h"
-#include "routine.h"
+#include "running.h"
 
 namespace coev
 {
@@ -19,11 +19,11 @@ namespace coev
 		s.sa_flags = 0;
 		sigaction(sign, &s, NULL);
 	}
-	routine::routine()
+	running::running()
 	{
 		ingore_signal(SIGPIPE);
 	}
-	void routine::__add(const std::function<void()> &f)
+	void running::__add(const std::function<void()> &f)
 	{
 		m_list.emplace_back(
 			[=]()
@@ -32,7 +32,7 @@ namespace coev
 				loop::start();
 			});
 	}
-	void routine::join()
+	void running::join()
 	{
 		for (auto &it : m_list)
 			it.join();

@@ -64,6 +64,6 @@ int main()
 {
 	set_log_level(LOG_LEVEL_CORE);
 
-	routine::instance().add(co_task_t).add(co_task_f).add(co_task_u).add(co_task_v).join();
+	running::instance().add(co_task_t).add(co_task_f).add(co_task_u).add(co_task_v).join();
 	return 0;
 }

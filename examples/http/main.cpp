@@ -39,6 +39,6 @@ int main()
 	Httpserver pool("0.0.0.0", 9999, 8);
 
 	pool.add_router("/echo", echo);
-	routine::instance().join();
+	running::instance().join();
 	return 0;
 }

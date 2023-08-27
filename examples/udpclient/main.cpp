@@ -26,6 +26,6 @@ awaiter go()
 int main()
 {
 
-	routine::instance().add(go).join();
+	running::instance().add(go).join();
 	return 0;
 }

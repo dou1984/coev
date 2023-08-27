@@ -136,6 +136,6 @@ awaiter test_subscirbe()
 }
 int main()
 {
-	routine::instance().add(test_sync).join();
+	running::instance().add(test_sync).join();
 	return 0;
 }

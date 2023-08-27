@@ -36,7 +36,7 @@ int main()
 {
 	set_log_level(LOG_LEVEL_DEBUG);
 
-	routine::instance()
+	running::instance()
 		.add([]() -> awaiter
 			 { co_await wait_for_all(co_awaiter(), co_resume()); })
 		
