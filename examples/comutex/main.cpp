@@ -28,6 +28,8 @@ awaiter test_go()
 		TRACE();
 	}
 	auto r = std::chrono::system_clock::now() - now;
+
+	co_await sleep_for(1);
 	printf("%d %ld\n", g_total, r.count());
 	co_return 0;
 }
