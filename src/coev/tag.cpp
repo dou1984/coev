@@ -9,10 +9,10 @@ namespace coev
 	static uint64_t g_index{0};
 	static std::unordered_set<uint64_t> all_index;
 	static std::mutex g_mutex;
-	struct ctag
+	struct thdtag
 	{
 		uint64_t m_tag = 0;
-		ctag()
+		thdtag()
 		{
 			std::lock_guard<std::mutex> _(g_mutex);
 			while (all_index.find(g_index) != all_index.end())
@@ -22,7 +22,7 @@ namespace coev
 			m_tag = g_index++;
 			all_index.emplace(m_tag);
 		}
-		~ctag()
+		~thdtag()
 		{
 			std::lock_guard<std::mutex> _(g_mutex);
 			all_index.erase(m_tag);
@@ -30,7 +30,7 @@ namespace coev
 	};
 	uint64_t ttag()
 	{
-		thread_local ctag _tag;
+		thread_local thdtag _tag;
 		return _tag.m_tag;
 	}
 }
