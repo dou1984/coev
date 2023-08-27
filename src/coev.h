@@ -18,3 +18,5 @@
 #include "coev/mempool.h"
 #include "coev/tag.h"
 #include "coev/channelimpl.h"
+#include "coev/comuteximpl.h"
+#include "coev/waitgroupimpl.h"
