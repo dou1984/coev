@@ -9,16 +9,16 @@
 
 using namespace coev;
 
-std::mutex g_mtx;
+std::recursive_mutex g_mtx;
 
-struct TestMutex : EVRead
+struct TestMutex : EVRecv
 {
 } g_test;
 
 awaiter co_awaiter()
 {
 	LOG_DBG("awaiter begin\n");
-	co_await wait_for<EVRead>(g_test);
+	co_await wait_for<EVRecv>(g_test);
 	LOG_DBG("awaiter end\n");
 	co_return 0;
 }
@@ -27,7 +27,7 @@ awaiter co_resume()
 	LOG_DBG("resume begin\n");
 	co_await sleep_for(5);
 	LOG_DBG("resume end\n");
-	EVRead *e = &g_test;
+	EVRecv *e = &g_test;
 	resume(*e, g_mtx);
 	co_return 0;
 }

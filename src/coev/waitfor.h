@@ -20,21 +20,21 @@ namespace coev
 		return event{ev};
 	}
 	template <class EV, class OBJ>
-	event wait_for(OBJ &obj, std::mutex &mtx)
+	event wait_for(OBJ &obj, std::recursive_mutex &mtx)
 	{
-		std::lock_guard<std::mutex> _(mtx);
+		std::lock_guard<std::recursive_mutex> _(mtx);
 		EV *ev = &obj;
 		return event{ev};
 	}
 	template <class OBJ>
-	void resume(OBJ &obj, std::mutex &mtx)
+	void resume(OBJ &obj, std::recursive_mutex &mtx)
 	{
-		event *c = nullptr;
+		std::lock_guard<std::recursive_mutex> _(mtx);
+		if (!obj.empty())
 		{
-			std::lock_guard<std::mutex> _(mtx);
-			c = static_cast<event *>(obj.pop_front());
+			auto c = static_cast<event *>(obj.pop_front());
+			c->resume();
 		}
-		c->resume();
 	}
 	template <class... T>
 	awaiter wait_for_any(T &&..._task)

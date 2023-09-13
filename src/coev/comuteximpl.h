@@ -32,20 +32,17 @@ namespace coev
 		}
 		awaiter unlock()
 		{
-			m_lock.lock();
+			std::lock_guard<std::recursive_mutex> _(m_lock);
 			if (m_flag == off)
 			{
-				m_lock.unlock();
 			}
 			else if (EVRecv::empty())
 			{
 				m_flag = off;
-				m_lock.unlock();
 			}
 			else
 			{
 				auto c = static_cast<event *>(EVRecv::pop_front());
-				m_lock.unlock();
 				loop_resume(c);
 			}
 			co_return 0;
@@ -54,7 +51,7 @@ namespace coev
 	private:
 		const int on = 1;
 		const int off = 0;
-		std::mutex m_lock;
+		std::recursive_mutex m_lock;
 		int m_flag = 0;
 	};
 }

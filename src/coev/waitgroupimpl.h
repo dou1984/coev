@@ -18,29 +18,24 @@ namespace coev
 	public:
 		int add(int c = 1)
 		{
-			std::lock_guard<std::mutex> _(m_lock);
+			std::lock_guard<std::recursive_mutex> _(m_lock);
 			m_count += c;
 			return 0;
 		}
 		int done()
 		{
-			event *c = nullptr;
+			std::lock_guard<std::recursive_mutex> _(m_lock);
+			if (--m_count > 0)
 			{
-				std::lock_guard<std::mutex> _(m_lock);
-				if (--m_count > 0)
-				{
-					return 0;
-				}
-				else if (EVRecv::empty())
-				{
-					return 0;
-				}
-				else
-				{
-					c = static_cast<event *>(EVRecv::pop_front());
-				}
 			}
-			loop_resume(c);
+			else if (EVRecv::empty())
+			{
+			}
+			else
+			{
+				auto c = static_cast<event *>(EVRecv::pop_front());
+				loop_resume(c);
+			}
 			return 0;
 		}
 		awaiter wait()
@@ -49,11 +44,12 @@ namespace coev
 			EVRecv *ev = this;
 			event _event(ev);
 			m_lock.unlock();
+			co_await _event;
 			co_return 0;
 		}
 
 	private:
-		std::mutex m_lock;
+		std::recursive_mutex m_lock;
 		int m_count = 0;
 	};
 }

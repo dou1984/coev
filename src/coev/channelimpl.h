@@ -13,12 +13,12 @@
 
 namespace coev
 {
-	
+
 	template <class TYPE, RESUME loop_resume>
 	class channelimpl : EVRecv
 	{
 		std::list<TYPE> m_data;
-		std::mutex m_lock;
+		std::recursive_mutex m_lock;
 		void __get(TYPE &d)
 		{
 			assert(m_data.size());
@@ -27,7 +27,7 @@ namespace coev
 		}
 		event *__set(TYPE &&d)
 		{
-			std::lock_guard<decltype(m_lock)> _(m_lock);
+			std::lock_guard<std::recursive_mutex> _(m_lock);
 			m_data.emplace_back(std::move(d));
 			return !EVRecv::empty() ? static_cast<event *>(EVRecv::pop_front()) : nullptr;
 		}
@@ -52,9 +52,10 @@ namespace coev
 					m_lock.unlock();
 					co_return 0;
 				}
-				event ev(static_cast<EVRecv *>(this), ttag());
+				EVRecv *ev = this;
+				event _event(ev, ttag());
 				m_lock.unlock();
-				co_await ev;
+				co_await _event;
 			}
 		}
 	};

@@ -14,14 +14,18 @@ using namespace coev;
 
 int g_total = 0;
 comutex g_mutex;
+// std::mutex g_mutex;
 
 awaiter test_go()
 {
+	int _total = 0;
 	auto now = std::chrono::system_clock::now();
 	for (int i = 0; i < 100000; i++)
 	{
 		co_await g_mutex.lock();
+		// g_mutex.lock();
 		g_total += 1;
+		// g_mutex.unlock();
 		co_await g_mutex.unlock();
 	}
 	auto r = std::chrono::system_clock::now() - now;
