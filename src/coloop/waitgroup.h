@@ -3,7 +3,15 @@
 #include "loop.h"
 namespace coev
 {
-	class waitgroup final : public waitgroupimpl<loop::resume>
+	class waitgroup final : public EVRecv
 	{
+	public:
+		int add(int c = 1);
+		int done();
+		awaiter wait();
+
+	private:
+		std::recursive_mutex m_lock;
+		int m_count = 0;
 	};
 }
