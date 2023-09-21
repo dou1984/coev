@@ -17,9 +17,9 @@ waitgroup g_waiter;
 awaiter test_co()
 {
 	g_waiter.add();
-	LOG_FATAL("add");
+	LOG_FATAL("add\n");
 	co_await sleep_for(3);
-	LOG_FATAL("done");
+	LOG_FATAL("done\n");
 	g_waiter.done();
 	co_return 0;
 }
@@ -30,9 +30,8 @@ awaiter test_wait()
 	{
 		test_co();
 	}
-	co_await wait_for_all(g_waiter.wait(), g_waiter.wait(), g_waiter.wait());
-
-	LOG_FATAL("wait");
+	co_await g_waiter.wait();
+	LOG_FATAL("wait\n");
 	co_return 0;
 }
 int main()

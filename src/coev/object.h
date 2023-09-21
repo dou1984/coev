@@ -24,7 +24,4 @@ namespace coev
 	struct TIMER
 	{
 	};
-	struct MUTEX
-	{
-	};	
 }

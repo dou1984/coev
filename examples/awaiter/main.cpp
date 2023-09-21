@@ -39,7 +39,6 @@ int main()
 	running::instance()
 		.add([]() -> awaiter
 			 { co_await wait_for_all(co_awaiter(), co_resume()); })
-		
 		.join();
 	return 0;
 }

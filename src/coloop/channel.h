@@ -18,7 +18,7 @@ namespace coev
 		{
 			std::lock_guard<std::recursive_mutex> _(m_lock);
 			m_data.emplace_back(std::move(d));
-			return !EVRecv::empty() ? static_cast<event *>(EVRecv::pop_front()) : nullptr;
+			return static_cast<event *>(EVRecv::pop_front());
 		}
 
 	public:

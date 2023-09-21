@@ -5,6 +5,7 @@ extern t_malloc __real_malloc;
 extern t_free __real_free;
 namespace coev::__inner
 {
+#ifdef __MEMPOOL__
 	Buffer::Buffer(int _size) : m_size(_size)
 	{
 	}
@@ -47,4 +48,5 @@ namespace coev::__inner
 		const auto _shift = ((size_t) & (((Buffer *)0)->m_data));
 		return (Buffer *)((char *)_ptr - _shift);
 	}
+#endif
 }

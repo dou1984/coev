@@ -14,23 +14,19 @@ namespace coev
 		if (--m_count > 0)
 		{
 		}
-		else if (EVRecv::empty())
-		{
-		}
 		else
 		{
-			auto c = static_cast<event *>(EVRecv::pop_front());
-			loop::resume(c);
+			while (auto c = static_cast<event *>(EVRecv::pop_front()))
+			{
+				loop::resume(c);
+			}
 		}
 		return 0;
 	}
-	awaiter waitgroup::wait()
+	event waitgroup::wait()
 	{
-		m_lock.lock();
+		std::lock_guard<std::recursive_mutex> _(m_lock);
 		EVRecv *ev = this;
-		event _event(ev);
-		m_lock.unlock();
-		co_await _event;
-		co_return 0;
+		return event{ev};
 	}
 }

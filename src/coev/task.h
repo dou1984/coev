@@ -12,7 +12,7 @@
 
 namespace coev
 {
-	struct task : EVTask, EVEvent
+	struct task final : EVTask, EVEvent
 	{
 		void insert_task(taskext *_task);
 		void destroy();
