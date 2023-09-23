@@ -10,6 +10,18 @@ The coroutine of c++20 is a stackless coroutine, which greatly improves the swit
 
 The development of c++20 coroutines is difficult, so coev encapsulates three commonly used Awaiters, which reduces the difficulty of understanding c++20 coroutines and improves development efficiency. coev can also quickly convert asynchronous processes into coroutines.
 
+# install
+
+```sh
+#ubuntu
+apt install -y libhiredis-dev libmysqlclient-dev libhttp-parser-dev
+make build
+cd build
+cmake ..
+make 
+```
+
+
 ## event
 
 event is the smallest coroutine class, used to quickly convert asynchronous calls into coroutines. "eventchain" and "wait_for<eventchain>" cooperate with each other to quickly implement coroutines.
@@ -147,3 +159,6 @@ awaiter test_redis()
  co_return 0;
 }
 ```
+
+
+

@@ -13,17 +13,17 @@
 
 namespace coev
 {
-	template <class EV, class OBJ>
+	template <class EVCHAIN, class OBJ>
 	event wait_for(OBJ &obj)
 	{
-		EV *ev = &obj;
+		EVCHAIN *ev = &obj;
 		return event{ev};
 	}
-	template <class EV, class OBJ>
+	template <class EVCHAIN, class OBJ>
 	event wait_for(OBJ &obj, std::recursive_mutex &mtx)
 	{
 		std::lock_guard<std::recursive_mutex> _(mtx);
-		EV *ev = &obj;
+		EVCHAIN *ev = &obj;
 		return event{ev};
 	}
 	template <class OBJ>
@@ -50,7 +50,7 @@ namespace coev
 	{
 		task w;
 		(w.insert_task(&_task), ...);
-		while (w)
+		while (!w.empty())
 			co_await wait_for<EVEvent>(w);
 		co_return 0;
 	}

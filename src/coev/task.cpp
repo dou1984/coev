@@ -28,8 +28,5 @@ namespace coev
 			a->destroy();
 		}
 	}
-	task::operator bool()
-	{
-		return !EVTask::empty();
-	}
+	
 }

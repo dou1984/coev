@@ -16,7 +16,6 @@ namespace coev
 	{
 		void insert_task(taskext *_task);
 		void destroy();
-		operator bool();
+		bool empty() const { return EVTask::empty(); }
 	};
-
 }

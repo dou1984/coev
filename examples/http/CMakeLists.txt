@@ -12,4 +12,4 @@ project(cohttp)
 aux_source_directory(./ SRC_DIR)
 
 add_executable(${PROJECT_NAME} ${SRC_DIR})
-target_link_libraries(${PROJECT_NAME} cohttpreq http_parser coloop coev ev pthread)
+target_link_libraries(${PROJECT_NAME} cohttpparser http_parser coloop coev ev pthread)
