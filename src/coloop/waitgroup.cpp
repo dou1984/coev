@@ -23,10 +23,4 @@ namespace coev
 		}
 		return 0;
 	}
-	event waitgroup::wait()
-	{
-		std::lock_guard<std::recursive_mutex> _(m_lock);
-		EVRecv *ev = this;
-		return event{ev};
-	}
 }

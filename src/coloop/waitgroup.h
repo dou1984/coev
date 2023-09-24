@@ -8,7 +8,7 @@ namespace coev
 	public:
 		int add(int c = 1);
 		int done();
-		event wait();
+		event wait() { return wait_for<EVRecv>(*this, m_lock); }
 
 	private:
 		std::recursive_mutex m_lock;

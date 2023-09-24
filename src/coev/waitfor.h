@@ -19,17 +19,17 @@ namespace coev
 		EVCHAIN *ev = &obj;
 		return event{ev};
 	}
-	template <class EVCHAIN, class OBJ>
-	event wait_for(OBJ &obj, std::recursive_mutex &mtx)
+	template <class EVCHAIN, class OBJ, class MUTEX>
+	event wait_for(OBJ &obj, MUTEX &mtx)
 	{
-		std::lock_guard<std::recursive_mutex> _(mtx);
+		std::lock_guard<MUTEX> _(mtx);
 		EVCHAIN *ev = &obj;
 		return event{ev};
 	}
-	template <class OBJ>
-	void resume(OBJ &obj, std::recursive_mutex &mtx)
+	template <class OBJ, class MUTEX>
+	void resume(OBJ &obj, MUTEX &mtx)
 	{
-		std::lock_guard<std::recursive_mutex> _(mtx);
+		std::lock_guard<MUTEX> _(mtx);
 		if (!obj.empty())
 		{
 			auto c = static_cast<event *>(obj.pop_front());
