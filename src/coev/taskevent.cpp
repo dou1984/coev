@@ -1,9 +1,9 @@
-#include "taskext.h"
+#include "taskevent.h"
 #include "task.h"
 
 namespace coev
 {
-	void taskext::__resume()
+	void taskevent::__resume()
 	{
 		if (m_taskchain)
 		{
@@ -14,7 +14,7 @@ namespace coev
 			_taskchain->EVEvent::resume();
 		}
 	}
-	taskext::~taskext()
+	taskevent::~taskevent()
 	{
 		__resume();
 	}

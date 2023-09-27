@@ -45,7 +45,7 @@ namespace coev
 				 m_coroutine ? m_coroutine.address() : 0);
 		if (m_awaiting && !m_awaiting.done())
 			m_awaiting.resume();
-		taskext::__resume();
+		taskevent::__resume();
 	}
 	void awaiter::destroy()
 	{

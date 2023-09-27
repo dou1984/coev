@@ -36,11 +36,11 @@ namespace coev
 		__list_clear();
 		return true;
 	}
-	void chain::__list_add(chain *cur, chain *prev, chain *next)
+	void chain::__list_add(chain *_new, chain *prev, chain *next)
 	{
-		prev->m_next = next->m_prev = cur;
-		cur->m_next = next;
-		cur->m_prev = prev;
+		prev->m_next = next->m_prev = _new;
+		_new->m_next = next;
+		_new->m_prev = prev;
 	}
 	void chain::__list_del(chain *prev, chain *next)
 	{
@@ -48,10 +48,10 @@ namespace coev
 		prev->m_next = next;
 	}
 	/*
-	void chain::__list_append(chain *p, chain *n, chain *prev, chain *next)
+	void chain::__list_append(chain *new_prev, chain *new_next, chain *prev, chain *next)
 	{
-		p->m_next = next;
-		n->m_prev = prev;
+		new_prev->m_next = next;
+		new_next->m_prev = prev;
 		next->m_prev = p;
 		prev->m_next = n;
 	}

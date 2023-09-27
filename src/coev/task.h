@@ -8,13 +8,14 @@
 #pragma once
 #include "chain.h"
 #include "eventchain.h"
-#include "taskext.h"
+#include "taskevent.h"
 
 namespace coev
 {
 	struct task final : EVTask, EVEvent
 	{
-		void insert_task(taskext *_task);
+		virtual ~task();
+		void insert_task(taskevent *_task);
 		void destroy();
 		bool empty() const { return EVTask::empty(); }
 	};

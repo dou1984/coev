@@ -11,7 +11,11 @@
 
 namespace coev
 {
-	void task::insert_task(taskext *_task)
+	task::~task()
+	{
+		destroy();
+	}
+	void task::insert_task(taskevent *_task)
 	{
 		EVTask::push_back(_task);
 		_task->m_taskchain = this;
@@ -20,7 +24,7 @@ namespace coev
 	{
 		while (!EVTask::empty())
 		{
-			auto t = static_cast<taskext *>(EVTask::pop_front());
+			auto t = static_cast<taskevent *>(EVTask::pop_front());
 			assert(t->m_taskchain);
 			LOG_CORE("t:%p taskchain:%p\n", t, t->m_taskchain);
 			t->m_taskchain = nullptr;
@@ -28,5 +32,5 @@ namespace coev
 			a->destroy();
 		}
 	}
-	
+
 }

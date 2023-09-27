@@ -14,7 +14,7 @@ The development of c++20 coroutines is difficult, so coev encapsulates three com
 
 ```sh
 #ubuntu
-apt install -y libhiredis-dev libmysqlclient-dev libhttp-parser-dev
+apt install -y libhiredis-dev libmysqlclient-dev libhttp-parser-dev libev-dev
 make build
 cd build
 cmake ..

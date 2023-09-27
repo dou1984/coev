@@ -6,6 +6,17 @@ c++20 coroutine libev
 
 coev 是高性能的c++20协程库, coev封装了3个c++20协程类awaiter、event、eventchain, 这3个类大大降低了c++20协程的开发难度，提升开发效率，coev目的是快速将异步程序转为协程。
 
+# install
+
+```sh
+#ubuntu
+apt install -y libhiredis-dev libmysqlclient-dev libhttp-parser-dev libev-dev
+make build
+cd build
+cmake ..
+make 
+```
+
 ## event
 
 event 是最小的协程类，用于快速将异步调用转换成协程。与此匹配的是eventchain，wait_for<eventchain>，相互配合可以快速实现协程。

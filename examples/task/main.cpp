@@ -60,10 +60,41 @@ void co_task_v()
 {
 	co_task_short(false);
 }
+awaiter co_completed()
+{
+	LOG_DBG("incompleted begin\n")
+	co_await sleep_for(2);
+	LOG_DBG("arrived success\n");
+	co_return 0;
+}
+awaiter co_incompleted()
+{
+	LOG_DBG("incompleted begin\n")
+	co_await sleep_for(3);
+	LOG_DBG("arrived error\n");
+	co_return 0;
+}
+void co_two_task()
+{
+	[]() -> awaiter
+	{
+		co_await wait_for_any(co_completed(), wait_for_all(co_incompleted(), co_incompleted()));
+		co_return 0;
+	}();
+}
+void co_two_task2()
+{
+
+	[]() -> awaiter
+	{
+		co_await wait_for_any(co_incompleted(), wait_for_all(co_completed(), co_completed()));
+		co_return 0;
+	}();
+}
 int main()
 {
-	set_log_level(LOG_LEVEL_CORE);
+	set_log_level(LOG_LEVEL_DEBUG);
 
-	running::instance().add(co_task_t).add(co_task_f).add(co_task_u).add(co_task_v).join();
+	running::instance().add(co_task_t).add(co_task_f).add(co_task_u).add(co_task_v).add(co_two_task).add(co_two_task2).join();
 	return 0;
 }
