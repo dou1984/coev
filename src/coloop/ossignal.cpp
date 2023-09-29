@@ -29,11 +29,11 @@ namespace coev
 		m_Signal.data = this;
 		ev_signal_init(&m_Signal, ossignal::cb_signal, m_id);
 		ev_signal_start(loop::data(), &m_Signal);
-		m_tag = gtid();
+		m_tid = gtid();
 	}
 	ossignal::~ossignal()
 	{
-		ev_signal_stop(loop::at(m_tag), &m_Signal);
+		ev_signal_stop(loop::at(m_tid), &m_Signal);
 	}
 	int ossignal::resume()
 	{

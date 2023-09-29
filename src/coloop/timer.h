@@ -14,7 +14,7 @@ namespace coev
 	struct timer final : EVTimer
 	{
 		ev_timer m_data;
-		uint64_t m_tag = 0;
+		uint64_t m_tid = 0;
 
 		timer(ev_tstamp itimer, ev_tstamp rtimer);
 		virtual ~timer();

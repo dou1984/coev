@@ -39,7 +39,7 @@ namespace coev
 			::close(m_fd);
 			return;
 		}
-		m_tag = gtid();
+		m_tid = gtid();
 		connect_insert();
 	}
 	client::~client()
@@ -50,12 +50,12 @@ namespace coev
 	{
 		m_Read.data = this;
 		ev_io_init(&m_Read, &client::cb_connect, m_fd, EV_READ | EV_WRITE);
-		ev_io_start(loop::at(m_tag), &m_Read);
+		ev_io_start(loop::at(m_tid), &m_Read);
 		return 0;
 	}
 	int client::connect_remove()
 	{
-		ev_io_stop(loop::at(m_tag), &m_Read);
+		ev_io_stop(loop::at(m_tid), &m_Read);
 		return 0;
 	}
 	int client::__connect(const char *ip, int port)

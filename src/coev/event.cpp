@@ -10,7 +10,7 @@
 
 namespace coev
 {
-	event::event(chain *_eventchain, uint64_t _tag) : m_tag(_tag)
+	event::event(chain *_eventchain, uint64_t _tid) : m_tid(_tid)
 	{
 		if (_eventchain != nullptr)
 			_eventchain->push_back(this);

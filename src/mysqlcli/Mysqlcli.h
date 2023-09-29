@@ -34,7 +34,7 @@ namespace coev
 		
 	private:
 		MYSQL *m_mysql = nullptr;
-		int m_tag = 0;
+		int m_tid = 0;
 		ev_io m_Read;
 		ev_io m_Write;
 

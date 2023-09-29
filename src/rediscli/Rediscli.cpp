@@ -108,12 +108,12 @@ namespace coev
 	{
 		m_Read.data = this;
 		ev_io_init(&m_Read, &Rediscli::cb_connect, fd(), EV_READ | EV_WRITE);
-		ev_io_start(loop::at(m_tag), &m_Read);
+		ev_io_start(loop::at(m_tid), &m_Read);
 		return 0;
 	}
 	int Rediscli::__connect_remove()
 	{
-		ev_io_stop(loop::at(m_tag), &m_Read);
+		ev_io_stop(loop::at(m_tid), &m_Read);
 		return 0;
 	}
 	int Rediscli::__process_insert()
@@ -121,7 +121,7 @@ namespace coev
 		assert(fd() != INVALID);
 		m_Read.data = this;
 		ev_io_init(&m_Read, &Rediscli::cb_read, fd(), EV_READ);
-		ev_io_start(loop::at(m_tag), &m_Read);
+		ev_io_start(loop::at(m_tid), &m_Read);
 		m_Write.data = this;
 		ev_io_init(&m_Write, &Rediscli::cb_write, fd(), EV_WRITE);
 		return 0;
@@ -132,8 +132,8 @@ namespace coev
 		m_result.last_msg = STRING_CLOSED;
 		if (m_context)
 		{
-			ev_io_stop(loop::at(m_tag), &m_Read);
-			ev_io_stop(loop::at(m_tag), &m_Write);
+			ev_io_stop(loop::at(m_tid), &m_Read);
+			ev_io_stop(loop::at(m_tid), &m_Write);
 			m_context = nullptr;
 		}
 		return 0;
@@ -194,22 +194,22 @@ namespace coev
 	void Rediscli::__addread(void *privdata)
 	{
 		auto _this = (Rediscli *)(privdata);
-		ev_io_start(loop::at(_this->m_tag), &_this->m_Read);
+		ev_io_start(loop::at(_this->m_tid), &_this->m_Read);
 	}
 	void Rediscli::__delread(void *privdata)
 	{
 		auto _this = (Rediscli *)(privdata);
-		ev_io_stop(loop::at(_this->m_tag), &_this->m_Read);
+		ev_io_stop(loop::at(_this->m_tid), &_this->m_Read);
 	}
 	void Rediscli::__addwrite(void *privdata)
 	{
 		auto _this = (Rediscli *)(privdata);
-		ev_io_start(loop::at(_this->m_tag), &_this->m_Write);
+		ev_io_start(loop::at(_this->m_tid), &_this->m_Write);
 	}
 	void Rediscli::__delwrite(void *privdata)
 	{
 		auto _this = (Rediscli *)(privdata);
-		ev_io_stop(loop::at(_this->m_tag), &_this->m_Write);
+		ev_io_stop(loop::at(_this->m_tid), &_this->m_Write);
 	}
 	int Rediscli::fd()
 	{
@@ -217,7 +217,7 @@ namespace coev
 	}
 	Rediscli::Rediscli(const char *ip, int port, const char *auth)
 	{
-		m_tag = gtid();
+		m_tid = gtid();
 		m_ip = ip;
 		m_port = port;
 		m_auth = auth;

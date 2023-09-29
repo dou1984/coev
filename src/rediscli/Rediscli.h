@@ -50,7 +50,7 @@ namespace coev
 		int send(const char *);
 
 	private:
-		int m_tag;
+		int m_tid;
 		ev_io m_Read;
 		ev_io m_Write;
 		redisAsyncContext *m_context = nullptr;

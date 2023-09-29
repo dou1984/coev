@@ -22,24 +22,24 @@ namespace coev
 	{
 		m_data.data = this;
 		ev_timer_init(&m_data, timer::cb_timer, itimer, rtimer);
-		m_tag = gtid();
+		m_tid = gtid();
 	}
 	timer::~timer()
 	{
 		if (ev_is_active(&m_data))
-			ev_timer_stop(loop::at(m_tag), &m_data);
+			ev_timer_stop(loop::at(m_tid), &m_data);
 		assert(EVTimer::empty());
 	}
 	int timer::stop()
 	{
 		if (ev_is_active(&m_data))
-			ev_timer_stop(loop::at(m_tag), &m_data);
+			ev_timer_stop(loop::at(m_tid), &m_data);
 		return 0;
 	}
 	int timer::active()
 	{
 		if (!ev_is_active(&m_data))
-			ev_timer_start(loop::at(m_tag), &m_data);
+			ev_timer_start(loop::at(m_tid), &m_data);
 		return 0;
 	}
 	bool timer::is_active()
@@ -48,6 +48,6 @@ namespace coev
 	}
 	ev_tstamp timer::remaining()
 	{
-		return ev_timer_remaining(loop::at(m_tag), &m_data);
+		return ev_timer_remaining(loop::at(m_tid), &m_data);
 	}
 }

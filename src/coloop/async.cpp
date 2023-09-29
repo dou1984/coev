@@ -28,15 +28,15 @@ namespace coev
 		m_Async.data = this;
 		ev_async_init(&m_Async, async::cb_async);
 		ev_async_start(__loop, &m_Async);
-		m_tag = __tag;
+		m_tid = __tag;
 	}
 	async::~async()
 	{
-		ev_async_stop(loop::at(m_tag), &m_Async);
+		ev_async_stop(loop::at(m_tid), &m_Async);
 	}
 	int async::resume()
 	{
-		ev_async_send(loop::at(m_tag), &m_Async);
+		ev_async_send(loop::at(m_tid), &m_Async);
 		return 0;
 	}
 	int async::resume_event(event *ev)

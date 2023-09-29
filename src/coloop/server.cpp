@@ -73,16 +73,16 @@ namespace coev::tcp
 		}
 		return 0;
 	}
-	int server::__insert(uint64_t _tag)
+	int server::__insert(uint64_t _tid)
 	{
 		m_Reav.data = this;
 		ev_io_init(&m_Reav, server::cb_accept, m_fd, EV_READ);
-		ev_io_start(loop::at(_tag), &m_Reav);
+		ev_io_start(loop::at(_tid), &m_Reav);
 		return m_fd;
 	}
-	int server::__remove(uint64_t _tag)
+	int server::__remove(uint64_t _tid)
 	{
-		ev_io_stop(loop::at(_tag), &m_Reav);
+		ev_io_stop(loop::at(_tid), &m_Reav);
 		return m_fd;
 	}
 	bool server::__valid() const

@@ -30,7 +30,7 @@ namespace coev
 		const iocontext &operator=(iocontext &&);
 
 	protected:
-		uint64_t m_tag = 0;
+		uint64_t m_tid = 0;
 		int m_fd = INVALID;
 		ev_io m_Read;
 		ev_io m_Write;

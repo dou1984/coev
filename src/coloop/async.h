@@ -24,7 +24,7 @@ namespace coev
 	private:
 		ev_async m_Async;
 		std::mutex m_lock;
-		uint64_t m_tag = 0;
+		uint64_t m_tid = 0;
 		static void cb_async(struct ev_loop *loop, ev_async *w, int revents);
 		int __resume();
 		int resume();
