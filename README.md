@@ -4,7 +4,7 @@ c++20 coroutine libev
 
 ---
 
-coev is a c++20 coroutine library based on libev. In 2019, the C++ Committee proposed a draft of coroutines. There are also many libraries of coroutines on github. but the libraries are not friendly to developers. The author encapsulates a relatively simple library for the convenience of C++ developers.
+coev is a c++20 event-based coroutine solution. In 2019, the C++ Committee proposed a draft of coroutines. There are also many solutions of coroutines on github. but the libraries are not friendly to developers. The author encapsulates a relatively simple library for the convenience of C++ developers.
 
 The coroutine of c++20 is a stackless coroutine, which greatly improves the switching efficiency of the coroutine compared with the traditional stackful coroutine. Compared with the classic boost::context, c++20 coroutines have changed a lot in the development mode.
 
@@ -21,6 +21,7 @@ cmake ..
 make 
 ```
 
+The author encapsulates three classes "awaiter", "event", and "eventchain" through the c++20 coroutine library. The main idea of ​​these three subpackage classes is to be event-based. Developers no longer need to association coroutine with file's I/O, networks and pipelines etc. Coroutine codes are highly abstract, and completely separated from other module codes. In the development, the only things needed is to store current context and wait for data complished. When the data is ready, we can trigger the recovery context and continue the coroutine.
 
 ## event
 
@@ -47,7 +48,7 @@ awaiter co_trigger()
 
 ## awaiter
 
-awaiter is a coroutine class of coev. awaiter is very convenient to use. Defining awaiter as a function return can create a coroutine, and awaiter can define the return value type.
+awaiter is a coroutine class of coev. awaiter is very convenient to use. Defining awaiter as a function return can create a coroutine.
 
 ```cpp
 awaiter co_sleep(int t)  
