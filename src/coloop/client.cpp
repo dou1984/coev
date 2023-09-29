@@ -39,7 +39,7 @@ namespace coev
 			::close(m_fd);
 			return;
 		}
-		m_tag = ttag();
+		m_tag = gtid();
 		connect_insert();
 	}
 	client::~client()

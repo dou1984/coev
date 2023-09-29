@@ -53,7 +53,7 @@ namespace coev
 	}
 	iocontext::iocontext(int fd) : m_fd(fd)
 	{
-		m_tag = ttag();
+		m_tag = gtid();
 		__init();
 	}
 	int iocontext::__init()
@@ -93,7 +93,7 @@ namespace coev
 	}
 	const iocontext &iocontext::operator=(iocontext &&o)
 	{
-		m_tag = ttag();
+		m_tag = gtid();
 		o.__finally();
 		std::swap(m_fd, o.m_fd);
 		o.EVRecv::moveto(static_cast<EVRecv *>(this));

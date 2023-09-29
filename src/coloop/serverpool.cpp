@@ -13,7 +13,7 @@ namespace coev::tcp
 {
 	server &serverpool::get()
 	{
-		auto _tag = ttag();
+		auto _tag = gtid();
 		std::lock_guard<std::mutex> _(m_mutex);
 		auto &s = m_pool[_tag];
 		if (s.m_fd == INVALID)
@@ -25,7 +25,7 @@ namespace coev::tcp
 	}
 	int serverpool::start(const char *ip, int size)
 	{
-		auto _tag = ttag();
+		auto _tag = gtid();
 		std::lock_guard<std::mutex> _(m_mutex);
 		auto &s = m_pool[_tag];
 		if (m_fd == INVALID)

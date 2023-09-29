@@ -27,7 +27,7 @@ namespace coev
 		struct ev_loop *m_loop = nullptr;
 		__ev_loop()
 		{
-			m_tag = ttag();
+			m_tag = gtid();
 			m_loop = ev_loop_new();
 			std::lock_guard<std::mutex> _(g_mutex);
 			all_loops.emplace(m_tag, this);
@@ -67,7 +67,7 @@ namespace coev
 	}
 	void loop::resume(event *ev)
 	{
-		if (ev->m_tag == ttag())
+		if (ev->m_tag == gtid())
 		{
 			ev->resume();
 		}

@@ -20,7 +20,7 @@ namespace coev
 			_this->__resume();
 		}
 	}
-	async::async() : async(loop::data(), ttag())
+	async::async() : async(loop::data(), gtid())
 	{
 	}
 	async::async(struct ev_loop *__loop, uint64_t __tag)

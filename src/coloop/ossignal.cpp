@@ -29,7 +29,7 @@ namespace coev
 		m_Signal.data = this;
 		ev_signal_init(&m_Signal, ossignal::cb_signal, m_id);
 		ev_signal_start(loop::data(), &m_Signal);
-		m_tag = ttag();
+		m_tag = gtid();
 	}
 	ossignal::~ossignal()
 	{

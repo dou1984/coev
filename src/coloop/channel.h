@@ -42,7 +42,7 @@ namespace coev
 					co_return 0;
 				}
 				EVRecv *ev = this;
-				event _event(ev, ttag());
+				event _event(ev, gtid());
 				m_lock.unlock();
 				co_await _event;
 			}

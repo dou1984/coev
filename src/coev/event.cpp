@@ -6,7 +6,7 @@
  *
  */
 #include "event.h"
-#include "tag.h"
+#include "gtid.h"
 
 namespace coev
 {
@@ -15,7 +15,7 @@ namespace coev
 		if (m_eventchain != nullptr)
 			m_eventchain->push_back(this);
 	}
-	event::event(chain *obj) : event(obj, ttag())
+	event::event(chain *obj) : event(obj, gtid())
 	{
 	}
 	event::~event()

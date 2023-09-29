@@ -67,7 +67,7 @@ namespace coev::tcp
 	{
 		if (m_fd != INVALID)
 		{
-			__remove(ttag());
+			__remove(gtid());
 			::close(m_fd);
 			m_fd = INVALID;
 		}
