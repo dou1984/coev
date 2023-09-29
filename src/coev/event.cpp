@@ -20,8 +20,8 @@ namespace coev
 	}
 	event::~event()
 	{
-		if (!this->chain::empty())
-			this->chain::erase(this);
+		if (!chain::empty())
+			chain::erase(this);
 		m_awaiting = nullptr;
 	}
 	void event::await_resume()
