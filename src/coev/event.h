@@ -15,11 +15,10 @@ namespace coev
 {
 	struct event final : chain
 	{
-		chain *m_eventchain = nullptr;
 		std::coroutine_handle<> m_awaiting = nullptr;
 		uint64_t m_tag = 0;
-		event(chain *obj, uint64_t _tag);
-		event(chain *obj);
+		event(chain *eventchain, uint64_t _tag);
+		event(chain *eventchain);
 		virtual ~event();
 		event(event &&) = delete;
 		event(const event &) = delete;
