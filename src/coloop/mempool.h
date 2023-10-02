@@ -7,7 +7,7 @@
  */
 #pragma once
 #include <array>
-#include "chain.h"
+#include "../coev.h"
 
 namespace coev
 {

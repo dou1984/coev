@@ -11,7 +11,6 @@
 #include "promise.h"
 #include "log.h"
 #include "object.h"
-#include "hook.h"
 #include "taskevent.h"
 
 namespace coev
