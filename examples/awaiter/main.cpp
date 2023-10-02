@@ -32,13 +32,36 @@ awaiter co_resume()
 	co_return 0;
 }
 
+awaiter co_awaiter_sleep()
+{
+
+	auto ev = wait_for<EVRecv>(g_test);
+
+	LOG_DBG("awaiter sleep\n");
+	co_await sleep_for(2);
+	LOG_DBG("awaiter begin\n");
+	co_await ev;
+	LOG_DBG("awaiter end\n");
+	co_return 0;
+}
+awaiter co_awaiter_resume()
+{
+	co_await sleep_for(1);
+	LOG_DBG("awaiter resume\n");
+	g_test.EVRecv::resume();
+	co_return 0;
+}
 int main()
 {
 	set_log_level(LOG_LEVEL_DEBUG);
 
 	running::instance()
+		/*
+			.add([]() -> awaiter
+				 { co_return co_await wait_for_all(co_awaiter(), co_resume()); })
+				 */
 		.add([]() -> awaiter
-			 { co_await wait_for_all(co_awaiter(), co_resume()); })
+			 { co_return co_await wait_for_all(co_awaiter_sleep(), co_awaiter_resume()); })
 		.join();
 	return 0;
 }

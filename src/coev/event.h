@@ -16,6 +16,7 @@ namespace coev
 	struct event final : chain
 	{
 		std::coroutine_handle<> m_awaiting = nullptr;
+		bool m_ready = false;
 		uint64_t m_tid = 0;
 		event(chain *eventchain, uint64_t _tid);
 		event(chain *eventchain);

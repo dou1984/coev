@@ -29,7 +29,7 @@ namespace coev
 	}
 	bool event::await_ready()
 	{
-		return false;
+		return m_ready;
 	}
 	void event::await_suspend(std::coroutine_handle<> awaiting)
 	{
@@ -39,6 +39,9 @@ namespace coev
 	{
 		LOG_CORE("event m_awaiting:%p\n", m_awaiting ? m_awaiting.address() : 0);
 		if (m_awaiting && !m_awaiting.done())
+		{
 			m_awaiting.resume();
+		}
+		m_ready = true;
 	}
 }
