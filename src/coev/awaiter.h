@@ -7,6 +7,7 @@
  */
 #pragma once
 #include <coroutine>
+#include <atomic>
 #include "chain.h"
 #include "promise.h"
 #include "log.h"
@@ -45,6 +46,6 @@ namespace coev
 	private:
 		std::coroutine_handle<promise_type> m_coroutine = nullptr;
 		std::coroutine_handle<> m_awaiting = nullptr;
-		bool m_ready = false;
+		std::atomic_bool m_ready{false};
 	};
 }
