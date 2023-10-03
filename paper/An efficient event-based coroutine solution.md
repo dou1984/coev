@@ -1,9 +1,16 @@
 # An efficient event-based coroutine solution
 
-## Purpose
+Date: 2023-10-01
+Auther: Zhao Yun Shan
+Project: Programming Language C++
+
+Contents
+...
+
+## Motivation
 
 The c++20 coroutine library is a high-performance coroutine library solution, but it has not become popular, mainly because there is no universal encapsulation.
- The author provides a set of event-driven encapsulation that separates coroutine development from business code. Developers do not need to care about the encapsulation implementation of coroutines and can quickly convert existing asynchronous programs into coroutine programs.
+The author provides a set of event-driven encapsulation that separates coroutine development from business code. Developers do not need to care about the encapsulation implementation of coroutines and can quickly convert existing asynchronous programs into coroutine programs.
 
 ## event-based coroutine solution
 
@@ -24,7 +31,7 @@ struct event final : chain // chain is a simplified list
   event(chain *_eventchain);
   virtual ~event();
   void await_resume();
-  bool await_ready() { return false; }
+  bool await_ready() { return m_ready; }
   void await_suspend(std::coroutine_handle<> awaiting)；
   void resume();
   // Part of the implementation is omitted here

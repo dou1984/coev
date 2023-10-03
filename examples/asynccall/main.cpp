@@ -30,7 +30,6 @@ awaiter __call(int *x, int *y)
 		*y = __y;
 		TRACE();
 		ev.resume();
-		TRACE();
 	};
 	__func(f);
 	TRACE();
