@@ -9,31 +9,39 @@
 
 using namespace coev;
 
-void __func(const std::function<void(int, int)> &__f)
+struct Trigger : EVEvent
+{
+	int x;
+	int y;
+} g_trigger;
+
+void real_call(int __x, int __y)
+{
+	TRACE();
+	g_trigger.x = __x;
+	g_trigger.y = __y;
+	TRACE();
+	g_trigger.EVEvent::resume();
+	TRACE();
+};
+
+void __async_call()
 {
 	[&]() -> awaiter
 	{
 		TRACE();
-		co_await sleep_for(5);
-		TRACE();
-		__f(1, 2);
+		co_await sleep_for(1);
+		real_call(1, 2);
 		TRACE();
 		co_return 0;
 	}();
 }
-awaiter __call(int *x, int *y)
+awaiter __call()
 {
-	EVEvent ev;
-	auto f = [&](int __x, int __y)
-	{
-		*x = __x;
-		*y = __y;
-		TRACE();
-		ev.resume();
-	};
-	__func(f);
 	TRACE();
-	co_await wait_for<EVEvent>(ev);
+	__async_call();
+	TRACE();
+	co_await wait_for<EVEvent>(g_trigger);
 	TRACE();
 	co_return 0;
 }
@@ -43,12 +51,10 @@ int main()
 	set_log_level(LOG_LEVEL_CORE);
 	running::instance()
 		.add([]() -> awaiter
-			 { 
-				int x = 0;
-				int y = 0;
+			 { 			
 				TRACE();
-				co_await __call(&x, &y);
-				LOG_DBG("__call %d:%d\n", x, y);
+				co_await __call();
+				LOG_DBG("__call %d:%d\n", g_trigger.x, g_trigger.y);
 				co_return 0; })
 		.join();
 	return 0;
