@@ -7,7 +7,7 @@ The c++20 coroutine library is a high-performance coroutine library solution, bu
 
 ## event-based coroutine solution
 
-Until now, the author has many projects with asynchronous framework . It is a heavy workload to transform each class of these asynchronous processes into a coroutine class. Therefore, the author designed an event-driven coroutine library that can quickly convert asynchronous programs into As a coroutine, other developers no longger need to understand the C++20 coroutine or encapsulate a new coroutine class to quickly convert asynchronous programs into coroutines.
+Until now, the author has many projects with asynchronous framework. It is a heavy workload to transform each class of these asynchronous processes into a coroutine class. Therefore, the author designed an event-driven coroutine library that can quickly convert asynchronous programs into As a coroutine, other developers no longger need to understand the C++20 coroutine or encapsulate a new coroutine class to quickly convert asynchronous programs into coroutines.
 
 The author encapsulates three classes awaiter, event, and eventchain through the c++20 coroutine. The main idea of ​​these three subpackage classes is to be event-driven. Developers no longer need to combine c++20 coroutine with files I/O, networks, and pipelines etc. codes are mixed to achieve highly abstract coroutine code and completely separated from other modules. In the development process, the only thing need to store the context when we wait for data complished and suspend coroutine . When the data is ready , we can trigger the recovery context and continue the coroutine.
 
