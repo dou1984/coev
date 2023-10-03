@@ -8,7 +8,7 @@
 #pragma once
 
 namespace coev
-{	
+{
 	struct RECV
 	{
 	};
