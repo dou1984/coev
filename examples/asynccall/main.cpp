@@ -11,27 +11,23 @@ using namespace coev;
 
 struct Trigger : EVEvent
 {
-	int x;
-	int y;
+	int x = 0;
 } g_trigger;
 
-void real_call(int __x, int __y)
-{
-	TRACE();
-	g_trigger.x = __x;
-	g_trigger.y = __y;
-	TRACE();
-	g_trigger.EVEvent::resume();
-	TRACE();
+void real_call(int __x){
+	// g_trigger.x = __x;
 };
 
-void __async_call()
+void __async_call(void (*__f)(int))
 {
-	[&]() -> awaiter
+	[=]() -> awaiter
 	{
 		TRACE();
 		co_await sleep_for(1);
-		real_call(1, 2);
+		__f(1); // It will core dump here, __f is not equal input argument __f, is it a g++ bug?
+		// real_call(1); // It's OK.
+		TRACE();
+		g_trigger.EVEvent::resume();
 		TRACE();
 		co_return 0;
 	}();
@@ -39,7 +35,7 @@ void __async_call()
 awaiter __call()
 {
 	TRACE();
-	__async_call();
+	__async_call(real_call);
 	TRACE();
 	co_await wait_for<EVEvent>(g_trigger);
 	TRACE();
@@ -54,7 +50,7 @@ int main()
 			 { 			
 				TRACE();
 				co_await __call();
-				LOG_DBG("__call %d:%d\n", g_trigger.x, g_trigger.y);
+				LOG_DBG("__call %d\n", g_trigger.x);
 				co_return 0; })
 		.join();
 	return 0;
