@@ -6,6 +6,7 @@
  *
  */
 #pragma once
+#include <mutex>
 #include "chain.h"
 #include "object.h"
 #include "event.h"
@@ -15,19 +16,25 @@ namespace coev
 	template <class TYPE>
 	struct eventchain : chain, TYPE
 	{
+		void append(chain *c)
+		{
+			chain::push_back(c);
+		}
 		bool resume()
 		{
-			if (chain::empty())
-				return false;
 			auto c = static_cast<event *>(chain::pop_front());
-			c->resume();
-			return true;
+			if (c)
+			{
+				c->resume();
+				return true;
+			}
+			return false;
 		}
 	};
-
 	using EVRecv = eventchain<RECV>;
 	using EVSend = eventchain<SEND>;
 	using EVEvent = eventchain<EVENT>;
 	using EVTask = eventchain<TASK>;
 	using EVTimer = eventchain<TIMER>;
+
 }

@@ -17,7 +17,7 @@ namespace coev
 	}
 	void task::insert_task(taskevent *_task)
 	{
-		EVTask::push_back(_task);
+		EVTask::append(_task);
 		_task->m_taskchain = this;
 	}
 	void task::destroy()

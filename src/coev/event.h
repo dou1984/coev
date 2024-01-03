@@ -11,6 +11,7 @@
 #include "log.h"
 #include "chain.h"
 #include "promise.h"
+#include "gtid.h"
 
 namespace coev
 {
@@ -19,8 +20,12 @@ namespace coev
 		std::coroutine_handle<> m_awaiting = nullptr;
 		uint64_t m_tid = 0;
 		std::atomic_bool m_ready{false};
-		event(chain *eventchain, uint64_t _tid);
-		event(chain *eventchain);
+		template <class EVENTCHAIN>
+		event(EVENTCHAIN *_eventchain) : m_tid(gtid())
+		{
+			if (_eventchain != nullptr)
+				_eventchain->append(this);
+		}
 		virtual ~event();
 		event(event &&) = delete;
 		event(const event &) = delete;

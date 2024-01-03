@@ -28,7 +28,7 @@ awaiter co_resume()
 	co_await sleep_for(5);
 	LOG_DBG("resume end\n");
 	EVRecv *e = &g_test;
-	resume(*e, g_mtx);
+	e->resume();
 	co_return 0;
 }
 

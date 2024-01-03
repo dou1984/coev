@@ -8,6 +8,7 @@
 #pragma once
 #include "chain.h"
 #include "eventchain.h"
+#include "eventchainmutex.h"
 #include "taskevent.h"
 
 namespace coev
@@ -17,6 +18,6 @@ namespace coev
 		virtual ~task();
 		void insert_task(taskevent *_task);
 		void destroy();
-		bool empty() const { return EVTask::empty(); }
+		bool empty() { return EVTask::empty(); }
 	};
 }

@@ -9,10 +9,12 @@
 #include <atomic>
 #include <chrono>
 #include <coloop.h>
+#include <atomic>
 
 using namespace coev;
 
-int g_total = 0;
+// int g_total = 0;
+std::atomic_int g_total{0};
 comutex g_mutex;
 // std::mutex g_mutex;
 
@@ -25,17 +27,19 @@ awaiter test_go()
 		co_await g_mutex.lock();
 		// g_mutex.lock();
 		g_total += 1;
+		_total += 1;
 		// g_mutex.unlock();
 		co_await g_mutex.unlock();
 	}
 	auto r = std::chrono::system_clock::now() - now;
 
-	printf("%d %ld\n", g_total, r.count());
+	LOG_DBG("%d %d %ld \n", g_total.load(), _total, r.count());
 	co_return 0;
 }
 
 int main()
 {
+	// set_log_level(LOG_LEVEL_CORE);
 	running::instance().add(8, test_go).join();
 
 	return 0;

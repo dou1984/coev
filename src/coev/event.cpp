@@ -6,18 +6,11 @@
  *
  */
 #include "event.h"
-#include "gtid.h"
+#include "eventchain.h"
 
 namespace coev
 {
-	event::event(chain *_eventchain, uint64_t _tid) : m_tid(_tid)
-	{
-		if (_eventchain != nullptr)
-			_eventchain->push_back(this);
-	}
-	event::event(chain *_eventchain) : event(_eventchain, gtid())
-	{
-	}
+	
 	event::~event()
 	{
 		if (!chain::empty())

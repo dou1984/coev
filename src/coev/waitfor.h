@@ -16,25 +16,8 @@ namespace coev
 	template <class EVCHAIN, class OBJ>
 	event wait_for(OBJ &obj)
 	{
-		EVCHAIN *ev = &obj;
+		EVCHAIN *ev = &obj;		
 		return event{ev};
-	}
-	template <class EVCHAIN, class OBJ, class MUTEX>
-	event wait_for(OBJ &obj, MUTEX &mtx)
-	{
-		std::lock_guard<MUTEX> _(mtx);
-		EVCHAIN *ev = &obj;
-		return event{ev};
-	}
-	template <class OBJ, class MUTEX>
-	void resume(OBJ &obj, MUTEX &mtx)
-	{
-		std::lock_guard<MUTEX> _(mtx);
-		if (!obj.empty())
-		{
-			auto c = static_cast<event *>(obj.pop_front());
-			c->resume();
-		}
 	}
 	template <class... T>
 	awaiter wait_for_any(T &&..._task)

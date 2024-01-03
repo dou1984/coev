@@ -24,8 +24,7 @@ awaiter go()
 		co_await ch.get(x);
 	}
 	total += x;
-	x = total;
-	printf("%d\n", x);
+	printf("%d\n", total.load());
 	co_return x;
 }
 int main()

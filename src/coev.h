@@ -17,3 +17,6 @@
 #include "coev/setvalue.h"
 #include "coev/gtid.h"
 #include "coev/chain.h"
+#include "coev/comutex.h"
+#include "coev/channel.h"
+#include "coev/waitgroup.h"
