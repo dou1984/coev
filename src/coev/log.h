@@ -15,7 +15,8 @@
 #define PRINT(...) printf(__VA_ARGS__)
 #define LOG(LEVEL, ...)                                                  \
 	if (get_log_level() <= LEVEL)                                        \
-	{ /*std::lock_guard<std::mutex> _(get_log_mutex());   */             \
+	{                                                                    \
+		std::lock_guard<std::mutex> _(get_log_mutex());                  \
 		{                                                                \
 			auto __now__ = std::chrono::system_clock::now();             \
 			auto __tm__ = std::chrono::system_clock::to_time_t(__now__); \

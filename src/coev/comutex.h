@@ -10,6 +10,10 @@ namespace coev
 		int m_flag = 0;
 
 	public:
+		/*
+		awaiter lock();
+		awaiter unlock();
+		*/
 		awaiter lock();
 		awaiter unlock();
 	};

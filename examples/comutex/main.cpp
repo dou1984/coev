@@ -17,12 +17,14 @@ using namespace coev;
 std::atomic_int g_total{0};
 comutex g_mutex;
 // std::mutex g_mutex;
-
+EVMutex *g_evmutex = &g_mutex;
+std::atomic_int g_count{0};
 awaiter test_go()
 {
+	co_await sleep_for(2);
 	int _total = 0;
 	auto now = std::chrono::system_clock::now();
-	for (int i = 0; i < 100000; i++)
+	for (int i = 0; i < 20; i++)
 	{
 		co_await g_mutex.lock();
 		// g_mutex.lock();
@@ -30,17 +32,20 @@ awaiter test_go()
 		_total += 1;
 		// g_mutex.unlock();
 		co_await g_mutex.unlock();
+		co_await usleep_for(1);
 	}
-	auto r = std::chrono::system_clock::now() - now;
 
-	LOG_DBG("%d %d %ld \n", g_total.load(), _total, r.count());
+	co_await sleep_for(1);
+	auto r = std::chrono::system_clock::now() - now;
+	auto _count = g_count++;
+	LOG_DBG("%d %d %d %ld\n", _count, g_total.load(), _total, r.count());
 	co_return 0;
 }
 
 int main()
 {
 	// set_log_level(LOG_LEVEL_CORE);
-	running::instance().add(8, test_go).join();
+	running::instance().add(100, test_go).join();
 
 	return 0;
 }

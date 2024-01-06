@@ -95,7 +95,7 @@ namespace coev::tcp
 		{
 			co_return INVALID;
 		}
-		co_await wait_for<EVRecv>(*this);
+		co_await EVRecv::wait_for();
 		ipaddress peer;
 		auto fd = coev::tcp::__accept(m_fd, peer);
 		if (fd != INVALID)

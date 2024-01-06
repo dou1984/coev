@@ -7,6 +7,7 @@
  */
 #pragma once
 #include <memory>
+#include <functional>
 #include "awaiter.h"
 #include "task.h"
 #include "event.h"
@@ -16,8 +17,26 @@ namespace coev
 	template <class EVCHAIN, class OBJ>
 	event wait_for(OBJ &obj)
 	{
-		EVCHAIN *ev = &obj;		
+		EVCHAIN *ev = &obj;
 		return event{ev};
+	}
+	template <class EVCHAIN, class OBJ>
+	event wait_for_x(OBJ &obj)
+	{
+		EVCHAIN *ev = &obj;
+		return event{ev};
+	}
+	template <class EVCHAIN, class OBJ>
+	bool resume(OBJ &obj)
+	{
+		EVCHAIN *ev = &obj;
+		auto c = static_cast<event *>(ev->pop_front());
+		if (c)
+		{
+			c->resume();
+			return true;
+		}
+		return false;
 	}
 	template <class... T>
 	awaiter wait_for_any(T &&..._task)
@@ -37,4 +56,5 @@ namespace coev
 			co_await wait_for<EVEvent>(w);
 		co_return 0;
 	}
+
 }

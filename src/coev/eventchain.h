@@ -16,6 +16,10 @@ namespace coev
 	template <class TYPE>
 	struct eventchain : chain, TYPE
 	{
+		event wait_for()
+		{
+			return event(this);
+		}
 		void append(chain *c)
 		{
 			chain::push_back(c);

@@ -6,7 +6,13 @@ namespace coev
 	event waitgroup::wait()
 	{
 		EVMutex::lock();
-		return wait_for<EVMutex>(*this);
+		return wait_for_x<EVMutex>(*this);
+		/*
+		return EVMutex::wait_for(
+			[]()
+			{ return true; },
+			[]() {});
+		*/
 	}
 	int waitgroup::add(int c)
 	{
@@ -28,6 +34,11 @@ namespace coev
 			c->resume();
 			goto __retry__;
 		}
+		/*
+		while (EVMutex::resume([]() {}))
+		{
+		}
+		*/
 		return 0;
 	}
 }

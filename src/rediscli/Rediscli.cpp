@@ -225,7 +225,7 @@ namespace coev
 	awaiter Rediscli::connect()
 	{
 		__connect();
-		co_await wait_for<EVRecv>(*this);
+		co_await EVRecv::wait_for();
 		__connect_remove();
 		__process_insert();
 		co_return 0;
@@ -234,15 +234,15 @@ namespace coev
 	{
 		LOG_DBG("query %s\n", message);
 		redisAsyncCommand(m_context, Rediscli::__callback, this, message);
-		co_await wait_for<EVRecv>(*this);
+		co_await EVRecv::wait_for();
 		if (m_context == nullptr)
 			co_return INVALID;
 		callback(m_result);
 		co_return 0;
-	}	
+	}
 	int Rediscli::send(const char *message)
 	{
 		LOG_DBG("send %s\n", message);
 		return redisAsyncCommand(m_context, Rediscli::__callback, this, message);
-	}	
+	}
 }

@@ -20,3 +20,5 @@
 #include "coev/comutex.h"
 #include "coev/channel.h"
 #include "coev/waitgroup.h"
+#include "coev/eventchain.h"
+#include "coev/eventchainmutex.h"

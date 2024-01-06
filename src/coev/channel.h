@@ -23,19 +23,35 @@ namespace coev
 				c->resume();
 			}
 			co_return 0;
+			/*
+			EVMutex::resume(
+				[this, &d]()
+				{ m_data.emplace_back(std::move(d)); });
+			co_return 0;
+			*/
 		}
 		awaiter get(TYPE &d)
 		{
 			EVMutex::lock();
 			if (m_data.empty())
 			{
-				co_await wait_for<EVMutex>(*this);
+				co_await wait_for_x<EVMutex>(*this);
 				EVMutex::lock();
 			}
 			d = std::move(m_data.front());
 			m_data.pop_front();
 			EVMutex::unlock();
 			co_return 0;
+			/*
+			return EVMutex::wait_for(
+				[this]()
+				{ return m_data.empty(); },
+				[this, &d]()
+				{
+					d = std::move(m_data.front());
+					m_data.pop_front();
+				});
+			*/
 		}
 	};
 }
