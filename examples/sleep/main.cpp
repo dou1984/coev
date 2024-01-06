@@ -29,7 +29,7 @@ awaiter co_timer()
 	t.active();
 	while (true)
 	{
-		co_await wait_for<EVTimer>(t);
+		co_await t.EVTimer::wait_for();
 		LOG_DBG("timer %f\n", 3.0);
 	}
 	co_return 0;

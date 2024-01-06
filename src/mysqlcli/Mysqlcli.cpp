@@ -135,10 +135,10 @@ namespace coev
 	{
 		if (__connect() == INVALID)
 			co_return INVALID;
-		co_await wait_for<EVRecv>(*this);
+		co_await EVRecv::wait_for();
 		__connect_remove();
 		__query_insert();
-		co_await wait_for<EVRecv>(*this);
+		co_await EVRecv::wait_for();
 		int status = 0;
 		while ((status = __tryconnect()) == NET_ASYNC_NOT_READY)
 		{
@@ -161,7 +161,7 @@ namespace coev
 			if (isInprocess())
 			{
 				ev_io_start(loop::at(m_tid), &m_Write);
-				co_await wait_for<EVSend>(*this);
+				co_await EVSend::wait_for();
 				ev_io_stop(loop::at(m_tid), &m_Write);
 			}
 		}
@@ -172,7 +172,7 @@ namespace coev
 		}
 		do
 		{
-			co_await wait_for<EVRecv>(*this);
+			co_await EVRecv::wait_for();
 		} while ((status = mysql_real_query_nonblocking(m_mysql, sql, size)) == NET_ASYNC_NOT_READY);
 		if (__isneterror(status) == INVALID)
 		{

@@ -76,7 +76,7 @@ namespace coev
 		{
 			co_return fd;
 		}
-		co_await wait_for<EVRecv>(*this);
+		co_await EVRecv::wait_for();
 		auto err = getSocketError(m_fd);
 		if (err == 0)
 		{

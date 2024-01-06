@@ -13,9 +13,8 @@ namespace coev
 {
 	struct task;
 
-	class taskevent : protected chain
+	struct taskevent : chain
 	{
-	protected:
 		friend struct task;
 
 		task *m_taskchain = nullptr;

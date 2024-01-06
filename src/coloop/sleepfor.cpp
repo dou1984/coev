@@ -16,14 +16,14 @@ namespace coev
 	{
 		timer _timer(t, 0);
 		_timer.active();
-		co_await wait_for<EVTimer>(_timer);
+		co_await _timer.EVTimer::wait_for();
 		co_return 0;
 	}
 	awaiter usleep_for(long t)
 	{
 		timer _timer((float)t / 1000000, 0);
 		_timer.active();
-		co_await wait_for<EVTimer>(_timer);
+		co_await _timer.EVTimer::wait_for();
 		co_return 0;
 	}
 }

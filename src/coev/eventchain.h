@@ -14,15 +14,11 @@
 namespace coev
 {
 	template <class TYPE>
-	struct eventchain : chain, TYPE
-	{
+	struct eventchain : chain,  TYPE
+	{		
 		event wait_for()
 		{
 			return event(this);
-		}
-		void append(chain *c)
-		{
-			chain::push_back(c);
 		}
 		bool resume()
 		{
@@ -35,10 +31,10 @@ namespace coev
 			return false;
 		}
 	};
+
 	using EVRecv = eventchain<RECV>;
 	using EVSend = eventchain<SEND>;
 	using EVEvent = eventchain<EVENT>;
 	using EVTask = eventchain<TASK>;
 	using EVTimer = eventchain<TIMER>;
-
 }

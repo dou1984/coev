@@ -8,7 +8,7 @@ IF(NOT CMAKE_BUILD_TYPE)
 	SET(CMAKE_BUILD_TYPE Debug)
 ENDIF()
 
-project(cowaiter)
+project(cowaitgroup)
 
 aux_source_directory(./ SRC_DIR)
 

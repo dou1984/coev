@@ -37,7 +37,7 @@ awaiter __call()
 	TRACE();
 	__async_call(real_call);
 	TRACE();
-	co_await wait_for<EVEvent>(g_trigger);
+	co_await g_trigger.EVEvent::wait_for();
 	TRACE();
 	co_return 0;
 }

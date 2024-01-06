@@ -14,36 +14,12 @@
 
 namespace coev
 {
-	template <class EVCHAIN, class OBJ>
-	event wait_for(OBJ &obj)
-	{
-		EVCHAIN *ev = &obj;
-		return event{ev};
-	}
-	template <class EVCHAIN, class OBJ>
-	event wait_for_x(OBJ &obj)
-	{
-		EVCHAIN *ev = &obj;
-		return event{ev};
-	}
-	template <class EVCHAIN, class OBJ>
-	bool resume(OBJ &obj)
-	{
-		EVCHAIN *ev = &obj;
-		auto c = static_cast<event *>(ev->pop_front());
-		if (c)
-		{
-			c->resume();
-			return true;
-		}
-		return false;
-	}
 	template <class... T>
 	awaiter wait_for_any(T &&..._task)
 	{
 		task w;
 		(w.insert_task(&_task), ...);
-		co_await wait_for<EVEvent>(w);
+		co_await w.EVEvent::wait_for();
 		w.destroy();
 		co_return 0;
 	}
@@ -53,7 +29,7 @@ namespace coev
 		task w;
 		(w.insert_task(&_task), ...);
 		while (!w.empty())
-			co_await wait_for<EVEvent>(w);
+			co_await w.EVEvent::wait_for();
 		co_return 0;
 	}
 

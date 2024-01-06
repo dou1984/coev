@@ -14,7 +14,7 @@ namespace coev
 		__list_del(_old->m_prev, _old->m_next);
 		_old->__list_clear();
 		return _old;
-	}	
+	}
 	bool chain::moveto(chain *_new)
 	{
 		if (empty())

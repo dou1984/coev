@@ -30,7 +30,6 @@ awaiter go()
 int main()
 {
 
-	running::instance().add(8, go);
-	running::instance().join();
+	running::instance().add(8, go).join();
 	return 0;
 }

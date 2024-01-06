@@ -3,16 +3,12 @@
 
 namespace coev
 {
-	event waitgroup::wait()
+	awaiter waitgroup::wait()
 	{
-		EVMutex::lock();
-		return wait_for_x<EVMutex>(*this);
-		/*
 		return EVMutex::wait_for(
 			[]()
 			{ return true; },
 			[]() {});
-		*/
 	}
 	int waitgroup::add(int c)
 	{
@@ -25,20 +21,9 @@ namespace coev
 		{
 			return 0;
 		}
-	__retry__:
-		EVMutex::lock();
-		auto c = static_cast<event *>(EVMutex::pop_front());
-		EVMutex::unlock();
-		if (c)
-		{
-			c->resume();
-			goto __retry__;
-		}
-		/*
 		while (EVMutex::resume([]() {}))
 		{
 		}
-		*/
 		return 0;
 	}
 }

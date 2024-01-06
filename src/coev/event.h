@@ -17,15 +17,16 @@ namespace coev
 {
 	struct event final : chain
 	{
-		std::coroutine_handle<> m_awaiting = nullptr;
-		uint64_t m_tid = 0;
-		std::atomic_bool m_ready{false};
-		template <class EVENTCHAIN>
-		event(EVENTCHAIN *_eventchain) : m_tid(gtid())
+		enum status
 		{
-			if (_eventchain != nullptr)
-				_eventchain->append(this);
-		}
+			CONSTRUCT,
+			SUSPEND,
+			READY,
+		};
+		std::atomic_int m_status{CONSTRUCT};
+		std::coroutine_handle<> m_awaiting = nullptr;
+		int m_tid = 0;
+		event(chain *_eventchain);
 		virtual ~event();
 		event(event &&) = delete;
 		event(const event &) = delete;

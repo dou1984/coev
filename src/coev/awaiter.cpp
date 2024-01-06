@@ -35,7 +35,7 @@ namespace coev
 		LOG_CORE("m_awaiting:%p m_coroutine:%p\n",
 				 m_awaiting ? m_awaiting.address() : 0,
 				 m_coroutine ? m_coroutine.address() : 0);
-		if (m_coroutine)
+		if (m_coroutine.address())
 			m_coroutine.promise()._awaiter = nullptr;
 	}
 	void awaiter::resume()
@@ -43,7 +43,7 @@ namespace coev
 		LOG_CORE("m_awaiting:%p m_coroutine:%p\n",
 				 m_awaiting ? m_awaiting.address() : 0,
 				 m_coroutine ? m_coroutine.address() : 0);
-		if (m_awaiting && !m_awaiting.done())
+		if (m_awaiting.address() && !m_awaiting.done())
 			m_awaiting.resume();
 		taskevent::__resume();
 	}
@@ -52,7 +52,7 @@ namespace coev
 		LOG_CORE("m_awaiting:%p m_coroutine:%p\n",
 				 m_awaiting ? m_awaiting.address() : 0,
 				 m_coroutine ? m_coroutine.address() : 0);
-		if (m_coroutine && m_coroutine.promise()._awaiter)
+		if (m_coroutine.address() && m_coroutine.promise()._awaiter)
 		{
 			m_coroutine.promise()._awaiter = nullptr;
 			m_coroutine.destroy();

@@ -14,42 +14,40 @@
 
 namespace coev
 {
-    template <class TYPE, class MUTEX>
-    struct eventchainmutex : chain, MUTEX, TYPE
-    {
-        void append(chain *c)
-        {
-            chain::push_back(c);
-            MUTEX::unlock();
-        }
+	template <class TYPE, class MUTEX>
+	struct eventchainmutex : chain, MUTEX, TYPE
+	{
+		template <class SUSPEND, class CALL>
+		awaiter wait_for(const SUSPEND &suppend, const CALL &call)
+		{
+			MUTEX::lock();
+			if (suppend())
+			{
+				event ev(this);
+				MUTEX::unlock();
+				co_await ev;
+				MUTEX::lock();
+			}
+			call();
+			MUTEX::unlock();
+			co_return 0;
+		}
+		template <class CALL>
+		bool resume(const CALL &call)
+		{
+			MUTEX::lock();
+			auto c = static_cast<event *>(chain::pop_front());
+			call();
+			MUTEX::unlock();
+			if (c)
+			{
+				c->resume();
+				return true;
+			}
+			return false;
+		}
+	};
 
-        template <class SUSPEND, class CALL>
-        awaiter wait_for(const SUSPEND &suppend, const CALL &call)
-        {
-            MUTEX::lock();
-            if (suppend())
-            {
-                co_await event(this);
-                MUTEX::lock();
-            }
-            call();
-            MUTEX::unlock();
-            co_return 0;
-        }
-        template <class CALL>
-        bool resume(const CALL &call)
-        {
-            MUTEX::lock();
-            auto c = static_cast<event *>(chain::pop_front());
-            call();
-            MUTEX::unlock();
-            if (c)
-            {
-                c->resume();
-                return true;
-            }
-            return false;
-        }
-    };
-    using EVMutex = eventchainmutex<RECV, std::mutex>;
+	using EVMutex = eventchainmutex<RECV, std::mutex>;
+
 }
