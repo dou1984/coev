@@ -8,7 +8,7 @@
 			"name": "(gdb) Bash on Windows Launch",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "/mnt/d/github/coev/bin/coasynccall",
+			"program": "/mnt/d/github/coev/bin/comutex",
 			"args": [],
 			"stopAtEntry": false,
 			"miDebuggerArgs": "",
