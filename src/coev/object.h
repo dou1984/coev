@@ -24,5 +24,9 @@ namespace coev
 	struct TIMER
 	{
 	};
-
+	struct FMUTEX
+	{
+		void lock() {}
+		void unlock() {}
+	};
 }

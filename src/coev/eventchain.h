@@ -14,8 +14,8 @@
 namespace coev
 {
 	template <class TYPE>
-	struct eventchain : chain,  TYPE
-	{		
+	struct eventchain : chain, TYPE
+	{
 		event wait_for()
 		{
 			return event(this);
