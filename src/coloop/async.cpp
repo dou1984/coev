@@ -52,7 +52,7 @@ namespace coev
 			std::lock_guard<decltype(m_lock)> _(m_lock);
 			EVRecv::moveto(&_list);
 		}
-		while (_list.resume())
+		while (coev::resume<EVRecv>(&_list))
 		{
 		}
 		return 0;

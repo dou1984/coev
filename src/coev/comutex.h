@@ -1,7 +1,8 @@
 #pragma once
+#include <atomic>
 #include <mutex>
-#include "eventchainmutex.h"
 #include "awaiter.h"
+#include "eventchain.h"
 
 namespace coev
 {

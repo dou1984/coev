@@ -18,7 +18,7 @@ struct TestMutex : EVRecv
 awaiter co_awaiter()
 {
 	LOG_DBG("awaiter begin\n");
-	co_await g_test.EVRecv::wait_for();
+	co_await wait_for<EVRecv>(&g_test);
 	LOG_DBG("awaiter end\n");
 	co_return 0;
 }
@@ -28,14 +28,14 @@ awaiter co_resume()
 	co_await sleep_for(5);
 	LOG_DBG("resume end\n");
 	EVRecv *e = &g_test;
-	e->resume();
+	resume<EVRecv>(e);
 	co_return 0;
 }
 
 awaiter co_awaiter_sleep()
 {
 
-	auto ev = g_test.EVRecv::wait_for();
+	auto ev = wait_for<EVRecv>(&g_test);
 
 	LOG_DBG("awaiter sleep\n");
 	co_await sleep_for(2);
@@ -48,7 +48,7 @@ awaiter co_awaiter_resume()
 {
 	co_await sleep_for(1);
 	LOG_DBG("awaiter resume\n");
-	g_test.EVRecv::resume();
+	resume<EVRecv>(&g_test);
 	co_return 0;
 }
 int main()

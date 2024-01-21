@@ -1,6 +1,6 @@
 #include "taskevent.h"
 #include "task.h"
-
+#include "waitfor.h"
 namespace coev
 {
 	void taskevent::__resume()
@@ -11,7 +11,7 @@ namespace coev
 			auto _taskchain = m_taskchain;
 			m_taskchain = nullptr;
 			_taskchain->EVTask::erase(this);
-			_taskchain->EVEvent::resume();
+			coev::resume<EVEvent>(_taskchain);
 		}
 	}
 	taskevent::~taskevent()

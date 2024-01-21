@@ -9,20 +9,36 @@
 #include <mutex>
 #include "chain.h"
 #include "object.h"
+#include "awaiter.h"
 #include "event.h"
 
 namespace coev
 {
-	template <class TYPE>
-	struct eventchain : chain, TYPE
+	template <class TYPE = RECV, class MUTEX = FMUTEX>
+	struct eventchain : chain, MUTEX, TYPE
 	{
-		event wait_for()
+		template <class SUSPEND, class CALL>
+		awaiter wait_for(const SUSPEND &suppend, const CALL &call)
 		{
-			return event(this);
+			MUTEX::lock();
+			if (suppend())
+			{
+				event ev(this);
+				MUTEX::unlock();
+				co_await ev;
+				MUTEX::lock();
+			}
+			call();
+			MUTEX::unlock();
+			co_return 0;
 		}
-		bool resume()
+		template <class CALL>
+		bool resume(const CALL &call)
 		{
+			MUTEX::lock();
 			auto c = static_cast<event *>(chain::pop_front());
+			call();
+			MUTEX::unlock();
 			if (c)
 			{
 				c->resume();
@@ -37,4 +53,6 @@ namespace coev
 	using EVEvent = eventchain<EVENT>;
 	using EVTask = eventchain<TASK>;
 	using EVTimer = eventchain<TIMER>;
+	using EVMutex = eventchain<RECV, std::mutex>;
+
 }

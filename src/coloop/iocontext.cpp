@@ -19,13 +19,13 @@ namespace coev
 	{
 		auto _this = (iocontext *)w->data;
 		assert(_this != NULL);
-		_this->EVRecv::resume();
+		resume<EVRecv>(_this);
 	}
 	void iocontext::cb_write(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
 		auto _this = (iocontext *)w->data;
 		assert(_this != NULL);
-		_this->EVSend::resume();
+		resume<EVSend>(_this);
 	}
 	int iocontext::__close()
 	{
@@ -34,10 +34,10 @@ namespace coev
 			__finally();
 			::close(m_fd);
 			m_fd = INVALID;
-			while (EVRecv::resume())
+			while (resume<EVRecv>(this))
 			{
 			}
-			while (EVSend::resume())
+			while (resume<EVSend>(this))
 			{
 			}
 		}
@@ -110,7 +110,7 @@ namespace coev
 			if (r == INVALID && isInprocess())
 			{
 				ev_io_start(loop::at(m_tid), &m_Write);
-				co_await EVSend::wait_for();
+				co_await wait_for<EVSend>(this);
 				if (EVSend::empty())
 					ev_io_stop(loop::at(m_tid), &m_Write);
 			}
@@ -125,7 +125,7 @@ namespace coev
 	{
 		while (__valid())
 		{
-			co_await EVRecv::wait_for();
+			co_await wait_for<EVRecv>(this);
 			auto r = ::recv(m_fd, buffer, size, 0);
 			if (r == INVALID && isInprocess())
 			{
@@ -139,7 +139,7 @@ namespace coev
 	{
 		while (__valid())
 		{
-			co_await EVRecv::wait_for();
+			co_await wait_for<EVRecv>(this);
 			sockaddr_in addr;
 			socklen_t addrsize = sizeof(addr);
 			int r = ::recvfrom(m_fd, buffer, size, 0, (struct sockaddr *)&addr, &addrsize);
@@ -162,7 +162,7 @@ namespace coev
 			if (r == INVALID && isInprocess())
 			{
 				ev_io_start(loop::at(m_tid), &m_Write);
-				co_await EVSend::wait_for();
+				co_await wait_for<EVSend>(this);
 				if (EVSend::empty())
 					ev_io_stop(loop::at(m_tid), &m_Write);
 			}

@@ -1,4 +1,5 @@
 #include "comutex.h"
+#include "eventchain.h"
 #include "waitfor.h"
 
 namespace coev
@@ -8,7 +9,8 @@ namespace coev
 
 	awaiter comutex::lock()
 	{
-		return EVMutex::wait_for(
+		return coev::ts::wait_for<EVMutex>(
+			this,
 			[this]()
 			{ return m_flag == on; },
 			[this]()
@@ -16,7 +18,8 @@ namespace coev
 	}
 	awaiter comutex::unlock()
 	{
-		EVMutex::resume(
+		coev::ts::resume<EVMutex>(
+			this,
 			[this]()
 			{ m_flag = off; });
 		co_return 0;

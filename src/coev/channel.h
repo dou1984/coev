@@ -2,7 +2,7 @@
 #include <list>
 #include "awaiter.h"
 #include "waitfor.h"
-#include "eventchainmutex.h"
+#include "eventchain.h"
 
 namespace coev
 {
@@ -14,21 +14,22 @@ namespace coev
 	public:
 		awaiter set(TYPE &&d)
 		{
-			EVMutex::resume(
-				[this, &d]()
-				{ m_data.emplace_back(std::move(d)); });
+			ts::resume<EVMutex>(this,
+								  [this, &d]()
+								  { m_data.emplace_back(std::move(d)); });
 			co_return 0;
 		}
 		awaiter set(const TYPE &d)
 		{
-			EVMutex::resume(
-				[this, d]()
-				{ m_data.emplace_back(std::move(d)); });
+			ts::resume<EVMutex>(this,
+								  [this, d]()
+								  { m_data.emplace_back(std::move(d)); });
 			co_return 0;
 		}
 		awaiter get(TYPE &d)
 		{
-			return EVMutex::wait_for(
+			return ts::wait_for<EVMutex>(
+				this,
 				[this]()
 				{ return m_data.empty(); },
 				[this, &d]()

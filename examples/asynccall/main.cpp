@@ -27,7 +27,7 @@ void __async_call(void (*__f)(int))
 		__f(1); // It will core dump here, __f is not equal input argument __f, is it a g++ bug?
 		// real_call(1); // It's OK.
 		TRACE();
-		g_trigger.EVEvent::resume();
+		resume<EVEvent>(&g_trigger);
 		TRACE();
 		co_return 0;
 	}();
@@ -37,7 +37,7 @@ awaiter __call()
 	TRACE();
 	__async_call(real_call);
 	TRACE();
-	co_await g_trigger.EVEvent::wait_for();
+	co_await wait_for<EVEvent>(&g_trigger);
 	TRACE();
 	co_return 0;
 }

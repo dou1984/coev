@@ -7,6 +7,7 @@
  */
 #include "server.h"
 #include "loop.h"
+#include "../coev.h"
 
 namespace coev::tcp
 {
@@ -27,7 +28,7 @@ namespace coev::tcp
 			return;
 		server *_this = (server *)(w->data);
 		assert(_this != nullptr);
-		_this->EVRecv::resume();
+		coev::resume<EVRecv>(_this);
 	}
 	server::~server()
 	{
@@ -95,7 +96,7 @@ namespace coev::tcp
 		{
 			co_return INVALID;
 		}
-		co_await EVRecv::wait_for();
+		co_await coev::wait_for<EVRecv>(this);
 		ipaddress peer;
 		auto fd = coev::tcp::__accept(m_fd, peer);
 		if (fd != INVALID)

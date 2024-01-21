@@ -108,7 +108,7 @@ awaiter test_sync()
 
 	while (c)
 	{
-		co_await c.EVRecv::wait_for();
+		co_await wait_for<EVRecv>(&c);
 		LOG_DBG("%d\n%s\n", c.result().num_rows, c.result().str);
 	}
 	co_return 0;
@@ -126,7 +126,7 @@ awaiter test_subscirbe()
 
 	while (c)
 	{
-		co_await c.EVRecv::wait_for();
+		co_await wait_for<EVRecv>(&c);
 		std::string out[4];
 		c.result().unpack(out[0], out[1], out[2], out[3]);
 		LOG_DBG("recv %s %s %s %s\n", out[0].data(), out[1].data(), out[2].data(), out[3].data());

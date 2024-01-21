@@ -25,7 +25,7 @@ namespace coev
 		client *_this = (client *)(w->data);
 		assert(_this != nullptr);
 		_this->connect_remove();
-		_this->EVRecv::resume();
+		resume<EVRecv>(_this);
 	}
 	client::client()
 	{
@@ -76,7 +76,7 @@ namespace coev
 		{
 			co_return fd;
 		}
-		co_await EVRecv::wait_for();
+		co_await wait_for<EVRecv>(this);
 		auto err = getSocketError(m_fd);
 		if (err == 0)
 		{

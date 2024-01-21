@@ -4,12 +4,12 @@ namespace coev
 {
 	awaiter::promise_type::~promise_type()
 	{
-		LOG_CORE("promise_type:%p awaiter:%p\n", this, _awaiter);
-		if (_awaiter)
+		LOG_CORE("promise_type:%p awaiter:%p\n", this, m_awaiter);
+		if (m_awaiter)
 		{
-			_awaiter->m_ready = true;
-			_awaiter->resume();
-			_awaiter = nullptr;
+			m_awaiter->m_state = READY;
+			m_awaiter->resume();
+			m_awaiter = nullptr;
 		}
 	}
 	awaiter awaiter::promise_type::get_return_object()
@@ -28,7 +28,8 @@ namespace coev
 	}
 	awaiter::awaiter(std::coroutine_handle<promise_type> h) : m_coroutine(h)
 	{
-		m_coroutine.promise()._awaiter = this;
+		m_coroutine.promise().m_awaiter = this;
+		m_state = CONSTRUCT;
 	}
 	awaiter::~awaiter()
 	{
@@ -36,10 +37,11 @@ namespace coev
 				 m_awaiting ? m_awaiting.address() : 0,
 				 m_coroutine ? m_coroutine.address() : 0);
 		if (m_coroutine.address())
-			m_coroutine.promise()._awaiter = nullptr;
+			m_coroutine.promise().m_awaiter = nullptr;
 	}
 	void awaiter::resume()
 	{
+		m_state = READY;
 		LOG_CORE("m_awaiting:%p m_coroutine:%p\n",
 				 m_awaiting ? m_awaiting.address() : 0,
 				 m_coroutine ? m_coroutine.address() : 0);
@@ -47,14 +49,27 @@ namespace coev
 			m_awaiting.resume();
 		taskevent::__resume();
 	}
+	bool awaiter::done()
+	{
+		return m_coroutine ? m_coroutine.done() : true;
+	}
+	bool awaiter::await_ready()
+	{
+		return m_state == READY;
+	}
+	void awaiter::await_suspend(std::coroutine_handle<> awaiting)
+	{
+		m_awaiting = awaiting;
+		m_state = READY;
+	}
 	void awaiter::destroy()
 	{
 		LOG_CORE("m_awaiting:%p m_coroutine:%p\n",
 				 m_awaiting ? m_awaiting.address() : 0,
 				 m_coroutine ? m_coroutine.address() : 0);
-		if (m_coroutine.address() && m_coroutine.promise()._awaiter)
+		if (m_coroutine.address() && m_coroutine.promise().m_awaiter)
 		{
-			m_coroutine.promise()._awaiter = nullptr;
+			m_coroutine.promise().m_awaiter = nullptr;
 			m_coroutine.destroy();
 		}
 		m_coroutine = nullptr;

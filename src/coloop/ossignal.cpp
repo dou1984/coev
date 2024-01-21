@@ -7,18 +7,17 @@
  */
 #include <sys/signal.h>
 #include <unistd.h>
+#include "../coev.h"
 #include "loop.h"
 #include "ossignal.h"
 
 namespace coev
 {
-	
-
 	void ossignal::cb_signal(struct ev_loop *loop, struct ev_signal *w, int revents)
 	{
 		ossignal *_this = (ossignal *)w->data;
 		assert(_this);
-		_this->EVRecv::resume();
+		coev::resume<EVRecv>(_this);
 	}
 	ossignal::ossignal(uint64_t id) : m_id(id)
 	{

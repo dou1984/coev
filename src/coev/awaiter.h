@@ -18,11 +18,17 @@ namespace coev
 {
 	class awaiter final : public taskevent
 	{
+		enum status : int
+    	{
+        	CONSTRUCT,
+        	SUSPEND,
+        	READY,
+    	};
 	public:
 		struct promise_type : promise
 		{
 			int value;
-			awaiter *_awaiter = nullptr;
+			awaiter *m_awaiter = nullptr;
 			promise_type() = default;
 			~promise_type();
 			awaiter get_return_object();
@@ -37,15 +43,15 @@ namespace coev
 		const awaiter &operator=(awaiter &&) = delete;
 		~awaiter();
 		void resume();
-		bool done() { return m_coroutine ? m_coroutine.done() : true; }
-		bool await_ready() { return m_ready; }
-		void await_suspend(std::coroutine_handle<> awaiting) { m_awaiting = awaiting; }
-		auto await_resume() { return m_coroutine ? m_coroutine.promise().value : 0; }
+		bool done();
+		bool await_ready();	
+		void await_suspend(std::coroutine_handle<> awaiting);
+		auto await_resume()	{ return m_coroutine ? m_coroutine.promise().value : 0; }		
 		void destroy();
 
 	private:
 		std::coroutine_handle<promise_type> m_coroutine = nullptr;
-		std::coroutine_handle<> m_awaiting = nullptr;
-		std::atomic_bool m_ready{false};
+		std::coroutine_handle<> m_awaiting = nullptr;		
+		std::atomic_int m_state {CONSTRUCT};
 	};
 }

@@ -6,6 +6,7 @@
  *
  */
 #include "Rediscli.h"
+#include "../coev.h"
 
 namespace coev
 {
@@ -24,7 +25,7 @@ namespace coev
 			return;
 		auto _this = (Rediscli *)(w->data);
 		assert(_this != nullptr);
-		_this->EVRecv::resume();
+		coev::resume<EVRecv>(_this);
 	}
 	void Rediscli::cb_write(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
@@ -87,7 +88,7 @@ namespace coev
 			m_result.last_error = INVALID;
 			m_result.last_msg = STRING_CLOSED;
 		}
-		EVRecv::resume();
+		coev::resume<EVRecv>(this);
 	}
 	int Rediscli::__connect()
 	{
@@ -154,7 +155,7 @@ namespace coev
 		{
 			LOG_DBG("connected error fd:%d\n", _this->fd());
 			_this->__process_remove();
-			_this->EVRecv::resume();
+			coev::resume<EVRecv>(_this);
 		}
 	}
 	void Rediscli::__disconnected(const redisAsyncContext *ac, int status)
@@ -168,7 +169,7 @@ namespace coev
 		{
 			LOG_DBG("disconnect fd:%d %d %s\n", _this->fd(), ac->err, ac->errstr);
 			_this->__process_remove();
-			_this->EVRecv::resume();
+			coev::resume<EVRecv>(_this);
 		}
 	}
 	void Rediscli::__onsend()
@@ -225,7 +226,7 @@ namespace coev
 	awaiter Rediscli::connect()
 	{
 		__connect();
-		co_await EVRecv::wait_for();
+		co_await coev::wait_for<EVRecv>(this);
 		__connect_remove();
 		__process_insert();
 		co_return 0;
@@ -234,7 +235,7 @@ namespace coev
 	{
 		LOG_DBG("query %s\n", message);
 		redisAsyncCommand(m_context, Rediscli::__callback, this, message);
-		co_await EVRecv::wait_for();
+		co_await coev::wait_for<EVRecv>(this);
 		if (m_context == nullptr)
 			co_return INVALID;
 		callback(m_result);

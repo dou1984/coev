@@ -105,7 +105,7 @@ event wait_for(OBJ &obj)
 }
 awaiter co_waiting()
 { 
- co_return co_await wait_for<EVRecv>(g_trigger); // 等待数据准备及事件触发
+ co_return co_await wait_for<EVRecv>(&g_trigger); // 等待数据准备及事件触发
 }
 awaiter co_trigger()
 {
@@ -120,11 +120,11 @@ You can start multiple awaiter coroutines and wait for events in the event chain
 ```cpp
 awaiter co_waiting_first()
 { 
- co_return co_await wait_for<EVRecv>(g_trigger); 
+ co_return co_await wait_for<EVRecv>(&g_trigger); 
 }
 awaiter co_waiting_second()
 { 
- co_return co_await wait_for<EVRecv>(g_trigger); 
+ co_return co_await wait_for<EVRecv>(&g_trigger); 
 }
 void co_trigger()
 {
@@ -141,7 +141,7 @@ The awaiter coroutine can be nested in the awaiter's coroutine. Developers can e
   task w; //task用于存储awaiter
   (w.insert_task(&_task), ...);
   while (!w.empty()) 
-   co_await wait_for<EVEvent>(w);
+   co_await wait_for<EVEvent>(&w);
   co_return 0;
 }
 awaiter co_wait_complated()
@@ -159,7 +159,7 @@ awaiter wait_for_any(T &&..._task)
 {
   task w;
   (w.insert_task(&_task), ...);
-  co_await wait_for<EVEvent>(w);
+  co_await wait_for<EVEvent>(&w);
   w.destroy();
   co_return 0;
 }
