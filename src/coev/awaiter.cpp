@@ -60,7 +60,7 @@ namespace coev
 	void awaiter::await_suspend(std::coroutine_handle<> awaiting)
 	{
 		m_awaiting = awaiting;
-		m_state = READY;
+		m_state = SUSPEND;
 	}
 	void awaiter::destroy()
 	{

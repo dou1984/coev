@@ -18,12 +18,6 @@ namespace coev
 {
 	class awaiter final : public taskevent
 	{
-		enum status : int
-    	{
-        	CONSTRUCT,
-        	SUSPEND,
-        	READY,
-    	};
 	public:
 		struct promise_type : promise
 		{

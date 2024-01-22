@@ -17,14 +17,14 @@ namespace coev
 	}
 	void task::insert_task(taskevent *_task)
 	{
-		EVTask::push_back(_task);
+		async::push_back(_task);
 		_task->m_taskchain = this;
 	}
 	void task::destroy()
 	{
-		while (!EVTask::empty())
+		while (!async::empty())
 		{
-			auto t = static_cast<taskevent *>(EVTask::pop_front());
+			auto t = static_cast<taskevent *>(async::pop_front());
 			assert(t->m_taskchain);
 			LOG_CORE("t:%p taskchain:%p\n", t, t->m_taskchain);
 			t->m_taskchain = nullptr;

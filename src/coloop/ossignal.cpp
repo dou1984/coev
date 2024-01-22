@@ -17,7 +17,7 @@ namespace coev
 	{
 		ossignal *_this = (ossignal *)w->data;
 		assert(_this);
-		coev::resume<EVRecv>(_this);
+		coev::resume(_this);
 	}
 	ossignal::ossignal(uint64_t id) : m_id(id)
 	{

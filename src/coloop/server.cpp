@@ -28,7 +28,7 @@ namespace coev::tcp
 			return;
 		server *_this = (server *)(w->data);
 		assert(_this != nullptr);
-		coev::resume<EVRecv>(_this);
+		coev::resume(_this);
 	}
 	server::~server()
 	{
@@ -96,7 +96,7 @@ namespace coev::tcp
 		{
 			co_return INVALID;
 		}
-		co_await coev::wait_for<EVRecv>(this);
+		co_await coev::wait_for(this);
 		ipaddress peer;
 		auto fd = coev::tcp::__accept(m_fd, peer);
 		if (fd != INVALID)

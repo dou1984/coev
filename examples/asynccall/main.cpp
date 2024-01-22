@@ -9,36 +9,31 @@
 
 using namespace coev;
 
-struct Trigger : EVEvent
+struct Trigger : async
 {
 	int x = 0;
 } g_trigger;
 
-void real_call(int __x){
-	// g_trigger.x = __x;
+void real_call(int __x)
+{
+	g_trigger.x = __x;
 };
 
 void __async_call(void (*__f)(int))
 {
-	[=]() -> awaiter
+	[__f]() -> awaiter
 	{
-		TRACE();
 		co_await sleep_for(1);
-		__f(1); // It will core dump here, __f is not equal input argument __f, is it a g++ bug?
-		// real_call(1); // It's OK.
-		TRACE();
-		resume<EVEvent>(&g_trigger);
-		TRACE();
+		//__f(1); // It will core dump here, __f is not equal input argument __f, is it a g++ bug?
+		real_call(1); // It's OK.
+		resume<async>(&g_trigger);
 		co_return 0;
 	}();
 }
 awaiter __call()
 {
-	TRACE();
 	__async_call(real_call);
-	TRACE();
-	co_await wait_for<EVEvent>(&g_trigger);
-	TRACE();
+	co_await wait_for(&g_trigger);
 	co_return 0;
 }
 
@@ -48,7 +43,6 @@ int main()
 	running::instance()
 		.add([]() -> awaiter
 			 { 			
-				TRACE();
 				co_await __call();
 				LOG_DBG("__call %d\n", g_trigger.x);
 				co_return 0; })

@@ -11,7 +11,7 @@
 
 namespace coev
 {
-	struct timer final : EVTimer
+	struct timer final : async
 	{
 		ev_timer m_data;
 		uint64_t m_tid = 0;

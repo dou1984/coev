@@ -12,12 +12,12 @@
 
 namespace coev
 {
-	class async : public EVRecv
+	class awaken : public async
 	{
 	public:
-		async();
-		async(struct ev_loop *, uint64_t);
-		~async();
+		awaken();
+		awaken(struct ev_loop *, uint64_t);
+		~awaken();
 
 		int resume_event(event *ev);
 

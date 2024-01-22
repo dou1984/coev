@@ -16,7 +16,7 @@ namespace coev
 			return;
 		timer *_this = (timer *)(w->data);
 		assert(_this != NULL);
-		coev::resume<EVTimer>(_this);
+		coev::resume<async>(_this);
 	}
 	timer::timer(ev_tstamp itimer, ev_tstamp rtimer)
 	{
@@ -28,7 +28,7 @@ namespace coev
 	{
 		if (ev_is_active(&m_data))
 			ev_timer_stop(loop::at(m_tid), &m_data);
-		assert(EVTimer::empty());
+		assert(async::empty());
 	}
 	int timer::stop()
 	{

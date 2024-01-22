@@ -9,21 +9,13 @@
 
 namespace coev
 {
-	struct RECV
+	struct OBJECT0
 	{
 	};
-	struct SEND
+	struct OBJECT1
 	{
 	};
-	struct EVENT
-	{
-	};
-	struct TASK
-	{
-	};
-	struct TIMER
-	{
-	};
+	
 	struct FMUTEX
 	{
 		void lock() {}

@@ -13,7 +13,7 @@
 namespace coev::tcp
 {
 
-	class server final : public EVRecv
+	class server final : public async
 	{
 	public:
 		using faccept = std::function<awaiter(const ipaddress &, iocontext &)>;

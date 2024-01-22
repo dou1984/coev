@@ -7,7 +7,7 @@
  */
 #include <thread>
 #include "event.h"
-#include "eventchain.h"
+#include "evlist.h"
 #include "gtid.h"
 
 namespace coev
@@ -37,11 +37,11 @@ namespace coev
 	}
 	void event::resume()
 	{
-		LOG_CORE("event m_awaiting:%p\n", m_awaiting ? m_awaiting.address() : 0);
+		LOG_CORE("event m_awaiting:%p\n", m_awaiting ? m_awaiting.address() : 0);		
 		while (m_status == CONSTRUCT)
 		{
 			std::this_thread::sleep_for(std::chrono::nanoseconds(1));
-		}
+		}		
 		m_status = READY;
 		if (m_awaiting.address() && !m_awaiting.done())
 		{

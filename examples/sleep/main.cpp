@@ -29,7 +29,7 @@ awaiter co_timer()
 	t.active();
 	while (true)
 	{
-		co_await wait_for<EVTimer>(&t);
+		co_await wait_for(&t);
 		LOG_DBG("timer %f\n", 3.0);
 	}
 	co_return 0;
@@ -47,13 +47,14 @@ awaiter co_iterator(int t)
 }
 int main()
 {
-	set_log_level(LOG_LEVEL_CORE);
+	set_log_level(LOG_LEVEL_DEBUG);
 
-	running::instance().add(co_sleep);
-	running::instance().add(co_timer);
-	running::instance().add([]()
-							{ co_iterator(10); });
-
-	running::instance().join();
+	running::instance()
+		.add(co_sleep)
+		.add(co_timer)
+		.add(
+			[]()
+			{ co_iterator(10); })
+		.join();
 	return 0;
 }

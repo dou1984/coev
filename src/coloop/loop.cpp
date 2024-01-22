@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include "loop.h"
-#include "async.h"
+#include "awaken.h"
 
 #define g_loop threadlocal<__this_ev_loop>::instance()
 
@@ -39,9 +39,9 @@ namespace coev
 			all_loops.erase(m_tid);
 		}
 	};
-	struct __this_ev_loop : __ev_loop, async
+	struct __this_ev_loop : __ev_loop, awaken
 	{
-		__this_ev_loop() : __ev_loop(), async(__ev_loop::m_loop, __ev_loop::m_tid)
+		__this_ev_loop() : __ev_loop(), awaken(__ev_loop::m_loop, __ev_loop::m_tid)
 		{
 		}
 	};
@@ -83,7 +83,7 @@ namespace coev
 			}
 			if (__loop)
 			{
-				__loop->async::resume_event(ev);
+				__loop->awaken::resume_event(ev);
 			}
 		}
 	}

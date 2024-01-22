@@ -13,7 +13,7 @@
 #define SIGNALMAX (64)
 namespace coev
 {
-	struct ossignal final : EVRecv
+	struct ossignal final : async
 	{
 		ossignal(uint64_t id);
 		virtual ~ossignal();

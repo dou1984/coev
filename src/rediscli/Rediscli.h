@@ -38,7 +38,7 @@ namespace coev
 			(__setvalue(value, rows[i++]->str), ...);
 		}
 	};
-	class Rediscli : Redisconf, public EVRecv
+	class Rediscli : Redisconf, public async
 	{
 	public:
 		Rediscli(const char *ip, int port, const char *auth);

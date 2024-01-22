@@ -46,7 +46,7 @@ awaiter test_wait()
 {
 	co_await wg.wait();
 
-	exit(0);
+	co_await sleep_for(10);
 	co_return 0;
 }
 int main()

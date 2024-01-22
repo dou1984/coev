@@ -19,13 +19,13 @@ namespace coev
 	{
 		auto _this = (iocontext *)w->data;
 		assert(_this != NULL);
-		resume<EVRecv>(_this);
+		resume<async>(_this);
 	}
 	void iocontext::cb_write(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
 		auto _this = (iocontext *)w->data;
 		assert(_this != NULL);
-		resume<EVSend>(_this);
+		resume<async_ext>(_this);
 	}
 	int iocontext::__close()
 	{
@@ -34,10 +34,10 @@ namespace coev
 			__finally();
 			::close(m_fd);
 			m_fd = INVALID;
-			while (resume<EVRecv>(this))
+			while (resume<async>(this))
 			{
 			}
-			while (resume<EVSend>(this))
+			while (resume<async_ext>(this))
 			{
 			}
 		}
@@ -82,8 +82,8 @@ namespace coev
 	}
 	iocontext::~iocontext()
 	{
-		assert(EVRecv::empty());
-		assert(EVSend::empty());
+		assert(async::empty());
+		assert(async_ext::empty());
 		if (m_fd != INVALID)
 		{
 			__finally();
@@ -96,8 +96,8 @@ namespace coev
 		m_tid = gtid();
 		o.__finally();
 		std::swap(m_fd, o.m_fd);
-		o.EVRecv::moveto(static_cast<EVRecv *>(this));
-		o.EVSend::moveto(static_cast<EVSend *>(this));
+		o.async::moveto(static_cast<async *>(this));
+		o.async_ext::moveto(static_cast<async_ext *>(this));
 		__init();
 		return *this;
 	}
@@ -110,8 +110,8 @@ namespace coev
 			if (r == INVALID && isInprocess())
 			{
 				ev_io_start(loop::at(m_tid), &m_Write);
-				co_await wait_for<EVSend>(this);
-				if (EVSend::empty())
+				co_await wait_for<async_ext>(this);
+				if (async_ext::empty())
 					ev_io_stop(loop::at(m_tid), &m_Write);
 			}
 			else
@@ -125,7 +125,7 @@ namespace coev
 	{
 		while (__valid())
 		{
-			co_await wait_for<EVRecv>(this);
+			co_await wait_for<async>(this);
 			auto r = ::recv(m_fd, buffer, size, 0);
 			if (r == INVALID && isInprocess())
 			{
@@ -139,7 +139,7 @@ namespace coev
 	{
 		while (__valid())
 		{
-			co_await wait_for<EVRecv>(this);
+			co_await wait_for<async>(this);
 			sockaddr_in addr;
 			socklen_t addrsize = sizeof(addr);
 			int r = ::recvfrom(m_fd, buffer, size, 0, (struct sockaddr *)&addr, &addrsize);
@@ -162,8 +162,8 @@ namespace coev
 			if (r == INVALID && isInprocess())
 			{
 				ev_io_start(loop::at(m_tid), &m_Write);
-				co_await wait_for<EVSend>(this);
-				if (EVSend::empty())
+				co_await wait_for<async_ext>(this);
+				if (async_ext::empty())
 					ev_io_stop(loop::at(m_tid), &m_Write);
 			}
 			co_return r;

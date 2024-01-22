@@ -13,6 +13,12 @@
 
 namespace coev
 {
+	enum status : int
+	{
+		CONSTRUCT,
+		SUSPEND,
+		READY,
+	};
 	struct promise
 	{
 		promise() = default;

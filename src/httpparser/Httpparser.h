@@ -11,7 +11,7 @@
 
 namespace coev
 {
-	struct Httpparser : http_parser, EVRecv
+	struct Httpparser : http_parser, async
 	{
 		Httpparser();
 		virtual ~Httpparser() = default;

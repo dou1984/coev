@@ -6,53 +6,53 @@
  *
  */
 #include "../coev.h"
-#include "async.h"
+#include "awaken.h"
 #include "loop.h"
 
 namespace coev
 {
-	void async::cb_async(struct ev_loop *loop, ev_async *w, int revents)
+	void awaken::cb_async(struct ev_loop *loop, ev_async *w, int revents)
 	{
 		if (revents & EV_ASYNC)
 		{
-			async *_this = (async *)w->data;
+			awaken *_this = (awaken *)w->data;
 			assert(_this != nullptr);
 			_this->__resume();
 		}
 	}
-	async::async() : async(loop::data(), gtid())
+	awaken::awaken() : awaken(loop::data(), gtid())
 	{
 	}
-	async::async(struct ev_loop *__loop, uint64_t __tag)
+	awaken::awaken(struct ev_loop *__loop, uint64_t __tag)
 	{
 		m_Async.data = this;
-		ev_async_init(&m_Async, async::cb_async);
+		ev_async_init(&m_Async, awaken::cb_async);
 		ev_async_start(__loop, &m_Async);
 		m_tid = __tag;
 	}
-	async::~async()
+	awaken::~awaken()
 	{
 		ev_async_stop(loop::at(m_tid), &m_Async);
 	}
-	int async::resume()
+	int awaken::resume()
 	{
 		ev_async_send(loop::at(m_tid), &m_Async);
 		return 0;
 	}
-	int async::resume_event(event *ev)
+	int awaken::resume_event(event *ev)
 	{
 		std::lock_guard<decltype(m_lock)> _(m_lock);
-		EVRecv::push_back(ev);
+		async::push_back(ev);
 		return resume();
 	}
-	int async::__resume()
+	int awaken::__resume()
 	{
-		EVRecv _list;
+		async _list;
 		{
 			std::lock_guard<decltype(m_lock)> _(m_lock);
-			EVRecv::moveto(&_list);
+			async::moveto(&_list);
 		}
-		while (coev::resume<EVRecv>(&_list))
+		while (coev::resume(&_list))
 		{
 		}
 		return 0;

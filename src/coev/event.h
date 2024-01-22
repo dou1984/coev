@@ -16,14 +16,8 @@
 namespace coev
 {
 	struct event final : chain
-	{		
-		enum status : int
-    	{
-        	CONSTRUCT,
-        	SUSPEND,
-        	READY,
-    	};
-		std::atomic_int m_status {CONSTRUCT};
+	{
+		std::atomic_int m_status{CONSTRUCT};
 		std::coroutine_handle<> m_awaiting = nullptr;
 		int m_tid = 0;
 		event(chain *_eventchain);
