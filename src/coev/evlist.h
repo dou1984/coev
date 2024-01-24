@@ -14,6 +14,12 @@
 
 namespace coev
 {
+	struct OBJECT0
+	{
+	};
+	struct OBJECT1
+	{
+	};
 	struct async : chain, OBJECT0
 	{
 	};
