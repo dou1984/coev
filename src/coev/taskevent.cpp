@@ -9,9 +9,8 @@ namespace coev
 		{
 			LOG_CORE("m_taskchain %p\n", m_taskchain);
 			auto _taskchain = m_taskchain;
-			m_taskchain = nullptr;
-			_taskchain->async::erase(this);
-			coev::resume<async_ext>(_taskchain);
+			m_taskchain->erase_task(this);
+			coev::resume<1>(_taskchain, []() {});
 		}
 	}
 	taskevent::~taskevent()

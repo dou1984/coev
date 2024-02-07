@@ -14,7 +14,7 @@
 
 namespace coev
 {
-	class iocontext : public async, public async_ext
+	class iocontext : public async<evl, evl>
 	{
 	public:
 		iocontext() = default;

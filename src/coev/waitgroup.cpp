@@ -5,7 +5,7 @@ namespace coev
 {
 	awaiter waitgroup::wait()
 	{
-		return ts::wait_for(this,
+		return wait_for(this,
 			[]()
 			{ return true; },
 			[]() {});
@@ -21,7 +21,7 @@ namespace coev
 		{
 			return 0;
 		}
-		while (ts::resume(this, []() {}))
+		while (resume(this, []() {}))
 		{
 		}
 		return 0;

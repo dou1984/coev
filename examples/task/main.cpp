@@ -84,17 +84,25 @@ void co_two_task()
 }
 void co_two_task2()
 {
-
 	[]() -> awaiter
 	{
 		co_await wait_for_any(co_incompleted(), wait_for_all(co_completed(), co_completed()));
 		co_return 0;
 	}();
 }
+
 int main()
 {
 	set_log_level(LOG_LEVEL_DEBUG);
 
-	running::instance().add(co_task_t).add(co_task_f).add(co_task_u).add(co_task_v).add(co_two_task).add(co_two_task2).join();
+	running::instance()
+		.add(co_task_t)
+		.add(co_task_f)
+		.add(co_task_u)
+		.add(co_task_v)
+		.add(co_two_task)
+		.add(co_two_task2)
+		.add(co_task_thd)
+		.join();
 	return 0;
 }

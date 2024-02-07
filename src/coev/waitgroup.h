@@ -1,11 +1,11 @@
 #pragma once
 #include <atomic>
-#include "evlist.h"
+#include "async.h"
 #include "awaiter.h"
 
 namespace coev
 {
-	class waitgroup final : public async_mutex
+	class waitgroup final : public async<evlts>
 	{
 		std::atomic_int m_count{0};
 

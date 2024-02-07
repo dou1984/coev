@@ -2,27 +2,27 @@
 #include <list>
 #include "awaiter.h"
 #include "waitfor.h"
-#include "evlist.h"
+#include "async.h"
 
 namespace coev
 {
 	template <class TYPE>
-	class channel : public async_mutex
+	class channel : public async<evlts>
 	{
 		std::list<TYPE> m_data;
 
 	public:
 		awaiter set(TYPE &&d)
 		{
-			ts::resume(
+			resume(
 				this,
-				[this, &d]()
+				[this, d = std::move(d)]()
 				{ m_data.emplace_back(std::move(d)); });
 			co_return 0;
 		}
 		awaiter set(const TYPE &d)
 		{
-			ts::resume(
+			resume(
 				this,
 				[this, d]()
 				{ m_data.emplace_back(std::move(d)); });
@@ -30,7 +30,7 @@ namespace coev
 		}
 		awaiter get(TYPE &d)
 		{
-			return ts::wait_for(
+			return wait_for(
 				this,
 				[this]()
 				{ return m_data.empty(); },

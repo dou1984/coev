@@ -1,5 +1,5 @@
 #include "comutex.h"
-#include "evlist.h"
+#include "async.h"
 #include "waitfor.h"
 
 namespace coev
@@ -9,7 +9,7 @@ namespace coev
 
 	awaiter comutex::lock()
 	{
-		return coev::ts::wait_for(
+		return coev::wait_for(
 			this,
 			[this]()
 			{ return m_flag == on; },
@@ -18,7 +18,7 @@ namespace coev
 	}
 	awaiter comutex::unlock()
 	{
-		ts::resume(
+		resume(
 			this,
 			[this]()
 			{ m_flag = off; });

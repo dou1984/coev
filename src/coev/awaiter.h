@@ -11,7 +11,6 @@
 #include "chain.h"
 #include "promise.h"
 #include "log.h"
-#include "object.h"
 #include "taskevent.h"
 
 namespace coev
@@ -46,6 +45,6 @@ namespace coev
 	private:
 		std::coroutine_handle<promise_type> m_coroutine = nullptr;
 		std::coroutine_handle<> m_awaiting = nullptr;		
-		std::atomic_int m_state {CONSTRUCT};
+		std::atomic_int m_state {INIT};
 	};
 }

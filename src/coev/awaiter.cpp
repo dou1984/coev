@@ -29,7 +29,7 @@ namespace coev
 	awaiter::awaiter(std::coroutine_handle<promise_type> h) : m_coroutine(h)
 	{
 		m_coroutine.promise().m_awaiter = this;
-		m_state = CONSTRUCT;
+		m_state = INIT;
 	}
 	awaiter::~awaiter()
 	{

@@ -7,16 +7,17 @@
  */
 #pragma once
 #include "chain.h"
-#include "evlist.h"
+#include "async.h"
 #include "taskevent.h"
 
 namespace coev
 {
-	struct task final : async, async_ext
+	struct task final : async<evl, evlts>
 	{
 		virtual ~task();
 		void insert_task(taskevent *_task);
+		void erase_task(taskevent *_task);
 		void destroy();
-		bool empty() { return async::empty(); }
+		bool empty();
 	};
 }

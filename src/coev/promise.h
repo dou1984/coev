@@ -15,7 +15,7 @@ namespace coev
 {
 	enum status : int
 	{
-		CONSTRUCT,
+		INIT,
 		SUSPEND,
 		READY,
 	};

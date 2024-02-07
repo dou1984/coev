@@ -2,11 +2,11 @@
 #include <atomic>
 #include <mutex>
 #include "awaiter.h"
-#include "evlist.h"
+#include "async.h"
 
 namespace coev
 {
-	class comutex final : public async_mutex
+	class comutex final : public async<evlts>
 	{
 		std::atomic_int m_flag{0};
 

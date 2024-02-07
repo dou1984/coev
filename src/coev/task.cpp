@@ -17,20 +17,37 @@ namespace coev
 	}
 	void task::insert_task(taskevent *_task)
 	{
-		async::push_back(_task);
+		auto& _evl = std::get<1>(*this);
+		std::lock_guard<std::mutex> _(_evl);
+		_evl.push_back(_task);
 		_task->m_taskchain = this;
+	}
+	void task::erase_task(taskevent *_task)
+	{
+		auto& _evl = std::get<1>(*this);
+		std::lock_guard<std::mutex> _(_evl);
+		_task->m_taskchain = nullptr;
+		_evl.erase(_task);
 	}
 	void task::destroy()
 	{
-		while (!async::empty())
+		auto& _evl = std::get<1>(*this);
+		std::lock_guard<std::mutex> _(_evl);
+		while (!_evl.empty())
 		{
-			auto t = static_cast<taskevent *>(async::pop_front());
+			auto t = static_cast<taskevent *>(_evl.pop_front());
 			assert(t->m_taskchain);
 			LOG_CORE("t:%p taskchain:%p\n", t, t->m_taskchain);
 			t->m_taskchain = nullptr;
 			auto a = static_cast<awaiter *>(t);
 			a->destroy();
 		}
+	}
+	bool task::empty()
+	{
+		auto& _evl = std::get<1>(*this);
+		std::lock_guard<std::mutex> _(_evl);
+		return _evl.empty();
 	}
 
 }
