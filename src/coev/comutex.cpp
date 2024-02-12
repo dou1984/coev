@@ -1,3 +1,10 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2023, Zhao Yun Shan
+ *	All rights reserved.
+ *
+ */
 #include "comutex.h"
 #include "async.h"
 #include "waitfor.h"

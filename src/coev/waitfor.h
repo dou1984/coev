@@ -37,26 +37,26 @@ namespace coev
 	awaiter wait_for(async<T...> *_this, const SUSPEND &suppend, const CALL &call)
 	{
 		auto &_evlts = std::get<I>(*_this);
-		_evlts.M().lock();
+		_evlts.lock();
 		if (suppend())
 		{
 			event ev(&_evlts);
-			_evlts.M().unlock();
+			_evlts.unlock();
 			co_await ev;
-			_evlts.M().lock();
+			_evlts.lock();
 		}
 		call();
-		_evlts.M().unlock();
+		_evlts.unlock();
 		co_return 0;
 	}
 	template <size_t I = 0, class CALL, async_t... T>
 	bool resume(async<T...> *_this, const CALL &call)
 	{
 		auto &_evlts = std::get<I>(*_this);
-		_evlts.M().lock();
+		_evlts.lock();
 		auto c = static_cast<event *>(_evlts.pop_front());
 		call();
-		_evlts.M().unlock();
+		_evlts.unlock();
 		if (c)
 		{
 			c->resume();

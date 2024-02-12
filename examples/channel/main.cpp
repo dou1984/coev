@@ -7,7 +7,7 @@
  */
 #include <thread>
 #include <atomic>
-#include <coloop.h>
+#include "../cosys/coloop.h"
 
 using namespace coev;
 

@@ -6,7 +6,7 @@
  *
  */
 #include <stdio.h>
-#include <coloop.h>
+#include "../cosys/coloop.h"
 
 using namespace coev;
 awaiter co_sleep()

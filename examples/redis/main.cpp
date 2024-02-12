@@ -6,11 +6,12 @@
  *
  */
 #include <coev.h>
-#include <coapp.h>
 #include <sstream>
 #include <random>
 #include <string_view>
 #include <vector>
+#include "../cosys/coapp.h"
+
 using namespace coev;
 
 awaiter go()

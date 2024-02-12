@@ -12,23 +12,19 @@
 
 namespace coev
 {
-
-	template <bool mtx>
-	struct event_list : chain, std::enable_if<mtx, std::mutex>
+	struct fmutex
 	{
-		using base = typename std::enable_if<mtx, std::mutex>;
-		auto &M()
-		{
-			if constexpr (mtx)
-			{
-				return base::type;
-			}
-			static_assert(false);
-		}
+		void lock() {}
+		void unlock() {}
 	};
-
-	using evl = event_list<false>;
-	using evlts = event_list<true>;
+	struct event_list : chain
+	{
+	};
+	struct event_list_mutex : chain, std::mutex
+	{
+	};
+	using evl = event_list;
+	using evlts = event_list_mutex;
 
 	template <typename T>
 	concept async_t = std::is_same<T, evl>::value || std::is_same<T, evlts>::value;
@@ -36,5 +32,11 @@ namespace coev
 	template <async_t G = evl, async_t... T>
 	struct async : std::tuple<G, T...>
 	{
+		template <size_t I = 0>
+		chain *data()
+		{
+			return static_cast<chain *>(&std::get<I>(*this));
+		}
 	};
+
 }

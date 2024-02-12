@@ -5,7 +5,7 @@
  *	All rights reserved.
  *
  */
-#include <coloop.h>
+#include "../cosys/coloop.h"
 
 using namespace coev;
 
@@ -101,8 +101,7 @@ int main()
 		.add(co_task_u)
 		.add(co_task_v)
 		.add(co_two_task)
-		.add(co_two_task2)
-		.add(co_task_thd)
+		.add(co_two_task2)		
 		.join();
 	return 0;
 }

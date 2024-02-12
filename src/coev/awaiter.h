@@ -39,12 +39,12 @@ namespace coev
 		bool done();
 		bool await_ready();	
 		void await_suspend(std::coroutine_handle<> awaiting);
-		auto await_resume()	{ return m_coroutine ? m_coroutine.promise().value : 0; }		
+		auto await_resume()	{ return m_callee ? m_callee.promise().value : 0; }		
 		void destroy();
 
 	private:
-		std::coroutine_handle<promise_type> m_coroutine = nullptr;
-		std::coroutine_handle<> m_awaiting = nullptr;		
+		std::coroutine_handle<promise_type> m_callee = nullptr;
+		std::coroutine_handle<> m_caller = nullptr;		
 		std::atomic_int m_state {INIT};
 	};
 }

@@ -1,3 +1,10 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2023, Zhao Yun Shan
+ *	All rights reserved.
+ *
+ */
 #include "awaiter.h"
 
 namespace coev
@@ -26,53 +33,53 @@ namespace coev
 		value = v;
 		return {};
 	}
-	awaiter::awaiter(std::coroutine_handle<promise_type> h) : m_coroutine(h)
+	awaiter::awaiter(std::coroutine_handle<promise_type> h) : m_callee(h)
 	{
-		m_coroutine.promise().m_awaiter = this;
+		m_callee.promise().m_awaiter = this;
 		m_state = INIT;
 	}
 	awaiter::~awaiter()
 	{
-		LOG_CORE("m_awaiting:%p m_coroutine:%p\n",
-				 m_awaiting ? m_awaiting.address() : 0,
-				 m_coroutine ? m_coroutine.address() : 0);
-		if (m_coroutine.address())
-			m_coroutine.promise().m_awaiter = nullptr;
+		LOG_CORE("m_caller:%p m_callee:%p\n",
+				 m_caller ? m_caller.address() : 0,
+				 m_callee ? m_callee.address() : 0);
+		if (m_callee.address())
+			m_callee.promise().m_awaiter = nullptr;
 	}
 	void awaiter::resume()
 	{
 		m_state = READY;
-		LOG_CORE("m_awaiting:%p m_coroutine:%p\n",
-				 m_awaiting ? m_awaiting.address() : 0,
-				 m_coroutine ? m_coroutine.address() : 0);
-		if (m_awaiting.address() && !m_awaiting.done())
-			m_awaiting.resume();
+		LOG_CORE("m_caller:%p m_callee:%p\n",
+				 m_caller ? m_caller.address() : 0,
+				 m_callee ? m_callee.address() : 0);
+		if (m_caller.address() && !m_caller.done())
+			m_caller.resume();
 		taskevent::__resume();
 	}
 	bool awaiter::done()
 	{
-		return m_coroutine ? m_coroutine.done() : true;
+		return m_callee ? m_callee.done() : true;
 	}
 	bool awaiter::await_ready()
 	{
 		return m_state == READY;
 	}
-	void awaiter::await_suspend(std::coroutine_handle<> awaiting)
+	void awaiter::await_suspend(std::coroutine_handle<> caller)
 	{
-		m_awaiting = awaiting;
+		m_caller = caller;
 		m_state = SUSPEND;
 	}
 	void awaiter::destroy()
 	{
-		LOG_CORE("m_awaiting:%p m_coroutine:%p\n",
-				 m_awaiting ? m_awaiting.address() : 0,
-				 m_coroutine ? m_coroutine.address() : 0);
-		if (m_coroutine.address() && m_coroutine.promise().m_awaiter)
+		LOG_CORE("m_caller:%p m_callee:%p\n",
+				 m_caller ? m_caller.address() : 0,
+				 m_callee ? m_callee.address() : 0);
+		if (m_callee.address() && m_callee.promise().m_awaiter)
 		{
-			m_coroutine.promise().m_awaiter = nullptr;
-			m_coroutine.destroy();
+			m_callee.promise().m_awaiter = nullptr;
+			m_callee.destroy();
 		}
-		m_coroutine = nullptr;
-		m_awaiting = nullptr;
+		m_callee = nullptr;
+		m_caller = nullptr;
 	}
 }

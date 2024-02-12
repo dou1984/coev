@@ -5,10 +5,10 @@
  *	All rights reserved.
  *
  */
-#include <coapp.h>
 #include <string.h>
 #include <sstream>
 #include <random>
+#include "../cosys/coapp.h"
 
 using namespace coev;
 

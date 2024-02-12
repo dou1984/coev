@@ -5,13 +5,13 @@
  *	All rights reserved.
  *
  */
-#include <coloop.h>
+#include "../cosys/coloop.h"
 
 using namespace coev;
 
 std::recursive_mutex g_mtx;
 
-struct TestMutex : async
+struct TestMutex : async<>
 {
 } g_test;
 

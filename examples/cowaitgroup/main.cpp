@@ -8,7 +8,7 @@
 #include <thread>
 #include <atomic>
 #include <chrono>
-#include <coloop.h>
+#include "../cosys/coloop.h"
 
 using namespace coev;
 

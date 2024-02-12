@@ -6,8 +6,8 @@
  *
  */
 #include <sstream>
-#include <coloop.h>
-#include <coapp.h>
+#include "../cosys/coapp.h"
+#include "../cosys/coloop.h"
 
 using namespace coev;
 

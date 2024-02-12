@@ -5,11 +5,11 @@
  *	All rights reserved.
  *
  */
-#include <coloop.h>
+#include "../cosys/coloop.h"
 
 using namespace coev;
 
-struct Trigger : async
+struct Trigger : async<>
 {
 	int x = 0;
 } g_trigger;
@@ -26,7 +26,7 @@ void __async_call(void (*__f)(int))
 		co_await sleep_for(1);
 		//__f(1); // It will core dump here, __f is not equal input argument __f, is it a g++ bug?
 		real_call(1); // It's OK.
-		resume<async>(&g_trigger);
+		coev::resume(&g_trigger);
 		co_return 0;
 	}();
 }

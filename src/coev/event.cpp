@@ -8,7 +8,6 @@
 #include <thread>
 #include "event.h"
 #include "async.h"
-#include "gtid.h"
 
 namespace coev
 {
@@ -21,7 +20,7 @@ namespace coev
 	{
 		if (!chain::empty())
 			chain::erase(this);
-		m_awaiting = nullptr;
+		m_awaiter = nullptr;
 	}
 	void event::await_resume()
 	{
@@ -30,22 +29,22 @@ namespace coev
 	{
 		return m_status == READY;
 	}
-	void event::await_suspend(std::coroutine_handle<> awaiting)
+	void event::await_suspend(std::coroutine_handle<> awaiter)
 	{
-		m_awaiting = awaiting;
+		m_awaiter = awaiter;
 		m_status = SUSPEND;
 	}
 	void event::resume()
 	{
-		LOG_CORE("event m_awaiting:%p\n", m_awaiting ? m_awaiting.address() : 0);		
+		LOG_CORE("event m_awaiter:%p\n", m_awaiter ? m_awaiter.address() : 0);		
 		while (m_status == INIT)
 		{
 			std::this_thread::sleep_for(std::chrono::nanoseconds(1));
 		}		
 		m_status = READY;
-		if (m_awaiting.address() && !m_awaiting.done())
+		if (m_awaiter.address() && !m_awaiter.done())
 		{
-			m_awaiting.resume();
+			m_awaiter.resume();
 		}
 	}
 }
