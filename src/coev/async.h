@@ -12,23 +12,14 @@
 
 namespace coev
 {
-	struct fmutex
-	{
-		void lock() {}
-		void unlock() {}
-	};
-	struct event_list : chain
+	struct evl : chain
 	{
 	};
-	struct event_list_mutex : chain, std::mutex
+	struct evlts : chain, std::mutex
 	{
 	};
-	using evl = event_list;
-	using evlts = event_list_mutex;
-
 	template <typename T>
 	concept async_t = std::is_same<T, evl>::value || std::is_same<T, evlts>::value;
-
 	template <async_t G = evl, async_t... T>
 	struct async : std::tuple<G, T...>
 	{
