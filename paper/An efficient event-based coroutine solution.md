@@ -1,4 +1,4 @@
-# An efficient event-based coroutine solution
+# An efficient event-driven coroutine solution
 
 Date: 2023-10-01
 Auther: Zhao Yun Shan
@@ -9,34 +9,41 @@ Contents
 
 ## Motivation
 
-The c++20 coroutine library is a high-performance coroutine library solution, but it has not become popular, mainly because there is no universal encapsulation.
-The author provides a set of event-driven encapsulation that separates coroutine development from business code. Developers do not need to care about the encapsulation implementation of coroutines and can quickly convert existing asynchronous programs into coroutine programs.
+The C++20 coroutine library offers a powerful solution for high-performance coroutines, yet its widespread adoption has been hindered by the absence of a universal encapsulation mechanism. To address this issue, the author has introduced an innovative approach—a set of event-driven encapsulations that cleanly separate coroutine development from business logic. This breakthrough empowers developers to effortlessly transition existing asynchronous programs into coroutine-based ones without the burdensome task of delving into the intricacies of coroutine encapsulation.
 
-## event-based coroutine solution
+## event-driven coroutine solution
 
-Until now, the author has many projects with asynchronous framework. It is a heavy workload to transform each class of these asynchronous processes into a coroutine class. Therefore, the author designed an event-driven coroutine library that can quickly convert asynchronous programs into As a coroutine, other developers no longger need to understand the C++20 coroutine or encapsulate a new coroutine class to quickly convert asynchronous programs into coroutines.
+Up until now, the author has undertaken numerous projects involving asynchronous frameworks. The arduous process of converting each asynchronous process class into a coroutine class posed a significant challenge. In response, the author has ingeniously designed an event-driven coroutine library capable of swiftly converting asynchronous programs into coroutines. This groundbreaking approach liberates developers from the necessity of grappling with C++20 coroutine intricacies or crafting new coroutine classes to facilitate the transition of asynchronous programs into coroutine-based ones.
 
-The author encapsulates three classes awaiter, event, and eventchain through the c++20 coroutine. The main idea of ​​these three subpackage classes is to be event-driven. Developers no longer need to combine c++20 coroutine with files I/O, networks, and pipelines etc. codes are mixed to achieve highly abstract coroutine code and completely separated from other modules. In the development process, the only thing need to store the context when we wait for data complished and suspend coroutine . When the data is ready , we can trigger the recovery context and continue the coroutine.
+The author has encapsulated four pivotal classes—namely, **awaiter**, **event**, **async** and **task**—utilizing the C++20 coroutine framework. The core principle underpinning these subpackage classes is their event-driven nature. Developers are no longer burdened with the task of intertwining C++20 coroutine code with file I/O, network operations, or pipeline handling. Instead, they can create highly abstract coroutine code that remains entirely segregated from other modules. During the development process, the sole responsibility lies in preserving the context while waiting for data completion and suspending the coroutine. When the data becomes available, developers can seamlessly trigger the context restoration, enabling the coroutine to resume its execution seamlessly.
 
-# event
 
-event is the smallest coroutine class, used to quickly convert asynchronous calls into coroutines. "eventchain" and "wait_for<eventchain>" cooperate with each other to quickly implement coroutines.
+## Principle
+
++ **event** is the minimal requirement coroutine class, responsible only for event driving. It does not generate new **coroutine_handle**. When waiting for data preparation, `co_await event` can immediately suspend the **awaiter** coroutine. When data is ready, it can resume the awaiter coroutine asynchronously. The event serves as the core of event-driven mechanisms.
++ **awaiter** is an encapsulated coroutine class that generate new **coroutine_handle**. When waiting for data preparation, you can use `co_await` on **events** and **awaiters** within the **awaiter** funtion body, suspending the current **awaiter**. When the **awaiter** function body completes (`co_return` or `co_yield`), it will resume to the upper-level **awaiter** that called it, allowing the function body of the upper-level **awaiter** to continue execution.
++ **async** is a collection of events used to store multiple **event**, allowing for the waiting of **event** in different categories. It is used for multiple **awaiters** to sequentially await **event**.
++ **task** is used when simultaneously waiting for multiple **awaiter** coroutines. **task** can be used to await the completion of multiple independent coroutine simultaneously. Different combinations of tasks can accomplish complex workflows.
+
+## event
+
+**event** is the most basic coroutine class, responsible only for event-driven operations. The member variable **m_awaiting** within the class represents the **awaiter** created for the **event**. When data is ready, it resumes execution in the coroutine function body via m_awaiting.
 
 ```cpp
 struct event final : chain // chain is a simplified list
 {
-  std::coroutine_handle<> m_awaiting = nullptr; // waiting for the upper coroutine_handle of the event
-  uint64_t m_tid = 0;
-  std::atomic_bool m_ready{false}; 
+  std::atomic_int m_status{INIT};
+  std::coroutine_handle<> m_awaiter = nullptr;// waiting for the upper coroutine_handle of the event
   event(chain *_eventchain);
   virtual ~event();
   void await_resume();
-  bool await_ready() { return m_ready; }
-  void await_suspend(std::coroutine_handle<> awaiting)；
+  bool await_ready();
+  void await_suspend(std::coroutine_handle<> awaiter);
   void resume();
-  // Part of the implementation is omitted here
 };
 ```
+
+# async
 
 The eventchain is used to store the "list" of events. When the coroutine needs to be resumed, calling the resume function can jump to the waiting awaiter.
 
