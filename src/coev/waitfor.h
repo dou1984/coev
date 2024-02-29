@@ -64,8 +64,8 @@ namespace coev
 		}
 		return false;
 	}
-	template <class... ASYNC>
-	awaiter wait_for_any(ASYNC &&..._task)
+	template <class... AWAITER>
+	awaiter wait_for_any(AWAITER &&..._task)
 	{
 		task w;
 		(w.insert_task(&_task), ...);
@@ -73,8 +73,8 @@ namespace coev
 		w.destroy();
 		co_return 0;
 	}
-	template <class... ASYNC>
-	awaiter wait_for_all(ASYNC &&..._task)
+	template <class... AWAITER>
+	awaiter wait_for_all(AWAITER &&..._task)
 	{
 		task w;
 		(w.insert_task(&_task), ...);
@@ -84,4 +84,5 @@ namespace coev
 		}
 		co_return 0;
 	}
+
 }

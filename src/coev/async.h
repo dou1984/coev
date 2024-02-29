@@ -23,11 +23,6 @@ namespace coev
 	template <async_t G = evl, async_t... T>
 	struct async : std::tuple<G, T...>
 	{
-		template <size_t I = 0>
-		chain *data()
-		{
-			return static_cast<chain *>(&std::get<I>(*this));
-		}
 	};
 
 }

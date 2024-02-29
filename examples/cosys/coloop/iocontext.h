@@ -27,7 +27,6 @@ namespace coev
 		awaiter sendto(const char *, int, ipaddress &);
 		awaiter close();
 		operator bool() const;
-		const iocontext &operator=(iocontext &&);
 
 	protected:
 		uint64_t m_tid = 0;

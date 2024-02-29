@@ -12,7 +12,8 @@ namespace coev
 {
 	uint64_t gtid()
 	{
-		std::hash<std::thread::id> hasher;
-		return hasher(std::this_thread::get_id());
+		thread_local std::hash<std::thread::id> hasher;
+		thread_local auto _id = hasher(std::this_thread::get_id());
+		return _id;
 	}
 }

@@ -15,6 +15,11 @@
 
 namespace coev
 {
+	template <size_t I = 0, async_t... T>
+	auto &get_async(async<T...> *_this)
+	{
+		return std::get<I>(*_this);
+	}
 	void iocontext::cb_read(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
 		auto _this = (iocontext *)w->data;
@@ -82,8 +87,9 @@ namespace coev
 	}
 	iocontext::~iocontext()
 	{
-		assert(data<0>()->empty());
-		assert(data<1>()->empty());
+		assert(get_async<0>(this).empty());
+		assert(get_async<1>(this).empty());
+
 		if (m_fd != INVALID)
 		{
 			__finally();
@@ -91,17 +97,6 @@ namespace coev
 			m_fd = INVALID;
 		}
 	}
-	const iocontext &iocontext::operator=(iocontext &&o)
-	{
-		m_tid = gtid();
-		o.__finally();
-		std::swap(m_fd, o.m_fd);
-		o.data<0>()->moveto(data<0>());
-		o.data<1>()->moveto(data<1>());
-		__init();
-		return *this;
-	}
-
 	awaiter iocontext::send(const char *buffer, int size)
 	{
 		while (__valid())
@@ -111,7 +106,7 @@ namespace coev
 			{
 				ev_io_start(loop::at(m_tid), &m_Write);
 				co_await wait_for<1>(this);
-				if (data<1>()->empty())
+				if (get_async<1>(this).empty())
 					ev_io_stop(loop::at(m_tid), &m_Write);
 			}
 			else
@@ -163,7 +158,7 @@ namespace coev
 			{
 				ev_io_start(loop::at(m_tid), &m_Write);
 				co_await wait_for<1>(this);
-				if (data<1>()->empty())
+				if (get_async<1>(this).empty())
 					ev_io_stop(loop::at(m_tid), &m_Write);
 			}
 			co_return r;

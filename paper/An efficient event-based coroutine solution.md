@@ -45,25 +45,25 @@ struct event final : chain // chain is a simplified list
 
 # async
 
-The eventchain is used to store the "list" of events. When the coroutine needs to be resumed, calling the resume function can jump to the waiting awaiter.
+The usage of an “event list” (**evl**) for storing events. When waiting for data, the **wait_for** method is called, which inserts an event into the evl. At this point, the awaiter coroutine enters a waiting state. When it’s necessary to resume the coroutine, the resume function of the event can be invoked, allowing the awaiter function body to continue executing. Additionally, evlts represents a thread-safe “event list,” protecting the data within the event list in multi-threaded programs.
+
+**async** is a collection of events. **async** contains multiple “event lists”, which can be distinguished by using tags. For example, I/O read and write events can be separated into two independent event lists for storage.
 
 ```cpp
-template <class TYPE>
-struct eventchain : chain, TYPE
+struct evl : chain {};
+struct evlts : chain, std::mutex {};
+template <typename T>
+concept async_t = std::is_same<T, evl>::value || std::is_same<T, evlts>::value;
+template <async_t G = evl, async_t... T>
+struct async : std::tuple<G, T...>
 {
-  bool resume()
-  {
-    if (chain::empty())
-      return false;
-    auto c = static_cast<event *>(chain::pop_front());
-    c->resume();
-    return true;
-  }
 };
-  ```
+```
 
-  Awaiter is a coroutine encapsulation class that can be used to start a coroutine. The function can wait for the event event to complete.
+## awaiter
+**awaiter** is a coroutine wrapper class. When **co_await** is used within an awaiter, it creates a **coroutine_handle** and records the **coroutine_handle** of the caller’s **awaiter**. When the **awaiter** function body completes execution, the current **coroutine_handle** is destroyed, and the caller’s resume function is invoked, allowing the execution to resume within the caller’s awaiter function body.
 
+Developer can wait for an **event** within the **awaiter** function body. The **wait_for** method is used to wait for the event. When the **event** is completed, the resume function is called, allowing the **awaiter** coroutine function body to continue executing.
 ```cpp
 struct awaiter final : taskevent // Taskevent is used when waiting for multiple coroutines to completed.
 {
@@ -72,25 +72,21 @@ struct awaiter final : taskevent // Taskevent is used when waiting for multiple 
    int value;   
    awaiter *m_awaiter = nullptr; // current awaiter
    promise_type() = default;
-   ~promise_type();
    awaiter get_return_object();
    std::suspend_never return_value(int v);
    std::suspend_never yield_value(int v); 
    // Part of the implementation is omitted here
   };
-  awaiter(std::coroutine_handle<promise_type> h) : m_coroutine(h)
-  {
-    m_coroutine.promise().m_awaiter = this;
-  }
-  void resume(); // resume to the upper awaiter
+  awaiter(std::coroutine_handle<promise_type> h); 
+  void resume(); // resume to the caller's awaiter
   bool done() { return m_coroutine ? m_coroutine.done() : true; }
   bool await_ready() { return m_ready; } 
-  void await_suspend(std::coroutine_handle<> awaiting) { m_awaiting = awaiting; }
-  auto await_resume() { return m_coroutine ? m_coroutine.promise().value : 0; }
-  void destroy(); // terminate a waiting coroutine force.
-  std::coroutine_handle<promise_type> m_coroutine = nullptr;
-  std::coroutine_handle<> m_awaiting = nullptr; 
-  bool m_ready = false;
+  void await_suspend(std::coroutine_handle<> caller) { m_caller = caller; }
+  auto await_resume() { return m_callee ? m_callee.promise().value : 0; }
+  void destroy(); // terminate current coroutine force.
+  std::coroutine_handle<promise_type> m_callee = nullptr;
+  std::coroutine_handle<> m_caller = nullptr;		
+  std::atomic_int m_state {INIT};
   // Part of the implementation is omitted here
 };
 ```
@@ -99,43 +95,34 @@ Use "wait_for" an event in awaiter. Wait_for will insert the event into the even
 
 
 ```cpp
-using EVRecv = eventchain<RECV>; //give eventchain a new name，用以区分不同的等待事件
-struct Trigger : EVRecv
-{
-} g_trigger;
-
-template <class EVCHAIN, class OBJ>
-event wait_for(OBJ &obj)
-{
- EVCHAIN *ev = &obj;
- return event{ev};
-}
+async<evl> g_triger;
 awaiter co_waiting()
 { 
- co_return co_await wait_for<EVRecv>(&g_trigger); // 等待数据准备及事件触发
+ co_await wait_for<0>(&g_trigger); // waiting for data 
+ co_return 0;
 }
 awaiter co_trigger()
 {
- co_await sleep_for(5); //等待5秒
- g_trigger.EVRecv::resume();  // 数据准备完成、触发事件时，跳转到协程co_waiting
+ co_await sleep_for(1); //sleep 1 second
+ resume<0>(g_trigger);  // the data complished, jump to co_waiting and continue executing
  co_return 0;
 }
 ```
 
-You can start multiple awaiter coroutines and wait for events in the event chain at the same time. When the data preparation is completed and the event is triggered, the awaiter coroutines can be resumed one by one.
+You can start multiple **awaiter** coroutines and wait for events at the same time. When the data is completed and the event is triggered, the awaiter coroutines can be resumed one by one.
 
 ```cpp
 awaiter co_waiting_first()
 { 
- co_return co_await wait_for<EVRecv>(&g_trigger); 
+ co_return co_await wait_for<0>(&g_trigger); 
 }
 awaiter co_waiting_second()
 { 
- co_return co_await wait_for<EVRecv>(&g_trigger); 
+ co_return co_await wait_for<0>(&g_trigger); 
 }
 void co_trigger()
 {
- while(g_trigger.EVRecv::resume());//Resume waiting awaiters one by one
+ while(resume<0>(&g_trigger));//Resume waiting awaiters one by one
 }
 ```
 
@@ -157,7 +144,6 @@ awaiter co_wait_complated()
 }
 ```
 
-
 wait_for_any is used to wait for any one of multiple awaiter coroutines to complete. When a waiting awaiter coroutine completes, wait_for_any will return.
 
 ```cpp
@@ -176,9 +162,6 @@ awaiter co_wait_incomplated()
 }
 ```
 
-Eventchain is not thread-safe. If you use eventchain to wait for events in multiple threads at the same time, you need to add thread locks.
-At the same time, there is another problem. If you wait for an event in thread A, and after thread B resumes the event, the code after the awaiter resumes will be executed in thread B. This is a problem that needs attention.
-
 # Summarize
 
-All awaiter coroutines are event-driven. When you need to wait for an event, the event is saved in the event chain. When the event is completed, resume the event and jump to the waiting awaiter. When the awaiter completes, you can return to the upper layer to wait. awaiter in. Developers only need to understand awaiter, event, eventchain and wait_for functions. They do not need to understand promise_type, coroutine_handle and other processes, nor do they need to re-encapsulate coroutines according to different businesses. This can greatly reduce the difficulty of development and is also consistent with The development thinking and habits of most people.
+All awaiter coroutines are event-driven. When you need to wait for an event, the event is saved in the async. When the event is completed, resume the event and jump to the waiting awaiter. When the awaiter completes, you can return to the caller awaiter. Developers only need to understand awaiter, event, async and wait_for functions. They do not need to understand promise_type, coroutine_handle and other processes, nor do they need to re-encapsulate coroutines according to different businesses. This can greatly reduce the difficulty of development and is also consistent with The development thinking and habits of most people.
