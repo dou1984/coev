@@ -19,29 +19,32 @@ make build
 cd build
 cmake ..
 make 
+
+#compile examples
+make build
+cd build
+cmake BUILD_EXAMPLES=ON ..
+make
 ```
 
-The author encapsulates three classes "awaiter", "event", and "eventchain" through the c++20 coroutine library. The main idea of ​​these three subpackage classes is to be event-based. Developers no longer need to association coroutine with file's I/O, networks and pipelines etc. Coroutine codes are highly abstract, and completely separated from other module codes. In the development, the only things needed is to store current context and wait for data complished. When the data is ready, we can trigger the recovery context and continue the coroutine.
+The author encapsulates three classes "awaiter", "event", "async" and "task" through the c++20 coroutine library. The main idea of ​​these three subpackage classes is to be event-based. Developers no longer need to association coroutine with file's I/O, networks and pipelines etc. Coroutine codes are highly abstract, and completely separated from other module codes. In the development, the only things needed is to store current context and wait for data complished. When the data is ready, we can trigger the recovery context and continue the coroutine.
 
 ## event
 
 event is the smallest coroutine class, used to quickly convert asynchronous calls into coroutines. "eventchain" and "wait_for<eventchain>" cooperate with each other to quickly implement coroutines.
 
 ```cpp
-using EVRecv = eventchain<RECV>;//give a new name
-struct Trigger :  EVRecv
-{
-} g_trigger;
+async<evl> g_triger;
 
 awaiter co_waiting()
 { 
- co_await wait_for<EVRecv>(g_trigger);
+ co_await wait_for<0>(&g_trigger);
  co_return 0;
 }
 awaiter co_trigger()
 {
  co_await sleep_for(5);
- g_trigger.EVRecv::resume();
+ resume<0>(&g_triger);
  co_return 0;
 }
 ```

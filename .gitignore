@@ -35,3 +35,6 @@ lib/*
 build/*
 data/*
 .vscode/*
+
+coev.zip
+pack.sh

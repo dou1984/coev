@@ -22,20 +22,16 @@ make
 event 是最小的协程类，用于快速将异步调用转换成协程。与此匹配的是eventchain，wait_for<eventchain>，相互配合可以快速实现协程。
 
 ```cpp
-using EVRecv = eventchain<RECV>;//起个新的名字
-struct Trigger :  EVRecv
-{
-} g_trigger;
-
+async<evl> g_triger;
 awaiter co_waiting()
 { 
- co_await wait_for<EVRecv>(g_trigger); // 等待事件触发
+ co_await wait_for<0>(g_trigger); // 等待事件触发
  co_return 0;
 }
 awaiter co_trigger()
 {
  co_await sleep_for(5);
- g_trigger.EVRecv::resume();  // 触发事件，跳转协程到co_waiting
+ resume<0>(&g_trigger);  // 触发事件，跳转协程到co_waiting
  co_return 0;
 }
 ```

@@ -8,7 +8,12 @@ IF(NOT CMAKE_BUILD_TYPE)
 ENDIF()
 
 add_subdirectory(./src)
-add_subdirectory(./examples)
+
+option(BUILD_EXAMPLES "Build submodule examples" OFF)
+if(BUILD_EXAMPLES)
+  add_subdirectory(./examples)
+endif()
+
 
 set(CMAKE_C_COMPILER gcc CACHE INTERNAL "cmake_c_compiler")
 set(CMAKE_CXX_COMPILER g++ CACHE INTERNAL "cmake_cxx_compiler")
