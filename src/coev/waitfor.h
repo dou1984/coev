@@ -15,6 +15,7 @@
 
 namespace coev
 {
+
 	template <size_t I = 0, async_t... T>
 	event wait_for(async<T...> *_this)
 	{
@@ -65,19 +66,19 @@ namespace coev
 		return false;
 	}
 	template <class... AWAITER>
-	awaiter wait_for_any(AWAITER &&..._task)
+	awaiter wait_for_any(AWAITER &&...awt)
 	{
 		task w;
-		(w.insert_task(&_task), ...);
+		(w.insert_task(&awt), ...);
 		co_await wait_for<0>(&w);
 		w.destroy();
 		co_return 0;
 	}
 	template <class... AWAITER>
-	awaiter wait_for_all(AWAITER &&..._task)
+	awaiter wait_for_all(AWAITER &&...awt)
 	{
 		task w;
-		(w.insert_task(&_task), ...);
+		(w.insert_task(&awt), ...);
 		while (!w.empty())
 		{
 			co_await wait_for<0>(&w);

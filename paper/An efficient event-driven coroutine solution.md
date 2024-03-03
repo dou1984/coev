@@ -18,7 +18,7 @@ Up until now, the author has undertaken numerous projects involving asynchronous
 The author has encapsulated four pivotal classes—namely, **awaiter**, **event**, **async** and **task**—utilizing the C++20 coroutine framework. The core principle underpinning these subpackage classes is their event-driven nature. Developers are no longer burdened with the task of intertwining C++20 coroutine code with file I/O, network operations, or pipeline handling. Instead, they can create highly abstract coroutine code that remains entirely segregated from other modules. During the development process, the sole responsibility lies in preserving the context while waiting for data completion and suspending the coroutine. When the data becomes available, developers can seamlessly trigger the context restoration, enabling the coroutine to resume its execution seamlessly.
 
 
-## Principle
+## principle
 
 + **event** is the minimal requirement coroutine class, responsible only for event driving. It does not generate new **coroutine_handle**. When waiting for data preparation, `co_await event` can immediately suspend the **awaiter** coroutine. When data is ready, it can resume the awaiter coroutine asynchronously. The event serves as the core of event-driven mechanisms.
 + **awaiter** is an encapsulated coroutine class that generate new **coroutine_handle**. When waiting for data preparation, you can use `co_await` on **events** and **awaiters** within the **awaiter** funtion body, suspending the current **awaiter**. When the **awaiter** function body completes (`co_return` or `co_yield`), it will resume to the upper-level **awaiter** that called it, allowing the function body of the upper-level **awaiter** to continue execution.
@@ -27,7 +27,7 @@ The author has encapsulated four pivotal classes—namely, **awaiter**, **event*
 
 ## event
 
-**event** is the most basic coroutine class, responsible only for event-driven operations. The member variable **m_awaiting** within the class represents the **awaiter** created for the **event**. When data is ready, it resumes execution in the coroutine function body via m_awaiting.
+**event** is the most basic coroutine class, responsible only for event-driven operations. The member variable **m_awaiter** within the class represents the **awaiter** created for the **event**. When data becomes available, it resumes execution in the coroutine function body via **m_awaiter**.
 
 ```cpp
 struct event final : chain // chain is a simplified list
@@ -43,11 +43,11 @@ struct event final : chain // chain is a simplified list
 };
 ```
 
-# async
+## async
 
-The usage of an “event list” (**evl**) for storing events. When waiting for data, the **wait_for** method is called, which inserts an event into the evl. At this point, the awaiter coroutine enters a waiting state. When it’s necessary to resume the coroutine, the resume function of the event can be invoked, allowing the awaiter function body to continue executing. Additionally, evlts represents a thread-safe “event list,” protecting the data within the event list in multi-threaded programs.
+**evl** is an “event list” usd for storing events. When waiting for data, the **wait_for** method is called, which inserts an event into the evl. At this point, the awaiter coroutine enters a waiting state. When it’s necessary to resume the coroutine, the resume function of the event can be invoked, allowing the awaiter function body to continue executing. Additionally, evlts represents a thread-safe "event list", protecting the data within the event list in multi-threaded programs.
 
-**async** is a collection of events. **async** contains multiple “event lists”, which can be distinguished by using tags. For example, I/O read and write events can be separated into two independent event lists for storage.
+**async** is a collection of events. **async** contains multiple "event lists", which can be distinguished by using tags. For example, I/O read and write events can be separated into two independent "event lists" for storage.
 
 ```cpp
 struct evl : chain {};
@@ -61,9 +61,11 @@ struct async : std::tuple<G, T...>
 ```
 
 ## awaiter
-**awaiter** is a coroutine wrapper class. When **co_await** is used within an awaiter, it creates a **coroutine_handle** and records the **coroutine_handle** of the caller’s **awaiter**. When the **awaiter** function body completes execution, the current **coroutine_handle** is destroyed, and the caller’s resume function is invoked, allowing the execution to resume within the caller’s awaiter function body.
 
-Developer can wait for an **event** within the **awaiter** function body. The **wait_for** method is used to wait for the event. When the **event** is completed, the resume function is called, allowing the **awaiter** coroutine function body to continue executing.
+**awaiter** is a coroutine wrapper class. When `co_await` is used within an **awaiter**, it creates a **coroutine_handle** and records the **coroutine_handle** of the caller’s **awaiter**. When the **awaiter** function body completes execution, the current **coroutine_handle** is destroyed, and the caller’s `resume` function is invoked, allowing the execution to resume within the caller’s **awaiter** function body.
+
+Developer can wait for an **event** within the **awaiter** function body. The `wait_for` method is used to wait for the event. When the **event** is completed, the `resume` function is called, allowing the **awaiter** coroutine function body to continue executing.
+
 ```cpp
 struct awaiter final : taskevent // Taskevent is used when waiting for multiple coroutines to completed.
 {
@@ -80,7 +82,7 @@ struct awaiter final : taskevent // Taskevent is used when waiting for multiple 
   awaiter(std::coroutine_handle<promise_type> h); 
   void resume(); // resume to the caller's awaiter
   bool done() { return m_coroutine ? m_coroutine.done() : true; }
-  bool await_ready() { return m_ready; } 
+  bool await_ready() { return m_state; } 
   void await_suspend(std::coroutine_handle<> caller) { m_caller = caller; }
   auto await_resume() { return m_callee ? m_callee.promise().value : 0; }
   void destroy(); // terminate current coroutine force.
@@ -91,25 +93,24 @@ struct awaiter final : taskevent // Taskevent is used when waiting for multiple 
 };
 ```
 
-Use "wait_for" an event in awaiter. Wait_for will insert the event into the eventchain and wait for the data complished and event to be triggered. When the data is ready and the event is triggered, you can resume the event in the eventchain and the event will be restored to the waiting awaiter.
-
+In an **awaiter**, when using `wait_for` with an **event**, the `wait_for` function inserts the event into the **async** and waits for data and an event trigger. When the data is ready or the event is triggered, **async** can asynchronously invoke the `resume` function of the **event**, which will resume execution in the caller's **awaiter**. The async can contain multiple **event lists**.
 
 ```cpp
 async<evl> g_triger;
 awaiter co_waiting()
 { 
- co_await wait_for<0>(&g_trigger); // waiting for data 
+ co_await wait_for<0>(&g_trigger); // waiting for date and an event trigger
  co_return 0;
 }
 awaiter co_trigger()
 {
- co_await sleep_for(1); //sleep 1 second
- resume<0>(g_trigger);  // the data complished, jump to co_waiting and continue executing
+ co_await sleep_for(1);   // sleep for 1 second.
+ resume<0>(g_trigger);    // data is ready, resume and go to co_waiting 
  co_return 0;
 }
 ```
 
-You can start multiple **awaiter** coroutines and wait for events at the same time. When the data is completed and the event is triggered, the awaiter coroutines can be resumed one by one.
+Developer can launch multiple **awaiter** coroutines while simultaneously waiting for events from an **event list**. When data is ready and an event is triggered, the **awaiter** can resume execution sequentially.
 
 ```cpp
 awaiter co_waiting_first()
@@ -126,13 +127,59 @@ void co_trigger()
 }
 ```
 
-The awaiter coroutine can be nested in the awaiter's coroutine. Developers can encapsulate different libraries and then hand them over to other developers to encapsulate them on this basis. Developers do not need to encapsulate the C++ coroutine again.
+Developer can nest **awaiter** coroutines within each other. This nesting allows developers to encapsulate different libraries and share them with others without additional wrapping of the **awaiter** coroutines.
 
-  ```cpp
- template <class... T>
- awaiter wait_for_all(T &&..._task)
+```cpp
+awaiter co_sleep(int t)
+{
+  co_await sleep_for(t);
+  co_return 0；
+}
+awaiter co_iterator(int t)
+{
+ if (t > 0)
  {
-  task w; //task用于存储awaiter
+  co_await co_iterator(t - 1);
+  co_await sleep_for(1);
+ }
+ co_return 0;
+}
+```
+
+Regarding **evlts**, it represents a thread-safe event list. You can also use the `wait_for` function to wait for events, with the variables in the wait_for call protected by std::mutex.
+
+```cpp
+async<evlts> g_trigger;
+std::list<int> g_data;
+awaiter co_channel_recv() {
+  co_await wait_for<0>(&g_trigger,	    
+    []() {//If there is no data in g_data, it needs to suspend. If there is data in g_data, it can immediately return. 
+      return g_data.empty();
+    },
+		[]() {
+      std::cout<< g_data.front();
+			g_data.pop_front();// get data from g_data.
+		});
+  co_return 0;
+}
+awaiter co_channel_send(){  
+  resume<0>(&g_trigger,[]() { //Put data into g_data and resume back to co_channel_recv.
+    g_data.emplace_back(1);
+  });
+}
+```
+
+## task 
+
+**task** is used when simultaneously waiting for multiple **awaiter** coroutines. It is a list that stores **taskevent** instances and hold multiple **awaiter** coroutines.
+
+`wait_for_all`function waits for multiple **awaiter** coroutines to complete. When all the awaited coroutines finish, `wait_for_all` returns.
+
+```cpp
+template <class... T>
+awaiter wait_for_all(T &&..._task)
+{
+  task w;
   (w.insert_task(&_task), ...);
   while (!w.empty()) 
    co_await wait_for<EVEvent>(&w);
@@ -144,7 +191,7 @@ awaiter co_wait_complated()
 }
 ```
 
-wait_for_any is used to wait for any one of multiple awaiter coroutines to complete. When a waiting awaiter coroutine completes, wait_for_any will return.
+`wait_for_any` function waits for any of the **awaiter** coroutines to complete. When one of the **awaiter** coroutines finishes, `wait_for_any` returns.
 
 ```cpp
 template <class... T>
@@ -164,4 +211,8 @@ awaiter co_wait_incomplated()
 
 # Summarize
 
-All awaiter coroutines are event-driven. When you need to wait for an event, the event is saved in the async. When the event is completed, resume the event and jump to the waiting awaiter. When the awaiter completes, you can return to the caller awaiter. Developers only need to understand awaiter, event, async and wait_for functions. They do not need to understand promise_type, coroutine_handle and other processes, nor do they need to re-encapsulate coroutines according to different businesses. This can greatly reduce the difficulty of development and is also consistent with The development thinking and habits of most people.
+All awaiter coroutines are event-driven. When waiting for an event, save the event in async. When the event completes, resume the event and jump to the waiting awaiter. When the awaiter completes, it can return to the waiting caller’s awaiter. Developers only need to understand awaiter, event, async, and the wait_for function. There is no need to understand concepts like promise_type or coroutine_handle , nor is there a need to encapsulate coroutines based on different business logic.
+
+The solution is highly abstract and can be used to transform asynchronous programs into coroutines. Whether it’s file I/O, networking, pipelines, or business code, all asynchronous processes can be converted into coroutines. This significantly reduces development complexity and aligns with the thinking habits of most developers.
+
+The author has provided a complete implementation, including examples with HTTP, MySQL client, and Hiredis. You can find the source code at <https://github.com/dou1984/coev/tree/main/src/coev>.
