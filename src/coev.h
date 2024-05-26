@@ -19,5 +19,5 @@
 #include "coev/comutex.h"
 #include "coev/channel.h"
 #include "coev/waitgroup.h"
-#include "coev/async.h"
+#include "coev/trigger.h"
 

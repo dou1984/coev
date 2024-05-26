@@ -12,7 +12,7 @@
 
 namespace coev
 {
-	class awaken : public async<>
+	class awaken
 	{
 	public:
 		awaken();
@@ -22,8 +22,9 @@ namespace coev
 		int resume_event(event *ev);
 
 	private:
-		ev_async m_Async;
+		ev_async m_awaken;
 		std::mutex m_lock;
+		trigger m_trigger;
 		uint64_t m_tid = 0;
 		static void cb_async(struct ev_loop *loop, ev_async *w, int revents);
 		int __resume();

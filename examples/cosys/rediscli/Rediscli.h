@@ -38,7 +38,7 @@ namespace coev
 			(__setvalue(value, rows[i++]->str), ...);
 		}
 	};
-	class Rediscli : Redisconf, public async<>
+	class Rediscli : Redisconf
 	{
 	public:
 		Rediscli(const char *ip, int port, const char *auth);
@@ -49,10 +49,14 @@ namespace coev
 		auto &result() { return m_result; }
 		int send(const char *);
 
+		operator trigger &() { return m_trigger; }
+
 	private:
+		trigger m_trigger;
 		int m_tid;
 		ev_io m_Read;
 		ev_io m_Write;
+
 		redisAsyncContext *m_context = nullptr;
 		Redisresult m_result;
 

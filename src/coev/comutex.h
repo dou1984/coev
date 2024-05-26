@@ -9,12 +9,13 @@
 #include <atomic>
 #include <mutex>
 #include "awaiter.h"
-#include "async.h"
+#include "trigger.h"
 
 namespace coev
 {
-	class comutex final : public async<evlts>
+	class comutex final
 	{
+		ts::trigger m_trigger;
 		std::atomic_int m_flag{0};
 
 	public:

@@ -17,25 +17,22 @@ namespace coev
 	}
 	void task::insert_task(taskevent *_task)
 	{
-		auto &_evlts = std::get<1>(*this);
-		std::lock_guard<std::mutex> _(_evlts);
-		_evlts.push_back(_task);
+		std::lock_guard<std::mutex> _(m_trigger_mutex);
+		m_trigger_mutex.push_back(_task);
 		_task->m_taskchain = this;
 	}
 	void task::erase_task(taskevent *_task)
 	{
-		auto &_evlts = std::get<1>(*this);
-		std::lock_guard<std::mutex> _(_evlts);
+		std::lock_guard<std::mutex> _(m_trigger_mutex);
 		_task->m_taskchain = nullptr;
-		_evlts.erase(_task);
+		m_trigger_mutex.erase(_task);
 	}
 	void task::destroy()
 	{
-		auto &_evlts = std::get<1>(*this);
-		std::lock_guard<std::mutex> _(_evlts);
-		while (!_evlts.empty())
+		std::lock_guard<std::mutex> _(m_trigger_mutex);
+		while (!m_trigger_mutex.empty())
 		{
-			auto t = static_cast<taskevent *>(_evlts.pop_front());
+			auto t = static_cast<taskevent *>(m_trigger_mutex.pop_front());
 			assert(t->m_taskchain);
 			LOG_CORE("t:%p taskchain:%p\n", t, t->m_taskchain);
 			t->m_taskchain = nullptr;
@@ -45,9 +42,8 @@ namespace coev
 	}
 	bool task::empty()
 	{
-		auto &_evlts = std::get<1>(*this);
-		std::lock_guard<std::mutex> _(_evlts);
-		return _evlts.empty();
+		std::lock_guard<std::mutex> _(m_trigger_mutex);
+		return m_trigger_mutex.empty();
 	}
 
 }

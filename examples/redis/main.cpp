@@ -100,16 +100,12 @@ awaiter test_sync()
 	co_await c.query("PSYNC ? -1");
 	LOG_DBG("%s\n", c.result().str);
 
-	/*
-	auto vct = __trim(c.result()->last_msg, ' ');
-	*/
-
 	co_await c.query("SUBSCRIBE");
 	LOG_DBG("%s\n", c.result().str);
 
 	while (c)
 	{
-		co_await wait_for(&c);
+		co_await wait_for(c);
 		LOG_DBG("%d\n%s\n", c.result().num_rows, c.result().str);
 	}
 	co_return 0;
@@ -127,7 +123,7 @@ awaiter test_subscirbe()
 
 	while (c)
 	{
-		co_await wait_for(&c);
+		co_await wait_for(c);
 		std::string out[4];
 		c.result().unpack(out[0], out[1], out[2], out[3]);
 		LOG_DBG("recv %s %s %s %s\n", out[0].data(), out[1].data(), out[2].data(), out[3].data());

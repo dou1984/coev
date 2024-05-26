@@ -9,7 +9,7 @@ ENDIF()
 
 add_subdirectory(./src)
 
-option(BUILD_EXAMPLES "Build submodule examples" OFF)
+option(BUILD_EXAMPLES "Build submodule examples" ON)
 if(BUILD_EXAMPLES)
   add_subdirectory(./examples)
 endif()

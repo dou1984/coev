@@ -9,36 +9,37 @@
 #include <list>
 #include "awaiter.h"
 #include "waitfor.h"
-#include "async.h"
+#include "trigger.h"
 
 namespace coev
 {
 	template <class TYPE>
-	class channel : public async<evlts>
+	class channel
 	{
 		std::list<TYPE> m_data;
+		ts::trigger m_trigger;
 
 	public:
 		awaiter set(TYPE &&d)
 		{
-			resume(
-				this,
+			ts::resume(
+				m_trigger,
 				[this, d = std::move(d)]()
 				{ m_data.emplace_back(std::move(d)); });
 			co_return 0;
 		}
 		awaiter set(const TYPE &d)
 		{
-			resume(
-				this,
+			ts::resume(
+				m_trigger,
 				[this, d]()
 				{ m_data.emplace_back(std::move(d)); });
 			co_return 0;
 		}
 		awaiter get(TYPE &d)
 		{
-			return wait_for(
-				this,
+			return ts::wait_for(
+				m_trigger,
 				[this]()
 				{ return m_data.empty(); },
 				[this, &d]()

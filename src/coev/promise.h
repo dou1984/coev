@@ -15,9 +15,9 @@ namespace coev
 {
 	enum status : int
 	{
-		INIT,
-		SUSPEND,
-		READY,
+		STATUS_INIT,
+		STATUS_SUSPEND,
+		STATUS_READY,
 	};
 	struct promise
 	{

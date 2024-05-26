@@ -15,22 +15,18 @@
 
 namespace coev
 {
-	template <size_t I = 0, async_t... T>
-	auto &get_async(async<T...> *_this)
-	{
-		return std::get<I>(*_this);
-	}
+
 	void iocontext::cb_read(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
 		auto _this = (iocontext *)w->data;
 		assert(_this != NULL);
-		resume<0>(_this);
+		resume(_this->m_trigger_read);
 	}
 	void iocontext::cb_write(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
 		auto _this = (iocontext *)w->data;
 		assert(_this != NULL);
-		resume<1>(_this);
+		resume(_this->m_trigger_write);
 	}
 	int iocontext::__close()
 	{
@@ -39,10 +35,10 @@ namespace coev
 			__finally();
 			::close(m_fd);
 			m_fd = INVALID;
-			while (resume<0>(this))
+			while (resume(m_trigger_read))
 			{
 			}
-			while (resume<1>(this))
+			while (resume(m_trigger_write))
 			{
 			}
 		}
@@ -87,8 +83,6 @@ namespace coev
 	}
 	iocontext::~iocontext()
 	{
-		assert(get_async<0>(this).empty());
-		assert(get_async<1>(this).empty());
 
 		if (m_fd != INVALID)
 		{
@@ -105,8 +99,8 @@ namespace coev
 			if (r == INVALID && isInprocess())
 			{
 				ev_io_start(loop::at(m_tid), &m_Write);
-				co_await wait_for<1>(this);
-				if (get_async<1>(this).empty())
+				co_await wait_for(m_trigger_write);
+				if (m_trigger_write.empty())
 					ev_io_stop(loop::at(m_tid), &m_Write);
 			}
 			else
@@ -120,7 +114,7 @@ namespace coev
 	{
 		while (__valid())
 		{
-			co_await wait_for<0>(this);
+			co_await wait_for(m_trigger_read);
 			auto r = ::recv(m_fd, buffer, size, 0);
 			if (r == INVALID && isInprocess())
 			{
@@ -134,7 +128,7 @@ namespace coev
 	{
 		while (__valid())
 		{
-			co_await wait_for<0>(this);
+			co_await wait_for(m_trigger_read);
 			sockaddr_in addr;
 			socklen_t addrsize = sizeof(addr);
 			int r = ::recvfrom(m_fd, buffer, size, 0, (struct sockaddr *)&addr, &addrsize);
@@ -157,8 +151,8 @@ namespace coev
 			if (r == INVALID && isInprocess())
 			{
 				ev_io_start(loop::at(m_tid), &m_Write);
-				co_await wait_for<1>(this);
-				if (get_async<1>(this).empty())
+				co_await wait_for(m_trigger_write);
+				if (m_trigger_write.empty())
 					ev_io_stop(loop::at(m_tid), &m_Write);
 			}
 			co_return r;

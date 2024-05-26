@@ -7,7 +7,6 @@
  */
 #include <thread>
 #include "event.h"
-#include "async.h"
 
 namespace coev
 {
@@ -27,21 +26,21 @@ namespace coev
 	}
 	bool event::await_ready()
 	{
-		return m_status == READY;
+		return m_status == STATUS_READY;
 	}
 	void event::await_suspend(std::coroutine_handle<> awaiter)
 	{
 		m_awaiter = awaiter;
-		m_status = SUSPEND;
+		m_status = STATUS_SUSPEND;
 	}
 	void event::resume()
 	{
 		LOG_CORE("event m_awaiter:%p\n", m_awaiter ? m_awaiter.address() : 0);		
-		while (m_status == INIT)
+		while (m_status == STATUS_INIT)
 		{
 			std::this_thread::sleep_for(std::chrono::nanoseconds(1));
 		}		
-		m_status = READY;
+		m_status = STATUS_READY;
 		if (m_awaiter.address() && !m_awaiter.done())
 		{
 			m_awaiter.resume();

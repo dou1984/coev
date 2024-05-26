@@ -14,7 +14,7 @@ namespace coev
 		LOG_CORE("promise_type:%p awaiter:%p\n", this, m_awaiter);
 		if (m_awaiter)
 		{
-			m_awaiter->m_state = READY;
+			m_awaiter->m_state = STATUS_READY;
 			m_awaiter->resume();
 			m_awaiter = nullptr;
 		}
@@ -36,7 +36,7 @@ namespace coev
 	awaiter::awaiter(std::coroutine_handle<promise_type> h) : m_callee(h)
 	{
 		m_callee.promise().m_awaiter = this;
-		m_state = INIT;
+		m_state = STATUS_INIT;
 	}
 	awaiter::~awaiter()
 	{
@@ -48,7 +48,7 @@ namespace coev
 	}
 	void awaiter::resume()
 	{
-		m_state = READY;
+		m_state = STATUS_READY;
 		LOG_CORE("m_caller:%p m_callee:%p\n",
 				 m_caller ? m_caller.address() : 0,
 				 m_callee ? m_callee.address() : 0);
@@ -62,12 +62,12 @@ namespace coev
 	}
 	bool awaiter::await_ready()
 	{
-		return m_state == READY;
+		return m_state == STATUS_READY;
 	}
 	void awaiter::await_suspend(std::coroutine_handle<> caller)
 	{
 		m_caller = caller;
-		m_state = SUSPEND;
+		m_state = STATUS_SUSPEND;
 	}
 	void awaiter::destroy()
 	{

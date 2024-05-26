@@ -21,7 +21,7 @@ namespace coev
 		std::string m_db;
 		int m_port;
 	};
-	class Mysqlcli : Mysqlconf, public async<evl, evl>
+	class Mysqlcli : Mysqlconf
 	{
 	public:
 		Mysqlcli(const char *ip, int port, const char *username, const char *password, const char *db);
@@ -31,12 +31,14 @@ namespace coev
 		awaiter connect();
 		awaiter query(const char *sql, int size, const std::function<void(int, MYSQL_ROW)> &);
 		awaiter query(const char *sql, int size);
-		
+
 	private:
 		MYSQL *m_mysql = nullptr;
 		int m_tid = 0;
 		ev_io m_Read;
 		ev_io m_Write;
+		trigger m_trigger_read;
+		trigger m_trigger_write;
 
 		static void cb_connect(struct ev_loop *loop, struct ev_io *w, int revents);
 		static void cb_write(struct ev_loop *loop, struct ev_io *w, int revents);

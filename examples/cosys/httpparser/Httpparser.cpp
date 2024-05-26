@@ -21,7 +21,7 @@ namespace coev
 	int on_message_complete(http_parser *_)
 	{
 		auto _this = static_cast<Httpparser *>(_);
-		resume(_this);
+		resume(_this->m_trigger);
 		return 0;
 	}
 	int on_url(http_parser *_, const char *at, size_t length)

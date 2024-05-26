@@ -6,7 +6,6 @@
  *
  */
 #include "comutex.h"
-#include "async.h"
 #include "waitfor.h"
 
 namespace coev
@@ -16,8 +15,8 @@ namespace coev
 
 	awaiter comutex::lock()
 	{
-		return coev::wait_for(
-			this,
+		return coev::ts::wait_for(
+			m_trigger,
 			[this]()
 			{ return m_flag == on; },
 			[this]()
@@ -25,8 +24,8 @@ namespace coev
 	}
 	awaiter comutex::unlock()
 	{
-		resume(
-			this,
+		ts::resume(
+			m_trigger,
 			[this]()
 			{ m_flag = off; });
 		co_return 0;

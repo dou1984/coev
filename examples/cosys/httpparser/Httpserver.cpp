@@ -34,7 +34,7 @@ namespace coev
 	}
 	awaiter Httpserver::router(iocontext &io, Httpparser &req)
 	{
-		co_await wait_for(&req);
+		co_await wait_for(req.m_trigger);
 		LOG_CORE("router begin url:%s\n", req.m_url.c_str());
 		if (auto it = m_router.find(req.m_url); it != m_router.end())
 		{

@@ -25,34 +25,34 @@ namespace coev
 	}
 	awaken::awaken(struct ev_loop *__loop, uint64_t __tag)
 	{
-		m_Async.data = this;
-		ev_async_init(&m_Async, awaken::cb_async);
-		ev_async_start(__loop, &m_Async);
+		m_awaken.data = this;
+		ev_async_init(&m_awaken, awaken::cb_async);
+		ev_async_start(__loop, &m_awaken);
 		m_tid = __tag;
 	}
 	awaken::~awaken()
 	{
-		ev_async_stop(loop::at(m_tid), &m_Async);
+		ev_async_stop(loop::at(m_tid), &m_awaken);
 	}
 	int awaken::resume()
 	{
-		ev_async_send(loop::at(m_tid), &m_Async);
+		ev_async_send(loop::at(m_tid), &m_awaken);
 		return 0;
 	}
 	int awaken::resume_event(event *ev)
 	{
 		std::lock_guard<decltype(m_lock)> _(m_lock);
-		std::get<0>(*this).push_back(ev);
+		m_trigger.push_back(ev);
 		return resume();
 	}
 	int awaken::__resume()
-	{			
-		async _async;
+	{
+		trigger _trigger;
 		{
 			std::lock_guard<decltype(m_lock)> _(m_lock);
-			std::get<0>(*this).chain::moveto(&std::get<0>(_async));
+			m_trigger.moveto(&_trigger);
 		}
-		while (coev::resume<0>(&_async))
+		while (coev::resume(_trigger))
 		{
 		}
 		return 0;

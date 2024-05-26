@@ -11,7 +11,7 @@
 
 namespace coev
 {
-	struct Httpparser : http_parser, async<>
+	struct Httpparser : http_parser
 	{
 		Httpparser();
 		virtual ~Httpparser() = default;
@@ -22,5 +22,6 @@ namespace coev
 		std::string m_body;
 		std::string m_url;
 		std::string m_response;
+		trigger m_trigger;
 	};
 }

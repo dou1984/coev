@@ -45,6 +45,6 @@ namespace coev
 	private:
 		std::coroutine_handle<promise_type> m_callee = nullptr;
 		std::coroutine_handle<> m_caller = nullptr;		
-		std::atomic_int m_state {INIT};
+		std::atomic_int m_state {STATUS_INIT};
 	};
 }

@@ -16,7 +16,7 @@ namespace coev
 			return;
 		timer *_this = (timer *)(w->data);
 		assert(_this != NULL);
-		coev::resume(_this);
+		coev::resume(_this->m_trigger);
 	}
 	timer::timer(ev_tstamp itimer, ev_tstamp rtimer)
 	{

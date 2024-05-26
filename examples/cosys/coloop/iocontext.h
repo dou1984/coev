@@ -11,10 +11,9 @@
 #include <coev.h>
 #include "socket.h"
 
-
 namespace coev
 {
-	class iocontext : public async<evl, evl>
+	class iocontext
 	{
 	public:
 		iocontext() = default;
@@ -34,6 +33,8 @@ namespace coev
 		ev_io m_Read;
 		ev_io m_Write;
 
+		trigger m_trigger_read;
+		trigger m_trigger_write;
 		int __finally();
 		int __init();
 		int __close();

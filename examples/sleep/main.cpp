@@ -29,7 +29,7 @@ awaiter co_timer()
 	t.active();
 	while (true)
 	{
-		co_await wait_for(&t);
+		co_await wait_for(t);
 		LOG_DBG("timer %f\n", 3.0);
 	}
 	co_return 0;
