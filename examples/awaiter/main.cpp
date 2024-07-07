@@ -11,7 +11,7 @@ using namespace coev;
 
 std::recursive_mutex g_mtx;
 
-trigger g_test;
+async g_test;
 
 awaiter co_awaiter()
 {

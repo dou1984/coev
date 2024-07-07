@@ -12,7 +12,7 @@ using namespace coev;
 struct Trigger 
 {
 	int x = 0;
-	trigger m_trigger;
+	async m_trigger;
 } g_trigger;
 
 void real_call(int __x)

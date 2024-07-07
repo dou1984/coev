@@ -3,12 +3,12 @@
 
 namespace coev
 {
-	event wait_for(trigger &_this)
+	event wait_for(async &_this)
 	{
 		return event(&_this);
 	}
 
-	bool resume(trigger &_this)
+	bool resume(async &_this)
 	{
 		auto c = static_cast<event *>(_this.pop_front());
 		if (c)
@@ -20,7 +20,7 @@ namespace coev
 	}
 	namespace ts
 	{
-		awaiter wait_for(trigger &_this, const SUSPEND &suppend, const CALL &call)
+		awaiter wait_for(async &_this, const SUSPEND &suppend, const CALL &call)
 		{
 			_this.lock();
 			if (suppend())
@@ -34,7 +34,7 @@ namespace coev
 			_this.unlock();
 			co_return 0;
 		}
-		bool resume(trigger &_this, const CALL &call)
+		bool resume(async &_this, const CALL &call)
 		{
 			_this.lock();
 			auto c = static_cast<event *>(_this.pop_front());

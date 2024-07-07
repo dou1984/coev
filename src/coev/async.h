@@ -12,13 +12,13 @@
 
 namespace coev
 {
-	struct trigger : chain
+	struct async : chain
 	{
 	};
 
 	namespace ts
 	{
-		struct trigger : chain, std::mutex
+		struct async : chain, std::mutex
 		{
 		};
 	}

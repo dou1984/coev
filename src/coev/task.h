@@ -7,15 +7,15 @@
  */
 #pragma once
 #include "chain.h"
-#include "trigger.h"
+#include "async.h"
 #include "taskevent.h"
 
 namespace coev
 {
 	struct task final
 	{
-		trigger m_trigger;
-		ts::trigger m_trigger_mutex;
+		async m_trigger;
+		ts::async m_trigger_mutex;
 		virtual ~task();
 		void insert_task(taskevent *_task);
 		void erase_task(taskevent *_task);

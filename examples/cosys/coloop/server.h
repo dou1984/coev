@@ -28,7 +28,7 @@ namespace coev::tcp
 		int m_fd = INVALID;
 		ev_io m_Reav;
 		faccept m_dispatch;
-		trigger m_trigger;
+		async m_trigger;
 
 		int __insert(uint64_t _tid);
 		int __remove(uint64_t _tid);

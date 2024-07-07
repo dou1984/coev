@@ -47,7 +47,7 @@ namespace coev
 	}
 	int awaken::__resume()
 	{
-		trigger _trigger;
+		async _trigger;
 		{
 			std::lock_guard<decltype(m_lock)> _(m_lock);
 			m_trigger.moveto(&_trigger);

@@ -24,7 +24,7 @@ namespace coev
 	private:
 		ev_async m_awaken;
 		std::mutex m_lock;
-		trigger m_trigger;
+		async m_trigger;
 		uint64_t m_tid = 0;
 		static void cb_async(struct ev_loop *loop, ev_async *w, int revents);
 		int __resume();

@@ -9,7 +9,7 @@
 #include <list>
 #include "awaiter.h"
 #include "waitfor.h"
-#include "trigger.h"
+#include "async.h"
 
 namespace coev
 {
@@ -17,7 +17,7 @@ namespace coev
 	class channel
 	{
 		std::list<TYPE> m_data;
-		ts::trigger m_trigger;
+		ts::async m_trigger;
 
 	public:
 		awaiter set(TYPE &&d)

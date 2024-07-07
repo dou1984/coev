@@ -7,14 +7,14 @@
  */
 #pragma once
 #include <atomic>
-#include "trigger.h"
+#include "async.h"
 #include "awaiter.h"
 
 namespace coev
 {
 	class waitgroup final
 	{
-		ts::trigger m_trigger;
+		ts::async m_async;
 		std::atomic_int m_count{0};
 
 	public:

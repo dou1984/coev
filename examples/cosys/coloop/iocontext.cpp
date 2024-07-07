@@ -20,13 +20,13 @@ namespace coev
 	{
 		auto _this = (iocontext *)w->data;
 		assert(_this != NULL);
-		resume(_this->m_trigger_read);
+		resume(_this->m_async_read);
 	}
 	void iocontext::cb_write(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
 		auto _this = (iocontext *)w->data;
 		assert(_this != NULL);
-		resume(_this->m_trigger_write);
+		resume(_this->m_async_write);
 	}
 	int iocontext::__close()
 	{
@@ -35,10 +35,10 @@ namespace coev
 			__finally();
 			::close(m_fd);
 			m_fd = INVALID;
-			while (resume(m_trigger_read))
+			while (resume(m_async_read))
 			{
 			}
-			while (resume(m_trigger_write))
+			while (resume(m_async_write))
 			{
 			}
 		}
@@ -99,8 +99,8 @@ namespace coev
 			if (r == INVALID && isInprocess())
 			{
 				ev_io_start(loop::at(m_tid), &m_Write);
-				co_await wait_for(m_trigger_write);
-				if (m_trigger_write.empty())
+				co_await wait_for(m_async_write);
+				if (m_async_write.empty())
 					ev_io_stop(loop::at(m_tid), &m_Write);
 			}
 			else
@@ -114,7 +114,7 @@ namespace coev
 	{
 		while (__valid())
 		{
-			co_await wait_for(m_trigger_read);
+			co_await wait_for(m_async_read);
 			auto r = ::recv(m_fd, buffer, size, 0);
 			if (r == INVALID && isInprocess())
 			{
@@ -128,7 +128,7 @@ namespace coev
 	{
 		while (__valid())
 		{
-			co_await wait_for(m_trigger_read);
+			co_await wait_for(m_async_read);
 			sockaddr_in addr;
 			socklen_t addrsize = sizeof(addr);
 			int r = ::recvfrom(m_fd, buffer, size, 0, (struct sockaddr *)&addr, &addrsize);
@@ -151,8 +151,8 @@ namespace coev
 			if (r == INVALID && isInprocess())
 			{
 				ev_io_start(loop::at(m_tid), &m_Write);
-				co_await wait_for(m_trigger_write);
-				if (m_trigger_write.empty())
+				co_await wait_for(m_async_write);
+				if (m_async_write.empty())
 					ev_io_stop(loop::at(m_tid), &m_Write);
 			}
 			co_return r;

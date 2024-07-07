@@ -33,8 +33,8 @@ namespace coev
 		ev_io m_Read;
 		ev_io m_Write;
 
-		trigger m_trigger_read;
-		trigger m_trigger_write;
+		async m_async_read;
+		async m_async_write;
 		int __finally();
 		int __init();
 		int __close();

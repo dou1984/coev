@@ -28,7 +28,6 @@ namespace coev
 	{
 		if (ev_is_active(&m_data))
 			ev_timer_stop(loop::at(m_tid), &m_data);
-		assert(data()->empty());
 	}
 	int timer::stop()
 	{

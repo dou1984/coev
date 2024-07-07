@@ -11,20 +11,20 @@
 #include "awaiter.h"
 #include "task.h"
 #include "event.h"
-#include "trigger.h"
+#include "async.h"
 
 namespace coev
 {
 	using SUSPEND = std::function<bool()>;
 	using CALL = std::function<void()>;
 
-	event wait_for(trigger &);
-	bool resume(trigger &);
+	event wait_for(async &);
+	bool resume(async &);
 
 	namespace ts
 	{
-		awaiter wait_for(trigger &, const SUSPEND &suppend, const CALL &call);
-		bool resume(trigger &, const CALL &call);
+		awaiter wait_for(async &, const SUSPEND &suppend, const CALL &call);
+		bool resume(async &, const CALL &call);
 	}
 
 	template <class... AWAITER>

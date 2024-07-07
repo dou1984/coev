@@ -6,6 +6,8 @@
  *
  */
 #include "promise.h"
+#include "log.h"
+#include "awaiter.h"
 
 namespace coev
 {

@@ -22,16 +22,16 @@ make
 event 是最小的协程类，用于快速将异步调用转换成协程。与此匹配的是eventchain，wait_for<eventchain>，相互配合可以快速实现协程。
 
 ```cpp
-async<evl> g_triger;
+async g_triger;
 awaiter co_waiting()
 { 
- co_await wait_for<0>(g_trigger); // 等待事件触发
+ co_await wait_for(g_trigger); // 等待事件触发
  co_return 0;
 }
 awaiter co_trigger()
 {
  co_await sleep_for(5);
- resume<0>(&g_trigger);  // 触发事件，跳转协程到co_waiting
+ resume(&g_trigger);  // 触发事件，跳转协程到co_waiting
  co_return 0;
 }
 ```
@@ -102,48 +102,5 @@ awaiter co_channel_output()
  int x = 0;
  co_await ch.get(x);
  co_return  0;
-}
-```
-
-## mysql
-
-coev 可以查询mysql数据库。
-
-```cpp
-awaiter test_mysql()
-{
- Mysqlcli c("127.0.0.1", 3306, "root", "12345678", "test");
- auto r = co_await c.connect();
- if (r == -1)
- {
-  co_return 0;
- }
- auto s = "select * from t_test limit 1;"
- auto r = co_await c.query(s.c_str(), s.size(), [](auto,auto) {});
- if (r == -1)
- {
-  co_return  0;
- }
- co_return 0;
-}
-```
-
-## redis
-
-coev 可以查询redis。
-
-```cpp
-awaiter test_redis()
-{
- Rediscli c("127.0.0.1", 6379, "");
-
- co_await c.connect();
- co_await c.query("ping hello",
-  [](auto &r)
-  {
-   LOG_DBG("%s\n", r.last_msg);
-  });
-
- co_return 0;
 }
 ```
