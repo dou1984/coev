@@ -9,8 +9,18 @@
 #include "log.h"
 #include "awaiter.h"
 
-namespace coev
+namespace coev::details
 {
+	promise::~promise()
+	{
+		LOG_CORE("promise_type:%p awaiter:%p\n", this, m_awaiter);
+		if (m_awaiter)
+		{
+			m_awaiter->m_state = STATUS_READY;
+			m_awaiter->resume();
+			m_awaiter = nullptr;
+		}
+	}
 	void promise::unhandled_exception()
 	{
 		throw std::current_exception();

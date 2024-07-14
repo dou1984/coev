@@ -11,7 +11,7 @@
 #include <string.h>
 #include "log.h"
 
-namespace coev
+namespace coev::details
 {
 	enum status : int
 	{
@@ -19,12 +19,17 @@ namespace coev
 		STATUS_SUSPEND,
 		STATUS_READY,
 	};
+	
+	struct awaiter_impl;
 	struct promise
 	{
+		awaiter_impl *m_awaiter = nullptr;
+
 		promise() = default;
-		~promise() = default;
+		~promise();
 		void unhandled_exception();
 		std::suspend_never initial_suspend();
 		std::suspend_never final_suspend() noexcept;
 	};
+
 }
