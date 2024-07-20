@@ -34,14 +34,14 @@ The author encapsulates three classes "awaiter", "event", "async" and "task" thr
 event is the smallest coroutine class, used to quickly convert asynchronous calls into coroutines. "eventchain" and "wait_for<eventchain>" cooperate with each other to quickly implement coroutines.
 
 ```cpp
-async<evl> g_triger;
+async g_triger;
 
-awaiter co_waiting()
+awaiter<int> co_waiting()
 { 
  co_await wait_for<0>(&g_trigger);
  co_return 0;
 }
-awaiter co_trigger()
+awaiter<int> co_trigger()
 {
  co_await sleep_for(5);
  resume<0>(&g_triger);
@@ -54,12 +54,12 @@ awaiter co_trigger()
 awaiter is a coroutine class of coev. awaiter is very convenient to use. Defining awaiter as a function return can create a coroutine.
 
 ```cpp
-awaiter co_sleep(int t)  
+awaiter<int> co_sleep(int t)  
 {  
  co_await sleep_for(t); 
  co_return 0；  
 } 
-awaiter co_iterator(int t)
+awaiter<int> co_iterator(int t)
 {
  if (t > 0)
  {
@@ -73,11 +73,11 @@ awaiter co_iterator(int t)
 awaiter can be called hierarchically, which solves the most commonly used multi-level calling problem in coroutine.
 
 ```cpp
-awaiter test_lower()
+awaiter<int> test_lower()
 {
  co_await co_sleep(1);
 }
-awaiter test_upper()
+awaiter<int> test_upper()
 {
  co_await test_lower();
 }
@@ -86,16 +86,16 @@ awaiter test_upper()
 awaiter is used to wait for the completion of the coroutine. awaiter can choose two modes, one is to wait for all tasks to complete before exiting, and the other is to exit as long as one task is completed.
 
 ```cpp
-awaiter co_sleep(int t)
+awaiter<int> co_sleep(int t)
 {
   co_await sleep_for(t);
   co_return 0；
 }
-awaiter test_any()
+awaiter<int> test_any()
 {
  co_await wait_for_any(co_sleep(1), co_sleep(2));
 }
-awaiter test_all()
+awaiter<int> test_all()
 {
  co_await wait_for_all(co_sleep(1), co_sleep(2));
 }
@@ -107,13 +107,13 @@ channel is used for data transmission.
 
 ```cpp
 channel<int> ch;  
-awaiter co_channel_input()  
+awaiter<int> co_channel_input()  
 {  
  int x = 1;  
  co_await ch.set(x); 
  co_return 0;  
 }  
-awaiter co_channel_output()  
+awaiter<int> co_channel_output()  
 {  
  int x = 0;  
  co_await ch.get(x);  
@@ -126,7 +126,7 @@ awaiter co_channel_output()
 coev can query the mysql database.
 
 ```cpp
-awaiter test_mysql()
+awaiter<int> test_mysql()
 {
  Mysqlcli c("127.0.0.1", 3306, "root", "12345678", "test");
  auto r = co_await c.connect();
@@ -149,7 +149,7 @@ awaiter test_mysql()
 coev can query the redis library.
 
 ```cpp
-awaiter test_redis()
+awaiter<int> test_redis()
 {
  Rediscli c("127.0.0.1", 6379, "");
 

@@ -19,9 +19,34 @@ namespace coev
 	class awaiter final : public taskevent
 	{
 	public:
-		struct promise_type : promise
+		struct promise_value
 		{
 			T value;
+			std::suspend_never return_value(T &&v)
+			{
+				value = std::move(v);
+				return {};
+			}
+			std::suspend_never yield_value(T &&v)
+			{
+				value = std::move(v);
+				return {};
+			}
+		};
+		struct promise_void
+		{
+			std::suspend_never return_void()
+			{
+				return {};
+			}
+			std::suspend_never yield_void()
+			{
+				return {};
+			}
+		};
+
+		struct promise_type : promise, std::conditional_t<std::is_void_v<T>, promise_void, promise_value>
+		{
 			awaiter *m_awaiter = nullptr;
 			promise_type() = default;
 			~promise_type()
@@ -34,21 +59,11 @@ namespace coev
 					m_awaiter = nullptr;
 				}
 			}
-			awaiter<T> get_return_object() { return {std::coroutine_handle<promise_type>::from_promise(*this)}; }
-			std::suspend_never return_value(T &&v)
+			awaiter<T> get_return_object()
 			{
-				value = std::move(v);
-				return {};
-			}
-			std::suspend_never yield_value(T &&v)
-			{
-				value = std::move(v);
-				return {};
+				return {std::coroutine_handle<promise_type>::from_promise(*this)};
 			}
 		};
-		std::coroutine_handle<promise_type> m_callee = nullptr;
-		std::coroutine_handle<> m_caller = nullptr;
-		std::atomic_int m_state{STATUS_INIT};
 
 	public:
 		awaiter() = default;
@@ -66,7 +81,7 @@ namespace coev
 				m_callee.promise().m_awaiter = nullptr;
 		}
 		bool done() { return m_callee ? m_callee.done() : true; }
-		auto await_resume() { return m_callee ? m_callee.promise().value : 0; }
+		T await_resume() { return m_callee ? std::move(m_callee.promise().value) : 0; }
 		void destroy()
 		{
 			LOG_CORE("m_caller:%p m_callee:%p\n", m_caller ? m_caller.address() : 0, m_callee ? m_callee.address() : 0);
@@ -95,6 +110,11 @@ namespace coev
 				m_caller.resume();
 			taskevent::__resume();
 		}
+
+	private:
+		std::coroutine_handle<promise_type> m_callee = nullptr;
+		std::coroutine_handle<> m_caller = nullptr;
+		std::atomic_int m_state{STATUS_INIT};
 	};
 
 }

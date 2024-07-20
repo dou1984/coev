@@ -4,7 +4,7 @@ c++20 coroutine libev
 
 ---
 
-coev 是高性能的c++20协程库, coev封装了3个c++20协程类awaiter、event、eventchain, 这3个类大大降低了c++20协程的开发难度，提升开发效率，coev目的是快速将异步程序转为协程。
+coev 是高性能的c++20协程库, coev封装了3个c++20协程类awaiter、event、async, 这3个类大大降低了c++20协程的开发难度，提升开发效率，coev目的是快速将异步程序转为协程。
 
 # install
 
@@ -22,7 +22,7 @@ make
 event 是最小的协程类，用于快速将异步调用转换成协程。与此匹配的是eventchain，wait_for<eventchain>，相互配合可以快速实现协程。
 
 ```cpp
-async<evl> g_triger;
+async g_triger;
 awaiter co_waiting()
 { 
  co_await wait_for<0>(g_trigger); // 等待事件触发
@@ -43,11 +43,11 @@ awaiter是coev的协程类，awaiter使用起来很方便，把awaiter定义为�
 awaiter可以用分级调用，这解决了coroutine中最常用的多级调用问题。
 
 ```cpp
-awaiter test_lower()
+awaiter<int> test_lower()
 {
   co_await co_sleep(1);
 }
-awaiter test_upper()
+awaiter<int> test_upper()
 {
  co_await test_lower();
 }
@@ -56,12 +56,12 @@ awaiter test_upper()
 awaiter 协程嵌套
 
 ```cpp
-awaiter co_sleep(int t)
+awaiter<int> co_sleep(int t)
 {
   co_await sleep_for(t);
   co_return 0；
 }
-awaiter co_iterator(int t)
+awaiter<int> co_iterator(int t)
 {
  if (t > 0)
  {
@@ -75,11 +75,11 @@ awaiter co_iterator(int t)
 awaiter 也可用于多个协程的等待, 一种是wait_for_all 等待所有awaiter完成，一种是wait_for_any等待任意awaiter完成 。
 
 ```cpp
-awaiter test_any()
+awaiter<int> test_any()
 {
  co_await wait_for_any(sleep_for(1), sleep_for(2));
 }
-awaiter test_all()
+awaiter<int> test_all()
 {
   co_await wait_for_all(sleep_for(1), sleep_for(2));
 }
@@ -91,13 +91,13 @@ channel用于数据传输。
 
 ```cpp
 channel<int> ch;
-awaiter co_channel_input()
+awaiter<int> co_channel_input()
 {
   int x = 1;
  co_await ch.set(x); 
  co_return 0;
 }
-awaiter co_channel_output()
+awaiter<int> co_channel_output()
 {
  int x = 0;
  co_await ch.get(x);
@@ -110,7 +110,7 @@ awaiter co_channel_output()
 coev 可以查询mysql数据库。
 
 ```cpp
-awaiter test_mysql()
+awaiter<int> test_mysql()
 {
  Mysqlcli c("127.0.0.1", 3306, "root", "12345678", "test");
  auto r = co_await c.connect();
@@ -133,7 +133,7 @@ awaiter test_mysql()
 coev 可以查询redis。
 
 ```cpp
-awaiter test_redis()
+awaiter<int> test_redis()
 {
  Rediscli c("127.0.0.1", 6379, "");
 
