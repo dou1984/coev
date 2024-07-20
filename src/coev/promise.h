@@ -22,7 +22,6 @@ namespace coev
 	
 	struct promise
 	{
-
 		promise() = default;
 		~promise();
 		void unhandled_exception();

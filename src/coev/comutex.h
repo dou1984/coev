@@ -15,7 +15,7 @@ namespace coev
 {
 	class comutex final
 	{
-		async_ts m_trigger;
+		ts::async m_trigger;
 		std::atomic_int m_flag{0};
 
 	public:

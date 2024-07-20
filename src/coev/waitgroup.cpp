@@ -12,7 +12,7 @@ namespace coev
 {
 	awaiter<int> waitgroup::wait()
 	{
-		return wait_for_ts(m_trigger, []()
+		return ts::wait_for(m_trigger, []()
 						   { return true; }, []() {});
 	}
 	int waitgroup::add(int c)
@@ -26,7 +26,7 @@ namespace coev
 		{
 			return 0;
 		}
-		while (resume_ts(m_trigger, []() {}))
+		while (ts::resume(m_trigger, []() {}))
 		{
 		}
 		return 0;

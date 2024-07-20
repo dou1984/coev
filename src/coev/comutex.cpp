@@ -15,7 +15,7 @@ namespace coev
 
 	awaiter<int> comutex::lock()
 	{
-		return coev::wait_for_ts(
+		return coev::ts::wait_for(
 			m_trigger,
 			[this]()
 			{ return m_flag == on; },
@@ -24,7 +24,7 @@ namespace coev
 	}
 	bool comutex::unlock()
 	{
-		return resume_ts(
+		return ts::resume(
 			m_trigger,
 			[this]()
 			{ m_flag = off; });

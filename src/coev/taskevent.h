@@ -19,7 +19,7 @@ namespace coev
 		task *m_taskchain = nullptr;
 		void __resume();
 		virtual ~taskevent();
-		virtual void destroy();
+		virtual void destroy() {}
 	};
 
 }

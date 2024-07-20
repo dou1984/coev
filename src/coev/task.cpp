@@ -44,5 +44,4 @@ namespace coev
 		std::lock_guard<std::mutex> _(m_trigger_mutex);
 		return m_trigger_mutex.empty();
 	}
-
 }

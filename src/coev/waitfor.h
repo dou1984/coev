@@ -21,9 +21,6 @@ namespace coev
 	event wait_for(async &);
 	bool resume(async &);
 
-	awaiter<int> wait_for_ts(async_ts &, const SUSPEND &suppend, const CALL &call);
-	bool resume_ts(async_ts &, const CALL &call);
-
 	template <class... AWAITER>
 	awaiter<int> wait_for_any(AWAITER &&...awt)
 	{
@@ -44,4 +41,11 @@ namespace coev
 		}
 		co_return 0;
 	}
+
+	namespace ts
+	{
+		awaiter<int> wait_for(ts::async &, const SUSPEND &suppend, const CALL &call);
+		bool resume(ts::async &, const CALL &call);
+	}
+
 }
