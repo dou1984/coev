@@ -16,22 +16,25 @@
 namespace coev
 {
 	template <class T>
-	class awaiter;
-	namespace details
+	class awaiter final : public taskevent
 	{
-		struct awaiter_impl : taskevent
-		{
-			std::coroutine_handle<> m_caller = nullptr;
-			std::atomic_int m_state{STATUS_INIT};
-			void await_suspend(std::coroutine_handle<> caller);
-			bool await_ready();
-			void resume();
-		};
-		template <class T>
+	public:
 		struct promise_type : promise
 		{
 			T value;
-			awaiter<T> get_return_object() { return {std::coroutine_handle<promise_type<T>>::from_promise(*this)}; }
+			awaiter *m_awaiter = nullptr;
+			promise_type() = default;
+			~promise_type()
+			{
+				LOG_CORE("promise_type:%p awaiter:%p\n", this, m_awaiter);
+				if (m_awaiter)
+				{
+					m_awaiter->m_state = STATUS_READY;
+					m_awaiter->resume();
+					m_awaiter = nullptr;
+				}
+			}
+			awaiter<T> get_return_object() { return {std::coroutine_handle<promise_type>::from_promise(*this)}; }
 			std::suspend_never return_value(T &&v)
 			{
 				value = std::move(v);
@@ -43,22 +46,13 @@ namespace coev
 				return {};
 			}
 		};
-		struct promise_void : promise
-		{
-			//awaiter<void> get_return_object() { return {std::coroutine_handle<promise_void>::from_promise(*this)}; }
-			std::suspend_never return_void() { return {}; }
-			std::suspend_never yield_void() { return {}; }
-		};
-	}
-	template <class T>
-	class awaiter final : protected details::awaiter_impl
-	{
-		using PROMISE = std::conditional<std::is_void_v<T>, details::promise_void, details::promise_type<T>>;
-		std::coroutine_handle<PROMISE> m_callee = nullptr;
+		std::coroutine_handle<promise_type> m_callee = nullptr;
+		std::coroutine_handle<> m_caller = nullptr;
+		std::atomic_int m_state{STATUS_INIT};
 
 	public:
 		awaiter() = default;
-		awaiter(std::coroutine_handle<PROMISE> h) : m_callee(h)
+		awaiter(std::coroutine_handle<promise_type> h) : m_callee(h)
 		{
 			m_callee.promise().m_awaiter = this;
 		}
@@ -83,6 +77,23 @@ namespace coev
 			}
 			m_callee = nullptr;
 			m_caller = nullptr;
+		}
+		void await_suspend(std::coroutine_handle<> caller)
+		{
+			m_caller = caller;
+			m_state = STATUS_SUSPEND;
+		}
+		bool await_ready()
+		{
+			return m_state == STATUS_READY;
+		}
+		void resume()
+		{
+			m_state = STATUS_READY;
+			LOG_CORE("m_caller:%p\n", m_caller ? m_caller.address() : 0)
+			if (m_caller.address() && !m_caller.done())
+				m_caller.resume();
+			taskevent::__resume();
 		}
 	};
 

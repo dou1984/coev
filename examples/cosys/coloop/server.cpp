@@ -90,7 +90,7 @@ namespace coev::tcp
 	{
 		return m_fd != INVALID;
 	}
-	awaiter server::__accept()
+	awaiter<int> server::__accept()
 	{
 		if (!__valid())
 		{
@@ -103,14 +103,14 @@ namespace coev::tcp
 		{
 			setNoBlock(fd, true);
 		}
-		[=, this]() -> awaiter
+		[=, this]() -> awaiter<int>
 		{
 			iocontext io(fd);
 			co_return co_await m_dispatch(peer, io);
 		}();
 		co_return fd;
 	}
-	awaiter server::accept(const faccept &dispatch)
+	awaiter<int> server::accept(const faccept &dispatch)
 	{
 		m_dispatch = dispatch;
 		while (__valid())

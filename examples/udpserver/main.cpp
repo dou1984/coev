@@ -9,7 +9,7 @@
 
 using namespace coev;
 
-awaiter go(int fd)
+awaiter<int> go(int fd)
 {
 	iocontext io(fd);
 	while (io)

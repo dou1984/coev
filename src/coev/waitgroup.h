@@ -14,12 +14,12 @@ namespace coev
 {
 	class waitgroup final
 	{
-		ts::async m_async;
+		async_ts m_trigger;
 		std::atomic_int m_count{0};
 
 	public:
 		int add(int c = 1);
 		int done();
-		awaiter wait();
+		awaiter<int> wait();
 	};
 }

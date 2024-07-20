@@ -9,7 +9,7 @@
 #include "../cosys/coloop.h"
 
 using namespace coev;
-awaiter co_sleep()
+awaiter<int> co_sleep()
 {
 	auto now = std::chrono::system_clock::now();
 	for (int i = 0; i < 3; i++)
@@ -23,7 +23,7 @@ awaiter co_sleep()
 	co_return 0;
 }
 
-awaiter co_timer()
+awaiter<int> co_timer()
 {
 	timer t(3.0, 3.0);
 	t.active();
@@ -35,7 +35,7 @@ awaiter co_timer()
 	co_return 0;
 }
 
-awaiter co_iterator(int t)
+awaiter<int> co_iterator(int t)
 {
 	if (t > 0)
 	{

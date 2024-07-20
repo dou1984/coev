@@ -18,7 +18,7 @@ namespace coev
 	public:
 		client();
 		virtual ~client();		
-		awaiter connect(const char *, int);
+		awaiter<int> connect(const char *, int);
 
 	private:
 		int connect_insert();

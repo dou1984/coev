@@ -15,7 +15,7 @@ namespace coev
 	struct task final
 	{
 		async m_trigger;
-		ts::async m_trigger_mutex;
+		async_ts m_trigger_mutex;
 		virtual ~task();
 		void insert_task(taskevent *_task);
 		void erase_task(taskevent *_task);

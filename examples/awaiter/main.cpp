@@ -13,14 +13,14 @@ std::recursive_mutex g_mtx;
 
 async g_test;
 
-awaiter co_awaiter()
+awaiter<int> co_awaiter()
 {
 	LOG_DBG("awaiter begin\n");
 	co_await wait_for(g_test);
 	LOG_DBG("awaiter end\n");
 	co_return 0;
 }
-awaiter co_resume()
+awaiter<int> co_resume()
 {
 	LOG_DBG("resume begin\n");
 	co_await sleep_for(5);
@@ -29,7 +29,7 @@ awaiter co_resume()
 	co_return 0;
 }
 
-awaiter co_awaiter_sleep()
+awaiter<int> co_awaiter_sleep()
 {
 
 	auto ev = wait_for(g_test);
@@ -41,7 +41,7 @@ awaiter co_awaiter_sleep()
 	LOG_DBG("awaiter end\n");
 	co_return 0;
 }
-awaiter co_awaiter_resume()
+awaiter<int> co_awaiter_resume()
 {
 	co_await sleep_for(1);
 	LOG_DBG("awaiter resume\n");
@@ -57,7 +57,7 @@ int main()
 			.add([]() -> awaiter
 				 { co_return co_await wait_for_all(co_awaiter(), co_resume()); })
 				 */
-		.add([]() -> awaiter
+		.add([]() -> awaiter<int>
 			 { co_return co_await wait_for_all(co_awaiter_sleep(), co_awaiter_resume()); })
 		.join();
 	return 0;

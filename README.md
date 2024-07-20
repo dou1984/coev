@@ -34,17 +34,17 @@ The author encapsulates three classes "awaiter", "event", "async" and "task" thr
 event is the smallest coroutine class, used to quickly convert asynchronous calls into coroutines. "eventchain" and "wait_for<eventchain>" cooperate with each other to quickly implement coroutines.
 
 ```cpp
-async g_triger;
+async<evl> g_triger;
 
 awaiter co_waiting()
 { 
- co_await wait_for(&g_trigger);
+ co_await wait_for<0>(&g_trigger);
  co_return 0;
 }
 awaiter co_trigger()
 {
  co_await sleep_for(5);
- resume(&g_triger);
+ resume<0>(&g_triger);
  co_return 0;
 }
 ```
@@ -119,6 +119,49 @@ awaiter co_channel_output()
  co_await ch.get(x);  
  co_return  0;  
 }  
+```
+
+## mysql
+
+coev can query the mysql database.
+
+```cpp
+awaiter test_mysql()
+{
+ Mysqlcli c("127.0.0.1", 3306, "root", "12345678", "test");
+ auto r = co_await c.connect();
+ if (r == -1)
+ {
+  co_return 0;
+ }
+ auto s = "select * from t_test limit 1;"
+ auto r = co_await c.query(s.c_str(), s.size(), [](auto,auto) {});
+ if (r == -1)
+ {
+  co_return  0;
+ }
+ co_return 0;
+}
+```
+
+## redis
+
+coev can query the redis library.
+
+```cpp
+awaiter test_redis()
+{
+ Rediscli c("127.0.0.1", 6379, "");
+
+ co_await c.connect();
+ co_await c.query("ping hello",
+  [](auto &r)
+  {
+   LOG_DBG("%s\n", r.last_msg);
+  });
+
+ co_return 0;
+}
 ```
 
 

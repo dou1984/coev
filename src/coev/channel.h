@@ -17,28 +17,28 @@ namespace coev
 	class channel
 	{
 		std::list<TYPE> m_data;
-		ts::async m_trigger;
+		async_ts m_trigger;
 
 	public:
-		awaiter set(TYPE &&d)
+		awaiter<int> set(TYPE &&d)
 		{
-			ts::resume(
+			resume_ts(
 				m_trigger,
 				[this, d = std::move(d)]()
 				{ m_data.emplace_back(std::move(d)); });
 			co_return 0;
 		}
-		awaiter set(const TYPE &d)
+		awaiter<int> set(const TYPE &d)
 		{
-			ts::resume(
+			resume_ts(
 				m_trigger,
 				[this, d]()
 				{ m_data.emplace_back(std::move(d)); });
 			co_return 0;
 		}
-		awaiter get(TYPE &d)
+		awaiter<int> get(TYPE &d)
 		{
-			return ts::wait_for(
+			return wait_for_ts(
 				m_trigger,
 				[this]()
 				{ return m_data.empty(); },

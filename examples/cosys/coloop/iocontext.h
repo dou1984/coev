@@ -20,11 +20,11 @@ namespace coev
 		iocontext(int fd);
 		iocontext(iocontext &&) = delete;
 		virtual ~iocontext();
-		awaiter send(const char *, int);
-		awaiter recv(char *, int);
-		awaiter recvfrom(char *, int, ipaddress &);
-		awaiter sendto(const char *, int, ipaddress &);
-		awaiter close();
+		awaiter<int> send(const char *, int);
+		awaiter<int> recv(char *, int);
+		awaiter<int> recvfrom(char *, int, ipaddress &);
+		awaiter<int> sendto(const char *, int, ipaddress &);
+		awaiter<int> close();
 		operator bool() const;
 
 	protected:
@@ -33,8 +33,8 @@ namespace coev
 		ev_io m_Read;
 		ev_io m_Write;
 
-		async m_async_read;
-		async m_async_write;
+		async m_trigger_read;
+		async m_trigger_write;
 		int __finally();
 		int __init();
 		int __close();

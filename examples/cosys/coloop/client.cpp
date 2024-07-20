@@ -25,7 +25,7 @@ namespace coev
 		client *_this = (client *)(w->data);
 		assert(_this != nullptr);
 		_this->connect_remove();
-		resume(_this->m_async_read);
+		resume(_this->m_trigger_read);
 	}
 	client::client()
 	{
@@ -69,14 +69,14 @@ namespace coev
 		}
 		return __close();
 	}
-	awaiter client::connect(const char *ip, int port)
+	awaiter<int> client::connect(const char *ip, int port)
 	{
 		int fd = __connect(ip, port);
 		if (fd == INVALID)
 		{
 			co_return fd;
 		}
-		co_await wait_for(m_async_read);
+		co_await wait_for(m_trigger_read);
 		auto err = getSocketError(m_fd);
 		if (err == 0)
 		{

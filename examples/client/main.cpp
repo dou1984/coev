@@ -9,7 +9,7 @@
 
 using namespace coev;
 
-awaiter co_dail(const char *ip, int port)
+awaiter<int> co_dail(const char *ip, int port)
 {
 	client c;
 	co_await c.connect(ip, port);

@@ -11,7 +11,7 @@
 #include <string.h>
 #include "log.h"
 
-namespace coev::details
+namespace coev
 {
 	enum status : int
 	{
@@ -20,10 +20,8 @@ namespace coev::details
 		STATUS_READY,
 	};
 	
-	struct awaiter_impl;
 	struct promise
 	{
-		awaiter_impl *m_awaiter = nullptr;
 
 		promise() = default;
 		~promise();

@@ -13,21 +13,20 @@ namespace coev
 	const int on = 1;
 	const int off = 0;
 
-	awaiter comutex::lock()
+	awaiter<int> comutex::lock()
 	{
-		return coev::ts::wait_for(
+		return coev::wait_for_ts(
 			m_trigger,
 			[this]()
 			{ return m_flag == on; },
 			[this]()
 			{ m_flag = on; });
 	}
-	awaiter comutex::unlock()
+	bool comutex::unlock()
 	{
-		ts::resume(
+		return resume_ts(
 			m_trigger,
 			[this]()
 			{ m_flag = off; });
-		co_return 0;
 	}
 }

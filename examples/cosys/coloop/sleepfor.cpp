@@ -12,14 +12,14 @@
 
 namespace coev
 {
-	awaiter sleep_for(long t)
+	awaiter<int> sleep_for(long t)
 	{
 		timer _timer(t, 0);
 		_timer.active();
 		co_await wait_for(_timer);
 		co_return 0;
 	}
-	awaiter usleep_for(long t)
+	awaiter<int> usleep_for(long t)
 	{
 		timer _timer((float)t / 1000000, 0);
 		_timer.active();

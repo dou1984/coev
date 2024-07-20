@@ -15,11 +15,11 @@ namespace coev
 {
 	class comutex final
 	{
-		ts::async m_trigger;
+		async_ts m_trigger;
 		std::atomic_int m_flag{0};
 
 	public:
-		awaiter lock();
-		awaiter unlock();
+		awaiter<int> lock();
+		bool unlock();
 	};
 }

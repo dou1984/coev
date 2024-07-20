@@ -17,11 +17,14 @@ namespace coev
 			LOG_CORE("m_taskchain %p\n", m_taskchain);
 			auto _taskchain = m_taskchain;
 			m_taskchain->erase_task(this);
-			ts::resume(_taskchain->m_trigger_mutex, []() {});
+			resume_ts(_taskchain->m_trigger_mutex, []() {});
 		}
 	}
 	taskevent::~taskevent()
 	{
 		__resume();
+	}
+	void taskevent::destroy()
+	{
 	}
 }

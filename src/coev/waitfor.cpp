@@ -18,34 +18,33 @@ namespace coev
 		}
 		return false;
 	}
-	namespace ts
+
+	awaiter<int> wait_for_ts(async_ts &_this, const SUSPEND &suppend, const CALL &call)
 	{
-		awaiter wait_for(async &_this, const SUSPEND &suppend, const CALL &call)
+		_this.lock();
+		if (suppend())
 		{
-			_this.lock();
-			if (suppend())
-			{
-				event ev(&_this);
-				_this.unlock();
-				co_await ev;
-				_this.lock();
-			}
-			call();
+			event ev(&_this);
 			_this.unlock();
-			co_return 0;
-		}
-		bool resume(async &_this, const CALL &call)
-		{
+			co_await ev;
 			_this.lock();
-			auto c = static_cast<event *>(_this.pop_front());
-			call();
-			_this.unlock();
-			if (c)
-			{
-				c->resume();
-				return true;
-			}
-			return false;
 		}
+		call();
+		_this.unlock();
+		co_return 0;
 	}
+	bool resume_ts(async_ts &_this, const CALL &call)
+	{
+		_this.lock();
+		auto c = static_cast<event *>(_this.pop_front());
+		call();
+		_this.unlock();
+		if (c)
+		{
+			c->resume();
+			return true;
+		}
+		return false;
+	}
+
 }

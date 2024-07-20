@@ -10,7 +10,7 @@
 using namespace coev;
 
 tcp::serverpool pool;
-awaiter dispatch(const ipaddress &addr, iocontext &io)
+awaiter<int> dispatch(const ipaddress &addr, iocontext &io)
 {
 	while (io)
 	{
@@ -31,7 +31,7 @@ awaiter dispatch(const ipaddress &addr, iocontext &io)
 	}
 	co_return INVALID;
 }
-awaiter co_server()
+awaiter<int> co_server()
 {
 	co_await pool.get().accept(dispatch);
 	co_return INVALID;
