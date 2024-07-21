@@ -13,7 +13,7 @@ namespace coev
 	const int on = 1;
 	const int off = 0;
 
-	awaiter<int> comutex::lock()
+	awaiter<void> comutex::lock()
 	{
 		return coev::ts::wait_for(
 			m_trigger,

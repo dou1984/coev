@@ -31,9 +31,7 @@ awaiter<int> co_resume()
 
 awaiter<int> co_awaiter_sleep()
 {
-
 	auto ev = wait_for(g_test);
-
 	LOG_DBG("awaiter sleep\n");
 	co_await sleep_for(2);
 	LOG_DBG("awaiter begin\n");
@@ -53,12 +51,10 @@ int main()
 	set_log_level(LOG_LEVEL_DEBUG);
 
 	running::instance()
-		/*
-			.add([]() -> awaiter
-				 { co_return co_await wait_for_all(co_awaiter(), co_resume()); })
-				 */
-		.add([]() -> awaiter<int>
-			 { co_return co_await wait_for_all(co_awaiter_sleep(), co_awaiter_resume()); })
+		.add([]() -> awaiter<void>
+			 { co_await wait_for_all(co_awaiter(), co_resume()); })
+		.add([]() -> awaiter<void>
+			 { co_await wait_for_all(co_awaiter_sleep(), co_awaiter_resume()); })
 		.join();
 	return 0;
 }

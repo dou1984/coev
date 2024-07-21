@@ -81,7 +81,13 @@ namespace coev
 				m_callee.promise().m_awaiter = nullptr;
 		}
 		bool done() { return m_callee ? m_callee.done() : true; }
-		T await_resume() { return m_callee ? std::move(m_callee.promise().value) : 0; }
+		T await_resume()
+		{
+			if constexpr (!std::is_void_v<T>)
+			{
+				return m_callee ? std::move(m_callee.promise().value) : 0;
+			}
+		}
 		void destroy()
 		{
 			LOG_CORE("m_caller:%p m_callee:%p\n", m_caller ? m_caller.address() : 0, m_callee ? m_callee.address() : 0);
@@ -116,5 +122,4 @@ namespace coev
 		std::coroutine_handle<> m_caller = nullptr;
 		std::atomic_int m_state{STATUS_INIT};
 	};
-
 }

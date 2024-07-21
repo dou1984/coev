@@ -10,7 +10,7 @@
 
 namespace coev
 {
-	awaiter<int> waitgroup::wait()
+	awaiter<void> waitgroup::wait()
 	{
 		return ts::wait_for(m_trigger, []()
 						   { return true; }, []() {});

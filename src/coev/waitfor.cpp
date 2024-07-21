@@ -21,7 +21,7 @@ namespace coev
 
 	namespace ts
 	{
-		awaiter<int> wait_for(ts::async &_this, const SUSPEND &suppend, const CALL &call)
+		awaiter<void> wait_for(ts::async &_this, const SUSPEND &suppend, const CALL &call)
 		{
 			_this.lock();
 			if (suppend())
@@ -33,7 +33,6 @@ namespace coev
 			}
 			call();
 			_this.unlock();
-			co_return 0;
 		}
 		bool resume(ts::async &_this, const CALL &call)
 		{

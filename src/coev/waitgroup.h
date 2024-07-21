@@ -20,6 +20,6 @@ namespace coev
 	public:
 		int add(int c = 1);
 		int done();
-		awaiter<int> wait();
+		awaiter<void> wait();
 	};
 }

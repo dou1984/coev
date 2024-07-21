@@ -17,8 +17,8 @@ namespace coev
 		async m_trigger;
 		ts::async m_trigger_mutex;
 		virtual ~task();
-		void insert_task(taskevent *_task);
-		void erase_task(taskevent *_task);
+		void __insert(taskevent *_task);
+		void __erase(taskevent *_task);
 		void destroy();
 		bool empty();
 	};

@@ -36,7 +36,7 @@ namespace coev
 				{ m_data.emplace_back(std::move(d)); });
 			co_return 0;
 		}
-		awaiter<int> get(TYPE &d)
+		awaiter<void> get(TYPE &d)
 		{
 			return ts::wait_for(
 				m_trigger,

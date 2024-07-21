@@ -15,13 +15,13 @@ namespace coev
 	{
 		destroy();
 	}
-	void task::insert_task(taskevent *_task)
+	void task::__insert(taskevent *_task)
 	{
 		std::lock_guard<std::mutex> _(m_trigger_mutex);
 		m_trigger_mutex.push_back(_task);
 		_task->m_taskchain = this;
 	}
-	void task::erase_task(taskevent *_task)
+	void task::__erase(taskevent *_task)
 	{
 		std::lock_guard<std::mutex> _(m_trigger_mutex);
 		_task->m_taskchain = nullptr;

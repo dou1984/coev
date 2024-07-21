@@ -19,7 +19,7 @@ namespace coev
 		std::atomic_int m_flag{0};
 
 	public:
-		awaiter<int> lock();
+		awaiter<void> lock();
 		bool unlock();
 	};
 }
