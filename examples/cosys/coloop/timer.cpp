@@ -6,7 +6,7 @@
  *
  */
 #include "timer.h"
-#include "libev.h"
+#include "coloop.h"
 
 namespace coev
 {
@@ -27,18 +27,18 @@ namespace coev
 	timer::~timer()
 	{
 		if (ev_is_active(&m_data))
-			ev_timer_stop(libev::at(m_tid), &m_data);
+			ev_timer_stop(coloop::at(m_tid), &m_data);
 	}
 	int timer::stop()
 	{
 		if (ev_is_active(&m_data))
-			ev_timer_stop(libev::at(m_tid), &m_data);
+			ev_timer_stop(coloop::at(m_tid), &m_data);
 		return 0;
 	}
 	int timer::active()
 	{
 		if (!ev_is_active(&m_data))
-			ev_timer_start(libev::at(m_tid), &m_data);
+			ev_timer_start(coloop::at(m_tid), &m_data);
 		return 0;
 	}
 	bool timer::is_active()
@@ -47,6 +47,6 @@ namespace coev
 	}
 	ev_tstamp timer::remaining()
 	{
-		return ev_timer_remaining(libev::at(m_tid), &m_data);
+		return ev_timer_remaining(coloop::at(m_tid), &m_data);
 	}
 }

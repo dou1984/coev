@@ -6,7 +6,7 @@
  *
  */
 #include "client.h"
-#include "libev.h"
+#include "coloop.h"
 
 namespace coev
 {
@@ -50,12 +50,12 @@ namespace coev
 	{
 		m_Read.data = this;
 		ev_io_init(&m_Read, &client::cb_connect, m_fd, EV_READ | EV_WRITE);
-		ev_io_start(libev::at(m_tid), &m_Read);
+		ev_io_start(coloop::at(m_tid), &m_Read);
 		return 0;
 	}
 	int client::__remove()
 	{
-		ev_io_stop(libev::at(m_tid), &m_Read);
+		ev_io_stop(coloop::at(m_tid), &m_Read);
 		return 0;
 	}
 	int client::__connect(const char *ip, int port)

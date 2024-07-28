@@ -10,7 +10,7 @@
 #include <mutex>
 #include <unordered_map>
 #include <algorithm>
-#include "libev.h"
+#include "coloop.h"
 #include "awaken.h"
 
 #define g_loop threadlocal<__this_ev_loop>::instance()
@@ -46,11 +46,11 @@ namespace coev
 		}
 	};
 
-	void libev::start()
+	void coloop::start()
 	{
 		ev_run(g_loop.m_loop, 0);
 	}
-	void libev::stop()
+	void coloop::stop()
 	{
 		std::lock_guard<std::mutex> _(g_mutex);
 		for (auto &it : all_loops)
@@ -58,11 +58,11 @@ namespace coev
 			ev_loop_destroy(it.second->m_loop);
 		}
 	}
-	struct ev_loop *libev::data()
+	struct ev_loop *coloop::data()
 	{
 		return g_loop.m_loop;
 	}
-	struct ev_loop *libev::at(uint64_t _tid)
+	struct ev_loop *coloop::at(uint64_t _tid)
 	{
 		if (data() == nullptr)
 		{
@@ -73,7 +73,7 @@ namespace coev
 			return it->second->m_loop;
 		return nullptr;
 	}
-	void libev::resume(event *ev)
+	void coloop::resume(event *ev)
 	{
 		if (ev->m_tid == gtid())
 		{
