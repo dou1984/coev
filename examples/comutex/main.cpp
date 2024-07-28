@@ -23,15 +23,13 @@ awaiter<int> test_go()
 	auto now = std::chrono::system_clock::now();
 	for (int i = 0; i < 20; i++)
 	{
-		co_await g_mutex.lock();
-		// g_mutex.lock();
-		g_total += 1;
-		// g_mutex.unlock();
+		co_await g_mutex.lock();		
+		g_total += 1;		
 		g_mutex.unlock();
 		co_await usleep_for(1);
 	}
 
-	co_await sleep_for(1);
+	co_await sleep_for(10);
 	auto r = std::chrono::system_clock::now() - now;
 	auto _count = g_count++;
 	LOG_DBG("%d %d %ld\n", _count, g_total.load(), r.count());

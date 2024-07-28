@@ -51,7 +51,6 @@ namespace coev
 			promise_type() = default;
 			~promise_type()
 			{
-				LOG_CORE("promise_type:%p awaiter:%p\n", this, m_awaiter);
 				if (m_awaiter)
 				{
 					m_awaiter->m_state = STATUS_READY;
@@ -76,7 +75,6 @@ namespace coev
 		const awaiter &operator=(awaiter &&) = delete;
 		~awaiter()
 		{
-			LOG_CORE("m_caller:%p m_callee:%p\n", m_caller ? m_caller.address() : 0, m_callee ? m_callee.address() : 0);
 			if (m_callee.address())
 				m_callee.promise().m_awaiter = nullptr;
 		}
@@ -90,7 +88,6 @@ namespace coev
 		}
 		void destroy()
 		{
-			LOG_CORE("m_caller:%p m_callee:%p\n", m_caller ? m_caller.address() : 0, m_callee ? m_callee.address() : 0);
 			if (m_callee.address() && m_callee.promise().m_awaiter)
 			{
 				m_callee.promise().m_awaiter = nullptr;
@@ -111,7 +108,6 @@ namespace coev
 		void resume()
 		{
 			m_state = STATUS_READY;
-			LOG_CORE("m_caller:%p\n", m_caller ? m_caller.address() : 0)
 			if (m_caller.address() && !m_caller.done())
 				m_caller.resume();
 			taskevent::__resume();

@@ -7,7 +7,7 @@
  */
 #include <sys/signal.h>
 #include <unistd.h>
-#include "loop.h"
+#include "libev.h"
 #include "running.h"
 
 namespace coev
@@ -29,7 +29,7 @@ namespace coev
 			[=]()
 			{
 				f();
-				loop::start();
+				libev::start();
 			});
 	}
 	void running::join()

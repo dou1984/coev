@@ -21,8 +21,8 @@ namespace coev
 		awaiter<int> connect(const char *, int);
 
 	private:
-		int connect_insert();
-		int connect_remove();
+		int __insert();
+		int __remove();
 		int __connect(const char *ip, int port);
 		int __connect(int fd, const char *ip, int port);
 		static void cb_connect(struct ev_loop *loop, struct ev_io *w, int revents);

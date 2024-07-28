@@ -6,7 +6,7 @@
  *
  */
 #include <algorithm>
-#include "loop.h"
+#include "libev.h"
 #include "serverpool.h"
 
 namespace coev::tcp
@@ -42,9 +42,9 @@ namespace coev::tcp
 		{
 			auto &s = it->second;
 			if (s.m_fd != INVALID)
-			{
+			{				
 				s.__remove(it->first);
-				s.m_fd = INVALID;
+				//s.m_fd = INVALID;
 			}
 		}
 		if (m_fd != INVALID)

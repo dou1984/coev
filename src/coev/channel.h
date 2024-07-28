@@ -20,21 +20,19 @@ namespace coev
 		ts::async m_trigger;
 
 	public:
-		awaiter<int> set(TYPE &&d)
+		void set(TYPE &&d)
 		{
 			ts::resume(
 				m_trigger,
 				[this, d = std::move(d)]()
 				{ m_data.emplace_back(std::move(d)); });
-			co_return 0;
 		}
-		awaiter<int> set(const TYPE &d)
+		void set(const TYPE &d)
 		{
 			ts::resume(
 				m_trigger,
 				[this, d]()
 				{ m_data.emplace_back(std::move(d)); });
-			co_return 0;
 		}
 		awaiter<void> get(TYPE &d)
 		{

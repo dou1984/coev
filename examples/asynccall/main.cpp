@@ -9,7 +9,7 @@
 
 using namespace coev;
 
-struct Trigger 
+struct Trigger
 {
 	int x = 0;
 	async m_trigger;
@@ -42,11 +42,10 @@ int main()
 {
 	set_log_level(LOG_LEVEL_CORE);
 	running::instance()
-		.add([]() -> awaiter<int>
+		.add([]() -> awaiter<void>
 			 { 			
 				co_await __call();
-				LOG_DBG("__call %d\n", g_trigger.x);
-				co_return 0; })
+				LOG_DBG("__call %d\n", g_trigger.x); })
 		.join();
 	return 0;
 }

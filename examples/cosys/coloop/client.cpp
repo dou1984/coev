@@ -6,7 +6,7 @@
  *
  */
 #include "client.h"
-#include "loop.h"
+#include "libev.h"
 
 namespace coev
 {
@@ -24,7 +24,7 @@ namespace coev
 		}
 		client *_this = (client *)(w->data);
 		assert(_this != nullptr);
-		_this->connect_remove();
+		_this->__remove();
 		resume(_this->m_trigger_read);
 	}
 	client::client()
@@ -40,22 +40,22 @@ namespace coev
 			return;
 		}
 		m_tid = gtid();
-		connect_insert();
+		__insert();
 	}
 	client::~client()
 	{
 		close();
 	}
-	int client::connect_insert()
+	int client::__insert()
 	{
 		m_Read.data = this;
 		ev_io_init(&m_Read, &client::cb_connect, m_fd, EV_READ | EV_WRITE);
-		ev_io_start(loop::at(m_tid), &m_Read);
+		ev_io_start(libev::at(m_tid), &m_Read);
 		return 0;
 	}
-	int client::connect_remove()
+	int client::__remove()
 	{
-		ev_io_stop(loop::at(m_tid), &m_Read);
+		ev_io_stop(libev::at(m_tid), &m_Read);
 		return 0;
 	}
 	int client::__connect(const char *ip, int port)

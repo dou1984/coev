@@ -17,22 +17,22 @@ namespace coev
 	}
 	void task::__insert(taskevent *_task)
 	{
-		std::lock_guard<std::mutex> _(m_trigger_mutex);
-		m_trigger_mutex.push_back(_task);
+		std::lock_guard<std::mutex> _(m_async);
+		m_async.push_back(_task);
 		_task->m_taskchain = this;
 	}
 	void task::__erase(taskevent *_task)
 	{
-		std::lock_guard<std::mutex> _(m_trigger_mutex);
+		std::lock_guard<std::mutex> _(m_async);
 		_task->m_taskchain = nullptr;
-		m_trigger_mutex.erase(_task);
+		m_async.erase(_task);
 	}
 	void task::destroy()
 	{
-		std::lock_guard<std::mutex> _(m_trigger_mutex);
-		while (!m_trigger_mutex.empty())
+		std::lock_guard<std::mutex> _(m_async);
+		while (!m_async.empty())
 		{
-			auto t = static_cast<taskevent *>(m_trigger_mutex.pop_front());
+			auto t = static_cast<taskevent *>(m_async.pop_front());
 			assert(t->m_taskchain);
 			LOG_CORE("t:%p taskchain:%p\n", t, t->m_taskchain);
 			t->m_taskchain = nullptr;			
@@ -41,7 +41,7 @@ namespace coev
 	}
 	bool task::empty()
 	{
-		std::lock_guard<std::mutex> _(m_trigger_mutex);
-		return m_trigger_mutex.empty();
+		std::lock_guard<std::mutex> _(m_async);
+		return m_async.empty();
 	}
 }

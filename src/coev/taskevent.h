@@ -10,13 +10,11 @@
 
 namespace coev
 {
-	struct task;
 
 	struct taskevent : chain
 	{
-		friend struct task;
 
-		task *m_taskchain = nullptr;
+		void *m_taskchain = nullptr;
 		void __resume();
 		virtual ~taskevent();
 		virtual void destroy() {}

@@ -6,7 +6,6 @@
  *
  */
 #pragma once
-#include "loop.h"
 #include "iocontext.h"
 
 namespace coev::udp

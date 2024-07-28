@@ -7,7 +7,7 @@
  */
 #include <coev.h>
 #include "awaken.h"
-#include "loop.h"
+#include "libev.h"
 
 namespace coev
 {
@@ -20,7 +20,7 @@ namespace coev
 			_this->__resume();
 		}
 	}
-	awaken::awaken() : awaken(loop::data(), gtid())
+	awaken::awaken() : awaken(libev::data(), gtid())
 	{
 	}
 	awaken::awaken(struct ev_loop *__loop, uint64_t __tag)
@@ -32,11 +32,11 @@ namespace coev
 	}
 	awaken::~awaken()
 	{
-		ev_async_stop(loop::at(m_tid), &m_awaken);
+		ev_async_stop(libev::at(m_tid), &m_awaken);
 	}
 	int awaken::resume()
 	{
-		ev_async_send(loop::at(m_tid), &m_awaken);
+		ev_async_send(libev::at(m_tid), &m_awaken);
 		return 0;
 	}
 	int awaken::resume_event(event *ev)

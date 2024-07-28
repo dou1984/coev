@@ -20,7 +20,7 @@ awaiter<int> go()
 	for (int i = 0; i < 100000; i++)
 	{
 		x++;
-		co_await ch.set(std::move(x));
+		ch.set(std::move(x));
 		co_await ch.get(x);
 	}
 	total += x;

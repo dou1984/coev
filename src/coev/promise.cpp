@@ -9,10 +9,7 @@
 
 namespace coev
 {
-	promise::~promise()
-	{
-		
-	}
+
 	void promise::unhandled_exception()
 	{
 		throw std::current_exception();

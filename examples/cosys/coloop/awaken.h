@@ -12,7 +12,7 @@
 
 namespace coev
 {
-	class awaken
+	class awaken 
 	{
 	public:
 		awaken();
