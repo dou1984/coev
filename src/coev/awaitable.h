@@ -76,7 +76,6 @@ namespace coev
 		const awaitable &operator=(awaitable &&) = delete;
 		~awaitable()
 		{
-			// LOG_CORE("%p\n", m_callee.address());
 			if (m_callee.address())
 				m_callee.promise().m_awaitable = nullptr;
 		}

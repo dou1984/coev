@@ -22,14 +22,14 @@ namespace coev
 	public:
 		void set(TYPE &&d)
 		{
-			ts::resume(
+			ts::trigger(
 				m_trigger,
 				[this, d = std::move(d)]()
 				{ m_data.emplace_back(std::move(d)); });
 		}
 		void set(const TYPE &d)
 		{
-			ts::resume(
+			ts::trigger(
 				m_trigger,
 				[this, d]()
 				{ m_data.emplace_back(std::move(d)); });

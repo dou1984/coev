@@ -24,7 +24,7 @@ namespace coev
 	}
 	bool comutex::unlock()
 	{
-		return coev::ts::resume(
+		return coev::ts::trigger(
 			m_trigger,
 			[this]()
 			{ m_flag = off; });

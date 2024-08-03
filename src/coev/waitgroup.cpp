@@ -26,7 +26,7 @@ namespace coev
 		{
 			return 0;
 		}
-		while (ts::resume(m_trigger, []() {}))
+		while (ts::trigger(m_trigger, []() {}))
 		{
 		}
 		return 0;

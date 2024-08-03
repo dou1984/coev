@@ -16,7 +16,7 @@
 namespace coev
 {
 	event wait_for(async &);
-	bool resume(async &);
+	bool trigger(async &);
 
 	template <class... AWAITER>
 	awaitable<int> wait_for_any(AWAITER &&...awt)
@@ -44,7 +44,7 @@ namespace coev
 		using SUSPEND = std::function<bool()>;
 		using CALL = std::function<void()>;
 		awaitable<void> wait_for(ts::async &, const SUSPEND &suppend, const CALL &call);
-		bool resume(ts::async &, const CALL &call);
+		bool trigger(ts::async &, const CALL &call);
 	}
 
 }

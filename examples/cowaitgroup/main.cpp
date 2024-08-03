@@ -18,9 +18,10 @@ awaitable<int> test_co()
 {
 	g_waiter.add();
 	LOG_FATAL("add\n");
-	co_await sleep_for(3);
+	co_await sleep_for(1);
 	LOG_FATAL("done\n");
 	g_waiter.done();
+
 	co_return 0;
 }
 awaitable<int> test_wait()

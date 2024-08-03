@@ -8,7 +8,7 @@ namespace coev
 		return event(&_this);
 	}
 
-	bool resume(async &_this)
+	bool trigger(async &_this)
 	{
 		auto c = static_cast<event *>(_this.pop_front());
 		if (c)
@@ -34,18 +34,20 @@ namespace coev
 			call();
 			_this.m_mutex.unlock();
 		}
-		bool resume(ts::async &_this, const CALL &call)
+		bool trigger(ts::async &_this, const CALL &call)
 		{
-			_this.m_mutex.lock();
-			auto c = static_cast<event *>(_this.pop_front());
-			call();
-			_this.m_mutex.unlock();
-			if (c)
+			event *c = nullptr;
 			{
-				c->resume();
-				return true;
+				std::lock_guard<std::mutex> _(_this.m_mutex);
+				c = static_cast<event *>(_this.pop_front());
+				if (c == nullptr)
+				{
+					return false;
+				}
+				call();
 			}
-			return false;
+			c->resume();
+			return true;
 		}
 	}
 

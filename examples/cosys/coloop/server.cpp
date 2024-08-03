@@ -28,7 +28,7 @@ namespace coev::tcp
 			return;
 		server *_this = (server *)(w->data);
 		assert(_this != nullptr);
-		coev::resume(_this->m_trigger);
+		coev::trigger(_this->m_trigger);
 	}
 	server::~server()
 	{
