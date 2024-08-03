@@ -16,12 +16,12 @@ namespace coev::tcp
 	class server final
 	{
 	public:
-		using faccept = std::function<awaiter<int>(const ipaddress &, iocontext &)>;
+		using faccept = std::function<awaitable<int>(const ipaddress &, iocontext &)>;
 		server() = default;
 		virtual ~server();
 		int start(const char *ip, int port);
 		int stop();
-		awaiter<int> accept(const faccept &dispatch);
+		awaitable<int> accept(const faccept &dispatch);
 
 	private:
 		friend class serverpool;
@@ -33,7 +33,7 @@ namespace coev::tcp
 		int __insert(uint64_t _tid);
 		int __remove(uint64_t _tid);
 		bool __valid() const;
-		awaiter<int> __accept();
+		awaitable<int> __accept();
 		static void cb_accept(struct ev_loop *loop, struct ev_io *w, int revents);
 	};
 }

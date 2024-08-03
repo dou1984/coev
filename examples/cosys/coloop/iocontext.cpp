@@ -91,7 +91,7 @@ namespace coev
 			m_fd = INVALID;
 		}
 	}
-	awaiter<int> iocontext::send(const char *buffer, int size)
+	awaitable<int> iocontext::send(const char *buffer, int size)
 	{
 		while (__valid())
 		{
@@ -110,7 +110,7 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	awaiter<int> iocontext::recv(char *buffer, int size)
+	awaitable<int> iocontext::recv(char *buffer, int size)
 	{
 		while (__valid())
 		{
@@ -124,7 +124,7 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	awaiter<int> iocontext::recvfrom(char *buffer, int size, ipaddress &info)
+	awaitable<int> iocontext::recvfrom(char *buffer, int size, ipaddress &info)
 	{
 		while (__valid())
 		{
@@ -141,7 +141,7 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	awaiter<int> iocontext::sendto(const char *buffer, int size, ipaddress &info)
+	awaitable<int> iocontext::sendto(const char *buffer, int size, ipaddress &info)
 	{
 		while (__valid())
 		{
@@ -159,7 +159,7 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	awaiter<int> iocontext::close()
+	awaitable<int> iocontext::close()
 	{
 		LOG_CORE("m_fd:%d\n", m_fd);
 		__close();

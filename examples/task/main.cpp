@@ -9,9 +9,9 @@
 
 using namespace coev;
 
-awaiter<int> co_task(bool for_all)
+awaitable<int> co_task(bool for_all)
 {
-	auto t0 = []() -> awaiter<int>
+	auto t0 = []() -> awaitable<int>
 	{
 		TRACE();
 		co_await sleep_for(2);
@@ -19,7 +19,7 @@ awaiter<int> co_task(bool for_all)
 		co_return 0;
 	}();
 
-	auto t1 = []() -> awaiter<int>
+	auto t1 = []() -> awaitable<int>
 	{
 		TRACE();
 		co_await sleep_for(5);
@@ -35,7 +35,7 @@ awaiter<int> co_task(bool for_all)
 	co_return 0;
 }
 
-awaiter<int> co_task_short(bool for_all)
+awaitable<int> co_task_short(bool for_all)
 {
 	if (for_all)
 		co_await wait_for_all(sleep_for(2), sleep_for(3));
@@ -60,14 +60,14 @@ void co_task_v()
 {
 	co_task_short(false);
 }
-awaiter<int> co_completed()
+awaitable<int> co_completed()
 {
 	LOG_DBG("incompleted begin\n")
 	co_await sleep_for(2);
 	LOG_DBG("arrived success\n");
 	co_return 0;
 }
-awaiter<int> co_incompleted()
+awaitable<int> co_incompleted()
 {
 	LOG_DBG("incompleted begin\n")
 	co_await sleep_for(3);
@@ -76,7 +76,7 @@ awaiter<int> co_incompleted()
 }
 void co_two_task()
 {
-	[]() -> awaiter<int>
+	[]() -> awaitable<int>
 	{
 		co_await wait_for_any(co_completed(), wait_for_all(co_incompleted(), co_incompleted()));
 		co_return 0;
@@ -84,7 +84,7 @@ void co_two_task()
 }
 void co_two_task2()
 {
-	[]() -> awaiter<int>
+	[]() -> awaitable<int>
 	{
 		co_await wait_for_any(co_incompleted(), wait_for_all(co_completed(), co_completed()));
 		co_return 0;

@@ -15,10 +15,12 @@ namespace coev
 		if (m_taskchain)
 		{
 			LOG_CORE("m_taskchain %p\n", m_taskchain);
-			auto _taskchain = reinterpret_cast<task *>(m_taskchain);
-			_taskchain->__erase(this);
-			ts::resume(_taskchain->m_async, []() {});
+			auto _taskchain = m_taskchain;
 			m_taskchain = nullptr;
+			// ts::resume(_taskchain->m_async, []() {});
+			//_taskchain->__erase(this);
+			_taskchain->__erase(this);
+			resume(_taskchain->m_trigger);
 		}
 	}
 	taskevent::~taskevent()

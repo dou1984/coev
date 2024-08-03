@@ -69,7 +69,7 @@ namespace coev
 		}
 		return __close();
 	}
-	awaiter<int> client::connect(const char *ip, int port)
+	awaitable<int> client::connect(const char *ip, int port)
 	{
 		int fd = __connect(ip, port);
 		if (fd == INVALID)

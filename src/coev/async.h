@@ -10,8 +10,9 @@ namespace coev
 
     namespace ts
     {
-        struct async : chain, std::mutex
+        struct async : chain 
         {
+            std::mutex m_mutex;
         };
     }
 }

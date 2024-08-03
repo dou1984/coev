@@ -11,7 +11,7 @@
 
 namespace coev
 {
-	awaiter<void> sleep_for(long);
-	awaiter<void> usleep_for(long);
+	awaitable<void> sleep_for(long);
+	awaitable<void> usleep_for(long);
 
 }

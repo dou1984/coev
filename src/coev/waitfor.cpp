@@ -21,25 +21,25 @@ namespace coev
 
 	namespace ts
 	{
-		awaiter<void> wait_for(ts::async &_this, const SUSPEND &suppend, const CALL &call)
+		awaitable<void> wait_for(ts::async &_this, const SUSPEND &suppend, const CALL &call)
 		{
-			_this.lock();
+			_this.m_mutex.lock();
 			if (suppend())
 			{
 				event ev(&_this);
-				_this.unlock();
+				_this.m_mutex.unlock();
 				co_await ev;
-				_this.lock();
+				_this.m_mutex.lock();
 			}
 			call();
-			_this.unlock();
+			_this.m_mutex.unlock();
 		}
 		bool resume(ts::async &_this, const CALL &call)
 		{
-			_this.lock();
+			_this.m_mutex.lock();
 			auto c = static_cast<event *>(_this.pop_front());
 			call();
-			_this.unlock();
+			_this.m_mutex.unlock();
 			if (c)
 			{
 				c->resume();

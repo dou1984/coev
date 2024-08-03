@@ -27,7 +27,7 @@ cmake BUILD_EXAMPLES=ON ..
 make
 ```
 
-The author encapsulates three classes "awaiter", "event", "async" and "task" through the c++20 coroutine library. The main idea of ​​these three subpackage classes is to be event-based. Developers no longer need to association coroutine with file's I/O, networks and pipelines etc. Coroutine codes are highly abstract, and completely separated from other module codes. In the development, the only things needed is to store current context and wait for data complished. When the data is ready, we can trigger the recovery context and continue the coroutine.
+The author encapsulates three classes "awaitable", "event", "async" and "task" through the c++20 coroutine library. The main idea of ​​these three subpackage classes is to be event-based. Developers no longer need to association coroutine with file's I/O, networks and pipelines etc. Coroutine codes are highly abstract, and completely separated from other module codes. In the development, the only things needed is to store current context and wait for data complished. When the data is ready, we can trigger the recovery context and continue the coroutine.
 
 ## event
 
@@ -36,12 +36,12 @@ event is the smallest coroutine class, used to quickly convert asynchronous call
 ```cpp
 async g_triger;
 
-awaiter<int> co_waiting()
+awaitable<int> co_waiting()
 { 
  co_await wait_for<0>(&g_trigger);
  co_return 0;
 }
-awaiter<int> co_trigger()
+awaitable<int> co_trigger()
 {
  co_await sleep_for(5);
  resume<0>(&g_triger);
@@ -49,17 +49,17 @@ awaiter<int> co_trigger()
 }
 ```
 
-## awaiter
+## awaitable
 
-awaiter is a coroutine class of coev. awaiter is very convenient to use. Defining awaiter as a function return can create a coroutine.
+awaitable is a coroutine class of coev. awaitable is very convenient to use. Defining awaitable as a function return can create a coroutine.
 
 ```cpp
-awaiter<int> co_sleep(int t)  
+awaitable<int> co_sleep(int t)  
 {  
  co_await sleep_for(t); 
  co_return 0；  
 } 
-awaiter<int> co_iterator(int t)
+awaitable<int> co_iterator(int t)
 {
  if (t > 0)
  {
@@ -70,32 +70,32 @@ awaiter<int> co_iterator(int t)
 }
 ```
 
-awaiter can be called hierarchically, which solves the most commonly used multi-level calling problem in coroutine.
+awaitable can be called hierarchically, which solves the most commonly used multi-level calling problem in coroutine.
 
 ```cpp
-awaiter<int> test_lower()
+awaitable<int> test_lower()
 {
  co_await co_sleep(1);
 }
-awaiter<int> test_upper()
+awaitable<int> test_upper()
 {
  co_await test_lower();
 }
 ```
 
-awaiter is used to wait for the completion of the coroutine. awaiter can choose two modes, one is to wait for all tasks to complete before exiting, and the other is to exit as long as one task is completed.
+awaitable is used to wait for the completion of the coroutine. awaitable can choose two modes, one is to wait for all tasks to complete before exiting, and the other is to exit as long as one task is completed.
 
 ```cpp
-awaiter<int> co_sleep(int t)
+awaitable<int> co_sleep(int t)
 {
   co_await sleep_for(t);
   co_return 0；
 }
-awaiter<int> test_any()
+awaitable<int> test_any()
 {
  co_await wait_for_any(co_sleep(1), co_sleep(2));
 }
-awaiter<int> test_all()
+awaitable<int> test_all()
 {
  co_await wait_for_all(co_sleep(1), co_sleep(2));
 }
@@ -107,13 +107,13 @@ channel is used for data transmission.
 
 ```cpp
 channel<int> ch;  
-awaiter<int> co_channel_input()  
+awaitable<int> co_channel_input()  
 {  
  int x = 1;  
  co_await ch.set(x); 
  co_return 0;  
 }  
-awaiter<int> co_channel_output()  
+awaitable<int> co_channel_output()  
 {  
  int x = 0;  
  co_await ch.get(x);  
@@ -126,7 +126,7 @@ awaiter<int> co_channel_output()
 coev can query the mysql database.
 
 ```cpp
-awaiter<int> test_mysql()
+awaitable<int> test_mysql()
 {
  Mysqlcli c("127.0.0.1", 3306, "root", "12345678", "test");
  auto r = co_await c.connect();
@@ -149,7 +149,7 @@ awaiter<int> test_mysql()
 coev can query the redis library.
 
 ```cpp
-awaiter<int> test_redis()
+awaitable<int> test_redis()
 {
  Rediscli c("127.0.0.1", 6379, "");
 

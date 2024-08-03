@@ -14,7 +14,7 @@ using namespace coev;
 channel<int> ch;
 
 std::atomic<int> total = 0;
-awaiter<int> go()
+awaitable<int> go()
 {
 	int x = 0;
 	for (int i = 0; i < 100000; i++)

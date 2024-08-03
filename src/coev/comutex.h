@@ -8,7 +8,7 @@
 #pragma once
 #include <atomic>
 #include <mutex>
-#include "awaiter.h"
+#include "awaitable.h"
 #include "async.h"
 
 namespace coev
@@ -19,7 +19,7 @@ namespace coev
 		std::atomic_int m_flag{0};
 
 	public:
-		awaiter<void> lock();
+		awaitable<void> lock();
 		bool unlock();
 	};
 }

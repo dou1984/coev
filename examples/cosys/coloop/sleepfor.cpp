@@ -12,13 +12,13 @@
 
 namespace coev
 {
-	awaiter<void> sleep_for(long t)
+	awaitable<void> sleep_for(long t)
 	{
 		timer _timer(t, 0);
 		_timer.active();
 		co_await wait_for(_timer);
 	}
-	awaiter<void> usleep_for(long t)
+	awaitable<void> usleep_for(long t)
 	{
 		timer _timer((float)t / 1000000, 0);
 		_timer.active();

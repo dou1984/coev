@@ -28,9 +28,9 @@ namespace coev
 	{
 		return m_status == STATUS_READY;
 	}
-	void event::await_suspend(std::coroutine_handle<> awaiter)
+	void event::await_suspend(std::coroutine_handle<> awaitable)
 	{
-		m_awaiter = awaiter;
+		m_awaiter = awaitable;
 		m_status = STATUS_SUSPEND;
 	}
 	void event::resume()

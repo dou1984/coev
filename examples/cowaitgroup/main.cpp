@@ -14,7 +14,7 @@ using namespace coev;
 
 waitgroup g_waiter;
 
-awaiter<int> test_co()
+awaitable<int> test_co()
 {
 	g_waiter.add();
 	LOG_FATAL("add\n");
@@ -23,7 +23,7 @@ awaiter<int> test_co()
 	g_waiter.done();
 	co_return 0;
 }
-awaiter<int> test_wait()
+awaitable<int> test_wait()
 {
 
 	for (int i = 0; i < 10; i++)

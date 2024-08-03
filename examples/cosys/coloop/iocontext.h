@@ -20,11 +20,11 @@ namespace coev
 		iocontext(int fd);
 		iocontext(iocontext &&) = delete;
 		virtual ~iocontext();
-		awaiter<int> send(const char *, int);
-		awaiter<int> recv(char *, int);
-		awaiter<int> recvfrom(char *, int, ipaddress &);
-		awaiter<int> sendto(const char *, int, ipaddress &);
-		awaiter<int> close();
+		awaitable<int> send(const char *, int);
+		awaitable<int> recv(char *, int);
+		awaitable<int> recvfrom(char *, int, ipaddress &);
+		awaitable<int> sendto(const char *, int, ipaddress &);
+		awaitable<int> close();
 		operator bool() const;
 
 	protected:

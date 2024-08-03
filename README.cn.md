@@ -23,12 +23,12 @@ event 是最小的协程类，用于快速将异步调用转换成协程。与�
 
 ```cpp
 async g_triger;
-awaiter co_waiting()
+awaitable co_waiting()
 { 
  co_await wait_for<0>(g_trigger); // 等待事件触发
  co_return 0;
 }
-awaiter co_trigger()
+awaitable co_trigger()
 {
  co_await sleep_for(5);
  resume<0>(&g_trigger);  // 触发事件，跳转协程到co_waiting
@@ -36,32 +36,32 @@ awaiter co_trigger()
 }
 ```
 
-## awaiter
+## awaitable
 
 awaiter是coev的协程类，awaiter使用起来很方便，把awaiter定义为函数返回既可以创建一个协程。
 
 awaiter可以用分级调用，这解决了coroutine中最常用的多级调用问题。
 
 ```cpp
-awaiter<int> test_lower()
+awaitable<int> test_lower()
 {
   co_await co_sleep(1);
 }
-awaiter<int> test_upper()
+awaitable<int> test_upper()
 {
  co_await test_lower();
 }
 ```
 
-awaiter 协程嵌套
+awaitable 协程嵌套
 
 ```cpp
-awaiter<int> co_sleep(int t)
+awaitable<int> co_sleep(int t)
 {
   co_await sleep_for(t);
   co_return 0；
 }
-awaiter<int> co_iterator(int t)
+awaitable<int> co_iterator(int t)
 {
  if (t > 0)
  {
@@ -72,14 +72,14 @@ awaiter<int> co_iterator(int t)
 }
 ```
 
-awaiter 也可用于多个协程的等待, 一种是wait_for_all 等待所有awaiter完成，一种是wait_for_any等待任意awaiter完成 。
+awaitable 也可用于多个协程的等待, 一种是wait_for_all 等待所有awaiter完成，一种是wait_for_any等待任意awaiter完成 。
 
 ```cpp
-awaiter<int> test_any()
+awaitable<int> test_any()
 {
  co_await wait_for_any(sleep_for(1), sleep_for(2));
 }
-awaiter<int> test_all()
+awaitable<int> test_all()
 {
   co_await wait_for_all(sleep_for(1), sleep_for(2));
 }
@@ -91,13 +91,13 @@ channel用于数据传输。
 
 ```cpp
 channel<int> ch;
-awaiter<int> co_channel_input()
+awaitable<int> co_channel_input()
 {
   int x = 1;
  co_await ch.set(x); 
  co_return 0;
 }
-awaiter<int> co_channel_output()
+awaitable<int> co_channel_output()
 {
  int x = 0;
  co_await ch.get(x);
@@ -110,7 +110,7 @@ awaiter<int> co_channel_output()
 coev 可以查询mysql数据库。
 
 ```cpp
-awaiter<int> test_mysql()
+awaitable<int> test_mysql()
 {
  Mysqlcli c("127.0.0.1", 3306, "root", "12345678", "test");
  auto r = co_await c.connect();
@@ -133,7 +133,7 @@ awaiter<int> test_mysql()
 coev 可以查询redis。
 
 ```cpp
-awaiter<int> test_redis()
+awaitable<int> test_redis()
 {
  Rediscli c("127.0.0.1", 6379, "");
 

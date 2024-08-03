@@ -16,7 +16,7 @@
 namespace coev
 {
 	template <class T>
-	class awaiter final : public taskevent
+	class awaitable final : public taskevent
 	{
 	public:
 		struct promise_value
@@ -47,36 +47,38 @@ namespace coev
 
 		struct promise_type : promise, std::conditional_t<std::is_void_v<T>, promise_void, promise_value>
 		{
-			awaiter *m_awaiter = nullptr;
+			awaitable *m_awaitable = nullptr;
 			promise_type() = default;
 			~promise_type()
 			{
-				if (m_awaiter)
+				// LOG_CORE(" %p\n", (void *)m_awaitable);
+				if (m_awaitable)
 				{
-					m_awaiter->m_state = STATUS_READY;
-					m_awaiter->resume();
-					m_awaiter = nullptr;
+					m_awaitable->m_state = STATUS_READY;
+					m_awaitable->resume();
+					m_awaitable = nullptr;
 				}
 			}
-			awaiter<T> get_return_object()
+			awaitable<T> get_return_object()
 			{
 				return {std::coroutine_handle<promise_type>::from_promise(*this)};
 			}
 		};
 
 	public:
-		awaiter() = default;
-		awaiter(std::coroutine_handle<promise_type> h) : m_callee(h)
+		awaitable() = default;
+		awaitable(std::coroutine_handle<promise_type> h) : m_callee(h)
 		{
-			m_callee.promise().m_awaiter = this;
+			m_callee.promise().m_awaitable = this;
 		}
-		awaiter(awaiter &&o) = delete;
-		awaiter(const awaiter &) = delete;
-		const awaiter &operator=(awaiter &&) = delete;
-		~awaiter()
+		awaitable(awaitable &&o) = delete;
+		awaitable(const awaitable &) = delete;
+		const awaitable &operator=(awaitable &&) = delete;
+		~awaitable()
 		{
+			// LOG_CORE("%p\n", m_callee.address());
 			if (m_callee.address())
-				m_callee.promise().m_awaiter = nullptr;
+				m_callee.promise().m_awaitable = nullptr;
 		}
 		bool done() { return m_callee ? m_callee.done() : true; }
 		T await_resume()
@@ -88,9 +90,9 @@ namespace coev
 		}
 		void destroy()
 		{
-			if (m_callee.address() && m_callee.promise().m_awaiter)
+			if (m_callee.address() && m_callee.promise().m_awaitable)
 			{
-				m_callee.promise().m_awaiter = nullptr;
+				m_callee.promise().m_awaitable = nullptr;
 				m_callee.destroy();
 			}
 			m_callee = nullptr;
@@ -101,10 +103,7 @@ namespace coev
 			m_caller = caller;
 			m_state = STATUS_SUSPEND;
 		}
-		bool await_ready()
-		{
-			return m_state == STATUS_READY;
-		}
+		bool await_ready() { return m_state == STATUS_READY; }
 		void resume()
 		{
 			m_state = STATUS_READY;

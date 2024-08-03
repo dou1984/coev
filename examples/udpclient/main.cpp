@@ -9,7 +9,7 @@
 
 using namespace coev;
 
-awaiter<int> go()
+awaitable<int> go()
 {
 	ipaddress addr = {"127.0.0.1", 9998};
 	auto fd = udp::socketfd();

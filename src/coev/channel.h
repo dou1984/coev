@@ -7,7 +7,7 @@
  */
 #pragma once
 #include <list>
-#include "awaiter.h"
+#include "awaitable.h"
 #include "waitfor.h"
 #include "async.h"
 
@@ -34,7 +34,7 @@ namespace coev
 				[this, d]()
 				{ m_data.emplace_back(std::move(d)); });
 		}
-		awaiter<void> get(TYPE &d)
+		awaitable<void> get(TYPE &d)
 		{
 			return ts::wait_for(
 				m_trigger,

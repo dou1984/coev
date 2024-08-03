@@ -26,7 +26,7 @@ namespace coev
 		event(const event &) = delete;
 		void await_resume();
 		bool await_ready();
-		void await_suspend(std::coroutine_handle<> awaiter);
+		void await_suspend(std::coroutine_handle<> awaitable);
 		void resume();
 	};
 }

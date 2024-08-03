@@ -17,7 +17,7 @@ comutex g_mutex;
 std::atomic_int g_total{0};
 std::atomic_int g_count{0};
 
-awaiter<int> test_go()
+awaitable<int> test_go()
 {
 	co_await sleep_for(1);
 	auto now = std::chrono::system_clock::now();

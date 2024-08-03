@@ -11,7 +11,7 @@
 #include "coev/log.h"
 #include "coev/threadlocal.h"
 #include "coev/singleton.h"
-#include "coev/awaiter.h"
+#include "coev/awaitable.h"
 #include "coev/task.h"
 #include "coev/waitfor.h"
 #include "coev/setvalue.h"

@@ -8,7 +8,7 @@
 #pragma once
 #include <memory>
 #include <functional>
-#include "awaiter.h"
+#include "awaitable.h"
 #include "task.h"
 #include "event.h"
 #include "async.h"
@@ -19,7 +19,7 @@ namespace coev
 	bool resume(async &);
 
 	template <class... AWAITER>
-	awaiter<int> wait_for_any(AWAITER &&...awt)
+	awaitable<int> wait_for_any(AWAITER &&...awt)
 	{
 		task w;
 		(w.__insert(&awt), ...);
@@ -28,7 +28,7 @@ namespace coev
 		co_return 0;
 	}
 	template <class... AWAITER>
-	awaiter<int> wait_for_all(AWAITER &&...awt)
+	awaitable<int> wait_for_all(AWAITER &&...awt)
 	{
 		task w;
 		(w.__insert(&awt), ...);
@@ -43,7 +43,7 @@ namespace coev
 	{
 		using SUSPEND = std::function<bool()>;
 		using CALL = std::function<void()>;
-		awaiter<void> wait_for(ts::async &, const SUSPEND &suppend, const CALL &call);
+		awaitable<void> wait_for(ts::async &, const SUSPEND &suppend, const CALL &call);
 		bool resume(ts::async &, const CALL &call);
 	}
 

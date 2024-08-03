@@ -8,7 +8,7 @@
 #pragma once
 #include <atomic>
 #include "async.h"
-#include "awaiter.h"
+#include "awaitable.h"
 
 namespace coev
 {
@@ -20,6 +20,6 @@ namespace coev
 	public:
 		int add(int c = 1);
 		int done();
-		awaiter<void> wait();
+		awaitable<void> wait();
 	};
 }
