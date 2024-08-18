@@ -15,26 +15,26 @@
 
 namespace coev
 {
-	event wait_for(async &);
-	bool trigger(async &);
+	event wait_for(coev::async &);
+	bool notify(coev::async &);
 
-	template <class... AWAITER>
-	awaitable<int> wait_for_any(AWAITER &&...awt)
+	template <class... AWAITABLE>
+	awaitable<int> wait_for_any(AWAITABLE &&...awt)
 	{
 		task w;
-		(w.__insert(&awt), ...);
-		co_await wait_for(w.m_trigger);
+		(w.insert(&awt), ...);
+		co_await w.wait_for();
 		w.destroy();
 		co_return 0;
 	}
-	template <class... AWAITER>
-	awaitable<int> wait_for_all(AWAITER &&...awt)
+	template <class... AWAITABLE>
+	awaitable<int> wait_for_all(AWAITABLE &&...awt)
 	{
 		task w;
-		(w.__insert(&awt), ...);
+		(w.insert(&awt), ...);
 		while (!w.empty())
 		{
-			co_await wait_for(w.m_trigger);
+			co_await w.wait_for();
 		}
 		co_return 0;
 	}
@@ -43,8 +43,8 @@ namespace coev
 	{
 		using SUSPEND = std::function<bool()>;
 		using CALL = std::function<void()>;
-		awaitable<void> wait_for(ts::async &, const SUSPEND &suppend, const CALL &call);
-		bool trigger(ts::async &, const CALL &call);
+		awaitable<void> wait_for(coev::ts::async &, const SUSPEND &suppend, CALL &&call);
+		bool notify(coev::ts::async &, const CALL &call);
 	}
 
 }

@@ -14,12 +14,13 @@ namespace coev
 	{
 		if (_eventchain != nullptr)
 			_eventchain->push_back(this);
+		LOG_CORE("event _eventchain %p\n", _eventchain);
 	}
 	event::~event()
 	{
 		if (!chain::empty())
 			chain::erase(this);
-		m_awaiter = nullptr;
+		m_caller = nullptr;
 	}
 	void event::await_resume()
 	{
@@ -30,20 +31,20 @@ namespace coev
 	}
 	void event::await_suspend(std::coroutine_handle<> awaitable)
 	{
-		m_awaiter = awaitable;
+		m_caller = awaitable;
 		m_status = STATUS_SUSPEND;
 	}
 	void event::resume()
 	{
-		LOG_CORE("event m_awaiter:%p\n", m_awaiter ? m_awaiter.address() : 0);		
+		LOG_CORE("event resume m_caller:%p\n", m_caller ? m_caller.address() : 0);		
 		while (m_status == STATUS_INIT)
 		{
 			std::this_thread::sleep_for(std::chrono::nanoseconds(1));
 		}		
 		m_status = STATUS_READY;
-		if (m_awaiter.address() && !m_awaiter.done())
+		if (m_caller.address() && !m_caller.done())
 		{
-			m_awaiter.resume();
+			m_caller.resume();
 		}
 	}
 }

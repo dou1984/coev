@@ -6,17 +6,18 @@
  *
  */
 #pragma once
+#include <functional>
 #include "chain.h"
 
 namespace coev
 {
-	struct task;
-	struct taskevent : chain
+	class task;
+	struct tasknotify : chain
 	{
-		task *m_taskchain = nullptr;
-		void __resume();
-		virtual ~taskevent();
-		virtual void destroy() {}
+		task *m_task = nullptr;
+		virtual ~tasknotify();	
+		virtual void destroy();
+		void notify();
 	};
 
 }

@@ -52,7 +52,7 @@ namespace coev
 			std::lock_guard<decltype(m_lock)> _(m_lock);
 			m_trigger.moveto(&_trigger);
 		}
-		while (coev::trigger(_trigger))
+		while (coev::notify(_trigger))
 		{
 		}
 		return 0;

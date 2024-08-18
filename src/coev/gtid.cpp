@@ -5,15 +5,49 @@
  *	All rights reserved.
  *
  */
-#include <thread>
+#include <unordered_set>
+#include <algorithm>
+#include <mutex>
 #include "gtid.h"
 
 namespace coev
 {
+	/*
 	uint64_t gtid()
 	{
 		thread_local std::hash<std::thread::id> hasher;
 		thread_local auto _id = hasher(std::this_thread::get_id());
 		return _id;
+	}
+	*/
+
+	struct unique_id
+	{
+		static std::unordered_set<uint64_t> m_tidset;
+		static std::mutex m_mutex;
+		static uint64_t m_tid;
+		uint64_t m_id = 0;
+		unique_id()
+		{
+			std::lock_guard<std::mutex> _(m_mutex);
+			do
+			{
+				m_id = m_tid++;
+			} while (std::find(m_tidset.begin(), m_tidset.end(), m_id) != m_tidset.end());
+			m_tidset.insert(m_id);
+		}
+		~unique_id()
+		{
+			std::lock_guard<std::mutex> _(m_mutex);
+			m_tidset.erase(m_id);
+		}
+	};
+	uint64_t unique_id::m_tid = 0;
+	std::unordered_set<uint64_t> unique_id::m_tidset;
+	std::mutex unique_id::m_mutex;
+	uint64_t gtid()
+	{
+		thread_local unique_id _;
+		return _.m_id;
 	}
 }

@@ -8,15 +8,16 @@
 #pragma once
 #include <coroutine>
 #include <atomic>
+#include <memory>
 #include "chain.h"
 #include "promise.h"
 #include "log.h"
-#include "taskevent.h"
+#include "tasknotify.h"
 
 namespace coev
-{
+{	
 	template <class T>
-	class awaitable final : public taskevent
+	class awaitable final : public tasknotify
 	{
 	public:
 		struct promise_value
@@ -30,6 +31,16 @@ namespace coev
 			std::suspend_never yield_value(T &&v)
 			{
 				value = std::move(v);
+				return {};
+			}
+			std::suspend_never return_value(const T &v)
+			{
+				value = v;
+				return {};
+			}
+			std::suspend_never yield_value(const T &v)
+			{
+				value = v;
 				return {};
 			}
 		};
@@ -51,12 +62,12 @@ namespace coev
 			promise_type() = default;
 			~promise_type()
 			{
-				// LOG_CORE(" %p\n", (void *)m_awaitable);
 				if (m_awaitable)
 				{
 					m_awaitable->m_state = STATUS_READY;
-					m_awaitable->resume();
-					m_awaitable = nullptr;
+					auto _awaitable = m_awaitable;
+					m_awaitable = nullptr;				
+					_awaitable->resume();					
 				}
 			}
 			awaitable<T> get_return_object()
@@ -74,8 +85,10 @@ namespace coev
 		awaitable(awaitable &&o) = delete;
 		awaitable(const awaitable &) = delete;
 		const awaitable &operator=(awaitable &&) = delete;
+		const awaitable &operator=(const awaitable &&) = delete;
 		~awaitable()
 		{
+			LOG_CORE("destructor %p\n", this);
 			if (m_callee.address())
 				m_callee.promise().m_awaitable = nullptr;
 		}
@@ -105,10 +118,11 @@ namespace coev
 		bool await_ready() { return m_state == STATUS_READY; }
 		void resume()
 		{
+			LOG_CORE("resume %p\n", this);
 			m_state = STATUS_READY;
 			if (m_caller.address() && !m_caller.done())
 				m_caller.resume();
-			taskevent::__resume();
+			tasknotify::notify();
 		}
 
 	private:

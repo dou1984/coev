@@ -26,8 +26,7 @@ awaitable<int> test_co()
 }
 awaitable<int> test_wait()
 {
-
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < 2; i++)
 	{
 		test_co();
 	}
@@ -37,7 +36,7 @@ awaitable<int> test_wait()
 }
 int main()
 {
-
+	set_log_level(LOG_LEVEL_CORE);
 	running::instance().add(test_wait).join();
 
 	return 0;

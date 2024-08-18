@@ -27,7 +27,7 @@ void __async_call(void (*__f)(int))
 		co_await sleep_for(1);
 		// __f(1);  // It will core dump here, __f is not equal input argument __f, is it a g++ bug?
 		real_call(1); // It's OK.
-		coev::trigger(g_trigger.m_trigger);
+		coev::notify(g_trigger.m_trigger);
 		co_return 0;
 	}();
 }
@@ -43,9 +43,10 @@ int main()
 	set_log_level(LOG_LEVEL_CORE);
 	running::instance()
 		.add([]() -> awaitable<void>
-			 { 			
+			 { 	
+				LOG_DBG("__call %d\n", g_trigger.x);		
 				co_await __call();
-				LOG_DBG("__call %d\n", g_trigger.x); })
-		.join();
+				LOG_DBG("__call %d\n", g_trigger.x);
+		}).join();
 	return 0;
 }

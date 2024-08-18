@@ -20,15 +20,14 @@ namespace coev
 		m_count += c;
 		return 0;
 	}
-	int waitgroup::done()
+	void waitgroup::done()
 	{
-		if (--m_count > 0)
+		if (--m_count <= 0 )
 		{
-			return 0;
+			return ;
 		}
-		while (ts::trigger(m_trigger, []() {}))
+		while (ts::notify(m_trigger, []() {}))
 		{
-		}
-		return 0;
+		}	
 	}
 }

@@ -18,7 +18,7 @@ namespace coev
 	struct event final : chain
 	{
 		std::atomic_int m_status{STATUS_INIT};
-		std::coroutine_handle<> m_awaiter = nullptr;
+		std::coroutine_handle<> m_caller = nullptr;
 		size_t m_tid;
 		event(chain *_eventchain);
 		virtual ~event();

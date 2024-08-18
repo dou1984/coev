@@ -25,7 +25,7 @@ namespace coev
 		client *_this = (client *)(w->data);
 		assert(_this != nullptr);
 		_this->__remove();
-		trigger(_this->m_trigger_read);
+		notify(_this->m_trigger_read);
 	}
 	client::client()
 	{

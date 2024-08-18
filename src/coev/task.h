@@ -6,20 +6,27 @@
  *
  */
 #pragma once
+#include <memory>
+#include <functional>
 #include "chain.h"
 #include "async.h"
-#include "taskevent.h"
+#include "event.h"
+#include "tasknotify.h"
 
 namespace coev
 {
-	struct task final
-	{
+	class task final
+	{		
 		async m_trigger;
-		ts::async m_async;
+		ts::async m_async;		
+		
+		void __erase(tasknotify* _notify);
+	public:
 		virtual ~task();
-		void __insert(taskevent *_task);
-		void __erase(taskevent *_task);
 		void destroy();
+		void notify(tasknotify* _notify);
 		bool empty();
+		event wait_for();
+		void insert(tasknotify* _notify);
 	};
 }

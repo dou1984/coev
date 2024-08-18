@@ -23,7 +23,7 @@ awaitable<int> co_resume()
 	LOG_DBG("resume begin\n");
 	co_await sleep_for(5);
 	LOG_DBG("resume end\n");
-	trigger(g_test);
+	notify(g_test);
 	co_return 0;
 }
 
@@ -41,7 +41,7 @@ awaitable<int> co_awaitable_resume()
 {
 	co_await sleep_for(2);
 	LOG_DBG("co_awaitable_resume wakeup\n");
-	trigger(g_test);
+	notify(g_test);
 	co_return 0;
 }
 int main()

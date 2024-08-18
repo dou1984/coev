@@ -15,18 +15,10 @@ namespace coev
 
 	awaitable<void> comutex::lock()
 	{
-		return coev::ts::wait_for(
-			m_trigger,
-			[this]()
-			{ return m_flag == on; },
-			[this]()
-			{ m_flag = on; });
+		return coev::ts::wait_for(m_trigger,  [this]() { return m_flag == on; }, [this]() { m_flag = on; });
 	}
 	bool comutex::unlock()
 	{
-		return coev::ts::trigger(
-			m_trigger,
-			[this]()
-			{ m_flag = off; });
+		return coev::ts::notify(m_trigger, [this]() { m_flag = off; });
 	}
 }
