@@ -55,7 +55,7 @@ int main()
 {
 	set_log_level(LOG_LEVEL_CORE);
 	running::instance()
-		//.add(100, test_go)
+		.add(100, test_go)
 		.add(4, test_lock)
 		.join();
 

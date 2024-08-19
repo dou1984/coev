@@ -17,7 +17,7 @@ namespace coev
 {
 	class task final
 	{		
-		async m_trigger;
+		async m_listener;
 		ts::async m_async;		
 		
 		void __erase(tasknotify* _notify);

@@ -47,10 +47,10 @@ namespace coev
 	void task::notify(tasknotify* _notify)
 	{
 		__erase(_notify);
-		coev::notify(m_trigger);
+		coev::notify(m_listener);
 	}
 	event task::wait_for()
 	{
-		return coev::wait_for(m_trigger);
+		return coev::wait_for(m_listener);
 	}
 }

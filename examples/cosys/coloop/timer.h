@@ -15,11 +15,11 @@ namespace coev
 	{
 		ev_timer m_data;
 		uint64_t m_tid = 0;
-		async m_trigger;
+		async m_listener;
 		static void cb_timer(struct ev_loop *loop, struct ev_timer *w, int revents);
 
 	public:
-		operator async &() { return m_trigger; }
+		operator async &() { return m_listener; }
 		timer(ev_tstamp itimer, ev_tstamp rtimer);
 		virtual ~timer();
 		int active();

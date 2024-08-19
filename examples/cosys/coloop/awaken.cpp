@@ -42,17 +42,17 @@ namespace coev
 	int awaken::resume_event(event *ev)
 	{
 		std::lock_guard<decltype(m_lock)> _(m_lock);
-		m_trigger.push_back(ev);
+		m_listener.push_back(ev);
 		return resume();
 	}
 	int awaken::__resume()
 	{
-		async _trigger;
+		async _listener;
 		{
 			std::lock_guard<decltype(m_lock)> _(m_lock);
-			m_trigger.moveto(&_trigger);
+			m_listener.moveto(&_listener);
 		}
-		while (coev::notify(_trigger))
+		while (coev::notify(_listener))
 		{
 		}
 		return 0;

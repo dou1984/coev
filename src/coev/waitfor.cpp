@@ -25,18 +25,14 @@ namespace coev
 		{
 			_this.m_mutex.lock();
 			if (suppend())
-			{
-				auto _call = std::move(call);
+			{			
 				event ev(&_this);
 				_this.m_mutex.unlock();
 				co_await ev;
 				_this.m_mutex.lock();
-				_call();
-			} 
-			else
-			{
-				call();
-			}
+				
+			} 			
+			call();			
 			_this.m_mutex.unlock();
 		}
 		bool notify(coev::ts::async &_this, const CALL &call)

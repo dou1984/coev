@@ -12,8 +12,7 @@ namespace coev
 {
 	awaitable<void> waitgroup::wait()
 	{
-		return ts::wait_for(m_trigger, []()
-						   { return true; }, []() {});
+		co_await ts::wait_for(m_listener, []() { return true; }, []() {});
 	}
 	int waitgroup::add(int c)
 	{
@@ -26,7 +25,7 @@ namespace coev
 		{
 			return ;
 		}
-		while (ts::notify(m_trigger, []() {}))
+		while (ts::notify(m_listener, []() {}))
 		{
 		}	
 	}
