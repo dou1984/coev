@@ -21,7 +21,7 @@ awaitable<int> co_awaitable()
 awaitable<int> co_resume()
 {
 	LOG_DBG("resume begin\n");
-	co_await sleep_for(5);
+	// co_await sleep_for(5);
 	LOG_DBG("resume end\n");
 	notify(g_test);
 	co_return 0;
@@ -31,7 +31,7 @@ awaitable<int> co_awaitable_sleep()
 {
 	auto ev = wait_for(g_test);
 	LOG_DBG("awaitable sleep\n");
-	co_await sleep_for(1);
+	// co_await sleep_for(1);
 	LOG_DBG("awaitable wakeup\n");
 	co_await ev;
 	LOG_DBG("co_awaitable_sleep end\n");
@@ -39,7 +39,7 @@ awaitable<int> co_awaitable_sleep()
 }
 awaitable<int> co_awaitable_resume()
 {
-	co_await sleep_for(2);
+	// co_await sleep_for(2);
 	LOG_DBG("co_awaitable_resume wakeup\n");
 	notify(g_test);
 	co_return 0;

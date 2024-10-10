@@ -37,7 +37,7 @@ namespace coev
 		}
 		bool notify(coev::ts::async &_this, const CALL &call)
 		{
-			event *c = [&]() {
+			auto c = [&]() {
 				std::lock_guard<std::mutex> _(_this.m_mutex);
 				call();
 				return static_cast<event *>(_this.pop_front());				

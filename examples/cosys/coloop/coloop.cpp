@@ -11,9 +11,8 @@
 #include <unordered_map>
 #include <algorithm>
 #include "coloop.h"
-#include "awaken.h"
 
-#define g_loop threadlocal<__this_ev_loop>::instance()
+#define g_loop local<__ev_loop>::instance()
 
 namespace coev
 {
@@ -37,12 +36,6 @@ namespace coev
 			ev_loop_destroy(m_loop);
 			std::lock_guard<std::mutex> _(g_mutex);
 			all_loops.erase(m_tid);
-		}
-	};
-	struct __this_ev_loop : __ev_loop, awaken
-	{
-		__this_ev_loop() : __ev_loop(), awaken(__ev_loop::m_loop, __ev_loop::m_tid)
-		{
 		}
 	};
 
@@ -73,26 +66,5 @@ namespace coev
 			return it->second->m_loop;
 		return nullptr;
 	}
-	void coloop::resume(event *ev)
-	{
-		if (ev->m_tid == gtid())
-		{
-			ev->resume();
-		}
-		else
-		{
-			__this_ev_loop *__loop = nullptr;
-			{
-				std::lock_guard<std::mutex> _(g_mutex);
-				if (auto it = all_loops.find(ev->m_tid); it != all_loops.end())
-				{
-					__loop = static_cast<__this_ev_loop *>(it->second);
-				}
-			}
-			if (__loop)
-			{
-				__loop->awaken::resume_event(ev);
-			}
-		}
-	}
+	
 }
