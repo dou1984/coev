@@ -9,6 +9,7 @@
 #include <thread>
 #include <list>
 #include <functional>
+#include <coev.h>
 
 namespace coev
 {

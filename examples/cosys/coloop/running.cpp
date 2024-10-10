@@ -7,7 +7,6 @@
  */
 #include <sys/signal.h>
 #include <unistd.h>
-#include "coloop.h"
 #include "running.h"
 
 namespace coev
@@ -29,7 +28,7 @@ namespace coev
 			[=]()
 			{
 				f();
-				coloop::start();
+				//coloop::start();
 			});
 	}
 	void running::join()
