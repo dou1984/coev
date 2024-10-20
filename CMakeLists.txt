@@ -25,3 +25,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin CACHE INTERNAL "cma
 
 include_directories(/usr/local/include)
 link_directories(/usr/local/lib64/ /usr/local/lib/)
+
+install(TARGETS coev LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+file(GLOB_RECURSE HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h)
+
+install(FILES ${HEADERS} DESTINATION include/coev/ ${CMAKE_INSTALL_INCLUDEDIR})
