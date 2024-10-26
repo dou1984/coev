@@ -47,8 +47,7 @@ awaitable<int> co_awaitable_resume()
 
 awaitable<int, int, int> co_awaiter_tuple()
 {
-
-	co_return {1, 2, 3};
+	co_return 1, 2, 3;
 }
 
 awaitable<void> co_awaiter_tuple_ex()
@@ -68,8 +67,8 @@ int main()
 		.add([]() -> awaitable<void>
 			 { co_await wait_for_all(co_awaitable_sleep(), co_awaitable_resume());
 			  LOG_DBG("co_awaitable_sleep co_awaitable_resume finish\n"); })
-		.add([]() -> awaiter<void>
-			  { co_await co_awaiter_tuple_ex(); })
-		..join();
+		.add([]() -> awaitable<void>
+			 { co_await co_awaiter_tuple_ex(); })
+		.join();
 	return 0;
 }

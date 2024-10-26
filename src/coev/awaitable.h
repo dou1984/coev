@@ -61,13 +61,13 @@ namespace coev
 			template <class... ARGS>
 			std::suspend_never return_value(ARGS &&...args)
 			{
-				value = std::make_tuple(std::forward<ARGS>(args)...);
+				__set<0>(std::forward<ARGS>(args)...);
 				return {};
 			}
 			template <class... ARGS>
-			std::suspend_never yield_value(const ARGS &...args)
+			std::suspend_never yield_value(ARGS &&...args)
 			{
-				value = std::make_tuple(args...);
+				__set<0>(std::forward<ARGS>(args)...);
 				return {};
 			}
 			template <class... ARGS>
@@ -76,12 +76,14 @@ namespace coev
 				value = std::make_tuple(args...);
 				return {};
 			}
+			
 			template <class... ARGS>
-			std::suspend_never yield_value(ARGS &&...args)
+			std::suspend_never yield_value(const ARGS &...args)
 			{
-				value = std::make_tuple(std::forward<ARGS>(args)...);
+				value = std::make_tuple(args...);
 				return {};
 			}
+			
 			template <size_t I, class... ARGS>
 			void __set(ARGS &&...args);
 			template <size_t I, class ARGS>
@@ -133,11 +135,18 @@ namespace coev
 				m_callee.promise().m_awaitable = nullptr;
 		}
 		bool done() { return m_callee ? m_callee.done() : true; }
-		T await_resume()
+		auto await_resume()
 		{
-			if constexpr (!std::is_void_v<T>)
+			if constexpr (sizeof...(R) > 0)
 			{
-				return m_callee ? std::move(m_callee.promise().value) : 0;
+				return m_callee ? std::move(m_callee.promise().value) : decltype(m_callee.promise().value){};
+			}
+			else if constexpr (!std::is_void_v<T>)
+			{
+				return m_callee ? std::move(m_callee.promise().value) : decltype(m_callee.promise().value){};
+			}
+			else
+			{
 			}
 		}
 		void destroy()
