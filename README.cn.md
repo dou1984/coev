@@ -24,13 +24,13 @@ event 是最小的协程类，用于快速将异步调用转换成协程。与�
 async g_triger;
 awaitable co_waiting()
 { 
- co_await wait_for<0>(g_trigger); // 等待事件触发
+ co_await wait_for(g_trigger); // 等待事件触发
  co_return 0;
 }
 awaitable co_trigger()
 {
  co_await sleep_for(5);
- resume<0>(&g_trigger);  // 触发事件，跳转协程到co_waiting
+ resume(&g_trigger);  // 触发事件，跳转协程到co_waiting
  co_return 0;
 }
 ```

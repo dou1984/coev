@@ -33,17 +33,17 @@ The author encapsulates three classes "awaitable", "event", "async" and "task" t
 event is the smallest coroutine class, used to quickly convert asynchronous calls into coroutines. "eventchain" and "wait_for<eventchain>" cooperate with each other to quickly implement coroutines.
 
 ```cpp
-async g_triger;
+async g_listener;
 
 awaitable<int> co_waiting()
 { 
- co_await wait_for<0>(&g_trigger);
+ co_await wait_for(&g_listener);
  co_return 0;
 }
 awaitable<int> co_trigger()
 {
  co_await sleep_for(5);
- resume<0>(&g_triger);
+ notify(&g_listener);
  co_return 0;
 }
 ```
