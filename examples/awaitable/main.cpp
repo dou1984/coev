@@ -44,6 +44,19 @@ awaitable<int> co_awaitable_resume()
 	notify(g_test);
 	co_return 0;
 }
+
+awaitable<int, int, int> co_awaiter_tuple()
+{
+
+	co_return {1, 2, 3};
+}
+
+awaitable<void> co_awaiter_tuple_ex()
+{
+	auto [x, y, z] = co_await co_awaiter_tuple();
+
+	LOG_DBG("%d %d %d\n", x, y, z);
+}
 int main()
 {
 	set_log_level(LOG_LEVEL_DEBUG);
@@ -55,6 +68,8 @@ int main()
 		.add([]() -> awaitable<void>
 			 { co_await wait_for_all(co_awaitable_sleep(), co_awaitable_resume());
 			  LOG_DBG("co_awaitable_sleep co_awaitable_resume finish\n"); })
-		.join();
+		.add([]() -> awaiter<void>
+			  { co_await co_awaiter_tuple_ex(); })
+		..join();
 	return 0;
 }

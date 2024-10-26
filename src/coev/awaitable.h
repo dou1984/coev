@@ -15,8 +15,8 @@
 #include "tasknotify.h"
 
 namespace coev
-{	
-	template <class T>
+{
+	template <class T, class... R>
 	class awaitable final : public tasknotify
 	{
 	public:
@@ -55,8 +55,48 @@ namespace coev
 				return {};
 			}
 		};
-
-		struct promise_type : promise, std::conditional_t<std::is_void_v<T>, promise_void, promise_value>
+		struct promise_tuple
+		{
+			std::tuple<T, R...> value;
+			template <class... ARGS>
+			std::suspend_never return_value(ARGS &&...args)
+			{
+				value = std::make_tuple(std::forward<ARGS>(args)...);
+				return {};
+			}
+			template <class... ARGS>
+			std::suspend_never yield_value(const ARGS &...args)
+			{
+				value = std::make_tuple(args...);
+				return {};
+			}
+			template <class... ARGS>
+			std::suspend_never return_value(const ARGS &...args)
+			{
+				value = std::make_tuple(args...);
+				return {};
+			}
+			template <class... ARGS>
+			std::suspend_never yield_value(ARGS &&...args)
+			{
+				value = std::make_tuple(std::forward<ARGS>(args)...);
+				return {};
+			}
+			template <size_t I, class... ARGS>
+			void __set(ARGS &&...args);
+			template <size_t I, class ARGS>
+			void __set(ARGS &&args)
+			{
+				std::get<I>(value) = std::move(args);
+			}
+			template <size_t I, class ARGS, class... RES>
+			void __set(ARGS &&args, RES &&...res)
+			{
+				std::get<I>(value) = std::move(args);
+				__set<I + 1>(std::forward<ARGS>(res)...);
+			}
+		};
+		struct promise_type : promise, std::conditional_t<(sizeof...(R) > 0), promise_tuple, std::conditional_t<std::is_void_v<T>, promise_void, promise_value>>
 		{
 			awaitable *m_awaitable = nullptr;
 			promise_type() = default;
@@ -66,11 +106,11 @@ namespace coev
 				{
 					m_awaitable->m_state = STATUS_READY;
 					auto _awaitable = m_awaitable;
-					m_awaitable = nullptr;				
-					_awaitable->resume();					
+					m_awaitable = nullptr;
+					_awaitable->resume();
 				}
 			}
-			awaitable<T> get_return_object()
+			awaitable<T, R...> get_return_object()
 			{
 				return {std::coroutine_handle<promise_type>::from_promise(*this)};
 			}
