@@ -14,7 +14,6 @@ The development of c++20 coroutines is difficult, so coev encapsulates three com
 
 ```sh
 #ubuntu
-apt install -y libhiredis-dev libmysqlclient-dev libhttp-parser-dev libev-dev
 make build
 cd build
 cmake ..
@@ -120,49 +119,5 @@ awaitable<int> co_channel_output()
  co_return  0;  
 }  
 ```
-
-## mysql
-
-coev can query the mysql database.
-
-```cpp
-awaitable<int> test_mysql()
-{
- Mysqlcli c("127.0.0.1", 3306, "root", "12345678", "test");
- auto r = co_await c.connect();
- if (r == -1)
- {
-  co_return 0;
- }
- auto s = "select * from t_test limit 1;"
- auto r = co_await c.query(s.c_str(), s.size(), [](auto,auto) {});
- if (r == -1)
- {
-  co_return  0;
- }
- co_return 0;
-}
-```
-
-## redis
-
-coev can query the redis library.
-
-```cpp
-awaitable<int> test_redis()
-{
- Rediscli c("127.0.0.1", 6379, "");
-
- co_await c.connect();
- co_await c.query("ping hello",
-  [](auto &r)
-  {
-   LOG_DBG("%s\n", r.last_msg);
-  });
-
- co_return 0;
-}
-```
-
-
-
+More information link to 
+https://github.com/dou1984/coev/wiki/High-performance-event%E2%80%90based-stackless-coroutine

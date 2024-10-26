@@ -12,15 +12,8 @@
 
 namespace coev
 {
-	/*
-	uint64_t gtid()
-	{
-		thread_local std::hash<std::thread::id> hasher;
-		thread_local auto _id = hasher(std::this_thread::get_id());
-		return _id;
-	}
-	*/
 
+#define TID_MAX 1000000000
 	struct unique_id
 	{
 		static std::unordered_set<uint64_t> m_tidset;
@@ -32,7 +25,12 @@ namespace coev
 			std::lock_guard<std::mutex> _(m_mutex);
 			do
 			{
+				if (m_tid > TID_MAX)
+				{
+					m_tid = 0;
+				}
 				m_id = m_tid++;
+
 			} while (std::find(m_tidset.begin(), m_tidset.end(), m_id) != m_tidset.end());
 			m_tidset.insert(m_id);
 		}

@@ -10,7 +10,6 @@ coev 是高性能的c++20协程库, coev封装了3个c++20协程类awaiter、eve
 
 ```sh
 #ubuntu
-apt install -y libhiredis-dev libmysqlclient-dev libhttp-parser-dev libev-dev
 make build
 cd build
 cmake ..
@@ -105,45 +104,5 @@ awaitable<int> co_channel_output()
 }
 ```
 
-## mysql
-
-coev 可以查询mysql数据库。
-
-```cpp
-awaitable<int> test_mysql()
-{
- Mysqlcli c("127.0.0.1", 3306, "root", "12345678", "test");
- auto r = co_await c.connect();
- if (r == -1)
- {
-  co_return 0;
- }
- auto s = "select * from t_test limit 1;"
- auto r = co_await c.query(s.c_str(), s.size(), [](auto,auto) {});
- if (r == -1)
- {
-  co_return  0;
- }
- co_return 0;
-}
-```
-
-## redis
-
-coev 可以查询redis。
-
-```cpp
-awaitable<int> test_redis()
-{
- Rediscli c("127.0.0.1", 6379, "");
-
- co_await c.connect();
- co_await c.query("ping hello",
-  [](auto &r)
-  {
-   LOG_DBG("%s\n", r.last_msg);
-  });
-
- co_return 0;
-}
-```
+更多信息可以查看
+https://github.com/dou1984/coev/wiki/High-performance-event%E2%80%90based-stackless-coroutine
