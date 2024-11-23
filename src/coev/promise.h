@@ -17,7 +17,7 @@ namespace coev
 	{
 		STATUS_INIT,
 		STATUS_SUSPEND,
-		STATUS_READY,
+		STATUS_RESUMED,
 	};
 	
 	struct promise

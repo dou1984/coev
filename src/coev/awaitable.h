@@ -28,21 +28,15 @@ namespace coev
 				value = std::move(v);
 				return {};
 			}
-			std::suspend_never yield_value(T &&v)
-			{
-				value = std::move(v);
-				return {};
-			}
+
 			std::suspend_never return_value(const T &v)
 			{
 				value = v;
 				return {};
 			}
-			std::suspend_never yield_value(const T &v)
-			{
-				value = v;
-				return {};
-			}
+			std::suspend_never yield_value(T &&v) = delete;
+			std::suspend_never yield_value(const T &v) = delete;
+		
 		};
 		struct promise_void
 		{
@@ -76,14 +70,12 @@ namespace coev
 				value = std::make_tuple(args...);
 				return {};
 			}
-			
 			template <class... ARGS>
 			std::suspend_never yield_value(const ARGS &...args)
 			{
 				value = std::make_tuple(args...);
 				return {};
 			}
-			
 			template <size_t I, class... ARGS>
 			void __set(ARGS &&...args);
 			template <size_t I, class ARGS>
@@ -106,7 +98,7 @@ namespace coev
 			{
 				if (m_awaitable)
 				{
-					m_awaitable->m_state = STATUS_READY;
+					m_awaitable->m_state = STATUS_RESUMED;
 					auto _awaitable = m_awaitable;
 					m_awaitable = nullptr;
 					_awaitable->resume();
@@ -164,11 +156,11 @@ namespace coev
 			m_caller = caller;
 			m_state = STATUS_SUSPEND;
 		}
-		bool await_ready() { return m_state == STATUS_READY; }
+		bool await_ready() { return m_state == STATUS_RESUMED; }
 		void resume()
 		{
 			LOG_CORE("resume %p\n", this);
-			m_state = STATUS_READY;
+			m_state = STATUS_RESUMED;
 			if (m_caller.address() && !m_caller.done())
 				m_caller.resume();
 			tasknotify::notify();

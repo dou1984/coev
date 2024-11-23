@@ -27,7 +27,7 @@ namespace coev
 	}
 	bool event::await_ready()
 	{
-		return m_status == STATUS_READY;
+		return m_status == STATUS_RESUMED;
 	}
 	void event::await_suspend(std::coroutine_handle<> awaitable)
 	{
@@ -41,7 +41,7 @@ namespace coev
 		{
 			std::this_thread::sleep_for(std::chrono::nanoseconds(1));
 		}		
-		m_status = STATUS_READY;
+		m_status = STATUS_RESUMED;
 		if (m_caller.address() && !m_caller.done())
 		{
 			m_caller.resume();
