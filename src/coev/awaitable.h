@@ -25,7 +25,7 @@ namespace coev
 			T value;
 			std::suspend_never return_value(T &&v)
 			{
-				value = std::forward(v);
+				value = std::forward<T>(v);
 				return {};
 			}		
 			std::suspend_never return_value(const T &v)
@@ -71,13 +71,13 @@ namespace coev
 			template <size_t I, class ARGS>
 			void __set(ARGS &&args)
 			{
-				std::get<I>(value) = std::forward(args);
+				std::get<I>(value) = std::forward<ARGS>(args);
 			}
 			template <size_t I, class ARGS, class... RES>
 			void __set(ARGS &&args, RES &&...res)
 			{
-				std::get<I>(value) = std::forward(args);
-				__set<I + 1>(std::forward<ARGS>(res)...);
+				std::get<I>(value) = std::forward<ARGS>(args);
+				__set<I + 1>(std::forward<RES>(res)...);
 			}
 		};
 		struct promise_type : promise, std::conditional_t<(sizeof...(R) > 0), promise_tuple, std::conditional_t<std::is_void_v<T>, promise_void, promise_value>>
