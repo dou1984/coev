@@ -25,18 +25,17 @@ namespace coev
 			T value;
 			std::suspend_never return_value(T &&v)
 			{
-				value = std::move(v);
+				value = std::forward(v);
 				return {};
-			}
-
+			}		
 			std::suspend_never return_value(const T &v)
 			{
 				value = v;
 				return {};
 			}
-			std::suspend_never yield_value(T &&v) = delete;
-			std::suspend_never yield_value(const T &v) = delete;
-		
+			std::suspend_always yield_value(T &&v)= delete;
+			std::suspend_always yield_value(const T &v) =delete;
+			
 		};
 		struct promise_void
 		{
@@ -44,10 +43,8 @@ namespace coev
 			{
 				return {};
 			}
-			std::suspend_never yield_void()
-			{
-				return {};
-			}
+			std::suspend_always yield_void() =delete;
+		
 		};
 		struct promise_tuple
 		{
@@ -57,13 +54,7 @@ namespace coev
 			{
 				__set<0>(std::forward<ARGS>(args)...);
 				return {};
-			}
-			template <class... ARGS>
-			std::suspend_never yield_value(ARGS &&...args)
-			{
-				__set<0>(std::forward<ARGS>(args)...);
-				return {};
-			}
+			}		
 			template <class... ARGS>
 			std::suspend_never return_value(const ARGS &...args)
 			{
@@ -71,22 +62,21 @@ namespace coev
 				return {};
 			}
 			template <class... ARGS>
-			std::suspend_never yield_value(const ARGS &...args)
-			{
-				value = std::make_tuple(args...);
-				return {};
-			}
+			std::suspend_never yield_value(const ARGS &...args) = delete;		
+			template <class... ARGS>
+			std::suspend_never yield_value(ARGS &&...args) = delete;
+
 			template <size_t I, class... ARGS>
 			void __set(ARGS &&...args);
 			template <size_t I, class ARGS>
 			void __set(ARGS &&args)
 			{
-				std::get<I>(value) = std::move(args);
+				std::get<I>(value) = std::forward(args);
 			}
 			template <size_t I, class ARGS, class... RES>
 			void __set(ARGS &&args, RES &&...res)
 			{
-				std::get<I>(value) = std::move(args);
+				std::get<I>(value) = std::forward(args);
 				__set<I + 1>(std::forward<ARGS>(res)...);
 			}
 		};
@@ -115,6 +105,7 @@ namespace coev
 		awaitable(std::coroutine_handle<promise_type> h) : m_callee(h)
 		{
 			m_callee.promise().m_awaitable = this;
+	
 		}
 		awaitable(awaitable &&o) = delete;
 		awaitable(const awaitable &) = delete;
@@ -156,7 +147,11 @@ namespace coev
 			m_caller = caller;
 			m_state = STATUS_SUSPEND;
 		}
-		bool await_ready() { return m_state == STATUS_RESUMED; }
+		bool await_ready()
+		{
+			LOG_CORE("await_ready %p %s\n", this, m_state==STATUS_RESUMED ? "READY":"WAIT");
+			return m_state == STATUS_RESUMED;
+		}
 		void resume()
 		{
 			LOG_CORE("resume %p\n", this);
