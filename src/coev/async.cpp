@@ -20,7 +20,7 @@ namespace coev
 
 	namespace thread_safe
 	{
-		awaitable<void> async::suspend(const std::function<bool()> &suppend, std::function<void()> &&call)
+		awaitable<void> async::suspend(const std::function<bool()> &suppend, const std::function<void()> &call)
 		{
 			m_mutex.lock();
 			if (suppend())

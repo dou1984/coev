@@ -60,9 +60,9 @@ namespace coev
 				return {};
 			}
 			template <class... ARGS>
-			std::suspend_never yield_value(const ARGS &...args) = delete;
+			std::suspend_always yield_value(const ARGS &...args) = delete;
 			template <class... ARGS>
-			std::suspend_never yield_value(ARGS &&...args) = delete;
+			std::suspend_always yield_value(ARGS &&...args) = delete;
 
 			template <size_t I, class... ARGS>
 			void __set(ARGS &&...args);

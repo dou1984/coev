@@ -18,8 +18,8 @@ namespace coev
         struct async : chain
         {
             std::mutex m_mutex;
-            awaitable<void> suspend(const std::function<bool()> &suppend, std::function<void()> &&call);
-            bool resume(const std::function<void()> &call);
+            awaitable<void> suspend(const std::function<bool()> &, const std::function<void()> &);
+            bool resume(const std::function<void()> &);
         };
     }
 }

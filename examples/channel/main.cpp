@@ -20,8 +20,8 @@ awaitable<int> go()
 	for (int i = 0; i < 100000; i++)
 	{
 		x++;
-		ch.set(std::move(x));
-		co_await ch.get(x);
+		ch.set(x);
+		x = co_await ch.get();
 	}
 	total += x;
 	printf("%d\n", total.load());

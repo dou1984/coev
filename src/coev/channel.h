@@ -30,11 +30,12 @@ namespace coev
 		{
 			m_listener.resume(
 				[this, d]()
-				{ m_data.emplace_back(std::move(d)); });
+				{ m_data.push_back(d); });
 		}
-		awaitable<void> get(TYPE &d)
+		awaitable<TYPE> get()
 		{
-			return m_listener.suspend(
+			TYPE d;
+			co_await m_listener.suspend(
 				[this]()
 				{ return m_data.empty(); },
 				[this, &d]()
@@ -42,6 +43,7 @@ namespace coev
 					d = std::move(m_data.front());
 					m_data.pop_front();
 				});
+			co_return d;
 		}
 	};
 }
