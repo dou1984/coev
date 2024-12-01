@@ -15,10 +15,16 @@ namespace coev
 
 	awaitable<void> comutex::lock()
 	{
-		co_await coev::ts::wait_for(m_listener,  [this]() { return m_flag == on; }, [this]() { m_flag = on; });
+		co_await m_listener.suspend(
+			[this]()
+			{ return m_flag == on; },
+			[this]()
+			{ m_flag = on; });
 	}
 	bool comutex::unlock()
 	{
-		return coev::ts::notify(m_listener, [this]() { m_flag = off; });
+		return m_listener.resume(
+			[this]()
+			{ m_flag = off; });
 	}
 }

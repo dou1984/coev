@@ -12,12 +12,12 @@
 #include "chain.h"
 #include "promise.h"
 #include "log.h"
-#include "tasknotify.h"
+#include "taskevent.h"
 
 namespace coev
 {
 	template <class T, class... R>
-	class awaitable final : public tasknotify
+	class awaitable final : public taskevent
 	{
 	public:
 		struct promise_value
@@ -27,15 +27,14 @@ namespace coev
 			{
 				value = std::forward<T>(v);
 				return {};
-			}		
+			}
 			std::suspend_never return_value(const T &v)
 			{
 				value = v;
 				return {};
 			}
-			std::suspend_always yield_value(T &&v)= delete;
-			std::suspend_always yield_value(const T &v) =delete;
-			
+			std::suspend_always yield_value(T &&v) = delete;
+			std::suspend_always yield_value(const T &v) = delete;
 		};
 		struct promise_void
 		{
@@ -43,8 +42,7 @@ namespace coev
 			{
 				return {};
 			}
-			std::suspend_always yield_void() =delete;
-		
+			std::suspend_always yield_void() = delete;
 		};
 		struct promise_tuple
 		{
@@ -54,7 +52,7 @@ namespace coev
 			{
 				__set<0>(std::forward<ARGS>(args)...);
 				return {};
-			}		
+			}
 			template <class... ARGS>
 			std::suspend_never return_value(const ARGS &...args)
 			{
@@ -62,7 +60,7 @@ namespace coev
 				return {};
 			}
 			template <class... ARGS>
-			std::suspend_never yield_value(const ARGS &...args) = delete;		
+			std::suspend_never yield_value(const ARGS &...args) = delete;
 			template <class... ARGS>
 			std::suspend_never yield_value(ARGS &&...args) = delete;
 
@@ -105,7 +103,6 @@ namespace coev
 		awaitable(std::coroutine_handle<promise_type> h) : m_callee(h)
 		{
 			m_callee.promise().m_awaitable = this;
-	
 		}
 		awaitable(awaitable &&o) = delete;
 		awaitable(const awaitable &) = delete;
@@ -149,7 +146,7 @@ namespace coev
 		}
 		bool await_ready()
 		{
-			LOG_CORE("await_ready %p %s\n", this, m_state==STATUS_RESUMED ? "READY":"WAIT");
+			LOG_CORE("await_ready %p %s\n", this, m_state == STATUS_RESUMED ? "READY" : "WAIT");
 			return m_state == STATUS_RESUMED;
 		}
 		void resume()
@@ -158,7 +155,7 @@ namespace coev
 			m_state = STATUS_RESUMED;
 			if (m_caller.address() && !m_caller.done())
 				m_caller.resume();
-			tasknotify::notify();
+			taskevent::resume();
 		}
 
 	private:

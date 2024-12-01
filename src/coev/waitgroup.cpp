@@ -12,21 +12,23 @@ namespace coev
 {
 	awaitable<void> waitgroup::wait()
 	{
-		co_await ts::wait_for(m_listener, []() { return true; }, []() {});
+		co_await m_listener.suspend(
+			[]()
+			{ return true; }, []() {});
 	}
-	int waitgroup::add(int c)
+	int waitgroup::add()
 	{
-		m_count += c;
+		++m_count;
 		return 0;
 	}
 	void waitgroup::done()
 	{
-		if (--m_count <= 0 )
+		if (--m_count > 0)
 		{
-			return ;
+			return;
 		}
-		while (ts::notify(m_listener, []() {}))
+		while (m_listener.resume([]() {}))
 		{
-		}	
+		}
 	}
 }

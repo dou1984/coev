@@ -14,14 +14,14 @@ using namespace coev;
 
 waitgroup g_waiter;
 
-awaitable<int> test_co()
+awaitable<void> test_co()
 {
 	g_waiter.add();
 	LOG_FATAL("add\n");
 
 	g_waiter.done();
 
-	co_return 0;
+	co_return;
 }
 awaitable<int> test_wait()
 {
@@ -30,7 +30,7 @@ awaitable<int> test_wait()
 		test_co();
 	}
 	co_await g_waiter.wait();
-	LOG_FATAL("wait\n");
+	LOG_FATAL("suspend\n");
 	co_return 0;
 }
 int main()

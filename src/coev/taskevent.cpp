@@ -5,26 +5,26 @@
  *	All rights reserved.
  *
  */
-#include "tasknotify.h"
+#include "taskevent.h"
 #include "task.h"
 #include "waitfor.h"
 namespace coev
 {
-	void tasknotify::notify()
+	void taskevent::resume()
 	{
 		if (m_task)
 		{
 			LOG_CORE("m_task %p\n", m_task);
 			auto _task = m_task;
 			m_task = nullptr;
-			_task->notify(this);
+			_task->done(this);
 		}
 	}
-	tasknotify::~tasknotify()
+	taskevent::~taskevent()
 	{
-		notify();
+		resume();
 	}
-	void tasknotify::destroy()
+	void taskevent::destroy()
 	{
 	}
 }

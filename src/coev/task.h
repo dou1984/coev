@@ -11,22 +11,22 @@
 #include "chain.h"
 #include "async.h"
 #include "event.h"
-#include "tasknotify.h"
+#include "taskevent.h"
 
 namespace coev
 {
 	class task final
 	{		
 		async m_listener;
-		ts::async m_async;		
+		thread_safe::async m_waiter;		
 		
-		void __erase(tasknotify* _notify);
+		void __erase(taskevent* _notify);
 	public:
-		virtual ~task();
+		~task();
 		void destroy();
-		void notify(tasknotify* _notify);
+		void done(taskevent* _notify);
 		bool empty();
-		event wait_for();
-		void insert(tasknotify* _notify);
+		event wait();
+		void insert(taskevent* _notify);
 	};
 }

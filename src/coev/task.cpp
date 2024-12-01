@@ -16,41 +16,41 @@ namespace coev
 	{
 		destroy();
 	}
-	void task::insert(tasknotify* _notify)
-	{		
-		std::lock_guard<std::mutex> _(m_async.m_mutex);
-		m_async.push_back(_notify);
-		_notify->m_task = this;		
+	void task::insert(taskevent *ev)
+	{
+		std::lock_guard<std::mutex> _(m_waiter.m_mutex);
+		m_waiter.push_back(ev);
+		ev->m_task = this;
 	}
-	void task::__erase(tasknotify* _inotify)
+	void task::__erase(taskevent *_inotify)
 	{
 		LOG_CORE("erase %p\n", _inotify);
-		std::lock_guard<std::mutex> _(m_async.m_mutex);
-		m_async.erase(_inotify);
+		std::lock_guard<std::mutex> _(m_waiter.m_mutex);
+		m_waiter.erase(_inotify);
 	}
 	void task::destroy()
 	{
-		std::lock_guard<std::mutex> _(m_async.m_mutex);
-		while (!m_async.empty())
+		std::lock_guard<std::mutex> _(m_waiter.m_mutex);
+		while (!m_waiter.empty())
 		{
-			auto t = static_cast<tasknotify *>(m_async.pop_front());			
+			auto t = static_cast<taskevent *>(m_waiter.pop_front());
 			LOG_CORE("inotify:%p\n", t);
-			m_async.erase(t);
+			m_waiter.erase(t);
 			t->destroy();
 		}
 	}
 	bool task::empty()
 	{
-		std::lock_guard<std::mutex> _(m_async.m_mutex);
-		return m_async.empty();
+		std::lock_guard<std::mutex> _(m_waiter.m_mutex);
+		return m_waiter.empty();
 	}
-	void task::notify(tasknotify* _notify)
+	void task::done(taskevent *ev)
 	{
-		__erase(_notify);
-		coev::notify(m_listener);
+		__erase(ev);
+		m_listener.resume();
 	}
-	event task::wait_for()
+	event task::wait()
 	{
-		return coev::wait_for(m_listener);
+		return m_listener.suspend();
 	}
 }

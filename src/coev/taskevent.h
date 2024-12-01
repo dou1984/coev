@@ -12,12 +12,12 @@
 namespace coev
 {
 	class task;
-	struct tasknotify : chain
+	struct taskevent : chain
 	{
 		task *m_task = nullptr;
-		virtual ~tasknotify();	
+		virtual ~taskevent();	
 		virtual void destroy();
-		void notify();
+		void resume();
 	};
 
 }
