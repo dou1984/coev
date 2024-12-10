@@ -9,7 +9,8 @@
 #include <atomic>
 #include <chrono>
 #include <atomic>
-#include "../cosys/coloop.h"
+#include <coev/coev.h>
+#include <cosys/cosys.h>
 
 using namespace coev;
 
@@ -19,17 +20,17 @@ std::atomic_int g_count{0};
 
 awaitable<int> test_go()
 {
-	std::this_thread:: sleep_for(std::chrono::seconds(1));
+	co_await sleep_for(1);
 	auto now = std::chrono::system_clock::now();
 	for (int i = 0; i < 100; i++)
 	{
 		co_await g_mutex.lock();		
 		g_total += 1;		
 		g_mutex.unlock();
-		// co_await sleep_for(1);
+		co_await usleep_for(1);
 	}
 
-
+	co_await sleep_for(10);
 	auto r = std::chrono::system_clock::now() - now;
 	auto _count = g_count++;
 	LOG_DBG("%d %d %ld\n", _count, g_total.load(), r.count());
@@ -43,8 +44,11 @@ awaitable<void> test_lock()
 	co_await g_lock.lock();
 	LOG_DBG("test_lock locked\n");
 
+	co_await sleep_for(1);
+	LOG_DBG("awaken\n");
 	g_lock.unlock();
 
+	
 	LOG_DBG("test_lock end\n");
 
 }

@@ -1,13 +1,13 @@
 /*
- *	cosys - c++20 coroutine library
+ *	coev - c++20 coroutine library
  *
  *	Copyright (c) 2023, Zhao Yun Shan
  *	All rights reserved.
  *
  */
 #include "server.h"
-#include "cosys.h"
 #include "../coev/coev.h"
+#include "cosys.h"
 
 namespace coev::tcp
 {
@@ -25,7 +25,9 @@ namespace coev::tcp
 	void server::cb_accept(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
 		if (EV_ERROR & revents)
+		{
 			return;
+		}
 		server *_this = (server *)(w->data);
 		assert(_this != nullptr);
 		_this->m_listener.resume();

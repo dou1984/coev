@@ -5,7 +5,8 @@
  *	All rights reserved.
  *
  */
-#include "../cosys/coloop.h"
+#include <coev/coev.h>
+#include <cosys/cosys.h>
 
 using namespace coev;
 

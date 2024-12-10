@@ -1,11 +1,10 @@
 /*
- *	cosys - c++20 coroutine library
+ *	coev - c++20 coroutine library
  *
  *	Copyright (c) 2023, Zhao Yun Shan
  *	All rights reserved.
  *
  */
-#include "../coev/coev.h"
 #include "awaken.h"
 #include "cosys.h"
 

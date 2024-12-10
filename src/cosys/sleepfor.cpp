@@ -1,5 +1,5 @@
 /*
- *	cosys - c++20 coroutine library
+ *	coev - c++20 coroutine library
  *
  *	Copyright (c) 2023, Zhao Yun Shan
  *	All rights reserved.
@@ -16,12 +16,12 @@ namespace coev
 	{
 		timer _timer(t, 0);
 		_timer.active();
-		co_await _timer.get().suspend();
+		co_await _timer.suspend();
 	}
 	awaitable<void> usleep_for(long t)
 	{
 		timer _timer((float)t / 1000000, 0);
 		_timer.active();
-		co_await _timer.get().suspend();
+		co_await _timer.suspend();
 	}
 }

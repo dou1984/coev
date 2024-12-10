@@ -5,7 +5,8 @@
  *	All rights reserved.
  *
  */
-#include "../cosys/coloop.h"
+#include <coev/coev.h>
+#include <cosys/cosys.h>
 
 using namespace coev;
 
@@ -14,14 +15,12 @@ awaitable<int> co_task(bool for_all)
 	auto t0 = []() -> awaitable<int>
 	{
 		TRACE();
-
 		co_return 0;
 	}();
 
 	auto t1 = []() -> awaitable<int>
 	{
 		TRACE();
-
 		co_return 0;
 	}();
 
@@ -79,8 +78,6 @@ int main()
 	running::instance()
 		.add(co_task_t)
 		.add(co_task_f)
-		
-
 		.add(co_two_task)
 		.add(co_two_task2)		
 		.join();

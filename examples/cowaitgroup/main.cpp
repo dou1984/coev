@@ -8,20 +8,22 @@
 #include <thread>
 #include <atomic>
 #include <chrono>
-#include "../cosys/coloop.h"
+#include <coev/coev.h>
+#include <cosys/cosys.h>
 
 using namespace coev;
 
 waitgroup g_waiter;
 
-awaitable<void> test_co()
+awaitable<int> test_co()
 {
 	g_waiter.add();
 	LOG_FATAL("add\n");
-
+	co_await sleep_for(1);
+	LOG_FATAL("done\n");
 	g_waiter.done();
 
-	co_return;
+	co_return 0;
 }
 awaitable<int> test_wait()
 {
@@ -30,7 +32,7 @@ awaitable<int> test_wait()
 		test_co();
 	}
 	co_await g_waiter.wait();
-	LOG_FATAL("suspend\n");
+	LOG_FATAL("wait\n");
 	co_return 0;
 }
 int main()
