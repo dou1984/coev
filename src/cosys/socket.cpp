@@ -6,10 +6,18 @@
  *
  */
 #include <cerrno>
+#include <string.h>
 #include "socket.h"
 
 namespace coev
 {
+	const host &host::operator=(const host &o)
+	{
+		constexpr int l = sizeof(addr);
+		strncpy(addr, o.addr, l);
+		addr[l - 1] = '\0';
+		return *this;
+	}
 	void zeroSin(void *sin_zero)
 	{
 		unsigned long long *ptr = (unsigned long long *)sin_zero;
@@ -22,9 +30,9 @@ namespace coev
 		inet_pton(addr.sin_family, ip, &addr.sin_addr);
 		zeroSin(addr.sin_zero);
 	}
-	void parseAddr(sockaddr_in &addr, ipaddress &info)
+	void parseAddr(sockaddr_in &addr, host &info)
 	{
-		inet_ntop(AF_INET, &(addr.sin_addr), info.ip, sizeof(info.ip));
+		inet_ntop(AF_INET, &(addr.sin_addr), info.addr, sizeof(info.addr));
 		info.port = ntohs(addr.sin_port);
 	}
 	int bindLocal(int fd, const char *ip)
@@ -48,14 +56,14 @@ namespace coev
 		addr.sun_path[0] = '\0';
 		strcpy(addr.sun_path + 1, ip);
 		return ::connect(fd, (sockaddr *)&addr, sizeof(addr.sun_family) + strlen(ip) + 1);
-	}	
+	}
 	int getSocketError(int fd)
 	{
 		int error_value = 0;
 		socklen_t len = sizeof(socklen_t);
 		return getsockopt(fd, SOL_SOCKET, SO_ERROR, (char *)&error_value, &len) == -1 ? -1 : error_value;
 	}
-	int acceptLocal(int fd, ipaddress &info)
+	int acceptLocal(int fd, host &info)
 	{
 		sockaddr_un addr;
 		addr.sun_family = AF_LOCAL;
@@ -64,7 +72,7 @@ namespace coev
 		int rfd = accept(fd, (sockaddr *)&addr, &addr_len);
 		if (rfd != INVALID)
 		{
-			strncpy(info.ip, addr.sun_path, sizeof(info.ip));
+			strncpy(info.addr, addr.sun_path, sizeof(info.addr));
 		}
 		return rfd;
 	}
@@ -137,7 +145,7 @@ namespace coev
 	{
 		return setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *)&nodelay, sizeof(nodelay));
 	}
-	int getSockName(int fd, ipaddress &info)
+	int getSockName(int fd, host &info)
 	{
 		struct sockaddr_in addr;
 		socklen_t addr_len = sizeof(addr);
@@ -148,7 +156,7 @@ namespace coev
 		}
 		return ret;
 	}
-	int getPeerName(int fd, ipaddress &info)
+	int getPeerName(int fd, host &info)
 	{
 		struct sockaddr_in addr;
 		socklen_t addr_len = sizeof(addr);
@@ -159,7 +167,7 @@ namespace coev
 		}
 		return ret;
 	}
-	int getHostName(const char *name, ipaddress &info)
+	int getHostName(const char *name, host &info)
 	{
 		auto host = gethostbyname(name);
 		if (!host)
@@ -167,7 +175,7 @@ namespace coev
 			return INVALID;
 		}
 		auto addr = (struct in_addr *)host->h_addr_list[0];
-		inet_ntop(AF_INET, addr, info.ip, sizeof(info.ip));
+		inet_ntop(AF_INET, addr, info.addr, sizeof(info.addr));
 		return 0;
 	}
 	bool isInprocess()

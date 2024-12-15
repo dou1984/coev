@@ -27,9 +27,9 @@ namespace coev
 		tcp::serverpool m_pool;
 		int m_timeout = 15;
 		std::unordered_map<std::string, frouter> m_router;
-		awaitable<int> dispatch(const ipaddress &addr, iocontext &io);
+		awaitable<int> dispatch(const host &addr, iocontext &io);
 		awaitable<int> router(iocontext &c, Httpparser &req);
-		awaitable<int> timeout(const ipaddress &addr, iocontext &io);
+		awaitable<int> timeout(const host &addr, iocontext &io);
 	};
 
 }

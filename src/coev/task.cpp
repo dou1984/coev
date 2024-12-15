@@ -16,13 +16,13 @@ namespace coev
 	{
 		destroy();
 	}
-	void task::insert(taskevent *ev)
+	void task::insert(evtask *ev)
 	{
 		std::lock_guard<std::mutex> _(m_waiter.m_mutex);
 		m_waiter.push_back(ev);
 		ev->m_task = this;
 	}
-	void task::__erase(taskevent *_inotify)
+	void task::__erase(evtask *_inotify)
 	{
 		LOG_CORE("erase %p\n", _inotify);
 		std::lock_guard<std::mutex> _(m_waiter.m_mutex);
@@ -33,8 +33,8 @@ namespace coev
 		std::lock_guard<std::mutex> _(m_waiter.m_mutex);
 		while (!m_waiter.empty())
 		{
-			auto t = static_cast<taskevent *>(m_waiter.pop_front());
-			LOG_CORE("inotify:%p\n", t);
+			auto t = static_cast<evtask *>(m_waiter.pop_front());
+			LOG_CORE("evtask:%p\n", t);
 			m_waiter.erase(t);
 			t->destroy();
 		}
@@ -44,7 +44,7 @@ namespace coev
 		std::lock_guard<std::mutex> _(m_waiter.m_mutex);
 		return m_waiter.empty();
 	}
-	void task::done(taskevent *ev)
+	void task::done(evtask *ev)
 	{
 		__erase(ev);
 		m_listener.resume();

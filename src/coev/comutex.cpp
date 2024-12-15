@@ -8,7 +8,7 @@
 #include "comutex.h"
 #include "waitfor.h"
 
-namespace coev
+namespace coev::thread_safe
 {
 	const int on = 1;
 	const int off = 0;

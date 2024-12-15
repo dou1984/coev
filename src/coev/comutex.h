@@ -11,15 +11,16 @@
 #include "awaitable.h"
 #include "async.h"
 
-namespace coev
+namespace coev::thread_safe
 {
 	class comutex final
 	{
-		thread_safe::async m_listener;
+		async m_listener;
 		std::atomic_int m_flag{0};
 
 	public:
 		awaitable<void> lock();
 		bool unlock();
 	};
+
 }

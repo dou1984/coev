@@ -12,10 +12,10 @@
 namespace coev
 {
 	class task;
-	struct taskevent : chain
+	struct evtask : chain
 	{
 		task *m_task = nullptr;
-		virtual ~taskevent();	
+		virtual ~evtask();	
 		virtual void destroy();
 		void resume();
 	};

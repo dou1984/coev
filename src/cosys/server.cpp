@@ -11,7 +11,7 @@
 
 namespace coev::tcp
 {
-	static int __real_accept(int fd, ipaddress &info)
+	static int __real_accept(int fd, host &info)
 	{
 		sockaddr_in addr;
 		socklen_t addr_len = sizeof(sockaddr_in);
@@ -92,34 +92,19 @@ namespace coev::tcp
 	{
 		return m_fd != INVALID;
 	}
-	awaitable<int> server::__accept()
+	awaitable<int> server::accept(host &peer)
 	{
 		if (!__valid())
 		{
 			co_return INVALID;
 		}
 		co_await m_listener.suspend();
-		ipaddress peer;
 		auto fd = __real_accept(m_fd, peer);
 		if (fd != INVALID)
 		{
 			setNoBlock(fd, true);
 		}
-		[=, this]() -> awaitable<int>
-		{
-			iocontext io(fd);
-			auto r = co_await m_dispatch(peer, io);
-			co_return r;
-		}();
 		co_return fd;
 	}
-	awaitable<int> server::accept(const faccept &dispatch)
-	{
-		m_dispatch = dispatch;
-		while (__valid())
-		{
-			co_await __accept();
-		}
-		co_return INVALID;
-	}
+
 }

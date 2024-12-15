@@ -25,7 +25,7 @@ namespace coev
 		}
 		co_return 0;
 	}
-	awaitable<int> Httpserver::dispatch(const ipaddress &addr, iocontext &io)
+	awaitable<int> Httpserver::dispatch(const host &addr, iocontext &io)
 	{
 		Httpparser req;
 		co_return co_await wait_for_any(
@@ -43,7 +43,7 @@ namespace coev
 		LOG_CORE("router end url:%s\n", req.m_url.c_str());
 		co_return co_await io.close();
 	}
-	awaitable<int> Httpserver::timeout(const ipaddress &addr, iocontext &io)
+	awaitable<int> Httpserver::timeout(const host &addr, iocontext &io)
 	{
 		co_await sleep_for(m_timeout);
 		co_await io.send("timeout", 8);
@@ -57,7 +57,7 @@ namespace coev
 			[this]() -> awaitable
 			{
 				co_return co_await m_pool.get().accept(
-					[this](const ipaddress &addr, iocontext &io) -> awaitable
+					[this](const host &addr, iocontext &io) -> awaitable
 					{ co_return co_await dispatch(addr, io); });
 			});
 	}

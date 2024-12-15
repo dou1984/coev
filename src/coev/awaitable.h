@@ -12,12 +12,12 @@
 #include "chain.h"
 #include "promise.h"
 #include "log.h"
-#include "taskevent.h"
+#include "evtask.h"
 
 namespace coev
 {
 	template <class T, class... R>
-	class awaitable final : public taskevent
+	class awaitable final : public evtask
 	{
 	public:
 		struct promise_value
@@ -155,7 +155,7 @@ namespace coev
 			m_state = STATUS_RESUMED;
 			if (m_caller.address() && !m_caller.done())
 				m_caller.resume();
-			taskevent::resume();
+			evtask::resume();
 		}
 
 	private:

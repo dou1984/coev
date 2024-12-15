@@ -15,7 +15,6 @@
 
 namespace coev
 {
-
 	void iocontext::cb_read(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
 		auto _this = (iocontext *)w->data;
@@ -100,7 +99,9 @@ namespace coev
 				ev_io_start(cosys::at(m_tid), &m_write);
 				co_await m_write_listener.suspend();
 				if (m_write_listener.empty())
+				{
 					ev_io_stop(cosys::at(m_tid), &m_write);
+				}
 			}
 			else
 			{
@@ -123,7 +124,7 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	awaitable<int> iocontext::recvfrom(char *buffer, int size, ipaddress &info)
+	awaitable<int> iocontext::recvfrom(char *buffer, int size, host &info)
 	{
 		while (__valid())
 		{
@@ -140,19 +141,21 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	awaitable<int> iocontext::sendto(const char *buffer, int size, ipaddress &info)
+	awaitable<int> iocontext::sendto(const char *buffer, int size, host &info)
 	{
 		while (__valid())
 		{
 			sockaddr_in addr;
-			fillAddr(addr, info.ip, info.port);
+			fillAddr(addr, info.addr, info.port);
 			int r = ::sendto(m_fd, buffer, size, 0, (struct sockaddr *)&addr, sizeof(addr));
 			if (r == INVALID && isInprocess())
 			{
 				ev_io_start(cosys::at(m_tid), &m_write);
 				co_await m_write_listener.suspend();
 				if (m_write_listener.empty())
+				{
 					ev_io_stop(cosys::at(m_tid), &m_write);
+				}
 			}
 			co_return r;
 		}

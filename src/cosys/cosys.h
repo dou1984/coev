@@ -20,12 +20,11 @@
 
 namespace coev
 {
-	struct cosys final
+	struct cosys
 	{
 		static void start();
 		static struct ev_loop *data();
 		static struct ev_loop *at(uint64_t);
-		static void resume(event *);
 		static void stop();
 	};
 }

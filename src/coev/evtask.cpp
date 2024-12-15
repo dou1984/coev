@@ -5,12 +5,12 @@
  *	All rights reserved.
  *
  */
-#include "taskevent.h"
+#include "evtask.h"
 #include "task.h"
 #include "waitfor.h"
 namespace coev
 {
-	void taskevent::resume()
+	void evtask::resume()
 	{
 		if (m_task)
 		{
@@ -20,11 +20,11 @@ namespace coev
 			_task->done(this);
 		}
 	}
-	taskevent::~taskevent()
+	evtask::~evtask()
 	{
 		resume();
 	}
-	void taskevent::destroy()
+	void evtask::destroy()
 	{
 	}
 }

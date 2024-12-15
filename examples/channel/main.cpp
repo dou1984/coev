@@ -22,7 +22,7 @@ awaitable<int> go()
 	{
 		x++;
 		ch.set(x);
-		x = co_await ch.get();
+		x = co_await ch.move();
 	}
 	total += x;
 	printf("%d\n", total.load());

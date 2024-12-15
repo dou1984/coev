@@ -20,7 +20,7 @@ namespace coev
 		thread_safe::async m_listener;
 
 	public:
-		void set(TYPE &&d)
+		void move(TYPE &&d)
 		{
 			m_listener.resume(
 				[this, d = std::move(d)]()
@@ -32,7 +32,7 @@ namespace coev
 				[this, d]()
 				{ m_data.push_back(d); });
 		}
-		awaitable<TYPE> get()
+		awaitable<TYPE> move()
 		{
 			TYPE d;
 			co_await m_listener.suspend(
@@ -43,7 +43,7 @@ namespace coev
 					d = std::move(m_data.front());
 					m_data.pop_front();
 				});
-			co_return d;
+			co_return std::move(d);
 		}
 	};
 }

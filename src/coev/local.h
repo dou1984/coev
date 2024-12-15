@@ -6,15 +6,16 @@
  *
  */
 #pragma once
+#include <unordered_map>
 
 namespace coev
 {
-	template <class _Type>
+	template <class T>
 	struct local final
 	{
-		static _Type &instance()
+		static T &instance()
 		{
-			static thread_local _Type obj;
+			static thread_local T obj;
 			return obj;
 		}
 	};

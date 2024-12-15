@@ -15,12 +15,12 @@ awaitable<int> go(int fd)
 	iocontext io(fd);
 	while (io)
 	{
-		ipaddress addr;
+		host addr;
 		char buffer[1000];
 		auto r = co_await io.recvfrom(buffer, sizeof(buffer), addr);
-		LOG_DBG("recvfrom %s:%d %s\n", addr.ip, addr.port, buffer);
+		LOG_DBG("recvfrom %s:%d %s\n", addr.addr, addr.port, buffer);
 		co_await io.sendto(buffer, r, addr);
-		LOG_DBG("sendto %s:%d %s\n", addr.ip, addr.port, buffer);
+		LOG_DBG("sendto %s:%d %s\n", addr.addr, addr.port, buffer);
 	}
 
 	co_return 0;

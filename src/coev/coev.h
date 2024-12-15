@@ -20,4 +20,5 @@
 #include "channel.h"
 #include "waitgroup.h"
 #include "async.h"
-
+#include "gtid.h"
+#include "unique.h"

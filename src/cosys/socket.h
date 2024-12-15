@@ -21,10 +21,11 @@
 
 namespace coev
 {
-	struct ipaddress
+	struct host
 	{
-		char ip[64];
+		char addr[64];
 		int port;
+		const host &operator=(const host &);
 	};
 
 	int bindLocal(int fd, const char *ip);
@@ -33,7 +34,7 @@ namespace coev
 
 	int connectLocal(int fd, const char *ip);
 
-	int acceptLocal(int fd, ipaddress &);
+	int acceptLocal(int fd, host &);
 
 	int getSocketError(int fd);
 
@@ -61,7 +62,7 @@ namespace coev
 
 	int setNoDelay(int fd, int nodelay);
 
-	int getSockName(int fd, ipaddress &);
+	int getSockName(int fd, host &);
 
 	int getPeerName(int fd, char *ip, int len, int &port);
 
@@ -71,5 +72,5 @@ namespace coev
 
 	void fillAddr(sockaddr_in &addr, const char *ip, int port);
 
-	void parseAddr(sockaddr_in &addr, ipaddress &info);
+	void parseAddr(sockaddr_in &addr, host &info);
 }

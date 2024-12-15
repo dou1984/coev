@@ -12,11 +12,10 @@
 
 namespace coev
 {
-	class awaken 
+	class awaken
 	{
 	public:
 		awaken();
-		awaken(struct ev_loop *, uint64_t);
 		~awaken();
 
 		int resume(event *ev);
@@ -26,7 +25,9 @@ namespace coev
 		std::mutex m_lock;
 		async m_listener;
 		uint64_t m_tid = 0;
+		struct ev_loop *m_loop = nullptr;
 		static void cb_async(struct ev_loop *loop, ev_async *w, int revents);
+		void __init();
 		int __resume();
 		int __done();
 	};

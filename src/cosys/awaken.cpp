@@ -5,6 +5,8 @@
  *	All rights reserved.
  *
  */
+#include <unordered_map>
+#include <mutex>
 #include "awaken.h"
 #include "cosys.h"
 
@@ -19,23 +21,32 @@ namespace coev
 			_this->__resume();
 		}
 	}
-	awaken::awaken() : awaken(cosys::data(), gtid())
+	awaken::awaken()
 	{
+		__init();
 	}
-	awaken::awaken(struct ev_loop *__loop, uint64_t __tag)
+	void awaken::__init()
 	{
 		m_awaken.data = this;
 		ev_async_init(&m_awaken, awaken::cb_async);
-		ev_async_start(__loop, &m_awaken);
-		m_tid = __tag;
+		m_tid = gtid();
+		m_loop = cosys::data();		
+		ev_async_start(m_loop, &m_awaken);		
 	}
 	awaken::~awaken()
 	{
-		ev_async_stop(cosys::at(m_tid), &m_awaken);
+		if (m_loop)
+		{
+			ev_async_stop(m_loop, &m_awaken);
+			m_loop = nullptr;
+		}
 	}
 	int awaken::__done()
 	{
-		ev_async_send(cosys::at(m_tid), &m_awaken);
+		if (m_loop)
+		{
+			ev_async_send(m_loop, &m_awaken);
+		}
 		return 0;
 	}
 	int awaken::resume(event *ev)

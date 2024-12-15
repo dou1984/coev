@@ -11,7 +11,7 @@
 #include "chain.h"
 #include "async.h"
 #include "event.h"
-#include "taskevent.h"
+#include "evtask.h"
 
 namespace coev
 {
@@ -20,13 +20,13 @@ namespace coev
 		async m_listener;
 		thread_safe::async m_waiter;		
 		
-		void __erase(taskevent* _notify);
+		void __erase(evtask* _notify);
 	public:
 		~task();
 		void destroy();
-		void done(taskevent* _notify);
+		void done(evtask* _notify);
 		bool empty();
 		event wait();
-		void insert(taskevent* _notify);
+		void insert(evtask* _notify);
 	};
 }

@@ -11,8 +11,9 @@
 using namespace coev;
 
 tcp::serverpool pool;
-awaitable<int> dispatch(const ipaddress &addr, iocontext &io)
+awaitable<void> dispatch(host addr, int fd)
 {
+	iocontext io(fd);
 	while (io)
 	{
 		char buffer[0x1000];
@@ -20,21 +21,24 @@ awaitable<int> dispatch(const ipaddress &addr, iocontext &io)
 		if (r == INVALID)
 		{
 			co_await io.close();
-			co_return 0;
 		}
 		LOG_DBG("%s\n", buffer);
 		r = co_await io.send(buffer, r);
 		if (r == INVALID)
 		{
 			co_await io.close();
-			co_return 0;
 		}
 	}
-	co_return INVALID;
 }
 awaitable<int> co_server()
 {
-	co_await pool.get().accept(dispatch);
+	auto &srv = pool.get();
+	host h;
+	auto fd = co_await srv.accept(h);
+	if (srv)
+	{
+		dispatch(h, fd);
+	}
 	co_return INVALID;
 }
 

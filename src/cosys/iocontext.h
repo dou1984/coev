@@ -22,8 +22,8 @@ namespace coev
 		virtual ~iocontext();
 		awaitable<int> send(const char *, int);
 		awaitable<int> recv(char *, int);
-		awaitable<int> recvfrom(char *, int, ipaddress &);
-		awaitable<int> sendto(const char *, int, ipaddress &);
+		awaitable<int> recvfrom(char *, int, host &);
+		awaitable<int> sendto(const char *, int, host &);
 		awaitable<int> close();
 		operator bool() const;
 
