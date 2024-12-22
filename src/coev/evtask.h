@@ -12,10 +12,16 @@
 namespace coev
 {
 	class task;
-	struct evtask : chain
+	class evtask : public chain
 	{
+		friend class task;
 		task *m_task = nullptr;
-		virtual ~evtask();	
+		int m_id = 0;
+
+	public:
+		evtask() = default;
+		evtask(task *, int);
+		virtual ~evtask();
 		virtual void destroy();
 		void resume();
 	};

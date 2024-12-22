@@ -19,20 +19,22 @@ namespace coev
 	awaitable<int> wait_for_any(AWAITABLE &&...awt)
 	{
 		task w;
-		(w.insert(&awt), ...);
-		co_await w.wait();
+		int id = 0;
+		(w.insert(&awt, id++), ...);
+		id = co_await w.wait();
 		w.destroy();
-		co_return 0;
+		co_return id;
 	}
 	template <class... AWAITABLE>
 	awaitable<int> wait_for_all(AWAITABLE &&...awt)
 	{
 		task w;
-		(w.insert(&awt), ...);
+		int id = 0;
+		(w.insert(&awt, id++), ...);
 		while (!w.empty())
 		{
-			co_await w.wait();
+			id = co_await w.wait();
 		}
-		co_return 0;
+		co_return id;
 	}
 }

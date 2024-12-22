@@ -16,11 +16,12 @@ namespace coev
 	{
 		destroy();
 	}
-	void task::insert(evtask *ev)
+	void task::insert(evtask *ev, int _id)
 	{
 		std::lock_guard<std::mutex> _(m_waiter.m_mutex);
 		m_waiter.push_back(ev);
 		ev->m_task = this;
+		ev->m_id = _id;
 	}
 	void task::__erase(evtask *_inotify)
 	{
@@ -46,11 +47,19 @@ namespace coev
 	}
 	void task::done(evtask *ev)
 	{
-		__erase(ev);
-		m_listener.resume();
+		m_listener.resume(
+			[this, ev]()
+			{
+				m_last = ev->m_id;
+				__erase(ev);
+			});
 	}
-	event task::wait()
+	awaitable<int> task::wait()
 	{
-		return m_listener.suspend();
+		co_await m_listener.suspend(
+			[]() -> bool
+			{ return true; },
+			[]() {});
+		co_return m_last;
 	}
 }

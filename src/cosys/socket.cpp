@@ -11,11 +11,23 @@
 
 namespace coev
 {
+	host::host(const host &o)
+	{
+		*this = o;
+	}
+	host::host(const char *_addr, int _port)
+	{
+		constexpr int l = sizeof(addr);
+		strncpy(addr, _addr, l);
+		addr[l - 1] = '\0';
+		port = _port;
+	}
 	const host &host::operator=(const host &o)
 	{
 		constexpr int l = sizeof(addr);
 		strncpy(addr, o.addr, l);
 		addr[l - 1] = '\0';
+		port = o.port;
 		return *this;
 	}
 	void zeroSin(void *sin_zero)

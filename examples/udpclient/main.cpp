@@ -12,7 +12,8 @@ using namespace coev;
 
 awaitable<int> go()
 {
-	host addr = {"127.0.0.1", 9998};
+	host addr("127.0.0.1", 9998);
+	
 	auto fd = udp::socketfd();
 	iocontext io(fd);
 	while (io)

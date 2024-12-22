@@ -17,19 +17,17 @@ namespace coev
 	class Httpserver final
 	{
 	public:
-		using frouter = std::function<awaitable<int>(iocontext &io, Httpparser &req)>;
-		Httpserver(const char *, int, int);
+		Httpserver(const char *, int);
 		virtual ~Httpserver() = default;
 
-		void add_router(const std::string &, const frouter &);
+		awaitable<int> accept(host &);
+		static awaitable<void> parse(iocontext &io, Httpparser &req);
+
+		auto &get() { return m_pool.get(); }
 
 	private:
 		tcp::serverpool m_pool;
 		int m_timeout = 15;
-		std::unordered_map<std::string, frouter> m_router;
-		awaitable<int> dispatch(const host &addr, iocontext &io);
-		awaitable<int> router(iocontext &c, Httpparser &req);
-		awaitable<int> timeout(const host &addr, iocontext &io);
 	};
 
 }

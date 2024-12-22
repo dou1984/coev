@@ -25,6 +25,9 @@ namespace coev
 	{
 		char addr[64];
 		int port;
+		host() = default;
+		host(const host &o);
+		host(const char *, int);
 		const host &operator=(const host &);
 	};
 

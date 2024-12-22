@@ -16,17 +16,19 @@
 namespace coev
 {
 	class task final
-	{		
-		async m_listener;
-		thread_safe::async m_waiter;		
-		
-		void __erase(evtask* _notify);
+	{
+		thread_safe::async m_listener;
+		thread_safe::async m_waiter;
+		int m_id = 0;
+		int m_last = 0;
+		void __erase(evtask *_notify);
+
 	public:
 		~task();
 		void destroy();
-		void done(evtask* _notify);
+		void done(evtask *_notify);
 		bool empty();
-		event wait();
-		void insert(evtask* _notify);
+		awaitable<int> wait();
+		void insert(evtask *_notify, int _id);
 	};
 }

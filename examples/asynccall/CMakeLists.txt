@@ -2,10 +2,10 @@ cmake_minimum_required(VERSION 3.14.0)
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
 link_directories(${PROJECT_SOURCE_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin) 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
 if(NOT CMAKE_BUILD_TYPE)
-	set(CMAKE_BUILD_TYPE Debug)
+    SET(CMAKE_BUILD_TYPE Release CACHE INTERNAL "cmake_build_type")
 endif()
 project(coasynccall)
 

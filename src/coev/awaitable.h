@@ -47,6 +47,7 @@ namespace coev
 		struct promise_tuple
 		{
 			std::tuple<T, R...> value;
+
 			template <class... ARGS>
 			std::suspend_never return_value(ARGS &&...args)
 			{
@@ -56,7 +57,7 @@ namespace coev
 			template <class... ARGS>
 			std::suspend_never return_value(const ARGS &...args)
 			{
-				value = std::make_tuple(args...);
+				__set<0>(args...);
 				return {};
 			}
 			template <class... ARGS>
@@ -64,14 +65,14 @@ namespace coev
 			template <class... ARGS>
 			std::suspend_always yield_value(ARGS &&...args) = delete;
 
-			template <size_t I, class... ARGS>
+			template <std::size_t I, class... ARGS>
 			void __set(ARGS &&...args);
-			template <size_t I, class ARGS>
+			template <std::size_t I, class ARGS>
 			void __set(ARGS &&args)
 			{
 				std::get<I>(value) = std::forward<ARGS>(args);
 			}
-			template <size_t I, class ARGS, class... RES>
+			template <std::size_t I, class ARGS, class... RES>
 			void __set(ARGS &&args, RES &&...res)
 			{
 				std::get<I>(value) = std::forward<ARGS>(args);

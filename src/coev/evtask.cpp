@@ -10,6 +10,9 @@
 #include "waitfor.h"
 namespace coev
 {
+	evtask::evtask(task *_task, int _id) : m_task(_task), m_id(_id)
+	{
+	}
 	void evtask::resume()
 	{
 		if (m_task)
