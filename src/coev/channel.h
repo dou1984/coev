@@ -16,9 +16,6 @@ namespace coev
 	template <class TYPE>
 	class channel
 	{
-		std::list<TYPE> m_data;
-		thread_safe::async m_listener;
-
 	public:
 		void move(TYPE &&d)
 		{
@@ -37,13 +34,21 @@ namespace coev
 			TYPE d;
 			co_await m_listener.suspend(
 				[this]()
-				{ return m_data.empty(); },
-				[this, &d]()
-				{
-					d = std::move(m_data.front());
-					m_data.pop_front();
-				});
-			co_return std::move(d);
+				{ return __invalid(); },
+				[&]()
+				{ d = pop_front(); });
+			co_return d;
+		}
+
+	private:
+		std::list<TYPE> m_data;
+		thread_safe::async m_listener;
+		bool __invalid() const { return m_data.empty(); }
+		TYPE pop_front()
+		{
+			auto d = std::move(m_data.front());
+			m_data.pop_front();
+			return d;
 		}
 	};
 }

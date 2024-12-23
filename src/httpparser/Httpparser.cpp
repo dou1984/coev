@@ -9,27 +9,27 @@
 
 namespace coev
 {
-	int on_message_begin(http_parser *_)
+	int Httpparser::on_message_begin(http_parser *_)
 	{
 		auto _this = static_cast<Httpparser *>(_);
 		_this->clear();
 		return 0;
 	}
-	int on_headers_complete(http_parser *_)
+	int Httpparser::on_headers_complete(http_parser *_)
 	{
 		auto _this = static_cast<Httpparser *>(_);
 		_this->clear();
 		_this->m_header_listener.resume();
 		return 0;
 	}
-	int on_message_complete(http_parser *_)
+	int Httpparser::on_message_complete(http_parser *_)
 	{
 		auto _this = static_cast<Httpparser *>(_);
 		_this->m_body_listener.resume();
 		_this->clear();
 		return 0;
 	}
-	int on_url(http_parser *_, const char *at, size_t length)
+	int Httpparser::on_url(http_parser *_, const char *at, size_t length)
 	{
 		auto _this = static_cast<Httpparser *>(_);
 		_this->m_value = std::string(at, length);
@@ -37,20 +37,20 @@ namespace coev
 		_this->m_url_listener.resume();
 		return 0;
 	}
-	int on_status(http_parser *_, const char *at, size_t length)
+	int Httpparser::on_status(http_parser *_, const char *at, size_t length)
 	{
 		auto _this = static_cast<Httpparser *>(_);
 		_this->m_value = std::string(at, length);
 		LOG_CORE("<status>%s\n", _this->m_value.data());
 		return 0;
 	}
-	int on_header_field(http_parser *_, const char *at, size_t length)
+	int Httpparser::on_header_field(http_parser *_, const char *at, size_t length)
 	{
 		auto _this = static_cast<Httpparser *>(_);
 		_this->m_key = std::string(at, length);
 		return 0;
 	}
-	int on_header_value(http_parser *_, const char *at, size_t length)
+	int Httpparser::on_header_value(http_parser *_, const char *at, size_t length)
 	{
 		auto _this = static_cast<Httpparser *>(_);
 		_this->m_value = std::string(at, length);
@@ -58,7 +58,7 @@ namespace coev
 		_this->m_header_listener.resume();
 		return 0;
 	}
-	int on_body(http_parser *_, const char *at, size_t length)
+	int Httpparser::on_body(http_parser *_, const char *at, size_t length)
 	{
 		auto _this = static_cast<Httpparser *>(_);
 		_this->m_value = std::string(at, length);
@@ -66,15 +66,15 @@ namespace coev
 		_this->m_body_listener.resume();
 		return 0;
 	}
-	static http_parser_settings g_settings = {
-		.on_message_begin = on_message_begin,
-		.on_url = on_url,
-		.on_status = on_status,
-		.on_header_field = on_header_field,
-		.on_header_value = on_header_value,
-		.on_headers_complete = on_headers_complete,
-		.on_body = on_body,
-		.on_message_complete = on_message_complete,
+	http_parser_settings Httpparser::m_settings = {
+		.on_message_begin = Httpparser::on_message_begin,
+		.on_url = Httpparser::on_url,
+		.on_status = Httpparser::on_status,
+		.on_header_field = Httpparser::on_header_field,
+		.on_header_value = Httpparser::on_header_value,
+		.on_headers_complete = Httpparser::on_headers_complete,
+		.on_body = Httpparser::on_body,
+		.on_message_complete = Httpparser::on_message_complete,
 	};
 	Httpparser::Httpparser()
 	{
@@ -82,7 +82,7 @@ namespace coev
 	}
 	int Httpparser::parse(const char *buffer, int size)
 	{
-		return http_parser_execute(this, &g_settings, buffer, size);
+		return http_parser_execute(this, &m_settings, buffer, size);
 	}
 	void Httpparser::clear()
 	{
@@ -97,7 +97,7 @@ namespace coev
 	awaitable<std::string, std::string> Httpparser::get_header()
 	{
 		co_await m_header_listener.suspend();
-		co_return m_key, m_value;
+		co_return {m_key, m_value};
 	}
 	awaitable<std::string> Httpparser::get_body()
 	{

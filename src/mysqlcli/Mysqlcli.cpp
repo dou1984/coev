@@ -41,18 +41,19 @@ namespace coev
 		assert(_this != nullptr);
 		_this->m_read_listener.resume();
 	}
-	Mysqlcli::Mysqlcli(const char *ip, int port, const char *username, const char *password, const char *db)
+	Mysqlcli::Mysqlcli(const char *ip, int port, const char *username, const char *password, const char *db, const char *charset)
 	{
 		m_mysql = mysql_init(0);
 		if (m_mysql == nullptr)
 		{
 			throw("mysql init");
 		}
-		m_ip = ip;
+		m_url = ip;
 		m_port = port;
 		m_username = username;
 		m_password = password;
 		m_db = db;
+		m_charset = charset;
 	}
 	Mysqlcli::~Mysqlcli()
 	{
@@ -61,7 +62,7 @@ namespace coev
 	int Mysqlcli::__tryconnect()
 	{
 		return mysql_real_connect_nonblocking(
-			m_mysql, m_ip.c_str(), m_username.c_str(), m_password.c_str(), m_db.c_str(), m_port, nullptr, 0);
+			m_mysql, m_url.c_str(), m_username.c_str(), m_password.c_str(), m_db.c_str(), m_port, nullptr, 0);
 	}
 	int Mysqlcli::__isneterror(int state)
 	{
@@ -151,6 +152,7 @@ namespace coev
 	}
 	awaitable<int> Mysqlcli::query(const char *sql, int size)
 	{
+		__clear();
 		int status = 0;
 		while ((status = mysql_send_query_nonblocking(m_mysql, sql, size)) == NET_ASYNC_NOT_READY)
 		{
@@ -184,42 +186,37 @@ namespace coev
 			LOG_CORE("error %d %d %s\n", status, mysql_errno(m_mysql), mysql_error(m_mysql));
 			co_return INVALID;
 		}
-		co_return 0;
-	}
-	awaitable<int> Mysqlcli::query(const char *sql, int size, const std::function<void(int, MYSQL_ROW)> &callback)
-	{
-		auto r = co_await query(sql, size);
-		if (r == INVALID)
-		{
-			co_return r;
-		}
-		int status = 0;
-		MYSQL_RES *results = nullptr;
-		while ((status = mysql_store_result_nonblocking(m_mysql, &results)) == NET_ASYNC_NOT_READY)
-		{
-		}
-		int num_rows = mysql_affected_rows(m_mysql);
-		if (results != nullptr)
-		{
-			int i = 0;
-			MYSQL_ROW rows;
-			while ((status = mysql_fetch_row_nonblocking(results, &rows)) == NET_ASYNC_COMPLETE && rows)
-			{
-				assert(mysql_errno(m_mysql) == 0);
-				callback(i++, rows);
-			}
-			while ((status = mysql_free_result_nonblocking(results)) != NET_ASYNC_COMPLETE)
-			{
-			}
 
-			co_return num_rows;
+		assert(m_results == nullptr);
+		while ((status = mysql_store_result_nonblocking(m_mysql, &m_results)) == NET_ASYNC_NOT_READY)
+		{
 		}
-		else
+		auto num_rows = mysql_affected_rows(m_mysql);
+		co_return num_rows;
+	}
+	int Mysqlcli::__results()
+	{
+		if (m_results == nullptr)
 		{
 			auto last_error = mysql_errno(m_mysql);
 			LOG_CORE("last error %d\n", last_error);
-			co_return last_error == 0 ? num_rows : INVALID;
+			return last_error;
 		}
-		co_return 0;
+		int status = 0;
+		if ((status = mysql_fetch_row_nonblocking(m_results, &m_row)) == NET_ASYNC_COMPLETE && m_row)
+		{
+			assert(mysql_errno(m_mysql) == 0);
+			return status;
+		}
+		return NET_ASYNC_COMPLETE_NO_MORE_RESULTS;
+	}
+	void Mysqlcli::__clear()
+	{
+		int status = 0;
+		while ((status = mysql_free_result_nonblocking(m_results)) != NET_ASYNC_COMPLETE)
+		{
+		}
+		m_row = nullptr;
+		m_results = nullptr;
 	}
 }

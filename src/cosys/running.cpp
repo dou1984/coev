@@ -35,11 +35,15 @@ namespace coev
 	void running::join()
 	{
 		for (auto &it : m_list)
+		{
 			it.join();
+		}
 	}
 	void running::detach()
 	{
 		for (auto &it : m_list)
+		{
 			it.detach();
+		}
 	}
 }

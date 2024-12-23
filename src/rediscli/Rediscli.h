@@ -8,6 +8,7 @@
 #pragma once
 #include <ev.h>
 #include <string.h>
+#include <string>
 #include <hiredis/hiredis.h>
 #include <hiredis/async.h>
 #include <coev/coev.h>
@@ -20,43 +21,39 @@ namespace coev
 		std::string m_auth;
 		int m_port = 6379;
 	};
-	struct Redisresult
-	{
-		int last_error = 0;
-		int num_rows = 0;
-		union
-		{
-			const char *str;
-			const char *last_msg;
-			struct redisReply **rows;
-			int integer;
-		};
-		template <class... TYPE>
-		void unpack(TYPE &...value)
-		{
-			int i = 0;
-			(__setvalue(value, rows[i++]->str), ...);
-		}
-	};
+
 	class Rediscli : Redisconf
 	{
 	public:
 		Rediscli(const char *ip, int port, const char *auth);
 		awaitable<int> connect();
-		awaitable<int> query(const char *, const std::function<void(Redisresult &)> &_ = [](auto &) {});
-		operator bool() const { return m_context != nullptr; }
-		auto &result() { return m_result; }
-		int send(const char *);
+		awaitable<int> query(const char *message);
+		awaitable<int> query(const std::string&);
+		std::string reply_string();
+		std::string reply();
+		int reply_integer();
+		bool error() const;
+		template <class... ARGS>
+		bool reply(ARGS &&...args)
+		{
+			if (m_reply->type == REDIS_REPLY_ARRAY)
+			{
+				int i = 0;
+				auto row = m_reply->element;
+				(__setvalue(args, row[i++]->str), ...);
+				return true;
+			}
+			return false;
+		}
 
-
-	private:	
+	private:
 		int m_tid;
 		ev_io m_read;
 		ev_io m_write;
 		async m_listener;
 
 		redisAsyncContext *m_context = nullptr;
-		Redisresult m_result;
+		redisReply *m_reply = nullptr;
 
 		static void cb_connect(struct ev_loop *loop, struct ev_io *w, int revents);
 		static void cb_write(struct ev_loop *loop, struct ev_io *w, int revents);

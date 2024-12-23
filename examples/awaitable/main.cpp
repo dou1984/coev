@@ -46,16 +46,16 @@ awaitable<int> co_awaitable_resume()
 	co_return 0;
 }
 
-awaitable<int, int, int, int, int> co_awaiter_tuple()
+awaitable<int, float, int, int, double> co_awaiter_tuple()
 {
-	co_return 10, 20, 345, 6, 78;
+	co_return { 10, 20.0, 345, 6, 78.0 };
 }
 
 awaitable<void> co_awaiter_tuple_ex()
 {
 	auto [a, b, c, d, e] = co_await co_awaiter_tuple();
 
-	LOG_DBG("%d %d %d %d %d\n", a, b, c, d, e);
+	LOG_DBG("%d %f %d %d %f\n", a, b, c, d, e);
 }
 int main()
 {

@@ -32,14 +32,15 @@ namespace coev
 		async m_body_listener;
 		async m_header_listener;
 
+		static http_parser_settings m_settings;
 		void clear();
-		friend int on_message_begin(http_parser *_);
-		friend int on_headers_complete(http_parser *_);
-		friend int on_message_complete(http_parser *_);
-		friend int on_url(http_parser *_, const char *, size_t);
-		friend int on_status(http_parser *_, const char *, size_t);
-		friend int on_header_field(http_parser *_, const char *, size_t);
-		friend int on_header_value(http_parser *_, const char *, size_t);
-		friend int on_body(http_parser *_, const char *, size_t);
+		static int on_message_begin(http_parser *_);
+		static int on_headers_complete(http_parser *_);
+		static int on_message_complete(http_parser *_);
+		static int on_url(http_parser *_, const char *, size_t);
+		static int on_status(http_parser *_, const char *, size_t);
+		static int on_header_field(http_parser *_, const char *, size_t);
+		static int on_header_value(http_parser *_, const char *, size_t);
+		static int on_body(http_parser *_, const char *, size_t);
 	};
 }

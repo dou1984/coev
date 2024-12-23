@@ -19,7 +19,6 @@ namespace coev
 	{
 		thread_safe::async m_listener;
 		thread_safe::async m_waiter;
-		int m_id = 0;
 		int m_last = 0;
 		void __erase(evtask *_notify);
 

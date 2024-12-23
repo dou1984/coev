@@ -73,7 +73,7 @@ awaitable<void> co_router(Httpserver &pool)
 }
 int main()
 {
-	set_log_level(LOG_LEVEL_DEBUG);
+	set_log_level(LOG_LEVEL_CORE);
 	Httpserver pool("0.0.0.0", 9999);
 
 	running::instance()

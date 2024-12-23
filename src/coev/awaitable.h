@@ -9,6 +9,7 @@
 #include <coroutine>
 #include <atomic>
 #include <memory>
+#include <iostream>
 #include "chain.h"
 #include "promise.h"
 #include "log.h"
@@ -47,37 +48,18 @@ namespace coev
 		struct promise_tuple
 		{
 			std::tuple<T, R...> value;
-
-			template <class... ARGS>
-			std::suspend_never return_value(ARGS &&...args)
+			std::suspend_never return_value(std::tuple<T, R...> &&source)
 			{
-				__set<0>(std::forward<ARGS>(args)...);
+				value = std::move(source);
 				return {};
 			}
-			template <class... ARGS>
-			std::suspend_never return_value(const ARGS &...args)
+			std::suspend_never return_value(const std::tuple<T, R...> &source)
 			{
-				__set<0>(args...);
+				value = source;
 				return {};
 			}
-			template <class... ARGS>
-			std::suspend_always yield_value(const ARGS &...args) = delete;
-			template <class... ARGS>
-			std::suspend_always yield_value(ARGS &&...args) = delete;
-
-			template <std::size_t I, class... ARGS>
-			void __set(ARGS &&...args);
-			template <std::size_t I, class ARGS>
-			void __set(ARGS &&args)
-			{
-				std::get<I>(value) = std::forward<ARGS>(args);
-			}
-			template <std::size_t I, class ARGS, class... RES>
-			void __set(ARGS &&args, RES &&...res)
-			{
-				std::get<I>(value) = std::forward<ARGS>(args);
-				__set<I + 1>(std::forward<RES>(res)...);
-			}
+			std::suspend_always yield_value(const T, const R &...) = delete;
+			std::suspend_always yield_value(T &&, R &&...) = delete;
 		};
 		struct promise_type : promise, std::conditional_t<(sizeof...(R) > 0), promise_tuple, std::conditional_t<std::is_void_v<T>, promise_void, promise_value>>
 		{
