@@ -53,17 +53,6 @@ namespace coev
 			m_reply = nullptr;
 		}
 	}
-	std::string Rediscli::reply_string()
-	{
-		assert(m_reply);
-		switch (m_reply->type)
-		{
-		case REDIS_REPLY_STRING:
-		case REDIS_REPLY_ERROR:
-			return m_reply->str;
-		}
-		return reply();
-	}
 	int Rediscli::reply_integer()
 	{
 		assert(m_reply);
@@ -83,11 +72,11 @@ namespace coev
 		assert(m_reply);
 		switch (m_reply->type)
 		{
-		case REDIS_REPLY_INTEGER:
-			return std::to_string(m_reply->integer);
 		case REDIS_REPLY_STRING:
 		case REDIS_REPLY_ERROR:
 			return m_reply->str;
+		case REDIS_REPLY_INTEGER:
+			return std::to_string(m_reply->integer);
 		case REDIS_REPLY_NIL:
 			return STRING_NIL;
 		default:

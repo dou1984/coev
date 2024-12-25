@@ -48,7 +48,7 @@ awaitable<void> co_router(Httpserver &pool)
 				Httpserver::parse(io, req),
 				[&]() -> awaitable<void>
 				{
-					co_await req.get_url();
+					auto url = co_await req.get_url();
 
 					while (true)
 					{

@@ -69,17 +69,60 @@ awaitable<int> test_sync()
 
 	co_await c.query("info server");
 
-	auto s = c.reply_string();
+	auto s = c.reply();
 	LOG_DBG("%s\n", s.c_str());
 
 	co_return 0;
 }
+awaitable<int> test_array()
+{
+	Rediscli c("127.0.0.1", 6379, "");
+	co_await c.connect();
 
+	std::ostringstream oss;
+	oss << "hset h:test" << " a 1 " << " b 2 " << " c 3 ";
+
+	co_await c.query(oss.str());
+	if (c.error())
+	{
+		LOG_ERR("test_array %s\n", c.reply().c_str());
+		co_return 0;
+	}
+	LOG_DBG("hset h:test %s\n", c.reply().c_str());
+
+	oss.str();
+	oss << "hgeall h:test";
+	co_await c.query(oss.str());
+	auto n = c.reply_integer();
+	auto cnt = n / 2;
+
+	std::string key;
+	std::string value;
+	for (int i = 0; i < cnt; i++)
+	{
+		c.reply(i * 2, key, value);
+		LOG_DBG("%s=%s\n", key.c_str(), value.c_str());
+	}
+
+	oss.str();
+	oss << "del h:test";
+	co_await c.query(oss.str());
+	if (c.error())
+	{
+		LOG_DBG("del h:test error %s\n", c.reply().c_str());
+		co_return 0;
+	}
+	auto s = c.reply();
+
+	LOG_DBG("del h:test %s\n", s.c_str());
+	co_return 0;
+}
 int main()
 {
 	running::instance()
 		// .add(test_sync)
-		.add(go)
+		// .add(go)
+		.add(test_array)
 		.join();
 	return 0;
 }

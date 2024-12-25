@@ -28,17 +28,15 @@ namespace coev
 		Rediscli(const char *ip, int port, const char *auth);
 		awaitable<int> connect();
 		awaitable<int> query(const char *message);
-		awaitable<int> query(const std::string&);
-		std::string reply_string();
+		awaitable<int> query(const std::string &);
 		std::string reply();
 		int reply_integer();
 		bool error() const;
 		template <class... ARGS>
-		bool reply(ARGS &&...args)
+		bool reply(int i, ARGS &&...args)
 		{
 			if (m_reply->type == REDIS_REPLY_ARRAY)
 			{
-				int i = 0;
 				auto row = m_reply->element;
 				(__setvalue(args, row[i++]->str), ...);
 				return true;
