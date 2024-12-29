@@ -7,8 +7,8 @@
  */
 #include <sstream>
 #include <cosys/cosys.h>
-#include <httpparser/Httpparser.h>
-#include <httpparser/Httpserver.h>
+#include <cohttp/Httpparser.h>
+#include <cohttp/Httpserver.h>
 
 using namespace coev;
 
@@ -45,7 +45,7 @@ awaitable<void> co_router(Httpserver &pool)
 			iocontext io(fd);
 			Httpparser req;
 			co_await wait_for_all(
-				Httpserver::parse(io, req),
+				req.parse(io),
 				[&]() -> awaitable<void>
 				{
 					auto url = co_await req.get_url();

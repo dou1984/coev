@@ -20,8 +20,7 @@ namespace coev
 		Httpserver(const char *, int);
 		virtual ~Httpserver() = default;
 
-		awaitable<int> accept(host &);
-		static awaitable<void> parse(iocontext &io, Httpparser &req);
+		awaitable<int> accept(host &);		
 
 		auto &get() { return m_pool.get(); }
 

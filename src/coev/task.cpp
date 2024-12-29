@@ -18,36 +18,36 @@ namespace coev
 	}
 	void task::insert(evtask *ev, int _id)
 	{
-		std::lock_guard<std::mutex> _(m_waiter.m_mutex);
-		m_waiter.push_back(ev);
+		std::lock_guard<std::mutex> _(m_ev_listener.m_mutex);
+		m_ev_listener.push_back(ev);
 		ev->m_task = this;
 		ev->m_id = _id;
 	}
 	void task::__erase(evtask *_inotify)
 	{
 		LOG_CORE("erase %p\n", _inotify);
-		std::lock_guard<std::mutex> _(m_waiter.m_mutex);
-		m_waiter.erase(_inotify);
+		std::lock_guard<std::mutex> _(m_ev_listener.m_mutex);
+		m_ev_listener.erase(_inotify);
 	}
 	void task::destroy()
 	{
-		std::lock_guard<std::mutex> _(m_waiter.m_mutex);
-		while (!m_waiter.empty())
+		std::lock_guard<std::mutex> _(m_ev_listener.m_mutex);
+		while (!m_ev_listener.empty())
 		{
-			auto t = static_cast<evtask *>(m_waiter.pop_front());
+			auto t = static_cast<evtask *>(m_ev_listener.pop_front());
 			LOG_CORE("evtask:%p\n", t);
-			m_waiter.erase(t);
+			m_ev_listener.erase(t);
 			t->destroy();
 		}
 	}
 	bool task::empty()
 	{
-		std::lock_guard<std::mutex> _(m_waiter.m_mutex);
-		return m_waiter.empty();
+		std::lock_guard<std::mutex> _(m_ev_listener.m_mutex);
+		return m_ev_listener.empty();
 	}
 	void task::done(evtask *ev)
 	{
-		m_listener.resume(
+		m_task_listener.resume(
 			[this, ev]()
 			{
 				m_last = ev->m_id;
@@ -56,7 +56,7 @@ namespace coev
 	}
 	awaitable<int> task::wait()
 	{
-		co_await m_listener.suspend(
+		co_await m_task_listener.suspend(
 			[]() -> bool
 			{ return true; },
 			[]() {});

@@ -9,19 +9,7 @@
 
 namespace coev
 {
-	awaitable<void> Httpserver::parse(iocontext &io, Httpparser &req)
-	{
-		while (io)
-		{
-			char buffer[0x1000];
-			auto r = co_await io.recv(buffer, sizeof(buffer));
-			if (r == INVALID)
-			{
-				break;
-			}
-			req.parse(buffer, r);
-		}
-	}
+	
 
 	Httpserver::Httpserver(const char *ip, int port)
 	{

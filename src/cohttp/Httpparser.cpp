@@ -104,4 +104,17 @@ namespace coev
 		co_await m_body_listener.suspend();
 		co_return m_value;
 	}
+	awaitable<void> Httpparser::parse(iocontext &io)
+	{
+		while (io)
+		{
+			char buffer[0x1000];
+			auto r = co_await io.recv(buffer, sizeof(buffer));
+			if (r == INVALID)
+			{
+				break;
+			}
+			parse(buffer, r);
+		}
+	}
 }

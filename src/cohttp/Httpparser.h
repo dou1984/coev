@@ -11,6 +11,7 @@
 #include <tuple>
 #include <http_parser.h>
 #include <coev/coev.h>
+#include <cosys/cosys.h>
 
 namespace coev
 {
@@ -19,13 +20,14 @@ namespace coev
 	public:
 		Httpparser();
 		virtual ~Httpparser() = default;
-		int parse(const char *, int);
+		awaitable<void> parse(iocontext &io);
 
 		awaitable<std::string> get_url();
 		awaitable<std::string, std::string> get_header();
 		awaitable<std::string> get_body();
 
 	private:
+		int parse(const char *, int);
 		std::string m_key;
 		std::string m_value;
 		async m_url_listener;
