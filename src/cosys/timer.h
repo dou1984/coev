@@ -7,7 +7,7 @@
  */
 #pragma once
 #include <ev.h>
-#include "../coev/coev.h"
+#include <coev/coev.h>
 
 namespace coev
 {

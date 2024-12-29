@@ -23,9 +23,9 @@ namespace coev
 		awaitable<void> parse(iocontext &io);
 
 		awaitable<std::string> get_url();
-		awaitable<std::string, std::string> get_header();
+		awaitable<bool, std::string, std::string> get_header();
 		awaitable<std::string> get_body();
-
+		awaitable<std::string> get_status();
 	private:
 		int parse(const char *, int);
 		std::string m_key;
@@ -33,6 +33,7 @@ namespace coev
 		async m_url_listener;
 		async m_body_listener;
 		async m_header_listener;
+		async m_status_listener;
 
 		static http_parser_settings m_settings;
 		void clear();

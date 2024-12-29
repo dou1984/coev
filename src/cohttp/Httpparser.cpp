@@ -42,6 +42,7 @@ namespace coev
 		auto _this = static_cast<Httpparser *>(_);
 		_this->m_value = std::string(at, length);
 		LOG_CORE("<status>%s\n", _this->m_value.data());
+		_this->m_status_listener.resume();
 		return 0;
 	}
 	int Httpparser::on_header_field(http_parser *_, const char *at, size_t length)
@@ -94,14 +95,23 @@ namespace coev
 		co_await m_url_listener.suspend();
 		co_return m_value;
 	}
-	awaitable<std::string, std::string> Httpparser::get_header()
+	awaitable<bool, std::string, std::string> Httpparser::get_header()
 	{
 		co_await m_header_listener.suspend();
-		co_return {m_key, m_value};
+		if (m_key.size() == 0 && m_value.size() == 0)
+		{
+			co_return {false, m_key, m_value};
+		}
+		co_return {true, m_key, m_value};
 	}
 	awaitable<std::string> Httpparser::get_body()
 	{
 		co_await m_body_listener.suspend();
+		co_return m_value;
+	}
+	awaitable<std::string> Httpparser::get_status()
+	{
+		co_await m_status_listener.suspend();
 		co_return m_value;
 	}
 	awaitable<void> Httpparser::parse(iocontext &io)

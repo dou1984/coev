@@ -50,13 +50,9 @@ awaitable<void> co_router(Httpserver &pool)
 				{
 					auto url = co_await req.get_url();
 
-					while (true)
+					auto [ok, key, value] = co_await req.get_header();
+					if (ok)
 					{
-						auto [key, value] = co_await req.get_header();
-						if (key == "")
-						{
-							break;
-						}
 						std::cout << key << "=" << value << std::endl;
 					}
 
@@ -73,7 +69,7 @@ awaitable<void> co_router(Httpserver &pool)
 }
 int main()
 {
-	set_log_level(LOG_LEVEL_CORE);
+	set_log_level(LOG_LEVEL_DEBUG);
 	Httpserver pool("0.0.0.0", 9999);
 
 	running::instance()
