@@ -10,7 +10,7 @@ namespace coev
 
 	bool async::resume()
 	{
-		if (auto c = static_cast<event *>(pop_front()); c != nullptr)
+		if (auto c = static_cast<event *>(pop_front()); c != nullptr )
 		{
 			c->resume();
 			return true;

@@ -5,6 +5,7 @@
  *	All rights reserved.
  *
  */
+#include <cstdint>
 #include "Rediscli.h"
 #include "../cosys/cosys.h"
 
@@ -48,6 +49,7 @@ namespace coev
 		if (_reply != nullptr)
 		{
 			LOG_CORE("type:%d elements:%ld\n", _reply->type, _reply->elements);
+			assert(m_reply == nullptr);
 			m_reply = _reply;
 			m_listener.resume();
 			m_reply = nullptr;
@@ -59,11 +61,11 @@ namespace coev
 		switch (m_reply->type)
 		{
 		case REDIS_REPLY_INTEGER:
-		case REDIS_REPLY_ARRAY:
-		case REDIS_REPLY_ERROR:
 			return m_reply->integer;
+		case REDIS_REPLY_ARRAY:
+			return m_reply->elements;
 		default:
-			assert(false);
+			throw("No support redis type!\n");
 		}
 		return 0;
 	}
@@ -74,16 +76,27 @@ namespace coev
 		{
 		case REDIS_REPLY_STRING:
 		case REDIS_REPLY_ERROR:
-			return m_reply->str;
+			return std::string(m_reply->str, m_reply->len);
 		case REDIS_REPLY_INTEGER:
 			return std::to_string(m_reply->integer);
+		case REDIS_REPLY_ARRAY:
+			return std::to_string(m_reply->elements);
 		case REDIS_REPLY_NIL:
 			return STRING_NIL;
 		default:
-			assert(false);
+			throw("No support redis type!\n");
 		}
 		return STRING_CLOSED;
 	}
+	Rediscli::RedisArray Rediscli::reply_array()
+	{
+		if (m_reply->type == REDIS_REPLY_ARRAY)
+		{
+			return RedisArray(m_reply->element, m_reply->elements);
+		}
+		throw("No support redis type!\n");
+	}
+
 	bool Rediscli::error() const
 	{
 		return m_context == nullptr || m_reply == nullptr || m_reply->type == REDIS_REPLY_ERROR;
@@ -238,5 +251,13 @@ namespace coev
 	awaitable<int> Rediscli::query(const std::string &message)
 	{
 		return query(message.c_str());
+	}
+
+	Rediscli::RedisArray::RedisArray(redisReply **element, size_t elements) : m_element(element), m_elements(elements)
+	{
+		if (m_elements > INT64_MAX)
+		{
+			throw("RedisArray construct m_elements bigger than INT64_MAX");
+		}
 	}
 }

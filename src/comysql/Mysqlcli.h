@@ -26,7 +26,7 @@ namespace coev
 	class Mysqlcli : Mysqlconf
 	{
 	public:
-		Mysqlcli(const char *ip, int port, const char *username, const char *password, const char *db, const char *charset);
+		Mysqlcli(const Mysqlconf&);
 		virtual ~Mysqlcli();
 		operator MYSQL *() { return m_mysql; }
 

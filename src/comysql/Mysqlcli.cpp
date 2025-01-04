@@ -41,19 +41,19 @@ namespace coev
 		assert(_this != nullptr);
 		_this->m_read_listener.resume();
 	}
-	Mysqlcli::Mysqlcli(const char *ip, int port, const char *username, const char *password, const char *db, const char *charset)
+	Mysqlcli::Mysqlcli(const Mysqlconf &conf)
 	{
 		m_mysql = mysql_init(0);
 		if (m_mysql == nullptr)
 		{
 			throw("mysql init");
 		}
-		m_url = ip;
-		m_port = port;
-		m_username = username;
-		m_password = password;
-		m_db = db;
-		m_charset = charset;
+		m_url = conf.m_url;
+		m_port = conf.m_port;
+		m_username = conf.m_username;
+		m_password = conf.m_password;
+		m_db = conf.m_db;
+		m_charset = conf.m_charset;
 	}
 	Mysqlcli::~Mysqlcli()
 	{

@@ -24,6 +24,8 @@ namespace coev
 
 	class Rediscli : Redisconf
 	{
+		class RedisArray;
+
 	public:
 		Rediscli(const char *ip, int port, const char *auth);
 		awaitable<int> connect();
@@ -31,18 +33,8 @@ namespace coev
 		awaitable<int> query(const std::string &);
 		std::string reply();
 		int reply_integer();
+		RedisArray reply_array();
 		bool error() const;
-		template <class... ARGS>
-		bool reply(int i, ARGS &&...args)
-		{
-			if (m_reply->type == REDIS_REPLY_ARRAY)
-			{
-				auto row = m_reply->element;
-				(__setvalue(args, row[i++]->str), ...);
-				return true;
-			}
-			return false;
-		}
 
 	private:
 		int m_tid;
@@ -78,4 +70,25 @@ namespace coev
 		int fd();
 	};
 
+	class Rediscli::RedisArray
+	{
+		redisReply **m_element = nullptr;
+		size_t m_elements;
+
+	public:
+		RedisArray(redisReply **element, size_t elements);
+		bool operator==(const RedisArray &o) const { return m_element == o.m_element && m_elements == o.m_elements; }
+		bool operator!=(const RedisArray &o) const { return m_element != o.m_element || m_elements != o.m_elements; }
+		RedisArray begin() const { return RedisArray(m_element, m_elements); }
+		RedisArray end() const { return RedisArray(m_element + m_elements, 0); }
+		RedisArray shift(int i) const { return RedisArray(m_element + i, m_elements - i); }
+		operator bool() const { return m_elements > 0; }
+		template <class... ARGS>
+		auto reply(ARGS &&...args)
+		{
+			int i = 0;
+			(__setvalue(args, m_element[i++]->str), ...);
+			return shift(i);
+		}
+	};
 }

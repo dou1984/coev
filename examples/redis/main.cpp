@@ -82,7 +82,8 @@ awaitable<int> test_array()
 	std::ostringstream oss;
 	oss << "hset h:test" << " a 1 " << " b 2 " << " c 3 ";
 
-	co_await c.query(oss.str());
+	auto s = oss.str();
+	co_await c.query(s);
 	if (c.error())
 	{
 		LOG_ERR("test_array %s\n", c.reply().c_str());
@@ -90,21 +91,27 @@ awaitable<int> test_array()
 	}
 	LOG_DBG("hset h:test %s\n", c.reply().c_str());
 
-	oss.str();
-	oss << "hgeall h:test";
-	co_await c.query(oss.str());
-	auto n = c.reply_integer();
-	auto cnt = n / 2;
+	oss.str("");
+	oss << "hgetall h:test";
+	s = oss.str();
+	co_await c.query(s);
 
+	if (c.error())
+	{
+		LOG_ERR("test_array hgeall %s\n", c.reply().c_str());
+		co_return 0;
+	}
+	auto arr = c.reply_array();
 	std::string key;
 	std::string value;
-	for (int i = 0; i < cnt; i++)
+
+	while (arr)
 	{
-		c.reply(i * 2, key, value);
+		arr = arr.reply(key, value);
 		LOG_DBG("%s=%s\n", key.c_str(), value.c_str());
 	}
 
-	oss.str();
+	oss.str("");
 	oss << "del h:test";
 	co_await c.query(oss.str());
 	if (c.error())
@@ -112,7 +119,7 @@ awaitable<int> test_array()
 		LOG_DBG("del h:test error %s\n", c.reply().c_str());
 		co_return 0;
 	}
-	auto s = c.reply();
+	s = c.reply();
 
 	LOG_DBG("del h:test %s\n", s.c_str());
 	co_return 0;

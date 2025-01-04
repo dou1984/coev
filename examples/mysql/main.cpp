@@ -25,7 +25,14 @@ struct t_test_table
 awaitable<int> go()
 {
 	LOG_ERR("begin\n");
-	coev::Mysqlcli c("127.0.0.1", 3306, "ashan", "12345678", "test", "");
+	coev::Mysqlcli c({
+		.m_url = "127.0.0.1",
+		.m_username = "ashan",
+		.m_password = "12345678",
+		.m_db = "test",
+		.m_charset = "",
+		.m_port = 3306,
+	});
 	auto r = co_await c.connect();
 
 	std::ostringstream oss;
@@ -95,7 +102,14 @@ awaitable<int> go()
 }
 awaitable<int> clear()
 {
-	coev::Mysqlcli c("127.0.0.1", 3306, "ashan", "12345678", "test", "");
+	coev::Mysqlcli c({
+		.m_url = "127.0.0.1",
+		.m_username = "ashan",
+		.m_password = "12345678",
+		.m_db = "test",
+		.m_charset = "",
+		.m_port = 3306,
+	});
 	auto r = co_await c.connect();
 	if (r == INVALID)
 	{
