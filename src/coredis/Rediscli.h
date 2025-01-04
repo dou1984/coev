@@ -12,6 +12,7 @@
 #include <hiredis/hiredis.h>
 #include <hiredis/async.h>
 #include <coev/coev.h>
+#include <cosys/cosys.h>
 
 namespace coev
 {
@@ -38,6 +39,7 @@ namespace coev
 
 	private:
 		int m_tid;
+		struct ev_loop* m_loop;
 		ev_io m_read;
 		ev_io m_write;
 		async m_listener;

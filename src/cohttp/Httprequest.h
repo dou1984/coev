@@ -15,17 +15,18 @@
 
 namespace coev
 {
-	class Httpparser : http_parser
+	class Httprequest : http_parser
 	{
 	public:
-		Httpparser();
-		virtual ~Httpparser() = default;
-		awaitable<void> parse(iocontext &io);
+		Httprequest();
+		virtual ~Httprequest() = default;
+		awaitable<int> parse(iocontext &io);
 
 		awaitable<std::string> get_url();
 		awaitable<bool, std::string, std::string> get_header();
 		awaitable<std::string> get_body();
 		awaitable<std::string> get_status();
+
 	private:
 		int parse(const char *, int);
 		std::string m_key;

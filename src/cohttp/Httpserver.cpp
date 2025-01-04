@@ -9,8 +9,6 @@
 
 namespace coev
 {
-	
-
 	Httpserver::Httpserver(const char *ip, int port)
 	{
 		m_pool.start(ip, port);

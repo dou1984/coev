@@ -120,12 +120,12 @@ namespace coev
 	{
 		m_read.data = this;
 		ev_io_init(&m_read, &Rediscli::cb_connect, fd(), EV_READ | EV_WRITE);
-		ev_io_start(cosys::at(m_tid), &m_read);
+		ev_io_start(m_loop, &m_read);
 		return 0;
 	}
 	int Rediscli::__connect_remove()
 	{
-		ev_io_stop(cosys::at(m_tid), &m_read);
+		ev_io_stop(m_loop, &m_read);
 		return 0;
 	}
 	int Rediscli::__process_insert()
@@ -133,7 +133,7 @@ namespace coev
 		assert(fd() != INVALID);
 		m_read.data = this;
 		ev_io_init(&m_read, &Rediscli::cb_read, fd(), EV_READ);
-		ev_io_start(cosys::at(m_tid), &m_read);
+		ev_io_start(m_loop, &m_read);
 		m_write.data = this;
 		ev_io_init(&m_write, &Rediscli::cb_write, fd(), EV_WRITE);
 		return 0;
@@ -142,8 +142,8 @@ namespace coev
 	{
 		if (m_context)
 		{
-			ev_io_stop(cosys::at(m_tid), &m_read);
-			ev_io_stop(cosys::at(m_tid), &m_write);
+			ev_io_stop(m_loop, &m_read);
+			ev_io_stop(m_loop, &m_write);
 			m_context = nullptr;
 		}
 		return 0;
@@ -204,22 +204,22 @@ namespace coev
 	void Rediscli::__addread(void *privdata)
 	{
 		auto _this = (Rediscli *)(privdata);
-		ev_io_start(cosys::at(_this->m_tid), &_this->m_read);
+		ev_io_start(_this->m_loop, &_this->m_read);
 	}
 	void Rediscli::__delread(void *privdata)
 	{
 		auto _this = (Rediscli *)(privdata);
-		ev_io_stop(cosys::at(_this->m_tid), &_this->m_read);
+		ev_io_stop(_this->m_loop, &_this->m_read);
 	}
 	void Rediscli::__addwrite(void *privdata)
 	{
 		auto _this = (Rediscli *)(privdata);
-		ev_io_start(cosys::at(_this->m_tid), &_this->m_write);
+		ev_io_start(_this->m_loop, &_this->m_write);
 	}
 	void Rediscli::__delwrite(void *privdata)
 	{
 		auto _this = (Rediscli *)(privdata);
-		ev_io_stop(cosys::at(_this->m_tid), &_this->m_write);
+		ev_io_stop(_this->m_loop, &_this->m_write);
 	}
 	int Rediscli::fd()
 	{
@@ -231,6 +231,7 @@ namespace coev
 		m_ip = ip;
 		m_port = port;
 		m_auth = auth;
+		m_loop = cosys::data();
 	}
 	awaitable<int> Rediscli::connect()
 	{

@@ -26,7 +26,7 @@ namespace coev
 	class Mysqlcli : Mysqlconf
 	{
 	public:
-		Mysqlcli(const Mysqlconf&);
+		Mysqlcli(const Mysqlconf &);
 		virtual ~Mysqlcli();
 		operator MYSQL *() { return m_mysql; }
 
@@ -54,6 +54,7 @@ namespace coev
 		MYSQL_RES *m_results = nullptr;
 		MYSQL_ROW m_row = nullptr;
 		int m_tid = 0;
+		struct ev_loop *m_loop = nullptr;
 		ev_io m_read;
 		ev_io m_write;
 		async m_read_listener;

@@ -7,7 +7,7 @@
  */
 #include <sstream>
 #include <cosys/cosys.h>
-#include <cohttp/Httpparser.h>
+#include <cohttp/Httprequest.h>
 #include <cohttp/Httpserver.h>
 
 using namespace coev;
@@ -43,7 +43,7 @@ awaitable<void> co_router(Httpserver &pool)
 		[=]() -> awaitable<void>
 		{
 			iocontext io(fd);
-			Httpparser req;
+			Httprequest req;
 			co_await wait_for_all(
 				req.parse(io),
 				[&]() -> awaitable<void>

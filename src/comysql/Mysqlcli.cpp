@@ -80,6 +80,7 @@ namespace coev
 	int Mysqlcli::__connect()
 	{
 		m_tid = gtid();
+		m_loop = cosys::data();
 		auto status = __tryconnect();
 		if (status == NET_ASYNC_ERROR)
 		{
@@ -97,14 +98,14 @@ namespace coev
 		TRACE();
 		m_read.data = this;
 		ev_io_init(&m_read, &Mysqlcli::cb_read, fd(), EV_READ | EV_WRITE);
-		ev_io_start(cosys::at(m_tid), &m_read);
+		ev_io_start(m_loop, &m_read);
 		return 0;
 	}
 	int Mysqlcli::__connect_remove()
 	{
 		if (fd() != INVALID)
 		{
-			ev_io_stop(cosys::at(m_tid), &m_read);
+			ev_io_stop(m_loop, &m_read);
 		}
 		return 0;
 	}
@@ -114,7 +115,7 @@ namespace coev
 		TRACE();
 		m_read.data = this;
 		ev_io_init(&m_read, &Mysqlcli::cb_read, fd(), EV_READ);
-		ev_io_start(cosys::at(m_tid), &m_read);
+		ev_io_start(m_loop, &m_read);
 		m_write.data = this;
 		ev_io_init(&m_write, &Mysqlcli::cb_write, fd(), EV_WRITE);
 		return 0;
@@ -123,8 +124,8 @@ namespace coev
 	{
 		if (fd() != INVALID)
 		{
-			ev_io_stop(cosys::at(m_tid), &m_read);
-			ev_io_stop(cosys::at(m_tid), &m_write);
+			ev_io_stop(m_loop, &m_read);
+			ev_io_stop(m_loop, &m_write);
 		}
 		return 0;
 	}
@@ -162,9 +163,9 @@ namespace coev
 			}
 			if (isInprocess())
 			{
-				ev_io_start(cosys::at(m_tid), &m_write);
+				ev_io_start(m_loop, &m_write);
 				co_await m_write_listener.suspend();
-				ev_io_stop(cosys::at(m_tid), &m_write);
+				ev_io_stop(m_loop, &m_write);
 			}
 		}
 		if (__isneterror(status) == INVALID)
