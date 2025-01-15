@@ -11,7 +11,7 @@
 #include "awaitable.h"
 #include "async.h"
 
-namespace coev::thread_safe
+namespace coev::guard
 {
 	class comutex final
 	{

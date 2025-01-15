@@ -13,7 +13,7 @@ namespace coev
         bool resume();
     };
 
-    namespace thread_safe
+    namespace guard
     {
         struct async : chain
         {

@@ -14,7 +14,7 @@ namespace coev
 {
 	class waitgroup final
 	{
-		thread_safe::async m_listener;
+		guard::async m_listener;
 		std::atomic_int m_count{0};
 
 	public:

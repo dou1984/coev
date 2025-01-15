@@ -17,8 +17,8 @@ namespace coev
 {
 	class task final
 	{
-		thread_safe::async m_task_listener;
-		thread_safe::async m_ev_listener;
+		guard::async m_task_listener;
+		guard::async m_ev_listener;
 		int m_last = 0;
 		void __erase(evtask *_notify);
 

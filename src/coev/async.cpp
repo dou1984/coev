@@ -18,7 +18,7 @@ namespace coev
 		return false;
 	}
 
-	namespace thread_safe
+	namespace guard
 	{
 		awaitable<void> async::suspend(const std::function<bool()> &suppend, const std::function<void()> &call)
 		{

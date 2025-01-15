@@ -32,7 +32,7 @@ namespace coev
 	int Httprequest::on_url(http_parser *_, const char *at, size_t length)
 	{
 		auto _this = static_cast<Httprequest *>(_);
-		_this->m_value = std::string(at, length);
+		_this->m_value = std::string_view(at, length);
 		LOG_CORE("<url>%s\n", _this->m_value.data());
 		_this->m_url_listener.resume();
 		return 0;
@@ -40,7 +40,7 @@ namespace coev
 	int Httprequest::on_status(http_parser *_, const char *at, size_t length)
 	{
 		auto _this = static_cast<Httprequest *>(_);
-		_this->m_value = std::string(at, length);
+		_this->m_value = std::string_view(at, length);
 		LOG_CORE("<status>%s\n", _this->m_value.data());
 		_this->m_status_listener.resume();
 		return 0;
@@ -48,13 +48,13 @@ namespace coev
 	int Httprequest::on_header_field(http_parser *_, const char *at, size_t length)
 	{
 		auto _this = static_cast<Httprequest *>(_);
-		_this->m_key = std::string(at, length);
+		_this->m_key = std::string_view(at, length);
 		return 0;
 	}
 	int Httprequest::on_header_value(http_parser *_, const char *at, size_t length)
 	{
 		auto _this = static_cast<Httprequest *>(_);
-		_this->m_value = std::string(at, length);
+		_this->m_value = std::string_view(at, length);
 		LOG_CORE("<header>%s:%s\n", _this->m_key.data(), _this->m_value.data());
 		_this->m_header_listener.resume();
 		return 0;
@@ -62,7 +62,7 @@ namespace coev
 	int Httprequest::on_body(http_parser *_, const char *at, size_t length)
 	{
 		auto _this = static_cast<Httprequest *>(_);
-		_this->m_value = std::string(at, length);
+		_this->m_value = std::string_view(at, length);
 		LOG_CORE("<message>%s\n", _this->m_value.data());
 		_this->m_body_listener.resume();
 		return 0;
@@ -87,15 +87,15 @@ namespace coev
 	}
 	void Httprequest::clear()
 	{
-		m_key.clear();
-		m_value.clear();
+		m_key = std::string_view();
+		m_value = std::string_view();
 	}
-	awaitable<std::string> Httprequest::get_url()
+	awaitable<std::string_view> Httprequest::get_url()
 	{
 		co_await m_url_listener.suspend();
 		co_return std::move(m_value);
 	}
-	awaitable<bool, std::string, std::string> Httprequest::get_header()
+	awaitable<bool, std::string_view, std::string_view> Httprequest::get_header()
 	{
 		co_await m_header_listener.suspend();
 		if (m_key.size() == 0 && m_value.size() == 0)
@@ -104,12 +104,12 @@ namespace coev
 		}
 		co_return {true, std::move(m_key), std::move(m_value)};
 	}
-	awaitable<std::string> Httprequest::get_body()
+	awaitable<std::string_view> Httprequest::get_body()
 	{
 		co_await m_body_listener.suspend();
 		co_return std::move(m_value);
 	}
-	awaitable<std::string> Httprequest::get_status()
+	awaitable<std::string_view> Httprequest::get_status()
 	{
 		co_await m_status_listener.suspend();
 		co_return std::move(m_value);

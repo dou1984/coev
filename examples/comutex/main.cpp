@@ -14,7 +14,7 @@
 
 using namespace coev;
 
-thread_safe::comutex g_mutex;
+guard::comutex g_mutex;
 std::atomic_int g_total{0};
 std::atomic_int g_count{0};
 
@@ -37,7 +37,7 @@ awaitable<int> test_go()
 	co_return 0;
 }
 
-thread_safe::comutex g_lock;
+guard::comutex g_lock;
 awaitable<void> test_lock()
 {
 	LOG_DBG("test_lock begin\n");

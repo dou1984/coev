@@ -42,7 +42,7 @@ namespace coev
 
 	private:
 		std::list<TYPE> m_data;
-		thread_safe::async m_listener;
+		guard::async m_listener;
 		bool __invalid() const { return m_data.empty(); }
 		TYPE pop_front()
 		{

@@ -22,15 +22,15 @@ namespace coev
 		virtual ~Httprequest() = default;
 		awaitable<int> parse(iocontext &io);
 
-		awaitable<std::string> get_url();
-		awaitable<bool, std::string, std::string> get_header();
-		awaitable<std::string> get_body();
-		awaitable<std::string> get_status();
+		awaitable<std::string_view> get_url();
+		awaitable<bool, std::string_view, std::string_view> get_header();
+		awaitable<std::string_view> get_body();
+		awaitable<std::string_view> get_status();
 
 	private:
 		int parse(const char *, int);
-		std::string m_key;
-		std::string m_value;
+		std::string_view m_key;
+		std::string_view m_value;
 		async m_url_listener;
 		async m_body_listener;
 		async m_header_listener;
