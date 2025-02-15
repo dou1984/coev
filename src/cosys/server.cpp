@@ -30,7 +30,11 @@ namespace coev::tcp
 		}
 		server *_this = (server *)(w->data);
 		assert(_this != nullptr);
-		_this->m_listener.resume();
+		_this->m_waiter.resume();
+	}
+	server::server()
+	{
+		m_loop = cosys::data();
 	}
 	server::~server()
 	{
@@ -80,12 +84,12 @@ namespace coev::tcp
 	{
 		m_reav.data = this;
 		ev_io_init(&m_reav, server::cb_accept, m_fd, EV_READ);
-		ev_io_start(cosys::at(_tid), &m_reav);
+		ev_io_start(m_loop, &m_reav);
 		return m_fd;
 	}
 	int server::__remove(uint64_t _tid)
 	{
-		ev_io_stop(cosys::at(_tid), &m_reav);
+		ev_io_stop(m_loop, &m_reav);
 		return m_fd;
 	}
 	bool server::__valid() const
@@ -98,7 +102,7 @@ namespace coev::tcp
 		{
 			co_return INVALID;
 		}
-		co_await m_listener.suspend();
+		co_await m_waiter.suspend();
 		auto fd = __real_accept(m_fd, peer);
 		if (fd != INVALID)
 		{

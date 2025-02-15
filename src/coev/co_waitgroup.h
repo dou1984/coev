@@ -12,9 +12,9 @@
 
 namespace coev
 {
-	class waitgroup final
+	class co_waitgroup final
 	{
-		guard::async m_listener;
+		guard::async m_waiter;
 		std::atomic_int m_count{0};
 
 	public:

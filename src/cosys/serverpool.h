@@ -12,7 +12,7 @@
 
 namespace coev::tcp
 {
-	class serverpool final
+	class serverpool
 	{
 		int m_fd = INVALID;
 		std::unordered_map<uint64_t, server> m_pool;

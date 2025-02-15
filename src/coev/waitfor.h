@@ -9,7 +9,7 @@
 #include <memory>
 #include <functional>
 #include "awaitable.h"
-#include "task.h"
+#include "co_task.h"
 #include "event.h"
 #include "async.h"
 
@@ -18,7 +18,7 @@ namespace coev
 	template <class... AWAITABLE>
 	awaitable<int> wait_for_any(AWAITABLE &&...awt)
 	{
-		task w;
+		co_task w;
 		int id = 0;
 		(w.insert(&awt, id++), ...);
 		id = co_await w.wait();
@@ -28,7 +28,7 @@ namespace coev
 	template <class... AWAITABLE>
 	awaitable<int> wait_for_all(AWAITABLE &&...awt)
 	{
-		task w;
+		co_task w;
 		int id = 0;
 		(w.insert(&awt, id++), ...);
 		while (!w.empty())

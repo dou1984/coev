@@ -19,13 +19,13 @@ namespace coev
 	{
 		auto _this = (iocontext *)w->data;
 		assert(_this != NULL);
-		_this->m_read_listener.resume();
+		_this->m_read_waiter.resume();
 	}
 	void iocontext::cb_write(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
 		auto _this = (iocontext *)w->data;
 		assert(_this != NULL);
-		_this->m_write_listener.resume();
+		_this->m_write_waiter.resume();
 	}
 	int iocontext::__close()
 	{
@@ -34,10 +34,10 @@ namespace coev
 			__finally();
 			::close(m_fd);
 			m_fd = INVALID;
-			while (m_read_listener.resume())
+			while (m_read_waiter.resume())
 			{
 			}
-			while (m_write_listener.resume())
+			while (m_write_waiter.resume())
 			{
 			}
 		}
@@ -54,6 +54,7 @@ namespace coev
 	iocontext::iocontext(int fd) : m_fd(fd)
 	{
 		m_tid = gtid();
+		m_loop = cosys::data();
 		__init();
 	}
 	int iocontext::__init()
@@ -63,7 +64,7 @@ namespace coev
 		{
 			m_read.data = this;
 			ev_io_init(&m_read, iocontext::cb_read, m_fd, EV_READ);
-			ev_io_start(cosys::at(m_tid), &m_read);
+			ev_io_start(m_loop, &m_read);
 
 			m_write.data = this;
 			ev_io_init(&m_write, iocontext::cb_write, m_fd, EV_WRITE);
@@ -75,8 +76,8 @@ namespace coev
 		LOG_CORE("fd:%d\n", m_fd);
 		if (m_fd != INVALID)
 		{
-			ev_io_stop(cosys::at(m_tid), &m_read);
-			ev_io_stop(cosys::at(m_tid), &m_write);
+			ev_io_stop(m_loop, &m_read);
+			ev_io_stop(m_loop, &m_write);
 		}
 		return 0;
 	}
@@ -96,11 +97,11 @@ namespace coev
 			auto r = ::send(m_fd, buffer, size, 0);
 			if (r == INVALID && isInprocess())
 			{
-				ev_io_start(cosys::at(m_tid), &m_write);
-				co_await m_write_listener.suspend();
-				if (m_write_listener.empty())
+				ev_io_start(m_loop, &m_write);
+				co_await m_write_waiter.suspend();
+				if (m_write_waiter.empty())
 				{
-					ev_io_stop(cosys::at(m_tid), &m_write);
+					ev_io_stop(m_loop, &m_write);
 				}
 			}
 			else
@@ -114,7 +115,7 @@ namespace coev
 	{
 		while (__valid())
 		{
-			co_await m_read_listener.suspend();
+			co_await m_read_waiter.suspend();
 			auto r = ::recv(m_fd, buffer, size, 0);
 			if (r == INVALID && isInprocess())
 			{
@@ -128,7 +129,7 @@ namespace coev
 	{
 		while (__valid())
 		{
-			co_await m_read_listener.suspend();
+			co_await m_read_waiter.suspend();
 			sockaddr_in addr;
 			socklen_t addrsize = sizeof(addr);
 			int r = ::recvfrom(m_fd, buffer, size, 0, (struct sockaddr *)&addr, &addrsize);
@@ -150,11 +151,11 @@ namespace coev
 			int r = ::sendto(m_fd, buffer, size, 0, (struct sockaddr *)&addr, sizeof(addr));
 			if (r == INVALID && isInprocess())
 			{
-				ev_io_start(cosys::at(m_tid), &m_write);
-				co_await m_write_listener.suspend();
-				if (m_write_listener.empty())
+				ev_io_start(m_loop, &m_write);
+				co_await m_write_waiter.suspend();
+				if (m_write_waiter.empty())
 				{
-					ev_io_stop(cosys::at(m_tid), &m_write);
+					ev_io_stop(m_loop, &m_write);
 				}
 			}
 			co_return r;

@@ -14,7 +14,7 @@
 
 using namespace coev;
 
-guard::comutex g_mutex;
+guard::co_mutex g_mutex;
 std::atomic_int g_total{0};
 std::atomic_int g_count{0};
 
@@ -37,7 +37,7 @@ awaitable<int> test_go()
 	co_return 0;
 }
 
-guard::comutex g_lock;
+guard::co_mutex g_lock;
 awaitable<void> test_lock()
 {
 	LOG_DBG("test_lock begin\n");
@@ -54,10 +54,10 @@ awaitable<void> test_lock()
 }
 int main()
 {
-	set_log_level(LOG_LEVEL_CORE);
+	//set_log_level(LOG_LEVEL_CORE);
 	running::instance()
-		.add(100, test_go)
-		.add(4, test_lock)
+		.add(25, test_go)
+		// .add(4, test_lock)
 		.join();
 
 	return 0;

@@ -12,7 +12,7 @@
 
 using namespace coev;
 
-channel<int> ch;
+co_channel<int> ch;
 
 std::atomic<int> total = 0;
 awaitable<int> go()

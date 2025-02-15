@@ -25,12 +25,12 @@ awaitable<int> co_sleep()
 
 awaitable<int> co_timer()
 {
-	timer t(3.0, 3.0);
+	co_timer t(3.0, 3.0);
 	t.active();
 	while (true)
 	{
 		co_await wait_for(t);
-		LOG_DBG("timer %f\n", 3.0);
+		LOG_DBG("co_timer %f\n", 3.0);
 	}
 	co_return 0;
 }

@@ -29,12 +29,13 @@ namespace coev
 
 	protected:
 		uint64_t m_tid = 0;
+		struct ev_loop *m_loop = nullptr;
 		int m_fd = INVALID;
 		ev_io m_read;
 		ev_io m_write;
 
-		async m_read_listener;
-		async m_write_listener;
+		async m_read_waiter;
+		async m_write_waiter;
 		int __finally();
 		int __init();
 		int __close();

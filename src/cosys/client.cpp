@@ -25,7 +25,7 @@ namespace coev
 		client *_this = (client *)(w->data);
 		assert(_this != nullptr);
 		_this->__remove();
-		_this->m_read_listener.resume();
+		_this->m_read_waiter.resume();
 	}
 	client::client()
 	{
@@ -44,18 +44,18 @@ namespace coev
 	}
 	client::~client()
 	{
-		close();
+		__close();
 	}
 	int client::__insert()
 	{
 		m_read.data = this;
 		ev_io_init(&m_read, &client::cb_connect, m_fd, EV_READ | EV_WRITE);
-		ev_io_start(cosys::at(m_tid), &m_read);
+		ev_io_start(m_loop, &m_read);
 		return 0;
 	}
 	int client::__remove()
 	{
-		ev_io_stop(cosys::at(m_tid), &m_read);
+		ev_io_stop(m_loop, &m_read);
 		return 0;
 	}
 	int client::__connect(const char *ip, int port)
@@ -76,7 +76,7 @@ namespace coev
 		{
 			co_return fd;
 		}
-		co_await m_read_listener.suspend();
+		co_await m_read_waiter.suspend();
 		auto err = getSocketError(m_fd);
 		if (err == 0)
 		{

@@ -14,7 +14,7 @@ using namespace coev;
 struct Trigger
 {
 	int x = 0;
-	async m_listener;
+	async m_waiter;
 } g_trigger;
 
 void real_call(int __x)
@@ -29,14 +29,14 @@ void __async_call(void (*__f)(int))
 		co_await sleep_for(1);
 		// __f(1);  // It will core dump here, __f is not equal input argument __f, is it a g++ bug?
 		real_call(1); // It's OK.
-		g_trigger.m_listener.resume();
+		g_trigger.m_waiter.resume();
 		co_return 0;
 	}();
 }
 awaitable<int> __call()
 {
 	__async_call(real_call);
-	co_await g_trigger.m_listener.suspend();
+	co_await g_trigger.m_waiter.suspend();
 	co_return 0;
 }
 

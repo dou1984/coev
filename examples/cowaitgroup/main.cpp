@@ -13,7 +13,7 @@
 
 using namespace coev;
 
-waitgroup g_waiter;
+co_waitgroup g_waiter;
 
 awaitable<int> test_co()
 {

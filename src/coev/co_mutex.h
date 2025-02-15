@@ -13,9 +13,9 @@
 
 namespace coev::guard
 {
-	class comutex final
+	class co_mutex final
 	{
-		async m_listener;
+		async m_waiter;
 		std::atomic_int m_flag{0};
 
 	public:

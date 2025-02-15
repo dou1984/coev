@@ -15,15 +15,15 @@
 
 namespace coev
 {
-	class task final
+	class co_task final
 	{
-		guard::async m_task_listener;
-		guard::async m_ev_listener;
+		guard::async m_task_waiter;
+		guard::async m_ev_waiter;
 		int m_last = 0;
 		void __erase(evtask *_notify);
 
 	public:
-		~task();
+		~co_task();
 		void destroy();
 		void done(evtask *_notify);
 		bool empty();

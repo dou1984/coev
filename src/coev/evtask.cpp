@@ -6,11 +6,11 @@
  *
  */
 #include "evtask.h"
-#include "task.h"
+#include "co_task.h"
 #include "waitfor.h"
 namespace coev
 {
-	evtask::evtask(task *_task, int _id) : m_task(_task), m_id(_id)
+	evtask::evtask(co_task *_task, int _id) : m_task(_task), m_id(_id)
 	{
 	}
 	void evtask::resume()

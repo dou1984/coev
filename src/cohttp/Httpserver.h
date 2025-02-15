@@ -21,7 +21,6 @@ namespace coev
 		virtual ~Httpserver() = default;
 
 		awaitable<int> accept(host &);
-
 		auto &get() { return m_pool.get(); }
 		
 	private:

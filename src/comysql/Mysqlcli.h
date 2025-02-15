@@ -57,8 +57,8 @@ namespace coev
 		struct ev_loop *m_loop = nullptr;
 		ev_io m_read;
 		ev_io m_write;
-		async m_read_listener;
-		async m_write_listener;
+		async m_read_waiter;
+		async m_write_waiter;
 
 		int __results();
 		void __clear();

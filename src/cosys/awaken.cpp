@@ -52,7 +52,7 @@ namespace coev
 	int awaken::resume(event *ev)
 	{
 		std::lock_guard<std::mutex> _(m_lock);
-		m_listener.push_back(ev);
+		m_waiter.push_back(ev);
 		return __done();
 	}
 	int awaken::__resume()
@@ -60,7 +60,7 @@ namespace coev
 		async _listener;
 		{
 			std::lock_guard<std::mutex> _(m_lock);
-			m_listener.moveto(&_listener);
+			m_waiter.moveto(&_listener);
 		}
 		while (_listener.resume())
 		{

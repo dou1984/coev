@@ -5,29 +5,29 @@
  *	All rights reserved.
  *
  */
-#include "waitgroup.h"
+#include "co_waitgroup.h"
 #include "waitfor.h"
 
 namespace coev
 {
-	awaitable<void> waitgroup::wait()
+	awaitable<void> co_waitgroup::wait()
 	{
-		co_await m_listener.suspend(
+		co_await m_waiter.suspend(
 			[]()
 			{ return true; }, []() {});
 	}
-	int waitgroup::add()
+	int co_waitgroup::add()
 	{
 		++m_count;
 		return 0;
 	}
-	void waitgroup::done()
+	void co_waitgroup::done()
 	{
 		if (--m_count > 0)
 		{
 			return;
 		}
-		while (m_listener.resume([]() {}))
+		while (m_waiter.resume([]() {}))
 		{
 		}
 	}

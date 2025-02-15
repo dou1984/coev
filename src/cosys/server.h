@@ -12,10 +12,10 @@
 
 namespace coev::tcp
 {
-	class server final
+	class server
 	{
 	public:
-		server() = default;
+		server();
 		virtual ~server();
 		int start(const char *ip, int port);
 		int stop();
@@ -25,8 +25,9 @@ namespace coev::tcp
 	private:
 		friend class serverpool;
 		int m_fd = INVALID;
+		struct ev_loop *m_loop = nullptr;
 		ev_io m_reav;
-		async m_listener;
+		async m_waiter;
 
 		int __insert(uint64_t _tid);
 		int __remove(uint64_t _tid);

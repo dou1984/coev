@@ -14,25 +14,25 @@
 namespace coev
 {
 	template <class TYPE>
-	class channel
+	class co_channel
 	{
 	public:
 		void move(TYPE &&d)
 		{
-			m_listener.resume(
+			m_waiter.resume(
 				[this, d = std::move(d)]()
 				{ m_data.emplace_back(std::move(d)); });
 		}
 		void set(const TYPE &d)
 		{
-			m_listener.resume(
+			m_waiter.resume(
 				[this, d]()
 				{ m_data.push_back(d); });
 		}
 		awaitable<TYPE> move()
 		{
 			TYPE d;
-			co_await m_listener.suspend(
+			co_await m_waiter.suspend(
 				[this]()
 				{ return __invalid(); },
 				[&]()
@@ -42,7 +42,7 @@ namespace coev
 
 	private:
 		std::list<TYPE> m_data;
-		guard::async m_listener;
+		guard::async m_waiter;
 		bool __invalid() const { return m_data.empty(); }
 		TYPE pop_front()
 		{

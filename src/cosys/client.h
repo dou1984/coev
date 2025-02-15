@@ -13,7 +13,7 @@
 
 namespace coev
 {
-	class client final : public iocontext
+	class client : protected iocontext
 	{
 	public:
 		client();

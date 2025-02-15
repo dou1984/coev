@@ -10,7 +10,7 @@
 
 using namespace coev;
 
-awaitable<int> co_task(bool for_all)
+awaitable<int> proc_task(bool for_all)
 {
 	auto t0 = []() -> awaitable<int>
 	{
@@ -35,11 +35,11 @@ awaitable<int> co_task(bool for_all)
 
 void co_task_t()
 {
-	co_task(true);
+	proc_task(true);
 }
 void co_task_f()
 {
-	co_task(false);
+	proc_task(false);
 }
 
 awaitable<int> co_completed()

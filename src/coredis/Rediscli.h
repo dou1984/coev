@@ -42,7 +42,7 @@ namespace coev
 		struct ev_loop* m_loop;
 		ev_io m_read;
 		ev_io m_write;
-		async m_listener;
+		async m_waiter;
 
 		redisAsyncContext *m_context = nullptr;
 		redisReply *m_reply = nullptr;

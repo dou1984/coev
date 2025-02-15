@@ -38,6 +38,8 @@ namespace coev
 
 		static http_parser_settings m_settings;
 		void clear();
+
+	private:
 		static int on_message_begin(http_parser *_);
 		static int on_headers_complete(http_parser *_);
 		static int on_message_complete(http_parser *_);

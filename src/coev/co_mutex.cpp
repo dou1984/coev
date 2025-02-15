@@ -5,7 +5,7 @@
  *	All rights reserved.
  *
  */
-#include "comutex.h"
+#include "co_mutex.h"
 #include "waitfor.h"
 
 namespace coev::guard
@@ -13,17 +13,17 @@ namespace coev::guard
 	const int on = 1;
 	const int off = 0;
 
-	awaitable<void> comutex::lock()
+	awaitable<void> co_mutex::lock()
 	{
-		co_await m_listener.suspend(
+		co_await m_waiter.suspend(
 			[this]()
 			{ return m_flag == on; },
 			[this]()
 			{ m_flag = on; });
 	}
-	bool comutex::unlock()
+	bool co_mutex::unlock()
 	{
-		return m_listener.resume(
+		return m_waiter.resume(
 			[this]()
 			{ m_flag = off; });
 	}

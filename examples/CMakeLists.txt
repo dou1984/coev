@@ -12,5 +12,6 @@ add_subdirectory(./mysql)
 add_subdirectory(./http)
 add_subdirectory(./udpclient)
 add_subdirectory(./udpserver)
+add_subdirectory(./nocopy)
 
 
