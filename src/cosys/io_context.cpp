@@ -11,23 +11,23 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "cosys.h"
-#include "iocontext.h"
+#include "io_context.h"
 
 namespace coev
 {
-	void iocontext::cb_read(struct ev_loop *loop, struct ev_io *w, int revents)
+	void io_context::cb_read(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
-		auto _this = (iocontext *)w->data;
+		auto _this = (io_context *)w->data;
 		assert(_this != NULL);
 		_this->m_read_waiter.resume();
 	}
-	void iocontext::cb_write(struct ev_loop *loop, struct ev_io *w, int revents)
+	void io_context::cb_write(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
-		auto _this = (iocontext *)w->data;
+		auto _this = (io_context *)w->data;
 		assert(_this != NULL);
 		_this->m_write_waiter.resume();
 	}
-	int iocontext::__close()
+	int io_context::__close()
 	{
 		if (m_fd != INVALID)
 		{
@@ -43,35 +43,35 @@ namespace coev
 		}
 		return 0;
 	}
-	bool iocontext::__valid() const
+	bool io_context::__valid() const
 	{
 		return m_fd != INVALID;
 	}
-	iocontext::operator bool() const
+	io_context::operator bool() const
 	{
 		return m_fd != INVALID;
 	}
-	iocontext::iocontext(int fd) : m_fd(fd)
+	io_context::io_context(int fd) : m_fd(fd)
 	{
 		m_tid = gtid();
 		m_loop = cosys::data();
 		__init();
 	}
-	int iocontext::__init()
+	int io_context::__init()
 	{
 		LOG_CORE("fd:%d\n", m_fd);
 		if (m_fd != INVALID)
 		{
 			m_read.data = this;
-			ev_io_init(&m_read, iocontext::cb_read, m_fd, EV_READ);
+			ev_io_init(&m_read, io_context::cb_read, m_fd, EV_READ);
 			ev_io_start(m_loop, &m_read);
 
 			m_write.data = this;
-			ev_io_init(&m_write, iocontext::cb_write, m_fd, EV_WRITE);
+			ev_io_init(&m_write, io_context::cb_write, m_fd, EV_WRITE);
 		}
 		return 0;
 	}
-	int iocontext::__finally()
+	int io_context::__finally()
 	{
 		LOG_CORE("fd:%d\n", m_fd);
 		if (m_fd != INVALID)
@@ -81,16 +81,11 @@ namespace coev
 		}
 		return 0;
 	}
-	iocontext::~iocontext()
+	io_context::~io_context()
 	{
-		if (m_fd != INVALID)
-		{
-			__finally();
-			::close(m_fd);
-			m_fd = INVALID;
-		}
+		__close();
 	}
-	awaitable<int> iocontext::send(const char *buffer, int size)
+	awaitable<int> io_context::send(const char *buffer, int size)
 	{
 		while (__valid())
 		{
@@ -111,7 +106,7 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	awaitable<int> iocontext::recv(char *buffer, int size)
+	awaitable<int> io_context::recv(char *buffer, int size)
 	{
 		while (__valid())
 		{
@@ -125,7 +120,7 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	awaitable<int> iocontext::recvfrom(char *buffer, int size, host &info)
+	awaitable<int> io_context::recvfrom(char *buffer, int size, addrInfo &info)
 	{
 		while (__valid())
 		{
@@ -142,12 +137,12 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	awaitable<int> iocontext::sendto(const char *buffer, int size, host &info)
+	awaitable<int> io_context::sendto(const char *buffer, int size, addrInfo &info)
 	{
 		while (__valid())
 		{
 			sockaddr_in addr;
-			fillAddr(addr, info.addr, info.port);
+			fillAddr(addr, info.ip, info.port);
 			int r = ::sendto(m_fd, buffer, size, 0, (struct sockaddr *)&addr, sizeof(addr));
 			if (r == INVALID && isInprocess())
 			{
@@ -162,10 +157,12 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	awaitable<int> iocontext::close()
+	
+	int io_context::close()
 	{
 		LOG_CORE("m_fd:%d\n", m_fd);
 		__close();
-		co_return 0;
+		return 0;
 	}
+	
 }

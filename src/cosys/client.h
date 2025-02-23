@@ -9,18 +9,19 @@
 #include <ev.h>
 #include <coev/coev.h>
 #include "socket.h"
-#include "iocontext.h"
+#include "io_context.h"
 
 namespace coev
 {
-	class client : protected iocontext
+	class client : public io_context
 	{
 	public:
 		client();
-		virtual ~client();		
+		virtual ~client();
 		awaitable<int> connect(const char *, int);
 
 	private:
+		void __initial() ;
 		int __insert();
 		int __remove();
 		int __connect(const char *ip, int port);

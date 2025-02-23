@@ -4,13 +4,13 @@
 
 namespace coev
 {
-    class evpipe final : protected awaken
+    class co_pipe final : protected awaken
     {
         uint64_t m_tid = 0;
 
     public:
-        evpipe();
-        ~evpipe();
+        co_pipe();
+        ~co_pipe();
 
         static void resume(async &listener);
     };

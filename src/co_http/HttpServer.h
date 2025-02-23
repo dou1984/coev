@@ -14,17 +14,13 @@
 
 namespace coev
 {
-	class Httpserver final
+	class HttpServer final : public tcp::server
 	{
 	public:
-		Httpserver(const char *, int);
-		virtual ~Httpserver() = default;
+		HttpServer() = default;
+		virtual ~HttpServer() = default;
 
-		awaitable<int> accept(host &);
-		auto &get() { return m_pool.get(); }
-		
 	private:
-		tcp::serverpool m_pool;
 		int m_timeout = 15;
 	};
 

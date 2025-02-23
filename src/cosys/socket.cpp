@@ -7,28 +7,41 @@
  */
 #include <cerrno>
 #include <string.h>
+#include <stdio.h>
 #include "socket.h"
 
 namespace coev
 {
-	host::host(const host &o)
+	addrInfo::addrInfo(const addrInfo &o)
 	{
 		*this = o;
 	}
-	host::host(const char *_addr, int _port)
+	addrInfo::addrInfo(const char *_ip, int _port)
 	{
-		constexpr int l = sizeof(addr);
-		strncpy(addr, _addr, l);
-		addr[l - 1] = '\0';
+		constexpr int l = sizeof(ip);
+		strncpy(ip, _ip, l);
+		ip[l - 1] = '\0';
 		port = _port;
 	}
-	const host &host::operator=(const host &o)
+	const addrInfo &addrInfo::operator=(const addrInfo &o)
 	{
-		constexpr int l = sizeof(addr);
-		strncpy(addr, o.addr, l);
-		addr[l - 1] = '\0';
+		constexpr int l = sizeof(ip);
+		strncpy(ip, o.ip, l);
+		ip[l - 1] = '\0';
 		port = o.port;
 		return *this;
+	}
+	int addrInfo::fromUrl(const char *url)
+	{
+		auto count = sscanf(url, "%[^:]:%d", ip, &port);
+		switch (count)
+		{
+		case 2:
+		case 1:
+			return 0;
+		default:
+			return -1;
+		}
 	}
 	void zeroSin(void *sin_zero)
 	{
@@ -42,9 +55,9 @@ namespace coev
 		inet_pton(addr.sin_family, ip, &addr.sin_addr);
 		zeroSin(addr.sin_zero);
 	}
-	void parseAddr(sockaddr_in &addr, host &info)
+	void parseAddr(sockaddr_in &addr, addrInfo &info)
 	{
-		inet_ntop(AF_INET, &(addr.sin_addr), info.addr, sizeof(info.addr));
+		inet_ntop(AF_INET, &(addr.sin_addr), info.ip, sizeof(info.ip));
 		info.port = ntohs(addr.sin_port);
 	}
 	int bindLocal(int fd, const char *ip)
@@ -75,7 +88,7 @@ namespace coev
 		socklen_t len = sizeof(socklen_t);
 		return getsockopt(fd, SOL_SOCKET, SO_ERROR, (char *)&error_value, &len) == -1 ? -1 : error_value;
 	}
-	int acceptLocal(int fd, host &info)
+	int acceptLocal(int fd, addrInfo &info)
 	{
 		sockaddr_un addr;
 		addr.sun_family = AF_LOCAL;
@@ -84,7 +97,7 @@ namespace coev
 		int rfd = accept(fd, (sockaddr *)&addr, &addr_len);
 		if (rfd != INVALID)
 		{
-			strncpy(info.addr, addr.sun_path, sizeof(info.addr));
+			strncpy(info.ip, addr.sun_path, sizeof(info.ip));
 		}
 		return rfd;
 	}
@@ -157,7 +170,7 @@ namespace coev
 	{
 		return setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *)&nodelay, sizeof(nodelay));
 	}
-	int getSockName(int fd, host &info)
+	int getSockName(int fd, addrInfo &info)
 	{
 		struct sockaddr_in addr;
 		socklen_t addr_len = sizeof(addr);
@@ -168,7 +181,7 @@ namespace coev
 		}
 		return ret;
 	}
-	int getPeerName(int fd, host &info)
+	int getPeerName(int fd, addrInfo &info)
 	{
 		struct sockaddr_in addr;
 		socklen_t addr_len = sizeof(addr);
@@ -179,7 +192,7 @@ namespace coev
 		}
 		return ret;
 	}
-	int getHostName(const char *name, host &info)
+	int getHostName(const char *name, addrInfo &info)
 	{
 		auto host = gethostbyname(name);
 		if (!host)
@@ -187,7 +200,7 @@ namespace coev
 			return INVALID;
 		}
 		auto addr = (struct in_addr *)host->h_addr_list[0];
-		inet_ntop(AF_INET, addr, info.addr, sizeof(info.addr));
+		inet_ntop(AF_INET, addr, info.ip, sizeof(info.ip));
 		return 0;
 	}
 	bool isInprocess()

@@ -7,12 +7,14 @@
  */
 #include <sstream>
 #include <cosys/cosys.h>
-#include <cohttp/Httprequest.h>
-#include <cohttp/Httpserver.h>
+#include <co_http/Httprequest.h>
+#include <co_http/HttpServer.h>
 
 using namespace coev;
 
-awaitable<int> echo(iocontext &io)
+tcp::serverpool<HttpServer> g_server;
+
+awaitable<int> echo(io_context &io)
 {
 	LOG_DBG("recv echo\n");
 	std::ostringstream oss;
@@ -33,52 +35,49 @@ Content-Type: text/html; charset=utf-8)";
 	co_return 0;
 }
 
-awaitable<void> co_router(Httpserver &pool)
+awaitable<void> co_router()
 {
-	while (pool.get())
+	auto &srv = g_server.get();
+	while (srv.valid())
 	{
-		host h;
-		auto fd = co_await pool.accept(h);
-
+		addrInfo h;
+		auto fd = co_await srv.accept(h);
+		if (fd == INVALID)
+		{
+			LOG_CORE("accept error %s", strerror(errno));
+			continue;
+		}
 		[=]() -> awaitable<void>
 		{
-			iocontext io(fd);
-			Httprequest req;
-			co_await wait_for_all(
-				req.parse(io),
-				[&]() -> awaitable<void>
-				{
-					auto url = co_await req.get_url();
+			io_context io(fd);
+			HttpRequest r;
+			auto [ok, req] = co_await r.get_request(io);
+			if (ok != 0)
+			{
+				LOG_DBG("parse http request error %s", req.status.c_str());
+				co_return;
+			}
+			std::cout << "url:" << req.url << std::endl;
+			for (auto &it : req.headers)
+			{
+				std::cout << "header:" << it.first << ":" << it.second << std::endl;
+			}
+			std::cout << "body:" << req.body << std::endl;
 
-					auto [ok, key, value] = co_await req.get_header();
-					if (ok)
-					{
-						std::cout << key << "=" << value << std::endl;
-					}
+			co_await echo(io);
 
-					auto body = co_await req.get_body();
-
-					std::cout << body << std::endl;
-
-					co_await echo(io);
-
-					co_await io.close();
-				}());
+			io.close();
 		}();
 	}
 }
 int main()
 {
-	set_log_level(LOG_LEVEL_DEBUG);
-	Httpserver pool("0.0.0.0", 9999);
+	g_server.start("127.0.0.1", 9999);
 
+	set_log_level(LOG_LEVEL_DEBUG);
 	running::instance()
-		.add(
-			8,
-			[&]() -> awaitable<void>
-			{
-				co_await co_router(pool);
-			})
+		.add(2, [&]() -> awaitable<void>
+			 { co_await co_router(); })
 		.join();
 	return 0;
 }

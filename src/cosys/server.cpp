@@ -11,11 +11,11 @@
 
 namespace coev::tcp
 {
-	static int __real_accept(int fd, host &info)
+	static int __real_accept(int fd, addrInfo &info)
 	{
 		sockaddr_in addr;
 		socklen_t addr_len = sizeof(sockaddr_in);
-		int rfd = accept(fd, (sockaddr *)&addr, &addr_len);
+		int rfd = ::accept(fd, (sockaddr *)&addr, &addr_len);
 		if (rfd != INVALID)
 		{
 			parseAddr(addr, info);
@@ -74,31 +74,34 @@ namespace coev::tcp
 	{
 		if (m_fd != INVALID)
 		{
-			__remove(gtid());
+			__remove();
 			::close(m_fd);
 			m_fd = INVALID;
 		}
 		return 0;
 	}
-	int server::__insert(uint64_t _tid)
+	int server::insert(int fd)
 	{
+		m_fd = fd;
+		return __insert();
+	}
+	int server::__insert()
+	{
+		LOG_CORE("ev_io_start:%p %p", m_loop, &m_reav);
 		m_reav.data = this;
 		ev_io_init(&m_reav, server::cb_accept, m_fd, EV_READ);
 		ev_io_start(m_loop, &m_reav);
 		return m_fd;
 	}
-	int server::__remove(uint64_t _tid)
+	int server::__remove()
 	{
 		ev_io_stop(m_loop, &m_reav);
 		return m_fd;
 	}
-	bool server::__valid() const
+
+	awaitable<int> server::accept(addrInfo &peer)
 	{
-		return m_fd != INVALID;
-	}
-	awaitable<int> server::accept(host &peer)
-	{
-		if (!__valid())
+		if (!valid())
 		{
 			co_return INVALID;
 		}

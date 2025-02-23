@@ -16,7 +16,7 @@ namespace coev
 	{
 	public:
 		awaken();
-		~awaken();
+		virtual ~awaken();
 
 		int resume(event *ev);
 

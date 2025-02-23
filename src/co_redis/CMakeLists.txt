@@ -5,11 +5,11 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
-IF(NOT CMAKE_BUILD_TYPE)
-	SET(CMAKE_BUILD_TYPE Debug)
-ENDIF()
+if(NOT CMAKE_BUILD_TYPE)
+	 SET(CMAKE_BUILD_TYPE Release CACHE INTERNAL "cmake_build_type")
+endif()
 
-project(cohttp)
+project(co_redis)
 
 aux_source_directory(. SRC_DIR)
 

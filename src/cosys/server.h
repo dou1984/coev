@@ -8,7 +8,7 @@
 #pragma once
 #include <ev.h>
 #include "socket.h"
-#include "iocontext.h"
+#include "io_context.h"
 
 namespace coev::tcp
 {
@@ -19,19 +19,18 @@ namespace coev::tcp
 		virtual ~server();
 		int start(const char *ip, int port);
 		int stop();
-		awaitable<int> accept(host &);
-		operator bool() const { return __valid(); }
+		int insert(int fd);
+		awaitable<int> accept(addrInfo &);
+		bool valid() const { return m_fd != INVALID; }
 
 	private:
-		friend class serverpool;
 		int m_fd = INVALID;
 		struct ev_loop *m_loop = nullptr;
 		ev_io m_reav;
 		async m_waiter;
 
-		int __insert(uint64_t _tid);
-		int __remove(uint64_t _tid);
-		bool __valid() const;
+		int __insert();
+		int __remove();
 		static void cb_accept(struct ev_loop *loop, struct ev_io *w, int revents);
 	};
 }

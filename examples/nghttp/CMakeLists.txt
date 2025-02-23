@@ -7,9 +7,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 IF(NOT CMAKE_BUILD_TYPE)
 	SET(CMAKE_BUILD_TYPE Debug)
 ENDIF()
-project(testmysql)
+project(test_nghttp)
 
 aux_source_directory(./ SRC_DIR)
 
 add_executable(${PROJECT_NAME} ${SRC_DIR})
-target_link_libraries(${PROJECT_NAME} co_mysql mysqlclient cosys coev ev pthread)
+target_link_libraries(${PROJECT_NAME} co_nghttp nghttp2 cosys coev ev pthread)

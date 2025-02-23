@@ -12,16 +12,58 @@
 
 namespace coev::tcp
 {
+	template <class S>
 	class serverpool
 	{
 		int m_fd = INVALID;
-		std::unordered_map<uint64_t, server> m_pool;
+		std::unordered_map<uint64_t, S> m_pool;
 		std::mutex m_mutex;
 
 	public:
-		server &get();
-		int start(const char *, int);
-		int stop();
+		S &get()
+		{
+			auto _tid = gtid();
+			std::lock_guard<std::mutex> _(m_mutex);
+			auto &s = m_pool[_tid];
+			if (m_fd == INVALID)
+			{
+			}
+			else if (!s.valid())
+			{
+				s.insert(m_fd);
+			}
+			return s;
+		}
+		int start(const char *ip, int port)
+		{
+			auto _tid = gtid();
+			std::lock_guard<std::mutex> _(m_mutex);
+			auto &s = m_pool[_tid];
+			if (m_fd == INVALID)
+			{
+				m_fd = s.start(ip, port);
+				s.insert(m_fd);
+			}
+			return m_fd;
+		}
+		int stop()
+		{
+			std::lock_guard<std::mutex> _(m_mutex);
+			for (auto it = m_pool.begin(); it != m_pool.end(); ++it)
+			{
+				auto &s = it->second;
+				if (s.m_fd != INVALID)
+				{
+					s.__remove();
+				}
+			}
+			if (m_fd != INVALID)
+			{
+				::close(m_fd);
+				m_fd = INVALID;
+			}
+			return 0;
+		}
 	};
 
 }

@@ -1,26 +1,26 @@
 #include <unordered_map>
 #include <mutex>
 #include "coev/coev.h"
-#include "evpipe.h"
+#include "co_pipe.h"
 
 namespace coev
 {
-	local<evpipe> __this_pipe;
-	static std::unordered_map<uint64_t, evpipe *> all_pipes;
+	local<co_pipe> __this_pipe;
+	static std::unordered_map<uint64_t, co_pipe *> all_pipes;
 	static std::mutex g_mutex;
 
-	evpipe::evpipe()
+	co_pipe::co_pipe()
 	{
 		m_tid = gtid();
 		std::lock_guard<std::mutex> _(g_mutex);
 		all_pipes.emplace(m_tid, this);
 	}
-	evpipe::~evpipe()
+	co_pipe::~co_pipe()
 	{
 		std::lock_guard<std::mutex> _(g_mutex);
 		all_pipes.erase(m_tid);
 	}
-	void evpipe::resume(async &listener)
+	void co_pipe::resume(async &listener)
 	{
 		auto c = listener.pop_front();
 		if (c == nullptr)

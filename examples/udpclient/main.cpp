@@ -12,17 +12,17 @@ using namespace coev;
 
 awaitable<int> go()
 {
-	host addr("127.0.0.1", 9998);
+	addrInfo addr("127.0.0.1", 9998);
 	
 	auto fd = udp::socketfd();
-	iocontext io(fd);
+	io_context io(fd);
 	while (io)
 	{
 		char buffer[1000] = "hello world";
 		co_await io.sendto(buffer, strlen(buffer) + 1, addr);
-		LOG_DBG("send to %s:%d %s\n", addr.addr, addr.port, buffer);
+		LOG_DBG("send to %s:%d %s\n", addr.ip, addr.port, buffer);
 		co_await io.recvfrom(buffer, sizeof(buffer), addr);
-		LOG_DBG("recv from %s:%d %s\n", addr.addr, addr.port, buffer);
+		LOG_DBG("recv from %s:%d %s\n", addr.ip, addr.port, buffer);
 	}
 }
 int main()

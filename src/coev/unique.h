@@ -14,7 +14,7 @@ namespace coev
             std::lock_guard<std::mutex> _(m_mutex);
             all_datas.emplace(m_tid, &m_data);
         }
-        ~unique()
+        virtual ~unique()
         {
             std::lock_guard<std::mutex> _(m_mutex);
             all_datas.erase(m_tid);

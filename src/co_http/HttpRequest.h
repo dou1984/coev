@@ -15,26 +15,50 @@
 
 namespace coev
 {
-	class Httprequest : http_parser
+
+	class HttpRequest : http_parser
 	{
 	public:
-		Httprequest();
-		virtual ~Httprequest() = default;
-		awaitable<int> parse(iocontext &io);
+		enum ResStatus
+		{
+			flag_io_end = 0,
+			flag_timeout = 1,
+		};
+		struct request
+		{
+			std::string url;
+			std::string body;
+			std::string status;
+			std::unordered_map<std::string, std::string> headers;
+			request() = default;
+			request(request &&o);
+			const request &operator=(request &&o);
+		};
 
+	public:
+		HttpRequest();
+		virtual ~HttpRequest() = default;
+		awaitable<int> parse(io_context &io);
+
+		awaitable<int, request> get_request(io_context &io);
 		awaitable<std::string_view> get_url();
 		awaitable<bool, std::string_view, std::string_view> get_header();
 		awaitable<std::string_view> get_body();
 		awaitable<std::string_view> get_status();
+		awaitable<void> finished();
+
+	private:
+		const int m_timeout = 15;
 
 	private:
 		int parse(const char *, int);
 		std::string_view m_key;
 		std::string_view m_value;
-		async m_url_listener;
-		async m_body_listener;
-		async m_header_listener;
-		async m_status_listener;
+		async m_url_waiter;
+		async m_body_waiter;
+		async m_header_waiter;
+		async m_status_waiter;
+		async m_finish_waiter;
 
 		static http_parser_settings m_settings;
 		void clear();

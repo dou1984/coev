@@ -27,7 +27,15 @@ namespace coev
 		_this->__remove();
 		_this->m_read_waiter.resume();
 	}
-	client::client()
+	client::client() : io_context(INVALID)
+	{
+		__initial();
+	}
+	client::~client()
+	{
+		__close();
+	}
+	void client::__initial()
 	{
 		m_fd = ::socket(AF_INET, SOCK_STREAM, 0);
 		if (m_fd == INVALID)
@@ -39,12 +47,7 @@ namespace coev
 			::close(m_fd);
 			return;
 		}
-		m_tid = gtid();
 		__insert();
-	}
-	client::~client()
-	{
-		__close();
 	}
 	int client::__insert()
 	{
@@ -71,17 +74,17 @@ namespace coev
 	}
 	awaitable<int> client::connect(const char *ip, int port)
 	{
-		int fd = __connect(ip, port);
-		if (fd == INVALID)
+		m_fd = __connect(ip, port);
+		if (m_fd == INVALID)
 		{
-			co_return fd;
+			co_return m_fd;
 		}
 		co_await m_read_waiter.suspend();
 		auto err = getSocketError(m_fd);
 		if (err == 0)
 		{
 			__init();
-			co_return fd;
+			co_return m_fd;
 		}
 		co_return __close();
 	}

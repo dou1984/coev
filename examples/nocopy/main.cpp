@@ -9,17 +9,18 @@ public:
     nocopy() = default;
     nocopy(nocopy &&) = default;
 
-    nocopy(const nocopy &) = default;
-    nocopy &operator=(const nocopy &) = default;
+    nocopy(const nocopy &) = delete;
+    nocopy &operator=(const nocopy &) = delete;
     nocopy &operator=(nocopy &&) = default;
     ~nocopy() = default;
 };
+
 awaitable<void> co_nocopy()
 {
     auto f = []() -> awaitable<nocopy, nocopy>
     {
         nocopy a, b;
-        co_return {a, b};
+        co_return {std::move(a), std::move(b)};
     };
 
     auto [x, y] = co_await f();

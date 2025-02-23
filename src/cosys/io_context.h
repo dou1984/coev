@@ -13,18 +13,18 @@
 
 namespace coev
 {
-	class iocontext
+	class io_context
 	{
 	public:
-		iocontext() = default;
-		iocontext(int fd);
-		iocontext(iocontext &&) = delete;
-		virtual ~iocontext();
+		io_context() = delete;
+		io_context(int fd);
+		io_context(io_context &&) = delete;
+		virtual ~io_context();
 		awaitable<int> send(const char *, int);
 		awaitable<int> recv(char *, int);
-		awaitable<int> recvfrom(char *, int, host &);
-		awaitable<int> sendto(const char *, int, host &);
-		awaitable<int> close();
+		awaitable<int> recvfrom(char *, int, addrInfo &);
+		awaitable<int> sendto(const char *, int, addrInfo &);
+		int close();
 		operator bool() const;
 
 	protected:

@@ -10,32 +10,32 @@
 
 using namespace coev;
 
-tcp::serverpool pool;
-awaitable<void> dispatch(host addr, int fd)
+tcp::serverpool<tcp::server> pool;
+awaitable<void> dispatch(addrInfo addr, int fd)
 {
-	iocontext io(fd);
+	io_context io(fd);
 	while (io)
 	{
 		char buffer[0x1000];
 		auto r = co_await io.recv(buffer, sizeof(buffer));
 		if (r == INVALID)
 		{
-			co_await io.close();
+			io.close();
 		}
 		LOG_DBG("%s\n", buffer);
 		r = co_await io.send(buffer, r);
 		if (r == INVALID)
 		{
-			co_await io.close();
+			io.close();
 		}
 	}
 }
 awaitable<int> co_server()
 {
 	auto &srv = pool.get();
-	host h;
+	addrInfo h;
 	auto fd = co_await srv.accept(h);
-	if (srv)
+	if (srv.valid())
 	{
 		dispatch(h, fd);
 	}
