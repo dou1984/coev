@@ -139,7 +139,7 @@ namespace coev::nghttp2
         return 0;
     }
 
-    NghttpRequest::NghttpRequest() : client()
+    NghttpRequest::NghttpRequest() : ssl_context()
     {
         static int __init_nghttp2 = __init();
     }
@@ -158,7 +158,7 @@ namespace coev::nghttp2
             m_fd = INVALID;
             co_return m_fd;
         }
-        co_await client::connect(info.ip, info.port);
+        co_await io_context::connect(info.ip, info.port);
         err = nghttp2_session_client_new(&m_session, m_callbacks, this);
         if (err < 0)
         {

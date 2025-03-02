@@ -16,7 +16,7 @@ namespace coev
 	class io_context
 	{
 	public:
-		io_context() = delete;
+		io_context() ;
 		io_context(int fd);
 		io_context(io_context &&) = delete;
 		virtual ~io_context();
@@ -26,6 +26,8 @@ namespace coev
 		awaitable<int> sendto(const char *, int, addrInfo &);
 		int close();
 		operator bool() const;
+
+		awaitable<int> connect(const char *, int);
 
 	protected:
 		uint64_t m_tid = 0;
@@ -42,5 +44,13 @@ namespace coev
 		bool __valid() const;
 		static void cb_write(struct ev_loop *loop, struct ev_io *w, int revents);
 		static void cb_read(struct ev_loop *loop, struct ev_io *w, int revents);
+
+	protected:
+		void __initial();
+		int __insert();
+		int __remove();
+		int __connect(const char *ip, int port);
+		int __connect(int fd, const char *ip, int port);
+		static void cb_connect(struct ev_loop *loop, struct ev_io *w, int revents);
 	};
 }

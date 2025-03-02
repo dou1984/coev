@@ -10,10 +10,10 @@
 #include <unordered_map>
 #include "server.h"
 
-namespace coev::tcp
+namespace coev
 {
 	template <class S>
-	class serverpool
+	class server_pool
 	{
 		int m_fd = INVALID;
 		std::unordered_map<uint64_t, S> m_pool;
@@ -41,8 +41,8 @@ namespace coev::tcp
 			auto &s = m_pool[_tid];
 			if (m_fd == INVALID)
 			{
-				m_fd = s.start(ip, port);
-				s.insert(m_fd);
+				m_fd = s.start(ip, port);				
+			
 			}
 			return m_fd;
 		}

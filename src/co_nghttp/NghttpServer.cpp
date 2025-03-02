@@ -3,7 +3,6 @@
 
 namespace coev::nghttp2
 {
-
     NghttpServer::NghttpServer(const char *url)
     {
         addrInfo info;

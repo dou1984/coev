@@ -12,7 +12,7 @@
 
 using namespace coev;
 
-tcp::serverpool<HttpServer> g_server;
+server_pool<HttpServer> g_server;
 
 awaitable<int> echo(io_context &io)
 {
@@ -44,7 +44,7 @@ awaitable<void> co_router()
 		auto fd = co_await srv.accept(h);
 		if (fd == INVALID)
 		{
-			LOG_CORE("accept error %s", strerror(errno));
+			LOG_CORE("accept error %s\n", strerror(errno));
 			continue;
 		}
 		[=]() -> awaitable<void>
@@ -54,7 +54,7 @@ awaitable<void> co_router()
 			auto [ok, req] = co_await r.get_request(io);
 			if (ok != 0)
 			{
-				LOG_DBG("parse http request error %s", req.status.c_str());
+				LOG_DBG("parse http request error %s\n", req.status.c_str());
 				co_return;
 			}
 			std::cout << "url:" << req.url << std::endl;
@@ -76,8 +76,7 @@ int main()
 
 	set_log_level(LOG_LEVEL_DEBUG);
 	running::instance()
-		.add(2, [&]() -> awaitable<void>
-			 { co_await co_router(); })
+		.add(2, co_router)
 		.join();
 	return 0;
 }

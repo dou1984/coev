@@ -4,12 +4,12 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 link_directories(${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin) 
 
-IF(NOT CMAKE_BUILD_TYPE)
-	SET(CMAKE_BUILD_TYPE Debug)
-ENDIF()
-project(test_http)
+if(NOT CMAKE_BUILD_TYPE)
+	 SET(CMAKE_BUILD_TYPE Release CACHE INTERNAL "cmake_build_type")
+endif()
+project(co_ssl)
 
 aux_source_directory(./ SRC_DIR)
 
 add_executable(${PROJECT_NAME} ${SRC_DIR})
-target_link_libraries(${PROJECT_NAME} co_http http_parser cosys coev ssl crypto ev pthread)
+target_link_libraries(${PROJECT_NAME} cosys coev ssl crypto ev pthread)

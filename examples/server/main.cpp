@@ -10,7 +10,7 @@
 
 using namespace coev;
 
-tcp::serverpool<tcp::server> pool;
+server_pool<tcp::server> pool;
 awaitable<void> dispatch(addrInfo addr, int fd)
 {
 	io_context io(fd);

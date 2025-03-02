@@ -157,12 +157,86 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	
 	int io_context::close()
 	{
 		LOG_CORE("m_fd:%d\n", m_fd);
 		__close();
 		return 0;
 	}
-	
+
+	// io_context::client
+	io_context::io_context() : m_fd(INVALID)
+	{
+		__initial();
+	}
+	int io_context::__connect(int fd, const char *ip, int port)
+	{
+		sockaddr_in addr;
+		fillAddr(addr, ip, port);
+		return ::connect(fd, (sockaddr *)&addr, sizeof(addr));
+	}
+	void io_context::cb_connect(struct ev_loop *loop, struct ev_io *w, int revents)
+	{
+		if (EV_ERROR & revents)
+		{
+			return;
+		}
+		io_context *_this = (io_context *)(w->data);
+		assert(_this != nullptr);
+		_this->__remove();
+		_this->m_read_waiter.resume();
+	}
+	void io_context::__initial()
+	{
+		m_fd = ::socket(AF_INET, SOCK_STREAM, 0);
+		if (m_fd == INVALID)
+		{
+			return;
+		}
+		if (setNoBlock(m_fd, true) < 0)
+		{
+			::close(m_fd);
+			return;
+		}
+		__insert();
+	}
+	int io_context::__insert()
+	{
+		m_read.data = this;
+		ev_io_init(&m_read, &io_context::cb_connect, m_fd, EV_READ | EV_WRITE);
+		ev_io_start(m_loop, &m_read);
+		return 0;
+	}
+	int io_context::__remove()
+	{
+		ev_io_stop(m_loop, &m_read);
+		return 0;
+	}
+	int io_context::__connect(const char *ip, int port)
+	{
+		if (__connect(m_fd, ip, port) < 0)
+		{
+			if (isInprocess())
+			{
+				return m_fd;
+			}
+		}
+		return __close();
+	}
+	awaitable<int> io_context::connect(const char *ip, int port)
+	{
+		m_fd = __connect(ip, port);
+		if (m_fd == INVALID)
+		{
+			co_return m_fd;
+		}
+		co_await m_read_waiter.suspend();
+		auto err = getSocketError(m_fd);
+		if (err == 0)
+		{
+			__init();
+			co_return m_fd;
+		}
+		co_return __close();
+	}
 }

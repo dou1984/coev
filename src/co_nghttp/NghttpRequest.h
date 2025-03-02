@@ -6,7 +6,7 @@
 
 namespace coev::nghttp2
 {
-    class NghttpRequest : public client
+    class NghttpRequest : public ssl_context
     {
     public:
         NghttpRequest();

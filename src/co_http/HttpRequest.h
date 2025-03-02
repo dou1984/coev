@@ -23,6 +23,7 @@ namespace coev
 		{
 			flag_io_end = 0,
 			flag_timeout = 1,
+			flag_running = 2,
 		};
 		struct request
 		{
@@ -38,17 +39,19 @@ namespace coev
 	public:
 		HttpRequest();
 		virtual ~HttpRequest() = default;
-		awaitable<int> parse(io_context &io);
+		awaitable<void> parse(io_context &io);
 
 		awaitable<int, request> get_request(io_context &io);
-		awaitable<std::string_view> get_url();
-		awaitable<bool, std::string_view, std::string_view> get_header();
-		awaitable<std::string_view> get_body();
-		awaitable<std::string_view> get_status();
+		awaitable<void> get_url();
+		awaitable<void> get_headers();
+
+		awaitable<void> get_body();
+		awaitable<void> get_status();
 		awaitable<void> finished();
 
 	private:
 		const int m_timeout = 15;
+		request m_request;
 
 	private:
 		int parse(const char *, int);

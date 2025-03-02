@@ -109,61 +109,58 @@ namespace coev
 	}
 	awaitable<int, HttpRequest::request> HttpRequest::get_request(io_context &io)
 	{
-		request req;
-		int r = co_await wait_for_any(
-			[&, this]() -> awaitable<void>
-			{
-				parse(io);
-				req.url = co_await get_url();
-				do
-				{
-					auto [ok, key, value] = co_await get_header();
-					if (!ok)
-					{
-						break;
-					}
-					req.headers.emplace(key, value);
-				} while (true);
-				req.body = co_await get_body();
-				co_await finished();
-			}(),
-			sleep_for(m_timeout));
-		if (r == flag_timeout)
+		co_task _task;
+		auto f_end = finished();
+		_task.insert(&f_end, flag_io_end);
+		auto f_timeout = sleep_for(m_timeout);
+		_task.insert(&f_timeout, flag_timeout);
+		auto f_url = get_url();
+		_task.insert(&f_url, flag_running);
+		auto f_headers = get_headers();
+		_task.insert(&f_headers, flag_running);
+		auto f_body = get_body();
+		_task.insert(&f_body, flag_running);
+		auto f_parse = parse(io);
+		_task.insert(&f_parse, flag_running);
+		int r = flag_running;
+		while ((r = co_await _task.wait()) == flag_running)
 		{
-			co_return {flag_timeout, std::move(req)};
 		}
-		co_return {flag_io_end, std::move(req)};
+		co_return {r, std::move(m_request)};
 	}
-	awaitable<std::string_view> HttpRequest::get_url()
+	awaitable<void> HttpRequest::get_url()
 	{
 		co_await m_url_waiter.suspend();
-		co_return std::move(m_value);
+		m_request.url = m_value;
 	}
-	awaitable<bool, std::string_view, std::string_view> HttpRequest::get_header()
+	awaitable<void> HttpRequest::get_headers()
 	{
-		co_await m_header_waiter.suspend();
-		if (m_key.size() == 0 && m_value.size() == 0)
+		while (true)
 		{
-			co_return {false, std::move(m_key), std::move(m_value)};
+			co_await m_header_waiter.suspend();
+			if (m_key.size() == 0 && m_value.size() == 0)
+			{
+				break;
+			}
+			m_request.headers.emplace(m_key, m_value);
 		}
-		co_return {true, std::move(m_key), std::move(m_value)};
 	}
-	awaitable<std::string_view> HttpRequest::get_body()
+	awaitable<void> HttpRequest::get_body()
 	{
 		co_await m_body_waiter.suspend();
-		co_return std::move(m_value);
+		m_request.body = m_value;
 	}
-	awaitable<std::string_view> HttpRequest::get_status()
+	awaitable<void> HttpRequest::get_status()
 	{
 		co_await m_status_waiter.suspend();
-		co_return std::move(m_value);
+		m_request.status = m_value;
 	}
 	awaitable<void> HttpRequest::finished()
 	{
 		co_await m_finish_waiter.suspend();
 		co_return;
 	}
-	awaitable<int> HttpRequest::parse(io_context &io)
+	awaitable<void> HttpRequest::parse(io_context &io)
 	{
 		while (io)
 		{
@@ -171,10 +168,9 @@ namespace coev
 			auto r = co_await io.recv(buffer, sizeof(buffer));
 			if (r == INVALID)
 			{
-				co_return INVALID;
+				break;
 			}
 			parse(buffer, r);
 		}
-		co_return 0;
 	}
 }

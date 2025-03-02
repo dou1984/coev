@@ -11,7 +11,7 @@ using namespace coev;
 
 awaitable<int> co_dail(const char *ip, int port)
 {
-	client c;
+	io_context c;
 	co_await c.connect(ip, port);
 	if (!c)
 	{
