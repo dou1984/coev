@@ -68,6 +68,7 @@ namespace coev::tcp
 		{
 			goto __error_return__;
 		}
+		__insert();
 		return m_fd;
 	}
 	int server::stop()
@@ -87,7 +88,7 @@ namespace coev::tcp
 	}
 	int server::__insert()
 	{
-		LOG_CORE("ev_io_start:%p %p", m_loop, &m_reav);
+		LOG_CORE("ev_io_start:%p %p\n", m_loop, &m_reav);
 		m_reav.data = this;
 		ev_io_init(&m_reav, server::cb_accept, m_fd, EV_READ);
 		ev_io_start(m_loop, &m_reav);

@@ -164,9 +164,10 @@ namespace coev
 		return 0;
 	}
 
-	// io_context::client
 	io_context::io_context() : m_fd(INVALID)
 	{
+		m_tid = gtid();
+		m_loop = cosys::data();
 		__initial();
 	}
 	int io_context::__connect(int fd, const char *ip, int port)

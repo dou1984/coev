@@ -15,7 +15,6 @@
 #include "udp.h"
 #include "co_timer.h"
 #include "ssl_context.h"
-#include "ssl_client.h"
 
 #define max_ev_loop (0x100)
 

@@ -31,7 +31,7 @@ Content-Type: text/html; charset=utf-8)";
 
             char buffer[1000];
             co_await ctx.recv(buffer, sizeof(buffer));
-           
+
             co_await ctx.send(hi, strlen(hi) + 1);
         }();
     }
@@ -40,23 +40,40 @@ Content-Type: text/html; charset=utf-8)";
 awaitable<int> proc_client()
 {
     coev::nghttp2::NghttpRequest client;
-    int fd = co_await client.connect("127.0.0.1");
+    int fd = co_await client.connect("127.0.0.1:8090");
     if (fd == INVALID)
     {
         co_return INVALID;
     }
     const char *user_data = "GET / HTTP/1.1\r\nHost: 157.148.69.80\r\n\r\n";
     int length = strlen(user_data) + 1;
-    co_await client.send(user_data, length);
-
+    int err = co_await client.send(user_data, length);
+    char buffer[1000];
+    err = co_await client.recv(buffer, sizeof(buffer));
     co_return 0;
 }
-int main()
+int main(int argc, char **argv)
 {
+    if (argc < 2)
+    {
+        LOG_ERR("usage: %s server|client", argv[0]);
+        return 1;
+    }
+
     set_log_level(LOG_LEVEL_DEBUG);
-    running::instance()
-        .add(proc_server)
-        // .add(proc_client)
-        .join();
+
+    if (strcmp(argv[1], "server") == 0)
+    {
+        running::instance()
+            .add(proc_server)
+            .join();
+    }
+    else if (strcmp(argv[1], "client") == 0)
+    {
+        running::instance()
+            .add(proc_client)
+            .join();
+    }
+
     return 0;
 }
