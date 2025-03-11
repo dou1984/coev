@@ -15,7 +15,7 @@
 #include "co_task.h"
 #include "wait_for.h"
 #include "setvalue.h"
-#include "chain.h"
+#include "queue.h"
 #include "co_mutex.h"
 #include "co_channel.h"
 #include "co_waitgroup.h"

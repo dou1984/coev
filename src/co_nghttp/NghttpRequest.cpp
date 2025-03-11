@@ -20,6 +20,7 @@
     }
 namespace coev::nghttp2
 {
+    static ssl_manager g_cli_mgr(ssl_manager::TLS_CLIENT);
 
     nghttp2_session_callbacks *NghttpRequest::m_callbacks = nullptr;
     int NghttpRequest::__init()
@@ -139,7 +140,7 @@ namespace coev::nghttp2
         return 0;
     }
 
-    NghttpRequest::NghttpRequest() : ssl_context()
+    NghttpRequest::NghttpRequest() : ssl_context(g_cli_mgr.get())
     {
         static int __init_nghttp2 = __init();
     }

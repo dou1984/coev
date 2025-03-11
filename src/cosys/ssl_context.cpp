@@ -4,20 +4,19 @@
 
 namespace coev
 {
-    static ssl_manager g_srv_mgr(ssl_manager::TLS_SERVER);
-    static ssl_manager g_cli_mgr(ssl_manager::TLS_CLIENT);
-    ssl_context::ssl_context()
+
+    ssl_context::ssl_context(SSL_CTX *_ssl_ctx)
     {
-        m_ssl = SSL_new(g_cli_mgr.get());
+        m_ssl = SSL_new(_ssl_ctx);
         if (m_ssl == nullptr)
         {
             LOG_ERR("SSL_new failed %p\n", m_ssl);
             throw std::runtime_error("SSL_new failed");
         }
     }
-    ssl_context::ssl_context(int fd) : io_context(fd)
+    ssl_context::ssl_context(int fd, SSL_CTX *_ssl_ctx) : io_context(fd)
     {
-        m_ssl = SSL_new(g_srv_mgr.get());
+        m_ssl = SSL_new(_ssl_ctx);
         if (m_ssl == nullptr)
         {
             LOG_ERR("SSL_new failed %p\n", m_ssl);
@@ -151,8 +150,5 @@ namespace coev
         }
         co_return 0;
     }
-    void ssl_context::load_certificated(const char *cert_file, const char *key_file)
-    {
-        g_srv_mgr.load_certificated(cert_file, key_file);
-    }
+
 }

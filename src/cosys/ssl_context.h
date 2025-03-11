@@ -11,8 +11,8 @@ namespace coev
     public:
         using io_context::operator bool;
         ssl_context(ssl_context &&) = delete;
-        ssl_context();
-        ssl_context(int fd);
+        ssl_context(SSL_CTX *);
+        ssl_context(int fd, SSL_CTX *);
         ~ssl_context();
 
         awaitable<int> send(const char *, int);
@@ -20,7 +20,6 @@ namespace coev
 
     public:
         awaitable<int> connect(const char *host, int port);
-        static void load_certificated(const char *, const char *);
         awaitable<int> do_handshake();
 
     protected:

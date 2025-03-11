@@ -9,18 +9,18 @@
 #include <coroutine>
 #include <atomic>
 #include "log.h"
-#include "chain.h"
+#include "queue.h"
 #include "promise.h"
 #include "gtid.h"
 
 namespace coev
 {
-	struct event final : chain
+	struct event final : queue
 	{
 		std::atomic_int m_status{STATUS_INIT};
 		std::coroutine_handle<> m_caller = nullptr;
 		size_t m_tid;
-		event(chain *_eventchain);
+		event(queue *_eventchain);
 		virtual ~event();
 		event(event &&) = delete;
 		event(const event &) = delete;

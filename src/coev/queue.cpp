@@ -5,17 +5,17 @@
  *	All rights reserved.
  *
  */
-#include "chain.h"
+#include "queue.h"
 
 namespace coev
 {
-	chain *chain::erase(chain *_old)
+	queue *queue::erase(queue *_old)
 	{
 		__list_del(_old->m_prev, _old->m_next);
 		_old->__list_clear();
 		return _old;
 	}
-	bool chain::moveto(chain *_new)
+	bool queue::moveto(queue *_new)
 	{
 		if (empty())
 			return false;
@@ -25,25 +25,25 @@ namespace coev
 		__list_clear();
 		return true;
 	}
-	void chain::__list_add(chain *_new, chain *prev, chain *next)
+	void queue::__list_add(queue *_new, queue *prev, queue *next)
 	{
 		prev->m_next = next->m_prev = _new;
 		_new->m_next = next;
 		_new->m_prev = prev;
 	}
-	void chain::__list_del(chain *prev, chain *next)
+	void queue::__list_del(queue *prev, queue *next)
 	{
 		next->m_prev = prev;
 		prev->m_next = next;
 	}
-	void chain::__list_move(chain *prev, chain *next)
+	void queue::__list_move(queue *prev, queue *next)
 	{
 		assert(empty());
 		prev->m_next = next->m_prev = this;
 		m_next = next;
 		m_prev = prev;
 	}
-	void chain::__list_clear()
+	void queue::__list_clear()
 	{
 		m_next = m_prev = this;
 	}

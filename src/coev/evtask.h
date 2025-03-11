@@ -7,12 +7,12 @@
  */
 #pragma once
 #include <functional>
-#include "chain.h"
+#include "queue.h"
 
 namespace coev
 {
 	class co_task;
-	class evtask : public chain
+	class evtask : public queue
 	{
 		friend class co_task;
 		co_task *m_task = nullptr;

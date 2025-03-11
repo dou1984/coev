@@ -3,11 +3,14 @@
 
 using namespace coev;
 
+static ssl_manager g_srv_mgr(ssl_manager::TLS_SERVER);
+static ssl_manager g_cli_mgr(ssl_manager::TLS_CLIENT);
+
 awaitable<void> test_ssl_context()
 {
     server_pool<tcp::server> pool;
     pool.start("127.0.0.1", 9998);
-    ssl_context::load_certificated(
+    g_srv_mgr.load_certificated(
         "./server.pem",
         "./server.pem");
 
@@ -25,7 +28,7 @@ awaitable<void> test_ssl_context()
         }
         [=]() -> awaitable<void>
         {
-            ssl_context ctx(fd);
+            ssl_context ctx(fd, g_srv_mgr.get());
             int err = co_await ctx.do_handshake();
             if (err == INVALID)
             {
@@ -54,7 +57,7 @@ awaitable<void> test_ssl_context()
 awaitable<void> test_ssl_client()
 {
 
-    ssl_context client;
+    ssl_context client(g_cli_mgr.get());
     int fd = co_await client.connect("127.0.0.1", 9998);
     if (fd == INVALID)
     {

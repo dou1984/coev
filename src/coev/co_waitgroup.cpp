@@ -13,8 +13,8 @@ namespace coev
 	awaitable<void> co_waitgroup::wait()
 	{
 		co_await m_waiter.suspend(
-			[]()
-			{ return true; }, []() {});
+			[this]()
+			{ return m_count > 0; }, []() {});
 	}
 	int co_waitgroup::add()
 	{

@@ -1,13 +1,13 @@
 #pragma once
 #include <mutex>
 #include <functional>
-#include "chain.h"
+#include "queue.h"
 #include "event.h"
 #include "awaitable.h"
 
 namespace coev
 {
-    struct async : chain
+    struct async : queue
     {
         event suspend();
         bool resume();
@@ -15,7 +15,7 @@ namespace coev
 
     namespace guard
     {
-        struct async : chain
+        struct async : queue
         {
             std::mutex m_mutex;
             awaitable<void> suspend(const std::function<bool()> &, const std::function<void()> &);

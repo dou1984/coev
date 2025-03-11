@@ -10,7 +10,7 @@
 
 namespace coev
 {
-	event::event(chain *_eventchain) : m_tid(gtid())
+	event::event(queue *_eventchain) : m_tid(gtid())
 	{
 		if (_eventchain != nullptr)
 			_eventchain->push_back(this);
@@ -18,8 +18,8 @@ namespace coev
 	}
 	event::~event()
 	{
-		if (!chain::empty())
-			chain::erase(this);
+		if (!queue::empty())
+			queue::erase(this);
 		m_caller = nullptr;
 	}
 	void event::await_resume()
