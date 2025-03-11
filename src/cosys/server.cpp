@@ -108,10 +108,7 @@ namespace coev::tcp
 		}
 		co_await m_waiter.suspend();
 		auto fd = __real_accept(m_fd, peer);
-		if (fd != INVALID)
-		{
-			setNoBlock(fd, true);
-		}
+	
 		co_return fd;
 	}
 

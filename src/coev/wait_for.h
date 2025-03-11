@@ -20,7 +20,7 @@ namespace coev
 	{
 		co_task w;
 		int id = 0;
-		(w.insert(&awt, id++), ...);
+		(w.insert(id++, &awt), ...);
 		id = co_await w.wait();
 		w.destroy();
 		co_return id;
@@ -30,7 +30,7 @@ namespace coev
 	{
 		co_task w;
 		int id = 0;
-		(w.insert(&awt, id++), ...);
+		(w.insert(id++, &awt), ...);
 		while (!w.empty())
 		{
 			id = co_await w.wait();

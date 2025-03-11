@@ -26,6 +26,7 @@ namespace coev
 		auto _this = (io_context *)w->data;
 		assert(_this != NULL);
 		_this->m_write_waiter.resume();
+		_this->__del_write();
 	}
 	int io_context::__close()
 	{
@@ -55,13 +56,15 @@ namespace coev
 	{
 		m_tid = gtid();
 		m_loop = cosys::data();
-		__init();
+		__initial();
 	}
-	int io_context::__init()
+	int io_context::__initial()
 	{
 		LOG_CORE("fd:%d\n", m_fd);
 		if (m_fd != INVALID)
 		{
+			setNoBlock(m_fd, true);
+
 			m_read.data = this;
 			ev_io_init(&m_read, io_context::cb_read, m_fd, EV_READ);
 			ev_io_start(m_loop, &m_read);
@@ -94,10 +97,6 @@ namespace coev
 			{
 				ev_io_start(m_loop, &m_write);
 				co_await m_write_waiter.suspend();
-				if (m_write_waiter.empty())
-				{
-					ev_io_stop(m_loop, &m_write);
-				}
 			}
 			else
 			{
@@ -148,10 +147,6 @@ namespace coev
 			{
 				ev_io_start(m_loop, &m_write);
 				co_await m_write_waiter.suspend();
-				if (m_write_waiter.empty())
-				{
-					ev_io_stop(m_loop, &m_write);
-				}
 			}
 			co_return r;
 		}
@@ -168,7 +163,7 @@ namespace coev
 	{
 		m_tid = gtid();
 		m_loop = cosys::data();
-		__initial();
+		__init_connect();
 	}
 	int io_context::__connect(int fd, const char *ip, int port)
 	{
@@ -184,10 +179,10 @@ namespace coev
 		}
 		io_context *_this = (io_context *)(w->data);
 		assert(_this != nullptr);
-		_this->__remove();
+		_this->__del_connect();
 		_this->m_read_waiter.resume();
 	}
-	void io_context::__initial()
+	void io_context::__init_connect()
 	{
 		m_fd = ::socket(AF_INET, SOCK_STREAM, 0);
 		if (m_fd == INVALID)
@@ -199,18 +194,26 @@ namespace coev
 			::close(m_fd);
 			return;
 		}
-		__insert();
+		__add_connect();
 	}
-	int io_context::__insert()
+	int io_context::__add_connect()
 	{
 		m_read.data = this;
 		ev_io_init(&m_read, &io_context::cb_connect, m_fd, EV_READ | EV_WRITE);
 		ev_io_start(m_loop, &m_read);
 		return 0;
 	}
-	int io_context::__remove()
+	int io_context::__del_connect()
 	{
 		ev_io_stop(m_loop, &m_read);
+		return 0;
+	}
+	int io_context::__del_write()
+	{
+		if (m_write_waiter.empty())
+		{
+			ev_io_stop(m_loop, &m_write);
+		}
 		return 0;
 	}
 	int io_context::__connect(const char *ip, int port)
@@ -233,11 +236,11 @@ namespace coev
 		}
 		co_await m_read_waiter.suspend();
 		auto err = getSocketError(m_fd);
-		if (err == 0)
+		if (err != 0)
 		{
-			__init();
-			co_return m_fd;
+			co_return __close();
 		}
-		co_return __close();
+		__initial();
+		co_return m_fd;
 	}
 }

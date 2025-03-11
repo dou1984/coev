@@ -6,10 +6,10 @@ using namespace coev;
 awaitable<void> test_ssl_context()
 {
     server_pool<tcp::server> pool;
-    pool.start("0.0.0.0", 9998);
+    pool.start("127.0.0.1", 9998);
     ssl_context::load_certificated(
-        "/home/dou1984/d/github/coev/useful/openssl/server.crt",
-        "/home/dou1984/d/github/coev/useful/openssl/server.key");
+        "./server.pem",
+        "./server.pem");
 
     LOG_DBG("server started\n");
     while (true)
@@ -55,7 +55,7 @@ awaitable<void> test_ssl_client()
 {
 
     ssl_context client;
-    int fd = co_await client.connect("0.0.0.0", 9998);
+    int fd = co_await client.connect("127.0.0.1", 9998);
     if (fd == INVALID)
     {
         LOG_ERR("connect failed fd:%d\n", fd);
@@ -80,7 +80,7 @@ awaitable<void> test_ssl_client()
 }
 int main(int argc, char **argv)
 {
-    set_log_level(LOG_LEVEL_CORE);
+    set_log_level(LOG_LEVEL_DEBUG);
     if (argc < 2)
     {
         LOG_ERR("usage: %s [server|client]\n", argv[0]);

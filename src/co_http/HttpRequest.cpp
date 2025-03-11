@@ -111,17 +111,17 @@ namespace coev
 	{
 		co_task _task;
 		auto f_end = finished();
-		_task.insert(&f_end, flag_io_end);
+		_task.insert(flag_io_end, &f_end);
 		auto f_timeout = sleep_for(m_timeout);
-		_task.insert(&f_timeout, flag_timeout);
+		_task.insert(flag_timeout, &f_timeout);
 		auto f_url = get_url();
-		_task.insert(&f_url, flag_running);
+		_task.insert(flag_running, &f_url);
 		auto f_headers = get_headers();
-		_task.insert(&f_headers, flag_running);
+		_task.insert(flag_running, &f_headers);
 		auto f_body = get_body();
-		_task.insert(&f_body, flag_running);
+		_task.insert(flag_running, &f_body);
 		auto f_parse = parse(io);
-		_task.insert(&f_parse, flag_running);
+		_task.insert(flag_running, &f_parse);
 		int r = flag_running;
 		while ((r = co_await _task.wait()) == flag_running)
 		{

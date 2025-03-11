@@ -16,7 +16,7 @@ namespace coev
 	class io_context
 	{
 	public:
-		io_context() ;
+		io_context();
 		io_context(int fd);
 		io_context(io_context &&) = delete;
 		virtual ~io_context();
@@ -39,18 +39,19 @@ namespace coev
 		async m_read_waiter;
 		async m_write_waiter;
 		int __finally();
-		int __init();
+		int __initial();
 		int __close();
 		bool __valid() const;
 		static void cb_write(struct ev_loop *loop, struct ev_io *w, int revents);
 		static void cb_read(struct ev_loop *loop, struct ev_io *w, int revents);
 
 	protected:
-		void __initial();
-		int __insert();
-		int __remove();
+		void __init_connect();
+		int __add_connect();
+		int __del_connect();		
+		int __del_write();
 		int __connect(const char *ip, int port);
-		int __connect(int fd, const char *ip, int port);
+		int __connect(int fd, const char *ip, int port);		
 		static void cb_connect(struct ev_loop *loop, struct ev_io *w, int revents);
 	};
 }

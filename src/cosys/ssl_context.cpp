@@ -13,9 +13,18 @@ namespace coev
 
         __ssl_manager(int method)
         {
-            SSL_load_error_strings();
-            OpenSSL_add_ssl_algorithms();
-
+            int err = SSL_load_error_strings();
+            LOG_CORE("SSL_load_error_strings\n");
+            if (!err)
+            {
+                throw std::runtime_error("SSL_load_error_strings failed");
+            }
+            err = SSL_library_init();
+            if (!err)
+            {
+                throw std::runtime_error("SSL_library_init failed");
+            }
+            LOG_CORE("SSL_library_init\n");
             if (method == TLS_SERVER)
             {
                 m_context = SSL_CTX_new(SSLv23_server_method());
@@ -29,8 +38,6 @@ namespace coev
                 LOG_ERR("SSL_CTX_new failed %p\n", m_context);
                 exit(INVALID);
             }
-         
-         
         }
         ~__ssl_manager()
         {
@@ -51,7 +58,7 @@ namespace coev
                 exit(INVALID);
             }
             int r = 0;
-            if ((r = SSL_CTX_use_certificate_chain_file(m_context, cert_file)) <= 0)
+            if ((r = SSL_CTX_use_certificate_file(m_context, cert_file, SSL_FILETYPE_PEM)) <= 0)
             {
                 LOG_ERR("SSL_CTX_use_certificate_chain_file %s failed %ld\n", cert_file, ERR_get_error());
                 exit(INVALID);
@@ -61,27 +68,13 @@ namespace coev
                 LOG_ERR("SSL_CTX_use_PrivateKey_file %s failed %ld\n", key_file, ERR_get_error());
                 exit(INVALID);
             }
-            /*
-            if ((r = SSL_CTX_set_tlsext_servername_callback(m_context, __ssl_manager::cb_ssl_ctx)) <= 0)
+            if ((r = SSL_CTX_check_private_key(m_context)) <= 0)
             {
-                LOG_ERR("SSL_CTX_set_tlsext_servername_callback failed %ld\n", ERR_get_error());
+                LOG_ERR("SSL_CTX_check_private_key %ld\n", ERR_get_error());
                 exit(INVALID);
             }
-            if ((r = SSL_CTX_set_tlsext_servername_arg(m_context, this)) <= 0)
-            {
-                LOG_ERR("SSL_CTX_set_tlsext_servername_arg failed %ld\n", ERR_get_error());
-                exit(INVALID);
-            }
-            */
         }
 
-        static int cb_ssl_ctx(SSL *ssl, int *al, void *arg)
-        {
-            auto _this = static_cast<__ssl_manager *>(arg);
-            const char *servername = SSL_get_servername(ssl, TLSEXT_NAMETYPE_host_name);
-            LOG_DBG("SSL_CTX_set_tlsext_servername_callback %s\n", servername);
-            return 0;
-        }
         SSL_CTX *m_context = nullptr;
     };
     static __ssl_manager g_srv_mgr(TLS_SERVER);
@@ -89,7 +82,7 @@ namespace coev
 
     ssl_context::ssl_context()
     {
-        m_ssl = SSL_new(g_srv_mgr.get());
+        m_ssl = SSL_new(g_cli_mgr.get());
         if (m_ssl == nullptr)
         {
             LOG_ERR("SSL_new failed %p\n", m_ssl);
@@ -98,7 +91,7 @@ namespace coev
     }
     ssl_context::ssl_context(int fd) : io_context(fd)
     {
-        m_ssl = SSL_new(g_cli_mgr.get());
+        m_ssl = SSL_new(g_srv_mgr.get());
         if (m_ssl == nullptr)
         {
             LOG_ERR("SSL_new failed %p\n", m_ssl);
@@ -111,9 +104,7 @@ namespace coev
             __async_finally();
             throw std::runtime_error("SSL_set_mode failed");
         }
-        SSL_set_mode(m_ssl, SSL_MODE_ASYNC);
         SSL_set_accept_state(m_ssl);
-        // SSL_set_tlsext_host_name(m_ssl, TLSEXT_NAMETYPE_host_name);
     }
     ssl_context::~ssl_context()
     {
@@ -125,12 +116,16 @@ namespace coev
         if (m_ssl)
         {
             SSL_free(m_ssl);
+            m_ssl = nullptr;
         }
     }
 
     awaitable<int> ssl_context::connect(const char *host, int port)
     {
-
+        if (m_ssl == nullptr)
+        {
+            throw std::runtime_error("connect error m_ssl is nullptr");
+        }
         int err = co_await io_context::connect(host, port);
         if (err == INVALID)
         {
@@ -145,7 +140,6 @@ namespace coev
             LOG_ERR("SSL_set_fd failed %d\n", err);
             goto __error__;
         }
-        SSL_set_mode(m_ssl, SSL_MODE_ASYNC);
         SSL_set_connect_state(m_ssl);
         err = co_await do_handshake();
         if (err == INVALID)
@@ -166,13 +160,8 @@ namespace coev
                     errno = -err;
                     co_return INVALID;
                 }
-
                 ev_io_start(m_loop, &m_write);
                 co_await m_write_waiter.suspend();
-                if (m_write_waiter.empty())
-                {
-                    ev_io_stop(m_loop, &m_write);
-                }
             }
             else
             {
@@ -205,22 +194,33 @@ namespace coev
         int err = 0;
         while ((err = SSL_do_handshake(m_ssl)) != 1)
         {
+            LOG_CORE("SSL_do_handshake %d\n", err);
             err = SSL_get_error(m_ssl, err);
             if (err == SSL_ERROR_WANT_READ)
             {
                 co_await m_read_waiter.suspend();
-                LOG_CORE("SSL_do_handshake READ %d\n", m_fd);
             }
             else if (err == SSL_ERROR_WANT_WRITE)
             {
                 co_await m_write_waiter.suspend();
-                LOG_CORE("SSL_do_handshake WRITE %d\n", m_fd);
+            }
+            else if (err == SSL_ERROR_NONE)
+            {
+                if (isInprocess())
+                {
+                    ev_io_start(m_loop, &m_write);
+                }
+                co_await wait_for_any(
+                    [this]() -> awaitable<void>
+                    { co_await m_read_waiter.suspend(); }(),
+                    [this]() -> awaitable<void>
+                    { co_await m_write_waiter.suspend(); }());
             }
             else
             {
+                LOG_ERR("do_handshake failed %d errno:%d %s\n", err, errno, strerror(errno));
                 errno = -err;
-                LOG_ERR("do_handshake failed %d\n", err);
-                //Dco_return INVALID;
+                co_return INVALID;
             }
         }
         co_return 0;

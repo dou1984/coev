@@ -28,6 +28,6 @@ namespace coev
 		void done(evtask *_notify);
 		bool empty();
 		awaitable<int> wait();
-		void insert(evtask *_notify, int _id);
+		void insert( int _id, evtask *_notify);
 	};
 }
