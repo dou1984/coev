@@ -8,12 +8,11 @@
 #include <atomic>
 #include <list>
 #include <mutex>
-#include <unordered_map>
 #include <algorithm>
 #include "cosys.h"
 #include "co_pipe.h"
 
-#define g_loop local<unique<__ev_loop>>::instance()
+#define g_loop local<__ev_loop>::instance()
 
 namespace coev
 {
@@ -32,22 +31,19 @@ namespace coev
 
 	void cosys::start()
 	{
-		auto _loop = g_loop->m_loop;
+		auto _loop = g_loop.m_loop;
 		co_pipe __pipe;
 		ev_run(_loop, 0);
 	}
 	void cosys::stop()
 	{
-		auto _loop = g_loop->m_loop;
+		auto _loop = g_loop.m_loop;
 		ev_loop_destroy(_loop);
 	}
 
 	struct ev_loop *cosys::data()
 	{
-		return g_loop->m_loop;
+		return g_loop.m_loop;
 	}
-	struct ev_loop *cosys::at(uint64_t _tid)
-	{
-		return _tid == gtid() ? g_loop->m_loop : g_loop.at(_tid)->m_loop;
-	}
+
 }

@@ -18,18 +18,18 @@ namespace coev
 	{
 		static std::unordered_set<uint64_t> m_tidset;
 		static std::mutex m_mutex;
-		static uint64_t m_tid;
+		static uint64_t m_next_id;
 		uint64_t m_id = 0;
 		unique_id()
 		{
 			std::lock_guard<std::mutex> _(m_mutex);
 			do
 			{
-				if (m_tid > TID_MAX)
+				if (m_next_id > TID_MAX)
 				{
-					m_tid = 0;
+					m_next_id = 0;
 				}
-				m_id = m_tid++;
+				m_id = m_next_id++;
 
 			} while (std::find(m_tidset.begin(), m_tidset.end(), m_id) != m_tidset.end());
 			m_tidset.insert(m_id);
@@ -40,7 +40,7 @@ namespace coev
 			m_tidset.erase(m_id);
 		}
 	};
-	uint64_t unique_id::m_tid = 0;
+	uint64_t unique_id::m_next_id = 0;
 	std::unordered_set<uint64_t> unique_id::m_tidset;
 	std::mutex unique_id::m_mutex;
 	uint64_t gtid()
@@ -48,4 +48,5 @@ namespace coev
 		thread_local unique_id _;
 		return _.m_id;
 	}
+	
 }

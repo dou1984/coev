@@ -21,5 +21,4 @@
 #include "co_waitgroup.h"
 #include "async.h"
 #include "gtid.h"
-#include "unique.h"
 #include "defer.h"

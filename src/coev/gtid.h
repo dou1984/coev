@@ -9,5 +9,5 @@
 
 namespace coev
 {
-	uint64_t gtid();
+	uint64_t gtid();	
 }
