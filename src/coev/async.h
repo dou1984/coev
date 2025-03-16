@@ -2,14 +2,14 @@
 #include <mutex>
 #include <functional>
 #include "queue.h"
-#include "event.h"
+#include "co_event.h"
 #include "awaitable.h"
 
 namespace coev
 {
     struct async : queue
     {
-        event suspend();
+        co_event suspend();
         bool resume();
     };
 

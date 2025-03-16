@@ -27,7 +27,7 @@ namespace coev
 		{
 			return;
 		}
-		auto ev = static_cast<event *>(c);
+		auto ev = static_cast<co_event *>(c);
 		if (ev->m_tid == gtid())
 		{
 			ev->resume();

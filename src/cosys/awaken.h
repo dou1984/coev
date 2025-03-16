@@ -18,7 +18,7 @@ namespace coev
 		awaken();
 		virtual ~awaken();
 
-		int resume(event *ev);
+		int resume(co_event *ev);
 
 	private:
 		ev_async m_awaken;

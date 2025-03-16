@@ -10,7 +10,7 @@
 #include <functional>
 #include "awaitable.h"
 #include "co_task.h"
-#include "event.h"
+#include "co_event.h"
 #include "async.h"
 
 namespace coev
@@ -19,9 +19,8 @@ namespace coev
 	awaitable<int> wait_for_any(AWAITABLE &&...awt)
 	{
 		co_task w;
-		int id = 0;
-		(w.insert(id++, &awt), ...);
-		id = co_await w.wait();
+		(w.insert(awt), ...);
+		auto id = co_await w.wait();
 		w.destroy();
 		co_return id;
 	}
@@ -29,12 +28,11 @@ namespace coev
 	awaitable<int> wait_for_all(AWAITABLE &&...awt)
 	{
 		co_task w;
-		int id = 0;
-		(w.insert(id++, &awt), ...);
+		(w.insert(awt), ...);
 		while (!w.empty())
 		{
-			id = co_await w.wait();
+			co_await w.wait();
 		}
-		co_return id;
+		co_return 0;
 	}
 }

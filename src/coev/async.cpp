@@ -3,14 +3,14 @@
 namespace coev
 {
 
-	event async::suspend()
+	co_event async::suspend()
 	{
-		return event(this);
+		return co_event(this);
 	}
 
 	bool async::resume()
 	{
-		if (auto c = static_cast<event *>(pop_front()); c != nullptr)
+		if (auto c = static_cast<co_event *>(pop_front()); c != nullptr)
 		{
 			c->resume();
 			return true;
@@ -25,7 +25,7 @@ namespace coev
 			m_mutex.lock();
 			if (suppend())
 			{
-				event ev(this);
+				co_event ev(this);
 				m_mutex.unlock();
 				co_await ev;
 				m_mutex.lock();
@@ -39,7 +39,7 @@ namespace coev
 			{
 				std::lock_guard<std::mutex> _(m_mutex);
 				call();
-				return static_cast<event *>(pop_front());
+				return static_cast<co_event *>(pop_front());
 			}();
 			if (c)
 			{

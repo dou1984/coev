@@ -49,7 +49,7 @@ namespace coev
 		}
 		return 0;
 	}
-	int awaken::resume(event *ev)
+	int awaken::resume(co_event *ev)
 	{
 		std::lock_guard<std::mutex> _(m_lock);
 		m_waiter.push_back(ev);

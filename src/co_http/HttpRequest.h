@@ -19,12 +19,6 @@ namespace coev
 	class HttpRequest : http_parser
 	{
 	public:
-		enum ResStatus
-		{
-			flag_io_end = 0,
-			flag_timeout = 1,
-			flag_running = 2,
-		};
 		struct request
 		{
 			std::string url;

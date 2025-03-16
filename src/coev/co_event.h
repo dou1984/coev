@@ -15,15 +15,15 @@
 
 namespace coev
 {
-	struct event final : queue
+	struct co_event final : queue
 	{
 		std::atomic_int m_status{STATUS_INIT};
 		std::coroutine_handle<> m_caller = nullptr;
 		size_t m_tid;
-		event(queue *_eventchain);
-		virtual ~event();
-		event(event &&) = delete;
-		event(const event &) = delete;
+		co_event(queue *_eventchain);
+		virtual ~co_event();
+		co_event(co_event &&) = delete;
+		co_event(const co_event &) = delete;
 		void await_resume();
 		bool await_ready();
 		void await_suspend(std::coroutine_handle<> awaitable);

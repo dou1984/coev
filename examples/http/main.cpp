@@ -31,7 +31,11 @@ Connection: Keep-Alive
 Content-Type: text/html; charset=utf-8)";
 
 	auto response = oss.str();
-	co_await io.send(response.data(), response.size());
+	int err = co_await io.send(response.data(), response.size());
+	if (err == INVALID)
+	{
+		LOG_ERR("send error %s\n", strerror(errno));
+	}
 	co_return 0;
 }
 
@@ -67,16 +71,17 @@ awaitable<void> co_router()
 			co_await echo(io);
 
 			io.close();
+			LOG_DBG("close socket %d\n", fd);
 		}();
 	}
 }
 int main()
 {
-	g_server.start("127.0.0.1", 9999);
+	g_server.start("0.0.0.0", 9999);
 
 	set_log_level(LOG_LEVEL_DEBUG);
 	running::instance()
-		.add(2, co_router)
+		.add(1, co_router)
 		.join();
 	return 0;
 }

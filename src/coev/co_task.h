@@ -10,24 +10,25 @@
 #include <functional>
 #include "queue.h"
 #include "async.h"
-#include "event.h"
-#include "evtask.h"
+#include "co_event.h"
+#include "is_destroying.h"
 
 namespace coev
 {
 	class co_task final
 	{
 		guard::async m_task_waiter;
-		guard::async m_ev_waiter;
-		int m_last = 0;
-		void __erase(evtask *_notify);
+		std::vector<promise *> m_promises;
+		int m_count = 0;
+		int m_id = 0;
 
 	public:
-		~co_task();
+		virtual ~co_task();
 		void destroy();
-		void done(evtask *_notify);
+
 		bool empty();
 		awaitable<int> wait();
-		void insert( int _id, evtask *_notify);
+		int insert(promise *_promise);
+		int done(promise *_promise);
 	};
 }

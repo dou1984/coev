@@ -16,4 +16,5 @@ add_subdirectory(./udpclient)
 add_subdirectory(./udpserver)
 add_subdirectory(./nocopy)
 add_subdirectory(./ssl)
+add_subdirectory(./sleep)
 

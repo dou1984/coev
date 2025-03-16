@@ -110,20 +110,20 @@ namespace coev
 	awaitable<int, HttpRequest::request> HttpRequest::get_request(io_context &io)
 	{
 		co_task _task;
-		auto f_end = finished();
-		_task.insert(flag_io_end, &f_end);
+		auto f_finished = finished();
+		_task.insert(f_finished);
 		auto f_timeout = sleep_for(m_timeout);
-		_task.insert(flag_timeout, &f_timeout);
+		_task.insert(f_timeout);
 		auto f_url = get_url();
-		_task.insert(flag_running, &f_url);
+		_task.insert(f_url);
 		auto f_headers = get_headers();
-		_task.insert(flag_running, &f_headers);
+		_task.insert(f_headers);
 		auto f_body = get_body();
-		_task.insert(flag_running, &f_body);
-		auto f_parse = parse(io);
-		_task.insert(flag_running, &f_parse);
-		int r = flag_running;
-		while ((r = co_await _task.wait()) == flag_running)
+		_task.insert(f_body);
+		auto f_id = parse(io);
+		_task.insert(f_id);
+		int r = 0;
+		while ((r = co_await _task.wait()) >= 2)
 		{
 		}
 		co_return {r, std::move(m_request)};

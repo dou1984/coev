@@ -6,41 +6,41 @@
  *
  */
 #include <thread>
-#include "event.h"
+#include "co_event.h"
 
 namespace coev
 {
-	event::event(queue *_eventchain) : m_tid(gtid())
+	co_event::co_event(queue *_eventchain) : m_tid(gtid())
 	{
 		if (_eventchain != nullptr)
 			_eventchain->push_back(this);
-		LOG_CORE("event _eventchain %p\n", _eventchain);
+		LOG_CORE("co_event _eventchain %p\n", _eventchain);
 	}
-	event::~event()
+	co_event::~co_event()
 	{
 		if (!queue::empty())
 			queue::erase(this);
 		m_caller = nullptr;
 	}
-	void event::await_resume()
+	void co_event::await_resume()
 	{
 	}
-	bool event::await_ready()
+	bool co_event::await_ready()
 	{
 		return m_status == STATUS_RESUMED;
 	}
-	void event::await_suspend(std::coroutine_handle<> awaitable)
+	void co_event::await_suspend(std::coroutine_handle<> _awaitable)
 	{
-		m_caller = awaitable;
+		m_caller = _awaitable;
 		m_status = STATUS_SUSPEND;
 	}
-	void event::resume()
+	void co_event::resume()
 	{
-		LOG_CORE("event resume m_caller:%p\n", m_caller ? m_caller.address() : 0);		
+		LOG_CORE("co_event resume m_caller:%p\n", m_caller ? m_caller.address() : 0);
 		while (m_status == STATUS_INIT)
 		{
 			std::this_thread::sleep_for(std::chrono::nanoseconds(1));
-		}		
+		}
 		m_status = STATUS_RESUMED;
 		if (m_caller.address() && !m_caller.done())
 		{

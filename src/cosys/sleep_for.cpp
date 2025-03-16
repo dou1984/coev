@@ -15,13 +15,15 @@ namespace coev
 	awaitable<void> sleep_for(long t)
 	{
 		co_timer _timer(t, 0);
-		_timer.active();
+		LOG_CORE("sleep_for %lds\n", t);
+		_timer.active();		
 		co_await _timer.suspend();
 	}
 	awaitable<void> usleep_for(long t)
 	{
 		co_timer _timer((float)t / 1000000, 0);
-		_timer.active();
+		LOG_CORE("usleep_for %ldus\n", t);
+		_timer.active();		
 		co_await _timer.suspend();
 	}
 }

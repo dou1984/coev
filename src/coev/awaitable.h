@@ -10,71 +10,21 @@
 #include <atomic>
 #include <memory>
 #include <iostream>
+#include <tuple>
 #include "queue.h"
 #include "promise.h"
 #include "log.h"
-#include "evtask.h"
+#include "local.h"
+#include "is_destroying.h"
 
 namespace coev
 {
 	template <class T, class... R>
-	class awaitable final : public evtask
+	class awaitable final : queue
 	{
 	public:
-		struct promise_value
+		struct promise_type : std::conditional_t<(sizeof...(R) > 0), promise_value<std::tuple<T, R...>>, std::conditional_t<std::is_void_v<T>, promise_void, promise_value<T>>>
 		{
-			T value;
-			std::suspend_never return_value(T &&v)
-			{
-				value = std::forward<T>(v);
-				return {};
-			}
-			std::suspend_never return_value(const T &v)
-			{
-				value = v;
-				return {};
-			}
-			std::suspend_always yield_value(T &&v) = delete;
-			std::suspend_always yield_value(const T &v) = delete;
-		};
-		struct promise_void
-		{
-			std::suspend_never return_void()
-			{
-				return {};
-			}
-			std::suspend_always yield_void() = delete;
-		};
-		struct promise_tuple
-		{
-			std::tuple<T, R...> value;
-			std::suspend_never return_value(std::tuple<T, R...> &&source)
-			{
-				value = std::move(source);
-				return {};
-			}
-			std::suspend_never return_value(const std::tuple<T, R...> &source)
-			{
-				value = source;
-				return {};
-			}
-			std::suspend_always yield_value(const T, const R &...) = delete;
-			std::suspend_always yield_value(T &&, R &&...) = delete;
-		};
-		struct promise_type : promise, std::conditional_t<(sizeof...(R) > 0), promise_tuple, std::conditional_t<std::is_void_v<T>, promise_void, promise_value>>
-		{
-			awaitable *m_awaitable = nullptr;
-			promise_type() = default;
-			~promise_type()
-			{
-				if (m_awaitable)
-				{
-					m_awaitable->m_state = STATUS_RESUMED;
-					auto _awaitable = m_awaitable;
-					m_awaitable = nullptr;
-					_awaitable->resume();
-				}
-			}
 			awaitable<T, R...> get_return_object()
 			{
 				return {std::coroutine_handle<promise_type>::from_promise(*this)};
@@ -85,7 +35,7 @@ namespace coev
 		awaitable() = default;
 		awaitable(std::coroutine_handle<promise_type> h) : m_callee(h)
 		{
-			m_callee.promise().m_awaitable = this;
+			LOG_CORE("awaitable created %p %p\n", this, m_callee.address());
 		}
 		awaitable(awaitable &&o) = delete;
 		awaitable(const awaitable &) = delete;
@@ -93,57 +43,58 @@ namespace coev
 		const awaitable &operator=(const awaitable &&) = delete;
 		~awaitable()
 		{
-			LOG_CORE("destructor %p\n", this);
-			if (m_callee.address())
-				m_callee.promise().m_awaitable = nullptr;
+			LOG_CORE("awaitable destroyed %p %p\n", this, m_callee.address());
+			if (local<is_destroying>::instance())
+			{
+				destroy();
+			}
 		}
-		bool done() { return m_callee ? m_callee.done() : true; }
-		auto await_resume()
+
+		bool done()
 		{
-			if constexpr (sizeof...(R) > 0)
+			LOG_CORE("await_suspend %p %p %s\n", this, m_callee.address(), m_callee.done() ? "done" : "running");
+			return m_callee && m_callee.address() ? m_callee.done() : true;
+		}
+		auto await_resume() // 返回协程的返回值
+		{
+			LOG_CORE("await_resume %p %p\n", this, m_callee.address());
+			if constexpr (!std::is_void<T>::value)
 			{
-				return m_callee ? std::move(m_callee.promise().value) : decltype(m_callee.promise().value){};
-			}
-			else if constexpr (!std::is_void_v<T>)
-			{
-				return m_callee ? std::move(m_callee.promise().value) : decltype(m_callee.promise().value){};
-			}
-			else
-			{
+				return m_callee && m_callee.address() != nullptr ? std::move(m_callee.promise().value) : decltype(m_callee.promise().value){};
 			}
 		}
 		void destroy()
 		{
-			if (m_callee.address() && m_callee.promise().m_awaitable)
+			if (m_callee && m_callee.address())
 			{
-				m_callee.promise().m_awaitable = nullptr;
-				m_callee.destroy();
+				if (!m_callee.done())
+				{
+					auto &_promise = m_callee.promise();
+					LOG_CORE("destroy task %p %p\n", this, m_callee.address());
+					_promise.m_task = nullptr;
+					_promise.m_caller = nullptr;
+					m_callee.destroy();
+				}
 			}
-			m_callee = nullptr;
-			m_caller = nullptr;
 		}
-		void await_suspend(std::coroutine_handle<> caller)
+		void await_suspend(std::coroutine_handle<> caller) // co_await调用， 传入上层coroutine_handle
 		{
-			m_caller = caller;
-			m_state = STATUS_SUSPEND;
+			if (m_callee && m_callee.address() && !m_callee.done())
+			{
+				LOG_CORE("await_suspend %p %p\n", this, m_callee.address());
+				m_callee.promise().m_caller = caller;
+			}
 		}
-		bool await_ready()
+		bool await_ready() // 是否挂起,正常情况需要挂起,返回false
 		{
-			LOG_CORE("await_ready %p %s\n", this, m_state == STATUS_RESUMED ? "READY" : "WAIT");
-			return m_state == STATUS_RESUMED;
+			return done();
 		}
-		void resume()
+		operator promise_type *()
 		{
-			LOG_CORE("resume %p\n", this);
-			m_state = STATUS_RESUMED;
-			if (m_caller.address() && !m_caller.done())
-				m_caller.resume();
-			evtask::resume();
+			return m_callee ? (&m_callee.promise()) : nullptr;
 		}
 
 	private:
 		std::coroutine_handle<promise_type> m_callee = nullptr;
-		std::coroutine_handle<> m_caller = nullptr;
-		std::atomic_int m_state{STATUS_INIT};
 	};
 }

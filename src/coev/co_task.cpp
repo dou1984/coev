@@ -5,7 +5,7 @@
  *	All rights reserved.
  *
  */
-#include "event.h"
+#include "co_event.h"
 #include "co_task.h"
 #include "awaitable.h"
 #include "wait_for.h"
@@ -16,50 +16,79 @@ namespace coev
 	{
 		destroy();
 	}
-	void co_task::insert(int _id, evtask *ev)
+	bool co_task::empty()
 	{
-		std::lock_guard<std::mutex> _(m_ev_waiter.m_mutex);
-		m_ev_waiter.push_back(ev);
-		ev->m_task = this;
-		ev->m_id = _id;
-	}
-	void co_task::__erase(evtask *_inotify)
-	{
-		LOG_CORE("erase %p\n", _inotify);
-		std::lock_guard<std::mutex> _(m_ev_waiter.m_mutex);
-		m_ev_waiter.erase(_inotify);
+		std::lock_guard<std::mutex> _(m_task_waiter.m_mutex);
+		return m_count == 0;
 	}
 	void co_task::destroy()
 	{
-		std::lock_guard<std::mutex> _(m_ev_waiter.m_mutex);
-		while (!m_ev_waiter.empty())
+		std::vector<promise *> _promises;
 		{
-			auto t = static_cast<evtask *>(m_ev_waiter.pop_front());
-			LOG_CORE("evtask:%p\n", t);
-			m_ev_waiter.erase(t);
-			t->destroy();
+			std::lock_guard<std::mutex> _(m_task_waiter.m_mutex);
+			_promises = std::move(m_promises);
+			m_count = 0;
 		}
-	}
-	bool co_task::empty()
-	{
-		std::lock_guard<std::mutex> _(m_ev_waiter.m_mutex);
-		return m_ev_waiter.empty();
-	}
-	void co_task::done(evtask *ev)
-	{
-		m_task_waiter.resume(
-			[this, ev]()
+		assert(m_task_waiter.empty());
+		for (int i = 0; i < _promises.size(); i++)
+		{
+			if (_promises[i])
 			{
-				m_last = ev->m_id;
-				__erase(ev);
-			});
+				auto p = _promises[i];
+				assert(p->m_caller == nullptr);
+				LOG_CORE("co_task::destroy() %d %p\n", i, p);
+				auto _coro = std::coroutine_handle<promise>::from_promise(*p);
+				assert(&_coro.promise() == p);
+				std::lock_guard<is_destroying> _(local<is_destroying>::instance());
+				_coro.destroy();
+			}
+		}
 	}
 	awaitable<int> co_task::wait()
 	{
 		co_await m_task_waiter.suspend(
-			[]() -> bool
-			{ return true; },
+			[this]() -> bool
+			{ return m_count > 0; },
 			[]() {});
-		co_return m_last;
+		co_return m_id;
+	}
+	int co_task::insert(promise *_promise)
+	{
+		std::lock_guard<std::mutex> _(m_task_waiter.m_mutex);
+		_promise->m_task = this;
+		if (m_promises.size() == m_count++)
+		{
+			auto i = m_promises.size();
+			m_promises.push_back(_promise);
+			return i;
+		}
+		for (int i = 0; i < m_promises.size(); i++)
+		{
+			if (m_promises[i] == nullptr)
+			{
+				m_promises[i] = _promise;
+				return i;
+			}
+		}
+		throw std::runtime_error("co_task: error m_count");
+	}
+
+	int co_task::done(promise *_promise)
+	{
+		m_task_waiter.resume(
+			[=, this]()
+			{
+				for (int i = 0; i < m_promises.size(); i++)
+				{
+					if (m_promises[i] == _promise)
+					{
+						m_promises[i] = nullptr;
+						m_count--;
+						m_id = i;
+						return;
+					}
+				}
+			});
+		return m_id;
 	}
 }
