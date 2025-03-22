@@ -115,6 +115,7 @@ namespace coev
 			}
 			else if (r == 0)
 			{
+				LOG_CORE("fd:%d closed\n", m_fd);
 				co_return INVALID;
 			}
 			else
@@ -137,6 +138,7 @@ namespace coev
 			}
 			else if (r == 0)
 			{
+				LOG_CORE("fd:%d closed\n", m_fd);
 				co_return INVALID;
 			}
 			else
@@ -161,6 +163,7 @@ namespace coev
 			}
 			else if (r == 0)
 			{
+				LOG_CORE("fd:%d closed\n", m_fd);
 				co_return INVALID;
 			}
 			parseAddr(addr, info);
@@ -182,6 +185,7 @@ namespace coev
 			}
 			else if (r == 0)
 			{
+				LOG_CORE("sendto return m_fd:%d\n", m_fd);
 				co_return INVALID;
 			}
 			co_return r;
