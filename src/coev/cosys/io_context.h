@@ -8,7 +8,7 @@
 #pragma once
 #include <ev.h>
 #include <memory>
-#include <coev/coev.h>
+#include "../coev.h"
 #include "socket.h"
 
 namespace coev

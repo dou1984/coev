@@ -1,4 +1,4 @@
-#include <cosys/cosys.h>
+#include <coev/cosys/cosys.h>
 #include <coev/coev.h>
 
 using namespace coev;
@@ -40,20 +40,22 @@ awaitable<void> test_ssl_context()
                 LOG_ERR("handshake failed fd:%d\n", fd);
                 co_return;
             }
-
-            char buffer[1024];
-            int r = co_await ctx.recv(buffer, sizeof(buffer));
-            if (r == INVALID)
+            while (true)
             {
-                LOG_ERR("recv failed fd:%d\n", fd);
-                co_return;
-            }
-            LOG_DBG("recv %d bytes from fd:%d %s\n", r, fd, buffer);
-            r = co_await ctx.send("hello world", strlen("hello world") + 1);
-            if (r == INVALID)
-            {
-                LOG_ERR("send failed fd:%d\n", fd);
-                co_return;
+                char buffer[1024];
+                int r = co_await ctx.recv(buffer, sizeof(buffer));
+                if (r == INVALID)
+                {
+                    LOG_ERR("recv failed fd:%d\n", fd);
+                    co_return;
+                }
+                LOG_DBG("recv %d bytes from fd:%d %s\n", r, fd, buffer);
+                r = co_await ctx.send("hello world", strlen("hello world") + 1);
+                if (r == INVALID)
+                {
+                    LOG_ERR("send failed fd:%d\n", fd);
+                    co_return;
+                }
             }
         }();
     }

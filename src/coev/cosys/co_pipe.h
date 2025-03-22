@@ -1,6 +1,6 @@
 #pragma once
 #include "awaken.h"
-#include "coev/coev.h"
+#include "../coev.h"
 
 namespace coev
 {

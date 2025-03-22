@@ -1,5 +1,5 @@
 #include <coev/coev.h>
-#include <cosys/cosys.h>
+#include <coev/cosys/cosys.h>
 
 using namespace coev;
 

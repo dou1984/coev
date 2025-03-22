@@ -51,7 +51,7 @@ namespace coev
 		}
 		bool done()
 		{
-			LOG_CORE("await_suspend %p %p %s\n", this, m_callee.address() || m_callee.promise().m_status == CORO_FINISHED ? "done" : "running");
+			LOG_CORE("await_suspend %p %s\n", this, m_callee.address() || m_callee.promise().m_status == CORO_FINISHED ? "done" : "running");
 			return m_callee && m_callee.address() && (m_callee.done() || m_callee.promise().m_status == CORO_FINISHED);
 		}
 		auto await_resume() // 返回协程的返回值
@@ -76,9 +76,9 @@ namespace coev
 		}
 		void await_suspend(std::coroutine_handle<> caller) // co_await调用， 传入上层coroutine_handle
 		{
-			LOG_CORE("await_suspend %p %p\n", this, m_callee.address());
-			if (m_callee && m_callee.address() && !m_callee.done())
+			if (!done())
 			{
+				LOG_CORE("await_suspend %p %p\n", this, m_callee.address());
 				m_callee.promise().m_caller = caller;
 			}
 		}

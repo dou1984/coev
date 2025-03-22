@@ -12,7 +12,7 @@
 #include <hiredis/hiredis.h>
 #include <hiredis/async.h>
 #include <coev/coev.h>
-#include <cosys/cosys.h>
+#include <coev/cosys/cosys.h>
 
 namespace coev
 {

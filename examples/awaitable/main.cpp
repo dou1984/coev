@@ -6,7 +6,7 @@
  *
  */
 #include <coev/coev.h>
-#include <cosys/cosys.h>
+#include <coev/cosys/cosys.h>
 
 #define g singleton<coev::co_waitgroup>::instance()
 
@@ -14,13 +14,12 @@ using namespace coev;
 
 async g_test;
 
-
-
 awaitable<int> co_awaitable()
 {
 	g.add();
-	defer _([]()
-			{ g.done(); });
+
+	defer([]()
+		  { g.done(); });
 
 	LOG_DBG("awaitable begin\n");
 	co_await g_test.suspend();

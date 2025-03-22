@@ -6,7 +6,7 @@
  *
  */
 #pragma once
-#include <coev/coev.h>
+#include "../coev.h"
 
 namespace coev
 {
