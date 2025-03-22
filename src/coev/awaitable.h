@@ -20,7 +20,7 @@
 namespace coev
 {
 	template <class T, class... R>
-	class awaitable final : queue
+	class awaitable final
 	{
 	public:
 		struct promise_type : std::conditional_t<(sizeof...(R) > 0), promise_value<std::tuple<T, R...>>, std::conditional_t<std::is_void_v<T>, promise_void, promise_value<T>>>
@@ -43,17 +43,16 @@ namespace coev
 		const awaitable &operator=(const awaitable &&) = delete;
 		~awaitable()
 		{
-			LOG_CORE("awaitable destroyed %p %p\n", this, m_callee.address());
 			if (local<is_destroying>::instance())
 			{
+				LOG_CORE("awaitable destroyed %p %p\n", this, m_callee.address());
 				destroy();
 			}
 		}
-
 		bool done()
 		{
-			LOG_CORE("await_suspend %p %p %s\n", this, m_callee.address(), m_callee.done() ? "done" : "running");
-			return m_callee && m_callee.address() ? m_callee.done() : true;
+			LOG_CORE("await_suspend %p %p %s\n", this, m_callee.address() || m_callee.promise().m_status == CORO_FINISHED ? "done" : "running");
+			return m_callee && m_callee.address() && (m_callee.done() || m_callee.promise().m_status == CORO_FINISHED);
 		}
 		auto await_resume() // 返回协程的返回值
 		{
@@ -65,23 +64,21 @@ namespace coev
 		}
 		void destroy()
 		{
-			if (m_callee && m_callee.address())
+			if (!done())
 			{
-				if (!m_callee.done())
-				{
-					auto &_promise = m_callee.promise();
-					LOG_CORE("destroy task %p %p\n", this, m_callee.address());
-					_promise.m_task = nullptr;
-					_promise.m_caller = nullptr;
-					m_callee.destroy();
-				}
+				auto &_promise = m_callee.promise();
+				LOG_CORE("destroy task %p %p\n", this, m_callee.address());
+				_promise.m_task = nullptr;
+				_promise.m_caller = nullptr;
+				std::lock_guard<is_destroying> _(local<is_destroying>::instance());
+				m_callee.destroy();
 			}
 		}
 		void await_suspend(std::coroutine_handle<> caller) // co_await调用， 传入上层coroutine_handle
 		{
+			LOG_CORE("await_suspend %p %p\n", this, m_callee.address());
 			if (m_callee && m_callee.address() && !m_callee.done())
 			{
-				LOG_CORE("await_suspend %p %p\n", this, m_callee.address());
 				m_callee.promise().m_caller = caller;
 			}
 		}

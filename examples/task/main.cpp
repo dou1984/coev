@@ -57,6 +57,7 @@ awaitable<int> co_incompleted(int t)
 	LOG_DBG("arrived co_incompleted\n");
 	co_await sleep_for(t);
 	LOG_DBG("arrived error co_incompleted\n");
+	throw std::runtime_error("error incompleted");
 	co_return 0;
 }
 void co_two_task()
@@ -102,39 +103,54 @@ void co_three_task4()
 	}();
 }
 
+auto g_unreachable = []() -> awaitable<int>
+{
+	defer _([]()
+			{ LOG_DBG("arrived defer 1\n"); });
+	co_await []() -> awaitable<int>
+	{
+		defer _([]()
+				{ LOG_DBG("arrived defer 2\n"); });
+		co_await sleep_for(5);
+		throw std::runtime_error("test exception");
+		co_return 0;
+	}();
+
+	co_return 0;
+};
+auto g_reachable = []() -> awaitable<int>
+{
+	co_await sleep_for(1);
+	LOG_DBG("arrived co_task5_task3\n");
+	co_return 0;
+};
 void co_task5()
 {
 	[]() -> awaitable<int>
 	{
+		auto f1 = g_unreachable();
+		auto f2 = g_unreachable();
+		auto f3 = g_reachable();
 		co_task _task;
-		_task.insert(
-			[]() -> awaitable<int>
-			{
-				defer _([]()
-						{ LOG_DBG("arrived defer 1\n"); });
-				co_await []() -> awaitable<int>
-				{
-					defer _([]()
-							{ LOG_DBG("arrived defer 2\n"); });
-					co_await sleep_for(10);
-					co_return 0;
-				}();
-
-				co_return 0;
-			}());
-		_task.insert(
-			[]() -> awaitable<int>
-			{
-				co_await sleep_for(10);
-				co_return 0;
-			}());
-		_task.insert(
-			[]() -> awaitable<int>
-			{
-				co_await sleep_for(1);
-				co_return 0;
-			}());
+		_task.insert(f1);
+		_task.insert(f2);
+		_task.insert(f3);
 		co_await _task.wait();
+		LOG_DBG("arrived co_task5_end\n");
+		co_return 0;
+	}();
+}
+
+void co_task6()
+{
+	[]() -> awaitable<int>
+	{
+		co_task _task;
+		_task.insert(g_unreachable());
+		_task.insert(g_unreachable());
+		_task.insert(g_reachable());
+		co_await _task.wait();
+		LOG_DBG("arrived co_task5_end\n");
 		co_return 0;
 	}();
 }
@@ -143,13 +159,14 @@ int main()
 	set_log_level(LOG_LEVEL_CORE);
 
 	running::instance()
-		// .add(co_task_t)
-		// .add(co_task_f)
-		// .add(co_two_task)
-		// .add(co_two_task2)
-		// .add(co_three_task3)
-		// .add(co_three_task4)
+		.add(co_task_t)
+		.add(co_task_f)
+		.add(co_two_task)
+		.add(co_two_task2)
+		.add(co_three_task3)
+		.add(co_three_task4)
 		.add(co_task5)
+		.add(co_task6)
 		.join();
 	return 0;
 }

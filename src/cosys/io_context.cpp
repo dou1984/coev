@@ -12,6 +12,7 @@
 #include <arpa/inet.h>
 #include "cosys.h"
 #include "io_context.h"
+#include "coev/local.h"
 
 namespace coev
 {
@@ -19,13 +20,15 @@ namespace coev
 	{
 		auto _this = (io_context *)w->data;
 		assert(_this != NULL);
-		_this->m_read_waiter.resume();
+		_this->m_read_waiter.resume(true);
+		local<coev::async>::instance().resume_all();
 	}
 	void io_context::cb_write(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
 		auto _this = (io_context *)w->data;
 		assert(_this != NULL);
-		_this->m_write_waiter.resume();
+		_this->m_write_waiter.resume(true);
+		local<coev::async>::instance().resume_all();
 		_this->__del_write();
 	}
 	int io_context::__close()
@@ -58,6 +61,11 @@ namespace coev
 		m_loop = cosys::data();
 		__initial();
 	}
+	io_context::io_context() : m_fd(INVALID)
+	{
+		m_tid = gtid();
+		m_loop = cosys::data();		
+	}
 	int io_context::__initial()
 	{
 		LOG_CORE("fd:%d\n", m_fd);
@@ -75,11 +83,19 @@ namespace coev
 		return 0;
 	}
 	int io_context::__finally()
-	{
-		LOG_CORE("fd:%d\n", m_fd);
+	{		
 		if (m_fd != INVALID)
 		{
+			LOG_CORE("fd:%d\n", m_fd);
 			ev_io_stop(m_loop, &m_read);
+			ev_io_stop(m_loop, &m_write);
+		}
+		return 0;
+	}
+	int io_context::__del_write()
+	{
+		if (m_write_waiter.empty())
+		{
 			ev_io_stop(m_loop, &m_write);
 		}
 		return 0;
@@ -100,6 +116,7 @@ namespace coev
 			}
 			else
 			{
+				LOG_CORE("fd:%d send %ld bytes\n", m_fd, r);
 				co_return r;
 			}
 		}
@@ -115,6 +132,7 @@ namespace coev
 			{
 				continue;
 			}
+			LOG_CORE("fd:%d recv %ld bytes\n", m_fd, r);
 			co_return r;
 		}
 		co_return INVALID;
@@ -159,88 +177,6 @@ namespace coev
 		return 0;
 	}
 
-	io_context::io_context() : m_fd(INVALID)
-	{
-		m_tid = gtid();
-		m_loop = cosys::data();
-		__init_connect();
-	}
-	int io_context::__connect(int fd, const char *ip, int port)
-	{
-		sockaddr_in addr;
-		fillAddr(addr, ip, port);
-		return ::connect(fd, (sockaddr *)&addr, sizeof(addr));
-	}
-	void io_context::cb_connect(struct ev_loop *loop, struct ev_io *w, int revents)
-	{
-		if (EV_ERROR & revents)
-		{
-			return;
-		}
-		io_context *_this = (io_context *)(w->data);
-		assert(_this != nullptr);
-		_this->__del_connect();
-		_this->m_read_waiter.resume();
-	}
-	void io_context::__init_connect()
-	{
-		m_fd = ::socket(AF_INET, SOCK_STREAM, 0);
-		if (m_fd == INVALID)
-		{
-			return;
-		}
-		if (setNoBlock(m_fd, true) < 0)
-		{
-			::close(m_fd);
-			return;
-		}
-		__add_connect();
-	}
-	int io_context::__add_connect()
-	{
-		m_read.data = this;
-		ev_io_init(&m_read, &io_context::cb_connect, m_fd, EV_READ | EV_WRITE);
-		ev_io_start(m_loop, &m_read);
-		return 0;
-	}
-	int io_context::__del_connect()
-	{
-		ev_io_stop(m_loop, &m_read);
-		return 0;
-	}
-	int io_context::__del_write()
-	{
-		if (m_write_waiter.empty())
-		{
-			ev_io_stop(m_loop, &m_write);
-		}
-		return 0;
-	}
-	int io_context::__connect(const char *ip, int port)
-	{
-		if (__connect(m_fd, ip, port) < 0)
-		{
-			if (isInprocess())
-			{
-				return m_fd;
-			}
-		}
-		return __close();
-	}
-	awaitable<int> io_context::connect(const char *ip, int port)
-	{
-		m_fd = __connect(ip, port);
-		if (m_fd == INVALID)
-		{
-			co_return m_fd;
-		}
-		co_await m_read_waiter.suspend();
-		auto err = getSocketError(m_fd);
-		if (err != 0)
-		{
-			co_return __close();
-		}
-		__initial();
-		co_return m_fd;
-	}
+	
+
 }

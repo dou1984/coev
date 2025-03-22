@@ -25,9 +25,7 @@ namespace coev
 		awaitable<int> recvfrom(char *, int, addrInfo &);
 		awaitable<int> sendto(const char *, int, addrInfo &);
 		int close();
-		operator bool() const;
-
-		awaitable<int> connect(const char *, int);
+		operator bool() const;	
 
 	protected:
 		uint64_t m_tid = 0;
@@ -42,16 +40,8 @@ namespace coev
 		int __initial();
 		int __close();
 		bool __valid() const;
+		int __del_write();
 		static void cb_write(struct ev_loop *loop, struct ev_io *w, int revents);
 		static void cb_read(struct ev_loop *loop, struct ev_io *w, int revents);
-
-	protected:
-		void __init_connect();
-		int __add_connect();
-		int __del_connect();		
-		int __del_write();
-		int __connect(const char *ip, int port);
-		int __connect(int fd, const char *ip, int port);		
-		static void cb_connect(struct ev_loop *loop, struct ev_io *w, int revents);
 	};
 }

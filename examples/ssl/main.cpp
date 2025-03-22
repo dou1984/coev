@@ -29,27 +29,31 @@ awaitable<void> test_ssl_context()
         [=]() -> awaitable<void>
         {
             ssl_context ctx(fd, g_srv_mgr.get());
+            defer _(
+                [=]()
+                {
+                    LOG_DBG("close fd:%d\n", fd);
+                });
             int err = co_await ctx.do_handshake();
             if (err == INVALID)
             {
                 LOG_ERR("handshake failed fd:%d\n", fd);
                 co_return;
             }
-            while (ctx)
+
+            char buffer[1024];
+            int r = co_await ctx.recv(buffer, sizeof(buffer));
+            if (r == INVALID)
             {
-                char buffer[1024];
-                int r = co_await ctx.recv(buffer, sizeof(buffer));
-                if (r == INVALID)
-                {
-                    LOG_ERR("recv failed fd:%d\n", fd);
-                    break;
-                }
-                r = co_await ctx.send("hello world", strlen("hello world") + 1);
-                if (r == INVALID)
-                {
-                    LOG_ERR("send failed fd:%d\n", fd);
-                    break;
-                }
+                LOG_ERR("recv failed fd:%d\n", fd);
+                co_return;
+            }
+            LOG_DBG("recv %d bytes from fd:%d %s\n", r, fd, buffer);
+            r = co_await ctx.send("hello world", strlen("hello world") + 1);
+            if (r == INVALID)
+            {
+                LOG_ERR("send failed fd:%d\n", fd);
+                co_return;
             }
         }();
     }
@@ -57,7 +61,7 @@ awaitable<void> test_ssl_context()
 awaitable<void> test_ssl_client()
 {
 
-    ssl_context client(g_cli_mgr.get());
+    ssl_connect client(g_cli_mgr.get());
     int fd = co_await client.connect("127.0.0.1", 9998);
     if (fd == INVALID)
     {
@@ -79,7 +83,7 @@ awaitable<void> test_ssl_client()
         LOG_ERR("recv failed fd:%d\n", fd);
         exit(INVALID);
     }
-    LOG_DBG("recv %d bytes from %d\n", r, fd);
+    LOG_DBG("recv %d bytes from %d %s\n", r, fd, buffer);
 }
 int main(int argc, char **argv)
 {

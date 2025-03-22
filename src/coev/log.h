@@ -23,7 +23,7 @@
 			auto __lt__ = std::localtime(&__tm__);                       \
 			auto __fl__ = strrchr(__FILE__, '/');                        \
 			__fl__ = __fl__ ? __fl__ + 1 : __FILE__;                     \
-			PRINT("[%d/%d/%d %02d:%02d:%02d %s][%s:%d][%s]",              \
+			PRINT("[%d/%d/%d %02d:%02d:%02d %s][%s:%d][%s]",             \
 				  __lt__->tm_year + 1900,                                \
 				  __lt__->tm_mon + 1,                                    \
 				  __lt__->tm_mday,                                       \
@@ -37,6 +37,7 @@
 			PRINT(__VA_ARGS__);                                          \
 		}                                                                \
 	}
+
 #define LOG_CORE(...) \
 	LOG(LOG_LEVEL_CORE, __VA_ARGS__)
 #define LOG_DBG(...) \
@@ -47,7 +48,6 @@
 	LOG(LOG_LEVEL_ERROR, __VA_ARGS__)
 #define LOG_FATAL(...) \
 	LOG(LOG_LEVEL_FATAL, __VA_ARGS__)
-
 #define TRACE() LOG_CORE("\n")
 
 namespace coev

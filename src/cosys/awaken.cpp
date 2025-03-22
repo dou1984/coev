@@ -19,6 +19,7 @@ namespace coev
 			awaken *_this = (awaken *)w->data;
 			assert(_this != nullptr);
 			_this->__resume();
+			local<coev::async>::instance().resume_all();
 		}
 	}
 	awaken::awaken()
@@ -62,7 +63,7 @@ namespace coev
 			std::lock_guard<std::mutex> _(m_lock);
 			m_waiter.moveto(&_listener);
 		}
-		while (_listener.resume())
+		while (_listener.resume(true))
 		{
 		}
 		return 0;

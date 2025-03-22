@@ -22,14 +22,15 @@ void real_call(int __x)
 	g_trigger.x = __x;
 };
 
-void __async_call(void (*__f)(int))
+// void __async_call(void (*__f)(int))
+void __async_call(const std::function<void(int)> &__f)
 {
 	[__f]() -> awaitable<int>
 	{
 		co_await sleep_for(1);
 		// __f(1);  // It will core dump here, __f is not equal input argument __f, is it a g++ bug?
-		real_call(1); // It's OK.
-		g_trigger.m_waiter.resume();
+		real_call(1); // It's OK.		
+		g_trigger.m_waiter.resume(true);
 		co_return 0;
 	}();
 }

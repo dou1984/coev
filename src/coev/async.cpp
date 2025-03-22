@@ -8,19 +8,33 @@ namespace coev
 		return co_event(this);
 	}
 
-	bool async::resume()
+	bool async::resume(bool immediately)
 	{
 		if (auto c = static_cast<co_event *>(pop_front()); c != nullptr)
 		{
-			c->resume();
+			if (immediately)
+			{
+				c->resume();				
+			}
+			else
+			{
+				local<coev::async>::instance().push_back(c);
+			}
 			return true;
 		}
 		return false;
 	}
+	void async::resume_all()
+	{
+		while (resume(true))
+		{
+			LOG_CORE("resume one\n");
+		}
+	}
 
 	namespace guard
 	{
-		awaitable<void> async::suspend(const std::function<bool()> &suppend, const std::function<void()> &call)
+		awaitable<void> async::suspend(const std::function<bool()> &suppend, const std::function<void()> &_get)
 		{
 			m_mutex.lock();
 			if (suppend())
@@ -30,19 +44,20 @@ namespace coev
 				co_await ev;
 				m_mutex.lock();
 			}
-			call();
+			_get();
 			m_mutex.unlock();
 		}
-		bool async::resume(const std::function<void()> &call)
+		bool async::resume(const std::function<void()> &_set)
 		{
-			auto c = [&]()
+			auto c = [&, this]()
 			{
 				std::lock_guard<std::mutex> _(m_mutex);
-				call();
+				_set();
 				return static_cast<co_event *>(pop_front());
 			}();
 			if (c)
 			{
+				LOG_CORE("resume %p\n", c);
 				c->resume();
 				return true;
 			}

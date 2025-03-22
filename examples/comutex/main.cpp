@@ -24,15 +24,16 @@ awaitable<int> test_go()
 	auto now = std::chrono::system_clock::now();
 	for (int i = 0; i < 100; i++)
 	{
-		co_await g_mutex.lock();		
-		g_total += 1;		
+		co_await g_mutex.lock();
+		g_total += 1;
 		g_mutex.unlock();
-		co_await usleep_for(1);
+		// co_await usleep_for(1);
 	}
 
-	co_await sleep_for(10);
+	co_await sleep_for(1);
 	auto r = std::chrono::system_clock::now() - now;
 	auto _count = g_count++;
+
 	LOG_DBG("%d %d %ld\n", _count, g_total.load(), r.count());
 	co_return 0;
 }
@@ -48,13 +49,11 @@ awaitable<void> test_lock()
 	LOG_DBG("awaken\n");
 	g_lock.unlock();
 
-	
 	LOG_DBG("test_lock end\n");
-
 }
 int main()
 {
-	//set_log_level(LOG_LEVEL_CORE);
+	set_log_level(LOG_LEVEL_DEBUG);
 	running::instance()
 		.add(25, test_go)
 		// .add(4, test_lock)

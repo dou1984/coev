@@ -16,7 +16,7 @@ server_pool<HttpServer> g_server;
 
 awaitable<int> echo(io_context &io)
 {
-	LOG_DBG("recv echo\n");
+	LOG_DBG("reach echo\n");
 	std::ostringstream oss;
 	oss << R"(HTTP/1.1 200 OK
 Date: Sun, 26 OCT 1984 10:00:00 GMT
@@ -51,7 +51,7 @@ awaitable<void> co_router()
 			LOG_CORE("accept error %s\n", strerror(errno));
 			continue;
 		}
-		[=]() -> awaitable<void>
+		[fd, h]() -> awaitable<void>
 		{
 			io_context io(fd);
 			HttpRequest r;
@@ -68,6 +68,7 @@ awaitable<void> co_router()
 			}
 			std::cout << "body:" << req.body << std::endl;
 
+			LOG_DBG("recv http request from %s:%d\n", h.ip, h.port);
 			co_await echo(io);
 
 			io.close();
@@ -79,7 +80,7 @@ int main()
 {
 	g_server.start("0.0.0.0", 9999);
 
-	set_log_level(LOG_LEVEL_DEBUG);
+	set_log_level(LOG_LEVEL_CORE);
 	running::instance()
 		.add(1, co_router)
 		.join();

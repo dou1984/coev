@@ -14,6 +14,7 @@ namespace coev
 {
 	co_task::~co_task()
 	{
+		LOG_CORE("co_task::~co_task() %p\n", this);
 		destroy();
 	}
 	bool co_task::empty()
@@ -29,14 +30,14 @@ namespace coev
 			_promises = std::move(m_promises);
 			m_count = 0;
 		}
-		assert(m_task_waiter.empty());
+		LOG_CORE("co_task::destroy() %p size:%ld\n", this, _promises.size());
 		for (int i = 0; i < _promises.size(); i++)
 		{
 			if (_promises[i])
 			{
 				auto p = _promises[i];
 				assert(p->m_caller == nullptr);
-				LOG_CORE("co_task::destroy() %d %p\n", i, p);
+				LOG_CORE("co_task::destroy() %d %p task:%p\n", i, p, p->m_task);
 				auto _coro = std::coroutine_handle<promise>::from_promise(*p);
 				assert(&_coro.promise() == p);
 				std::lock_guard<is_destroying> _(local<is_destroying>::instance());
@@ -82,6 +83,7 @@ namespace coev
 				{
 					if (m_promises[i] == _promise)
 					{
+						LOG_CORE("co_task: done %d %p\n", i, _promise);
 						m_promises[i] = nullptr;
 						m_count--;
 						m_id = i;

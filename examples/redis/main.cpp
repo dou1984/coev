@@ -11,7 +11,7 @@
 #include <string_view>
 #include <vector>
 #include <cosys/cosys.h>
-#include <co_redis/rediscli.h>
+#include <co_redis/Rediscli.h>
 
 using namespace coev;
 

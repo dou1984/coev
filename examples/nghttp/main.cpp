@@ -1,8 +1,12 @@
 #include <coev/coev.h>
+#include <cosys/cosys.h>
 #include <co_nghttp/NghttpServer.h>
 #include <co_nghttp/NghttpRequest.h>
 
 using namespace coev;
+
+ssl_manager g_cli_mgr(ssl_manager::TLS_CLIENT);
+
 awaitable<int> proc_server()
 {
     LOG_DBG("server start %s", "0.0.0.0:8090");
@@ -27,12 +31,23 @@ Content-Type: text/html; charset=utf-8)";
         LOG_DBG("recv fd %d from %s:%d", fd, info.ip, info.port);
         [=]() -> awaitable<void>
         {
-            io_context ctx(fd);
+            coev::nghttp2::NghttpRequest ctx(fd, g_cli_mgr.get());
 
             char buffer[1000];
-            co_await ctx.recv(buffer, sizeof(buffer));
-
-            co_await ctx.send(hi, strlen(hi) + 1);
+            auto err = co_await ctx.recv_body(buffer, sizeof(buffer));
+            if (err == INVALID)
+            {
+                LOG_ERR("recv error %d %s\n", errno, strerror(errno));
+                co_return;
+            }
+            LOG_DBG("recv data %s %d\n", buffer, err);
+            err = co_await ctx.send_body(hi, strlen(hi) + 1);
+            if (err == INVALID)
+            {
+                LOG_ERR("send error %d %s\n", errno, strerror(errno));
+                co_return;
+            }
+            LOG_DBG("send data %s %ld\n", hi, strlen(hi) + 1);
         }();
     }
     co_return 0;
@@ -47,9 +62,9 @@ awaitable<int> proc_client()
     }
     const char *user_data = "GET / HTTP/1.1\r\nHost: 157.148.69.80\r\n\r\n";
     int length = strlen(user_data) + 1;
-    int err = co_await client.send(user_data, length);
+    int err = co_await client.send_body(user_data, length);
     char buffer[1000];
-    err = co_await client.recv(buffer, sizeof(buffer));
+    err = co_await client.recv_body(buffer, sizeof(buffer));
     co_return 0;
 }
 int main(int argc, char **argv)

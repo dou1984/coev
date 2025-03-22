@@ -5,7 +5,8 @@ namespace coev
 {
     promise::~promise()
     {
-        LOG_CORE("promise::~promise %p %p\n", m_task, m_caller.address());
+
+        LOG_CORE("promise::~promise %p %p coro:%p\n", m_task, m_caller.address(), std::coroutine_handle<promise>::from_promise(*this).address());
         if (m_task)
         {
             assert(m_caller.address() == nullptr);
@@ -20,6 +21,7 @@ namespace coev
             m_caller = nullptr;
             _caller.resume();
         }
+        m_status = CORO_FINISHED;
     }
     void promise::unhandled_exception()
     {
@@ -28,12 +30,15 @@ namespace coev
 
     std::suspend_never promise::initial_suspend()
     {
-        LOG_CORE("promise::initial_suspend %p\n", this);
+
+        bool _ready = m_caller || m_task;
+        LOG_CORE("promise::initial_suspend %p %s\n", this, _ready ? "ready" : "not ready");
         return {};
     }
     std::suspend_never promise::final_suspend() noexcept
     {
-        LOG_CORE("promise::final_suspend %p %p\n", m_task, m_caller.address());
+        bool _ready = m_caller || m_task;
+        LOG_CORE("promise::final_suspend %p %p %s\n", this, m_task, _ready ? "ready" : "not ready");
         return {};
     }
     std::suspend_never promise_void::return_void()

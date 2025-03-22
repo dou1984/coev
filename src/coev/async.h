@@ -10,7 +10,8 @@ namespace coev
     struct async : queue
     {
         co_event suspend();
-        bool resume();
+        bool resume(bool immediate = false);        
+        void resume_all();
     };
 
     namespace guard

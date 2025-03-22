@@ -30,7 +30,8 @@ namespace coev::tcp
 		}
 		server *_this = (server *)(w->data);
 		assert(_this != nullptr);
-		_this->m_waiter.resume();
+		_this->m_waiter.resume(true);
+		local<coev::async>::instance().resume_all();
 	}
 	server::server()
 	{
@@ -107,9 +108,7 @@ namespace coev::tcp
 			co_return INVALID;
 		}
 		co_await m_waiter.suspend();
-		auto fd = __real_accept(m_fd, peer);
-	
-		co_return fd;
+		co_return __real_accept(m_fd, peer);
 	}
 
 }

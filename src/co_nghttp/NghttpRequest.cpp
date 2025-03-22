@@ -66,14 +66,14 @@ namespace coev::nghttp2
         }
         auto _this = static_cast<NghttpRequest *>(user_data);
         LOG_CORE("send %ld bytes", length);
-        _this->m_write_waiter.resume();
+        _this->m_write_waiter.resume(true);
         return 0;
     }
 
     ssize_t NghttpRequest::__recv_callback(nghttp2_session *session, uint8_t *buf, size_t length, int flags, void *user_data)
     {
         auto _this = static_cast<NghttpRequest *>(user_data);
-        _this->m_read_waiter.resume();
+        _this->m_read_waiter.resume(true);
         LOG_CORE("recv %ld bytes", length);
         return length;
     }
@@ -81,7 +81,7 @@ namespace coev::nghttp2
     ssize_t NghttpRequest::__read_callback(nghttp2_session *session, int32_t stream_id, uint8_t *buf, size_t length, uint32_t *data_flags, nghttp2_data_source *source, void *user_data)
     {
         auto _this = static_cast<NghttpRequest *>(user_data);
-        _this->m_read_waiter.resume();
+        _this->m_read_waiter.resume(true);
         LOG_CORE("read %ld bytes", length);
         return length;
     }
@@ -140,7 +140,10 @@ namespace coev::nghttp2
         return 0;
     }
 
-    NghttpRequest::NghttpRequest() : ssl_context(g_cli_mgr.get())
+    NghttpRequest::NghttpRequest(int fd, SSL_CTX *ctx) : ssl_connect(ctx)
+    {
+    }
+    NghttpRequest::NghttpRequest() : ssl_connect(g_cli_mgr.get())
     {
         static int __init_nghttp2 = __init();
     }
@@ -159,10 +162,16 @@ namespace coev::nghttp2
             m_fd = INVALID;
             co_return m_fd;
         }
-        co_await io_context::connect(info.ip, info.port);
+        err = co_await ssl_connect::connect(info.ip, info.port);
+        if (err == INVALID)
+        {
+            LOG_ERR("ssl connect failed %s %d", info.ip, info.port);
+            goto __error_return__;
+        }
         err = nghttp2_session_client_new(&m_session, m_callbacks, this);
         if (err < 0)
         {
+            LOG_ERR("nghttp2_session_client_new failed %s %d", info.ip, info.port);
             goto __error_return__;
         }
         co_return m_fd;

@@ -41,8 +41,8 @@ namespace coev
 			auto &s = m_pool[_tid];
 			if (m_fd == INVALID)
 			{
-				m_fd = s.start(ip, port);				
-			
+				m_fd = s.start(ip, port);
+				LOG_CORE("server_pool start fd=%d ip=%s port=%d", m_fd, ip, port);
 			}
 			return m_fd;
 		}

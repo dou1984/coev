@@ -17,9 +17,11 @@ namespace coev
 
 	enum status : int
 	{
-		STATUS_INIT,
-		STATUS_SUSPEND,
-		STATUS_RESUMED,
+		CORO_INIT,
+		CORO_SUSPEND,
+		CORO_RESUMED,
+		CORO_FINISHED,
+
 	};
 
 	class co_task;
@@ -27,6 +29,7 @@ namespace coev
 	{
 		std::coroutine_handle<> m_caller = nullptr;
 		co_task *m_task = nullptr;
+		int m_status = CORO_INIT;
 		promise() = default;
 		~promise();
 		void unhandled_exception();
@@ -44,17 +47,18 @@ namespace coev
 		V value;
 		std::suspend_never return_value(V &&v)
 		{
+			LOG_CORE("return_value %p\n", this);
 			value = std::forward<V>(v);
 			return {};
 		}
 		std::suspend_never return_value(const V &v)
 		{
+			LOG_CORE("return_value %p\n", this);
 			value = v;
 			return {};
 		}
 		std::suspend_always yield_value(V &&v) = delete;
-
 		std::suspend_always yield_value(const V &v) = delete;
 	};
-	
+
 }

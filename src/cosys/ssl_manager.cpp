@@ -39,10 +39,7 @@ namespace coev
             SSL_CTX_free(m_context);
         }
     }
-    SSL_CTX *ssl_manager::get()
-    {
-        return m_context;
-    }
+    
     void ssl_manager::load_certificated(const char *cert_file, const char *key_file)
     {
         if (m_context == nullptr)

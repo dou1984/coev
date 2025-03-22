@@ -11,7 +11,7 @@ using namespace coev;
 
 awaitable<int> co_dail(const char *ip, int port)
 {
-	io_context c;
+	io_connect c;
 	co_await c.connect(ip, port);
 	if (!c)
 	{
@@ -43,7 +43,7 @@ awaitable<int> co_dail(const char *ip, int port)
 			c.close();
 			co_return 0;
 		}
-		if (count++ > 100)
+		if (count++ > 10000)
 		{
 			co_return 0;
 		}

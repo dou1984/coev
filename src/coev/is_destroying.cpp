@@ -2,7 +2,7 @@
 
 namespace coev
 {
-    operator is_destroying::bool() const
+    is_destroying::operator bool() const
     {
         return m_status;
     }

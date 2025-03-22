@@ -6,11 +6,14 @@
 
 namespace coev::nghttp2
 {
-    class NghttpRequest : public ssl_context
+    class NghttpRequest : protected ssl_connect
     {
     public:
         NghttpRequest();
-        ~NghttpRequest();
+        NghttpRequest(int, SSL_CTX*);
+        NghttpRequest(const NghttpRequest &) = delete;
+        NghttpRequest &operator=(const NghttpRequest &) = delete;
+        ~NghttpRequest();        
 
         awaitable<int> connect(const char *url);
         awaitable<int> send_body(const char *body, int length);
