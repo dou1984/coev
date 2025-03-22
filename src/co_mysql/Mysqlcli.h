@@ -10,7 +10,7 @@
 #include <ev.h>
 #include <mysql/mysql.h>
 #include <mysql/mysqld_error.h>
-#include <coev/cosys/cosys.h>
+#include <coev/coev.h>
 
 namespace coev
 {

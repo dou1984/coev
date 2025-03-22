@@ -4,13 +4,12 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
 IF(NOT CMAKE_BUILD_TYPE)
-	SET(CMAKE_BUILD_TYPE Debug)
+    SET(CMAKE_BUILD_TYPE Debug)
 ENDIF()
 
 project(coev)
 
 aux_source_directory(. SRC_DIR)
-aux_source_directory(./cosys COSYS_DIR)
 
 add_library(${PROJECT_NAME} STATIC ${SRC_DIR} ${COSYS_DIR})
-target_link_libraries(${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME} ssl crypto)

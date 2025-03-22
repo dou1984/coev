@@ -6,7 +6,7 @@
  *
  */
 #include <coev/coev.h>
-#include <coev/cosys/cosys.h>
+#include <coev/coev.h>
 
 using namespace coev;
 
@@ -55,7 +55,7 @@ int main()
 
 	set_log_level(LOG_LEVEL_DEBUG);
 
-	pool.start("127.0.0.1", 9960);
+	pool.start("0.0.0.0", 9999);
 
 	running::instance().add(4, co_server).join();
 	return 0;

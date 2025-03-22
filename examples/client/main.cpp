@@ -6,7 +6,7 @@
  *
  */
 #include <coev/coev.h>
-#include <coev/cosys/cosys.h>
+#include <coev/coev.h>
 using namespace coev;
 
 awaitable<int> co_dail(const char *ip, int port)
@@ -43,7 +43,7 @@ awaitable<int> co_dail(const char *ip, int port)
 			c.close();
 			co_return 0;
 		}
-		if (count++ > 10000)
+		if (count++ > 1000000)
 		{
 			co_return 0;
 		}
@@ -52,9 +52,9 @@ awaitable<int> co_dail(const char *ip, int port)
 }
 void co_test()
 {
-	for (int i = 0; i < 10000; i++)
+	for (int i = 0; i < 1000; i++)
 	{
-		co_dail("127.0.0.1", 9960);
+		co_dail("0.0.0.0", 9999);
 	}
 }
 int main()

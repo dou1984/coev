@@ -6,7 +6,7 @@
  *
  */
 #include "server.h"
-#include "../coev.h"
+#include "coev.h"
 #include "cosys.h"
 
 namespace coev::tcp

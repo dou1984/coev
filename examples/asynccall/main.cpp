@@ -6,7 +6,7 @@
  *
  */
 
-#include <coev/cosys/cosys.h>
+#include <coev/coev.h>
 
 using namespace coev;
 

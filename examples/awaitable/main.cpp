@@ -6,7 +6,7 @@
  *
  */
 #include <coev/coev.h>
-#include <coev/cosys/cosys.h>
+#include <coev/coev.h>
 
 #define g singleton<coev::co_waitgroup>::instance()
 

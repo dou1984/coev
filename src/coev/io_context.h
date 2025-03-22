@@ -8,7 +8,7 @@
 #pragma once
 #include <ev.h>
 #include <memory>
-#include "../coev.h"
+#include "async.h"
 #include "socket.h"
 
 namespace coev
@@ -25,7 +25,7 @@ namespace coev
 		awaitable<int> recvfrom(char *, int, addrInfo &);
 		awaitable<int> sendto(const char *, int, addrInfo &);
 		int close();
-		operator bool() const;	
+		operator bool() const;
 
 	protected:
 		uint64_t m_tid = 0;

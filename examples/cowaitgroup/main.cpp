@@ -9,7 +9,7 @@
 #include <atomic>
 #include <chrono>
 #include <coev/coev.h>
-#include <coev/cosys/cosys.h>
+#include <coev/coev.h>
 
 using namespace coev;
 

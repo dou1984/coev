@@ -6,8 +6,8 @@
  *
  */
 #include <cstdint>
+#include <coev/coev.h>
 #include "Rediscli.h"
-#include <coev/cosys/cosys.h>
 
 namespace coev
 {
