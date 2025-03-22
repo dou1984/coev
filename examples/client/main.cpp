@@ -18,17 +18,19 @@ awaitable<int> co_dail(const char *ip, int port)
 		co_return INVALID;
 	}
 	char sayhi[] = "helloworld";
-	auto r = co_await c.send(sayhi, sizeof(sayhi));
-	if (r == INVALID)
-	{
-		c.close();
-		co_return 0;
-	}
 	int count = 0;
-	defer _([]()
-			{ LOG_FATAL("co_dail exit\n"); });
+	LOG_DBG("co_dail start %s %d\n", sayhi, port);
+	defer _([=]()
+			{ LOG_DBG("co_dail exit %s %d\n", ip, port); });
 	while (c)
 	{
+		auto r = co_await c.send(sayhi, strlen(sayhi) + 1);
+		if (r == INVALID)
+		{
+			c.close();
+			co_return 0;
+		}
+		LOG_DBG("send %s\n", sayhi);
 		char buffer[0x1000];
 		r = co_await c.recv(buffer, sizeof(buffer));
 		if (r == INVALID)
@@ -36,15 +38,10 @@ awaitable<int> co_dail(const char *ip, int port)
 			c.close();
 			co_return 0;
 		}
-		LOG_DBG("%s\n", buffer);
-		r = co_await c.send(buffer, r);
-		if (r == INVALID)
+		LOG_DBG("recv %s\n", buffer);
+		if (count++ > 2)
 		{
-			c.close();
-			co_return 0;
-		}
-		if (count++ > 1000000)
-		{
+			LOG_DBG("co_dail exit %s %d %d\n", ip, port, count);
 			co_return 0;
 		}
 	}
@@ -52,7 +49,7 @@ awaitable<int> co_dail(const char *ip, int port)
 }
 void co_test()
 {
-	for (int i = 0; i < 1000; i++)
+	for (int i = 0; i < 1; i++)
 	{
 		co_dail("0.0.0.0", 9999);
 	}
@@ -60,8 +57,8 @@ void co_test()
 int main()
 {
 
-	set_log_level(LOG_LEVEL_DEBUG);
-	running::instance().add(4, co_test).join();
+	set_log_level(LOG_LEVEL_CORE);
+	running::instance().add(1, co_test).join();
 
 	return 0;
 }

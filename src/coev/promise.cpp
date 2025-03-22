@@ -30,20 +30,14 @@ namespace coev
 
     std::suspend_never promise::initial_suspend()
     {
-
-        bool _ready = m_caller || m_task;
-        LOG_CORE("promise::initial_suspend %p %s\n", this, _ready ? "ready" : "not ready");
         return {};
     }
     std::suspend_never promise::final_suspend() noexcept
     {
-        bool _ready = m_caller || m_task;
-        LOG_CORE("promise::final_suspend %p %p %s\n", this, m_task, _ready ? "ready" : "not ready");
         return {};
     }
     std::suspend_never promise_void::return_void()
     {
-        LOG_CORE("promise_void::return_void\n");
         return {};
     }
 

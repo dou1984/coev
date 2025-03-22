@@ -12,9 +12,10 @@ namespace coev
 	{
 		if (auto c = static_cast<co_event *>(pop_front()); c != nullptr)
 		{
+			LOG_CORE("resume one %s\n", immediately ? "immediately" : "later");
 			if (immediately)
 			{
-				c->resume();				
+				c->resume();
 			}
 			else
 			{
@@ -44,6 +45,7 @@ namespace coev
 				co_await ev;
 				m_mutex.lock();
 			}
+			LOG_CORE("suspend one\n");
 			_get();
 			m_mutex.unlock();
 		}

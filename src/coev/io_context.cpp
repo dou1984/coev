@@ -13,7 +13,6 @@
 #include "cosys.h"
 #include "io_context.h"
 
-
 namespace coev
 {
 	void io_context::cb_read(struct ev_loop *loop, struct ev_io *w, int revents)
@@ -38,10 +37,10 @@ namespace coev
 			__finally();
 			::close(m_fd);
 			m_fd = INVALID;
-			while (m_read_waiter.resume())
+			while (m_read_waiter.resume(true))
 			{
 			}
-			while (m_write_waiter.resume())
+			while (m_write_waiter.resume(true))
 			{
 			}
 		}
@@ -64,7 +63,7 @@ namespace coev
 	io_context::io_context() : m_fd(INVALID)
 	{
 		m_tid = gtid();
-		m_loop = cosys::data();		
+		m_loop = cosys::data();
 	}
 	int io_context::__initial()
 	{
@@ -83,7 +82,7 @@ namespace coev
 		return 0;
 	}
 	int io_context::__finally()
-	{		
+	{
 		if (m_fd != INVALID)
 		{
 			LOG_CORE("fd:%d\n", m_fd);
@@ -114,6 +113,10 @@ namespace coev
 				ev_io_start(m_loop, &m_write);
 				co_await m_write_waiter.suspend();
 			}
+			else if (r == 0)
+			{
+				co_return INVALID;
+			}
 			else
 			{
 				LOG_CORE("fd:%d send %ld bytes\n", m_fd, r);
@@ -132,8 +135,15 @@ namespace coev
 			{
 				continue;
 			}
-			LOG_CORE("fd:%d recv %ld bytes\n", m_fd, r);
-			co_return r;
+			else if (r == 0)
+			{
+				co_return INVALID;
+			}
+			else
+			{
+				LOG_CORE("fd:%d recv %ld bytes\n", m_fd, r);
+				co_return r;
+			}
 		}
 		co_return INVALID;
 	}
@@ -148,6 +158,10 @@ namespace coev
 			if (r == INVALID && isInprocess())
 			{
 				continue;
+			}
+			else if (r == 0)
+			{
+				co_return INVALID;
 			}
 			parseAddr(addr, info);
 			co_return r;
@@ -166,6 +180,10 @@ namespace coev
 				ev_io_start(m_loop, &m_write);
 				co_await m_write_waiter.suspend();
 			}
+			else if (r == 0)
+			{
+				co_return INVALID;
+			}
 			co_return r;
 		}
 		co_return INVALID;
@@ -176,7 +194,5 @@ namespace coev
 		__close();
 		return 0;
 	}
-
-	
 
 }

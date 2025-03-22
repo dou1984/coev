@@ -43,9 +43,9 @@ namespace coev
 		const awaitable &operator=(const awaitable &&) = delete;
 		~awaitable()
 		{
+			LOG_CORE("awaitable destroyed %p %p\n", this, m_callee.address());
 			if (local<is_destroying>::instance())
 			{
-				LOG_CORE("awaitable destroyed %p %p\n", this, m_callee.address());
 				destroy();
 			}
 		}

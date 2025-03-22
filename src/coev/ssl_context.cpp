@@ -45,24 +45,27 @@ namespace coev
         }
     }
 
-   
     awaitable<int> ssl_context::send(const char *buf, int len)
     {
         while (__valid())
         {
-            if (int err = SSL_write(m_ssl, buf, len); err == INVALID)
+            if (int r = SSL_write(m_ssl, buf, len); r == INVALID)
             {
-                if (err = SSL_get_error(m_ssl, err); err != SSL_ERROR_WANT_WRITE)
+                if (r = SSL_get_error(m_ssl, r); r != SSL_ERROR_WANT_WRITE)
                 {
-                    errno = -err;
+                    errno = -r;
                     co_return INVALID;
                 }
                 ev_io_start(m_loop, &m_write);
                 co_await m_write_waiter.suspend();
             }
+            else if (r == 0)
+            {
+                co_return INVALID;
+            }
             else
             {
-                co_return err;
+                co_return r;
             }
         }
         co_return INVALID;
@@ -72,16 +75,20 @@ namespace coev
         while (__valid())
         {
             co_await m_read_waiter.suspend();
-            if (auto err = SSL_read(m_ssl, buf, size); err == INVALID)
+            if (auto r = SSL_read(m_ssl, buf, size); r == INVALID)
             {
-                if (err = SSL_get_error(m_ssl, err); err != SSL_ERROR_WANT_READ)
+                if (r = SSL_get_error(m_ssl, r); r != SSL_ERROR_WANT_READ)
                 {
                     co_return INVALID;
                 }
             }
+            else if (r == 0)
+            {
+                co_return INVALID;
+            }
             else
             {
-                co_return err;
+                co_return r;
             }
         }
         co_return INVALID;

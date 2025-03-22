@@ -13,9 +13,9 @@ using namespace coev;
 server_pool<tcp::server> pool;
 awaitable<void> dispatch(addrInfo addr, int fd)
 {
-	LOG_DBG("dispatch %s:%d\n", addr.ip, addr.port);
-	defer _([]()
-			{ LOG_DBG("dispatch exit\n"); });
+	LOG_DBG("dispatch start %s %d\n", addr.ip, addr.port);
+	defer _([=]()
+			{ LOG_DBG("dispatch exit %s %d\n", addr.ip, addr.port); });
 	io_context io(fd);
 	while (io)
 	{
@@ -26,13 +26,14 @@ awaitable<void> dispatch(addrInfo addr, int fd)
 			io.close();
 			co_return;
 		}
-		LOG_DBG("%s\n", buffer);
+		LOG_DBG("recv %d %s\n", r, buffer);
 		r = co_await io.send(buffer, r);
 		if (r == INVALID)
 		{
 			io.close();
 			co_return;
 		}
+		LOG_DBG("send %d %s\n", r, buffer);
 	}
 }
 awaitable<int> co_server()
@@ -53,10 +54,10 @@ awaitable<int> co_server()
 int main()
 {
 
-	set_log_level(LOG_LEVEL_DEBUG);
+	set_log_level(LOG_LEVEL_CORE);
 
 	pool.start("0.0.0.0", 9999);
 
-	running::instance().add(4, co_server).join();
+	running::instance().add(1, co_server).join();
 	return 0;
 }

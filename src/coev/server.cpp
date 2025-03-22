@@ -30,6 +30,7 @@ namespace coev::tcp
 		}
 		server *_this = (server *)(w->data);
 		assert(_this != nullptr);
+		LOG_CORE("server::cb_accept %p\n", _this);
 		_this->m_waiter.resume(true);
 		local<coev::async>::instance().resume_all();
 	}
