@@ -12,16 +12,16 @@
 
 namespace coev
 {
-	class awaken
+	class co_deliver
 	{
 	public:
-		awaken();
-		virtual ~awaken();
+		co_deliver();
+		virtual ~co_deliver();
 
 		int resume(co_event *ev);
 
 	private:
-		ev_async m_awaken;
+		ev_async m_deliver;
 		std::mutex m_lock;
 		async m_waiter;
 		uint64_t m_tid = 0;

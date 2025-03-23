@@ -46,7 +46,7 @@ awaitable<void> test_lock()
 	LOG_DBG("test_lock locked\n");
 
 	co_await sleep_for(1);
-	LOG_DBG("awaken\n");
+	LOG_DBG("co_deliver\n");
 	g_lock.unlock();
 
 	LOG_DBG("test_lock end\n");

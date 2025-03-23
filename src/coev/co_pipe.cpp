@@ -19,9 +19,9 @@ namespace coev
 		std::lock_guard<std::mutex> _(g_mutex);
 		all_pipes.erase(m_tid);
 	}
-	void co_pipe::resume(async &listener)
+	void co_pipe::resume(async &waiter)
 	{
-		auto c = listener.pop_front();
+		auto c = waiter.pop_front();
 		if (c == nullptr)
 		{
 			return;
@@ -36,8 +36,14 @@ namespace coev
 			std::lock_guard<std::mutex> _(g_mutex);
 			if (auto it = all_pipes.find(ev->m_tid); it != all_pipes.end())
 			{
-				it->second->awaken::resume(ev);
+				it->second->co_deliver::resume(ev);
 			}
 		}
+	}
+	awaitable<void> co_pipe::operator<<();
+	{
+	}
+	awaitable<void> co_pipe::operator>>()
+	{
 	}
 }
