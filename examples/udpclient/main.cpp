@@ -10,10 +10,10 @@
 
 using namespace coev;
 
-awaitable<int> go()
+awaitable<void> go()
 {
 	addrInfo addr("127.0.0.1", 9998);
-	
+
 	auto fd = udp::socketfd();
 	io_context io(fd);
 	while (io)
@@ -28,6 +28,6 @@ awaitable<int> go()
 int main()
 {
 
-	running::instance().add(go).join();
+	runnable::instance().add(go).join();
 	return 0;
 }

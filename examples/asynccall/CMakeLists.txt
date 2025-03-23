@@ -12,4 +12,4 @@ project(test_asynccall)
 aux_source_directory(./ SRC_DIR)
 
 add_executable(${PROJECT_NAME} ${SRC_DIR})
-target_link_libraries(${PROJECT_NAME} cosys coev ev pthread)
+target_link_libraries(${PROJECT_NAME} coev ev pthread)

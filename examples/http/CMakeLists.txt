@@ -12,4 +12,4 @@ project(test_http)
 aux_source_directory(./ SRC_DIR)
 
 add_executable(${PROJECT_NAME} ${SRC_DIR})
-target_link_libraries(${PROJECT_NAME} co_http http_parser cosys coev ssl crypto ev pthread)
+target_link_libraries(${PROJECT_NAME} co_http http_parser coev ssl crypto ev pthread)

@@ -7,7 +7,7 @@ using namespace coev;
 
 ssl_manager g_cli_mgr(ssl_manager::TLS_CLIENT);
 
-awaitable<int> proc_server()
+awaitable<void> proc_server()
 {
     LOG_DBG("server start %s", "0.0.0.0:8090");
     coev::nghttp2::NghttpServer server("0.0.0.0:8090");
@@ -50,22 +50,22 @@ Content-Type: text/html; charset=utf-8)";
             LOG_DBG("send data %s %ld\n", hi, strlen(hi) + 1);
         }();
     }
-    co_return 0;
+    co_return;
 }
-awaitable<int> proc_client()
+awaitable<void> proc_client()
 {
     coev::nghttp2::NghttpRequest client;
     int fd = co_await client.connect("127.0.0.1:8090");
     if (fd == INVALID)
     {
-        co_return INVALID;
+        co_return;
     }
     const char *user_data = "GET / HTTP/1.1\r\nHost: 157.148.69.80\r\n\r\n";
     int length = strlen(user_data) + 1;
     int err = co_await client.send_body(user_data, length);
     char buffer[1000];
     err = co_await client.recv_body(buffer, sizeof(buffer));
-    co_return 0;
+    co_return;
 }
 int main(int argc, char **argv)
 {
@@ -79,13 +79,13 @@ int main(int argc, char **argv)
 
     if (strcmp(argv[1], "server") == 0)
     {
-        running::instance()
+        runnable::instance()
             .add(proc_server)
             .join();
     }
     else if (strcmp(argv[1], "client") == 0)
     {
-        running::instance()
+        runnable::instance()
             .add(proc_client)
             .join();
     }

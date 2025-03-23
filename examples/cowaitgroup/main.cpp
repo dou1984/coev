@@ -25,20 +25,20 @@ awaitable<int> test_co()
 
 	co_return 0;
 }
-awaitable<int> test_wait()
+awaitable<void> test_wait()
 {
 	for (int i = 0; i < 2; i++)
 	{
-		test_co();
+		co_start test_co();
 	}
 	co_await g_waiter.wait();
 	LOG_FATAL("wait\n");
-	co_return 0;
+	co_return;
 }
 int main()
 {
 	set_log_level(LOG_LEVEL_CORE);
-	running::instance().add(test_wait).join();
+	runnable::instance().add(test_wait).join();
 
 	return 0;
 }

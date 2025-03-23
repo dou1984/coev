@@ -13,13 +13,17 @@ namespace coev
 	co_event::co_event(queue *_eventchain) : m_tid(gtid())
 	{
 		if (_eventchain != nullptr)
+		{
 			_eventchain->push_back(this);
+		}
 		LOG_CORE("co_event _eventchain %p\n", _eventchain);
 	}
 	co_event::~co_event()
 	{
 		if (!queue::empty())
+		{
 			queue::erase(this);
+		}
 		m_caller = nullptr;
 	}
 	void co_event::await_resume()

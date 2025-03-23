@@ -35,7 +35,7 @@ awaitable<void> dispatch(addrInfo addr, int fd)
 		LOG_DBG("send %d %s\n", r, buffer);
 	}
 }
-awaitable<int> co_server()
+awaitable<void> co_server()
 {
 	auto &srv = pool.get();
 	addrInfo h;
@@ -44,19 +44,18 @@ awaitable<int> co_server()
 		auto fd = co_await srv.accept(h);
 		if (srv.valid())
 		{
-			dispatch(h, fd);
+			co_start dispatch(h, fd);
 		}
 	}
-	co_return INVALID;
 }
 
 int main()
 {
 
-	set_log_level(LOG_LEVEL_CORE);
+	set_log_level(LOG_LEVEL_DEBUG);
 
 	pool.start("0.0.0.0", 9999);
 
-	running::instance().add(1, co_server).join();
+	runnable::instance().add(1, co_server).join();
 	return 0;
 }

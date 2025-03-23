@@ -33,6 +33,6 @@ awaitable<int> go()
 int main()
 {
 	set_log_level(LOG_LEVEL_CORE);
-	running::instance().add(2, go).join();
+	runnable::instance().add(2, go).join();
 	return 0;
 }

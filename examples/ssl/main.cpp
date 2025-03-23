@@ -1,5 +1,4 @@
 #include <coev/coev.h>
-#include <coev/coev.h>
 
 using namespace coev;
 
@@ -26,7 +25,7 @@ awaitable<void> test_ssl_context()
             LOG_ERR("accept failed fd:%d\n", fd);
             continue;
         }
-        [=]() -> awaitable<void>
+        co_start[=]()->awaitable<void>
         {
             ssl_context ctx(fd, g_srv_mgr.get());
             defer _(
@@ -57,7 +56,8 @@ awaitable<void> test_ssl_context()
                     co_return;
                 }
             }
-        }();
+        }
+        ();
     }
 }
 awaitable<void> test_ssl_client()
@@ -97,13 +97,13 @@ int main(int argc, char **argv)
     }
     if (strcmp(argv[1], "server") == 0)
     {
-        running::instance()
+        runnable::instance()
             .add(test_ssl_context)
             .join();
     }
     else if (strcmp(argv[1], "client") == 0)
     {
-        running::instance()
+        runnable::instance()
             .add(test_ssl_client)
             .join();
     }

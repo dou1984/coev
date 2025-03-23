@@ -15,6 +15,8 @@
 
 namespace coev
 {
+#define co_start coev::local<coev::co_task>::instance() <<
+
 	class co_task final
 	{
 		guard::async m_task_waiter;
@@ -26,7 +28,10 @@ namespace coev
 		virtual ~co_task();
 		void destroy();
 
+		int operator<<(promise *);
+		int operator>>(promise *);
 		bool empty();
+		awaitable<void> wait_all();
 		awaitable<int> wait();
 		int insert(promise *_promise);
 		int done(promise *_promise);

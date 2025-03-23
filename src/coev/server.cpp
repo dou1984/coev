@@ -90,15 +90,15 @@ namespace coev::tcp
 	}
 	int server::__insert()
 	{
-		LOG_CORE("ev_io_start:%p %p\n", m_loop, &m_reav);
-		m_reav.data = this;
-		ev_io_init(&m_reav, server::cb_accept, m_fd, EV_READ);
-		ev_io_start(m_loop, &m_reav);
+		LOG_CORE("ev_io_start:%p %p\n", m_loop, &m_recv);
+		m_recv.data = this;
+		ev_io_init(&m_recv, server::cb_accept, m_fd, EV_READ);
+		ev_io_start(m_loop, &m_recv);
 		return m_fd;
 	}
 	int server::__remove()
 	{
-		ev_io_stop(m_loop, &m_reav);
+		ev_io_stop(m_loop, &m_recv);
 		return m_fd;
 	}
 

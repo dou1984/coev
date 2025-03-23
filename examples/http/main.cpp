@@ -51,7 +51,7 @@ awaitable<void> co_router()
 			LOG_CORE("accept error %s\n", strerror(errno));
 			continue;
 		}
-		[fd, h]() -> awaitable<void>
+		co_start[fd, h]()->awaitable<void>
 		{
 			io_context io(fd);
 			HttpRequest r;
@@ -73,7 +73,8 @@ awaitable<void> co_router()
 
 			io.close();
 			LOG_DBG("close socket %d\n", fd);
-		}();
+		}
+		();
 	}
 }
 int main()
@@ -81,7 +82,7 @@ int main()
 	g_server.start("0.0.0.0", 9999);
 
 	set_log_level(LOG_LEVEL_CORE);
-	running::instance()
+	runnable::instance()
 		.add(1, co_router)
 		.join();
 	return 0;

@@ -48,7 +48,7 @@ int main()
 {
 	set_log_level(LOG_LEVEL_DEBUG);
 
-	running::instance()
+	runnable::instance()
 		.add(test_sleep)
 		.add(test_timer)
 		.add([]() -> awaitable<void>

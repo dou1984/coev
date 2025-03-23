@@ -104,7 +104,7 @@ int main()
 {
 	set_log_level(LOG_LEVEL_CORE);
 
-	running::instance()
+	runnable::instance()
 		.add([]() -> awaitable<void>
 			 { co_await wait_for_all(co_awaitable(), co_resume());
 			 LOG_DBG("co_awaitable co_resume finish\n"); })

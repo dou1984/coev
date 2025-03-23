@@ -11,6 +11,7 @@
 #include <string.h>
 #include "log.h"
 #include "queue.h"
+#include "suspend_bool.h"
 
 namespace coev
 {
@@ -19,6 +20,7 @@ namespace coev
 	{
 		CORO_INIT,
 		CORO_SUSPEND,
+		CORO_RUNNING,
 		CORO_RESUMED,
 		CORO_FINISHED,
 
@@ -33,7 +35,7 @@ namespace coev
 		promise() = default;
 		~promise();
 		void unhandled_exception();
-		std::suspend_never initial_suspend();
+		suspend_bool initial_suspend();
 		std::suspend_never final_suspend() noexcept;
 	};
 	struct promise_void : promise

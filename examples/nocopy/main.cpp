@@ -29,6 +29,6 @@ awaitable<void> co_nocopy()
 }
 int main()
 {
-    coev::running::instance().add(co_nocopy).join();
+    coev::runnable::instance().add(co_nocopy).join();
     return 0;
 }

@@ -36,13 +36,15 @@ awaitable<int> proc_task(bool for_all)
 	co_return 0;
 }
 
-void co_task_t()
+awaitable<int> co_task_t()
 {
 	proc_task(true);
+	co_return 0;
 }
-void co_task_f()
+awaitable<int> co_task_f()
 {
 	proc_task(false);
+	co_return 0;
 }
 
 awaitable<int> co_completed(int t)
@@ -60,9 +62,9 @@ awaitable<int> co_incompleted(int t)
 	throw std::runtime_error("error incompleted");
 	co_return 0;
 }
-void co_two_task()
+awaitable<void> co_two_task()
 {
-	[]() -> awaitable<int>
+	co_await []() -> awaitable<int>
 	{
 		LOG_DBG("arrived co_two_task\n");
 		co_await sleep_for(1);
@@ -71,9 +73,9 @@ void co_two_task()
 		co_return 0;
 	}();
 }
-void co_two_task2()
+awaitable<void> co_two_task2()
 {
-	[]() -> awaitable<int>
+	co_await []() -> awaitable<int>
 	{
 		LOG_DBG("arrived co_two_task2\n");
 		co_await wait_for_any(co_incompleted(2), wait_for_all(co_completed(1), co_completed(1)));
@@ -81,10 +83,9 @@ void co_two_task2()
 		co_return 0;
 	}();
 }
-
-void co_three_task3()
+awaitable<void> co_three_task3()
 {
-	[]() -> awaitable<int>
+	co_await []() -> awaitable<int>
 	{
 		LOG_DBG("arrived co_three_task3\n");
 		co_await sleep_for(1);
@@ -92,9 +93,9 @@ void co_three_task3()
 		LOG_DBG("arrived co_three_task3 success\n");
 	}();
 }
-void co_three_task4()
+awaitable<void> co_three_task4()
 {
-	[]() -> awaitable<int>
+	co_await []() -> awaitable<int>
 	{
 		LOG_DBG("arrived co_three_task3\n");
 		co_await sleep_for(1);
@@ -124,49 +125,49 @@ auto g_reachable = []() -> awaitable<int>
 	LOG_DBG("arrived co_task5_task3\n");
 	co_return 0;
 };
-void co_task5()
+awaitable<void> co_task5()
 {
-	[]() -> awaitable<int>
+	co_await []() -> awaitable<int>
 	{
 		auto f1 = g_unreachable();
 		auto f2 = g_unreachable();
 		auto f3 = g_reachable();
 		co_task _task;
-		_task.insert(f1);
-		_task.insert(f2);
-		_task.insert(f3);
+		_task << f1;
+		_task << f2;
+		_task << f3;
 		co_await _task.wait();
 		LOG_DBG("arrived co_task5_end\n");
 		co_return 0;
 	}();
 }
 
-void co_task6()
+awaitable<void> co_task6()
 {
-	[]() -> awaitable<int>
+	co_await []() -> awaitable<int>
 	{
 		co_task _task;
-		_task.insert(g_unreachable());
-		_task.insert(g_unreachable());
-		_task.insert(g_reachable());
+		_task << g_unreachable();
+		_task << g_unreachable();
+		_task << g_reachable();
 		co_await _task.wait();
-		LOG_DBG("arrived co_task5_end\n");
+		LOG_DBG("arrived co_task6_end\n");
 		co_return 0;
 	}();
 }
 int main()
 {
-	set_log_level(LOG_LEVEL_CORE);
+	set_log_level(LOG_LEVEL_DEBUG);
 
-	running::instance()
-		.add(co_task_t)
-		.add(co_task_f)
-		.add(co_two_task)
-		.add(co_two_task2)
+	runnable::instance()
+		// .add(co_task_t)
+		// .add(co_task_f)
+		// .add(co_two_task)
+		// .add(co_two_task2)
 		.add(co_three_task3)
-		.add(co_three_task4)
-		.add(co_task5)
-		.add(co_task6)
+		// .add(co_three_task4)
+		// .add(co_task5)
+		// .add(co_task6)
 		.join();
 	return 0;
 }

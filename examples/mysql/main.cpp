@@ -22,7 +22,7 @@ struct t_test_table
 	std::string create_time;
 	std::string update_time;
 };
-awaitable<int> go()
+awaitable<void> go()
 {
 	LOG_ERR("begin\n");
 	coev::Mysqlcli c({
@@ -100,7 +100,7 @@ awaitable<int> go()
 	c.results();
 	LOG_FATAL("SUCCESS\n");
 }
-awaitable<int> clear()
+awaitable<void> clear()
 {
 	coev::Mysqlcli c({
 		.m_url = "127.0.0.1",
@@ -113,7 +113,7 @@ awaitable<int> clear()
 	auto r = co_await c.connect();
 	if (r == INVALID)
 	{
-		co_return INVALID;
+		co_return;
 	}
 	std::ostringstream oss;
 	oss << "truncate table t_test_table;";
@@ -128,13 +128,13 @@ awaitable<int> clear()
 	{
 		LOG_DBG("results %d\n", err);
 	}
-	co_return 0;
+	co_return;
 }
 int main()
 {
 	set_log_level(LOG_LEVEL_DEBUG);
 
-	coev::running::instance().add(go).join();
+	coev::runnable::instance().add(go).join();
 
 	return 0;
 }

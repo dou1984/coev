@@ -107,7 +107,7 @@ namespace coev
 	{
 		while (__valid())
 		{
-			auto r = ::send(m_fd, buffer, size, 0);
+			int r = ::send(m_fd, buffer, size, 0);
 			if (r == INVALID && isInprocess())
 			{
 				ev_io_start(m_loop, &m_write);
@@ -120,7 +120,7 @@ namespace coev
 			}
 			else
 			{
-				LOG_CORE("fd:%d send %ld bytes\n", m_fd, r);
+				LOG_CORE("fd:%d send %d bytes\n", m_fd, r);
 				co_return r;
 			}
 		}
@@ -131,7 +131,7 @@ namespace coev
 		while (__valid())
 		{
 			co_await m_read_waiter.suspend();
-			auto r = ::recv(m_fd, buffer, size, 0);
+			int r = ::recv(m_fd, buffer, size, 0);
 			if (r == INVALID && isInprocess())
 			{
 				continue;
@@ -143,7 +143,7 @@ namespace coev
 			}
 			else
 			{
-				LOG_CORE("fd:%d recv %ld bytes\n", m_fd, r);
+				LOG_CORE("fd:%d recv %d bytes\n", m_fd, r);
 				co_return r;
 			}
 		}

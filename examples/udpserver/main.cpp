@@ -22,16 +22,18 @@ awaitable<int> go(int fd)
 		co_await io.sendto(buffer, r, addr);
 		LOG_DBG("sendto %s:%d %s\n", addr.ip, addr.port, buffer);
 	}
-
 	co_return 0;
 }
 int main()
 {
-	auto fd = udp::bindfd("127.0.0.1", 9998);
-	running::instance()
+
+	runnable::instance()
 		.add(4,
-			 [=]()
-			 { go(fd); })
+			 []() -> awaitable<void>
+			 {
+				 auto fd = udp::bindfd("127.0.0.1", 9998);
+				 co_await go(fd);
+			 })
 		.join();
 
 	return 0;

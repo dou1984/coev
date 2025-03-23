@@ -15,7 +15,7 @@
 
 using namespace coev;
 
-awaitable<int> go()
+awaitable<void> go()
 {
 	set_log_level(LOG_LEVEL_DEBUG);
 
@@ -27,7 +27,7 @@ awaitable<int> go()
 
 	if (c.error())
 	{
-		co_return 0;
+		co_return;
 	}
 	std::default_random_engine e;
 	std::ostringstream oss;
@@ -44,7 +44,7 @@ awaitable<int> go()
 	co_await c.query(s);
 	if (c.error())
 	{
-		co_return 0;
+		co_return;
 	}
 	s = c.reply();
 	std::cout << s << std::endl;
@@ -56,13 +56,14 @@ awaitable<int> go()
 
 	if (c.error())
 	{
-		co_return c.reply_integer();
+		c.reply_integer();
+		co_return;
 	}
 	s = c.reply();
-	co_return 0;
+	co_return;
 }
 
-awaitable<int> test_sync()
+awaitable<void> test_sync()
 {
 	Rediscli c("127.0.0.1", 6379, "");
 	co_await c.connect();
@@ -71,10 +72,8 @@ awaitable<int> test_sync()
 
 	auto s = c.reply();
 	LOG_DBG("%s\n", s.c_str());
-
-	co_return 0;
 }
-awaitable<int> test_array()
+awaitable<void> test_array()
 {
 	Rediscli c("127.0.0.1", 6379, "");
 	co_await c.connect();
@@ -87,7 +86,7 @@ awaitable<int> test_array()
 	if (c.error())
 	{
 		LOG_ERR("test_array %s\n", c.reply().c_str());
-		co_return 0;
+		co_return;
 	}
 	LOG_DBG("hset h:test %s\n", c.reply().c_str());
 
@@ -99,7 +98,7 @@ awaitable<int> test_array()
 	if (c.error())
 	{
 		LOG_ERR("test_array hgeall %s\n", c.reply().c_str());
-		co_return 0;
+		co_return;
 	}
 	auto arr = c.reply_array();
 	std::string key;
@@ -117,18 +116,18 @@ awaitable<int> test_array()
 	if (c.error())
 	{
 		LOG_DBG("del h:test error %s\n", c.reply().c_str());
-		co_return 0;
+		co_return;
 	}
 	s = c.reply();
 
 	LOG_DBG("del h:test %s\n", s.c_str());
-	co_return 0;
+	co_return;
 }
 int main()
 {
-	running::instance()
-		// .add(test_sync)
-		// .add(go)
+	runnable::instance()
+		.add(test_sync)
+		.add(go)
 		.add(test_array)
 		.join();
 	return 0;

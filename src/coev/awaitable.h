@@ -32,7 +32,10 @@ namespace coev
 		};
 
 	public:
-		awaitable() = default;
+		awaitable()
+		{
+			LOG_CORE("awaitable created %p\n", this);
+		}
 		awaitable(std::coroutine_handle<promise_type> h) : m_callee(h)
 		{
 			LOG_CORE("awaitable created %p %p\n", this, m_callee.address());
@@ -43,15 +46,15 @@ namespace coev
 		const awaitable &operator=(const awaitable &&) = delete;
 		~awaitable()
 		{
-			LOG_CORE("awaitable destroyed %p %p\n", this, m_callee.address());
 			if (local<is_destroying>::instance())
 			{
+				LOG_CORE("local<is_destroying>::instance() %p %p\n", this, m_callee.address());
 				destroy();
 			}
 		}
 		bool done()
 		{
-			LOG_CORE("await_suspend %p %s\n", this, m_callee.address() || m_callee.promise().m_status == CORO_FINISHED ? "done" : "running");
+			LOG_CORE("%p %s %d\n", this, m_callee.done() ? "done" : "runnable", m_callee.promise().m_status);
 			return m_callee && m_callee.address() && (m_callee.done() || m_callee.promise().m_status == CORO_FINISHED);
 		}
 		auto await_resume() // 返回协程的返回值
@@ -76,18 +79,29 @@ namespace coev
 		}
 		void await_suspend(std::coroutine_handle<> caller) // co_await调用， 传入上层coroutine_handle
 		{
-			if (!done())
+			LOG_CORE("await_suspend %p %p\n", this, m_callee.address());
+			m_callee.promise().m_caller = caller;
+			switch (m_callee.promise().m_status)
 			{
-				LOG_CORE("await_suspend %p %p\n", this, m_callee.address());
-				m_callee.promise().m_caller = caller;
+			case CORO_INIT:
+				break;
+			case CORO_SUSPEND:
+				LOG_CORE("rusume %p\n", m_callee.address());
+				m_callee.resume();
+				break;
+			default:
+				throw std::runtime_error("await_suspend error m_callee.promise().m_status");
 			}
 		}
 		bool await_ready() // 是否挂起,正常情况需要挂起,返回false
 		{
+			LOG_CORE("await_ready %p %p\n", this, m_callee.address());
 			return done();
 		}
+
 		operator promise_type *()
 		{
+			// LOG_CORE("promise %p %p\n", this, m_callee.address());
 			return m_callee ? (&m_callee.promise()) : nullptr;
 		}
 

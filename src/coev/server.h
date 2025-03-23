@@ -26,7 +26,7 @@ namespace coev::tcp
 	private:
 		int m_fd = INVALID;
 		struct ev_loop *m_loop = nullptr;
-		ev_io m_reav;
+		ev_io m_recv;
 		async m_waiter;
 
 		int __insert();

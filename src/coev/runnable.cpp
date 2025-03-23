@@ -8,7 +8,8 @@
 #include <sys/signal.h>
 #include <unistd.h>
 #include "cosys.h"
-#include "running.h"
+#include "runnable.h"
+#include "co_task.h"
 
 namespace coev
 {
@@ -19,27 +20,19 @@ namespace coev
 		s.sa_flags = 0;
 		sigaction(sign, &s, NULL);
 	}
-	running::running()
+	runnable::runnable()
 	{
 		ingore_signal(SIGPIPE);
 	}
-	void running::__add(const std::function<void()> &f)
-	{
-		m_list.emplace_back(
-			[=]()
-			{
-				f();
-				cosys::start();
-			});
-	}
-	void running::join()
+
+	void runnable::join()
 	{
 		for (auto &it : m_list)
 		{
 			it.join();
 		}
 	}
-	void running::detach()
+	void runnable::detach()
 	{
 		for (auto &it : m_list)
 		{

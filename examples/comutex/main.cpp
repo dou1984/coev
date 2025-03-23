@@ -18,7 +18,7 @@ guard::co_mutex g_mutex;
 std::atomic_int g_total{0};
 std::atomic_int g_count{0};
 
-awaitable<int> test_go()
+awaitable<void> test_go()
 {
 	co_await sleep_for(1);
 	auto now = std::chrono::system_clock::now();
@@ -35,7 +35,7 @@ awaitable<int> test_go()
 	auto _count = g_count++;
 
 	LOG_DBG("%d %d %ld\n", _count, g_total.load(), r.count());
-	co_return 0;
+	co_return;
 }
 
 guard::co_mutex g_lock;
@@ -54,7 +54,7 @@ awaitable<void> test_lock()
 int main()
 {
 	set_log_level(LOG_LEVEL_DEBUG);
-	running::instance()
+	runnable::instance()
 		.add(25, test_go)
 		// .add(4, test_lock)
 		.join();

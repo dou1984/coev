@@ -49,9 +49,11 @@ namespace coev
     {
         while (__valid())
         {
-            if (int r = SSL_write(m_ssl, buf, len); r == INVALID)
+            int r = SSL_write(m_ssl, buf, len);
+            if (r == INVALID)
             {
-                if (r = SSL_get_error(m_ssl, r); r != SSL_ERROR_WANT_WRITE)
+                r = SSL_get_error(m_ssl, r);
+                if (r != SSL_ERROR_WANT_WRITE)
                 {
                     errno = -r;
                     co_return INVALID;
@@ -75,9 +77,11 @@ namespace coev
         while (__valid())
         {
             co_await m_read_waiter.suspend();
-            if (auto r = SSL_read(m_ssl, buf, size); r == INVALID)
+            int r = SSL_read(m_ssl, buf, size);
+            if (r == INVALID)
             {
-                if (r = SSL_get_error(m_ssl, r); r != SSL_ERROR_WANT_READ)
+                r = SSL_get_error(m_ssl, r);
+                if (r != SSL_ERROR_WANT_READ)
                 {
                     co_return INVALID;
                 }

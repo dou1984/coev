@@ -9,6 +9,7 @@
 #include "co_task.h"
 #include "awaitable.h"
 #include "wait_for.h"
+#include "defer.h"
 
 namespace coev
 {
@@ -53,25 +54,55 @@ namespace coev
 			[]() {});
 		co_return m_id;
 	}
+	awaitable<void> co_task::wait_all()
+	{
+		while (!empty())
+		{
+			co_await wait();
+		}
+	}
+	int co_task::operator<<(promise *_promise)
+	{
+		return insert(_promise);
+	}
+	int co_task::operator>>(promise *_promise)
+	{
+		return done(_promise);
+	}
 	int co_task::insert(promise *_promise)
 	{
-		std::lock_guard<std::mutex> _(m_task_waiter.m_mutex);
-		_promise->m_task = this;
-		if (m_promises.size() == m_count++)
+		auto __finally = [=]()
 		{
-			auto i = m_promises.size();
-			m_promises.push_back(_promise);
-			return i;
-		}
-		for (int i = 0; i < m_promises.size(); i++)
-		{
-			if (m_promises[i] == nullptr)
+			if (_promise->m_status == CORO_SUSPEND)
 			{
-				m_promises[i] = _promise;
+				LOG_CORE("co_task: resume %p %d\n", _promise, _promise->m_status);
+				_promise->m_status = CORO_RUNNING;
+				std::coroutine_handle<promise>::from_promise(*_promise).resume();
+			}
+		};
+		auto __insert = [this, _promise]() -> int
+		{
+			std::lock_guard<std::mutex> _M(m_task_waiter.m_mutex);
+			_promise->m_task = this;
+			if (m_promises.size() == m_count++)
+			{
+				auto i = m_promises.size();
+				m_promises.push_back(_promise);
 				return i;
 			}
-		}
-		throw std::runtime_error("co_task: error m_count");
+			for (int i = 0; i < m_promises.size(); i++)
+			{
+				if (m_promises[i] == nullptr)
+				{
+					m_promises[i] = _promise;
+					return i;
+				}
+			}
+			throw std::runtime_error("co_task: error m_count");
+		};
+		auto id = __insert();
+		__finally();
+		return id;
 	}
 
 	int co_task::done(promise *_promise)
