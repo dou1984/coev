@@ -11,7 +11,7 @@ namespace coev
         io_connect *_this = (io_connect *)(w->data);
         assert(_this != nullptr);
         _this->__del_connect();
-        _this->m_read_waiter.resume(true);
+        _this->m_read_waiter.resume();
     }
     void io_connect::__init_connect()
     {

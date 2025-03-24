@@ -17,7 +17,7 @@ namespace coev
 		co_timer *_this = (co_timer *)(w->data);
 		assert(_this != NULL);
 		LOG_CORE("co_timer::cb_timer %p\n", _this);
-		_this->m_waiter.resume(true);
+		_this->m_waiter.resume();
 		local<coev::async>::instance().resume_all();
 	}
 	co_timer::co_timer(ev_tstamp itimer, ev_tstamp rtimer)

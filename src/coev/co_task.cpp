@@ -71,15 +71,6 @@ namespace coev
 	}
 	int co_task::insert(promise *_promise)
 	{
-		auto __finally = [=]()
-		{
-			if (_promise->m_status == CORO_SUSPEND)
-			{
-				LOG_CORE("co_task: resume %p %d\n", _promise, _promise->m_status);
-				_promise->m_status = CORO_RUNNING;
-				std::coroutine_handle<promise>::from_promise(*_promise).resume();
-			}
-		};
 		auto __insert = [this, _promise]() -> int
 		{
 			std::lock_guard<std::mutex> _M(m_task_waiter.m_mutex);
@@ -99,6 +90,15 @@ namespace coev
 				}
 			}
 			throw std::runtime_error("co_task: error m_count");
+		};
+		auto __finally = [=]()
+		{
+			if (_promise->m_status == CORO_SUSPEND)
+			{
+				LOG_CORE("co_task: resume %p %d\n", _promise, _promise->m_status);
+				_promise->m_status = CORO_RUNNING;
+				std::coroutine_handle<promise>::from_promise(*_promise).resume();
+			}
 		};
 		auto id = __insert();
 		__finally();

@@ -11,7 +11,6 @@
 #include <tuple>
 #include <http_parser.h>
 #include <coev/coev.h>
-#include <coev/coev.h>
 
 namespace coev
 {

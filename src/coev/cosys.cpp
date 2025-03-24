@@ -10,7 +10,8 @@
 #include <mutex>
 #include <algorithm>
 #include "cosys.h"
-#include "co_pipe.h"
+#include "local.h"
+#include "co_deliver.h"
 
 #define g_loop local<__ev_loop>::instance()
 
@@ -32,7 +33,7 @@ namespace coev
 	void cosys::start()
 	{
 		auto _loop = g_loop.m_loop;
-		co_pipe __pipe;
+		co_deliver __deliver;
 		ev_run(_loop, 0);
 	}
 	void cosys::stop()

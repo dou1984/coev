@@ -66,14 +66,14 @@ namespace coev::nghttp2
         }
         auto _this = static_cast<NghttpRequest *>(user_data);
         LOG_CORE("send %ld bytes", length);
-        _this->m_write_waiter.resume(true);
+        _this->m_write_waiter.resume();
         return 0;
     }
 
     ssize_t NghttpRequest::__recv_callback(nghttp2_session *session, uint8_t *buf, size_t length, int flags, void *user_data)
     {
         auto _this = static_cast<NghttpRequest *>(user_data);
-        _this->m_read_waiter.resume(true);
+        _this->m_read_waiter.resume();
         LOG_CORE("recv %ld bytes", length);
         return length;
     }
@@ -81,7 +81,7 @@ namespace coev::nghttp2
     ssize_t NghttpRequest::__read_callback(nghttp2_session *session, int32_t stream_id, uint8_t *buf, size_t length, uint32_t *data_flags, nghttp2_data_source *source, void *user_data)
     {
         auto _this = static_cast<NghttpRequest *>(user_data);
-        _this->m_read_waiter.resume(true);
+        _this->m_read_waiter.resume();
         LOG_CORE("read %ld bytes", length);
         return length;
     }

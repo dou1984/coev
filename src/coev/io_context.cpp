@@ -19,14 +19,14 @@ namespace coev
 	{
 		auto _this = (io_context *)w->data;
 		assert(_this != NULL);
-		_this->m_read_waiter.resume(true);
+		_this->m_read_waiter.resume();
 		local<coev::async>::instance().resume_all();
 	}
 	void io_context::cb_write(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
 		auto _this = (io_context *)w->data;
 		assert(_this != NULL);
-		_this->m_write_waiter.resume(true);
+		_this->m_write_waiter.resume();
 		local<coev::async>::instance().resume_all();
 		_this->__del_write();
 	}
@@ -37,10 +37,10 @@ namespace coev
 			__finally();
 			::close(m_fd);
 			m_fd = INVALID;
-			while (m_read_waiter.resume(true))
+			while (m_read_waiter.resume())
 			{
 			}
-			while (m_write_waiter.resume(true))
+			while (m_write_waiter.resume())
 			{
 			}
 		}

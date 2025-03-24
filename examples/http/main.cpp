@@ -7,7 +7,7 @@
  */
 #include <sstream>
 #include <coev/coev.h>
-#include <co_http/Httprequest.h>
+#include <co_http/HttpRequest.h>
 #include <co_http/HttpServer.h>
 
 using namespace coev;

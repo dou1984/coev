@@ -12,6 +12,10 @@
 
 namespace coev
 {
+	local<co_deliver> __this_deliver;
+	static std::unordered_map<uint64_t, co_deliver *> all_delivers;
+	static std::mutex g_mutex;
+
 	void co_deliver::cb_async(struct ev_loop *loop, ev_async *w, int revents)
 	{
 		if (revents & EV_ASYNC)
@@ -25,16 +29,22 @@ namespace coev
 	co_deliver::co_deliver()
 	{
 		__init();
+		__init_local();
+	}
+	co_deliver::~co_deliver()
+	{
+		__fini();
+		__fini_local();
 	}
 	void co_deliver::__init()
 	{
 		m_deliver.data = this;
 		ev_async_init(&m_deliver, co_deliver::cb_async);
 		m_tid = gtid();
-		m_loop = cosys::data();		
-		ev_async_start(m_loop, &m_deliver);		
+		m_loop = cosys::data();
+		ev_async_start(m_loop, &m_deliver);
 	}
-	co_deliver::~co_deliver()
+	void co_deliver::__fini()
 	{
 		if (m_loop)
 		{
@@ -50,6 +60,17 @@ namespace coev
 		}
 		return 0;
 	}
+	void co_deliver::__init_local()
+	{
+		std::lock_guard<std::mutex> _(g_mutex);
+		all_delivers.emplace(m_tid, this);
+	}
+	void co_deliver::__fini_local()
+	{
+		std::lock_guard<std::mutex> _(g_mutex);
+		all_delivers.erase(m_tid);
+	}
+
 	int co_deliver::resume(co_event *ev)
 	{
 		std::lock_guard<std::mutex> _(m_lock);
@@ -63,9 +84,30 @@ namespace coev
 			std::lock_guard<std::mutex> _(m_lock);
 			m_waiter.moveto(&_listener);
 		}
-		while (_listener.resume(true))
+		while (_listener.resume())
 		{
 		}
 		return 0;
+	}
+	void co_deliver::resume(async &waiter)
+	{
+		auto c = waiter.pop_front();
+		if (c == nullptr)
+		{
+			return;
+		}
+		auto ev = static_cast<co_event *>(c);
+		if (ev->m_tid == gtid())
+		{
+			ev->resume();
+		}
+		else
+		{
+			std::lock_guard<std::mutex> _(g_mutex);
+			if (auto it = all_delivers.find(ev->m_tid); it != all_delivers.end())
+			{
+				it->second->resume(ev);
+			}
+		}
 	}
 }

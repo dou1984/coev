@@ -36,7 +36,7 @@ awaitable<int> co_resume()
 	LOG_DBG("resume begin\n");
 	co_await sleep_for(5);
 	LOG_DBG("resume end\n");
-	g_test.resume(true);
+	g_test.resume();
 	co_return 0;
 }
 
@@ -61,7 +61,7 @@ awaitable<int> co_awaitable_resume()
 
 	co_await sleep_for(2);
 	LOG_DBG("co_awaitable_resume wakeup\n");
-	g_test.resume(true);
+	g_test.resume();
 	co_return 0;
 }
 

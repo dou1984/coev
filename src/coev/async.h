@@ -10,7 +10,8 @@ namespace coev
     struct async : queue
     {
         co_event suspend();
-        bool resume(bool immediate = false);        
+        bool resume();
+        bool resume_later();
         void resume_all();
     };
 

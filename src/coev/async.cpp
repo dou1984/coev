@@ -8,28 +8,30 @@ namespace coev
 		return co_event(this);
 	}
 
-	bool async::resume(bool immediately)
+	bool async::resume()
 	{
 		if (auto c = static_cast<co_event *>(pop_front()); c != nullptr)
 		{
-			LOG_CORE("resume one %s\n", immediately ? "immediately" : "later");
-			if (immediately)
-			{
-				c->resume();
-			}
-			else
-			{
-				local<coev::async>::instance().push_back(c);
-			}
+			LOG_CORE("resume one event immediately\n");
+			c->resume();
+			return true;
+		}
+		return false;
+	}
+	bool async::resume_later()
+	{
+		if (auto c = static_cast<co_event *>(pop_front()); c != nullptr)
+		{
+			LOG_CORE("resume one event later\n");
+			local<coev::async>::instance().push_back(c);
 			return true;
 		}
 		return false;
 	}
 	void async::resume_all()
 	{
-		while (resume(true))
+		while (resume())
 		{
-			LOG_CORE("resume one\n");
 		}
 	}
 
