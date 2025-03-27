@@ -18,7 +18,7 @@ namespace coev
 		}
 		return false;
 	}
-	bool async::resume_later()
+	bool async::resume_next_loop()
 	{
 		if (auto c = static_cast<co_event *>(pop_front()); c != nullptr)
 		{

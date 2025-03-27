@@ -39,7 +39,7 @@ namespace coev
 	int HttpRequest::on_message_complete(http_parser *_)
 	{
 		auto _this = static_cast<HttpRequest *>(_);
-		_this->m_finish_waiter.resume_later();
+		_this->m_finish_waiter.resume_next_loop();
 		_this->clear();
 		LOG_CORE("<message end>%s\n", _this->m_value.data());
 		return 0;

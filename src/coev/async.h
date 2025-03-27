@@ -11,7 +11,7 @@ namespace coev
     {
         co_event suspend();
         bool resume();
-        bool resume_later();
+        bool resume_next_loop();
         void resume_all();
     };
 
