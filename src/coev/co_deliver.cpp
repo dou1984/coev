@@ -87,6 +87,7 @@ namespace coev
 		while (_listener.resume())
 		{
 		}
+		local<async>::instance().resume_all();
 		return 0;
 	}
 	void co_deliver::resume(async &waiter)
