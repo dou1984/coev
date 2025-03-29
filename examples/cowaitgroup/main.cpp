@@ -9,7 +9,6 @@
 #include <atomic>
 #include <chrono>
 #include <coev/coev.h>
-#include <coev/coev.h>
 
 using namespace coev;
 
@@ -29,7 +28,7 @@ awaitable<void> test_wait()
 {
 	for (int i = 0; i < 2; i++)
 	{
-		co_start test_co();
+		co_start << test_co();
 	}
 	co_await g_waiter.wait();
 	LOG_FATAL("wait\n");
@@ -37,7 +36,7 @@ awaitable<void> test_wait()
 }
 int main()
 {
-	set_log_level(LOG_LEVEL_CORE);
+	set_log_level(LOG_LEVEL_DEBUG);
 	runnable::instance().add(test_wait).join();
 
 	return 0;

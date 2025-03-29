@@ -15,7 +15,7 @@ namespace coev
 		_old->__list_clear();
 		return _old;
 	}
-	bool queue::moveto(queue *_new)
+	bool queue::move_to(queue *_new)
 	{
 		if (empty())
 			return false;

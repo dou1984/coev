@@ -6,7 +6,6 @@
  *
  */
 #include <coev/coev.h>
-#include <coev/coev.h>
 
 #define g singleton<coev::co_waitgroup>::instance()
 
@@ -102,7 +101,7 @@ awaitable<void> co_await_destroy()
 }
 int main()
 {
-	set_log_level(LOG_LEVEL_CORE);
+	set_log_level(LOG_LEVEL_DEBUG);
 
 	runnable::instance()
 		.add([]() -> awaitable<void>

@@ -8,7 +8,7 @@ if(NOT CMAKE_BUILD_TYPE)
 	 SET(CMAKE_BUILD_TYPE Release CACHE INTERNAL "cmake_build_type")
 endif()
 
-project(cowaitgroup)
+project(test_waitgroup)
 
 aux_source_directory(./ SRC_DIR)
 

@@ -101,7 +101,6 @@ namespace coev
 
 		operator promise_type *()
 		{
-			// LOG_CORE("promise %p %p\n", this, m_callee.address());
 			return m_callee ? (&m_callee.promise()) : nullptr;
 		}
 

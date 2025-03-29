@@ -63,14 +63,6 @@ namespace coev
 	}
 	int co_task::operator<<(promise *_promise)
 	{
-		return insert(_promise);
-	}
-	int co_task::operator>>(promise *_promise)
-	{
-		return done(_promise);
-	}
-	int co_task::insert(promise *_promise)
-	{
 		auto __insert = [this, _promise]() -> int
 		{
 			std::lock_guard<std::mutex> _M(m_task_waiter.m_mutex);
@@ -105,7 +97,7 @@ namespace coev
 		return id;
 	}
 
-	int co_task::done(promise *_promise)
+	int co_task::operator>>(promise *_promise)
 	{
 		m_task_waiter.resume(
 			[=, this]()

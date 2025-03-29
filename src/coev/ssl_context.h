@@ -7,9 +7,6 @@ namespace coev
 {
     class ssl_context : virtual protected io_context
     {
-    protected:
-        ssl_context(SSL_CTX *);
-
     public:
         using io_context::operator bool;
         using io_context::close;
@@ -24,6 +21,7 @@ namespace coev
         awaitable<int> do_handshake();
 
     protected:
+        ssl_context() = default;
         void __async_finally();
 
     protected:

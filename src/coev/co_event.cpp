@@ -10,13 +10,13 @@
 
 namespace coev
 {
-	co_event::co_event(queue *_eventchain) : m_tid(gtid())
+	co_event::co_event(queue *_ev_queue) : m_tid(gtid())
 	{
-		if (_eventchain != nullptr)
+		if (_ev_queue != nullptr)
 		{
-			_eventchain->push_back(this);
+			_ev_queue->push_back(this);
 		}
-		LOG_CORE("co_event _eventchain %p\n", _eventchain);
+		LOG_CORE("co_event _ev_queue %p\n", _ev_queue);
 	}
 	co_event::~co_event()
 	{
@@ -29,10 +29,12 @@ namespace coev
 	void co_event::await_resume()
 	{
 	}
+	/*
 	bool co_event::await_ready()
 	{
 		return m_status == CORO_RESUMED;
 	}
+
 	void co_event::await_suspend(std::coroutine_handle<> _awaitable)
 	{
 		m_caller = _awaitable;
@@ -49,6 +51,54 @@ namespace coev
 		if (m_caller.address() && !m_caller.done())
 		{
 			m_caller.resume();
+		}
+	}
+	*/
+	void co_event::__resume()
+	{
+		LOG_CORE("co_event resume m_caller:%p\n", this);
+		if (m_caller.address() && !m_caller.done())
+		{
+			m_caller.resume();
+		}
+	}
+	bool co_event::await_ready()
+	{
+		assert(m_status == CORO_INIT || m_status == CORO_RESUMED);
+		return m_status == CORO_RESUMED;
+	}
+	void co_event::await_suspend(std::coroutine_handle<> _awaitable)
+	{
+		m_caller = _awaitable;
+		if (m_status == CORO_INIT)
+		{
+			m_status = CORO_SUSPEND;
+		}
+		else if (m_status == CORO_RESUMED)
+		{
+			m_status = CORO_FINISHED;
+			__resume();
+		}
+		else
+		{
+			assert(false);
+		}
+	}
+	void co_event::resume()
+	{
+		LOG_CORE("co_event resume m_caller:%p\n", m_caller ? m_caller.address() : 0);
+		if (m_status == CORO_INIT)
+		{
+			m_status == CORO_RESUMED;
+		}
+		else if (m_status == CORO_SUSPEND)
+		{
+			m_status = CORO_FINISHED;
+			__resume();
+		}
+		else
+		{
+			assert(false);
 		}
 	}
 }

@@ -39,8 +39,8 @@ namespace coev
             SSL_CTX_free(m_context);
         }
     }
-    
-    void ssl_manager::load_certificated(const char *cert_file, const char *key_file)
+
+    void ssl_manager::load_certificated(const char *cert_file)
     {
         if (m_context == nullptr)
         {
@@ -53,16 +53,33 @@ namespace coev
             LOG_ERR("SSL_CTX_use_certificate_chain_file %s failed %ld\n", cert_file, ERR_get_error());
             exit(INVALID);
         }
+    }
+    void ssl_manager::load_privatekey(const char *key_file)
+    {
+        if (m_context == nullptr)
+        {
+            LOG_ERR("SSL_CTX_new failed %p\n", m_context);
+            exit(INVALID);
+        }
+        int r = 0;
         if ((r = SSL_CTX_use_PrivateKey_file(m_context, key_file, SSL_FILETYPE_PEM)) <= 0)
         {
             LOG_ERR("SSL_CTX_use_PrivateKey_file %s failed %ld\n", key_file, ERR_get_error());
             exit(INVALID);
         }
+    }
+    void ssl_manager::check_privatekey(const char *key_file)
+    {
+        if (m_context == nullptr)
+        {
+            LOG_ERR("SSL_CTX_new failed %p\n", m_context);
+            exit(INVALID);
+        }
+        int r = 0;
         if ((r = SSL_CTX_check_private_key(m_context)) <= 0)
         {
             LOG_ERR("SSL_CTX_check_private_key %ld\n", ERR_get_error());
             exit(INVALID);
         }
     }
-
 }

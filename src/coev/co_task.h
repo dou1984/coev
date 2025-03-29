@@ -15,7 +15,7 @@
 
 namespace coev
 {
-#define co_start coev::local<coev::co_task>::instance() <<
+#define co_start coev::local<coev::co_task>::instance() 
 
 	class co_task final
 	{
@@ -33,7 +33,5 @@ namespace coev
 		bool empty();
 		awaitable<void> wait_all();
 		awaitable<int> wait();
-		int insert(promise *_promise);
-		int done(promise *_promise);
 	};
 }

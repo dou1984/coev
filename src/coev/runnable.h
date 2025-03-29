@@ -29,7 +29,7 @@ namespace coev
 			m_list.emplace_back(
 				[=]()
 				{
-					co_start _f();
+					co_start << _f();
 					cosys::start();
 				});
 		}
@@ -55,5 +55,4 @@ namespace coev
 		void join();
 		void detach();
 	};
-
 }

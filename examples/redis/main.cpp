@@ -10,7 +10,6 @@
 #include <random>
 #include <string_view>
 #include <vector>
-#include <coev/coev.h>
 #include <co_redis/Rediscli.h>
 
 using namespace coev;

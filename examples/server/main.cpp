@@ -44,7 +44,7 @@ awaitable<void> co_server()
 		auto fd = co_await srv.accept(h);
 		if (srv.valid())
 		{
-			co_start dispatch(h, fd);
+			co_start << dispatch(h, fd);
 		}
 	}
 }

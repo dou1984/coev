@@ -31,7 +31,7 @@ namespace coev
 		queue *begin() { return m_next; }
 		queue *end() { return this; }
 		queue *erase(queue *_old);
-		bool moveto(queue *_new);
+		bool move_to(queue *_new);
 
 	private:
 		void __list_add(queue *_new, queue *prev, queue *next);

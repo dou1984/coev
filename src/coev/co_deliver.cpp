@@ -12,7 +12,7 @@
 
 namespace coev
 {
-	local<co_deliver> __this_deliver;
+
 	static std::unordered_map<uint64_t, co_deliver *> all_delivers;
 	static std::mutex g_mutex;
 
@@ -82,7 +82,7 @@ namespace coev
 		async _listener;
 		{
 			std::lock_guard<std::mutex> _(m_lock);
-			m_waiter.moveto(&_listener);
+			m_waiter.move_to(&_listener);
 		}
 		while (_listener.resume())
 		{
@@ -98,14 +98,14 @@ namespace coev
 			return;
 		}
 		auto ev = static_cast<co_event *>(c);
-		if (ev->m_tid == gtid())
+		if (ev->id() == gtid())
 		{
 			ev->resume();
 		}
 		else
 		{
 			std::lock_guard<std::mutex> _(g_mutex);
-			if (auto it = all_delivers.find(ev->m_tid); it != all_delivers.end())
+			if (auto it = all_delivers.find(ev->id()); it != all_delivers.end())
 			{
 				it->second->resume(ev);
 			}

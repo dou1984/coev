@@ -8,7 +8,6 @@
 #include <thread>
 #include <atomic>
 #include <coev/coev.h>
-#include <coev/coev.h>
 
 using namespace coev;
 

@@ -33,7 +33,7 @@ namespace coev
 	void cosys::start()
 	{
 		auto _loop = g_loop.m_loop;
-		co_deliver __deliver;
+		auto id = local<co_deliver>::instance().id();
 		ev_run(_loop, 0);
 	}
 	void cosys::stop()

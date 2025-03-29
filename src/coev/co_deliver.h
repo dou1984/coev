@@ -19,6 +19,7 @@ namespace coev
 		virtual ~co_deliver();
 
 		static void resume(async &waiter);
+		int id() const { return m_tid; }
 
 	protected:
 		int resume(co_event *ev);

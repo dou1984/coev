@@ -12,7 +12,6 @@
 #include <hiredis/hiredis.h>
 #include <hiredis/async.h>
 #include <coev/coev.h>
-#include <coev/coev.h>
 
 namespace coev
 {

@@ -8,10 +8,9 @@ static ssl_manager g_cli_mgr(ssl_manager::TLS_CLIENT);
 awaitable<void> test_ssl_context()
 {
     server_pool<tcp::server> pool;
-    pool.start("127.0.0.1", 9998);
-    g_srv_mgr.load_certificated(
-        "./server.pem",
-        "./server.pem");
+    pool.start("0.0.0.0", 9998);
+    g_srv_mgr.load_certificated("./server.pem");
+    g_srv_mgr.load_privatekey("./server.pem");
 
     LOG_DBG("server started\n");
     while (true)
@@ -25,7 +24,7 @@ awaitable<void> test_ssl_context()
             LOG_ERR("accept failed fd:%d\n", fd);
             continue;
         }
-        co_start[=]()->awaitable<void>
+        co_start << [=]() -> awaitable<void>
         {
             ssl_context ctx(fd, g_srv_mgr.get());
             defer _(
@@ -56,36 +55,38 @@ awaitable<void> test_ssl_context()
                     co_return;
                 }
             }
-        }
-        ();
+        }();
     }
 }
 awaitable<void> test_ssl_client()
 {
 
     ssl_connect client(g_cli_mgr.get());
-    int fd = co_await client.connect("127.0.0.1", 9998);
+    int fd = co_await client.connect("0.0.0.0", 9998);
     if (fd == INVALID)
     {
         LOG_ERR("connect failed fd:%d\n", fd);
         exit(INVALID);
     }
-    auto buf = "hello world";
-    int size = strlen(buf) + 1;
-    int r = co_await client.send(buf, size);
-    if (r == INVALID)
+    for (int i = 0; i < 10; i++)
     {
-        LOG_ERR("send failed fd:%d\n", fd);
-        exit(INVALID);
+        auto buf = "hello world";
+        int size = strlen(buf) + 1;
+        int r = co_await client.send(buf, size);
+        if (r == INVALID)
+        {
+            LOG_ERR("send failed fd:%d\n", fd);
+            exit(INVALID);
+        }
+        char buffer[1024];
+        r = co_await client.recv(buffer, sizeof(buffer));
+        if (r == INVALID)
+        {
+            LOG_ERR("recv failed fd:%d\n", fd);
+            exit(INVALID);
+        }
+        LOG_DBG("recv %d bytes from %d %s\n", r, fd, buffer);
     }
-    char buffer[1024];
-    r = co_await client.recv(buffer, sizeof(buffer));
-    if (r == INVALID)
-    {
-        LOG_ERR("recv failed fd:%d\n", fd);
-        exit(INVALID);
-    }
-    LOG_DBG("recv %d bytes from %d %s\n", r, fd, buffer);
 }
 int main(int argc, char **argv)
 {

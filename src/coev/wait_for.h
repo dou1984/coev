@@ -19,7 +19,7 @@ namespace coev
 	awaitable<int> wait_for_any(AWAITABLE &&...awt)
 	{
 		co_task w;
-		(w.insert(awt), ...);
+		((w << awt), ...);
 		auto id = co_await w.wait();
 		w.destroy();
 		co_return id;
@@ -28,7 +28,7 @@ namespace coev
 	awaitable<int> wait_for_all(AWAITABLE &&...awt)
 	{
 		co_task w;
-		(w.insert(awt), ...);
+		((w << awt), ...);
 		while (!w.empty())
 		{
 			co_await w.wait();

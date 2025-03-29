@@ -4,16 +4,6 @@
 
 namespace coev
 {
-
-    ssl_context::ssl_context(SSL_CTX *_ssl_ctx)
-    {
-        m_ssl = SSL_new(_ssl_ctx);
-        if (m_ssl == nullptr)
-        {
-            LOG_ERR("SSL_new failed %p\n", m_ssl);
-            throw std::runtime_error("SSL_new failed");
-        }
-    }
     ssl_context::ssl_context(int fd, SSL_CTX *_ssl_ctx) : io_context(fd)
     {
         m_ssl = SSL_new(_ssl_ctx);

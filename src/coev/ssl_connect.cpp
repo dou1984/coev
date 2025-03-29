@@ -2,8 +2,14 @@
 
 namespace coev
 {
-    ssl_connect::ssl_connect(SSL_CTX *ctx) : ssl_context(ctx)
+    ssl_connect::ssl_connect(SSL_CTX *_ssl_ctx)
     {
+        m_ssl = SSL_new(_ssl_ctx);
+        if (m_ssl == nullptr)
+        {
+            LOG_ERR("SSL_new failed %p\n", m_ssl);
+            throw std::runtime_error("SSL_new failed");
+        }
     }
 
     awaitable<int> ssl_connect::connect(const char *host, int port)
