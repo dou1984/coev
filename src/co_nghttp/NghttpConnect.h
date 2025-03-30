@@ -8,5 +8,7 @@ namespace coev::nghttp2
     public:
         NghttpConnect(SSL_CTX *);
         awaitable<int> connect(const char *url);
+    protected:
+        int __cli_settings();
     };
 }

@@ -65,6 +65,7 @@ namespace coev
 	bool co_event::await_ready()
 	{
 		assert(m_status == CORO_INIT || m_status == CORO_RESUMED);
+		LOG_CORE("co_event await_ready m_status:%d\n", m_status);
 		return m_status == CORO_RESUMED;
 	}
 	void co_event::await_suspend(std::coroutine_handle<> _awaitable)

@@ -11,7 +11,6 @@ namespace coev
         using io_context::operator bool;
         using io_context::close;
         ssl_context(ssl_context &&) = delete;
-
         ssl_context(int fd, SSL_CTX *);
         ~ssl_context();
 
@@ -23,6 +22,7 @@ namespace coev
     protected:
         ssl_context() = default;
         void __async_finally();
+        int __ssl_write(const char *, int);
 
     protected:
         SSL *m_ssl = nullptr;

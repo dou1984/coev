@@ -4,8 +4,10 @@
 
 namespace coev
 {
+    
     ssl_context::ssl_context(int fd, SSL_CTX *_ssl_ctx) : io_context(fd)
     {
+        assert(m_fd != INVALID);
         m_ssl = SSL_new(_ssl_ctx);
         if (m_ssl == nullptr)
         {
@@ -123,5 +125,25 @@ namespace coev
         }
         co_return 0;
     }
-
+    int ssl_context::__ssl_write(const char *buffer, int buffer_size)
+    {
+        assert(m_ssl);
+        int r = SSL_write(m_ssl, buffer, buffer_size);
+        if (r == INVALID)
+        {
+            r = SSL_get_error(m_ssl, r);
+            if (r != SSL_ERROR_WANT_WRITE)
+            {
+                errno = -r;
+                return INVALID;
+            }
+            ev_io_start(m_loop, &m_write);
+        }
+        else if (r == 0)
+        {
+            errno = 0;
+            return INVALID;
+        }
+        return r;
+    }
 }

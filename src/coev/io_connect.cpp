@@ -1,7 +1,7 @@
 #include "io_connect.h"
 
 namespace coev
-{  
+{
     void io_connect::cb_connect(struct ev_loop *loop, struct ev_io *w, int revents)
     {
         if (EV_ERROR & revents)
@@ -23,6 +23,7 @@ namespace coev
         if (setNoBlock(m_fd, true) < 0)
         {
             ::close(m_fd);
+            m_fd = INVALID;
             return;
         }
         __add_connect();
@@ -61,7 +62,7 @@ namespace coev
         fillAddr(addr, ip, port);
         return ::connect(fd, (sockaddr *)&addr, sizeof(addr));
     }
- 
+
     awaitable<int> io_connect::connect(const char *ip, int port)
     {
         m_fd = __connect(ip, port);

@@ -35,8 +35,9 @@ namespace coev
 		if (m_fd != INVALID)
 		{
 			__finally();
-			::close(m_fd);
+			auto _fd = m_fd;
 			m_fd = INVALID;
+			::close(_fd);
 			while (m_read_waiter.resume())
 			{
 			}

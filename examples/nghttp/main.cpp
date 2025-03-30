@@ -8,18 +8,7 @@ using namespace coev;
 ssl_manager g_cli_mgr(ssl_manager::TLS_CLIENT);
 ssl_manager g_srv_mgr(ssl_manager::TLS_SERVER);
 
-char hi[] =
-    R"(HTTP/1.1 200 OK
-Date: Sun, 26 OCT 1984 10:00:00 GMT
-Server: coev
-Set-Cookie: COEV=0000000000000000; path=/
-Expires: Sun, 26 OCT 2100 10:00:00 GMT
-Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0
-Pragma: no-cache
-Content-Length: 0
-Keep-Alive: timeout=5, max=100
-Connection: Keep-Alive
-Content-Type: text/html; charset=utf-8)";
+char hi[] = R"(helloworld)";
 
 awaitable<void> proc_server()
 {
@@ -31,7 +20,7 @@ awaitable<void> proc_server()
         addrInfo info;
         int fd = co_await server.accept(info);
 
-        LOG_DBG("recv fd %d from %s:%d", fd, info.ip, info.port);
+        LOG_DBG("recv fd %d from %s:%d\n", fd, info.ip, info.port);
         co_start << [=]() -> awaitable<void>
         {
             coev::nghttp2::NghttpSession ctx(fd, g_srv_mgr.get());
@@ -52,6 +41,11 @@ awaitable<void> proc_server()
             LOG_DBG("recv data %s %d\n", buffer, err);
             Ngheader ngh;
             ngh.push_back(":status", "200");
+            ngh.push_back("server:", "coev");
+            ngh.push_back("set-cookie:", "COEV=0000000000000000");
+            ngh.push_back("keep-alive:", "timeout=5, max=100");
+            ngh.push_back("content-length:", "11");
+
             err = co_await ctx.send_body(ngh, ngh.size(), hi, strlen(hi) + 1);
             if (err == INVALID)
             {
@@ -78,13 +72,23 @@ awaitable<void> proc_client()
     ngh.push_back("accept", "*/*");
     ngh.push_back("user-agent", "nghttp2/" NGHTTP2_VERSION);
 
-    const char *user_data = "GET / HTTP/1.1\r\nHost: 157.148.69.80\r\n\r\n";
+    const char *user_data = "hello world";
     int length = strlen(user_data) + 1;
 
-    int err = co_await client.send_body(ngh, ngh.size(), user_data, length);
+    int r = co_await client.send_body(ngh, ngh.size(), user_data, length);
+    if (r == INVALID)
+    {
+        LOG_ERR("send error %d %s\n", errno, strerror(errno));
+        co_return;
+    }
     char buffer[1000];
-
-    err = co_await client.recv_body(buffer, sizeof(buffer));
+    r = co_await client.recv_body(buffer, sizeof(buffer));
+    if (r == INVALID)
+    {
+        LOG_ERR("recv error %d %s\n", errno, strerror(errno));
+        co_return;
+    }
+    LOG_DBG("recv data %s %d\n", buffer, r);
     co_return;
 }
 int main(int argc, char **argv)

@@ -65,7 +65,7 @@ awaitable<void> test_ssl_client()
     int fd = co_await client.connect("0.0.0.0", 9998);
     if (fd == INVALID)
     {
-        LOG_ERR("connect failed fd:%d\n", fd);
+        LOG_ERR("connect failed fd:%d error:%d\n", fd, errno);
         exit(INVALID);
     }
     for (int i = 0; i < 10; i++)
