@@ -31,15 +31,13 @@ awaitable<void> proc_server()
                 co_return;
             }
 
-            char buffer[1000];
-            err = co_await ctx.recv_body(buffer, sizeof(buffer));
+            err = co_await ctx.recv_process();
             if (err == INVALID)
             {
                 LOG_ERR("recv error %d %s\n", errno, strerror(errno));
                 co_return;
             }
-            LOG_DBG("recv data %s %d\n", buffer, err);
-            Ngheader ngh;
+            NgHeader ngh;
             ngh.push_back(":status", "200");
             ngh.push_back("server:", "coev");
             ngh.push_back("set-cookie:", "COEV=0000000000000000");
@@ -66,7 +64,7 @@ awaitable<void> proc_client()
         co_return;
     }
 
-    Ngheader ngh;
+    NgHeader ngh;
     ngh.push_back(":method", "GET");
     ngh.push_back(":scheme", "https");
     ngh.push_back("accept", "*/*");
@@ -81,14 +79,13 @@ awaitable<void> proc_client()
         LOG_ERR("send error %d %s\n", errno, strerror(errno));
         co_return;
     }
-    char buffer[1000];
-    r = co_await client.recv_body(buffer, sizeof(buffer));
+
+    r = co_await client.recv_process();
     if (r == INVALID)
     {
         LOG_ERR("recv error %d %s\n", errno, strerror(errno));
         co_return;
     }
-    LOG_DBG("recv data %s %d\n", buffer, r);
     co_return;
 }
 int main(int argc, char **argv)

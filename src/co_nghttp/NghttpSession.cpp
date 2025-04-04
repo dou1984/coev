@@ -16,6 +16,11 @@ namespace coev::nghttp2
         }
     };
     static __init_this g_init_this;
+    struct __cache
+    {
+        const char *m_data = nullptr;
+        int m_length = 0;
+    };
 
     nghttp2_session_callbacks *NghttpSession::m_callbacks = nullptr;
     int NghttpSession::__init()
@@ -52,20 +57,22 @@ namespace coev::nghttp2
 
     ssize_t NghttpSession::__read_callback(nghttp2_session *session, int32_t stream_id, uint8_t *buf, size_t length, uint32_t *data_flags, nghttp2_data_source *source, void *user_data)
     {
-
-        const char *data = (const char *)source->ptr;
-        size_t datalen = strlen(data);
-        LOG_CORE("data_source_read_callback %ld bytes length %ld from %p\n", datalen, length, source->ptr);
-        if (length > datalen)
-        {
-            length = datalen;
-        }
-        memcpy(buf, data, length);
-        if (length == datalen)
+        auto _this = static_cast<NghttpSession *>(user_data);
+        auto cache = (__cache *)source->ptr;
+        LOG_CORE("data_source_read_callback %ld bytes length %d from %s\n", length, cache->m_length, cache->m_data);
+        if (cache->m_length == 0)
         {
             *data_flags |= NGHTTP2_DATA_FLAG_EOF;
+            LOG_CORE("stream_id %d EOF %d\n", stream_id, *data_flags);
+            return 0;
         }
-
+        if (length > cache->m_length)
+        {
+            length = cache->m_length;
+        }
+        memcpy(buf, cache->m_data, length);
+        cache->m_data += length;
+        cache->m_length -= length;
         return length;
     }
     ssize_t NghttpSession::__send_callback(nghttp2_session *session, const uint8_t *data, size_t length, int flags, void *user_data)
@@ -81,9 +88,10 @@ namespace coev::nghttp2
     }
     ssize_t NghttpSession::__recv_callback(nghttp2_session *session, uint8_t *buf, size_t length, int flags, void *user_data)
     {
+        LOG_CORE("recv %ld bytes stream_id flags %d", length, flags);
         auto _this = static_cast<NghttpSession *>(user_data);
         _this->m_read_waiter.resume();
-        LOG_CORE("recv %ld bytes", length);
+
         return length;
     }
     int NghttpSession::__error_callback(nghttp2_session *session, const char *msg, size_t len, void *user_data)
@@ -95,19 +103,33 @@ namespace coev::nghttp2
     int NghttpSession::__on_frame_recv_callback(nghttp2_session *session, const nghttp2_frame *frame, void *user_data)
     {
         auto _this = static_cast<NghttpSession *>(user_data);
-        LOG_CORE("recv frame %p\n", frame);
+        LOG_CORE("recv stream_id %d type %d flags %d\n", frame->hd.stream_id, frame->hd.type, frame->hd.flags);
+        auto stream_id = frame->hd.stream_id;
+        if (frame->hd.type == NGHTTP2_SETTINGS)
+        {
+            // _this->__serv_settings();
+        }
+        else if (frame->hd.type == NGHTTP2_DATA)
+        {
+        }
+        else if (frame->hd.type == NGHTTP2_GOAWAY)
+        {
+              _this->m_requests.erase[stream_id];
+        }
         return 0;
     }
     int NghttpSession::__on_frame_send_callback(nghttp2_session *session, const nghttp2_frame *frame, void *user_data)
     {
         auto _this = static_cast<NghttpSession *>(user_data);
-        LOG_CORE("send frame %p\n", frame);
+        LOG_CORE("send stream_id %d type %d flags %d\n", frame->hd.stream_id, frame->hd.type, frame->hd.flags);
+
         return 0;
     }
     int NghttpSession::__on_begin_frame_callback(nghttp2_session *session, const nghttp2_frame_hd *hd, void *user_data)
     {
         auto _this = static_cast<NghttpSession *>(user_data);
-        LOG_CORE("begin frame %p\n", hd);
+        LOG_CORE("begin frame %p stream_id %d\n", hd, hd->stream_id);
+        _this->m_requests[hd->stream_id] = NgRequest();
         return 0;
     }
     int NghttpSession::__on_frame_not_send_callback(nghttp2_session *session, const nghttp2_frame *frame, int lib_error_code, void *user_data)
@@ -120,13 +142,14 @@ namespace coev::nghttp2
     int NghttpSession::__on_begin_headers_callback(nghttp2_session *session, const nghttp2_frame *frame, void *user_data)
     {
         auto _this = static_cast<NghttpSession *>(user_data);
-        LOG_CORE("begin header %p\n", frame);
+        LOG_CORE("begin header %d type %d flags %d\n", frame->hd.stream_id, frame->hd.type, frame->hd.flags);
         return 0;
     }
     int NghttpSession::__on_header_callback(nghttp2_session *session, const nghttp2_frame *frame, const uint8_t *name, size_t namelen, const uint8_t *value, size_t valuelen, uint8_t flags, void *user_data)
     {
         auto _this = static_cast<NghttpSession *>(user_data);
-        LOG_CORE("header %.*s: %.*s\n", (int)namelen, name, (int)valuelen, value);
+        LOG_CORE("header %d %.*s: %.*s\n", frame->hd.stream_id, (int)namelen, name, (int)valuelen, value);
+        _this->m_requests[frame->hd.stream_id].push_back((const char *)name, namelen, (const char *)value, valuelen);
         return 0;
     }
     int NghttpSession::__on_data_chunk_recv_callback(nghttp2_session *session, uint8_t flags, int32_t stream_id, const uint8_t *data, size_t len, void *user_data)
@@ -171,10 +194,14 @@ namespace coev::nghttp2
 
     awaitable<int> NghttpSession::send_body(nghttp2_nv *nva, int head_size, const char *body, int length)
     {
-        nghttp2_data_provider data_prd = {
-            .source = {.ptr = (void *)body},
+        __cache cache = {
+            .m_data = body,
+            .m_length = length,
+        };
+        nghttp2_data_provider data_provider = {
+            .source = {.ptr = &cache},
             .read_callback = &NghttpSession::__read_callback};
-        auto stream_id = nghttp2_submit_request(m_session, NULL, nva, head_size, &data_prd, NULL);
+        auto stream_id = nghttp2_submit_request(m_session, NULL, nva, head_size, &data_provider, this);
         LOG_CORE("stream_id %d\n", stream_id);
 
         auto err = nghttp2_session_send(m_session);
@@ -186,24 +213,31 @@ namespace coev::nghttp2
         }
         co_return stream_id;
     }
-    awaitable<int> NghttpSession::recv_body(char *body, int length)
+    awaitable<int> NghttpSession::recv_process()
     {
+        char body[1024];
         while (__valid())
         {
-            int r = co_await ssl_context::recv(body, length);
+            int r = co_await ssl_context::recv(body, sizeof(body));
             if (r == INVALID)
             {
             __error_return__:
                 __close();
                 co_return 0;
             }
-            auto err = nghttp2_session_mem_recv(m_session, (const uint8_t *)body, r);
-            if (err < 0)
+            LOG_CORE("recv %d bytes %s\n", r, body);
+            r = nghttp2_session_mem_recv(m_session, (uint8_t *)body, r);
+            if (r < 0)
             {
-                LOG_ERR("recv failed %d %ld %s\n", errno, err, nghttp2_strerror(err));
+                LOG_ERR("recv failed %d %d %s\n", errno, r, nghttp2_strerror(r));
                 goto __error_return__;
             }
-            LOG_CORE("recv %d bytes %s\n", r, body);
+            r = nghttp2_session_send(m_session);
+            if (r < 0)
+            {
+                LOG_ERR("send failed %d %d %s\n", errno, r, nghttp2_strerror(r));
+                goto __error_return__;
+            }
         }
     }
     int NghttpSession::__serv_settings()
@@ -237,13 +271,6 @@ namespace coev::nghttp2
             __close();
             co_return INVALID;
         }
-        /*
-        auto err = __serv_settings();
-        if (err != 0)
-        {
-            goto __error_return__;
-        }
-        */
         co_return 0;
     }
 }

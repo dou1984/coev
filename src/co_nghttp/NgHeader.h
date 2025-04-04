@@ -4,10 +4,10 @@
 
 namespace coev
 {
-    class Ngheader
+    class NgHeader
     {
     public:
-        Ngheader() = default;
+        NgHeader() = default;
 
         void push_back(const char *, size_t, const char *, size_t);
         void push_back(const char *, const char *);
