@@ -14,26 +14,21 @@
 using namespace coev;
 
 guard::co_mutex g_mutex;
-std::atomic_int g_total{0};
-std::atomic_int g_count{0};
-
+std::atomic_int g_total = {0};
 awaitable<void> test_go()
 {
-	co_await sleep_for(1);
+	auto tid = gtid();
 	auto now = std::chrono::system_clock::now();
-	for (int i = 0; i < 100; i++)
+	for (int i = 0; i < 10000; i++)
 	{
 		co_await g_mutex.lock();
-		g_total += 1;
+		++g_total;
 		g_mutex.unlock();
-		// co_await usleep_for(1);
 	}
-
-	co_await sleep_for(1);
 	auto r = std::chrono::system_clock::now() - now;
-	auto _count = g_count++;
-
-	LOG_DBG("%d %d %ld\n", _count, g_total.load(), r.count());
+	co_await sleep_for(1);
+	defer _([&]()
+			{ LOG_DBG("test_go end tid %ld total:%d \n", tid, g_total.load()); });
 	co_return;
 }
 
@@ -47,14 +42,13 @@ awaitable<void> test_lock()
 	co_await sleep_for(1);
 	LOG_DBG("co_deliver\n");
 	g_lock.unlock();
-
 	LOG_DBG("test_lock end\n");
 }
 int main()
 {
 	set_log_level(LOG_LEVEL_DEBUG);
 	runnable::instance()
-		.add(25, test_go)
+		.add(100, test_go)
 		// .add(4, test_lock)
 		.join();
 

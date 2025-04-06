@@ -98,7 +98,7 @@ awaitable<void> go()
 		throw("error");
 	}
 	c.results();
-	LOG_FATAL("SUCCESS\n");
+	LOG_INFO("SUCCESS\n");
 }
 awaitable<void> clear()
 {
@@ -134,7 +134,8 @@ int main()
 {
 	set_log_level(LOG_LEVEL_DEBUG);
 
-	coev::runnable::instance().add(go).join();
+	auto &run = coev::runnable::instance() << go;
+	run.join();
 
 	return 0;
 }

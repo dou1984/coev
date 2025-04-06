@@ -91,7 +91,6 @@ namespace coev::nghttp2
         LOG_CORE("recv %ld bytes stream_id flags %d", length, flags);
         auto _this = static_cast<NghttpSession *>(user_data);
         _this->m_read_waiter.resume();
-
         return length;
     }
     int NghttpSession::__error_callback(nghttp2_session *session, const char *msg, size_t len, void *user_data)
@@ -114,7 +113,7 @@ namespace coev::nghttp2
         }
         else if (frame->hd.type == NGHTTP2_GOAWAY)
         {
-              _this->m_requests.erase[stream_id];
+            _this->m_requests.erase(stream_id);
         }
         return 0;
     }
@@ -122,7 +121,6 @@ namespace coev::nghttp2
     {
         auto _this = static_cast<NghttpSession *>(user_data);
         LOG_CORE("send stream_id %d type %d flags %d\n", frame->hd.stream_id, frame->hd.type, frame->hd.flags);
-
         return 0;
     }
     int NghttpSession::__on_begin_frame_callback(nghttp2_session *session, const nghttp2_frame_hd *hd, void *user_data)
@@ -215,28 +213,32 @@ namespace coev::nghttp2
     }
     awaitable<int> NghttpSession::recv_process()
     {
-        char body[1024];
+        
         while (__valid())
         {
-            int r = co_await ssl_context::recv(body, sizeof(body));
-            if (r == INVALID)
+            int r = 0;
+            if (nghttp2_session_want_write(m_session))
             {
-            __error_return__:
-                __close();
-                co_return 0;
+                r = nghttp2_session_send(m_session);
+                if (r < 0)
+                {
+                    LOG_ERR("send failed %d %d %s\n", errno, r, nghttp2_strerror(r));
+                __error_return__:
+                    __close();
+                    co_return INVALID;
+                }
             }
-            LOG_CORE("recv %d bytes %s\n", r, body);
-            r = nghttp2_session_mem_recv(m_session, (uint8_t *)body, r);
-            if (r < 0)
+            if (nghttp2_session_want_read(m_session))
             {
-                LOG_ERR("recv failed %d %d %s\n", errno, r, nghttp2_strerror(r));
-                goto __error_return__;
-            }
-            r = nghttp2_session_send(m_session);
-            if (r < 0)
-            {
-                LOG_ERR("send failed %d %d %s\n", errno, r, nghttp2_strerror(r));
-                goto __error_return__;
+                char body[1024];
+                r = co_await ssl_context::recv(body, sizeof(body));
+                LOG_CORE("recv %d bytes %s\n", r, body);
+                r = nghttp2_session_mem_recv(m_session, (uint8_t *)body, r);
+                if (r < 0)
+                {
+                    LOG_ERR("recv failed %d %d %s\n", errno, r, nghttp2_strerror(r));
+                    goto __error_return__;
+                }
             }
         }
     }

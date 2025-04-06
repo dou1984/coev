@@ -27,7 +27,7 @@ namespace coev
 		auto _this = (Rediscli *)(w->data);
 		assert(_this != nullptr);
 		_this->m_waiter.resume();
-		local<coev::async>::instance().resume_all();
+		local_resume();
 	}
 	void Rediscli::cb_write(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
@@ -36,7 +36,7 @@ namespace coev
 		auto _this = (Rediscli *)(w->data);
 		assert(_this != nullptr);
 		_this->__onsend();
-		local<coev::async>::instance().resume_all();
+		local_resume();
 	}
 	void Rediscli::cb_read(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
@@ -45,7 +45,7 @@ namespace coev
 		auto _this = (Rediscli *)(w->data);
 		assert(_this != nullptr);
 		_this->__onrecv();
-		local<coev::async>::instance().resume_all();
+		local_resume();
 	}
 	void Rediscli::__oncallback(redisReply *_reply)
 	{

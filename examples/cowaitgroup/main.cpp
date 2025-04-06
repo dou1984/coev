@@ -17,9 +17,9 @@ co_waitgroup g_waiter;
 awaitable<int> test_co()
 {
 	g_waiter.add();
-	LOG_FATAL("add\n");
+	LOG_INFO("add\n");
 	co_await sleep_for(1);
-	LOG_FATAL("done\n");
+	LOG_INFO("done\n");
 	g_waiter.done();
 
 	co_return 0;
@@ -31,13 +31,14 @@ awaitable<void> test_wait()
 		co_start << test_co();
 	}
 	co_await g_waiter.wait();
-	LOG_FATAL("wait\n");
+	LOG_INFO("wait\n");
 	co_return;
 }
 int main()
 {
 	set_log_level(LOG_LEVEL_DEBUG);
-	runnable::instance().add(test_wait).join();
+	auto &run = runnable::instance() << test_wait;
+	run.join();
 
 	return 0;
 }

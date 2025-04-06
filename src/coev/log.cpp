@@ -15,7 +15,7 @@ namespace coev
 		"DEBUG",
 		"WARN",
 		"ERROR",
-		"FATAL"};
+		"INFO"};
 	int set_log_level(int _level)
 	{
 		g_log_level = _level;

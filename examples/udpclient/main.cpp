@@ -27,6 +27,7 @@ awaitable<void> go()
 int main()
 {
 
-	runnable::instance().add(go).join();
+	auto &run = runnable::instance() << go;
+	run.join();
 	return 0;
 }

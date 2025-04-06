@@ -12,45 +12,25 @@
 #include "singleton.h"
 #include "cosys.h"
 #include "local.h"
+#include "local_resume.h"
 #include "co_task.h"
+#include "co_deliver.h"
 
 namespace coev
 {
 	class runnable final : public singleton<runnable>
 	{
 		using func = std::function<awaitable<void>()>;
-		using ifunc = std::function<awaitable<int>()>;
-		using lfunc = std::function<awaitable<long>()>;
 		std::list<std::thread> m_list;
 
-		template <class _F>
-		void __add(const _F &_f)
-		{
-			m_list.emplace_back(
-				[=]()
-				{
-					co_start << _f();
-					cosys::start();
-				});
-		}
-
+		void __add(const func &_f);
+		void __deliver_resume();
 	public:
 		runnable();
-		template <class _F>
-		runnable &add(const _F &_f)
-		{
-			__add(_f);
-			return *this;
-		}
-		template <class _F>
-		runnable &add(int count, const _F &_f)
-		{
-			for (int i = 0; i < count; i++)
-			{
-				__add(_f);
-			}
-			return *this;
-		}
+		runnable(const runnable &) = delete;	
+		runnable(runnable&&)=delete;
+		runnable &operator<<(const func &_f);
+		runnable &add(int count, const func &_f);
 
 		void join();
 		void detach();

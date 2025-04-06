@@ -39,4 +39,41 @@ namespace coev
 			it.detach();
 		}
 	}
+	runnable &runnable::operator<<(const func &_f)
+	{
+		__add(_f);
+		return *this;
+	}
+	runnable &runnable::add(int count, const func &_f)
+	{
+		for (int i = 0; i < count; i++)
+		{
+			__add(_f);
+		}
+		return *this;
+	}
+	void runnable::__add(const func &_f)
+	{
+		m_list.emplace_back(
+			[_f, this]()
+			{
+				co_task _task;
+				_task << [_f, this]() -> awaitable<void>
+				{
+					co_start << _f();
+					co_await co_start.wait_all();
+					__deliver_resume();
+				}();
+				cosys::start();
+			});
+	}
+	void runnable::__deliver_resume()
+	{
+		while (co_deliver::resume(local<async>::instance()))
+		{
+		}
+		while (co_deliver::resume(local<co_list>::instance()))
+		{
+		}
+	}
 }

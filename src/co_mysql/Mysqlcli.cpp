@@ -32,7 +32,7 @@ namespace coev
 		Mysqlcli *_this = (Mysqlcli *)(w->data);
 		assert(_this != nullptr);
 		_this->m_write_waiter.resume();
-		local<coev::async>::instance().resume_all();
+		local_resume();
 	}
 	void Mysqlcli::cb_read(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
@@ -41,7 +41,7 @@ namespace coev
 		Mysqlcli *_this = (Mysqlcli *)(w->data);
 		assert(_this != nullptr);
 		_this->m_read_waiter.resume();
-		local<coev::async>::instance().resume_all();
+		local_resume();
 	}
 	Mysqlcli::Mysqlcli(const Mysqlconf &conf)
 	{

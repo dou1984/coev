@@ -17,8 +17,7 @@ namespace coev::guard
 	{
 		co_await m_waiter.suspend(
 			[this]()
-			{ return m_flag == on; },
-			[this]()
+			{ return m_flag == on; }, [this]()
 			{ m_flag = on; });
 	}
 	bool co_mutex::unlock()

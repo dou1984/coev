@@ -1,13 +1,12 @@
 #include "async.h"
+#include "ltdl.h"
 
 namespace coev
 {
-
 	co_event async::suspend()
 	{
 		return co_event(this);
 	}
-
 	bool async::resume()
 	{
 		if (auto c = static_cast<co_event *>(pop_front()); c != nullptr)
@@ -28,13 +27,16 @@ namespace coev
 		}
 		return false;
 	}
-	void async::resume_all()
+	bool async::resume_all()
 	{
+		bool ok = false;
 		while (resume())
 		{
+			// LOG_INFO("resume all events one\n");
+			ok = true;
 		}
+		return ok;
 	}
-
 	namespace guard
 	{
 		awaitable<void> async::suspend(const std::function<bool()> &suppend, const std::function<void()> &_get)
@@ -47,7 +49,6 @@ namespace coev
 				co_await ev;
 				m_mutex.lock();
 			}
-			LOG_CORE("suspend one\n");
 			_get();
 			m_mutex.unlock();
 		}
@@ -61,8 +62,7 @@ namespace coev
 			}();
 			if (c)
 			{
-				LOG_CORE("resume %p\n", c);
-				c->resume();
+				local<coev::async>::instance().push_back(c);
 				return true;
 			}
 			return false;

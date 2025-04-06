@@ -34,11 +34,11 @@ namespace coev
 	public:
 		awaitable()
 		{
-			LOG_CORE("awaitable created %p\n", this);
+			// LOG_CORE("awaitable created %p\n", this);
 		}
 		awaitable(std::coroutine_handle<promise_type> h) : m_callee(h)
 		{
-			LOG_CORE("awaitable created %p %p\n", this, m_callee.address());
+			// LOG_CORE("awaitable created %p %p\n", this, m_callee.address());
 		}
 		awaitable(awaitable &&o) = delete;
 		awaitable(const awaitable &) = delete;
@@ -48,18 +48,18 @@ namespace coev
 		{
 			if (local<is_destroying>::instance())
 			{
-				LOG_CORE("local<is_destroying>::instance() %p %p\n", this, m_callee.address());
+				// LOG_CORE("local<is_destroying>::instance() %p %p\n", this, m_callee.address());
 				destroy();
 			}
 		}
 		bool done()
 		{
-			LOG_CORE("%p %s %d\n", this, m_callee.done() ? "done" : "runnable", m_callee.promise().m_status);
+			// LOG_CORE("%p %s %d\n", this, m_callee.done() ? "done" : "runnable", m_callee.promise().m_status);
 			return m_callee && m_callee.address() && (m_callee.done() || m_callee.promise().m_status == CORO_FINISHED);
 		}
 		auto await_resume() // 返回协程的返回值
 		{
-			LOG_CORE("await_resume %p %p\n", this, m_callee.address());
+			// LOG_CORE("await_resume %p %p\n", this, m_callee.address());
 			if constexpr (!std::is_void<T>::value)
 			{
 				return m_callee && m_callee.address() != nullptr ? std::move(m_callee.promise().value) : decltype(m_callee.promise().value){};
@@ -70,7 +70,7 @@ namespace coev
 			if (!done())
 			{
 				auto &_promise = m_callee.promise();
-				LOG_CORE("destroy task %p %p\n", this, m_callee.address());
+				// LOG_CORE("destroy task %p %p\n", this, m_callee.address());
 				_promise.m_task = nullptr;
 				_promise.m_caller = nullptr;
 				std::lock_guard<is_destroying> _(local<is_destroying>::instance());
@@ -79,23 +79,22 @@ namespace coev
 		}
 		void await_suspend(std::coroutine_handle<> caller) // co_await调用， 传入上层coroutine_handle
 		{
-			LOG_CORE("await_suspend %p %p\n", this, m_callee.address());
 			m_callee.promise().m_caller = caller;
-			switch (m_callee.promise().m_status)
+			if (m_callee.promise().m_status == CORO_SUSPEND)
 			{
-			case CORO_INIT:
-				break;
-			case CORO_SUSPEND:
-				LOG_CORE("rusume %p\n", m_callee.address());
 				m_callee.resume();
-				break;
-			default:
+			}
+			else if (m_callee.promise().m_status == CORO_INIT)
+			{
+			}
+			else
+			{
 				throw std::runtime_error("await_suspend error m_callee.promise().m_status");
 			}
 		}
 		bool await_ready() // 是否挂起,正常情况需要挂起,返回false
 		{
-			LOG_CORE("await_ready %p %p\n", this, m_callee.address());
+			// LOG_CORE("await_ready %p %p\n", this, m_callee.address());
 			return done();
 		}
 

@@ -48,5 +48,24 @@ namespace coev
 		thread_local unique_id _;
 		return _.m_id;
 	}
-	
+
+	uint64_t ltid::id()
+	{
+		return m_tid;
+	}
+	void ltid::set(uint64_t id)
+	{
+		m_tid = id;
+		m_set = true;
+	}
+	void ltid::clear()
+	{
+		m_tid = 0;
+		m_set = false;
+	}
+	ltid::operator bool() const
+	{
+		return m_set;
+	}
+
 }

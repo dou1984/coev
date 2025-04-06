@@ -12,14 +12,14 @@ namespace coev
         co_event suspend();
         bool resume();
         bool resume_next_loop();
-        void resume_all();
+        bool resume_all();
     };
 
     namespace guard
     {
         struct async : queue
         {
-            std::mutex m_mutex;
+            std::mutex m_mutex;          
             awaitable<void> suspend(const std::function<bool()> &, const std::function<void()> &);
             bool resume(const std::function<void()> &);
         };

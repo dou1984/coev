@@ -45,14 +45,14 @@ awaitable<int> co_dail(const char *ip, int port)
 	}
 	co_return 0;
 }
-awaitable<int> co_test()
+awaitable<void> co_test()
 {
 
 	for (int i = 0; i < 100; i++)
 	{
 		co_start << co_dail("0.0.0.0", 9999);
 	}
-	co_return 0;
+	co_return;
 }
 int main()
 {

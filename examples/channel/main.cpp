@@ -14,7 +14,7 @@ using namespace coev;
 co_channel<int> ch;
 
 std::atomic<int> total = 0;
-awaitable<int> go()
+awaitable<void> go()
 {
 	LOG_DBG("go\n");
 	int x = 0;
@@ -27,7 +27,6 @@ awaitable<int> go()
 	}
 	total += x;
 	LOG_DBG("total:%d\n", total.load());
-	co_return x;
 }
 int main()
 {

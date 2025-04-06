@@ -35,15 +35,15 @@ awaitable<int> proc_task(bool for_all)
 	co_return 0;
 }
 
-awaitable<int> co_task_t()
+awaitable<void> co_task_t()
 {
 	proc_task(true);
-	co_return 0;
+	co_return;
 }
-awaitable<int> co_task_f()
+awaitable<void> co_task_f()
 {
 	proc_task(false);
-	co_return 0;
+	co_return;
 }
 
 awaitable<int> co_completed(int t)
@@ -158,15 +158,17 @@ int main()
 {
 	set_log_level(LOG_LEVEL_DEBUG);
 
-	runnable::instance()
-		// .add(co_task_t)
-		// .add(co_task_f)
-		// .add(co_two_task)
-		// .add(co_two_task2)
-		.add(co_three_task3)
-		// .add(co_three_task4)
-		// .add(co_task5)
-		// .add(co_task6)
-		.join();
+	auto &run =
+		runnable::instance()
+		<< co_task_t
+		<< co_task_f
+		<< co_two_task
+		<< co_two_task2
+		<< co_three_task3
+		<< co_three_task4
+		<< co_task5
+		<< co_task6;
+
+	run.join();
 	return 0;
 }

@@ -29,7 +29,8 @@ namespace coev
 	void co_event::await_resume()
 	{
 	}
-	/*
+
+#ifdef CO_EVENT_V1
 	bool co_event::await_ready()
 	{
 		return m_status == CORO_RESUMED;
@@ -53,15 +54,7 @@ namespace coev
 			m_caller.resume();
 		}
 	}
-	*/
-	void co_event::__resume()
-	{
-		LOG_CORE("co_event resume m_caller:%p\n", this);
-		if (m_caller.address() && !m_caller.done())
-		{
-			m_caller.resume();
-		}
-	}
+#else
 	bool co_event::await_ready()
 	{
 		assert(m_status == CORO_INIT || m_status == CORO_RESUMED);
@@ -90,7 +83,7 @@ namespace coev
 		LOG_CORE("co_event resume m_caller:%p\n", m_caller ? m_caller.address() : 0);
 		if (m_status == CORO_INIT)
 		{
-			m_status == CORO_RESUMED;
+			m_status = CORO_RESUMED;
 		}
 		else if (m_status == CORO_SUSPEND)
 		{
@@ -100,6 +93,15 @@ namespace coev
 		else
 		{
 			assert(false);
+		}
+	}
+#endif
+	void co_event::__resume()
+	{
+		LOG_CORE("co_event resume %d\n", m_status);
+		if (m_caller.address() && !m_caller.done())
+		{
+			m_caller.resume();
 		}
 	}
 }

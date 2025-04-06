@@ -9,6 +9,7 @@
 #include <mutex>
 #include "co_deliver.h"
 #include "cosys.h"
+#include "local_resume.h"
 
 namespace coev
 {
@@ -18,12 +19,15 @@ namespace coev
 
 	void co_deliver::cb_async(struct ev_loop *loop, ev_async *w, int revents)
 	{
+		// LOG_CORE("deliver resume event %d\n", revents);
 		if (revents & EV_ASYNC)
 		{
 			co_deliver *_this = (co_deliver *)w->data;
 			assert(_this != nullptr);
-			_this->__resume();
-			local<coev::async>::instance().resume_all();
+
+			_this->__resume_ev();
+			_this->__resume_coro();
+			local_resume();
 		}
 	}
 	co_deliver::co_deliver()
@@ -71,31 +75,44 @@ namespace coev
 		all_delivers.erase(m_tid);
 	}
 
-	int co_deliver::resume(co_event *ev)
+	int co_deliver::call_resume(co_event *ev)
 	{
 		std::lock_guard<std::mutex> _(m_lock);
 		m_waiter.push_back(ev);
 		return __done();
 	}
-	int co_deliver::__resume()
+	int co_deliver::call_resume(std::coroutine_handle<> coro)
+	{
+		std::lock_guard<std::mutex> _(m_lock);
+		m_co_list.emplace_back(coro, m_tid);
+		return __done();
+	}
+	int co_deliver::__resume_ev()
 	{
 		async _listener;
 		{
 			std::lock_guard<std::mutex> _(m_lock);
 			m_waiter.move_to(&_listener);
 		}
-		while (_listener.resume())
-		{
-		}
-		local<async>::instance().resume_all();
+		_listener.resume_all();
 		return 0;
 	}
-	void co_deliver::resume(async &waiter)
+	int co_deliver::__resume_coro()
+	{
+		auto _co_list = [this]()
+		{
+			std::lock_guard<std::mutex> _(m_lock);
+			return std::move(m_co_list);
+		}();
+		_co_list.resume_all();
+		return 0;
+	}
+	bool co_deliver::resume(async &waiter)
 	{
 		auto c = waiter.pop_front();
 		if (c == nullptr)
 		{
-			return;
+			return false;
 		}
 		auto ev = static_cast<co_event *>(c);
 		if (ev->id() == gtid())
@@ -107,8 +124,37 @@ namespace coev
 			std::lock_guard<std::mutex> _(g_mutex);
 			if (auto it = all_delivers.find(ev->id()); it != all_delivers.end())
 			{
-				it->second->resume(ev);
+				it->second->call_resume(ev);
 			}
 		}
+		return true;
 	}
+	bool co_deliver::resume(co_list &l)
+	{
+		if (l.empty())
+		{
+			return false;
+		}
+		auto co = l.front();
+		l.pop_front();
+		if (co.m_tid == gtid())
+		{
+			co.m_caller.resume();
+		}
+		else
+		{
+			std::lock_guard<std::mutex> _(g_mutex);
+			if (auto it = all_delivers.find(co.m_tid); it != all_delivers.end())
+			{
+				it->second->call_resume(co.m_caller);
+			}
+		}
+		return true;
+	}
+	void co_deliver::stop()
+	{
+		__fini();
+		__fini_local();
+	}
+
 }

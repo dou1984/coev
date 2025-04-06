@@ -8,6 +8,7 @@
 #include "server.h"
 #include "coev.h"
 #include "cosys.h"
+#include "local_resume.h"
 
 namespace coev::tcp
 {
@@ -32,7 +33,7 @@ namespace coev::tcp
 		assert(_this != nullptr);
 		LOG_CORE("server::cb_accept %p\n", _this);
 		_this->m_waiter.resume();
-		local<coev::async>::instance().resume_all();
+		local_resume();
 	}
 	server::server()
 	{

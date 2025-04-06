@@ -47,11 +47,13 @@ int main()
 {
 	set_log_level(LOG_LEVEL_DEBUG);
 
-	runnable::instance()
-		.add(test_sleep)
-		.add(test_timer)
-		.add([]() -> awaitable<void>
-			 { co_await test_iterator(10); })
-		.join();
+	auto &run = runnable::instance()
+				<< test_sleep
+				<< test_timer
+				<< []() -> awaitable<void>
+	{
+		co_await test_iterator(10);
+	};
+	run.join();
 	return 0;
 }

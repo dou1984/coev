@@ -32,11 +32,7 @@ awaitable<void> proc_server()
             }
 
             err = co_await ctx.recv_process();
-            if (err == INVALID)
-            {
-                LOG_ERR("recv error %d %s\n", errno, strerror(errno));
-                co_return;
-            }
+            /*
             NgHeader ngh;
             ngh.push_back(":status", "200");
             ngh.push_back("server:", "coev");
@@ -51,6 +47,7 @@ awaitable<void> proc_server()
                 co_return;
             }
             LOG_DBG("send data %s %ld\n", hi, strlen(hi) + 1);
+            */
         }();
     }
     co_return;
@@ -84,7 +81,6 @@ awaitable<void> proc_client()
     if (r == INVALID)
     {
         LOG_ERR("recv error %d %s\n", errno, strerror(errno));
-        co_return;
     }
     co_return;
 }
@@ -102,15 +98,13 @@ int main(int argc, char **argv)
     {
         g_srv_mgr.load_certificated("server.pem");
         g_srv_mgr.load_privatekey("server.pem");
-        runnable::instance()
-            .add(proc_server)
-            .join();
+        auto &run = runnable::instance() << proc_server;
+        run.join();
     }
     else if (strcmp(argv[1], "client") == 0)
     {
-        runnable::instance()
-            .add(proc_client)
-            .join();
+        auto &run = runnable::instance() << proc_client;
+        run.join();
     }
 
     return 0;

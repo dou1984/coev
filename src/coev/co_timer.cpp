@@ -7,6 +7,7 @@
  */
 #include "co_timer.h"
 #include "cosys.h"
+#include "local_resume.h"
 
 namespace coev
 {
@@ -18,7 +19,7 @@ namespace coev
 		assert(_this != NULL);
 		LOG_CORE("co_timer::cb_timer %p\n", _this);
 		_this->m_waiter.resume();
-		local<coev::async>::instance().resume_all();
+		local_resume();
 	}
 	co_timer::co_timer(ev_tstamp itimer, ev_tstamp rtimer)
 	{

@@ -9,6 +9,7 @@
 #include <coroutine>
 #include <iostream>
 #include <string.h>
+#include "gtid.h"
 #include "log.h"
 #include "queue.h"
 #include "suspend_bool.h"
@@ -32,7 +33,8 @@ namespace coev
 		std::coroutine_handle<> m_caller = nullptr;
 		co_task *m_task = nullptr;
 		int m_status = CORO_INIT;
-		promise() = default;
+		uint64_t m_tid = 0;
+		promise();
 		~promise();
 		void unhandled_exception();
 		suspend_bool initial_suspend();

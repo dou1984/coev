@@ -12,6 +12,7 @@
 #include <arpa/inet.h>
 #include "cosys.h"
 #include "io_context.h"
+#include "local_resume.h"
 
 namespace coev
 {
@@ -20,14 +21,14 @@ namespace coev
 		auto _this = (io_context *)w->data;
 		assert(_this != NULL);
 		_this->m_read_waiter.resume();
-		local<coev::async>::instance().resume_all();
+		local_resume();
 	}
 	void io_context::cb_write(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
 		auto _this = (io_context *)w->data;
 		assert(_this != NULL);
 		_this->m_write_waiter.resume();
-		local<coev::async>::instance().resume_all();
+		local_resume();
 		_this->__del_write();
 	}
 	int io_context::__close()

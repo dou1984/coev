@@ -101,24 +101,25 @@ awaitable<void> co_await_destroy()
 }
 int main()
 {
-	set_log_level(LOG_LEVEL_DEBUG);
+	set_log_level(LOG_LEVEL_CORE);
 
-	runnable::instance()
-		.add([]() -> awaitable<void>
-			 { co_await wait_for_all(co_awaitable(), co_resume());
-			 LOG_DBG("co_awaitable co_resume finish\n"); })
-		.add([]() -> awaitable<void>
-			 { co_await wait_for_all(co_awaitable_sleep(), co_awaitable_resume());
-			  LOG_DBG("co_awaitable_sleep co_awaitable_resume finish\n"); })
-		.add([]() -> awaitable<void>
-			 { co_await co_awaiter_tuple_ex(); })
-		.add(co_await_destroy)
-		// .add(
-		// 	[]() -> awaitable<void>
-		// 	{
-		// 		co_await g.wait();
-		// 		exit(1);
-		// 	})
-		.join();
+	auto &run = runnable::instance() << []() -> awaitable<void>
+	{
+		co_await wait_for_all(co_awaitable(), co_resume());
+		LOG_DBG("co_awaitable co_resume finish\n");
+	} << []() -> awaitable<void>
+	{
+		co_await wait_for_all(co_awaitable_sleep(), co_awaitable_resume());
+		LOG_DBG("co_awaitable_sleep co_awaitable_resume finish\n");
+	} << []() -> awaitable<void>
+	{
+		co_await co_awaiter_tuple_ex();
+	} << co_await_destroy
+	  << []() -> awaitable<void>
+	{
+		co_await g.wait();		
+		LOG_DBG("main finish\n");
+	};
+	run.join();
 	return 0;
 }

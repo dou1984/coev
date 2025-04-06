@@ -1,5 +1,5 @@
 #include "io_connect.h"
-
+#include "local_resume.h"
 namespace coev
 {
     void io_connect::cb_connect(struct ev_loop *loop, struct ev_io *w, int revents)
@@ -12,6 +12,7 @@ namespace coev
         assert(_this != nullptr);
         _this->__del_connect();
         _this->m_read_waiter.resume();
+        local_resume();
     }
     void io_connect::__init_connect()
     {

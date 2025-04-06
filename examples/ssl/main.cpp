@@ -68,6 +68,7 @@ awaitable<void> test_ssl_client()
         LOG_ERR("connect failed fd:%d error:%d\n", fd, errno);
         exit(INVALID);
     }
+    LOG_DBG("connect success fd:%d\n", fd);
     for (int i = 0; i < 10; i++)
     {
         auto buf = "hello world";
@@ -90,7 +91,7 @@ awaitable<void> test_ssl_client()
 }
 int main(int argc, char **argv)
 {
-    set_log_level(LOG_LEVEL_DEBUG);
+    set_log_level(LOG_LEVEL_CORE);
     if (argc < 2)
     {
         LOG_ERR("usage: %s [server|client]\n", argv[0]);
@@ -98,15 +99,13 @@ int main(int argc, char **argv)
     }
     if (strcmp(argv[1], "server") == 0)
     {
-        runnable::instance()
-            .add(test_ssl_context)
-            .join();
+        auto &run = runnable::instance() << test_ssl_context;
+        run.join();
     }
     else if (strcmp(argv[1], "client") == 0)
     {
-        runnable::instance()
-            .add(test_ssl_client)
-            .join();
+        auto &run = runnable::instance() << test_ssl_client;
+        run.join();
     }
     else
     {

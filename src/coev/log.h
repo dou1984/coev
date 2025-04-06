@@ -19,17 +19,22 @@
 		std::lock_guard<std::mutex> _(get_log_mutex());                  \
 		{                                                                \
 			auto __now__ = std::chrono::system_clock::now();             \
+			auto __count__ =                                             \
+				std::chrono::duration_cast<std::chrono::nanoseconds>(    \
+					__now__.time_since_epoch())                          \
+					.count();                                            \
 			auto __tm__ = std::chrono::system_clock::to_time_t(__now__); \
 			auto __lt__ = std::localtime(&__tm__);                       \
 			auto __fl__ = strrchr(__FILE__, '/');                        \
 			__fl__ = __fl__ ? __fl__ + 1 : __FILE__;                     \
-			PRINT("[%d/%d/%d %02d:%02d:%02d %s][%s:%d][%s]",             \
+			PRINT("[%d/%d/%d %02d:%02d:%02d.%ld %s][%s:%d][%s]",         \
 				  __lt__->tm_year + 1900,                                \
 				  __lt__->tm_mon + 1,                                    \
 				  __lt__->tm_mday,                                       \
 				  __lt__->tm_hour,                                       \
 				  __lt__->tm_min,                                        \
 				  __lt__->tm_sec,                                        \
+				  __count__ % 1000000000,                                \
 				  get_log_str(LEVEL),                                    \
 				  __fl__, __LINE__, __FUNCTION__);                       \
 		}                                                                \
@@ -46,8 +51,8 @@
 	LOG(LOG_LEVEL_WARN, __VA_ARGS__)
 #define LOG_ERR(...) \
 	LOG(LOG_LEVEL_ERROR, __VA_ARGS__)
-#define LOG_FATAL(...) \
-	LOG(LOG_LEVEL_FATAL, __VA_ARGS__)
+#define LOG_INFO(...) \
+	LOG(LOG_LEVEL_INFO, __VA_ARGS__)
 #define TRACE() LOG_CORE("\n")
 
 namespace coev
@@ -58,7 +63,7 @@ namespace coev
 		LOG_LEVEL_DEBUG,
 		LOG_LEVEL_WARN,
 		LOG_LEVEL_ERROR,
-		LOG_LEVEL_FATAL,
+		LOG_LEVEL_INFO,
 	};
 	int set_log_level(int);
 	int get_log_level();
