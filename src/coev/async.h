@@ -17,11 +17,17 @@ namespace coev
 
     namespace guard
     {
-        struct async : queue
+        class async : queue
         {
-            std::mutex m_mutex;          
+        public:
             awaitable<void> suspend(const std::function<bool()> &, const std::function<void()> &);
             bool resume(const std::function<void()> &);
+            bool deliver_resume(const std::function<void()> &);
+            std::mutex &lock() { return m_mutex; }
+
+        private:
+            co_event *__event(const std::function<void()> &_set);
+            std::mutex m_mutex;
         };
     }
 }

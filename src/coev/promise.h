@@ -33,8 +33,8 @@ namespace coev
 		std::coroutine_handle<> m_caller = nullptr;
 		co_task *m_task = nullptr;
 		int m_status = CORO_INIT;
-		uint64_t m_tid = 0;
-		promise();
+		uint64_t m_tid = gtid();
+		promise() = default;
 		~promise();
 		void unhandled_exception();
 		suspend_bool initial_suspend();

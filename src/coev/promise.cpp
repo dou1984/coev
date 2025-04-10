@@ -5,9 +5,7 @@
 
 namespace coev
 {
-    promise::promise() : m_tid(gtid())
-    {
-    }
+  
     promise::~promise()
     {
         m_status = CORO_FINISHED;

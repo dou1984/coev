@@ -1,5 +1,5 @@
 #include "async.h"
-#include "ltdl.h"
+#include "co_deliver.h"
 
 namespace coev
 {
@@ -32,13 +32,18 @@ namespace coev
 		bool ok = false;
 		while (resume())
 		{
-			// LOG_INFO("resume all events one\n");
 			ok = true;
 		}
 		return ok;
 	}
 	namespace guard
 	{
+		co_event *async::__event(const std::function<void()> &_set)
+		{
+			std::lock_guard<std::mutex> _(m_mutex);
+			_set();
+			return static_cast<co_event *>(pop_front());
+		}
 		awaitable<void> async::suspend(const std::function<bool()> &suppend, const std::function<void()> &_get)
 		{
 			m_mutex.lock();
@@ -54,15 +59,18 @@ namespace coev
 		}
 		bool async::resume(const std::function<void()> &_set)
 		{
-			auto c = [&, this]()
-			{
-				std::lock_guard<std::mutex> _(m_mutex);
-				_set();
-				return static_cast<co_event *>(pop_front());
-			}();
-			if (c)
+			if (auto c = __event(_set); c != nullptr)
 			{
 				local<coev::async>::instance().push_back(c);
+				return true;
+			}
+			return false;
+		}
+		bool async::deliver_resume(const std::function<void()> &_set)
+		{
+			if (auto c = __event(_set); c != nullptr)
+			{				
+				co_deliver::resume(c);
 				return true;
 			}
 			return false;

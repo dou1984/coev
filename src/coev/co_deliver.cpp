@@ -19,7 +19,7 @@ namespace coev
 
 	void co_deliver::cb_async(struct ev_loop *loop, ev_async *w, int revents)
 	{
-		// LOG_CORE("deliver resume event %d\n", revents);
+
 		if (revents & EV_ASYNC)
 		{
 			co_deliver *_this = (co_deliver *)w->data;
@@ -115,6 +115,10 @@ namespace coev
 			return false;
 		}
 		auto ev = static_cast<co_event *>(c);
+		return resume(ev);
+	}
+	bool co_deliver::resume(co_event *ev)
+	{
 		if (ev->id() == gtid())
 		{
 			ev->resume();

@@ -55,14 +55,22 @@ namespace coev
 	void runnable::__add(const func &_f)
 	{
 		m_list.emplace_back(
-			[_f, this]()
+			[=, this]()
 			{
+				coev::guard::async _fini;
 				co_task _task;
-				_task << [_f, this]() -> awaitable<void>
+				_task << [&]() -> awaitable<void>
+				{
+					co_await _fini.suspend([]()
+										   { return true; }, []() {});
+					local<co_deliver>::instance().stop();
+				}();
+				_task << [&, this]() -> awaitable<void>
 				{
 					co_start << _f();
 					co_await co_start.wait_all();
 					__deliver_resume();
+					_fini.deliver_resume([]() {});
 				}();
 				cosys::start();
 			});

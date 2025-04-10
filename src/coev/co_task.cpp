@@ -20,14 +20,14 @@ namespace coev
 	}
 	bool co_task::empty()
 	{
-		std::lock_guard<std::mutex> _(m_task_waiter.m_mutex);
+		std::lock_guard<std::mutex> _(m_task_waiter.lock());
 		return m_count == 0;
 	}
 	void co_task::destroy()
 	{
 		std::vector<promise *> _promises;
 		{
-			std::lock_guard<std::mutex> _(m_task_waiter.m_mutex);
+			std::lock_guard<std::mutex> _(m_task_waiter.lock());
 			_promises = std::move(m_promises);
 			m_count = 0;
 		}
@@ -41,7 +41,10 @@ namespace coev
 				auto _coro = std::coroutine_handle<promise>::from_promise(*p);
 				assert(&_coro.promise() == p);
 				std::lock_guard<is_destroying> _(local<is_destroying>::instance());
-				_coro.destroy();
+				if (!(_coro.done() || p->m_status == CORO_FINISHED))
+				{
+					_coro.destroy();
+				}
 			}
 		}
 	}
@@ -65,7 +68,7 @@ namespace coev
 		auto __insert = [this, _promise]() -> int
 		{
 			assert(_promise->m_tid == gtid());
-			std::lock_guard<std::mutex> _(m_task_waiter.m_mutex);
+			std::lock_guard<std::mutex> _(m_task_waiter.lock());
 			_promise->m_task = this;
 			if (m_promises.size() == m_count++)
 			{

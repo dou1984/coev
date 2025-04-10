@@ -9,6 +9,7 @@
 #include <ev.h>
 #include <mutex>
 #include "async.h"
+#include "co_event.h"
 #include "co_list.h"
 namespace coev
 {
@@ -20,6 +21,7 @@ namespace coev
 
 		static bool resume(async &waiter);
 		static bool resume(co_list &coro);
+		static bool resume(co_event *ev);
 		int id() const { return m_tid; }
 		void stop();
 
@@ -35,6 +37,7 @@ namespace coev
 		uint64_t m_tid = 0;
 		struct ev_loop *m_loop = nullptr;
 		static void cb_async(struct ev_loop *loop, ev_async *w, int revents);
+
 		void __init_local();
 		void __fini_local();
 		void __init();
