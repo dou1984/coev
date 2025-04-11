@@ -8,10 +8,9 @@ namespace coev
         bool ok = false;
         while (!__list::empty())
         {
-            // LOG_INFO("resume_all size %ld\n", __list::size());
-            auto _co = __list::front();
+            auto caller = __list::front().m_caller;
             __list::pop_front();
-            _co.m_caller.resume();
+            caller.resume();
             ok = true;
         }
         return ok;

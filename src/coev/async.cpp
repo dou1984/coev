@@ -66,10 +66,10 @@ namespace coev
 			}
 			return false;
 		}
-		bool async::deliver_resume(const std::function<void()> &_set)
+		bool async::deliver(const std::function<void()> &_set)
 		{
 			if (auto c = __event(_set); c != nullptr)
-			{				
+			{
 				co_deliver::resume(c);
 				return true;
 			}

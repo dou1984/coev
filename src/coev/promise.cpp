@@ -5,7 +5,7 @@
 
 namespace coev
 {
-  
+
     promise::~promise()
     {
         m_status = CORO_FINISHED;
@@ -20,8 +20,9 @@ namespace coev
         else if (m_caller)
         {
             assert(m_caller.address());
-            local<co_list>::instance().emplace_back(m_caller, m_tid);
+            auto _caller = m_caller;
             m_caller = nullptr;
+            _caller.resume();
         }
     }
     void promise::unhandled_exception()

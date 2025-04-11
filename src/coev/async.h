@@ -22,7 +22,7 @@ namespace coev
         public:
             awaitable<void> suspend(const std::function<bool()> &, const std::function<void()> &);
             bool resume(const std::function<void()> &);
-            bool deliver_resume(const std::function<void()> &);
+            bool deliver(const std::function<void()> &);
             std::mutex &lock() { return m_mutex; }
 
         private:

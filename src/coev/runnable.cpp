@@ -57,20 +57,21 @@ namespace coev
 		m_list.emplace_back(
 			[=, this]()
 			{
-				coev::guard::async _fini;
+				coev::guard::async _async;
 				co_task _task;
-				_task << [&]() -> awaitable<void>
+				_task << [&_async]() -> awaitable<void>
 				{
-					co_await _fini.suspend([]()
-										   { return true; }, []() {});
+					co_await _async.suspend([]()
+											{ return true; }, []() {});
 					local<co_deliver>::instance().stop();
 				}();
-				_task << [&, this]() -> awaitable<void>
+
+				_task << [=, this, &_async]() -> awaitable<void>
 				{
 					co_start << _f();
 					co_await co_start.wait_all();
 					__deliver_resume();
-					_fini.deliver_resume([]() {});
+					_async.deliver([]() {});
 				}();
 				cosys::start();
 			});
@@ -78,9 +79,6 @@ namespace coev
 	void runnable::__deliver_resume()
 	{
 		while (co_deliver::resume(local<async>::instance()))
-		{
-		}
-		while (co_deliver::resume(local<co_list>::instance()))
 		{
 		}
 	}

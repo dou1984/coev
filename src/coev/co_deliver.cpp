@@ -26,7 +26,6 @@ namespace coev
 			assert(_this != nullptr);
 
 			_this->__resume_ev();
-			_this->__resume_coro();
 			local_resume();
 		}
 	}
@@ -81,12 +80,7 @@ namespace coev
 		m_waiter.push_back(ev);
 		return __done();
 	}
-	int co_deliver::call_resume(std::coroutine_handle<> coro)
-	{
-		std::lock_guard<std::mutex> _(m_lock);
-		m_co_list.emplace_back(coro, m_tid);
-		return __done();
-	}
+	
 	int co_deliver::__resume_ev()
 	{
 		async _listener;
@@ -96,17 +90,7 @@ namespace coev
 		}
 		_listener.resume_all();
 		return 0;
-	}
-	int co_deliver::__resume_coro()
-	{
-		auto _co_list = [this]()
-		{
-			std::lock_guard<std::mutex> _(m_lock);
-			return std::move(m_co_list);
-		}();
-		_co_list.resume_all();
-		return 0;
-	}
+	}	
 	bool co_deliver::resume(async &waiter)
 	{
 		auto c = waiter.pop_front();
@@ -129,28 +113,6 @@ namespace coev
 			if (auto it = all_delivers.find(ev->id()); it != all_delivers.end())
 			{
 				it->second->call_resume(ev);
-			}
-		}
-		return true;
-	}
-	bool co_deliver::resume(co_list &l)
-	{
-		if (l.empty())
-		{
-			return false;
-		}
-		auto co = l.front();
-		l.pop_front();
-		if (co.m_tid == gtid())
-		{
-			co.m_caller.resume();
-		}
-		else
-		{
-			std::lock_guard<std::mutex> _(g_mutex);
-			if (auto it = all_delivers.find(co.m_tid); it != all_delivers.end())
-			{
-				it->second->call_resume(co.m_caller);
 			}
 		}
 		return true;

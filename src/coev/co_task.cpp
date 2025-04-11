@@ -93,7 +93,10 @@ namespace coev
 				LOG_CORE("co_task tid %ld %d\n", _promise->m_tid, _promise->m_status);
 				_promise->m_status = CORO_RUNNING;
 				auto coro = std::coroutine_handle<promise>::from_promise(*_promise);
-				coro.resume();
+				if (!(coro.done() || _promise->m_status == CORO_FINISHED))
+				{
+					coro.resume();
+				}
 			}
 		};
 		auto id = __insert();
