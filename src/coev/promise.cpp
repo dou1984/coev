@@ -5,11 +5,9 @@
 
 namespace coev
 {
-
     promise::~promise()
     {
         m_status = CORO_FINISHED;
-        // LOG_CORE("promise::~promise %p %p coro:%p\n", m_task, m_caller.address(), std::coroutine_handle<promise>::from_promise(*this).address());
         if (m_task)
         {
             assert(m_caller.address() == nullptr);
@@ -19,7 +17,7 @@ namespace coev
         }
         else if (m_caller)
         {
-            assert(m_caller.address());
+            assert(!m_caller.done());
             auto _caller = m_caller;
             m_caller = nullptr;
             _caller.resume();
@@ -34,10 +32,7 @@ namespace coev
     {
         auto _ready = m_caller || m_task;
         m_status = _ready ? CORO_RUNNING : CORO_SUSPEND;
-        // LOG_CORE("promise::initial_suspend %p %p %p %s\n", this, m_task, m_caller.address(), _ready ? "ready" : "not ready");
-        return {
-            .m_ready = _ready,
-        };
+        return {.m_ready = _ready};
     }
 
     std::suspend_never promise::final_suspend() noexcept

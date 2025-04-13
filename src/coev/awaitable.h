@@ -16,6 +16,7 @@
 #include "log.h"
 #include "local.h"
 #include "is_destroying.h"
+#include "co_caller.h"
 
 namespace coev
 {
@@ -32,13 +33,10 @@ namespace coev
 		};
 
 	public:
-		awaitable()
-		{
-			// LOG_CORE("awaitable created %p\n", this);
-		}
+		awaitable() =default;
 		awaitable(std::coroutine_handle<promise_type> h) : m_callee(h)
 		{
-			// LOG_CORE("awaitable created %p %p\n", this, m_callee.address());
+			m_callee.promise().m_this = m_callee;
 		}
 		awaitable(awaitable &&o) = delete;
 		awaitable(const awaitable &) = delete;
@@ -48,18 +46,15 @@ namespace coev
 		{
 			if (local<is_destroying>::instance())
 			{
-				// LOG_CORE("local<is_destroying>::instance() %p %p\n", this, m_callee.address());
 				destroy();
 			}
 		}
 		bool done()
 		{
-			// LOG_CORE("%p %s %d\n", this, m_callee.done() ? "done" : "runnable", m_callee.promise().m_status);
 			return m_callee && m_callee.address() && (m_callee.done() || m_callee.promise().m_status == CORO_FINISHED);
 		}
 		auto await_resume() // 返回协程的返回值
 		{
-			// LOG_CORE("await_resume %p %p\n", this, m_callee.address());
 			if constexpr (!std::is_void<T>::value)
 			{
 				return m_callee && m_callee.address() != nullptr ? std::move(m_callee.promise().value) : decltype(m_callee.promise().value){};
@@ -70,7 +65,6 @@ namespace coev
 			if (!done())
 			{
 				auto &_promise = m_callee.promise();
-				// LOG_CORE("destroy task %p %p\n", this, m_callee.address());
 				_promise.m_task = nullptr;
 				_promise.m_caller = nullptr;
 				std::lock_guard<is_destroying> _(local<is_destroying>::instance());
@@ -82,6 +76,7 @@ namespace coev
 			m_callee.promise().m_caller = caller;
 			if (m_callee.promise().m_status == CORO_SUSPEND)
 			{
+				// m_callee should be resumed here
 				m_callee.resume();
 			}
 			else if (m_callee.promise().m_status == CORO_INIT)
@@ -94,10 +89,8 @@ namespace coev
 		}
 		bool await_ready() // 是否挂起,正常情况需要挂起,返回false
 		{
-			// LOG_CORE("await_ready %p %p\n", this, m_callee.address());
 			return done();
 		}
-
 		operator promise_type *()
 		{
 			return m_callee ? (&m_callee.promise()) : nullptr;

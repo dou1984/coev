@@ -38,7 +38,7 @@ namespace coev
 	}
 	namespace guard
 	{
-		co_event *async::__event(const std::function<void()> &_set)
+		co_event *async::__ev(const std::function<void()> &_set)
 		{
 			std::lock_guard<std::mutex> _(m_mutex);
 			_set();
@@ -59,7 +59,7 @@ namespace coev
 		}
 		bool async::resume(const std::function<void()> &_set)
 		{
-			if (auto c = __event(_set); c != nullptr)
+			if (auto c = __ev(_set); c != nullptr)
 			{
 				local<coev::async>::instance().push_back(c);
 				return true;
@@ -68,7 +68,7 @@ namespace coev
 		}
 		bool async::deliver(const std::function<void()> &_set)
 		{
-			if (auto c = __event(_set); c != nullptr)
+			if (auto c = __ev(_set); c != nullptr)
 			{
 				co_deliver::resume(c);
 				return true;

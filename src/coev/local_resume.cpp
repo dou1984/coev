@@ -1,6 +1,6 @@
-#include "local_resume.h"
 #include "async.h"
-#include "co_list.h"
+#include "local_resume.h"
+#include "co_caller.h"
 
 namespace coev
 {
@@ -11,6 +11,10 @@ namespace coev
         {
             ok = true;
         }
+        // while (local<co_caller>::instance().resume_all())
+        // {
+        //     ok = true;
+        // }
         return ok;
     }
 }

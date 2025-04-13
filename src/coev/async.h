@@ -26,7 +26,7 @@ namespace coev
             std::mutex &lock() { return m_mutex; }
 
         private:
-            co_event *__event(const std::function<void()> &_set);
+            co_event *__ev(const std::function<void()> &_set);
             std::mutex m_mutex;
         };
     }

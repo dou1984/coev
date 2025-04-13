@@ -36,15 +36,12 @@ namespace coev
 			if (_promises[i])
 			{
 				auto p = _promises[i];
+				_promises[i] = nullptr;
+				p->m_task = nullptr;
 				assert(p->m_caller == nullptr);
 				LOG_CORE("co_task::destroy() %d %p task:%p\n", i, p, p->m_task);
-				auto _coro = std::coroutine_handle<promise>::from_promise(*p);
-				assert(&_coro.promise() == p);
 				std::lock_guard<is_destroying> _(local<is_destroying>::instance());
-				if (!(_coro.done() || p->m_status == CORO_FINISHED))
-				{
-					_coro.destroy();
-				}
+				p->m_this.destroy();
 			}
 		}
 	}
@@ -60,12 +57,15 @@ namespace coev
 	{
 		while (!empty())
 		{
-			co_await wait();
+			co_await m_task_waiter.suspend(
+				[this]() -> bool
+				{ return m_count > 0; },
+				[]() {});
 		}
 	}
 	int co_task::operator<<(promise *_promise)
 	{
-		auto __insert = [this, _promise]() -> int
+		auto __insert = [this](promise *_promise) -> int
 		{
 			assert(_promise->m_tid == gtid());
 			std::lock_guard<std::mutex> _(m_task_waiter.lock());
@@ -86,22 +86,19 @@ namespace coev
 			}
 			throw std::runtime_error("co_task: error m_count");
 		};
-		auto __finally = [=]()
+		auto __finally = [](promise *_promise)
 		{
 			if (_promise->m_status == CORO_SUSPEND)
 			{
 				LOG_CORE("co_task tid %ld %d\n", _promise->m_tid, _promise->m_status);
+				assert(_promise->m_status != CORO_FINISHED);
 				_promise->m_status = CORO_RUNNING;
-				auto coro = std::coroutine_handle<promise>::from_promise(*_promise);
-				if (!(coro.done() || _promise->m_status == CORO_FINISHED))
-				{
-					coro.resume();
-				}
+				assert(!_promise->m_this.done());
+				_promise->m_this.resume();
 			}
 		};
-		auto id = __insert();
-		__finally();
-		local_resume();
+		auto id = __insert(_promise);
+		__finally(_promise);
 		return id;
 	}
 

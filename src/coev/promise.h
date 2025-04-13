@@ -30,7 +30,8 @@ namespace coev
 	class co_task;
 	struct promise : queue
 	{
-		std::coroutine_handle<> m_caller = nullptr;
+		std::coroutine_handle<> m_this = nullptr;	
+		std::coroutine_handle<> m_caller = nullptr;		
 		co_task *m_task = nullptr;
 		int m_status = CORO_INIT;
 		uint64_t m_tid = gtid();

@@ -7,6 +7,7 @@
  */
 #include <thread>
 #include "co_event.h"
+#include "local_resume.h"
 
 namespace coev
 {
@@ -29,32 +30,6 @@ namespace coev
 	void co_event::await_resume()
 	{
 	}
-
-#ifdef CO_EVENT_V1
-	bool co_event::await_ready()
-	{
-		return m_status == CORO_RESUMED;
-	}
-
-	void co_event::await_suspend(std::coroutine_handle<> _awaitable)
-	{
-		m_caller = _awaitable;
-		m_status = CORO_SUSPEND;
-	}
-	void co_event::resume()
-	{
-		LOG_CORE("co_event resume m_caller:%p\n", m_caller ? m_caller.address() : 0);
-		while (m_status == CORO_INIT)
-		{
-			std::this_thread::sleep_for(std::chrono::nanoseconds(1));
-		}
-		m_status = CORO_RESUMED;
-		if (m_caller.address() && !m_caller.done())
-		{
-			m_caller.resume();
-		}
-	}
-#else
 	bool co_event::await_ready()
 	{
 		assert(m_status == CORO_INIT || m_status == CORO_RESUMED);
@@ -77,6 +52,7 @@ namespace coev
 		{
 			assert(false);
 		}
+		local_resume();
 	}
 	void co_event::resume()
 	{
@@ -95,13 +71,14 @@ namespace coev
 			assert(false);
 		}
 	}
-#endif
 	void co_event::__resume()
 	{
 		LOG_CORE("co_event resume %d\n", m_status);
 		if (m_caller.address() && !m_caller.done())
 		{
-			m_caller.resume();
+			auto _caller = m_caller;
+			m_caller = nullptr;
+			_caller.resume();
 		}
 	}
 }

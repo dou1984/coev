@@ -10,6 +10,8 @@
 #include "cosys.h"
 #include "runnable.h"
 #include "co_task.h"
+#include "sleep_for.h"
+#include "co_deliver.h"
 
 namespace coev
 {
@@ -55,31 +57,31 @@ namespace coev
 	void runnable::__add(const func &_f)
 	{
 		m_list.emplace_back(
-			[=, this]()
+			[=]()
 			{
-				coev::guard::async _async;
+				coev::guard::async end;
 				co_task _task;
-				_task << [&_async]() -> awaitable<void>
+				_task << [&]() -> awaitable<void>
 				{
-					co_await _async.suspend([]()
-											{ return true; }, []() {});
+					auto tid = gtid();
+					co_await end.suspend([]()
+										 { return true; }, []() {});
 					local<co_deliver>::instance().stop();
+					LOG_DBG("tid: %ld exit\n", tid);
 				}();
-
-				_task << [=, this, &_async]() -> awaitable<void>
+				_task << [&]() -> awaitable<void>
 				{
+					auto tid = gtid();
 					co_start << _f();
 					co_await co_start.wait_all();
-					__deliver_resume();
-					_async.deliver([]() {});
+					while (co_deliver::resume(local<async>::instance()))
+					{
+					}
+					end.deliver([]() {});
 				}();
 				cosys::start();
+				LOG_DBG("tid: %ld end\n", gtid());
 			});
 	}
-	void runnable::__deliver_resume()
-	{
-		while (co_deliver::resume(local<async>::instance()))
-		{
-		}
-	}
+
 }

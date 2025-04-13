@@ -11,10 +11,7 @@
 #include <functional>
 #include "singleton.h"
 #include "cosys.h"
-#include "local.h"
-#include "local_resume.h"
-#include "co_task.h"
-#include "co_deliver.h"
+#include "awaitable.h"
 
 namespace coev
 {
@@ -24,11 +21,11 @@ namespace coev
 		std::list<std::thread> m_list;
 
 		void __add(const func &_f);
-		void __deliver_resume();
+
 	public:
 		runnable();
-		runnable(const runnable &) = delete;	
-		runnable(runnable&&)=delete;
+		runnable(const runnable &) = delete;
+		runnable(runnable &&) = delete;
 		runnable &operator<<(const func &_f);
 		runnable &add(int count, const func &_f);
 
