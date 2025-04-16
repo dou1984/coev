@@ -43,12 +43,14 @@ awaitable<int> __call()
 int main()
 {
 	set_log_level(LOG_LEVEL_DEBUG);
-	auto &run = runnable::instance() << []() -> awaitable<void>
-	{
-		LOG_DBG("__call %d\n", g_trigger.x);
-		co_await __call();
-		LOG_DBG("__call %d\n", g_trigger.x);
-	};
-	run.join();
+	runnable::instance()
+		.start(
+			[]() -> awaitable<void>
+			{
+				LOG_DBG("__call %d\n", g_trigger.x);
+				co_await __call();
+				LOG_DBG("__call %d\n", g_trigger.x);
+			})
+		.join();
 	return 0;
 }

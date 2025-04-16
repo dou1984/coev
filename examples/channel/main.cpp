@@ -31,6 +31,6 @@ awaitable<void> go()
 int main()
 {
 	set_log_level(LOG_LEVEL_CORE);
-	runnable::instance().add(2, go).join();
+	runnable::instance().start(2, go).join();
 	return 0;
 }

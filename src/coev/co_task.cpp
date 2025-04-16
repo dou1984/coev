@@ -9,7 +9,6 @@
 #include "co_task.h"
 #include "awaitable.h"
 #include "wait_for.h"
-#include "defer.h"
 #include "local_resume.h"
 
 namespace coev
@@ -107,7 +106,7 @@ namespace coev
 	}
 	int co_task::release(promise *_promise)
 	{
-		m_task_waiter.resume(
+		m_task_waiter.deliver(
 			[=, this]()
 			{
 				for (int i = 0; i < m_promises.size(); i++)

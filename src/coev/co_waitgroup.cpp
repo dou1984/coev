@@ -27,7 +27,7 @@ namespace coev
 		{
 			return;
 		}
-		while (m_waiter.resume([]() {}))
+		while (m_waiter.deliver([]() {}))
 		{
 		}
 	}

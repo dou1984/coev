@@ -58,7 +58,7 @@ int main()
 {
 
 	set_log_level(LOG_LEVEL_DEBUG);
-	runnable::instance().add(4, co_test).join();
+	runnable::instance().start(4, co_test).join();
 
 	return 0;
 }

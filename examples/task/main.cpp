@@ -105,17 +105,14 @@ awaitable<void> co_three_task4()
 
 auto g_unreachable = []() -> awaitable<int>
 {
-	defer _([]()
-			{ LOG_DBG("arrived defer 1\n"); });
 	co_await []() -> awaitable<int>
 	{
-		defer _([]()
-				{ LOG_DBG("arrived defer 2\n"); });
 		co_await sleep_for(5);
+		LOG_DBG("arrived error 2\n");
 		throw std::runtime_error("test exception");
 		co_return 0;
 	}();
-
+	LOG_DBG("arrived error 1\n");
 	co_return 0;
 };
 auto g_reachable = []() -> awaitable<int>
@@ -158,17 +155,15 @@ int main()
 {
 	set_log_level(LOG_LEVEL_DEBUG);
 
-	auto &run =
-		runnable::instance()
-		<< co_task_t
-		<< co_task_f
-		<< co_two_task
-		<< co_two_task2
-		<< co_three_task3
-		<< co_three_task4
-		<< co_task5
-		<< co_task6;
-
-	run.join();
+	runnable::instance()
+		.start(co_task_t)
+		.start(co_task_f)
+		.start(co_two_task)
+		.start(co_two_task2)
+		.start(co_three_task3)
+		.start(co_three_task4)
+		.start(co_task5)
+		.start(co_task6)
+		.join();
 	return 0;
 }

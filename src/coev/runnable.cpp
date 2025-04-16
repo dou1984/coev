@@ -13,6 +13,7 @@
 #include "co_task.h"
 #include "sleep_for.h"
 #include "co_deliver.h"
+#include "local_resume.h"
 
 namespace coev
 {
@@ -42,17 +43,17 @@ namespace coev
 			it.detach();
 		}
 	}
-	runnable &runnable::operator<<(const func &_f)
+	// runnable &runnable::operator<<(const func &_f)
+	// {
+	// 	__add(_f);
+	// 	return *this;
+	// }
+	runnable &runnable::start(const func &_f)
 	{
 		__add(_f);
 		return *this;
 	}
-	runnable &runnable::add(const func &_f)
-	{
-		__add(_f);
-		return *this;
-	}
-	runnable &runnable::add(int count, const func &_f)
+	runnable &runnable::start(int count, const func &_f)
 	{
 		for (int i = 0; i < count; i++)
 		{
@@ -65,21 +66,10 @@ namespace coev
 		m_list.emplace_back(
 			[=]()
 			{
-				coev::guard::async end;
-				co_start << [&end]() -> awaitable<void>
-				{
-					co_await end.suspend([]()
-										 { return true; }, []() {});
-					local<co_deliver>::instance().stop();
-					LOG_DBG("tid: %ld before finished\n", gtid());
-				}();
-				co_start << [&end, _f]() -> awaitable<void>
+				co_start << [=]() -> awaitable<void>
 				{
 					co_await _f();
-					while (co_deliver::resume(local<async>::instance()))
-					{
-					}
-					end.deliver([]() {});
+					local_resume();
 				}();
 				cosys::start();
 				LOG_DBG("tid: %ld end\n", gtid());

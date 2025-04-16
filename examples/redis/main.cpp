@@ -124,7 +124,10 @@ awaitable<void> test_array()
 }
 int main()
 {
-	auto &run = runnable::instance() << test_sync << go << test_array;
-	run.join();
+	runnable::instance()
+		.start(test_sync)
+		.start(go)
+		.start(test_array)
+		.join();
 	return 0;
 }

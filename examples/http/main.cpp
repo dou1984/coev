@@ -82,7 +82,7 @@ int main()
 
 	set_log_level(LOG_LEVEL_CORE);
 	runnable::instance()
-		.add(1, co_router)
+		.start(1, co_router)
 		.join();
 	return 0;
 }

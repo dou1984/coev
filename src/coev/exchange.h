@@ -3,7 +3,7 @@
 namespace coev
 {
     template <typename T>    
-    T exchange(T &org)
+    T exchangeX(T &org)
     {
         auto tmp = org;
         org = nullptr;

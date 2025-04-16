@@ -12,9 +12,7 @@ using namespace coev;
 server_pool<tcp::server> pool;
 awaitable<void> dispatch(addrInfo addr, int fd)
 {
-	LOG_DBG("dispatch start %s %d\n", addr.ip, addr.port);
-	defer _([=]()
-			{ LOG_DBG("dispatch exit %s %d\n", addr.ip, addr.port); });
+	LOG_DBG("dispatch start %s %d\n", addr.ip, addr.port);	
 	io_context io(fd);
 	while (io)
 	{
@@ -56,6 +54,6 @@ int main()
 
 	pool.start("0.0.0.0", 9999);
 
-	runnable::instance().add(1, co_server).join();
+	runnable::instance().start(1, co_server).join();
 	return 0;
 }

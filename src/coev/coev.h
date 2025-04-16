@@ -21,7 +21,6 @@
 #include "co_waitgroup.h"
 #include "async.h"
 #include "gtid.h"
-#include "defer.h"
 #include "server.h"
 #include "server_pool.h"
 #include "sleep_for.h"

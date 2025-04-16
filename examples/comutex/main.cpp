@@ -35,8 +35,8 @@ int main()
 {
 	set_log_level(LOG_LEVEL_DEBUG);
 	runnable::instance()
-		.add(100, test_go)
-		// .add(4, test_lock)
+		.start(100, test_go)
+		// .start(4, test_lock)
 		.join();
 
 	return 0;

@@ -134,8 +134,9 @@ int main()
 {
 	set_log_level(LOG_LEVEL_DEBUG);
 
-	auto &run = coev::runnable::instance() << go;
-	run.join();
+	coev::runnable::instance()
+		.start(go)
+		.join();
 
 	return 0;
 }

@@ -61,7 +61,8 @@ namespace coev
 		{
 			if (auto c = __ev(_set); c != nullptr)
 			{
-				local<coev::async>::instance().push_back(c);
+				// local<coev::async>::instance().push_back(c);
+				c->resume();
 				return true;
 			}
 			return false;

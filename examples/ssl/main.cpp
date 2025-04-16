@@ -27,11 +27,7 @@ awaitable<void> test_ssl_context()
         co_start << [=]() -> awaitable<void>
         {
             ssl_context ctx(fd, g_srv_mgr.get());
-            defer _(
-                [=]()
-                {
-                    LOG_DBG("close fd:%d\n", fd);
-                });
+            LOG_DBG("close fd:%d\n", fd);
             int err = co_await ctx.do_handshake();
             if (err == INVALID)
             {
@@ -99,13 +95,15 @@ int main(int argc, char **argv)
     }
     if (strcmp(argv[1], "server") == 0)
     {
-        auto &run = runnable::instance() << test_ssl_context;
-        run.join();
+        runnable::instance()
+            .start(test_ssl_context)
+            .join();
     }
     else if (strcmp(argv[1], "client") == 0)
     {
-        auto &run = runnable::instance() << test_ssl_client;
-        run.join();
+        runnable::instance()
+            .start(test_ssl_client)
+            .join();
     }
     else
     {

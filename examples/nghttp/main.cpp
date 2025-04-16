@@ -96,13 +96,15 @@ int main(int argc, char **argv)
     {
         g_srv_mgr.load_certificated("server.pem");
         g_srv_mgr.load_privatekey("server.pem");
-        auto &run = runnable::instance() << proc_server;
-        run.join();
+        runnable::instance()
+            .start(proc_server)
+            .join();
     }
     else if (strcmp(argv[1], "client") == 0)
     {
-        auto &run = runnable::instance() << proc_client;
-        run.join();
+        runnable::instance()
+            .start(proc_client)
+            .join();
     }
 
     return 0;
