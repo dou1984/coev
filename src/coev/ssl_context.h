@@ -23,6 +23,7 @@ namespace coev
         ssl_context() = default;
         void __async_finally();
         int __ssl_write(const char *, int);
+        int __ssl_read(char *, int);
 
     protected:
         SSL *m_ssl = nullptr;

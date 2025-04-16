@@ -69,7 +69,7 @@ namespace coev
 	}
 	int io_context::__initial()
 	{
-		LOG_CORE("fd:%d\n", m_fd);
+		// LOG_CORE("fd:%d\n", m_fd);
 		if (m_fd != INVALID)
 		{
 			setNoBlock(m_fd, true);

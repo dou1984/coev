@@ -27,6 +27,7 @@ namespace coev
 		runnable(const runnable &) = delete;
 		runnable(runnable &&) = delete;
 		runnable &operator<<(const func &_f);
+		runnable &add(const func &_f);
 		runnable &add(int count, const func &_f);
 
 		void join();

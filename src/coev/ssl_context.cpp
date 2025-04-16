@@ -146,4 +146,23 @@ namespace coev
         }
         return r;
     }
+    int ssl_context::__ssl_read(char *buffer, int buffer_size)
+    {
+        assert(m_ssl);
+        int r = SSL_read(m_ssl, buffer, buffer_size);
+        if (r == INVALID)
+        {
+            r = SSL_get_error(m_ssl, r);
+            if (r != SSL_ERROR_WANT_READ)
+            {
+                return INVALID;
+            }
+        }
+        else if (r == 0)
+        {
+            errno = 0;
+            return INVALID;
+        }
+        return r;
+    }
 }

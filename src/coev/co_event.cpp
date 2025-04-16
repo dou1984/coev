@@ -17,7 +17,7 @@ namespace coev
 		{
 			_ev_queue->push_back(this);
 		}
-		LOG_CORE("co_event _ev_queue %p\n", _ev_queue);
+		// LOG_CORE("co_event _ev_queue %p\n", _ev_queue);
 	}
 	co_event::~co_event()
 	{
@@ -33,11 +33,12 @@ namespace coev
 	bool co_event::await_ready()
 	{
 		assert(m_status == CORO_INIT || m_status == CORO_RESUMED);
-		LOG_CORE("co_event await_ready m_status:%d\n", m_status);
+		// LOG_CORE("co_event await_ready m_status:%d\n", m_status);
 		return m_status == CORO_RESUMED;
 	}
 	void co_event::await_suspend(std::coroutine_handle<> _awaitable)
 	{
+		local_resume();
 		m_caller = _awaitable;
 		if (m_status == CORO_INIT)
 		{
@@ -52,7 +53,7 @@ namespace coev
 		{
 			assert(false);
 		}
-		local_resume();
+	
 	}
 	void co_event::resume()
 	{
@@ -73,7 +74,7 @@ namespace coev
 	}
 	void co_event::__resume()
 	{
-		LOG_CORE("co_event resume %d\n", m_status);
+		// LOG_CORE("co_event resume %d\n", m_status);
 		if (m_caller.address() && !m_caller.done())
 		{
 			auto _caller = m_caller;

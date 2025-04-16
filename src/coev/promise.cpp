@@ -2,7 +2,7 @@
 #include "co_task.h"
 #include "local_resume.h"
 #include "co_deliver.h"
-
+#include "exchange.h"
 namespace coev
 {
     promise::~promise()
@@ -11,16 +11,12 @@ namespace coev
         if (m_task)
         {
             assert(m_caller.address() == nullptr);
-            auto _task = m_task;
-            m_task = nullptr;
-            *_task >> this;
+            exchange(m_task)->release(this);
         }
         else if (m_caller)
         {
             assert(!m_caller.done());
-            auto _caller = m_caller;
-            m_caller = nullptr;
-            _caller.resume();
+            exchange(m_caller).resume();
         }
     }
     void promise::unhandled_exception()

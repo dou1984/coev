@@ -52,7 +52,7 @@ namespace coev
 		V value;
 		std::suspend_never return_value(V &&v)
 		{
-			LOG_CORE("return_value %p\n", this);
+			// LOG_CORE("return_value %p\n", this);
 			value = std::forward<V>(v);
 			return {};
 		}

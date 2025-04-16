@@ -106,14 +106,20 @@ namespace coev::nghttp2
         auto stream_id = frame->hd.stream_id;
         if (frame->hd.type == NGHTTP2_SETTINGS)
         {
-            // _this->__serv_settings();
-        }
-        else if (frame->hd.type == NGHTTP2_DATA)
-        {
+            _this->__serv_settings();
         }
         else if (frame->hd.type == NGHTTP2_GOAWAY)
         {
             _this->m_requests.erase(stream_id);
+        }
+        else if (frame->hd.type == NGHTTP2_DATA)
+        {
+        }
+        else if (frame->hd.type == NGHTTP2_HEADERS)
+        {
+        }
+        else if (frame->hd.type == NGHTTP2_RST_STREAM)
+        {
         }
         return 0;
     }
@@ -146,7 +152,7 @@ namespace coev::nghttp2
     int NghttpSession::__on_header_callback(nghttp2_session *session, const nghttp2_frame *frame, const uint8_t *name, size_t namelen, const uint8_t *value, size_t valuelen, uint8_t flags, void *user_data)
     {
         auto _this = static_cast<NghttpSession *>(user_data);
-        LOG_CORE("header %d %.*s: %.*s\n", frame->hd.stream_id, (int)namelen, name, (int)valuelen, value);
+        LOG_CORE("header stream_id %d %.*s: %.*s\n", frame->hd.stream_id, (int)namelen, name, (int)valuelen, value);
         _this->m_requests[frame->hd.stream_id].push_back((const char *)name, namelen, (const char *)value, valuelen);
         return 0;
     }
@@ -156,7 +162,7 @@ namespace coev::nghttp2
         LOG_CORE("recv data chunk %.*s flags:%d\n", (int)len, data, flags);
         if (flags & NGHTTP2_FLAG_END_STREAM)
         {
-            LOG_CORE("Stream %d received END_STREAM flag\n", stream_id);
+            LOG_CORE("stream_id %d received END_STREAM flag\n", stream_id);
             // 设置标志位，通知主循环停止接收
             // NghttpSession *self = static_cast<NghttpSession *>(user_data);
             // self->set_stream_complete(stream_id);
@@ -166,7 +172,7 @@ namespace coev::nghttp2
     int NghttpSession::__on_stream_close_callback(nghttp2_session *session, int32_t stream_id, uint32_t error_code, void *user_data)
     {
         auto _this = static_cast<NghttpSession *>(user_data);
-        LOG_CORE("__on_stream_close_callback %d error %d\n", stream_id, error_code);
+        LOG_CORE("__on_stream_close_callback stream_id %d error %d\n", stream_id, error_code);
         return 0;
     }
 
@@ -176,9 +182,7 @@ namespace coev::nghttp2
         if (err != 0)
         {
             LOG_ERR("nghttp2_session_client_new failed %s\n", nghttp2_strerror(err));
-        __error_return__:
             __close();
-            return;
         }
     }
 
@@ -186,6 +190,7 @@ namespace coev::nghttp2
     {
         if (m_session != nullptr)
         {
+            LOG_CORE("~NghttpSession\n");
             nghttp2_session_del(m_session);
         }
     }
@@ -198,49 +203,39 @@ namespace coev::nghttp2
         };
         nghttp2_data_provider data_provider = {
             .source = {.ptr = &cache},
-            .read_callback = &NghttpSession::__read_callback};
+            .read_callback = &NghttpSession::__read_callback,
+        };
         auto stream_id = nghttp2_submit_request(m_session, NULL, nva, head_size, &data_provider, this);
         LOG_CORE("stream_id %d\n", stream_id);
-
-        auto err = nghttp2_session_send(m_session);
-        if (err != 0)
+        auto err = __send_message();
+        if (err < 0)
         {
-            LOG_CORE("send failed %d %s\n", errno, nghttp2_strerror(errno));
-            __close();
             co_return INVALID;
         }
         co_return stream_id;
     }
-    awaitable<int> NghttpSession::recv_process()
+    awaitable<int> NghttpSession::process_loop()
     {
-        
         while (__valid())
         {
-            int r = 0;
-            if (nghttp2_session_want_write(m_session))
+            char body[1024];
+            auto r = co_await ssl_context::recv(body, sizeof(body));
+            if (r < 0)
             {
-                r = nghttp2_session_send(m_session);
-                if (r < 0)
-                {
-                    LOG_ERR("send failed %d %d %s\n", errno, r, nghttp2_strerror(r));
-                __error_return__:
-                    __close();
-                    co_return INVALID;
-                }
+                LOG_CORE("recv failed %d %d %s\n", errno, r, strerror(errno));
+            __error_return__:
+                __close();
+                co_return INVALID;
             }
-            if (nghttp2_session_want_read(m_session))
+            LOG_CORE("sess %p recv %d bytes %s\n", m_session, r, body);
+            r = nghttp2_session_mem_recv(m_session, (uint8_t *)body, r);
+            if (r < 0)
             {
-                char body[1024];
-                r = co_await ssl_context::recv(body, sizeof(body));
-                LOG_CORE("recv %d bytes %s\n", r, body);
-                r = nghttp2_session_mem_recv(m_session, (uint8_t *)body, r);
-                if (r < 0)
-                {
-                    LOG_ERR("recv failed %d %d %s\n", errno, r, nghttp2_strerror(r));
-                    goto __error_return__;
-                }
+                LOG_ERR("recv failed %d %d %s\n", errno, r, nghttp2_strerror(r));
+                goto __error_return__;
             }
         }
+        co_return 0;
     }
     int NghttpSession::__serv_settings()
     {
@@ -255,10 +250,10 @@ namespace coev::nghttp2
             __close();
             return INVALID;
         }
-        err = nghttp2_session_send(m_session);
-        if (err != 0)
+        err = __send_message();
+        if (err < 0)
         {
-            LOG_ERR("Failed to send SETTINGS: %s\n", nghttp2_strerror(err));
+            LOG_ERR("send message failed %d %d %s\n", errno, err, strerror(errno));
             goto __error_return__;
         }
         return err;
@@ -269,10 +264,21 @@ namespace coev::nghttp2
         if (err == INVALID)
         {
             LOG_ERR("handshake failed error %d %s\n", errno, strerror(errno));
-        __error_return__:
             __close();
             co_return INVALID;
         }
         co_return 0;
     }
+    int NghttpSession::__send_message()
+    {
+        auto r = nghttp2_session_send(m_session);
+        if (r < 0)
+        {
+            LOG_ERR("send failed %d %d %s\n", errno, r, nghttp2_strerror(r));
+            __close();
+            return INVALID;
+        }
+        return r;
+    }
+   
 }

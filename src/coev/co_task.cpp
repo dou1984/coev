@@ -39,7 +39,6 @@ namespace coev
 				_promises[i] = nullptr;
 				p->m_task = nullptr;
 				assert(p->m_caller == nullptr);
-				LOG_CORE("co_task::destroy() %d %p task:%p\n", i, p, p->m_task);
 				std::lock_guard<is_destroying> _(local<is_destroying>::instance());
 				p->m_this.destroy();
 			}
@@ -90,7 +89,7 @@ namespace coev
 		{
 			if (_promise->m_status == CORO_SUSPEND)
 			{
-				LOG_CORE("co_task tid %ld %d\n", _promise->m_tid, _promise->m_status);
+				// LOG_CORE("co_task tid %ld %d\n", _promise->m_tid, _promise->m_status);
 				assert(_promise->m_status != CORO_FINISHED);
 				_promise->m_status = CORO_RUNNING;
 				assert(!_promise->m_this.done());
@@ -103,6 +102,10 @@ namespace coev
 	}
 
 	int co_task::operator>>(promise *_promise)
+	{
+		return release(_promise);
+	}
+	int co_task::release(promise *_promise)
 	{
 		m_task_waiter.resume(
 			[=, this]()

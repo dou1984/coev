@@ -11,7 +11,7 @@ namespace coev
 	{
 		if (auto c = static_cast<co_event *>(pop_front()); c != nullptr)
 		{
-			LOG_CORE("resume one event immediately\n");
+			// LOG_CORE("resume one event immediately\n");
 			c->resume();
 			return true;
 		}

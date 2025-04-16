@@ -11,10 +11,6 @@ namespace coev
         {
             ok = true;
         }
-        // while (local<co_caller>::instance().resume_all())
-        // {
-        //     ok = true;
-        // }
         return ok;
     }
 }

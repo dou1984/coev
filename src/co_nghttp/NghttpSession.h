@@ -1,8 +1,8 @@
 #pragma once
 #include <unordered_map>
-#include <coev/coev.h>
 #include <nghttp2/nghttp2.h>
 #include <openssl/ssl.h>
+#include "../coev/coev.h"
 #include "NgRequest.h"
 
 namespace coev::nghttp2
@@ -18,7 +18,7 @@ namespace coev::nghttp2
         ~NghttpSession();
 
         awaitable<int> send_body(nghttp2_nv *, int head_size, const char *body, int length);
-        awaitable<int> recv_process();
+        awaitable<int> process_loop();
 
     protected:
         int __serv_settings();
@@ -27,9 +27,10 @@ namespace coev::nghttp2
         static nghttp2_session_callbacks *m_callbacks;
 
         std::unordered_map<int32_t, NgRequest> m_requests;
-        co_task m_tasks;
 
     private:
+        int __send_message();
+        // int __send_frame_end(int stream_id);
         static ssize_t __send_callback(nghttp2_session *session, const uint8_t *data, size_t length, int flags, void *user_data);
         static ssize_t __recv_callback(nghttp2_session *session, uint8_t *buf, size_t length, int flags, void *user_data);
         static ssize_t __read_callback(

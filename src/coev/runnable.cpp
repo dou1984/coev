@@ -6,6 +6,7 @@
  *
  */
 #include <sys/signal.h>
+#include <memory>
 #include <unistd.h>
 #include "cosys.h"
 #include "runnable.h"
@@ -46,6 +47,11 @@ namespace coev
 		__add(_f);
 		return *this;
 	}
+	runnable &runnable::add(const func &_f)
+	{
+		__add(_f);
+		return *this;
+	}
 	runnable &runnable::add(int count, const func &_f)
 	{
 		for (int i = 0; i < count; i++)
@@ -60,20 +66,16 @@ namespace coev
 			[=]()
 			{
 				coev::guard::async end;
-				co_task _task;
-				_task << [&]() -> awaitable<void>
+				co_start << [&end]() -> awaitable<void>
 				{
-					auto tid = gtid();
 					co_await end.suspend([]()
 										 { return true; }, []() {});
 					local<co_deliver>::instance().stop();
-					LOG_DBG("tid: %ld exit\n", tid);
+					LOG_DBG("tid: %ld before finished\n", gtid());
 				}();
-				_task << [&]() -> awaitable<void>
+				co_start << [&end, _f]() -> awaitable<void>
 				{
-					auto tid = gtid();
-					co_start << _f();
-					co_await co_start.wait_all();
+					co_await _f();
 					while (co_deliver::resume(local<async>::instance()))
 					{
 					}

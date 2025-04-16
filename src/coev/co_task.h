@@ -30,6 +30,7 @@ namespace coev
 
 		int operator<<(promise *);
 		int operator>>(promise *);
+		int release(promise *);
 		bool empty();
 		awaitable<void> wait_all();
 		awaitable<int> wait();
