@@ -20,10 +20,10 @@ namespace coev
 		// std::atomic_int m_status = {CORO_INIT};
 		int m_status = CORO_INIT;
 		std::coroutine_handle<> m_caller = nullptr;
-		size_t m_tid;
+		uint64_t m_tid;
 		void __resume();
 
-	public:	
+	public:
 		co_event(queue *_eventchain);
 		virtual ~co_event();
 		co_event(co_event &&) = delete;
@@ -32,6 +32,6 @@ namespace coev
 		bool await_ready();
 		void await_suspend(std::coroutine_handle<> awaitable);
 		void resume();
-		int id() const { return m_tid; }
+		auto id() const { return m_tid; }
 	};
 }

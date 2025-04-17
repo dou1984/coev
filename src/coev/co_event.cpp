@@ -38,7 +38,7 @@ namespace coev
 	}
 	void co_event::await_suspend(std::coroutine_handle<> _awaitable)
 	{
-		// local_resume();
+		local_resume();
 		m_caller = _awaitable;
 		if (m_status == CORO_INIT)
 		{
@@ -53,7 +53,6 @@ namespace coev
 		{
 			assert(false);
 		}
-	
 	}
 	void co_event::resume()
 	{

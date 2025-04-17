@@ -1,7 +1,6 @@
 #include "promise.h"
 #include "co_task.h"
 #include "co_deliver.h"
-#include "exchange.h"
 namespace coev
 {
     promise::~promise()
@@ -10,7 +9,6 @@ namespace coev
         if (m_task)
         {
             assert(m_caller.address() == nullptr);
-            // exchange(m_task)->release(this);
             auto _task = m_task;
             m_task = nullptr;
             _task->release(this);
@@ -18,7 +16,6 @@ namespace coev
         else if (m_caller)
         {
             assert(!m_caller.done());
-            // exchange(m_caller).resume();
             auto _caller = m_caller;
             m_caller = nullptr;
             _caller.resume();

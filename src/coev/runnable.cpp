@@ -70,6 +70,7 @@ namespace coev
 				{
 					co_await _f();
 					local_resume();
+					co_await sleep_for(100);
 				}();
 				cosys::start();
 				LOG_DBG("tid: %ld end\n", gtid());

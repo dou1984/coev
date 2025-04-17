@@ -26,8 +26,9 @@ awaitable<void> test_go()
 		g_mutex.unlock();
 	}
 	auto r = std::chrono::system_clock::now() - now;
+	LOG_DBG("before sleep tid %ld %ld total:%d \n", tid, gtid(), g_total.load());
 	co_await sleep_for(1);
-	LOG_DBG("test_go tid %ld total:%d \n", tid, g_total.load());
+	LOG_DBG("after sleep tid %ld %ld total:%d \n", tid, gtid(), g_total.load());
 	co_return;
 }
 
@@ -35,7 +36,7 @@ int main()
 {
 	set_log_level(LOG_LEVEL_DEBUG);
 	runnable::instance()
-		.start(100, test_go)
+		.start(200, test_go)
 		// .start(4, test_lock)
 		.join();
 

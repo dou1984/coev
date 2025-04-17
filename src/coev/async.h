@@ -6,13 +6,14 @@
 #include "awaitable.h"
 
 namespace coev
-{
+{    
+
     struct async : queue
     {
         co_event suspend();
         bool resume();
         bool resume_next_loop();
-        bool resume_all();
+        int resume_all();
     };
 
     namespace guard

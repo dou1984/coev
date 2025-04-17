@@ -19,12 +19,10 @@ namespace coev
 
 	void co_deliver::cb_async(struct ev_loop *loop, ev_async *w, int revents)
 	{
-
 		if (revents & EV_ASYNC)
 		{
 			co_deliver *_this = (co_deliver *)w->data;
 			assert(_this != nullptr);
-
 			_this->__resume_ev();
 			local_resume();
 		}
@@ -33,6 +31,7 @@ namespace coev
 	{
 		__init();
 		__init_local();
+		LOG_CORE("co_deliver::co_deliver %ld\n", gtid());
 	}
 	co_deliver::~co_deliver()
 	{
@@ -83,12 +82,12 @@ namespace coev
 
 	int co_deliver::__resume_ev()
 	{
-		async _listener;
+		async _waiter;
 		{
 			std::lock_guard<std::mutex> _(m_lock);
-			m_waiter.move_to(&_listener);
+			m_waiter.move_to(&_waiter);
 		}
-		_listener.resume_all();
+		_waiter.resume_all();
 		return 0;
 	}
 	bool co_deliver::resume(async &waiter)
@@ -101,30 +100,15 @@ namespace coev
 		auto ev = static_cast<co_event *>(c);
 		return resume(ev);
 	}
-	// bool co_deliver::resume(co_event *ev)
-	// {
-	// 	if (ev->id() == gtid())
-	// 	{
-	// 		ev->resume();
-	// 	}
-	// 	else
-	// 	{
-	// 		std::lock_guard<std::mutex> _(g_mutex);
-	// 		if (auto it = all_delivers.find(ev->id()); it != all_delivers.end())
-	// 		{
-	// 			it->second->call_resume(ev);
-	// 		}
-	// 	}
-	// 	return true;
-	// }
 	bool co_deliver::resume(co_event *ev)
 	{
 		std::lock_guard<std::mutex> _(g_mutex);
 		if (auto it = all_delivers.find(ev->id()); it != all_delivers.end())
 		{
 			it->second->call_resume(ev);
+			return true;
 		}
-		return true;
+		return false;
 	}
 	void co_deliver::stop()
 	{

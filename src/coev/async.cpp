@@ -1,8 +1,11 @@
 #include "async.h"
 #include "co_deliver.h"
-
+#include "local.h"
 namespace coev
 {
+	// static uint64_t resume_rotate_count = 50;
+	// using resume_count_t = uint64_t;
+
 	co_event async::suspend()
 	{
 		return co_event(this);
@@ -27,14 +30,14 @@ namespace coev
 		}
 		return false;
 	}
-	bool async::resume_all()
+	int async::resume_all()
 	{
-		bool ok = false;
+		int count = 0;
 		while (resume())
 		{
-			ok = true;
+			count += 1;
 		}
-		return ok;
+		return count;
 	}
 	namespace guard
 	{
@@ -61,8 +64,15 @@ namespace coev
 		{
 			if (auto c = __ev(_set); c != nullptr)
 			{
-				// local<coev::async>::instance().push_back(c);
-				c->resume();
+				// if ((++local<resume_count_t>::instance()) % resume_rotate_count == 0)
+				// {
+				// 	if (co_deliver::resume(c))
+				// 	{
+				// 		return true;
+				// 	}
+				// 	--local<resume_count_t>::instance();
+				// }
+				local<coev::async>::instance().push_back(c);
 				return true;
 			}
 			return false;
