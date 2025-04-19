@@ -10,6 +10,7 @@
 #include "awaitable.h"
 #include "wait_for.h"
 #include "local_resume.h"
+#include "socket.h"
 
 namespace coev
 {
@@ -106,21 +107,22 @@ namespace coev
 	}
 	int co_task::release(promise *_promise)
 	{
-		m_task_waiter.deliver(
-			[=, this]()
+		{
+			m_id = INVALID;
+			std::lock_guard<std::mutex> _(m_task_waiter.lock());
+			for (int i = 0; i < m_promises.size(); i++)
 			{
-				for (int i = 0; i < m_promises.size(); i++)
+				if (m_promises[i] == _promise)
 				{
-					if (m_promises[i] == _promise)
-					{
-						LOG_CORE("co_task: done %ld %p\n", _promise->m_tid, _promise);
-						m_promises[i] = nullptr;
-						m_count--;
-						m_id = i;
-						return;
-					}
+					LOG_CORE("co_task: done %ld %p\n", _promise->m_tid, _promise);
+					m_promises[i] = nullptr;
+					m_count--;
+					m_id = i;
+					break;
 				}
-			});
+			}
+		}
+		m_task_waiter.deliver();
 		return m_id;
 	}
 }

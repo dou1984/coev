@@ -3,8 +3,6 @@
 #include "local.h"
 namespace coev
 {
-	// static uint64_t resume_rotate_count = 50;
-	// using resume_count_t = uint64_t;
 
 	co_event async::suspend()
 	{
@@ -14,7 +12,6 @@ namespace coev
 	{
 		if (auto c = static_cast<co_event *>(pop_front()); c != nullptr)
 		{
-			// LOG_CORE("resume one event immediately\n");
 			c->resume();
 			return true;
 		}
@@ -64,21 +61,14 @@ namespace coev
 		{
 			if (auto c = __ev(_set); c != nullptr)
 			{
-				// if ((++local<resume_count_t>::instance()) % resume_rotate_count == 0)
-				// {
-				// 	if (co_deliver::resume(c))
-				// 	{
-				// 		return true;
-				// 	}
-				// 	--local<resume_count_t>::instance();
-				// }
 				local<coev::async>::instance().push_back(c);
 				return true;
 			}
 			return false;
 		}
-		bool async::deliver(const std::function<void()> &_set)
+		bool async::deliver()
 		{
+			const std::function<void()> _set = []() {};
 			if (auto c = __ev(_set); c != nullptr)
 			{
 				co_deliver::resume(c);

@@ -1,10 +1,10 @@
 #pragma once
 #include <string>
-#include "Ngheader.h"
+#include "NghttpHeader.h"
 
 namespace coev
 {
-    struct NgRequest : NgHeader
+    struct NghttpRequest : NghttpHeader
     {
         std::string m_body;
     };

@@ -26,7 +26,6 @@ namespace coev
 		runnable();
 		runnable(const runnable &) = delete;
 		runnable(runnable &&) = delete;
-		// runnable &operator<<(const func &_f);
 		runnable &start(const func &_f);
 		runnable &start(int count, const func &_f);
 

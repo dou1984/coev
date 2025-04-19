@@ -3,7 +3,7 @@
 #include <nghttp2/nghttp2.h>
 #include <openssl/ssl.h>
 #include "../coev/coev.h"
-#include "NgRequest.h"
+#include "NghttpRequest.h"
 
 namespace coev::nghttp2
 {
@@ -26,7 +26,7 @@ namespace coev::nghttp2
         nghttp2_session *m_session = nullptr;
         static nghttp2_session_callbacks *m_callbacks;
 
-        std::unordered_map<int32_t, NgRequest> m_requests;
+        std::unordered_map<int32_t, NghttpRequest> m_requests;
 
     private:
         int __send_message();

@@ -12,7 +12,7 @@ char hi[] = R"(helloworld)";
 
 const auto echo = [](coev::nghttp2::NghttpSession &ctx) -> awaitable<void>
 {
-    NgHeader ngh;
+    NghttpHeader ngh;
     ngh.push_back(":status", "200");
     ngh.push_back("server:", "coev");
     ngh.push_back("set-cookie:", "COEV=0000000000000000");
@@ -64,7 +64,7 @@ awaitable<void> proc_client()
         co_return;
     }
 
-    NgHeader ngh;
+    NghttpHeader ngh;
     ngh.push_back(":method", "GET");
     ngh.push_back(":scheme", "https");
     ngh.push_back("accept", "*/*");

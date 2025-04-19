@@ -16,7 +16,6 @@
 #include "log.h"
 #include "local.h"
 #include "is_destroying.h"
-#include "co_caller.h"
 
 namespace coev
 {

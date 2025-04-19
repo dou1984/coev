@@ -10,7 +10,6 @@
 #include <mutex>
 #include "async.h"
 #include "co_event.h"
-#include "co_caller.h"
 namespace coev
 {
 	class co_deliver
@@ -23,6 +22,7 @@ namespace coev
 		static bool resume(co_event *ev);
 		int id() const { return m_tid; }
 		void stop();
+		static void stop(int tid);
 
 	protected:
 		int call_resume(co_event *ev);

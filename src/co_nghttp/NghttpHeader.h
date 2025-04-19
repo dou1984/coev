@@ -4,10 +4,10 @@
 
 namespace coev
 {
-    class NgHeader
+    class NghttpHeader
     {
     public:
-        NgHeader() = default;
+        NghttpHeader() = default;
 
         void push_back(const char *, size_t, const char *, size_t);
         void push_back(const char *, const char *);

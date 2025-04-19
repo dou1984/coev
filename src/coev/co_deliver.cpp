@@ -115,5 +115,17 @@ namespace coev
 		__fini();
 		__fini_local();
 	}
-
+	void co_deliver::stop(int tid)
+	{
+		co_deliver *_this = [=](int tid)
+		{
+			std::lock_guard<std::mutex> _(g_mutex);
+			auto it = all_delivers.find(tid); 			
+			return it != all_delivers.end() ? it->second : nullptr;			
+		}(tid);
+		if (_this)
+		{
+			_this->stop();
+		}
+	}
 }

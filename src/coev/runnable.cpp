@@ -43,11 +43,6 @@ namespace coev
 			it.detach();
 		}
 	}
-	// runnable &runnable::operator<<(const func &_f)
-	// {
-	// 	__add(_f);
-	// 	return *this;
-	// }
 	runnable &runnable::start(const func &_f)
 	{
 		__add(_f);
@@ -66,14 +61,20 @@ namespace coev
 		m_list.emplace_back(
 			[=]()
 			{
-				co_start << [=]() -> awaitable<void>
+				guard::async _end;
+				co_start << [&_end]() -> awaitable<void>
+				{
+					co_await _end.suspend([]()
+										  { return true; }, []() {});
+					co_await sleep_for(6);
+					local<co_deliver>::instance().stop();
+				}();
+				co_start << [=, &_end]() -> awaitable<void>
 				{
 					co_await _f();
-					local_resume();
-					co_await sleep_for(100);
+					_end.deliver();
 				}();
 				cosys::start();
-				LOG_DBG("tid: %ld end\n", gtid());
 			});
 	}
 

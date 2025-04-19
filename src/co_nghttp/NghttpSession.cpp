@@ -133,7 +133,7 @@ namespace coev::nghttp2
     {
         auto _this = static_cast<NghttpSession *>(user_data);
         LOG_CORE("begin frame %p stream_id %d\n", hd, hd->stream_id);
-        _this->m_requests[hd->stream_id] = NgRequest();
+        _this->m_requests[hd->stream_id] = NghttpRequest();
         return 0;
     }
     int NghttpSession::__on_frame_not_send_callback(nghttp2_session *session, const nghttp2_frame *frame, int lib_error_code, void *user_data)
@@ -205,7 +205,7 @@ namespace coev::nghttp2
             .source = {.ptr = &cache},
             .read_callback = &NghttpSession::__read_callback,
         };
-        auto stream_id = nghttp2_submit_request(m_session, NULL, nva, head_size, &data_provider, this);
+        auto stream_id = nghttp2_submit_request(m_session, NGHTTP2_FLAG_END_STREAM, nva, head_size, &data_provider, this);
         LOG_CORE("stream_id %d\n", stream_id);
         auto err = __send_message();
         if (err < 0)
@@ -280,5 +280,5 @@ namespace coev::nghttp2
         }
         return r;
     }
-   
+
 }
