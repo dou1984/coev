@@ -57,6 +57,12 @@ namespace coev::nghttp2
 
     ssize_t NghttpSession::__read_callback(nghttp2_session *session, int32_t stream_id, uint8_t *buf, size_t length, uint32_t *data_flags, nghttp2_data_source *source, void *user_data)
     {
+        if (source == nullptr)
+        {
+            *data_flags |= NGHTTP2_DATA_FLAG_EOF;
+            LOG_CORE("data_source_read_callback source is null\n");
+            return 0;
+        }
         auto _this = static_cast<NghttpSession *>(user_data);
         auto cache = (__cache *)source->ptr;
         LOG_CORE("data_source_read_callback %ld bytes length %d from %s\n", length, cache->m_length, cache->m_data);
@@ -106,7 +112,6 @@ namespace coev::nghttp2
         auto stream_id = frame->hd.stream_id;
         if (frame->hd.type == NGHTTP2_SETTINGS)
         {
-            _this->__serv_settings();
         }
         else if (frame->hd.type == NGHTTP2_GOAWAY)
         {
@@ -190,29 +195,22 @@ namespace coev::nghttp2
     {
         if (m_session != nullptr)
         {
-            LOG_CORE("~NghttpSession\n");
             nghttp2_session_del(m_session);
         }
     }
 
-    awaitable<int> NghttpSession::send_body(nghttp2_nv *nva, int head_size, const char *body, int length)
+    awaitable<int> NghttpSession::submit_request(nghttp2_nv *nva, int head_size)
     {
-        __cache cache = {
-            .m_data = body,
-            .m_length = length,
-        };
-        nghttp2_data_provider data_provider = {
-            .source = {.ptr = &cache},
-            .read_callback = &NghttpSession::__read_callback,
-        };
-        auto stream_id = nghttp2_submit_request(m_session, NGHTTP2_FLAG_END_STREAM, nva, head_size, &data_provider, this);
-        LOG_CORE("stream_id %d\n", stream_id);
-        auto err = __send_message();
+
+        auto stream_id = nghttp2_submit_request(m_session, NULL, nva, head_size, NULL, this);
+        auto err = __send_body();
         if (err < 0)
         {
             co_return INVALID;
         }
-        co_return stream_id;
+        co_await m_streams[stream_id].suspend();
+
+        
     }
     awaitable<int> NghttpSession::process_loop()
     {
@@ -231,13 +229,15 @@ namespace coev::nghttp2
             r = nghttp2_session_mem_recv(m_session, (uint8_t *)body, r);
             if (r < 0)
             {
-                LOG_ERR("recv failed %d %d %s\n", errno, r, nghttp2_strerror(r));
+                LOG_CORE("recv failed %d %d %s\n", errno, r, nghttp2_strerror(r));
                 goto __error_return__;
             }
+            LOG_CORE("mem recv %d bytes\n", r);
         }
         co_return 0;
     }
-    int NghttpSession::__serv_settings()
+
+    int NghttpSession::send_server_settings()
     {
         nghttp2_settings_entry iv[] = {
             {NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, 100}};
@@ -250,7 +250,7 @@ namespace coev::nghttp2
             __close();
             return INVALID;
         }
-        err = __send_message();
+        err = __send_body();
         if (err < 0)
         {
             LOG_ERR("send message failed %d %d %s\n", errno, err, strerror(errno));
@@ -269,7 +269,7 @@ namespace coev::nghttp2
         }
         co_return 0;
     }
-    int NghttpSession::__send_message()
+    int NghttpSession::__send_body()
     {
         auto r = nghttp2_session_send(m_session);
         if (r < 0)

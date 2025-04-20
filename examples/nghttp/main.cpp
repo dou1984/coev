@@ -17,9 +17,8 @@ const auto echo = [](coev::nghttp2::NghttpSession &ctx) -> awaitable<void>
     ngh.push_back("server:", "coev");
     ngh.push_back("set-cookie:", "COEV=0000000000000000");
     ngh.push_back("keep-alive:", "timeout=5, max=100");
-    ngh.push_back("content-length:", "11");
 
-    auto err = co_await ctx.send_body(ngh, ngh.size(), hi, strlen(hi) + 1);
+    auto err = co_await ctx.submit_request(ngh, ngh.size());
     if (err == INVALID)
     {
         LOG_ERR("send error %d %s\n", errno, strerror(errno));
@@ -49,6 +48,7 @@ awaitable<void> proc_server()
                 LOG_ERR("handshake error %d %s\n", errno, strerror(errno));
                 co_return INVALID;
             }
+            ctx.send_server_settings();
             co_await ctx.process_loop();
             co_return 0;
         }();
@@ -66,6 +66,7 @@ awaitable<void> proc_client()
 
     NghttpHeader ngh;
     ngh.push_back(":method", "GET");
+    ngh.push_back(":path", "/");
     ngh.push_back(":scheme", "https");
     ngh.push_back("accept", "*/*");
     ngh.push_back("user-agent", "nghttp2/" NGHTTP2_VERSION);
@@ -73,7 +74,7 @@ awaitable<void> proc_client()
     const char *user_data = "hello world";
     int length = strlen(user_data) + 1;
 
-    int r = co_await client.send_body(ngh, ngh.size(), user_data, length);
+    int r = co_await client.submit_request(ngh, ngh.size());
     if (r == INVALID)
     {
         LOG_ERR("send error %d %s\n", errno, strerror(errno));

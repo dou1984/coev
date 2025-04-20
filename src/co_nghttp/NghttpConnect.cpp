@@ -34,7 +34,7 @@ namespace coev::nghttp2
             LOG_ERR("nghttp2_session_client_new failed %s %d %s\n", info.ip, info.port, nghttp2_strerror(err));
             goto __error_return__;
         }
-        err = __cli_settings();
+        err = send_client_settings();
         if (err != 0)
         {
             LOG_ERR("__cli_settings failed %s %d %s\n", info.ip, info.port, nghttp2_strerror(err));
@@ -42,7 +42,7 @@ namespace coev::nghttp2
         }
         co_return m_fd;
     }
-    int NghttpConnect::__cli_settings()
+    int NghttpConnect::send_client_settings()
     {
         nghttp2_settings_entry iv[] = {
             {NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, 100},

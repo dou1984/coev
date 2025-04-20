@@ -17,20 +17,21 @@ namespace coev::nghttp2
         NghttpSession &operator=(const NghttpSession &) = delete;
         ~NghttpSession();
 
-        awaitable<int> send_body(nghttp2_nv *, int head_size, const char *body, int length);
+        awaitable<int> submit_request(nghttp2_nv *, int head_size);
+        awaitable<int> post(nghttp2_nv *, int head_size, const char *body, int length);
+
         awaitable<int> process_loop();
 
-    protected:
-        int __serv_settings();
+        int send_server_settings();
+    protected:       
         NghttpSession() = default;
         nghttp2_session *m_session = nullptr;
         static nghttp2_session_callbacks *m_callbacks;
 
-        std::unordered_map<int32_t, NghttpRequest> m_requests;
-
+        std::unordered_map<uint32_t, NghttpRequest> m_requests;
+        std::unordered_map<uint32_t, coev::async > m_streams;
     private:
-        int __send_message();
-        // int __send_frame_end(int stream_id);
+        int __send_body();        
         static ssize_t __send_callback(nghttp2_session *session, const uint8_t *data, size_t length, int flags, void *user_data);
         static ssize_t __recv_callback(nghttp2_session *session, uint8_t *buf, size_t length, int flags, void *user_data);
         static ssize_t __read_callback(
