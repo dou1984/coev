@@ -2,42 +2,44 @@
 #include <unordered_map>
 #include <nghttp2/nghttp2.h>
 #include <openssl/ssl.h>
-#include "../coev/coev.h"
-#include "NghttpRequest.h"
+#include <coev/coev.h>
+#include <co_ssl/co_ssl.h>
+#include "NgRequest.h"
 
 namespace coev::nghttp2
 {
-    class NghttpSession : virtual protected ssl_context
+    class NgSession : virtual protected coev::ssl::ssl_context
     {
     public:
         awaitable<int> do_handshake();
 
-        NghttpSession(int, SSL_CTX *);
-        NghttpSession(const NghttpSession &) = delete;
-        NghttpSession &operator=(const NghttpSession &) = delete;
-        ~NghttpSession();
+        NgSession(int, SSL_CTX *);
+        NgSession(const NgSession &) = delete;
+        NgSession &operator=(const NgSession &) = delete;
+        ~NgSession();
+
+        awaitable<int> processing();
 
         awaitable<int> submit_request(nghttp2_nv *, int head_size);
-        awaitable<int> post(nghttp2_nv *, int head_size, const char *body, int length);
-
-        awaitable<int> process_loop();
+        awaitable<int> submit_body(nghttp2_nv *, int head_size, const char *body, int length);
+        awaitable<int> submit_response(int stream_id, nghttp2_nv *, int head_size, const char *body, int length);
 
         int send_server_settings();
-    protected:       
-        NghttpSession() = default;
+
+    protected:
+        NgSession() = default;
         nghttp2_session *m_session = nullptr;
         static nghttp2_session_callbacks *m_callbacks;
 
-        std::unordered_map<uint32_t, NghttpRequest> m_requests;
-        std::unordered_map<uint32_t, coev::async > m_streams;
+        std::unordered_map<uint32_t, NgRequest> m_requests;
+        std::unordered_map<uint32_t, coev::async> m_streams;
+
     private:
-        int __send_body();        
-        static ssize_t __send_callback(nghttp2_session *session, const uint8_t *data, size_t length, int flags, void *user_data);
-        static ssize_t __recv_callback(nghttp2_session *session, uint8_t *buf, size_t length, int flags, void *user_data);
-        static ssize_t __read_callback(
-            nghttp2_session *session, int32_t stream_id, uint8_t *buf, size_t length,
-            uint32_t *data_flags, nghttp2_data_source *source, void *user_data);
-        static int __error_callback(nghttp2_session *session, const char *msg, size_t len, void *user_data);
+        int __send_body();
+        static ssize_t __send_callback2(nghttp2_session *session, const uint8_t *data, size_t length, int flags, void *user_data);
+        static ssize_t __recv_callback2(nghttp2_session *session, uint8_t *buf, size_t length, int flags, void *user_data);
+        static ssize_t __read_callback2(nghttp2_session *session, int32_t stream_id, uint8_t *buf, size_t length, uint32_t *data_flags, nghttp2_data_source *source, void *user_data);
+        static int __error_callback2(nghttp2_session *session, int lib_error_code, const char *msg, size_t len, void *user_data);
         static int __on_frame_recv_callback(nghttp2_session *session, const nghttp2_frame *frame, void *user_data);
         static int __on_frame_send_callback(nghttp2_session *session, const nghttp2_frame *frame, void *user_data);
         static int __on_begin_frame_callback(nghttp2_session *session, const nghttp2_frame_hd *hd, void *user_data);

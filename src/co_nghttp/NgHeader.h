@@ -2,12 +2,12 @@
 #include <nghttp2/nghttp2.h>
 #include <vector>
 
-namespace coev
+namespace coev::nghttp2
 {
-    class NghttpHeader
+    class NgHeader
     {
     public:
-        NghttpHeader() = default;
+        NgHeader() = default;
 
         void push_back(const char *, size_t, const char *, size_t);
         void push_back(const char *, const char *);

@@ -1,8 +1,8 @@
-#include "ssl_connect.h"
+#include "ssl_client.h"
 
-namespace coev
+namespace coev::ssl
 {
-    ssl_connect::ssl_connect(SSL_CTX *_ssl_ctx)
+    ssl_client::ssl_client(SSL_CTX *_ssl_ctx)
     {
         m_ssl = SSL_new(_ssl_ctx);
         if (m_ssl == nullptr)
@@ -12,13 +12,13 @@ namespace coev
         }
     }
 
-    awaitable<int> ssl_connect::connect(const char *host, int port)
+    awaitable<int> ssl_client::connect(const char *host, int port)
     {
         if (m_ssl == nullptr)
         {
             throw std::runtime_error("connect error m_ssl is nullptr");
         }
-        int err = co_await io_connect::connect(host, port);
+        int err = co_await coev::io_connect::connect(host, port);
         if (err == INVALID)
         {
             LOG_ERR("connect failed %d\n", err);

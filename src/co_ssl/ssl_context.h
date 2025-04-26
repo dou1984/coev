@@ -1,11 +1,11 @@
 #pragma once
 #include <openssl/ssl.h>
 #include <openssl/err.h>
-#include "io_context.h"
+#include <coev/coev.h>
 
-namespace coev
+namespace coev::ssl
 {
-    class ssl_context : virtual protected io_context
+    class ssl_context : virtual protected coev::io_context
     {
     public:
         using io_context::operator bool;

@@ -1,8 +1,8 @@
-#include "coev.h"
+#include <coev/coev.h>
 #include "ssl_context.h"
 #include "ssl_manager.h"
 
-namespace coev
+namespace coev::ssl
 {
     
     ssl_context::ssl_context(int fd, SSL_CTX *_ssl_ctx) : io_context(fd)

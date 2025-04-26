@@ -12,6 +12,7 @@ endif()
 project(co_nghttp)
 
 aux_source_directory(. SRC_DIR)
+link_directories(/usr/local/lib64/ /usr/local/lib/)
 
 add_library(${PROJECT_NAME} STATIC ${SRC_DIR})
 target_link_libraries(${PROJECT_NAME})

@@ -1,7 +1,7 @@
 #include <coev/coev.h>
 
 using namespace coev;
-
+using namespace coev::ssl;
 static ssl_manager g_srv_mgr(ssl_manager::TLS_SERVER);
 static ssl_manager g_cli_mgr(ssl_manager::TLS_CLIENT);
 
@@ -57,7 +57,7 @@ awaitable<void> test_ssl_context()
 awaitable<void> test_ssl_client()
 {
 
-    ssl_connect client(g_cli_mgr.get());
+    ssl_client client(g_cli_mgr.get());
     int fd = co_await client.connect("0.0.0.0", 9998);
     if (fd == INVALID)
     {

@@ -1,8 +1,7 @@
-#include "coev.h"
-#include "socket.h"
+#include <coev/coev.h>
 #include "ssl_manager.h"
 
-namespace coev
+namespace coev::ssl
 {
     ssl_manager::ssl_manager(int method)
     {

@@ -2,7 +2,7 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-namespace coev
+namespace coev::ssl
 {
     class ssl_manager
     {

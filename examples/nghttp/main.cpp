@@ -1,70 +1,53 @@
 #include <coev/coev.h>
-#include <co_nghttp/NghttpServer.h>
-#include <co_nghttp/NghttpSession.h>
-#include <co_nghttp/NghttpConnect.h>
+#include <co_nghttp/NgServer.h>
+#include <co_nghttp/NgSession.h>
+#include <co_nghttp/NgClient.h>
+#include <co_nghttp/NgRequest.h>
 
+using namespace coev::nghttp2;
 using namespace coev;
-
-ssl_manager g_cli_mgr(ssl_manager::TLS_CLIENT);
-ssl_manager g_srv_mgr(ssl_manager::TLS_SERVER);
+ssl::ssl_manager g_cli_mgr(ssl::ssl_manager::TLS_CLIENT);
+ssl::ssl_manager g_srv_mgr(ssl::ssl_manager::TLS_SERVER);
 
 char hi[] = R"(helloworld)";
 
-const auto echo = [](coev::nghttp2::NghttpSession &ctx) -> awaitable<void>
+awaitable<int> echo(NgSession &ctx, NgRequest &request)
 {
-    NghttpHeader ngh;
+    NgHeader ngh;
     ngh.push_back(":status", "200");
     ngh.push_back("server:", "coev");
     ngh.push_back("set-cookie:", "COEV=0000000000000000");
-    ngh.push_back("keep-alive:", "timeout=5, max=100");
+    ngh.push_back("keep-alive:", "timeout=15, max=100");
 
-    auto err = co_await ctx.submit_request(ngh, ngh.size());
+    const char data[] = "hi, everyone!";
+    auto err = co_await ctx.submit_response(request.stream_id, ngh, ngh.size(), data, strlen(data) + 1);
     if (err == INVALID)
     {
         LOG_ERR("send error %d %s\n", errno, strerror(errno));
-        co_return;
+        co_return INVALID;
     }
     LOG_DBG("send data %s %ld\n", hi, strlen(hi) + 1);
-    co_return;
+    co_return 0;
 };
 awaitable<void> proc_server()
 {
     LOG_DBG("server start %s\n", "0.0.0.0:8090");
-    coev::nghttp2::NghttpServer server("0.0.0.0:8090");
+    coev::nghttp2::NgServer server("0.0.0.0:8090");
 
-    while (server.valid())
-    {
-        addrInfo info;
-        int fd = co_await server.accept(info);
-
-        LOG_DBG("recv fd %d from %s:%d\n", fd, info.ip, info.port);
-        co_start << [=]() -> awaitable<int>
-        {
-            LOG_DBG("client start %d\n", fd);
-            coev::nghttp2::NghttpSession ctx(fd, g_srv_mgr.get());
-            auto err = co_await ctx.do_handshake();
-            if (err == INVALID)
-            {
-                LOG_ERR("handshake error %d %s\n", errno, strerror(errno));
-                co_return INVALID;
-            }
-            ctx.send_server_settings();
-            co_await ctx.process_loop();
-            co_return 0;
-        }();
-    }
+    server.route("/echo", echo);
+    co_await server.dispatch(g_srv_mgr.get());
     co_return;
 }
 awaitable<void> proc_client()
 {
-    coev::nghttp2::NghttpConnect client(g_cli_mgr.get());
+    coev::nghttp2::NgClient client(g_cli_mgr.get());
     int fd = co_await client.connect("0.0.0.0:8090");
     if (fd == INVALID)
     {
         co_return;
     }
 
-    NghttpHeader ngh;
+    NgHeader ngh;
     ngh.push_back(":method", "GET");
     ngh.push_back(":path", "/");
     ngh.push_back(":scheme", "https");
@@ -80,7 +63,7 @@ awaitable<void> proc_client()
         LOG_ERR("send error %d %s\n", errno, strerror(errno));
         co_return;
     }
-    co_await client.process_loop();
+    co_await client.processing();
     co_return;
 }
 int main(int argc, char **argv)
