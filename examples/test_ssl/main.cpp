@@ -1,4 +1,5 @@
 #include <coev/coev.h>
+#include <co_ssl/co_ssl.h>
 
 using namespace coev;
 using namespace coev::ssl;
@@ -57,8 +58,8 @@ awaitable<void> test_ssl_context()
 awaitable<void> test_ssl_client()
 {
 
-    ssl_client client(g_cli_mgr.get());
-    int fd = co_await client.connect("0.0.0.0", 9998);
+    ssl::ssl_client cli(g_cli_mgr.get());
+    int fd = co_await cli.connect("0.0.0.0", 9998);
     if (fd == INVALID)
     {
         LOG_ERR("connect failed fd:%d error:%d\n", fd, errno);
@@ -69,14 +70,14 @@ awaitable<void> test_ssl_client()
     {
         auto buf = "hello world";
         int size = strlen(buf) + 1;
-        int r = co_await client.send(buf, size);
+        int r = co_await cli.send(buf, size);
         if (r == INVALID)
         {
             LOG_ERR("send failed fd:%d\n", fd);
             exit(INVALID);
         }
         char buffer[1024];
-        r = co_await client.recv(buffer, sizeof(buffer));
+        r = co_await cli.recv(buffer, sizeof(buffer));
         if (r == INVALID)
         {
             LOG_ERR("recv failed fd:%d\n", fd);

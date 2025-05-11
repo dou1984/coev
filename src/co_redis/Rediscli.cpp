@@ -58,7 +58,7 @@ namespace coev
 			m_reply = nullptr;
 		}
 	}
-	int Rediscli::reply_integer()
+	int Rediscli::result_integer()
 	{
 		assert(m_reply);
 		switch (m_reply->type)
@@ -72,7 +72,7 @@ namespace coev
 		}
 		return 0;
 	}
-	std::string Rediscli::reply()
+	std::string Rediscli::result()
 	{
 		assert(m_reply);
 		switch (m_reply->type)
@@ -91,7 +91,7 @@ namespace coev
 		}
 		return STRING_CLOSED;
 	}
-	Rediscli::RedisArray Rediscli::reply_array()
+	Rediscli::RedisArray Rediscli::result_array()
 	{
 		if (m_reply->type == REDIS_REPLY_ARRAY)
 		{
@@ -228,12 +228,12 @@ namespace coev
 	{
 		return m_context != nullptr ? m_context->c.fd : INVALID;
 	}
-	Rediscli::Rediscli(const char *ip, int port, const char *auth)
+	Rediscli::Rediscli(const Redisconf& conf)
 	{
 		m_tid = gtid();
-		m_ip = ip;
-		m_port = port;
-		m_auth = auth;
+		m_ip = conf.m_ip;
+		m_port = conf.m_port;
+		m_auth = conf.m_auth;
 		m_loop = cosys::data();
 	}
 	awaitable<int> Rediscli::connect()

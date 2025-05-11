@@ -18,7 +18,12 @@ awaitable<void> go()
 {
 	set_log_level(LOG_LEVEL_DEBUG);
 
-	Rediscli c("127.0.0.1", 6379, "");
+	Redisconf conf = {
+		.m_ip = "127.0.0.1",
+		.m_auth = "",
+		.m_port = 6379,
+	};
+	Rediscli c(conf);
 
 	co_await c.connect();
 
@@ -45,7 +50,7 @@ awaitable<void> go()
 	{
 		co_return;
 	}
-	s = c.reply();
+	s = c.result();
 	std::cout << s << std::endl;
 
 	oss.str("");
@@ -55,26 +60,37 @@ awaitable<void> go()
 
 	if (c.error())
 	{
-		c.reply_integer();
+		c.result_integer();
 		co_return;
 	}
-	s = c.reply();
+	s = c.result();
 	co_return;
 }
 
 awaitable<void> test_sync()
 {
-	Rediscli c("127.0.0.1", 6379, "");
+	Redisconf conf = {
+		.m_ip = "127.0.0.1",
+		.m_auth = "",
+		.m_port = 6379,
+	};
+	Rediscli c(conf);
 	co_await c.connect();
 
 	co_await c.query("info server");
 
-	auto s = c.reply();
+	auto s = c.result();
 	LOG_DBG("%s\n", s.c_str());
 }
 awaitable<void> test_array()
 {
-	Rediscli c("127.0.0.1", 6379, "");
+	Redisconf conf = {
+		.m_ip = "127.0.0.1",
+		.m_auth = "",
+		.m_port = 6379,
+	};
+	Rediscli c(conf);
+
 	co_await c.connect();
 
 	std::ostringstream oss;
@@ -84,10 +100,10 @@ awaitable<void> test_array()
 	co_await c.query(s);
 	if (c.error())
 	{
-		LOG_ERR("test_array %s\n", c.reply().c_str());
+		LOG_ERR("test_array %s\n", c.result().c_str());
 		co_return;
 	}
-	LOG_DBG("hset h:test %s\n", c.reply().c_str());
+	LOG_DBG("hset h:test %s\n", c.result().c_str());
 
 	oss.str("");
 	oss << "hgetall h:test";
@@ -96,16 +112,16 @@ awaitable<void> test_array()
 
 	if (c.error())
 	{
-		LOG_ERR("test_array hgeall %s\n", c.reply().c_str());
+		LOG_ERR("test_array hgeall %s\n", c.result().c_str());
 		co_return;
 	}
-	auto arr = c.reply_array();
+	auto arr = c.result_array();
 	std::string key;
 	std::string value;
 
 	while (arr)
 	{
-		arr = arr.reply(key, value);
+		arr = arr.result(key, value);
 		LOG_DBG("%s=%s\n", key.c_str(), value.c_str());
 	}
 
@@ -114,10 +130,10 @@ awaitable<void> test_array()
 	co_await c.query(oss.str());
 	if (c.error())
 	{
-		LOG_DBG("del h:test error %s\n", c.reply().c_str());
+		LOG_DBG("del h:test error %s\n", c.result().c_str());
 		co_return;
 	}
-	s = c.reply();
+	s = c.result();
 
 	LOG_DBG("del h:test %s\n", s.c_str());
 	co_return;

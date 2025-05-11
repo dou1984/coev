@@ -6,7 +6,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
 if(NOT CMAKE_BUILD_TYPE)
-	 SET(CMAKE_BUILD_TYPE Release CACHE INTERNAL "cmake_build_type")
+	set(CMAKE_BUILD_TYPE Release CACHE INTERNAL "cmake_build_type")
 endif()
 
 project(co_nghttp)

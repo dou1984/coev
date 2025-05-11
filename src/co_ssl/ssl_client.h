@@ -11,5 +11,4 @@ namespace coev::ssl
         ssl_client(SSL_CTX *ctx);
         awaitable<int> connect(const char *host, int port);
     };
-
 }

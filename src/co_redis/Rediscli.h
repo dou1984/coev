@@ -27,18 +27,18 @@ namespace coev
 		class RedisArray;
 
 	public:
-		Rediscli(const char *ip, int port, const char *auth);
+		Rediscli(const Redisconf &);
 		awaitable<int> connect();
 		awaitable<int> query(const char *message);
 		awaitable<int> query(const std::string &);
-		std::string reply();
-		int reply_integer();
-		RedisArray reply_array();
+		std::string result();
+		int result_integer();
+		RedisArray result_array();
 		bool error() const;
 
 	private:
 		int m_tid;
-		struct ev_loop* m_loop;
+		struct ev_loop *m_loop;
 		ev_io m_read;
 		ev_io m_write;
 		async m_waiter;
@@ -85,7 +85,7 @@ namespace coev
 		RedisArray shift(int i) const { return RedisArray(m_element + i, m_elements - i); }
 		operator bool() const { return m_elements > 0; }
 		template <class... ARGS>
-		auto reply(ARGS &&...args)
+		auto result(ARGS &&...args)
 		{
 			int i = 0;
 			(__setvalue(args, m_element[i++]->str), ...);

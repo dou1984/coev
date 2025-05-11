@@ -58,7 +58,7 @@ namespace coev
 		}
 		std::suspend_never return_value(const V &v)
 		{
-			LOG_CORE("return_value %p\n", this);
+			// LOG_CORE("return_value %p\n", this);
 			value = v;
 			return {};
 		}

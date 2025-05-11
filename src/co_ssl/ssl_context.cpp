@@ -4,7 +4,7 @@
 
 namespace coev::ssl
 {
-    
+
     ssl_context::ssl_context(int fd, SSL_CTX *_ssl_ctx) : io_context(fd)
     {
         assert(m_fd != INVALID);
@@ -69,6 +69,10 @@ namespace coev::ssl
         while (__valid())
         {
             co_await m_read_waiter.suspend();
+            if (__invalid())
+            {
+                co_return INVALID;
+            }
             int r = SSL_read(m_ssl, buf, size);
             if (r == INVALID)
             {

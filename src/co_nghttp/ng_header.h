@@ -4,17 +4,17 @@
 
 namespace coev::nghttp2
 {
-    class NgHeader
+    class ng_header
     {
     public:
-        NgHeader() = default;
+        ng_header() = default;
 
         void push_back(const char *, size_t, const char *, size_t);
         void push_back(const char *, const char *);
         operator nghttp2_nv *();
         int size() const;
 
-    private:
+    protected:
         union __nv
         {
             nghttp2_nv nva;
