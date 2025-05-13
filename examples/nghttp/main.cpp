@@ -63,14 +63,11 @@ awaitable<void> proc_client()
         co_return;
     }
 
-    auto [r, res] = co_await cli.wait_for_stream_end(stream_id);
-    if (r != 0)
-    {
-        LOG_ERR("wait_for_stream_end error %d %s\n", errno, strerror(errno));
-        co_return;
-    }
+    auto res = co_await cli.wait_for_stream_end(stream_id);
+
     LOG_INFO("status: %s body:%s\n", res.header(":status").c_str(), res.body().c_str());
 
+    cli.close();
     co_return;
 }
 int main(int argc, char **argv)

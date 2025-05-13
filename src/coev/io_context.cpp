@@ -105,6 +105,10 @@ namespace coev
 		}
 		return 0;
 	}
+	bool io_context::__is_client() const
+	{
+		return m_type & IO_CLIENT;
+	}
 	io_context::~io_context()
 	{
 		__close();

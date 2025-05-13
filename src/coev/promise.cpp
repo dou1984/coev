@@ -12,7 +12,7 @@ namespace coev
             assert(m_caller.address() == nullptr);
             auto _task = m_task;
             m_task = nullptr;
-            _task->release(this);
+            _task->unload(this);
         }
         else if (m_caller)
         {

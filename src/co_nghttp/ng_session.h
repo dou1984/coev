@@ -25,25 +25,28 @@ namespace coev::nghttp2
 
         awaitable<int> processing();
         awaitable<int> on_stream_end(const routers &);
-        awaitable<int, ng_request> wait_for_stream_end(int stream_id);
+        awaitable<ng_response> wait_for_stream_end(int stream_id);
 
         int submit_request(nghttp2_nv *, int head_size, const char *body, int length);
         int submit_response(int stream_id, nghttp2_nv *, int head_size, const char *body, int length);
+        int push_promise(int stream_id, nghttp2_nv *, int head_size);
         int error_reply(int32_t id, int error_code);
 
     public:
         int set_routers(const routers &);
         ng_request &get_request(int32_t stream_id);
         void remove_request(int32_t stream_id);
+        ng_response &get_response(int32_t stream_id);
+        void remove_response(int32_t stream_id);
 
         int send_server_settings();
 
     protected:
         ng_session() = default;
         nghttp2_session *m_session = nullptr;
-        int m_type = 0;
         static nghttp2_session_callbacks *m_callbacks;
         std::unordered_map<int32_t, ng_request> m_requests;
+        std::unordered_map<int32_t, ng_response> m_responses;
 
     protected:
         co_task m_tasks;

@@ -15,14 +15,13 @@
 
 namespace coev
 {
-#define co_start coev::local<coev::co_task>::instance() 
+#define co_start coev::local<coev::co_task>::instance()
 
 	class co_task final
 	{
-		guard::async m_task_waiter;
-		std::vector<promise *> m_promises;
-		int m_count = 0;
-		int m_id = 0;
+		guard::async m_waiter;
+		std::unordered_map<promise *, uint64_t> m_promises;
+		uint64_t m_id = 0;
 
 	public:
 		virtual ~co_task();
@@ -30,9 +29,10 @@ namespace coev
 
 		int operator<<(promise *);
 		int operator>>(promise *);
-		int release(promise *);
+		int load(promise *);
+		int unload(promise *);
 		bool empty();
 		awaitable<void> wait_all();
-		awaitable<int> wait();
+		awaitable<uint64_t> wait();
 	};
 }

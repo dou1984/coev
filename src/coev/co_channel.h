@@ -36,7 +36,7 @@ namespace coev
 				[this]()
 				{ return __invalid(); },
 				[&]()
-				{ d = pop_front(); });
+				{ d = __pop_front(); });
 			co_return d;
 		}
 
@@ -44,7 +44,7 @@ namespace coev
 		std::list<TYPE> m_data;
 		guard::async m_waiter;
 		bool __invalid() const { return m_data.empty(); }
-		TYPE pop_front()
+		TYPE __pop_front()
 		{
 			auto d = std::move(m_data.front());
 			m_data.pop_front();

@@ -13,6 +13,7 @@
 
 namespace coev
 {
+#define IO_CLIENT 0x1
 	class io_context
 	{
 	public:
@@ -31,6 +32,7 @@ namespace coev
 		uint64_t m_tid = 0;
 		struct ev_loop *m_loop = nullptr;
 		int m_fd = INVALID;
+		int m_type = 0;
 		ev_io m_read;
 		ev_io m_write;
 
@@ -42,6 +44,7 @@ namespace coev
 		bool __valid() const;
 		bool __invalid()const;
 		int __del_write();
+		bool __is_client()const;
 		static void cb_write(struct ev_loop *loop, struct ev_io *w, int revents);
 		static void cb_read(struct ev_loop *loop, struct ev_io *w, int revents);
 	};

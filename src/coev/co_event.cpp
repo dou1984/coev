@@ -11,6 +11,14 @@
 
 namespace coev
 {
+	void __set_reserved(co_event &e, uint64_t x)
+	{
+		e.m_reserved = x;
+	}
+	uint64_t __get_reserved(co_event &e)
+	{
+		return e.m_reserved;
+	}
 	co_event::co_event(queue *_ev_queue) : m_tid(gtid())
 	{
 		if (_ev_queue != nullptr)

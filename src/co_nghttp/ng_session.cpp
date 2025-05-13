@@ -59,7 +59,7 @@ namespace coev::nghttp2
     {
         auto _this = static_cast<ng_session *>(user_data);
         auto cache = (__cache *)source->ptr;
-        LOG_CORE("data_source_read_callback %ld bytes length %d from %s\n", length, cache->m_length, cache->m_data);
+        LOG_CORE("__read_callback %ld bytes length %d from %s\n", length, cache->m_length, cache->m_data);
         if (cache->m_length == 0)
         {
             *data_flags |= NGHTTP2_DATA_FLAG_EOF;
@@ -154,8 +154,17 @@ namespace coev::nghttp2
         {
             return 0;
         }
-        auto &req = _this->get_request(frame->hd.stream_id);
-        req.set_stream_id(frame->hd.stream_id);
+        auto stream_id = frame->hd.stream_id;
+        if (_this->__is_client())
+        {
+            auto &res = _this->get_response(stream_id);
+            res.set_stream_id(stream_id);
+        }
+        else
+        {
+            auto &req = _this->get_request(stream_id);
+            req.set_stream_id(stream_id);
+        }
         return 0;
     }
     int ng_session::__on_header_callback(nghttp2_session *sess, const nghttp2_frame *frame, const uint8_t *name, size_t namelen, const uint8_t *value, size_t valuelen, uint8_t flags, void *user_data)
@@ -166,8 +175,17 @@ namespace coev::nghttp2
         {
             return 0;
         }
-        auto &req = _this->get_request(frame->hd.stream_id);
-        req.add_header((const char *)name, namelen, (const char *)value, valuelen);
+        auto stream_id = frame->hd.stream_id;
+        if (_this->__is_client())
+        {
+            auto &res = _this->get_response(stream_id);
+            res.add_header((const char *)name, namelen, (const char *)value, valuelen);
+        }
+        else
+        {
+            auto &req = _this->get_request(stream_id);
+            req.add_header((const char *)name, namelen, (const char *)value, valuelen);
+        }
         return 0;
     }
     int ng_session::__on_data_chunk_recv_callback(nghttp2_session *sess, uint8_t flags, int32_t stream_id, const uint8_t *data, size_t len, void *user_data)
@@ -178,15 +196,30 @@ namespace coev::nghttp2
         {
             LOG_CORE("stream_id %d received END_STREAM flag\n", stream_id);
         }
-        auto &req = _this->get_request(stream_id);
-        req.append((const char *)data, len);
+        if (_this->__is_client())
+        {
+            auto &res = _this->get_response(stream_id);
+            res.append((const char *)data, len);
+        }
+        else
+        {
+            auto &req = _this->get_request(stream_id);
+            req.append((const char *)data, len);
+        }
         return 0;
     }
     int ng_session::__on_stream_close_callback(nghttp2_session *sess, int32_t stream_id, uint32_t error_code, void *user_data)
     {
         auto _this = static_cast<ng_session *>(user_data);
         LOG_CORE("__on_stream_close_callback stream_id %d error %d\n", stream_id, error_code);
-        _this->remove_request(stream_id);
+        if (_this->__is_client())
+        {
+            _this->remove_response(stream_id);
+        }
+        else
+        {
+            _this->remove_request(stream_id);
+        }
         return 0;
     }
 
@@ -246,6 +279,21 @@ namespace coev::nghttp2
         }
         return 0;
     }
+    int ng_session::push_promise(int stream_id, nghttp2_nv *nva, int head_size)
+    {
+        auto err = nghttp2_submit_push_promise(m_session, NGHTTP2_FLAG_NONE, stream_id, nva, head_size, this);
+        if (err < 0)
+        {
+            LOG_CORE("submit response failed %d %s\n", err, nghttp2_strerror(err));
+            return INVALID;
+        }
+        err = __send();
+        if (err < 0)
+        {
+            return INVALID;
+        }
+        return 0;
+    }
     int ng_session::error_reply(int32_t stream_id, int error_code)
     {
         auto err = nghttp2_submit_rst_stream(m_session, NGHTTP2_FLAG_NONE, stream_id, error_code);
@@ -291,14 +339,13 @@ namespace coev::nghttp2
 
     int ng_session::__processing(int stream_id)
     {
-        if (m_type == 0)
+        if (!__is_client())
         {
             m_trigger.resume();
         }
         else if (auto it = m_w_trigger.find(stream_id); it != m_w_trigger.end())
         {
             it->second.resume();
-            m_w_trigger.erase(it);
         }
         return 0;
     }
@@ -313,6 +360,13 @@ namespace coev::nghttp2
                 auto &req = it->second;
                 if (auto it_r = routers.find(req.path()); it_r != routers.end())
                 {
+                    auto err = push_promise(stream_id, nullptr, 0);
+                    if (err < 0)
+                    {
+                        LOG_CORE("push promise failed %d %s\n", err, nghttp2_strerror(err));
+                        __close();
+                        co_return INVALID;
+                    }
                     LOG_CORE("stream_id %d received END_STREAM flag\n", req.id());
                     m_tasks << it_r->second(*this, req);
                 }
@@ -320,17 +374,19 @@ namespace coev::nghttp2
         }
         co_return 0;
     }
-    awaitable<int, ng_request> ng_session::wait_for_stream_end(int stream_id)
+    awaitable<ng_response> ng_session::wait_for_stream_end(int stream_id)
     {
         co_await m_w_trigger[stream_id].suspend();
-        ng_request res;
-        if (auto it = m_requests.find(stream_id); it != m_requests.end())
+        m_w_trigger.erase(stream_id);
+
+        ng_response res;
+        if (auto it = m_responses.find(stream_id); it != m_responses.end())
         {
             res = std::move(it->second);
-            m_requests.erase(it);
-            co_return {0, std::move(res)};
+            m_responses.erase(it);
+            co_return res;
         }
-        co_return {INVALID, std::move(res)};
+        co_return res;
     }
     int ng_session::send_server_settings()
     {
@@ -367,7 +423,7 @@ namespace coev::nghttp2
     int ng_session::__send()
     {
         auto r = nghttp2_session_send(m_session);
-        if (r < 0)
+        if (r != 0)
         {
             LOG_ERR("send failed %d %d %s\n", errno, r, nghttp2_strerror(r));
             __close();
@@ -382,5 +438,13 @@ namespace coev::nghttp2
     void ng_session::remove_request(int32_t stream_id)
     {
         m_requests.erase(stream_id);
+    }
+    ng_response &ng_session::get_response(int32_t stream_id)
+    {
+        return m_responses[stream_id];
+    }
+    void ng_session::remove_response(int32_t stream_id)
+    {
+        m_responses.erase(stream_id);
     }
 }

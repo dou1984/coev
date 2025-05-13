@@ -66,7 +66,6 @@ namespace coev
 				{
 					co_await _end.suspend([]()
 										  { return true; }, []() {});
-					co_await sleep_for(6);
 					local<co_deliver>::instance().stop();
 				}();
 				co_start << [=, &_end]() -> awaitable<void>

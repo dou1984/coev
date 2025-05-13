@@ -32,6 +32,7 @@ namespace coev
     io_connect::io_connect()
     {
         __init_connect();
+        m_type |= IO_CLIENT;
     }
     int io_connect::__add_connect()
     {

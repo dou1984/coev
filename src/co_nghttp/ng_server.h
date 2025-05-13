@@ -15,7 +15,6 @@ namespace coev::nghttp2
 
     protected:
         awaitable<int> __dispatch(int fd, SSL_CTX *_mgr);
-        awaitable<int> __routing(int32_t stream_id, ng_session &ctx);
 
     private:
         ng_session::routers m_routers;
