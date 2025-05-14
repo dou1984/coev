@@ -21,7 +21,9 @@ namespace coev
 		status = std::move(o.status);
 		return *this;
 	}
-
+	HttpRequest::request::~request()
+	{
+	}
 	int HttpRequest::on_message_begin(http_parser *_)
 	{
 		auto _this = static_cast<HttpRequest *>(_);
@@ -32,7 +34,7 @@ namespace coev
 	{
 		auto _this = static_cast<HttpRequest *>(_);
 		_this->clear();
-		LOG_CORE("<header end>%.*s\n", (int)_this->m_value.size(), _this->m_value.data());
+		LOG_CORE("<header end>%ld\n", _this->m_value.size());
 		_this->m_header_waiter.resume();
 		return 0;
 	}
@@ -41,7 +43,7 @@ namespace coev
 		auto _this = static_cast<HttpRequest *>(_);
 		_this->m_finish_waiter.resume_next_loop();
 		_this->clear();
-		LOG_CORE("<message end>%.*s\n", (int)_this->m_value.size(), _this->m_value.data());
+		LOG_CORE("<message end>\n");
 		return 0;
 	}
 	int HttpRequest::on_url(http_parser *_, const char *at, size_t length)
@@ -49,7 +51,7 @@ namespace coev
 		auto _this = static_cast<HttpRequest *>(_);
 		_this->m_value = std::string_view(at, length);
 		_this->m_url_waiter.resume();
-		LOG_CORE("<url>%.*s\n", (int)_this->m_value.size(), _this->m_value.data());
+		LOG_CORE("<url>%ld\n", _this->m_value.size());
 		return 0;
 	}
 	int HttpRequest::on_status(http_parser *_, const char *at, size_t length)
@@ -57,7 +59,7 @@ namespace coev
 		auto _this = static_cast<HttpRequest *>(_);
 		_this->m_value = std::string_view(at, length);
 		_this->m_status_waiter.resume();
-		LOG_CORE("<status>%.*s\n", (int)_this->m_value.size(), _this->m_value.data());
+		LOG_CORE("<status>%ld\n", _this->m_value.size());
 		return 0;
 	}
 	int HttpRequest::on_header_field(http_parser *_, const char *at, size_t length)
@@ -72,7 +74,7 @@ namespace coev
 		auto _this = static_cast<HttpRequest *>(_);
 		_this->m_value = std::string_view(at, length);
 		_this->m_header_waiter.resume();
-		LOG_CORE("<header>:%.*s:%.*s\n", (int)_this->m_key.size(), _this->m_key.data(), (int)_this->m_value.size(), _this->m_value.data());
+		LOG_CORE("<header>:%ld:%ld\n", _this->m_key.size(), _this->m_value.size());
 		return 0;
 	}
 	int HttpRequest::on_body(http_parser *_, const char *at, size_t length)

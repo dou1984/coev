@@ -13,7 +13,6 @@
 #include "co_task.h"
 #include "sleep_for.h"
 #include "co_deliver.h"
-#include "local_resume.h"
 
 namespace coev
 {
