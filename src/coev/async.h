@@ -24,7 +24,7 @@ namespace coev
             awaitable<uint64_t> suspend(const std::function<bool()> &, const std::function<void()> &);
             bool resume(const std::function<void()> &);
             bool resume(uint64_t value = 0);
-            bool deliver(uint64_t value = 0);
+            bool deliver(uint64_t value = 0);            
             std::mutex &lock() { return m_mutex; }
 
         private:

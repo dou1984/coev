@@ -32,7 +32,7 @@ namespace coev
 	{
 		auto _this = static_cast<HttpRequest *>(_);
 		_this->clear();
-		LOG_CORE("<header end>%s\n", _this->m_value.data());
+		LOG_CORE("<header end>%.*s\n", (int)_this->m_value.size(), _this->m_value.data());
 		_this->m_header_waiter.resume();
 		return 0;
 	}
@@ -41,7 +41,7 @@ namespace coev
 		auto _this = static_cast<HttpRequest *>(_);
 		_this->m_finish_waiter.resume_next_loop();
 		_this->clear();
-		LOG_CORE("<message end>%s\n", _this->m_value.data());
+		LOG_CORE("<message end>%.*s\n", (int)_this->m_value.size(), _this->m_value.data());
 		return 0;
 	}
 	int HttpRequest::on_url(http_parser *_, const char *at, size_t length)
@@ -49,7 +49,7 @@ namespace coev
 		auto _this = static_cast<HttpRequest *>(_);
 		_this->m_value = std::string_view(at, length);
 		_this->m_url_waiter.resume();
-		LOG_CORE("<url>%s\n", _this->m_value.data());
+		LOG_CORE("<url>%.*s\n", (int)_this->m_value.size(), _this->m_value.data());
 		return 0;
 	}
 	int HttpRequest::on_status(http_parser *_, const char *at, size_t length)
@@ -57,7 +57,7 @@ namespace coev
 		auto _this = static_cast<HttpRequest *>(_);
 		_this->m_value = std::string_view(at, length);
 		_this->m_status_waiter.resume();
-		LOG_CORE("<status>%s\n", _this->m_value.data());
+		LOG_CORE("<status>%.*s\n", (int)_this->m_value.size(), _this->m_value.data());
 		return 0;
 	}
 	int HttpRequest::on_header_field(http_parser *_, const char *at, size_t length)
@@ -72,7 +72,7 @@ namespace coev
 		auto _this = static_cast<HttpRequest *>(_);
 		_this->m_value = std::string_view(at, length);
 		_this->m_header_waiter.resume();
-		LOG_CORE("<header>:%s:%s\n", _this->m_key.data(), _this->m_value.data());
+		LOG_CORE("<header>:%.*s:%.*s\n", (int)_this->m_key.size(), _this->m_key.data(), (int)_this->m_value.size(), _this->m_value.data());
 		return 0;
 	}
 	int HttpRequest::on_body(http_parser *_, const char *at, size_t length)
@@ -110,18 +110,25 @@ namespace coev
 	awaitable<int, HttpRequest::request> HttpRequest::get_request(io_context &io)
 	{
 		co_task _task;
-		_task << finished();
-		_task << sleep_for(m_timeout);
+		auto _finished = _task << finished();
+		auto _timeout = _task << sleep_for(m_timeout);
 		_task << get_url();
 		_task << get_headers();
 		_task << get_body();
 		_task << parse(io);
-		int r = 0;
-		while ((r = co_await _task.wait()) >= 2)
+		do
 		{
-			LOG_CORE("result: %d\n", r);
-		}
-		co_return {r, std::move(m_request)};
+			auto r = co_await _task.wait();
+			LOG_CORE("co_await result: %ld\n", r);
+			if (r == _finished)
+			{
+				co_return {0, std::move(m_request)};
+			}
+			else if (r == _timeout)
+			{
+				co_return {INVALID, std::move(m_request)};
+			}
+		} while (true);
 	}
 	awaitable<void> HttpRequest::get_url()
 	{

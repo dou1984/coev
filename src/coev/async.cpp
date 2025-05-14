@@ -66,7 +66,8 @@ namespace coev
 		{
 			if (auto c = __ev(_set); c != nullptr)
 			{
-				local<coev::async>::instance().push_back(c);
+				// local<coev::async>::instance().push_back(c);
+				c->resume();
 				return true;
 			}
 			return false;
@@ -76,7 +77,8 @@ namespace coev
 			if (auto c = __ev(__empty_set); c != nullptr)
 			{
 				__set_reserved(*c, value);
-				local<coev::async>::instance().push_back(c);
+				// local<coev::async>::instance().push_back(c);
+				c->resume();
 				return true;
 			}
 			return false;
@@ -87,9 +89,17 @@ namespace coev
 			if (auto c = __ev(__empty_set); c != nullptr)
 			{
 				__set_reserved(*c, value);
-				co_deliver::resume(c);
+				if (c->id() == gtid())
+				{
+					c->resume();
+				}
+				else
+				{
+					co_deliver::resume(c);
+				}
 				return true;
 			}
+			return false;
 		}
 	}
 }

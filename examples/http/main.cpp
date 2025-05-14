@@ -61,18 +61,15 @@ awaitable<void> co_router()
 				LOG_DBG("parse http request error %s\n", req.status.c_str());
 				co_return;
 			}
-			std::cout << "url:" << req.url << std::endl;
+			LOG_DBG("url:%s\n", req.url.c_str());
 			for (auto &it : req.headers)
 			{
 				std::cout << "header:" << it.first << ":" << it.second << std::endl;
 			}
-			std::cout << "body:" << req.body << std::endl;
+			LOG_DBG("body:%ld\n", req.body.size());
 
-			LOG_DBG("recv http request from %s:%d\n", h.ip, h.port);
 			co_await echo(io);
 
-			io.close();
-			LOG_DBG("close socket %d\n", fd);
 		}();
 	}
 }

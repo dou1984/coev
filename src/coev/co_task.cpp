@@ -68,7 +68,7 @@ namespace coev
 			assert(_promise->m_tid == gtid());
 			std::lock_guard<std::mutex> _(m_waiter.lock());
 			_promise->m_task = this;
-			auto id = m_id++;
+			auto id = ++m_id;
 			m_promises.emplace(_promise, id);
 			return id;
 		};
@@ -93,15 +93,22 @@ namespace coev
 	}
 	int co_task::unload(promise *_promise)
 	{
-		std::lock_guard<std::mutex> _(m_waiter.lock());
-		if (auto it = m_promises.find(_promise); it != m_promises.end())
+		auto id = [this, _promise]() -> uint64_t
 		{
-			LOG_CORE("co_task: done %ld %p\n", _promise->m_tid, _promise);
-			auto id = it->second;
-			m_promises.erase(it);
-			m_waiter.deliver(id);
+			std::lock_guard<std::mutex> _(m_waiter.lock());
+			if (auto it = m_promises.find(_promise); it != m_promises.end())
+			{
+				auto id = it->second;
+				m_promises.erase(it);
+				LOG_CORE("co_task: done %ld %ld\n", _promise->m_tid, id);
+				return id;
+			}
 			return 0;
+		}();
+		if (id != 0)
+		{
+			m_waiter.deliver(id);
 		}
-		return INVALID;
+		return id;
 	}
 }
