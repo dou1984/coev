@@ -33,8 +33,8 @@ namespace coev
 
 	public:
 		HttpRequest();
-		virtual ~HttpRequest() = default;
-		awaitable<int, request> get_request(io_context &io);
+		virtual ~HttpRequest() = default;		
+		awaitable<int> get_request(io_context &io, HttpRequest::request& request);
 
 		awaitable<void> parse(io_context &io);
 		awaitable<void> get_url();

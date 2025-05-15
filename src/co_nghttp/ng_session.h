@@ -30,7 +30,7 @@ namespace coev::nghttp2
         int submit_request(nghttp2_nv *, int head_size, const char *body, int length);
         int submit_response(int stream_id, nghttp2_nv *, int head_size, const char *body, int length);
         int push_promise(int stream_id, nghttp2_nv *, int head_size);
-        int error_reply(int32_t id, int error_code);
+        int reply_error(int32_t id, int error_code);
 
     public:
         int set_routers(const routers &);

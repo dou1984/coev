@@ -61,17 +61,17 @@ namespace coev
 			[=]()
 			{
 				guard::async _end;
-				co_start << [&_end]() -> awaitable<void>
+				co_start << [](guard::async &_end) -> awaitable<void>
 				{
 					co_await _end.suspend([]()
 										  { return true; }, []() {});
 					local<co_deliver>::instance().stop();
-				}();
-				co_start << [=, &_end]() -> awaitable<void>
+				}(_end);
+				co_start << [](const func &_f, guard::async &_end) -> awaitable<void>
 				{
 					co_await _f();
 					_end.deliver();
-				}();
+				}(_f, _end);
 				cosys::start();
 			});
 	}

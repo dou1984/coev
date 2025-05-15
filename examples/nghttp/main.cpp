@@ -67,6 +67,7 @@ awaitable<void> proc_client()
 
     LOG_INFO("status: %s body:%s\n", res.header(":status").c_str(), res.body().c_str());
 
+    
     cli.close();
     co_return;
 }

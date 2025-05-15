@@ -59,7 +59,6 @@ namespace coev::nghttp2
     {
         auto _this = static_cast<ng_session *>(user_data);
         auto cache = (__cache *)source->ptr;
-        LOG_CORE("__read_callback %ld bytes length %d from %s\n", length, cache->m_length, cache->m_data);
         if (cache->m_length == 0)
         {
             *data_flags |= NGHTTP2_DATA_FLAG_EOF;
@@ -116,12 +115,18 @@ namespace coev::nghttp2
             break;
         case NGHTTP2_GOAWAY:
         case NGHTTP2_RST_STREAM:
-            _this->remove_request(stream_id);
+            if (_this->__is_client())
+            {
+                _this->remove_response(stream_id);
+            }
+            else
+            {
+                _this->remove_request(stream_id);
+            }
+            _this->__processing(stream_id);
             break;
         case NGHTTP2_SETTINGS:
-            break;
         case NGHTTP2_PUSH_PROMISE:
-            break;
         default:
             break;
         }
@@ -192,10 +197,6 @@ namespace coev::nghttp2
     {
         auto _this = static_cast<ng_session *>(user_data);
         LOG_CORE("recv data chunk %.*s flags:%d\n", (int)len, data, flags);
-        if (flags & NGHTTP2_FLAG_END_STREAM)
-        {
-            LOG_CORE("stream_id %d received END_STREAM flag\n", stream_id);
-        }
         if (_this->__is_client())
         {
             auto &res = _this->get_response(stream_id);
@@ -214,7 +215,7 @@ namespace coev::nghttp2
         LOG_CORE("__on_stream_close_callback stream_id %d error %d\n", stream_id, error_code);
         if (_this->__is_client())
         {
-            _this->remove_response(stream_id);
+            // _this->remove_response(stream_id);
         }
         else
         {
@@ -294,7 +295,7 @@ namespace coev::nghttp2
         }
         return 0;
     }
-    int ng_session::error_reply(int32_t stream_id, int error_code)
+    int ng_session::reply_error(int32_t stream_id, int error_code)
     {
         auto err = nghttp2_submit_rst_stream(m_session, NGHTTP2_FLAG_NONE, stream_id, error_code);
         if (err < 0)
@@ -345,7 +346,7 @@ namespace coev::nghttp2
         }
         else if (auto it = m_w_trigger.find(stream_id); it != m_w_trigger.end())
         {
-            it->second.resume();
+            it->second.resume_next_loop();
         }
         return 0;
     }
@@ -357,7 +358,7 @@ namespace coev::nghttp2
             auto stream_id = nghttp2_session_get_last_proc_stream_id(m_session);
             if (auto it = m_requests.find(stream_id); it != m_requests.end())
             {
-                auto &req = it->second;
+                auto req = std::move(it->second);
                 if (auto it_r = routers.find(req.path()); it_r != routers.end())
                 {
                     auto err = push_promise(stream_id, nullptr, 0);

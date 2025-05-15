@@ -5,6 +5,7 @@
  *	All rights reserved.
  *
  */
+#include <bitset>
 #include "HttpRequest.h"
 
 namespace coev
@@ -23,6 +24,7 @@ namespace coev
 	}
 	HttpRequest::request::~request()
 	{
+		LOG_CORE("release %p\n", this);
 	}
 	int HttpRequest::on_message_begin(http_parser *_)
 	{
@@ -34,7 +36,7 @@ namespace coev
 	{
 		auto _this = static_cast<HttpRequest *>(_);
 		_this->clear();
-		LOG_CORE("<header end>%ld\n", _this->m_value.size());
+		LOG_CORE("header end:%s\n", _this->m_value.data());
 		_this->m_header_waiter.resume();
 		return 0;
 	}
@@ -42,8 +44,9 @@ namespace coev
 	{
 		auto _this = static_cast<HttpRequest *>(_);
 		_this->m_finish_waiter.resume_next_loop();
+		// _this->m_finish_waiter.resume();
 		_this->clear();
-		LOG_CORE("<message end>\n");
+		LOG_CORE("message end\n");
 		return 0;
 	}
 	int HttpRequest::on_url(http_parser *_, const char *at, size_t length)
@@ -51,7 +54,7 @@ namespace coev
 		auto _this = static_cast<HttpRequest *>(_);
 		_this->m_value = std::string_view(at, length);
 		_this->m_url_waiter.resume();
-		LOG_CORE("<url>%ld\n", _this->m_value.size());
+		LOG_CORE("url:%s\n", _this->m_value.data());
 		return 0;
 	}
 	int HttpRequest::on_status(http_parser *_, const char *at, size_t length)
@@ -59,7 +62,7 @@ namespace coev
 		auto _this = static_cast<HttpRequest *>(_);
 		_this->m_value = std::string_view(at, length);
 		_this->m_status_waiter.resume();
-		LOG_CORE("<status>%ld\n", _this->m_value.size());
+		LOG_CORE("status:%s\n", _this->m_value.data());
 		return 0;
 	}
 	int HttpRequest::on_header_field(http_parser *_, const char *at, size_t length)
@@ -74,7 +77,7 @@ namespace coev
 		auto _this = static_cast<HttpRequest *>(_);
 		_this->m_value = std::string_view(at, length);
 		_this->m_header_waiter.resume();
-		LOG_CORE("<header>:%ld:%ld\n", _this->m_key.size(), _this->m_value.size());
+		LOG_CORE("header:%s:%s\n", _this->m_key.data(), _this->m_value.data());
 		return 0;
 	}
 	int HttpRequest::on_body(http_parser *_, const char *at, size_t length)
@@ -82,7 +85,7 @@ namespace coev
 		auto _this = static_cast<HttpRequest *>(_);
 		_this->m_value = std::string_view(at, length);
 		_this->m_body_waiter.resume();
-		LOG_CORE("<message>%s\n", _this->m_value.data());
+		LOG_CORE("message:%s\n", _this->m_value.data());
 		return 0;
 	}
 	http_parser_settings HttpRequest::m_settings = {
@@ -109,7 +112,7 @@ namespace coev
 		m_key = "";
 		m_value = "";
 	}
-	awaitable<int, HttpRequest::request> HttpRequest::get_request(io_context &io)
+	awaitable<int> HttpRequest::get_request(io_context &io, HttpRequest::request &request)
 	{
 		co_task _task;
 		auto _finished = _task << finished();
@@ -122,13 +125,15 @@ namespace coev
 		{
 			auto r = co_await _task.wait();
 			LOG_CORE("co_await result: %ld\n", r);
+			if (r == _timeout)
+			{
+				co_return INVALID;
+			}
 			if (r == _finished)
 			{
-				co_return {0, std::move(m_request)};
-			}
-			else if (r == _timeout)
-			{
-				co_return {INVALID, std::move(m_request)};
+				LOG_CORE("finished\n")
+				request = std::move(m_request);
+				co_return 0;
 			}
 		} while (true);
 	}

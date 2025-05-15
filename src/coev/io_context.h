@@ -42,9 +42,9 @@ namespace coev
 		int __initial();
 		int __close();
 		bool __valid() const;
-		bool __invalid()const;
+		bool __invalid() const;
 		int __del_write();
-		bool __is_client()const;
+		bool __is_client() const;
 		static void cb_write(struct ev_loop *loop, struct ev_io *w, int revents);
 		static void cb_read(struct ev_loop *loop, struct ev_io *w, int revents);
 	};

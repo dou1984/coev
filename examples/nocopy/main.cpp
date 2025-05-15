@@ -16,13 +16,13 @@ public:
 
 awaitable<void> co_nocopy()
 {
-    auto f = []() -> awaitable<nocopy, nocopy>
+    auto f = []() -> awaitable<nocopy>
     {
-        nocopy a, b;
-        co_return {std::move(a), std::move(b)};
+        nocopy a;
+        co_return std::move(a);
     };
 
-    auto [x, y] = co_await f();
+    auto x = co_await f();
 
     co_return;
 }

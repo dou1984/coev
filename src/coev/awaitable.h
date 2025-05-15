@@ -19,13 +19,13 @@
 
 namespace coev
 {
-	template <class T, class... R>
+	template <class T>
 	class awaitable final
 	{
 	public:
-		struct promise_type : std::conditional_t<(sizeof...(R) > 0), promise_value<std::tuple<T, R...>>, std::conditional_t<std::is_void_v<T>, promise_void, promise_value<T>>>
+		struct promise_type : std::conditional_t<std::is_void_v<T>, promise_void, promise_value<T>>
 		{
-			awaitable<T, R...> get_return_object()
+			awaitable<T> get_return_object()
 			{
 				return {std::coroutine_handle<promise_type>::from_promise(*this)};
 			}

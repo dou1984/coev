@@ -59,22 +59,6 @@ awaitable<int> co_awaitable_resume()
 	co_return 0;
 }
 
-awaitable<int, float, int, int, double> co_awaiter_tuple()
-{
-	g.add();
-	g.done();
-
-	co_return {10, 20.0, 345, 6, 78.0};
-}
-
-awaitable<void> co_awaiter_tuple_ex()
-{
-	g.add();
-	g.done();
-
-	auto [a, b, c, d, e] = co_await co_awaiter_tuple();
-	LOG_DBG("%d %f %d %d %f\n", a, b, c, d, e);
-}
 awaitable<void> co_await_destroy()
 {
 	g.add();
@@ -107,10 +91,7 @@ int main()
 			{
 				co_await wait_for_all(co_awaitable_sleep(), co_awaitable_resume());
 				LOG_DBG("co_awaitable_sleep co_awaitable_resume finish\n");
-			})
-		.start(
-			[]() -> awaitable<void>
-			{ co_await co_awaiter_tuple_ex(); })
+			})		
 		.start(co_await_destroy)
 		.start(
 			[]() -> awaitable<void>

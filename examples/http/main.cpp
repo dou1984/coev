@@ -55,7 +55,8 @@ awaitable<void> co_router()
 		{
 			io_context io(fd);
 			HttpRequest r;
-			auto [ok, req] = co_await r.get_request(io);
+			HttpRequest::request req;
+			auto ok = co_await r.get_request(io, req);
 			if (ok != 0)
 			{
 				LOG_DBG("parse http request error %s\n", req.status.c_str());
@@ -69,7 +70,9 @@ awaitable<void> co_router()
 			LOG_DBG("body:%ld\n", req.body.size());
 
 			co_await echo(io);
+			LOG_DBG("echo end\n");
 
+			co_return;
 		}();
 	}
 }
