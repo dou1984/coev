@@ -15,10 +15,10 @@ namespace coev::guard
 {
 	class co_mutex final
 	{
-		std::atomic_int m_flag{0};
+		async m_waiter;
+		int m_flag;
 
 	public:
-		async m_waiter;
 		awaitable<void> lock();
 		bool unlock();
 	};

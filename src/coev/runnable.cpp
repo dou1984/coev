@@ -16,6 +16,7 @@
 
 namespace coev
 {
+
 	void ingore_signal(int sign)
 	{
 		struct sigaction s = {};
@@ -58,20 +59,12 @@ namespace coev
 	void runnable::__add(const func &_f)
 	{
 		m_list.emplace_back(
-			[=]()
+			[=, this]()
 			{
-				guard::async _end;
-				co_start << [](guard::async &_end) -> awaitable<void>
-				{
-					co_await _end.suspend([]()
-										  { return true; }, []() {});
-					local<co_deliver>::instance().stop();
-				}(_end);
-				co_start << [](const func &_f, guard::async &_end) -> awaitable<void>
+				co_start << [=, this]() -> awaitable<void>
 				{
 					co_await _f();
-					_end.deliver();
-				}(_f, _end);
+				}();
 				cosys::start();
 			});
 	}

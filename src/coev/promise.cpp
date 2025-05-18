@@ -21,6 +21,10 @@ namespace coev
             m_caller = nullptr;
             _caller.resume();
         }
+        else
+        {
+            assert(false);
+        }
     }
     void promise::unhandled_exception()
     {

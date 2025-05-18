@@ -3,12 +3,16 @@
 #include "local.h"
 namespace coev
 {
-	extern void __set_reserved(co_event &, uint64_t x);
-	extern uint64_t __get_reserved(co_event &);
+	extern void __ev_set_reserved(co_event &, uint64_t x);
+	extern uint64_t __ev_get_reserved(co_event &);
 	const std::function<void()> __empty_set = []() {};
 	co_event async::suspend()
 	{
 		return co_event(this);
+	}
+	co_event async::suspend_util_next_loop()
+	{
+		return co_event(&local<coev::async>::instance());
 	}
 	bool async::resume()
 	{
@@ -46,17 +50,17 @@ namespace coev
 			_set();
 			return static_cast<co_event *>(pop_front());
 		}
-		awaitable<uint64_t> async::suspend(const std::function<bool()> &suppend, const std::function<void()> &_get)
+		awaitable<uint64_t> async::suspend(const std::function<bool()> &_suppend, const std::function<void()> &_get)
 		{
 			uint64_t value = 0;
 			m_mutex.lock();
-			if (suppend())
+			if (_suppend())
 			{
 				co_event ev(this);
 				m_mutex.unlock();
 				co_await ev;
 				m_mutex.lock();
-				value = __get_reserved(ev);
+				value = __ev_get_reserved(ev);
 			}
 			_get();
 			m_mutex.unlock();
@@ -66,7 +70,6 @@ namespace coev
 		{
 			if (auto c = __ev(_set); c != nullptr)
 			{
-				// local<coev::async>::instance().push_back(c);
 				c->resume();
 				return true;
 			}
@@ -76,8 +79,7 @@ namespace coev
 		{
 			if (auto c = __ev(__empty_set); c != nullptr)
 			{
-				__set_reserved(*c, value);
-				// local<coev::async>::instance().push_back(c);
+				__ev_set_reserved(*c, value);
 				c->resume();
 				return true;
 			}
@@ -88,7 +90,7 @@ namespace coev
 		{
 			if (auto c = __ev(__empty_set); c != nullptr)
 			{
-				__set_reserved(*c, value);
+				__ev_set_reserved(*c, value);
 				if (c->id() == gtid())
 				{
 					c->resume();

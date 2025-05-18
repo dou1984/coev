@@ -18,19 +18,17 @@ std::atomic_int g_total = {0};
 
 awaitable<void> test_go()
 {
-
 	auto tid = gtid();
-	auto now = std::chrono::system_clock::now();
-	for (int i = 0; i < 100; i++)
+
+	for (int i = 0; i < 200; i++)
 	{
 		co_await g_mutex.lock();
 		++g_total;
 		g_mutex.unlock();
 	}
-	auto r = std::chrono::system_clock::now() - now;
-	LOG_DBG("before sleep tid %ld %ld total:%d\n", tid, gtid(), g_total.load());
-	co_await sleep_for(2);
-	// LOG_DBG("after sleep tid %ld %ld total:%d \n", tid, gtid(), g_total.load());
+	LOG_DBG("tid:%ld:%ld total:%d \n", tid, gtid(), g_total.load());
+	co_await sleep_for(1);
+
 	co_return;
 }
 

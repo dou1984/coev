@@ -11,11 +11,11 @@
 
 namespace coev
 {
-	void __set_reserved(co_event &e, uint64_t x)
+	void __ev_set_reserved(co_event &e, uint64_t x)
 	{
 		e.m_reserved = x;
 	}
-	uint64_t __get_reserved(co_event &e)
+	uint64_t __ev_get_reserved(co_event &e)
 	{
 		return e.m_reserved;
 	}
@@ -44,7 +44,6 @@ namespace coev
 	}
 	void co_event::await_suspend(std::coroutine_handle<> _awaitable)
 	{
-		// local_resume();
 		m_caller = _awaitable;
 		if (m_status == CORO_INIT)
 		{
@@ -63,6 +62,12 @@ namespace coev
 	void co_event::resume()
 	{
 		LOG_CORE("co_event resume m_caller:%p\n", m_caller ? m_caller.address() : 0);
+
+		while (m_status == CORO_INIT)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
+
 		if (m_status == CORO_INIT)
 		{
 			m_status = CORO_RESUMED;
@@ -84,6 +89,10 @@ namespace coev
 			auto _caller = m_caller;
 			m_caller = nullptr;
 			_caller.resume();
+		}
+		else
+		{
+			assert(false);
 		}
 	}
 }

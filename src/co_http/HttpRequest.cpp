@@ -43,8 +43,7 @@ namespace coev
 	int HttpRequest::on_message_complete(http_parser *_)
 	{
 		auto _this = static_cast<HttpRequest *>(_);
-		_this->m_finish_waiter.resume_next_loop();
-		// _this->m_finish_waiter.resume();
+		_this->m_finish_waiter.resume_next_loop();		
 		_this->clear();
 		LOG_CORE("message end\n");
 		return 0;
@@ -114,13 +113,14 @@ namespace coev
 	}
 	awaitable<int> HttpRequest::get_request(io_context &io, HttpRequest::request &request)
 	{
+
 		co_task _task;
 		auto _finished = _task << finished();
 		auto _timeout = _task << sleep_for(m_timeout);
 		_task << get_url();
 		_task << get_headers();
 		_task << get_body();
-		_task << parse(io);
+		co_start << parse(io);
 		do
 		{
 			auto r = co_await _task.wait();
@@ -182,7 +182,7 @@ namespace coev
 			if (r == 0)
 			{
 				break;
-			}
+			}			
 		}
 	}
 }
