@@ -8,6 +8,7 @@
 #include <thread>
 #include "co_event.h"
 #include "local_resume.h"
+#include "r.h"
 
 namespace coev
 {
@@ -39,24 +40,12 @@ namespace coev
 	}
 	bool co_event::await_ready()
 	{
-		// assert(m_status == CORO_INIT || m_status == CORO_RESUMED);
-		// return m_status == CORO_RESUMED;
+		
 		return m_status.load(std::memory_order_acq_rel);
 	}
 	void co_event::await_suspend(std::coroutine_handle<> _awaitable)
 	{
-		m_caller = _awaitable;
-		/*
-		if (m_status == CORO_INIT)
-		{
-			m_status = CORO_SUSPEND;
-		}
-		else if (m_status == CORO_RESUMED)
-		{
-			m_status = CORO_FINISHED;
-			__resume();
-		}
-		*/
+		m_caller = _awaitable;		
 		int e0 = CORO_INIT;
 		int e1 = CORO_RESUMED;
 		if (m_status.compare_exchange_strong(e0, CORO_SUSPEND, std::memory_order_acq_rel, std::memory_order_acq_rel))
@@ -74,23 +63,6 @@ namespace coev
 	void co_event::resume()
 	{
 		LOG_CORE("co_event resume m_caller:%p\n", m_caller ? m_caller.address() : 0);
-		/*
-		while (m_status == CORO_INIT)
-		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		}
-		*/
-		/*
-		if (m_status == CORO_INIT)
-		{
-			m_status = CORO_RESUMED;
-		}
-		else if (m_status == CORO_SUSPEND)
-		{
-			m_status = CORO_FINISHED;
-			__resume();
-		}
-		*/
 		int e0 = CORO_INIT;
 		int e1 = CORO_SUSPEND;
 		if (m_status.compare_exchange_strong(e0, CORO_RESUMED, std::memory_order_acq_rel, std::memory_order_acq_rel))
@@ -109,9 +81,7 @@ namespace coev
 	{
 		if (m_caller.address() && !m_caller.done())
 		{
-			auto _caller = m_caller;
-			m_caller = nullptr;
-			_caller.resume();
+			R(m_caller).resume();
 		}
 		else
 		{

@@ -6,7 +6,7 @@
 namespace coev::nghttp2
 {
 
-    class ng_server : public coev::tcp::server
+    class ng_server : public tcp::server
     {
     public:
         ng_server(const char *url);

@@ -9,7 +9,7 @@ if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-project(co_http)
+project(coev_http)
 
 aux_source_directory(. SRC_DIR)
 

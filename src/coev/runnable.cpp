@@ -59,9 +59,9 @@ namespace coev
 	void runnable::__add(const func &_f)
 	{
 		m_list.emplace_back(
-			[=, this]()
+			[=]()
 			{
-				co_start << [=, this]() -> awaitable<void>
+				co_start << [=]() -> awaitable<void>
 				{
 					co_await _f();
 				}();

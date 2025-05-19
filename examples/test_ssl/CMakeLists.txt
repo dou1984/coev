@@ -12,4 +12,4 @@ project(test_ssl)
 aux_source_directory(./ SRC_DIR)
 
 add_library(${PROJECT_NAME} STATIC ${SRC_DIR})
-target_link_libraries(${PROJECT_NAME} co_ssl coev ssl crypto ev pthread)
+target_link_libraries(${PROJECT_NAME} coev_ssl coev ssl crypto ev pthread)

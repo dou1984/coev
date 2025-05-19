@@ -6,114 +6,97 @@
  *
  */
 #include <bitset>
-#include "HttpRequest.h"
+#include "session.h"
 
-namespace coev
+namespace coev::http
 {
-	HttpRequest::request::request(request &&o)
+	int session::on_message_begin(http_parser *_)
 	{
-		*this = std::move(o);
-	}
-	const HttpRequest::request &HttpRequest::request::operator=(request &&o)
-	{
-		url = std::move(o.url);
-		headers = std::move(o.headers);
-		body = std::move(o.body);
-		status = std::move(o.status);
-		return *this;
-	}
-	HttpRequest::request::~request()
-	{
-		LOG_CORE("release %p\n", this);
-	}
-	int HttpRequest::on_message_begin(http_parser *_)
-	{
-		auto _this = static_cast<HttpRequest *>(_);
+		auto _this = static_cast<session *>(_);
 		_this->clear();
 		return 0;
 	}
-	int HttpRequest::on_headers_complete(http_parser *_)
+	int session::on_headers_complete(http_parser *_)
 	{
-		auto _this = static_cast<HttpRequest *>(_);
+		auto _this = static_cast<session *>(_);
 		_this->clear();
 		LOG_CORE("header end:%s\n", _this->m_value.data());
 		_this->m_header_waiter.resume();
 		return 0;
 	}
-	int HttpRequest::on_message_complete(http_parser *_)
+	int session::on_message_complete(http_parser *_)
 	{
-		auto _this = static_cast<HttpRequest *>(_);
-		_this->m_finish_waiter.resume_next_loop();		
+		auto _this = static_cast<session *>(_);
+		_this->m_finish_waiter.resume_next_loop();
 		_this->clear();
 		LOG_CORE("message end\n");
 		return 0;
 	}
-	int HttpRequest::on_url(http_parser *_, const char *at, size_t length)
+	int session::on_url(http_parser *_, const char *at, size_t length)
 	{
-		auto _this = static_cast<HttpRequest *>(_);
+		auto _this = static_cast<session *>(_);
 		_this->m_value = std::string_view(at, length);
 		_this->m_url_waiter.resume();
 		LOG_CORE("url:%s\n", _this->m_value.data());
 		return 0;
 	}
-	int HttpRequest::on_status(http_parser *_, const char *at, size_t length)
+	int session::on_status(http_parser *_, const char *at, size_t length)
 	{
-		auto _this = static_cast<HttpRequest *>(_);
+		auto _this = static_cast<session *>(_);
 		_this->m_value = std::string_view(at, length);
 		_this->m_status_waiter.resume();
 		LOG_CORE("status:%s\n", _this->m_value.data());
 		return 0;
 	}
-	int HttpRequest::on_header_field(http_parser *_, const char *at, size_t length)
+	int session::on_header_field(http_parser *_, const char *at, size_t length)
 	{
-		auto _this = static_cast<HttpRequest *>(_);
+		auto _this = static_cast<session *>(_);
 		_this->clear();
 		_this->m_key = std::string_view(at, length);
 		return 0;
 	}
-	int HttpRequest::on_header_value(http_parser *_, const char *at, size_t length)
+	int session::on_header_value(http_parser *_, const char *at, size_t length)
 	{
-		auto _this = static_cast<HttpRequest *>(_);
+		auto _this = static_cast<session *>(_);
 		_this->m_value = std::string_view(at, length);
 		_this->m_header_waiter.resume();
 		LOG_CORE("header:%s:%s\n", _this->m_key.data(), _this->m_value.data());
 		return 0;
 	}
-	int HttpRequest::on_body(http_parser *_, const char *at, size_t length)
+	int session::on_body(http_parser *_, const char *at, size_t length)
 	{
-		auto _this = static_cast<HttpRequest *>(_);
+		auto _this = static_cast<session *>(_);
 		_this->m_value = std::string_view(at, length);
 		_this->m_body_waiter.resume();
 		LOG_CORE("message:%s\n", _this->m_value.data());
 		return 0;
 	}
-	http_parser_settings HttpRequest::m_settings = {
-		.on_message_begin = HttpRequest::on_message_begin,
-		.on_url = HttpRequest::on_url,
-		.on_status = HttpRequest::on_status,
-		.on_header_field = HttpRequest::on_header_field,
-		.on_header_value = HttpRequest::on_header_value,
-		.on_headers_complete = HttpRequest::on_headers_complete,
-		.on_body = HttpRequest::on_body,
-		.on_message_complete = HttpRequest::on_message_complete,
+	http_parser_settings session::m_settings = {
+		.on_message_begin = session::on_message_begin,
+		.on_url = session::on_url,
+		.on_status = session::on_status,
+		.on_header_field = session::on_header_field,
+		.on_header_value = session::on_header_value,
+		.on_headers_complete = session::on_headers_complete,
+		.on_body = session::on_body,
+		.on_message_complete = session::on_message_complete,
 	};
 
-	HttpRequest::HttpRequest()
+	session::session()
 	{
 		http_parser_init(this, HTTP_REQUEST);
 	}
-	int HttpRequest::parse(const char *buffer, int size)
+	int session::parse(const char *buffer, int size)
 	{
 		return http_parser_execute(this, &m_settings, buffer, size);
 	}
-	void HttpRequest::clear()
+	void session::clear()
 	{
 		m_key = "";
 		m_value = "";
 	}
-	awaitable<int> HttpRequest::get_request(io_context &io, HttpRequest::request &request)
+	awaitable<int> session::get_request(io_context &io, request &request)
 	{
-
 		co_task _task;
 		auto _finished = _task << finished();
 		auto _timeout = _task << sleep_for(m_timeout);
@@ -137,12 +120,12 @@ namespace coev
 			}
 		} while (true);
 	}
-	awaitable<void> HttpRequest::get_url()
+	awaitable<void> session::get_url()
 	{
 		co_await m_url_waiter.suspend();
 		m_request.url = m_value;
 	}
-	awaitable<void> HttpRequest::get_headers()
+	awaitable<void> session::get_headers()
 	{
 		while (true)
 		{
@@ -154,21 +137,21 @@ namespace coev
 			m_request.headers.emplace(m_key, m_value);
 		}
 	}
-	awaitable<void> HttpRequest::get_body()
+	awaitable<void> session::get_body()
 	{
 		co_await m_body_waiter.suspend();
 		m_request.body = m_value;
 	}
-	awaitable<void> HttpRequest::get_status()
+	awaitable<void> session::get_status()
 	{
 		co_await m_status_waiter.suspend();
 		m_request.status = m_value;
 	}
-	awaitable<void> HttpRequest::finished()
+	awaitable<void> session::finished()
 	{
 		co_await m_finish_waiter.suspend();
 	}
-	awaitable<void> HttpRequest::parse(io_context &io)
+	awaitable<void> session::parse(io_context &io)
 	{
 		while (io)
 		{
@@ -182,7 +165,7 @@ namespace coev
 			if (r == 0)
 			{
 				break;
-			}			
+			}
 		}
 	}
 }

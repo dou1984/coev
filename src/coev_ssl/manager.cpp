@@ -1,9 +1,9 @@
 #include <coev/coev.h>
-#include "ssl_manager.h"
+#include "manager.h"
 
 namespace coev::ssl
 {
-    ssl_manager::ssl_manager(int method)
+    manager::manager(int method)
     {
         int err = SSL_load_error_strings();
         LOG_CORE("SSL_load_error_strings\n");
@@ -31,7 +31,7 @@ namespace coev::ssl
             exit(INVALID);
         }
     }
-    ssl_manager::~ssl_manager()
+    manager::~manager()
     {
         if (m_context)
         {
@@ -39,7 +39,7 @@ namespace coev::ssl
         }
     }
 
-    void ssl_manager::load_certificated(const char *cert_file)
+    void manager::load_certificated(const char *cert_file)
     {
         if (m_context == nullptr)
         {
@@ -53,7 +53,7 @@ namespace coev::ssl
             exit(INVALID);
         }
     }
-    void ssl_manager::load_privatekey(const char *key_file)
+    void manager::load_privatekey(const char *key_file)
     {
         if (m_context == nullptr)
         {
@@ -67,7 +67,7 @@ namespace coev::ssl
             exit(INVALID);
         }
     }
-    void ssl_manager::check_privatekey(const char *key_file)
+    void manager::check_privatekey(const char *key_file)
     {
         if (m_context == nullptr)
         {

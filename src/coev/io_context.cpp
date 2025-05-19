@@ -73,7 +73,6 @@ namespace coev
 	}
 	int io_context::__initial()
 	{
-		// LOG_CORE("fd:%d\n", m_fd);
 		if (m_fd != INVALID)
 		{
 			setNoBlock(m_fd, true);
@@ -104,11 +103,7 @@ namespace coev
 			ev_io_stop(m_loop, &m_write);
 		}
 		return 0;
-	}
-	bool io_context::__is_client() const
-	{
-		return m_type & IO_CLIENT;
-	}
+	}	
 	io_context::~io_context()
 	{
 		__close();

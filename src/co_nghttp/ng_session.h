@@ -3,14 +3,14 @@
 #include <nghttp2/nghttp2.h>
 #include <openssl/ssl.h>
 #include <coev/coev.h>
-#include <co_ssl/co_ssl.h>
+#include <coev_ssl/ssl.h>
 #include "ng_request.h"
 #include "ng_response.h"
 
 namespace coev::nghttp2
 {
 
-    class ng_session : virtual protected coev::ssl::ssl_context
+    class ng_session : virtual protected ssl::ssl_context
     {
     public:
         using router = std::function<awaitable<int>(ng_session &, ng_request &)>;

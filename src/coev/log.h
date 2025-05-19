@@ -8,39 +8,15 @@
 #pragma once
 #include <stdio.h>
 #include <string.h>
-#include <chrono>
-#include <ctime>
 #include <mutex>
 
 #define PRINT(...) printf(__VA_ARGS__)
-#define LOG(LEVEL, ...)                                                  \
-	if (get_log_level() <= LEVEL)                                        \
-	{                                                                    \
-		std::lock_guard<std::mutex> _(get_log_mutex());                  \
-		{                                                                \
-			auto __now__ = std::chrono::system_clock::now();             \
-			auto __count__ =                                             \
-				std::chrono::duration_cast<std::chrono::nanoseconds>(    \
-					__now__.time_since_epoch())                          \
-					.count();                                            \
-			auto __tm__ = std::chrono::system_clock::to_time_t(__now__); \
-			auto __lt__ = std::localtime(&__tm__);                       \
-			auto __fl__ = strrchr(__FILE__, '/');                        \
-			__fl__ = __fl__ ? __fl__ + 1 : __FILE__;                     \
-			PRINT("[%d/%d/%d %02d:%02d:%02d.%ld %s][%s:%d][%s]",         \
-				  __lt__->tm_year + 1900,                                \
-				  __lt__->tm_mon + 1,                                    \
-				  __lt__->tm_mday,                                       \
-				  __lt__->tm_hour,                                       \
-				  __lt__->tm_min,                                        \
-				  __lt__->tm_sec,                                        \
-				  __count__ % 1000000000,                                \
-				  get_log_str(LEVEL),                                    \
-				  __fl__, __LINE__, __FUNCTION__);                       \
-		}                                                                \
-		{                                                                \
-			PRINT(__VA_ARGS__);                                          \
-		}                                                                \
+#define LOG(LEVEL, ...)                                         \
+	if (get_log_level() <= LEVEL)                               \
+	{                                                           \
+		std::lock_guard<std::mutex> _(get_log_mutex());         \
+		print_log_str(LEVEL, __FILE__, __FUNCTION__, __LINE__); \
+		PRINT(__VA_ARGS__);                                     \
 	}
 
 #define LOG_CORE(...) \
@@ -65,8 +41,10 @@ namespace coev
 		LOG_LEVEL_ERROR,
 		LOG_LEVEL_INFO,
 	};
+
+	void print_log_str(int, const char *, const char *, size_t);
 	int set_log_level(int);
 	int get_log_level();
 	std::mutex &get_log_mutex();
-	const char *get_log_str(int level);
+	const char *get_log_str(int _level);
 }

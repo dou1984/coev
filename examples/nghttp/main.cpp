@@ -6,8 +6,8 @@
 
 using namespace coev::nghttp2;
 using namespace coev;
-ssl::ssl_manager g_cli_mgr(ssl::ssl_manager::TLS_CLIENT);
-ssl::ssl_manager g_srv_mgr(ssl::ssl_manager::TLS_SERVER);
+ssl::manager g_cli_mgr(ssl::manager::TLS_CLIENT);
+ssl::manager g_srv_mgr(ssl::manager::TLS_SERVER);
 
 char hi[] = R"(helloworld)";
 

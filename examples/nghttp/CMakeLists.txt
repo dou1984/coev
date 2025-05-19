@@ -13,4 +13,4 @@ aux_source_directory(./ SRC_DIR)
 link_directories(/usr/local/lib64/ /usr/local/lib/)
 
 add_executable(${PROJECT_NAME} ${SRC_DIR})
-target_link_libraries(${PROJECT_NAME} co_nghttp co_ssl  nghttp2 coev ev pthread)
+target_link_libraries(${PROJECT_NAME} co_nghttp coev_ssl  nghttp2 coev ev pthread)

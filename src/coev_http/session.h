@@ -11,30 +11,16 @@
 #include <tuple>
 #include <http_parser.h>
 #include <coev/coev.h>
+#include "request.h"
 
-namespace coev
+namespace coev::http
 {
-
-	class HttpRequest : http_parser
+	class session : http_parser
 	{
 	public:
-		struct request
-		{
-			std::string url;
-			std::string body;
-			std::string status;
-			std::unordered_map<std::string, std::string> headers;
-			request() = default;
-			request(request &&o);
-			~request();
-			request(const request &o)=delete;
-			const request &operator=(request &&o);
-		};
-
-	public:
-		HttpRequest();
-		virtual ~HttpRequest() = default;		
-		awaitable<int> get_request(io_context &io, HttpRequest::request& request);
+		session();
+		virtual ~session() = default;
+		awaitable<int> get_request(io_context &io, request &request);
 
 		awaitable<void> parse(io_context &io);
 		awaitable<void> get_url();

@@ -7,6 +7,6 @@
  */
 #include "HttpServer.h"
 
-namespace coev
+namespace coev::http
 {
 }

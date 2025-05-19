@@ -91,7 +91,7 @@ namespace coev
 		}
 		return STRING_CLOSED;
 	}
-	Rediscli::RedisArray Rediscli::result_array()
+	RedisArray Rediscli::result_array()
 	{
 		if (m_reply->type == REDIS_REPLY_ARRAY)
 		{
@@ -228,7 +228,7 @@ namespace coev
 	{
 		return m_context != nullptr ? m_context->c.fd : INVALID;
 	}
-	Rediscli::Rediscli(const Redisconf& conf)
+	Rediscli::Rediscli(const Redisconf &conf)
 	{
 		m_tid = gtid();
 		m_ip = conf.m_ip;
@@ -257,11 +257,4 @@ namespace coev
 		return query(message.c_str());
 	}
 
-	Rediscli::RedisArray::RedisArray(redisReply **element, size_t elements) : m_element(element), m_elements(elements)
-	{
-		if (m_elements > INT64_MAX)
-		{
-			throw("RedisArray construct m_elements bigger than INT64_MAX");
-		}
-	}
 }

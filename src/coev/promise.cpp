@@ -1,6 +1,7 @@
 #include "promise.h"
 #include "co_task.h"
 #include "co_deliver.h"
+#include "r.h"
 
 namespace coev
 {
@@ -10,16 +11,12 @@ namespace coev
         if (m_task)
         {
             assert(m_caller.address() == nullptr);
-            auto _task = m_task;
-            m_task = nullptr;
-            _task->unload(this);
+            R(m_task)->unload(this);
         }
         else if (m_caller)
         {
             assert(!m_caller.done());
-            auto _caller = m_caller;
-            m_caller = nullptr;
-            _caller.resume();
+            R(m_caller).resume();
         }
         else
         {

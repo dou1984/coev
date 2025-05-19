@@ -4,7 +4,7 @@
 
 namespace coev::ssl
 {
-    class ssl_manager
+    class manager
     {
     public:
         enum E_METHOD
@@ -12,8 +12,8 @@ namespace coev::ssl
             TLS_SERVER = 0,
             TLS_CLIENT = 1,
         };
-        ssl_manager(int method);
-        ~ssl_manager();
+        manager(int method);
+        ~manager();
 
         SSL_CTX *get() { return m_context; }
         void load_certificated(const char *cert_file);

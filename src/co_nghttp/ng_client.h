@@ -1,10 +1,10 @@
 #pragma once
-#include <co_ssl/co_ssl.h>
+#include <coev_ssl/ssl.h>
 #include "ng_session.h"
 
 namespace coev::nghttp2
 {
-    class ng_client final : public coev::ssl::ssl_client, public ng_session
+    class ng_client final : public ssl::ssl_client, public ng_session
     {
     public:
         using io_context::operator bool;

@@ -7,12 +7,12 @@
  */
 #include <sstream>
 #include <coev/coev.h>
-#include <co_http/HttpRequest.h>
-#include <co_http/HttpServer.h>
+#include <coev_http/HttpRequest.h>
+#include <coev_http/HttpServer.h>
 
 using namespace coev;
 
-server_pool<HttpServer> g_server;
+server_pool<server> g_server;
 
 awaitable<int> echo(io_context &io)
 {
@@ -54,8 +54,8 @@ awaitable<void> co_router()
 		co_start << [fd, h]() -> awaitable<void>
 		{
 			io_context io(fd);
-			HttpRequest r;
-			HttpRequest::request req;
+			http::session r;
+			http::request req;
 			auto ok = co_await r.get_request(io, req);
 			if (ok != 0)
 			{

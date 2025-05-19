@@ -4,11 +4,15 @@ namespace coev::ssl
 {
     ssl_client::ssl_client(SSL_CTX *_ssl_ctx)
     {
+        if (_ssl_ctx)
+        {
         m_ssl = SSL_new(_ssl_ctx);
         if (m_ssl == nullptr)
         {
             LOG_ERR("SSL_new failed %p\n", m_ssl);
             throw std::runtime_error("SSL_new failed");
+        }
+        m_type |= IO_SSL;
         }
     }
 

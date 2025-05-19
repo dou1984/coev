@@ -1,10 +1,10 @@
 #include <coev/coev.h>
-#include <co_ssl/co_ssl.h>
+#include <coev_ssl/ssl.h>
 
 using namespace coev;
 using namespace coev::ssl;
-static ssl_manager g_srv_mgr(ssl_manager::TLS_SERVER);
-static ssl_manager g_cli_mgr(ssl_manager::TLS_CLIENT);
+static manager g_srv_mgr(manager::TLS_SERVER);
+static manager g_cli_mgr(manager::TLS_CLIENT);
 
 awaitable<void> test_ssl_context()
 {

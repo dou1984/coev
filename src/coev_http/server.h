@@ -11,13 +11,13 @@
 #include <coev/coev.h>
 #include "HttpRequest.h"
 
-namespace coev
+namespace coev::http
 {
-	class HttpServer final : public tcp::server
+	class server final : public tcp::server
 	{
 	public:
-		HttpServer() = default;
-		virtual ~HttpServer() = default;
+		server() = default;
+		virtual ~server() = default;
 
 	private:
 		int m_timeout = 15;
