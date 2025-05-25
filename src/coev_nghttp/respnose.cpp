@@ -1,3 +1,4 @@
+#include <string.h>
 #include "response.h"
 
 namespace coev::nghttp2

@@ -45,18 +45,12 @@ namespace coev::nghttp2
     }
     const std::string &request::header(const std::string &key)
     {
-
         auto it = m_headers.find(key);
         return it != m_headers.end() ? it->second : empty_string;
     }
     const std::string &request::path()
     {
-        auto it = m_headers.find(":path");
-        return it != m_headers.end() ? it->second : empty_string;
-    }
-    const std::string &request::body()
-    {
-        return m_body;
+        return m_path;
     }
     const std::string &request::method()
     {
@@ -69,6 +63,10 @@ namespace coev::nghttp2
     const std::string &request::authority()
     {
         return m_authority;
+    }
+    const std::string &request::body()
+    {
+        return m_body;
     }
     int32_t request::id() const
     {

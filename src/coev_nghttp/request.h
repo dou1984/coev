@@ -23,7 +23,7 @@ namespace coev::nghttp2
         void append(const char *, size_t);
         const std::string &header(const std::string &);
         const std::string &path();
-        const std::string &method();]
+        const std::string &method();
         const std::string &scheme();
         const std::string &authority();
         const std::string &body();

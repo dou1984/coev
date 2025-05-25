@@ -20,7 +20,6 @@ namespace coev::nghttp2
         void append(const char *, size_t);
         const std::string &header(const std::string &key);
         void set_stream_id(uint32_t stream_id) { m_stream_id = stream_id; }
-        void set_status(const std::string &status) { m_status = status; }
-        void set_body(const std::string &body) { m_body = body; }
+      
     };
 }
