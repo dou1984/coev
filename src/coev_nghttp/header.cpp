@@ -2,7 +2,6 @@
 #include <string>
 #include "header.h"
 
-
 namespace coev::nghttp2
 {
     void header::push_back(const char *name, size_t namelen, const char *value, size_t valuelen)

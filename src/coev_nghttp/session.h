@@ -27,8 +27,8 @@ namespace coev::nghttp2
         awaitable<int> processing();
         awaitable<int> on_stream_end(const routers &);
 
-        awaitable<response> query(nghttp2_nv *nva, int head_size, const char *body, int length);
-        int reply(int stream_id, nghttp2_nv *nva, int head_size, const char *body, int length);
+        awaitable<response> query(header &h, const char *body, int length);
+        int reply(int stream_id, header &h, const char *body, int length);
         int reply_error(int32_t stream_id, int error_code);
 
     public:

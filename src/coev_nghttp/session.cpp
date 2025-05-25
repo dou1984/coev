@@ -295,9 +295,9 @@ namespace coev::nghttp2
         }
         return 0;
     }
-    int session::reply(int stream_id, nghttp2_nv *nva, int head_size, const char *body, int length)
+    int session::reply(int stream_id, header &h, const char *body, int length)
     {
-        return __submit_response(stream_id, nva, head_size, body, length);
+        return __submit_response(stream_id, h, h.size(), body, length);
     }
     int session::reply_error(int32_t stream_id, int error_code)
     {
@@ -379,10 +379,10 @@ namespace coev::nghttp2
         }
         co_return 0;
     }
-    awaitable<response> session::query(nghttp2_nv *nva, int head_size, const char *body, int length)
+    awaitable<response> session::query(header &h, const char *body, int length)
     {
 
-        auto stream_id = __submit_request(nva, head_size, body, length);
+        auto stream_id = __submit_request(h, h.size(), body, length);
         if (stream_id < 0)
         {
             static response _;
@@ -390,7 +390,7 @@ namespace coev::nghttp2
         }
         response res;
         co_await __wait_for_stream_end(stream_id, res);
-        co_return res;
+        co_return std::move(res);
     }
     awaitable<int> session::__wait_for_stream_end(int stream_id, response &req)
     {

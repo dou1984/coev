@@ -15,7 +15,7 @@ awaitable<int> echo(nghttp2::session &ctx, nghttp2::request &request)
     ngh.push_back(":status", "200");
 
     const char data[] = "hi, everyone!";
-    auto err = ctx.reply(request.id(), ngh, ngh.size(), data, strlen(data) + 1);
+    auto err = ctx.reply(request.id(), ngh, data, strlen(data) + 1);
     if (err == INVALID)
     {
         LOG_ERR("send error %d %s\n", errno, strerror(errno));
@@ -52,7 +52,7 @@ awaitable<void> proc_client()
     ngh.push_back("accept", "*/*");
     ngh.push_back("user-agent", "nghttp2/" NGHTTP2_VERSION);
 
-    auto res = co_await cli.query(ngh, ngh.size(), hi, sizeof(hi));
+    auto res = co_await cli.query(ngh, hi, sizeof(hi));
 
     LOG_INFO("status: %s body:%s\n", res.header(":status").c_str(), res.body().c_str());
 
