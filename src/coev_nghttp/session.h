@@ -25,7 +25,7 @@ namespace coev::nghttp2
 
     public:
         awaitable<int> processing();
-        awaitable<int> on_stream_end(const routers &);
+        awaitable<int> on_stream(const routers &);
 
         awaitable<response> query(header &h, const char *body, int length);
         int reply(int stream_id, header &h, const char *body, int length);

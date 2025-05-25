@@ -45,9 +45,9 @@ namespace coev::nghttp2
             co_return INVALID;
         }
         ctx.send_server_settings();
-        // co_await wait_for_all(ctx.processing(), ctx.on_stream_end(m_routers));
+        // co_await wait_for_all(ctx.processing(), ctx.on_stream(m_routers));
         co_start << ctx.processing();
-        co_await ctx.on_stream_end(m_routers);
+        co_await ctx.on_stream(m_routers);
         co_return 0;
     }
 

@@ -354,7 +354,7 @@ namespace coev::nghttp2
         }
         return 0;
     }
-    awaitable<int> session::on_stream_end(const routers &routers)
+    awaitable<int> session::on_stream(const routers &routers)
     {
         while (*this)
         {

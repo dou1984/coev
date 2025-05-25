@@ -2,8 +2,9 @@
 
 namespace coev::nghttp2
 {
-    
+
     static std::string empty_string = "";
+    const char *g_status = ":status";
 
     const std::string &response::status() const
     {
@@ -16,7 +17,14 @@ namespace coev::nghttp2
     }
     void response::add_header(const char *name, size_t namelen, const char *value, size_t valuelen)
     {
-        m_headers.emplace(std::string(name, namelen), std::string(value, valuelen));
+        if (strncmp(name, g_status, namelen) == 0)
+        {
+            m_status = std::string(value, valuelen);
+        }
+        else
+        {
+            m_headers.emplace(std::string(name, namelen), std::string(value, valuelen));
+        }
     }
     void response::append(const char *body, size_t length)
     {
@@ -24,7 +32,6 @@ namespace coev::nghttp2
     }
     const std::string &response::header(const std::string &key)
     {
-
         auto it = m_headers.find(key);
         return it != m_headers.end() ? it->second : empty_string;
     }
