@@ -100,9 +100,10 @@ namespace coev::http
 		co_task _task;
 		auto _finished = _task << finished();
 		auto _timeout = _task << sleep_for(m_timeout);
-		_task << get_url();
-		_task << get_headers();
-		_task << get_body();
+		_task << get_url(request.url);
+		_task << get_headers(request.headers);
+		_task << get_body(request.body);
+		_task << get_status(request.status);
 		co_start << parse(io);
 		do
 		{
@@ -115,17 +116,17 @@ namespace coev::http
 			if (r == _finished)
 			{
 				LOG_CORE("finished\n")
-				request = std::move(m_request);
+				// request = std::move(m_request);
 				co_return 0;
 			}
 		} while (true);
 	}
-	awaitable<void> session::get_url()
+	awaitable<void> session::get_url(std::string &url)
 	{
 		co_await m_url_waiter.suspend();
-		m_request.url = m_value;
+		url = m_value;
 	}
-	awaitable<void> session::get_headers()
+	awaitable<void> session::get_headers(std::unordered_map<std::string, std::string> &headers)
 	{
 		while (true)
 		{
@@ -134,18 +135,18 @@ namespace coev::http
 			{
 				break;
 			}
-			m_request.headers.emplace(m_key, m_value);
+			headers.emplace(m_key, m_value);
 		}
 	}
-	awaitable<void> session::get_body()
+	awaitable<void> session::get_body(std::string &body)
 	{
 		co_await m_body_waiter.suspend();
-		m_request.body = m_value;
+		body = m_value;
 	}
-	awaitable<void> session::get_status()
+	awaitable<void> session::get_status(std::string &status)
 	{
 		co_await m_status_waiter.suspend();
-		m_request.status = m_value;
+		status = m_value;
 	}
 	awaitable<void> session::finished()
 	{

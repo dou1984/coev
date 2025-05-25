@@ -1,12 +1,16 @@
-#include "ng_client.h"
+#include "client.h"
 
 namespace coev::nghttp2
 {
-    ng_client::ng_client(SSL_CTX *_ssl_ctx) : ssl_client(_ssl_ctx)
+    client::client(SSL_CTX *_ssl_ctx) : ssl::client(_ssl_ctx)
     {
-        m_type = 1;
+        m_type |= IO_CLIENT;
+        if (_ssl_ctx)
+        {
+            m_type |= IO_SSL;
+        }
     }
-    awaitable<int> ng_client::connect(const char *url)
+    awaitable<int> client::connect(const char *url)
     {
         if (m_fd == INVALID)
         {
@@ -20,7 +24,7 @@ namespace coev::nghttp2
             __close();
             co_return m_fd;
         }
-        err = co_await ssl::ssl_client::connect(info.ip, info.port);
+        err = co_await ssl::client::connect(info.ip, info.port);
         if (err == INVALID)
         {
             LOG_ERR("ssl connect failed %s %d %s\n", info.ip, info.port, nghttp2_strerror(err));
@@ -28,7 +32,7 @@ namespace coev::nghttp2
         }
         assert(m_ssl);
 
-        auto _this = static_cast<ng_session *>(this);
+        auto _this = static_cast<session *>(this);
         err = nghttp2_session_client_new(&m_session, m_callbacks, _this);
         if (err != 0)
         {
@@ -43,7 +47,7 @@ namespace coev::nghttp2
         }
         co_return m_fd;
     }
-    int ng_client::send_client_settings()
+    int client::send_client_settings()
     {
         nghttp2_settings_entry iv[] = {
             {NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, 100},

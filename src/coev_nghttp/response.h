@@ -5,7 +5,8 @@
 
 namespace coev::nghttp2
 {
-    class ng_response
+    
+    class response final
     {
         std::unordered_map<std::string, std::string> m_headers;
         std::string m_status;

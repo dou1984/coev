@@ -12,4 +12,4 @@ project(test_mysql)
 aux_source_directory(./ SRC_DIR)
 
 add_executable(${PROJECT_NAME} ${SRC_DIR})
-target_link_libraries(${PROJECT_NAME} co_mysql mysqlclient coev ev pthread)
+target_link_libraries(${PROJECT_NAME} coev_mysql mysqlclient coev ev pthread)

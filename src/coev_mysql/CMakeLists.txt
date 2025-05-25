@@ -9,7 +9,7 @@ if(NOT CMAKE_BUILD_TYPE)
 	 SET(CMAKE_BUILD_TYPE Release CACHE INTERNAL "cmake_build_type")
 endif()
 
-project(co_redis)
+project(coev_mysql)
 
 aux_source_directory(. SRC_DIR)
 

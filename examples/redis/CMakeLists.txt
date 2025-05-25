@@ -12,4 +12,4 @@ project(test_redis)
 aux_source_directory(./ SRC_DIR)
 
 add_executable(${PROJECT_NAME} ${SRC_DIR})
-target_link_libraries(${PROJECT_NAME} co_redis hiredis coev ev pthread)
+target_link_libraries(${PROJECT_NAME} coev_redis hiredis coev ev pthread)

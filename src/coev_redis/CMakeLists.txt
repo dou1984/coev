@@ -6,13 +6,12 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
 if(NOT CMAKE_BUILD_TYPE)
-	set(CMAKE_BUILD_TYPE Release CACHE INTERNAL "cmake_build_type")
+	 SET(CMAKE_BUILD_TYPE Release CACHE INTERNAL "cmake_build_type")
 endif()
 
-project(co_nghttp)
+project(coev_redis)
 
 aux_source_directory(. SRC_DIR)
-link_directories(/usr/local/lib64/ /usr/local/lib/)
 
 add_library(${PROJECT_NAME} STATIC ${SRC_DIR})
 target_link_libraries(${PROJECT_NAME})

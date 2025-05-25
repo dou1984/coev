@@ -7,12 +7,12 @@
  */
 #include <sstream>
 #include <coev/coev.h>
-#include <coev_http/HttpRequest.h>
-#include <coev_http/HttpServer.h>
+#include <coev_http/session.h>
+#include <coev_http/server.h>
 
 using namespace coev;
 
-server_pool<server> g_server;
+server_pool<http::server> g_server;
 
 awaitable<int> echo(io_context &io)
 {

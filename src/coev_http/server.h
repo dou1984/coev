@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <functional>
 #include <coev/coev.h>
-#include "HttpRequest.h"
+#include "session.h"
 
 namespace coev::http
 {

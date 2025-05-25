@@ -1,11 +1,11 @@
 #include <coev/coev.h>
-#include "ssl_context.h"
+#include "context.h"
 #include "manager.h"
 
 namespace coev::ssl
 {
 
-    ssl_context::ssl_context(int fd, SSL_CTX *_ssl_ctx) : io_context(fd)
+    context::context(int fd, SSL_CTX *_ssl_ctx) : io_context(fd)
     {
         assert(m_fd != INVALID);
         if (_ssl_ctx)
@@ -27,12 +27,12 @@ namespace coev::ssl
             m_type |= IO_SSL;
         }
     }
-    ssl_context::~ssl_context()
+    context::~context()
     {
         __async_finally();
     }
 
-    void ssl_context::__async_finally()
+    void context::__async_finally()
     {
         if (m_ssl)
         {
@@ -41,7 +41,7 @@ namespace coev::ssl
         }
     }
 
-    awaitable<int> ssl_context::send(const char *buf, int len)
+    awaitable<int> context::send(const char *buf, int len)
     {
         if (!__is_ssl())
         {
@@ -73,7 +73,7 @@ namespace coev::ssl
         }
         co_return INVALID;
     }
-    awaitable<int> ssl_context::recv(char *buf, int size)
+    awaitable<int> context::recv(char *buf, int size)
     {
         if (!__is_ssl())
         {
@@ -107,7 +107,7 @@ namespace coev::ssl
         }
         co_return INVALID;
     }
-    awaitable<int> ssl_context::do_handshake()
+    awaitable<int> context::do_handshake()
     {
         if (!__is_ssl())
         {
@@ -147,7 +147,7 @@ namespace coev::ssl
         }
         co_return 0;
     }
-    int ssl_context::__ssl_write(const char *buffer, int buffer_size)
+    int context::__ssl_write(const char *buffer, int buffer_size)
     {
 
         assert(m_ssl);
@@ -169,7 +169,7 @@ namespace coev::ssl
         }
         return r;
     }
-    int ssl_context::__ssl_read(char *buffer, int buffer_size)
+    int context::__ssl_read(char *buffer, int buffer_size)
     {
         assert(m_ssl);
         int r = SSL_read(m_ssl, buffer, buffer_size);

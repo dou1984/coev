@@ -1,14 +1,14 @@
 #pragma once
 #include <coev_ssl/ssl.h>
-#include "ng_session.h"
+#include "session.h"
 
 namespace coev::nghttp2
 {
-    class ng_client final : public ssl::ssl_client, public ng_session
+    class client final : public ssl::client, public session
     {
     public:
         using io_context::operator bool;
-        ng_client(SSL_CTX *);
+        client(SSL_CTX *);
         awaitable<int> connect(const char *url);
         int send_client_settings();
     };

@@ -2,11 +2,11 @@
 #include <string>
 #include <unordered_map>
 #include <nghttp2/nghttp2.h>
-#include "ng_header.h"
+#include "header.h"
 
 namespace coev::nghttp2
 {
-    class ng_request final
+    class request final
     {
         std::unordered_map<std::string, std::string> m_headers;
         std::string m_body;

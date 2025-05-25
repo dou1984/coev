@@ -1,22 +1,22 @@
-#include "ssl_client.h"
+#include "client.h"
 
 namespace coev::ssl
 {
-    ssl_client::ssl_client(SSL_CTX *_ssl_ctx)
+    client::client(SSL_CTX *_ssl_ctx)
     {
         if (_ssl_ctx)
         {
-        m_ssl = SSL_new(_ssl_ctx);
-        if (m_ssl == nullptr)
-        {
-            LOG_ERR("SSL_new failed %p\n", m_ssl);
-            throw std::runtime_error("SSL_new failed");
-        }
-        m_type |= IO_SSL;
+            m_ssl = SSL_new(_ssl_ctx);
+            if (m_ssl == nullptr)
+            {
+                LOG_ERR("SSL_new failed %p\n", m_ssl);
+                throw std::runtime_error("SSL_new failed");
+            }
+            m_type |= IO_SSL;
         }
     }
 
-    awaitable<int> ssl_client::connect(const char *host, int port)
+    awaitable<int> client::connect(const char *host, int port)
     {
         if (m_ssl == nullptr)
         {

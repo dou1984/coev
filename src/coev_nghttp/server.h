@@ -1,23 +1,23 @@
 #pragma once
 #include <coev/coev.h>
 #include <nghttp2/nghttp2.h>
-#include "ng_session.h"
+#include "session.h"
 
 namespace coev::nghttp2
 {
 
-    class ng_server : public tcp::server
+    class server final : public tcp::server
     {
     public:
-        ng_server(const char *url);
-        int route(const std::string &path, const ng_session::router &);
+        server(const char *url);
+        int route(const std::string &path, const session::router &);
         awaitable<void> dispatch(SSL_CTX *_mgr);
 
     protected:
         awaitable<int> __dispatch(int fd, SSL_CTX *_mgr);
 
     private:
-        ng_session::routers m_routers;
+        session::routers m_routers;
         co_task m_tasks;
     };
 }

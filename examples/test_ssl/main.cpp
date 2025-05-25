@@ -27,7 +27,7 @@ awaitable<void> test_ssl_context()
         }
         co_start << [=]() -> awaitable<void>
         {
-            ssl_context ctx(fd, g_srv_mgr.get());
+            context ctx(fd, g_srv_mgr.get());
             LOG_DBG("close fd:%d\n", fd);
             int err = co_await ctx.do_handshake();
             if (err == INVALID)
@@ -58,7 +58,7 @@ awaitable<void> test_ssl_context()
 awaitable<void> test_ssl_client()
 {
 
-    ssl::ssl_client cli(g_cli_mgr.get());
+    ssl::client cli(g_cli_mgr.get());
     int fd = co_await cli.connect("0.0.0.0", 9998);
     if (fd == INVALID)
     {

@@ -4,49 +4,54 @@
 #include <openssl/ssl.h>
 #include <coev/coev.h>
 #include <coev_ssl/ssl.h>
-#include "ng_request.h"
-#include "ng_response.h"
+#include "request.h"
+#include "response.h"
 
 namespace coev::nghttp2
 {
 
-    class ng_session : virtual protected ssl::ssl_context
+    class session : virtual protected ssl::context
     {
     public:
-        using router = std::function<awaitable<int>(ng_session &, ng_request &)>;
+        using router = std::function<awaitable<int>(session &, request &)>;
         using routers = std::unordered_map<std::string, router>;
 
         awaitable<int> do_handshake();
 
-        ng_session(int, SSL_CTX *);
-        ng_session(const ng_session &) = delete;
-        ng_session &operator=(const ng_session &) = delete;
-        ~ng_session();
+        session(int, SSL_CTX *);
+        session(const session &) = delete;
+        session &operator=(const session &) = delete;
+        ~session();
 
+    public:
         awaitable<int> processing();
         awaitable<int> on_stream_end(const routers &);
-        awaitable<ng_response> wait_for_stream_end(int stream_id);
 
-        int submit_request(nghttp2_nv *, int head_size, const char *body, int length);
-        int submit_response(int stream_id, nghttp2_nv *, int head_size, const char *body, int length);
-        int push_promise(int stream_id, nghttp2_nv *, int head_size);
-        int reply_error(int32_t id, int error_code);
+        awaitable<response> query(nghttp2_nv *nva, int head_size, const char *body, int length);
+        int reply(int stream_id, nghttp2_nv *nva, int head_size, const char *body, int length);
+        int reply_error(int32_t stream_id, int error_code);
 
     public:
         int set_routers(const routers &);
-        ng_request &get_request(int32_t stream_id);
+        request &get_request(int32_t stream_id);
         void remove_request(int32_t stream_id);
-        ng_response &get_response(int32_t stream_id);
+        response &get_response(int32_t stream_id);
         void remove_response(int32_t stream_id);
 
         int send_server_settings();
 
     protected:
-        ng_session() = default;
+        int __push_promise(int stream_id, nghttp2_nv *, int head_size);
+        int __submit_request(nghttp2_nv *, int head_size, const char *body, int length);
+        int __submit_response(int stream_id, nghttp2_nv *, int head_size, const char *body, int length);
+        awaitable<int> __wait_for_stream_end(int stream_id, response &req);
+
+    protected:
+        session() = default;
         nghttp2_session *m_session = nullptr;
         static nghttp2_session_callbacks *m_callbacks;
-        std::unordered_map<int32_t, ng_request> m_requests;
-        std::unordered_map<int32_t, ng_response> m_responses;
+        std::unordered_map<int32_t, request> m_requests;
+        std::unordered_map<int32_t, response> m_responses;
 
     protected:
         co_task m_tasks;

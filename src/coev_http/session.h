@@ -23,16 +23,14 @@ namespace coev::http
 		awaitable<int> get_request(io_context &io, request &request);
 
 		awaitable<void> parse(io_context &io);
-		awaitable<void> get_url();
-		awaitable<void> get_headers();
-
-		awaitable<void> get_body();
-		awaitable<void> get_status();
+		awaitable<void> get_url(std::string &);
+		awaitable<void> get_headers(std::unordered_map<std::string, std::string> &);
+		awaitable<void> get_body(std::string &);
+		awaitable<void> get_status(std::string &);
 		awaitable<void> finished();
 
 	private:
 		const int m_timeout = 15;
-		request m_request;
 
 	private:
 		int parse(const char *, int);

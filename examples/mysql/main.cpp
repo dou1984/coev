@@ -9,7 +9,7 @@
 #include <sstream>
 #include <random>
 #include <coev/coev.h>
-#include <co_mysql/Mysqlcli.h>
+#include <coev_mysql/Mysqlcli.h>
 
 using namespace coev;
 
