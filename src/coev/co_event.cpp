@@ -8,7 +8,7 @@
 #include <thread>
 #include "co_event.h"
 #include "local_resume.h"
-#include "v.h"
+#include "cv.h"
 
 namespace coev
 {
@@ -81,7 +81,7 @@ namespace coev
 	{
 		if (m_caller.address() && !m_caller.done())
 		{
-			V(m_caller).resume();
+			CV(m_caller).resume();
 		}
 		else
 		{

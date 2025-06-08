@@ -9,7 +9,7 @@
 #include <sstream>
 #include <random>
 #include <coev/coev.h>
-#include <coev_mysql/Mysqlcli.h>
+#include <coev_mysql/MysqlCli.h>
 
 using namespace coev;
 
@@ -25,7 +25,7 @@ struct t_test_table
 awaitable<void> go()
 {
 	LOG_ERR("begin\n");
-	coev::Mysqlcli c({
+	coev::MysqlCli c({
 		.m_url = "127.0.0.1",
 		.m_username = "ashan",
 		.m_password = "12345678",
@@ -102,7 +102,7 @@ awaitable<void> go()
 }
 awaitable<void> clear()
 {
-	coev::Mysqlcli c({
+	coev::MysqlCli c({
 		.m_url = "127.0.0.1",
 		.m_username = "ashan",
 		.m_password = "12345678",

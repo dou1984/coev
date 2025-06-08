@@ -3,7 +3,7 @@
 namespace coev
 {
     template <typename T>
-    T V(T &a)
+    T CV(T &a)
     {
         T t = a;
         a = nullptr;

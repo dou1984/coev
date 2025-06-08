@@ -13,5 +13,5 @@ project(coev_ssl)
 
 aux_source_directory(. SRC_DIR)
 
-add_library(${PROJECT_NAME} STATIC ${SRC_DIR} ${COSYS_DIR})
+add_library(${PROJECT_NAME} STATIC ${SRC_DIR})
 target_link_libraries(${PROJECT_NAME} ssl crypto)

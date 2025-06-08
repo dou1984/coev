@@ -5,9 +5,9 @@ link_directories(${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin) 
 
 if(NOT CMAKE_BUILD_TYPE)
-	set(CMAKE_BUILD_TYPE Release CACHE INTERNAL "cmake_build_type")
+	 SET(CMAKE_BUILD_TYPE Release CACHE INTERNAL "cmake_build_type")
 endif()
-project(co_client)
+project(test_tcp)
 
 aux_source_directory(./ SRC_DIR)
 

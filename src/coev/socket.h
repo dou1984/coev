@@ -16,8 +16,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <assert.h>
-
-#define INVALID (-1)
+#include "invalid.h"
 
 namespace coev
 {
@@ -30,7 +29,6 @@ namespace coev
 		addrInfo(const char *, int);
 		const addrInfo &operator=(const addrInfo &);
 		int fromUrl(const char *url);
-
 	};
 
 	int bindLocal(int fd, const char *ip);

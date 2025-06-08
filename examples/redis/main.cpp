@@ -10,7 +10,7 @@
 #include <random>
 #include <string_view>
 #include <vector>
-#include <coev_redis/Rediscli.h>
+#include <coev_redis/RedisCli.h>
 
 using namespace coev;
 
@@ -23,7 +23,7 @@ awaitable<void> go()
 		.m_auth = "",
 		.m_port = 6379,
 	};
-	Rediscli c(conf);
+	RedisCli c(conf);
 
 	co_await c.connect();
 
@@ -74,7 +74,7 @@ awaitable<void> test_sync()
 		.m_auth = "",
 		.m_port = 6379,
 	};
-	Rediscli c(conf);
+	RedisCli c(conf);
 	co_await c.connect();
 
 	co_await c.query("info server");
@@ -89,7 +89,7 @@ awaitable<void> test_array()
 		.m_auth = "",
 		.m_port = 6379,
 	};
-	Rediscli c(conf);
+	RedisCli c(conf);
 
 	co_await c.connect();
 

@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "socket.h"
+#include "invalid.h"
 
 namespace coev
 {
