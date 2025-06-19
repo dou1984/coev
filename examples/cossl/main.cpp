@@ -10,8 +10,8 @@ awaitable<void> test_ssl_context()
 {
     server_pool<tcp::server> pool;
     pool.start("0.0.0.0", 9998);
-    g_srv_mgr.load_certificated("./server.pem");
-    g_srv_mgr.load_privatekey("./server.pem");
+    g_srv_mgr.use_certificate_file("./server.pem");
+    g_srv_mgr.use_PrivateKey_file("./server.pem");
 
     LOG_DBG("server started\n");
     while (true)

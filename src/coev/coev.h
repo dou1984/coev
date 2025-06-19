@@ -15,6 +15,7 @@
 #include "singleton.h"
 #include "runnable.h"
 #include "awaitable.h"
+#include "statable.h"
 #include "setvalue.h"
 #include "wait_for.h"
 #include "sleep_for.h"

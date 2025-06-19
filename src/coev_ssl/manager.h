@@ -16,9 +16,9 @@ namespace coev::ssl
         ~manager();
 
         SSL_CTX *get() { return m_context; }
-        void load_certificated(const char *cert_file);
-        void load_privatekey( const char *key_file);
-        void check_privatekey(const char *key_file);
+        void use_certificate_file(const char *cert_file);
+        void use_PrivateKey_file( const char *key_file);
+        void check_private_key(const char *key_file);
     private:
         SSL_CTX *m_context = nullptr;
     };

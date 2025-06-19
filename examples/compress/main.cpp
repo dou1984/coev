@@ -1,5 +1,5 @@
 
-#include <utils/compress/compress.h>
+#include <common/compress/compress.h>
 #include <string.h>
 #include <iostream>
 int lz4_text()

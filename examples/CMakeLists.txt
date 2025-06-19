@@ -16,4 +16,4 @@ add_subdirectory(./nocopy)
 add_subdirectory(./cossl)
 add_subdirectory(./sleep)
 add_subdirectory(./compress)
-
+add_subdirectory(./statable)

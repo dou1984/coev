@@ -69,5 +69,4 @@ namespace coev
 		int fd();
 	};
 
-	
 }

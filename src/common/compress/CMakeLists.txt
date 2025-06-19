@@ -20,11 +20,6 @@ endif()
 
 project(compress)
 
-set(CMAKE_C_COMPILER gcc CACHE INTERNAL "cmake_c_compiler")
-set(CMAKE_CXX_COMPILER g++ CACHE INTERNAL "cmake_cxx_compiler")
-set(CMAKE_VERBOSE_MAKEFILE ON CACHE INTERNAL "cmake_verbose_makefile")
-set(CMAKE_CXX_FLAGS "-O0 -ggdb -std=c++23 -fcoroutines" CACHE INTERNAL "cmake_cxx_flags")
-
 include_directories(${LZ4_INCLUDE_DIRS})
 include_directories(${SNAPPY_INCLUDE_DIRS})
 include_directories(${ZSTD_INCLUDE_DIRS})

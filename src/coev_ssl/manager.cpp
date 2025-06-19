@@ -39,7 +39,7 @@ namespace coev::ssl
         }
     }
 
-    void manager::load_certificated(const char *cert_file)
+    void manager::use_certificate_file(const char *cert_file)
     {
         if (m_context == nullptr)
         {
@@ -53,7 +53,7 @@ namespace coev::ssl
             exit(INVALID);
         }
     }
-    void manager::load_privatekey(const char *key_file)
+    void manager::use_PrivateKey_file(const char *key_file)
     {
         if (m_context == nullptr)
         {
@@ -67,7 +67,7 @@ namespace coev::ssl
             exit(INVALID);
         }
     }
-    void manager::check_privatekey(const char *key_file)
+    void manager::check_private_key(const char *key_file)
     {
         if (m_context == nullptr)
         {
