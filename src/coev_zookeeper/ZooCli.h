@@ -21,22 +21,22 @@ namespace coev
 
         awaitable<int> connect(const char *host, int port);
 
-        awaitable<int> zoo_exists(const char *path, Stat_ &data);
-        awaitable<int> zoo_get(const char *path, const std::string &data);
-        awaitable<int> zoo_get_config(std::string &data);
-        awaitable<int> zoo_reconfig(const char *path, const std::string &joining, const std::string leaving, const std::string members, int64_t version);
-        awaitable<int> zoo_set(const char *path, const std::string buffer, int version);
-        awaitable<int> zoo_get_children(const char *path, std::string &data);
-        awaitable<int> zoo_get_children2(const char *path, std::vector<std::string> &data);
-        awaitable<int> zoo_async(const char *path, std::string &data);
-        awaitable<int> zoo_get_acl(const char *path, Stat_ &stat);
-        awaitable<int> zoo_set_acl(const char *path, int version, ACLVec_ &acl, Stat_ &stat);
-        awaitable<int> zoo_multi(int count, const ZooOp *ops);
-        awaitable<int> zoo_delete(const char *path, int version);
-        awaitable<int> zoo_create2(const char *path, const std::string &value, const ACLVec_ &acl, int mode);
-        awaitable<int> zoo_create2_ttl(const char *path, const std::string &value, const ACLVec_ &acl_entries, int mode, int64_t ttl);
-        awaitable<int> zoo_set_watches();
-        awaitable<int> zoo_wait_watcher();
+        awaitable<int> exists(const char *path, Stat_ &data);
+        awaitable<int> get(const char *path, const std::string &data);
+        awaitable<int> get_config(std::string &data);
+        awaitable<int> reconfig(const char *path, const std::string &joining, const std::string leaving, const std::string members, int64_t version);
+        awaitable<int> set(const char *path, const std::string buffer, int version);
+        awaitable<int> get_children(const char *path, std::string &data);
+        awaitable<int> get_children2(const char *path, std::vector<std::string> &data);
+        awaitable<int> async_(const char *path, std::string &data);
+        awaitable<int> get_acl(const char *path, Stat_ &stat);
+        awaitable<int> set_acl(const char *path, int version, ACLVec_ &acl, Stat_ &stat);
+        awaitable<int> multi(int count, const ZooOp *ops);
+        awaitable<int> delete_(const char *path, int version);
+        awaitable<int> create2(const char *path, const std::string &value, const ACLVec_ &acl, int mode);
+        awaitable<int> create2_ttl(const char *path, const std::string &value, const ACLVec_ &acl_entries, int mode, int64_t ttl);
+        awaitable<int> set_watches();
+        awaitable<int> wait_watches();
         awaitable<int> close();
 
     private:

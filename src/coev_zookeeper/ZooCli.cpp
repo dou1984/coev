@@ -298,7 +298,7 @@ namespace coev
 
         co_return 0;
     }
-    awaitable<int> ZooCli::zoo_exists(const char *path, Stat_ &data)
+    awaitable<int> ZooCli::exists(const char *path, Stat_ &data)
     {
 
         RequestHeader_ h = {get_xid(), ZOO_EXISTS_OP};
@@ -336,7 +336,7 @@ namespace coev
         data = res.stat;
         co_return 0;
     }
-    awaitable<int> ZooCli::zoo_get(const char *path, const std::string &data)
+    awaitable<int> ZooCli::get(const char *path, const std::string &data)
     {
 
         RequestHeader_ h = {get_xid(), ZOO_GETDATA_OP};
@@ -369,7 +369,7 @@ namespace coev
 
         co_return 0;
     }
-    awaitable<int> ZooCli::zoo_get_config(std::string &data)
+    awaitable<int> ZooCli::get_config(std::string &data)
     {
         const std::string path = ZOO_CONFIG_NODE;
         const std::string server_path = ZOO_CONFIG_NODE;
@@ -405,7 +405,7 @@ namespace coev
         co_return 0;
     }
 
-    awaitable<int> ZooCli::zoo_reconfig(const char *path, const std::string &joining, const std::string leaving, const std::string members, int64_t version)
+    awaitable<int> ZooCli::reconfig(const char *path, const std::string &joining, const std::string leaving, const std::string members, int64_t version)
     {
 
         RequestHeader_ h = {get_xid(), ZOO_RECONFIG_OP};
@@ -433,7 +433,7 @@ namespace coev
         ia.ReconfigRequest(&res);
         co_return 0;
     }
-    awaitable<int> ZooCli::zoo_set(const char *path, const std::string buffer, int version)
+    awaitable<int> ZooCli::set(const char *path, const std::string buffer, int version)
     {
 
         RequestHeader_ h = {get_xid(), ZOO_SETDATA_OP};
@@ -466,7 +466,7 @@ namespace coev
         co_return 0;
     }
 
-    awaitable<int> ZooCli::zoo_get_children(const char *path, std::string &data)
+    awaitable<int> ZooCli::get_children(const char *path, std::string &data)
     {
 
         RequestHeader_ h = {get_xid(), ZOO_GETCHILDREN_OP};
@@ -500,7 +500,7 @@ namespace coev
         co_return ZOK;
     }
 
-    awaitable<int> ZooCli::zoo_get_children2(const char *path, std::vector<std::string> &data)
+    awaitable<int> ZooCli::get_children2(const char *path, std::vector<std::string> &data)
     {
 
         RequestHeader_ h = {get_xid(), ZOO_GETCHILDREN2_OP};
@@ -537,7 +537,7 @@ namespace coev
         co_return 0;
     }
 
-    awaitable<int> ZooCli::zoo_async(const char *path, std::string &data)
+    awaitable<int> ZooCli::async_(const char *path, std::string &data)
     {
         SyncRequest_ req = {};
         auto r = path_init(req.path, path);
@@ -570,7 +570,7 @@ namespace coev
 
         co_return 0;
     }
-    awaitable<int> ZooCli::zoo_get_acl(const char *path, Stat_ &stat)
+    awaitable<int> ZooCli::get_acl(const char *path, Stat_ &stat)
     {
 
         GetACLRequest_ req = {};
@@ -603,7 +603,7 @@ namespace coev
         stat = resp.stat;
         co_return 0;
     }
-    awaitable<int> ZooCli::zoo_set_acl(const char *path, int version, ACLVec_ &acl, Stat_ &stat)
+    awaitable<int> ZooCli::set_acl(const char *path, int version, ACLVec_ &acl, Stat_ &stat)
     {
 
         SetACLRequest_ req = {
@@ -639,7 +639,7 @@ namespace coev
         stat = resp.stat;
         co_return 0;
     }
-    awaitable<int> ZooCli::zoo_multi(int count, const ZooOp *ops)
+    awaitable<int> ZooCli::multi(int count, const ZooOp *ops)
     {
         RequestHeader_ h = {get_xid(), ZOO_MULTI_OP};
         MultiHeader_ mh = {-1, 1, -1};
@@ -711,7 +711,7 @@ namespace coev
 
         co_return 0;
     }
-    awaitable<int> ZooCli::zoo_delete(const char *path, int version)
+    awaitable<int> ZooCli::delete_(const char *path, int version)
     {
 
         RequestHeader_ h = {get_xid(), ZOO_DELETE_OP};
@@ -742,11 +742,11 @@ namespace coev
 
         co_return 0;
     }
-    awaitable<int> ZooCli::zoo_create2(const char *path, const std::string &value, const ACLVec_ &acl, int mode)
+    awaitable<int> ZooCli::create2(const char *path, const std::string &value, const ACLVec_ &acl, int mode)
     {
-        return zoo_create2_ttl(path, value, acl, mode, -1);
+        return create2_ttl(path, value, acl, mode, -1);
     }
-    awaitable<int> ZooCli::zoo_create2_ttl(const char *path, const std::string &value, const ACLVec_ &acl_entries, int mode, int64_t ttl)
+    awaitable<int> ZooCli::create2_ttl(const char *path, const std::string &value, const ACLVec_ &acl_entries, int mode, int64_t ttl)
     {
 
         RequestHeader_ h = {get_xid(), get_create_op_type(mode, ZOO_CREATE2_OP)};
@@ -825,7 +825,7 @@ namespace coev
         }
     }
 
-    awaitable<int> ZooCli::zoo_set_watches()
+    awaitable<int> ZooCli::set_watches()
     {
         auto r = 0;
         RequestHeader_ h = {SET_WATCHES_XID, ZOO_SETWATCHES_OP};
@@ -890,7 +890,7 @@ namespace coev
         }
         co_return 0;
     }
-    awaitable<int> ZooCli::zoo_wait_watcher()
+    awaitable<int> ZooCli::wait_watches()
     {
         co_await m_watcher.suspend();
         co_return 0;

@@ -24,13 +24,13 @@ int main(int argc, char **argv)
                     co_return;
                 }
 
-                r = co_await cli.zoo_set("/test", "hello", -1);
+                r = co_await cli.set("/test", "hello", -1);
                 if (r == INVALID)
                 {
                     co_return;
                 }
                 std::string body;
-                r = co_await cli.zoo_get("/test", body);
+                r = co_await cli.get("/test", body);
                 if (r == INVALID)
                 {
                     co_return;
