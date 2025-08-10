@@ -13,10 +13,10 @@ namespace coev
         ZooOp() = default;
         ~ZooOp() = default;
 
-        void zoo_create_op_init(const char *path, const std::string &value, ACLVec &acl, int mode, char *path_buffer, int path_buffer_len);
-        void zoo_create2_op_init(const char *path, const std::string &value, ACLVec &acl, int mode, char *path_buffer, int path_buffer_len);
+        void zoo_create_op_init(const char *path, const std::string &value, ACLVec_ &acl, int mode, char *path_buffer, int path_buffer_len);
+        void zoo_create2_op_init(const char *path, const std::string &value, ACLVec_ &acl, int mode, char *path_buffer, int path_buffer_len);
         void zoo_delete_op_init(const char *path, int version);
-        void zoo_set_op_init(const char *path, const std::string &buffer, int version, Stat *stat);
+        void zoo_set_op_init(const char *path, const std::string &buffer, int version, Stat_ *stat);
         void zoo_check_op_init(const char *path, int version);
 
         int m_type;
@@ -30,7 +30,7 @@ namespace coev
                 int datalen;
                 char *buf;
                 int buflen;
-                ACLVec *acl;
+                ACLVec_ *acl;
                 int flags;
                 int64_t ttl;
             } m_create_op;
@@ -47,7 +47,7 @@ namespace coev
                 const char *data;
                 int datalen;
                 int version;
-                Stat *stat;
+                Stat_ *stat;
             } m_set_op;
 
             struct
@@ -63,6 +63,6 @@ namespace coev
         int err;
         char *value;
         int valuelen;
-        struct Stat *stat;
+        struct Stat_ *stat;
     };
 }

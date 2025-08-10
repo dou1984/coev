@@ -10,44 +10,40 @@
 namespace coev
 {
 
-    int oarchive::serialize_int(const char *tag, int32_t d)
+    int oarchive::serialize_int(int32_t d)
     {
         int32_t i = htonl(d);
         m_buff.append((char *)&i, sizeof(i));
         return 0;
     }
 
-    int oarchive::serialize_log(const char *tag, int64_t d)
+    int oarchive::serialize_log(int64_t d)
     {
         const int64_t i = htonll(d);
         m_buff.append((char *)&i, sizeof(i));
         return 0;
     }
-    int oarchive::start_vector(const char *tag, int32_t *count)
-    {
-        return serialize_int(tag, *count);
-    }
 
-    int oarchive::serialize_bool(const char *name, int32_t d)
+    int oarchive::serialize_bool(int32_t d)
     {
         bool i = d != 0;
         m_buff.append((char *)&i, sizeof(bool));
         return 0;
     }
     int32_t negone = -1;
-    int oarchive::serialize_buffer(const char *name, const std::string &s)
+    int oarchive::serialize_buffer(const std::string &s)
     {
-        return serialize_string(name, s);
+        return serialize_string(s);
     }
-    int oarchive::serialize_string(const char *name, const std::string &s)
+    int oarchive::serialize_string(const std::string &s)
     {
         int rc = 0;
         if (s.empty())
         {
-            return serialize_int("len", negone);
+            return serialize_int(negone);
         }
         int32_t len = s.size();
-        rc = serialize_int("len", len);
+        rc = serialize_int(len);
         if (rc < 0)
         {
             return rc;
@@ -57,7 +53,7 @@ namespace coev
         return 0;
     }
 
-    int iarchive::deserialize_int(const char *tag, int32_t *count)
+    int iarchive::deserialize_int(int32_t *count)
     {
         if (m_view.size() < sizeof(*count))
         {
@@ -69,7 +65,7 @@ namespace coev
         return 0;
     }
 
-    int iarchive::deserialize_long(const char *tag, int64_t *count)
+    int iarchive::deserialize_long(int64_t *count)
     {
         if (m_view.size() < sizeof(*count))
         {
@@ -79,7 +75,7 @@ namespace coev
         m_view = m_view.substr(sizeof(*count));
         return 0;
     }
-    int iarchive::deserialize_bool(const char *name, int32_t *v)
+    int iarchive::deserialize_bool(int32_t *v)
     {
         if (m_view.size() < 1)
         {
@@ -90,15 +86,15 @@ namespace coev
         return 0;
     }
 
-    int iarchive::deserialize_buffer(const char *name, std::string &str)
+    int iarchive::deserialize_buffer(std::string &str)
     {
-        return deserialize_string(name, str);
+        return deserialize_string(str);
     }
 
-    int iarchive::deserialize_string(const char *name, std::string &str)
+    int iarchive::deserialize_string(std::string &str)
     {
         int32_t len;
-        int rc = deserialize_int("len", &len);
+        int rc = deserialize_int(&len);
         if (rc < 0)
         {
             return rc;
@@ -145,259 +141,259 @@ namespace coev
         return m_buff.size();
     }
 
-    int oarchive::serialize_Id(const char *tag, Id *v)
+    int oarchive::Id(Id_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("scheme", v->scheme);
-        rc = rc ? rc : serialize_string("id", v->id);
+        rc = rc ? rc : serialize_string(v->scheme);
+        rc = rc ? rc : serialize_string(v->id);
         return rc;
     }
-    int iarchive::deserialize_Id(const char *tag, Id *v)
+    int iarchive::Id(Id_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("scheme", v->scheme);
-        rc = rc ? rc : deserialize_string("id", v->id);
+        rc = rc ? rc : deserialize_string(v->scheme);
+        rc = rc ? rc : deserialize_string(v->id);
         return rc;
     }
-    Id::~Id()
+    Id_::~Id_()
     {
         scheme.clear();
         id.clear();
     }
 
-    int oarchive::serialize_ACL(const char *tag, ACL *v)
+    int oarchive::ACL(ACL_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_int("perms", v->perms);
-        rc = rc ? rc : serialize_Id("id", &v->id);
+        rc = rc ? rc : serialize_int(v->perms);
+        rc = rc ? rc : Id(&v->id);
         return rc;
     }
-    int iarchive::deserialize_ACL(const char *tag, ACL *v)
+    int iarchive::ACL(ACL_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_int("perms", &v->perms);
-        rc = rc ? rc : deserialize_Id("id", &v->id);
+        rc = rc ? rc : deserialize_int(&v->perms);
+        rc = rc ? rc : Id(&v->id);
         return rc;
     }
-    ACL::~ACL()
+    ACL_::~ACL_()
     {
     }
 
-    int oarchive::serialize_Stat(const char *tag, Stat *v)
+    int oarchive::Stat(Stat_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_log("czxid", v->czxid);
-        rc = rc ? rc : serialize_log("mzxid", v->mzxid);
-        rc = rc ? rc : serialize_log("ctime", v->ctime);
-        rc = rc ? rc : serialize_log("mtime", v->mtime);
-        rc = rc ? rc : serialize_int("version", v->version);
-        rc = rc ? rc : serialize_int("cversion", v->cversion);
-        rc = rc ? rc : serialize_int("aversion", v->aversion);
-        rc = rc ? rc : serialize_log("ephemeralOwner", v->ephemeralOwner);
-        rc = rc ? rc : serialize_int("dataLength", v->dataLength);
-        rc = rc ? rc : serialize_int("numChildren", v->numChildren);
-        rc = rc ? rc : serialize_log("pzxid", v->pzxid);
+        rc = rc ? rc : serialize_log(v->czxid);
+        rc = rc ? rc : serialize_log(v->mzxid);
+        rc = rc ? rc : serialize_log(v->ctime);
+        rc = rc ? rc : serialize_log(v->mtime);
+        rc = rc ? rc : serialize_int(v->version);
+        rc = rc ? rc : serialize_int(v->cversion);
+        rc = rc ? rc : serialize_int(v->aversion);
+        rc = rc ? rc : serialize_log(v->ephemeralOwner);
+        rc = rc ? rc : serialize_int(v->dataLength);
+        rc = rc ? rc : serialize_int(v->numChildren);
+        rc = rc ? rc : serialize_log(v->pzxid);
         return rc;
     }
-    int iarchive::deserialize_Stat(const char *tag, Stat *v)
+    int iarchive::Stat(Stat_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_long("czxid", &v->czxid);
-        rc = rc ? rc : deserialize_long("mzxid", &v->mzxid);
-        rc = rc ? rc : deserialize_long("ctime", &v->ctime);
-        rc = rc ? rc : deserialize_long("mtime", &v->mtime);
-        rc = rc ? rc : deserialize_int("version", &v->version);
-        rc = rc ? rc : deserialize_int("cversion", &v->cversion);
-        rc = rc ? rc : deserialize_int("aversion", &v->aversion);
-        rc = rc ? rc : deserialize_long("ephemeralOwner", &v->ephemeralOwner);
-        rc = rc ? rc : deserialize_int("dataLength", &v->dataLength);
-        rc = rc ? rc : deserialize_int("numChildren", &v->numChildren);
-        rc = rc ? rc : deserialize_long("pzxid", &v->pzxid);
-        return rc;
-    }
-
-    int oarchive::serialize_StatPersisted(const char *tag, StatPersisted *v)
-    {
-        int rc = 0;
-        rc = rc ? rc : serialize_log("czxid", v->czxid);
-        rc = rc ? rc : serialize_log("mzxid", v->mzxid);
-        rc = rc ? rc : serialize_log("ctime", v->ctime);
-        rc = rc ? rc : serialize_log("mtime", v->mtime);
-        rc = rc ? rc : serialize_int("version", v->version);
-        rc = rc ? rc : serialize_int("cversion", v->cversion);
-        rc = rc ? rc : serialize_int("aversion", v->aversion);
-        rc = rc ? rc : serialize_log("ephemeralOwner", v->ephemeralOwner);
-        rc = rc ? rc : serialize_log("pzxid", v->pzxid);
-        return rc;
-    }
-    int iarchive::deserialize_StatPersisted(const char *tag, StatPersisted *v)
-    {
-        int rc = 0;
-        rc = rc ? rc : deserialize_long("czxid", &v->czxid);
-        rc = rc ? rc : deserialize_long("mzxid", &v->mzxid);
-        rc = rc ? rc : deserialize_long("ctime", &v->ctime);
-        rc = rc ? rc : deserialize_long("mtime", &v->mtime);
-        rc = rc ? rc : deserialize_int("version", &v->version);
-        rc = rc ? rc : deserialize_int("cversion", &v->cversion);
-        rc = rc ? rc : deserialize_int("aversion", &v->aversion);
-        rc = rc ? rc : deserialize_long("ephemeralOwner", &v->ephemeralOwner);
-        rc = rc ? rc : deserialize_long("pzxid", &v->pzxid);
+        rc = rc ? rc : deserialize_long(&v->czxid);
+        rc = rc ? rc : deserialize_long(&v->mzxid);
+        rc = rc ? rc : deserialize_long(&v->ctime);
+        rc = rc ? rc : deserialize_long(&v->mtime);
+        rc = rc ? rc : deserialize_int(&v->version);
+        rc = rc ? rc : deserialize_int(&v->cversion);
+        rc = rc ? rc : deserialize_int(&v->aversion);
+        rc = rc ? rc : deserialize_long(&v->ephemeralOwner);
+        rc = rc ? rc : deserialize_int(&v->dataLength);
+        rc = rc ? rc : deserialize_int(&v->numChildren);
+        rc = rc ? rc : deserialize_long(&v->pzxid);
         return rc;
     }
 
-    int oarchive::serialize_ClientInfo(const char *tag, ClientInfo *v)
+    int oarchive::StatPersisted(StatPersisted_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("authScheme", v->authScheme);
-        rc = rc ? rc : serialize_string("user", v->user);
+        rc = rc ? rc : serialize_log(v->czxid);
+        rc = rc ? rc : serialize_log(v->mzxid);
+        rc = rc ? rc : serialize_log(v->ctime);
+        rc = rc ? rc : serialize_log(v->mtime);
+        rc = rc ? rc : serialize_int(v->version);
+        rc = rc ? rc : serialize_int(v->cversion);
+        rc = rc ? rc : serialize_int(v->aversion);
+        rc = rc ? rc : serialize_log(v->ephemeralOwner);
+        rc = rc ? rc : serialize_log(v->pzxid);
         return rc;
     }
-    int iarchive::deserialize_ClientInfo(const char *tag, ClientInfo *v)
+    int iarchive::StatPersisted(StatPersisted_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("authScheme", v->authScheme);
-        rc = rc ? rc : deserialize_string("user", v->user);
+        rc = rc ? rc : deserialize_long(&v->czxid);
+        rc = rc ? rc : deserialize_long(&v->mzxid);
+        rc = rc ? rc : deserialize_long(&v->ctime);
+        rc = rc ? rc : deserialize_long(&v->mtime);
+        rc = rc ? rc : deserialize_int(&v->version);
+        rc = rc ? rc : deserialize_int(&v->cversion);
+        rc = rc ? rc : deserialize_int(&v->aversion);
+        rc = rc ? rc : deserialize_long(&v->ephemeralOwner);
+        rc = rc ? rc : deserialize_long(&v->pzxid);
         return rc;
     }
-    void deallocate_ClientInfo(ClientInfo *v)
+
+    int oarchive::ClientInfo(ClientInfo_ *v)
+    {
+        int rc = 0;
+        rc = rc ? rc : serialize_string(v->authScheme);
+        rc = rc ? rc : serialize_string(v->user);
+        return rc;
+    }
+    int iarchive::ClientInfo(ClientInfo_ *v)
+    {
+        int rc = 0;
+        rc = rc ? rc : deserialize_string(v->authScheme);
+        rc = rc ? rc : deserialize_string(v->user);
+        return rc;
+    }
+    void deallocate_ClientInfo(ClientInfo_ *v)
     {
         v->authScheme.clear();
         v->user.clear();
     }
-    int oarchive::serialize_ConnectRequest(const char *tag, ConnectRequest *v)
+    int oarchive::ConnectRequest(ConnectRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_int("protocolVersion", v->protocolVersion);
-        rc = rc ? rc : serialize_log("lastZxidSeen", v->lastZxidSeen);
-        rc = rc ? rc : serialize_int("timeOut", v->timeout);
-        rc = rc ? rc : serialize_log("sessionId", v->sessionId);
-        rc = rc ? rc : serialize_buffer("passwd", v->passwd);
-        rc = rc ? rc : serialize_bool("readOnly", v->readOnly);
+        rc = rc ? rc : serialize_int(v->protocolVersion);
+        rc = rc ? rc : serialize_log(v->lastZxidSeen);
+        rc = rc ? rc : serialize_int(v->timeout);
+        rc = rc ? rc : serialize_log(v->sessionId);
+        rc = rc ? rc : serialize_buffer(v->passwd);
+        rc = rc ? rc : serialize_bool(v->readOnly);
         return rc;
     }
-    int iarchive::deserialize_ConnectRequest(const char *tag, ConnectRequest *v)
+    int iarchive::ConnectRequest(ConnectRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_int("protocolVersion", &v->protocolVersion);
-        rc = rc ? rc : deserialize_long("lastZxidSeen", &v->lastZxidSeen);
-        rc = rc ? rc : deserialize_int("timeOut", &v->timeout);
-        rc = rc ? rc : deserialize_long("sessionId", &v->sessionId);
-        rc = rc ? rc : deserialize_buffer("passwd", v->passwd);
-        rc = rc ? rc : deserialize_bool("readOnly", &v->readOnly);
+        rc = rc ? rc : deserialize_int(&v->protocolVersion);
+        rc = rc ? rc : deserialize_long(&v->lastZxidSeen);
+        rc = rc ? rc : deserialize_int(&v->timeout);
+        rc = rc ? rc : deserialize_long(&v->sessionId);
+        rc = rc ? rc : deserialize_buffer(v->passwd);
+        rc = rc ? rc : deserialize_bool(&v->readOnly);
         return rc;
     }
-    void deallocate_ConnectRequest(ConnectRequest *v)
+    void deallocate_ConnectRequest(ConnectRequest_ *v)
     {
         v->passwd.clear();
     }
-    int oarchive::serialize_ConnectResponse(const char *tag, ConnectResponse *v)
+    int oarchive::ConnectResponse(ConnectResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_int("protocolVersion", v->protocolVersion);
-        rc = rc ? rc : serialize_int("timeOut", v->timeout);
-        rc = rc ? rc : serialize_log("sessionId", v->sessionId);
-        rc = rc ? rc : serialize_buffer("passwd", v->passwd);
-        rc = rc ? rc : serialize_bool("readOnly", v->readOnly);
+        rc = rc ? rc : serialize_int(v->protocolVersion);
+        rc = rc ? rc : serialize_int(v->timeout);
+        rc = rc ? rc : serialize_log(v->sessionId);
+        rc = rc ? rc : serialize_buffer(v->passwd);
+        rc = rc ? rc : serialize_bool(v->readOnly);
         return rc;
     }
-    int iarchive::deserialize_ConnectResponse(const char *tag, ConnectResponse *v)
+    int iarchive::ConnectResponse(ConnectResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_int("protocolVersion", &v->protocolVersion);
-        rc = rc ? rc : deserialize_int("timeOut", &v->timeout);
-        rc = rc ? rc : deserialize_long("sessionId", &v->sessionId);
-        rc = rc ? rc : deserialize_buffer("passwd", v->passwd);
-        rc = rc ? rc : deserialize_bool("readOnly", &v->readOnly);
+        rc = rc ? rc : deserialize_int(&v->protocolVersion);
+        rc = rc ? rc : deserialize_int(&v->timeout);
+        rc = rc ? rc : deserialize_long(&v->sessionId);
+        rc = rc ? rc : deserialize_buffer(v->passwd);
+        rc = rc ? rc : deserialize_bool(&v->readOnly);
         return rc;
     }
-    void deallocate_ConnectResponse(ConnectResponse *v)
+    void deallocate_ConnectResponse(ConnectResponse_ *v)
     {
         v->passwd.clear();
     }
 
-    StringVec::~StringVec()
+    StringVec_::~StringVec_()
     {
         clear();
     }
 
-    int oarchive::serialize_StringVec(const char *tag, StringVec *v)
+    int oarchive::StringVec(StringVec_ *v)
     {
         int32_t count = v->size();
         int rc = 0;
-        rc = start_vector(tag, &count);
+        rc = serialize_int(count);
         for (auto i = 0; i < (int32_t)v->size(); i++)
         {
-            rc = rc ? rc : serialize_string("data", v->at(i));
+            rc = rc ? rc : serialize_string(v->at(i));
         }
         return rc;
     }
-    int iarchive::deserialize_String_vector(const char *tag, StringVec *v)
+    int iarchive::StringVec(StringVec_ *v)
     {
         int rc = 0;
         int32_t count = 0;
-        rc = deserialize_int(tag, &count);
+        rc = deserialize_int(&count);
         v->resize(count);
         for (auto i = 0; i < (int32_t)v->size(); i++)
         {
-            rc = rc ? rc : deserialize_string("value", v->at(i));
+            rc = rc ? rc : deserialize_string(v->at(i));
         }
         return rc;
     }
-    int oarchive::serialize_SetWatches(const char *tag, SetWatches *v)
+    int oarchive::SetWatches(SetWatches_ *v)
     {
         int rc = 0;
 
-        rc = rc ? rc : serialize_log("relativeZxid", v->relativeZxid);
-        rc = rc ? rc : serialize_StringVec("dataWatches", &v->dataWatches);
-        rc = rc ? rc : serialize_StringVec("existWatches", &v->existWatches);
-        rc = rc ? rc : serialize_StringVec("childWatches", &v->childWatches);
+        rc = rc ? rc : serialize_log(v->relativeZxid);
+        rc = rc ? rc : StringVec(&v->dataWatches);
+        rc = rc ? rc : StringVec(&v->existWatches);
+        rc = rc ? rc : StringVec(&v->childWatches);
 
         return rc;
     }
-    int iarchive::deserialize_SetWatches(const char *tag, SetWatches *v)
+    int iarchive::SetWatches(SetWatches_ *v)
     {
         int rc = 0;
 
-        rc = rc ? rc : deserialize_long("relativeZxid", &v->relativeZxid);
-        rc = rc ? rc : deserialize_String_vector("dataWatches", &v->dataWatches);
-        rc = rc ? rc : deserialize_String_vector("existWatches", &v->existWatches);
-        rc = rc ? rc : deserialize_String_vector("childWatches", &v->childWatches);
+        rc = rc ? rc : deserialize_long(&v->relativeZxid);
+        rc = rc ? rc : StringVec(&v->dataWatches);
+        rc = rc ? rc : StringVec(&v->existWatches);
+        rc = rc ? rc : StringVec(&v->childWatches);
 
         return rc;
     }
-    void deallocate_SetWatches(SetWatches *v)
+    void deallocate_SetWatches(SetWatches_ *v)
     {
         v->dataWatches.clear();
         v->existWatches.clear();
         v->childWatches.clear();
     }
-    int oarchive::serialize_SetWatches2(const char *tag, SetWatches2 *v)
+    int oarchive::SetWatches2(SetWatches2_ *v)
     {
         int rc = 0;
 
-        rc = rc ? rc : serialize_log("relativeZxid", v->relativeZxid);
-        rc = rc ? rc : serialize_StringVec("dataWatches", &v->dataWatches);
-        rc = rc ? rc : serialize_StringVec("existWatches", &v->existWatches);
-        rc = rc ? rc : serialize_StringVec("childWatches", &v->childWatches);
-        rc = rc ? rc : serialize_StringVec("persistentWatches", &v->persistentWatches);
-        rc = rc ? rc : serialize_StringVec("persistentRecursiveWatches", &v->persistentRecursiveWatches);
+        rc = rc ? rc : serialize_log(v->relativeZxid);
+        rc = rc ? rc : StringVec(&v->dataWatches);
+        rc = rc ? rc : StringVec(&v->existWatches);
+        rc = rc ? rc : StringVec(&v->childWatches);
+        rc = rc ? rc : StringVec(&v->persistentWatches);
+        rc = rc ? rc : StringVec(&v->persistentRecursiveWatches);
 
         return rc;
     }
-    int iarchive::deserialize_SetWatches2(const char *tag, SetWatches2 *v)
+    int iarchive::SetWatches2(SetWatches2_ *v)
     {
         int rc = 0;
 
-        rc = rc ? rc : deserialize_long("relativeZxid", &v->relativeZxid);
-        rc = rc ? rc : deserialize_String_vector("dataWatches", &v->dataWatches);
-        rc = rc ? rc : deserialize_String_vector("existWatches", &v->existWatches);
-        rc = rc ? rc : deserialize_String_vector("childWatches", &v->childWatches);
-        rc = rc ? rc : deserialize_String_vector("persistentWatches", &v->persistentWatches);
-        rc = rc ? rc : deserialize_String_vector("persistentRecursiveWatches", &v->persistentRecursiveWatches);
+        rc = rc ? rc : deserialize_long(&v->relativeZxid);
+        rc = rc ? rc : StringVec(&v->dataWatches);
+        rc = rc ? rc : StringVec(&v->existWatches);
+        rc = rc ? rc : StringVec(&v->childWatches);
+        rc = rc ? rc : StringVec(&v->persistentWatches);
+        rc = rc ? rc : StringVec(&v->persistentRecursiveWatches);
 
         return rc;
     }
-    void deallocate_SetWatches2(SetWatches2 *v)
+    void deallocate_SetWatches2(SetWatches2_ *v)
     {
         v->dataWatches.clear();
         v->existWatches.clear();
@@ -405,303 +401,300 @@ namespace coev
         v->persistentWatches.clear();
         v->persistentRecursiveWatches.clear();
     }
-    int oarchive::serialize_RequestHeader(const char *tag, RequestHeader *v)
+    int oarchive::RequestHeader(RequestHeader_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_int("xid", v->xid);
-        rc = rc ? rc : serialize_int("type", v->type);
+        rc = rc ? rc : serialize_int(v->xid);
+        rc = rc ? rc : serialize_int(v->type);
         return rc;
     }
-    int iarchive::deserialize_RequestHeader(const char *tag, RequestHeader *v)
+    int iarchive::RequestHeader(RequestHeader_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_int("xid", &v->xid);
-        rc = rc ? rc : deserialize_int("type", &v->type);
+        rc = rc ? rc : deserialize_int(&v->xid);
+        rc = rc ? rc : deserialize_int(&v->type);
         return rc;
     }
 
-    int oarchive::serialize_MultiHeader(const char *tag, MultiHeader *v)
+    int oarchive::MultiHeader(MultiHeader_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_int("type", v->type);
-        rc = rc ? rc : serialize_bool("done", v->done);
-        rc = rc ? rc : serialize_int("err", v->err);
+        rc = rc ? rc : serialize_int(v->type);
+        rc = rc ? rc : serialize_bool(v->done);
+        rc = rc ? rc : serialize_int(v->err);
         return rc;
     }
-    int iarchive::deserialize_MultiHeader(const char *tag, MultiHeader *v)
+    int iarchive::MultiHeader(MultiHeader_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_int("type", &v->type);
-        rc = rc ? rc : deserialize_bool("done", &v->done);
-        rc = rc ? rc : deserialize_int("err", &v->err);
+        rc = rc ? rc : deserialize_int(&v->type);
+        rc = rc ? rc : deserialize_bool(&v->done);
+        rc = rc ? rc : deserialize_int(&v->err);
         return rc;
     }
-    void deallocate_MultiHeader(MultiHeader *v)
+    void deallocate_MultiHeader(MultiHeader_ *v)
     {
     }
-    int oarchive::serialize_AuthPacket(const char *tag, AuthPacket *v)
-    {
-        int rc = 0;
-        rc = rc ? rc : serialize_int("type", v->type);
-        rc = rc ? rc : serialize_string("scheme", v->scheme);
-        rc = rc ? rc : serialize_buffer("auth", v->auth);
-        return rc;
-    }
-    int iarchive::deserialize_AuthPacket(const char *tag, AuthPacket *v)
+    int oarchive::AuthPacket(AuthPacket_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_int("type", &v->type);
-        rc = rc ? rc : deserialize_string("scheme", v->scheme);
-        rc = rc ? rc : deserialize_buffer("auth", v->auth);
+        rc = rc ? rc : serialize_int(v->type);
+        rc = rc ? rc : serialize_string(v->scheme);
+        rc = rc ? rc : serialize_buffer(v->auth);
         return rc;
     }
-    void deallocate_AuthPacket(AuthPacket *v)
+    int iarchive::AuthPacket(AuthPacket_ *v)
+    {
+        int rc = 0;
+        rc = rc ? rc : deserialize_int(&v->type);
+        rc = rc ? rc : deserialize_string(v->scheme);
+        rc = rc ? rc : deserialize_buffer(v->auth);
+        return rc;
+    }
+    void deallocate_AuthPacket(AuthPacket_ *v)
     {
         v->scheme.clear();
         v->auth.clear();
     }
-    int oarchive::serialize_ReplyHeader(const char *tag, ReplyHeader *v)
+    int oarchive::ReplyHeader(ReplyHeader_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_int("xid", v->xid);
-        rc = rc ? rc : serialize_log("zxid", v->zxid);
-        rc = rc ? rc : serialize_int("err", v->err);
+        rc = rc ? rc : serialize_int(v->xid);
+        rc = rc ? rc : serialize_log(v->zxid);
+        rc = rc ? rc : serialize_int(v->err);
         return rc;
     }
-    int iarchive::deserialize_ReplyHeader(const char *tag, ReplyHeader *v)
+    int iarchive::ReplyHeader(ReplyHeader_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_int("xid", &v->xid);
-        rc = rc ? rc : deserialize_long("zxid", &v->zxid);
-        rc = rc ? rc : deserialize_int("err", &v->err);
+        rc = rc ? rc : deserialize_int(&v->xid);
+        rc = rc ? rc : deserialize_long(&v->zxid);
+        rc = rc ? rc : deserialize_int(&v->err);
         return rc;
     }
-    void deallocate_ReplyHeader(ReplyHeader *v)
+    void deallocate_ReplyHeader(ReplyHeader_ *v)
     {
     }
-    int oarchive::serialize_GetDataRequest(const char *tag, GetDataRequest *v)
-    {
-        int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_bool("watch", v->watch);
-        return rc;
-    }
-    int iarchive::deserialize_GetDataRequest(const char *tag, GetDataRequest *v)
+    int oarchive::GetDataRequest(GetDataRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_bool("watch", &v->watch);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : serialize_bool(v->watch);
         return rc;
     }
-    void deallocate_GetDataRequest(GetDataRequest *v)
+    int iarchive::GetDataRequest(GetDataRequest_ *v)
+    {
+        int rc = 0;
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : deserialize_bool(&v->watch);
+        return rc;
+    }
+    void deallocate_GetDataRequest(GetDataRequest_ *v)
     {
         v->path.clear();
     }
-    int oarchive::serialize_SetDataRequest(const char *tag, SetDataRequest *v)
+    int oarchive::SetDataRequest(SetDataRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_buffer("data", v->data);
-        rc = rc ? rc : serialize_int("version", v->version);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : serialize_buffer(v->data);
+        rc = rc ? rc : serialize_int(v->version);
         return rc;
     }
-    int iarchive::deserialize_SetDataRequest(const char *tag, SetDataRequest *v)
+    int iarchive::SetDataRequest(SetDataRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_buffer("data", v->data);
-        rc = rc ? rc : deserialize_int("version", &v->version);
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : deserialize_buffer(v->data);
+        rc = rc ? rc : deserialize_int(&v->version);
         return rc;
     }
-    void deallocate_SetDataRequest(SetDataRequest *v)
+    void deallocate_SetDataRequest(SetDataRequest_ *v)
     {
         v->path.clear();
         v->data.clear();
     }
-    int oarchive::serialize_ReconfigRequest(const char *tag, ReconfigRequest *v)
+    int oarchive::ReconfigRequest(ReconfigRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("joiningServers", v->joiningServers);
-        rc = rc ? rc : serialize_string("leavingServers", v->leavingServers);
-        rc = rc ? rc : serialize_string("newMembers", v->newMembers);
-        rc = rc ? rc : serialize_log("curConfigId", v->curConfigId);
+        rc = rc ? rc : serialize_string(v->joiningServers);
+        rc = rc ? rc : serialize_string(v->leavingServers);
+        rc = rc ? rc : serialize_string(v->newMembers);
+        rc = rc ? rc : serialize_log(v->curConfigId);
         return rc;
     }
-    int iarchive::deserialize_ReconfigRequest(const char *tag, ReconfigRequest *v)
+    int iarchive::ReconfigRequest(ReconfigRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("joiningServers", v->joiningServers);
-        rc = rc ? rc : deserialize_string("leavingServers", v->leavingServers);
-        rc = rc ? rc : deserialize_string("newMembers", v->newMembers);
-        rc = rc ? rc : deserialize_long("curConfigId", &v->curConfigId);
+        rc = rc ? rc : deserialize_string(v->joiningServers);
+        rc = rc ? rc : deserialize_string(v->leavingServers);
+        rc = rc ? rc : deserialize_string(v->newMembers);
+        rc = rc ? rc : deserialize_long(&v->curConfigId);
         return rc;
     }
-    void deallocate_ReconfigRequest(ReconfigRequest *v)
+    void deallocate_ReconfigRequest(ReconfigRequest_ *v)
     {
         v->joiningServers.clear();
         v->leavingServers.clear();
         v->newMembers.clear();
     }
-    int oarchive::serialize_SetDataResponse(const char *tag, SetDataResponse *v)
+    int oarchive::SetDataResponse(SetDataResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_Stat("stat", &v->stat);
+        rc = rc ? rc : Stat(&v->stat);
         return rc;
     }
-    int iarchive::deserialize_SetDataResponse(const char *tag, SetDataResponse *v)
+    int iarchive::SetDataResponse(SetDataResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_Stat("stat", &v->stat);
+        rc = rc ? rc : Stat(&v->stat);
         return rc;
     }
-    void deallocate_SetDataResponse(SetDataResponse *v)
+    void deallocate_SetDataResponse(SetDataResponse_ *v)
     {
     }
-    int oarchive::serialize_GetSASLRequest(const char *tag, GetSASLRequest *v)
-    {
-        int rc = 0;
-        rc = rc ? rc : serialize_buffer("token", v->token);
-        return rc;
-    }
-    int iarchive::deserialize_GetSASLRequest(const char *tag, GetSASLRequest *v)
+    int oarchive::GetSASLRequest(GetSASLRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_buffer("token", v->token);
+        rc = rc ? rc : serialize_buffer(v->token);
         return rc;
     }
-    void deallocate_GetSASLRequest(GetSASLRequest *v)
+    int iarchive::GetSASLRequest(GetSASLRequest_ *v)
+    {
+        int rc = 0;
+        rc = rc ? rc : deserialize_buffer(v->token);
+        return rc;
+    }
+    void deallocate_GetSASLRequest(GetSASLRequest_ *v)
     {
         v->token.clear();
     }
-    int oarchive::serialize_SetSASLRequest(const char *tag, SetSASLRequest *v)
+    int oarchive::SetSASLRequest(SetSASLRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_buffer("token", v->token);
+        rc = rc ? rc : serialize_buffer(v->token);
         return rc;
     }
-    int iarchive::deserialize_SetSASLRequest(const char *tag, SetSASLRequest *v)
+    int iarchive::SetSASLRequest(SetSASLRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_buffer("token", v->token);
-        return rc;
-    }
-    void deallocate_SetSASLRequest(SetSASLRequest *v)
-    {
-        v->token.clear();
-    }
-    int oarchive::serialize_SetSASLResponse(const char *tag, SetSASLResponse *v)
-    {
-        int rc = 0;
-        rc = rc ? rc : serialize_buffer("token", v->token);
-        return rc;
-    }
-    int iarchive::deserialize_SetSASLResponse(const char *tag, SetSASLResponse *v)
-    {
-        int rc = 0;
-        rc = rc ? rc : deserialize_buffer("token", v->token);
+        rc = rc ? rc : deserialize_buffer(v->token);
         return rc;
     }
 
-    int oarchive::serialize_ACL_vector(const char *tag, ACLVec *v)
+    int oarchive::SetSASLResponse(SetSASLResponse_ *v)
+    {
+        int rc = 0;
+        rc = rc ? rc : serialize_buffer(v->token);
+        return rc;
+    }
+    int iarchive::SetSASLResponse(SetSASLResponse_ *v)
+    {
+        int rc = 0;
+        rc = rc ? rc : deserialize_buffer(v->token);
+        return rc;
+    }
+
+    int oarchive::ACLVec(ACLVec_ *v)
     {
         int32_t count = 0;
         int rc = 0;
         int32_t i;
-        rc = start_vector(tag, &count);
+        rc = serialize_int(count);
         for (i = 0; i < count; i++)
         {
-            rc = rc ? rc : serialize_ACL("data", &(*v)[i]);
+            rc = rc ? rc : ACL(&(*v)[i]);
         }
         return rc;
     }
-    int iarchive::deserialize_ACLVec(const char *tag, ACLVec *v)
+    int iarchive::ACLVec(ACLVec_ *v)
     {
         int rc = 0;
         int32_t i;
         int count = 0;
-        rc = deserialize_int(tag, &count);
+        rc = deserialize_int(&count);
         v->resize(count);
         for (i = 0; i < count; i++)
         {
-            rc = rc ? rc : deserialize_ACL("value", &(*v)[i]);
+            rc = rc ? rc : ACL(&(*v)[i]);
         }
         return rc;
     }
-    int oarchive::serialize_CreateRequest(const char *tag, CreateRequest *v)
+    int oarchive::CreateRequest(CreateRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_buffer("data", v->data);
-        rc = rc ? rc : serialize_ACL_vector("acl", &v->acl);
-        rc = rc ? rc : serialize_int("flags", v->flags);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : serialize_buffer(v->data);
+        rc = rc ? rc : ACLVec(&v->acl);
+        rc = rc ? rc : serialize_int(v->flags);
         return rc;
     }
-    int iarchive::deserialize_CreateRequest(const char *tag, CreateRequest *v)
+    int iarchive::CreateRequest(CreateRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_buffer("data", v->data);
-        rc = rc ? rc : deserialize_ACLVec("acl", &v->acl);
-        rc = rc ? rc : deserialize_int("flags", &v->flags);
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : deserialize_buffer(v->data);
+        rc = rc ? rc : ACLVec(&v->acl);
+        rc = rc ? rc : deserialize_int(&v->flags);
         return rc;
     }
-    void CreateRequest::clear()
+    void CreateRequest_::clear()
     {
         path.clear();
         data.clear();
         acl.clear();
     }
 
-    int oarchive::serialize_CreateTTLRequest(const char *tag, CreateTTLRequest *v)
+    int oarchive::CreateTTLRequest(CreateTTLRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_buffer("data", v->data);
-        rc = rc ? rc : serialize_ACL_vector("acl", &v->acl);
-        rc = rc ? rc : serialize_int("flags", v->flags);
-        rc = rc ? rc : serialize_log("ttl", v->ttl);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : serialize_buffer(v->data);
+        rc = rc ? rc : ACLVec(&v->acl);
+        rc = rc ? rc : serialize_int(v->flags);
+        rc = rc ? rc : serialize_log(v->ttl);
         return rc;
     }
-    int iarchive::deserialize_CreateTTLRequest(const char *tag, CreateTTLRequest *v)
+    int iarchive::CreateTTLRequest(CreateTTLRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_buffer("data", v->data);
-        rc = rc ? rc : deserialize_ACLVec("acl", &v->acl);
-        rc = rc ? rc : deserialize_int("flags", &v->flags);
-        rc = rc ? rc : deserialize_long("ttl", &v->ttl);
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : deserialize_buffer(v->data);
+        rc = rc ? rc : ACLVec(&v->acl);
+        rc = rc ? rc : deserialize_int(&v->flags);
+        rc = rc ? rc : deserialize_long(&v->ttl);
         return rc;
     }
-    CreateTTLRequest::~CreateTTLRequest()
+    CreateTTLRequest_::~CreateTTLRequest_()
     {
         path.clear();
         data.clear();
         acl.clear();
     }
 
-    int oarchive::serialize_DeleteRequest(const char *tag, DeleteRequest *v)
+    int oarchive::DeleteRequest(DeleteRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_int("version", v->version);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : serialize_int(v->version);
         return rc;
     }
-    int iarchive::deserialize_DeleteRequest(const char *tag, DeleteRequest *v)
+    int iarchive::DeleteRequest(DeleteRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_int("version", &v->version);
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : deserialize_int(&v->version);
         return rc;
     }
-    void deallocate_DeleteRequest(DeleteRequest *v)
+    void deallocate_DeleteRequest(DeleteRequest_ *v)
     {
         v->path.clear();
     }
-    int oarchive::serialize_GetChildrenRequest(const char *tag, GetChildrenRequest *v)
+    int oarchive::GetChildrenRequest(GetChildrenRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_bool("watch", v->watch);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : serialize_bool(v->watch);
         return rc;
     }
 
@@ -713,995 +706,967 @@ namespace coev
     {
         m_view = std::string_view(data.data(), data.size());
     }
-    int iarchive::deserialize_GetChildrenRequest(const char *tag, GetChildrenRequest *v)
+    int iarchive::GetChildrenRequest(GetChildrenRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_bool("watch", &v->watch);
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : deserialize_bool(&v->watch);
         return rc;
     }
-    void deallocate_GetChildrenRequest(GetChildrenRequest *v)
+    void deallocate_GetChildrenRequest(GetChildrenRequest_ *v)
     {
         v->path.clear();
     }
-    int oarchive::serialize_GetAllChildrenNumberRequest(const char *tag, GetAllChildrenNumberRequest *v)
+    int oarchive::GetAllChildrenNumberRequest(GetAllChildrenNumberRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
+        rc = rc ? rc : serialize_string(v->path);
         return rc;
     }
-    int iarchive::deserialize_GetAllChildrenNumberRequest(const char *tag, GetAllChildrenNumberRequest *v)
+    int iarchive::GetAllChildrenNumberRequest(GetAllChildrenNumberRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
+        rc = rc ? rc : deserialize_string(v->path);
         return rc;
     }
-    void deallocate_GetAllChildrenNumberRequest(GetAllChildrenNumberRequest *v)
+    void deallocate_GetAllChildrenNumberRequest(GetAllChildrenNumberRequest_ *v)
     {
         v->path.clear();
     }
-    int oarchive::serialize_GetChildren2Request(const char *tag, GetChildren2Request *v)
+    int oarchive::GetChildren2Request(GetChildren2Request_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_bool("watch", v->watch);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : serialize_bool(v->watch);
         return rc;
     }
-    int iarchive::deserialize_GetChildren2Request(const char *tag, GetChildren2Request *v)
+    int iarchive::GetChildren2Request(GetChildren2Request_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_bool("watch", &v->watch);
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : deserialize_bool(&v->watch);
         return rc;
     }
-    void deallocate_GetChildren2Request(GetChildren2Request *v)
+    void deallocate_GetChildren2Request(GetChildren2Request_ *v)
     {
         v->path.clear();
     }
-    int oarchive::serialize_CheckVersionRequest(const char *tag, CheckVersionRequest *v)
+    int oarchive::CheckVersionRequest(CheckVersionRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_int("version", v->version);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : serialize_int(v->version);
         return rc;
     }
-    int iarchive::deserialize_CheckVersionRequest(const char *tag, CheckVersionRequest *v)
+    int iarchive::CheckVersionRequest(CheckVersionRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_int("version", &v->version);
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : deserialize_int(&v->version);
         return rc;
     }
-    void deallocate_CheckVersionRequest(CheckVersionRequest *v)
+    void deallocate_CheckVersionRequest(CheckVersionRequest_ *v)
     {
         v->path.clear();
     }
-    int oarchive::serialize_GetMaxChildrenRequest(const char *tag, GetMaxChildrenRequest *v)
+    int oarchive::GetMaxChildrenRequest(GetMaxChildrenRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
+        rc = rc ? rc : serialize_string(v->path);
         return rc;
     }
-    int iarchive::deserialize_GetMaxChildrenRequest(const char *tag, GetMaxChildrenRequest *v)
+    int iarchive::GetMaxChildrenRequest(GetMaxChildrenRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
+        rc = rc ? rc : deserialize_string(v->path);
         return rc;
     }
-    void deallocate_GetMaxChildrenRequest(GetMaxChildrenRequest *v)
+    void deallocate_GetMaxChildrenRequest(GetMaxChildrenRequest_ *v)
     {
         v->path.clear();
     }
-    int oarchive::serialize_GetMaxChildrenResponse(const char *tag, GetMaxChildrenResponse *v)
+    int oarchive::GetMaxChildrenResponse(GetMaxChildrenResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_int("max", v->max);
+        rc = rc ? rc : serialize_int(v->max);
         return rc;
     }
-    int iarchive::deserialize_GetMaxChildrenResponse(const char *tag, GetMaxChildrenResponse *v)
+    int iarchive::GetMaxChildrenResponse(GetMaxChildrenResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_int("max", &v->max);
+        rc = rc ? rc : deserialize_int(&v->max);
         return rc;
     }
-    void deallocate_GetMaxChildrenResponse(GetMaxChildrenResponse *v)
+    void deallocate_GetMaxChildrenResponse(GetMaxChildrenResponse_ *v)
     {
     }
-    int oarchive::serialize_SetMaxChildrenRequest(const char *tag, SetMaxChildrenRequest *v)
-    {
-        int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_int("max", v->max);
-        return rc;
-    }
-    int iarchive::deserialize_SetMaxChildrenRequest(const char *tag, SetMaxChildrenRequest *v)
+    int oarchive::SetMaxChildrenRequest(SetMaxChildrenRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_int("max", &v->max);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : serialize_int(v->max);
         return rc;
     }
-    void deallocate_SetMaxChildrenRequest(SetMaxChildrenRequest *v)
+    int iarchive::SetMaxChildrenRequest(SetMaxChildrenRequest_ *v)
+    {
+        int rc = 0;
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : deserialize_int(&v->max);
+        return rc;
+    }
+    void deallocate_SetMaxChildrenRequest(SetMaxChildrenRequest_ *v)
     {
         v->path.clear();
     }
-    int oarchive::serialize_SyncRequest(const char *tag, SyncRequest *v)
+    int oarchive::SyncRequest(SyncRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
+        rc = rc ? rc : serialize_string(v->path);
         return rc;
     }
-    int iarchive::deserialize_SyncRequest(const char *tag, SyncRequest *v)
+    int iarchive::SyncRequest(SyncRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
+        rc = rc ? rc : deserialize_string(v->path);
         return rc;
     }
-    void deallocate_SyncRequest(SyncRequest *v)
+    void deallocate_SyncRequest(SyncRequest_ *v)
     {
         v->path.clear();
     }
-    int oarchive::serialize_SyncResponse(const char *tag, SyncResponse *v)
+    int oarchive::SyncResponse(SyncResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
+        rc = rc ? rc : serialize_string(v->path);
         return rc;
     }
-    int iarchive::deserialize_SyncResponse(const char *tag, SyncResponse *v)
+    int iarchive::SyncResponse(SyncResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
+        rc = rc ? rc : deserialize_string(v->path);
         return rc;
     }
-    void deallocate_SyncResponse(SyncResponse *v)
+    void deallocate_SyncResponse(SyncResponse_ *v)
     {
         v->path.clear();
     }
-    int oarchive::serialize_GetACLRequest(const char *tag, GetACLRequest *v)
+    int oarchive::GetACLRequest(GetACLRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
+        rc = rc ? rc : serialize_string(v->path);
         return rc;
     }
-    int iarchive::deserialize_GetACLRequest(const char *tag, GetACLRequest *v)
+    int iarchive::GetACLRequest(GetACLRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
+        rc = rc ? rc : deserialize_string(v->path);
         return rc;
     }
-    void deallocate_GetACLRequest(GetACLRequest *v)
+    void deallocate_GetACLRequest(GetACLRequest_ *v)
     {
         v->path.clear();
     }
-    int oarchive::serialize_SetACLRequest(const char *tag, SetACLRequest *v)
+    int oarchive::SetACLRequest(SetACLRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_ACL_vector("acl", &v->acl);
-        rc = rc ? rc : serialize_int("version", v->version);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : ACLVec(&v->acl);
+        rc = rc ? rc : serialize_int(v->version);
         return rc;
     }
-    int iarchive::deserialize_SetACLRequest(const char *tag, SetACLRequest *v)
+    int iarchive::SetACLRequest(SetACLRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_ACLVec("acl", &v->acl);
-        rc = rc ? rc : deserialize_int("version", &v->version);
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : ACLVec(&v->acl);
+        rc = rc ? rc : deserialize_int(&v->version);
         return rc;
     }
-    void deallocate_SetACLRequest(SetACLRequest *v)
+    void deallocate_SetACLRequest(SetACLRequest_ *v)
     {
         v->path.clear();
         v->acl.clear();
     }
-    int oarchive::serialize_SetACLResponse(const char *tag, SetACLResponse *v)
+    int oarchive::SetACLResponse(SetACLResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_Stat("stat", &v->stat);
+        rc = rc ? rc : Stat(&v->stat);
         return rc;
     }
-    int iarchive::deserialize_SetACLResponse(const char *tag, SetACLResponse *v)
+    int iarchive::SetACLResponse(SetACLResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_Stat("stat", &v->stat);
+        rc = rc ? rc : Stat(&v->stat);
         return rc;
     }
-    void deallocate_SetACLResponse(SetACLResponse *v)
+    void deallocate_SetACLResponse(SetACLResponse_ *v)
     {
     }
-    int oarchive::serialize_AddWatchRequest(const char *tag, AddWatchRequest *v)
-    {
-        int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_int("mode", v->mode);
-        return rc;
-    }
-    int iarchive::deserialize_AddWatchRequest(const char *tag, AddWatchRequest *v)
+    int oarchive::AddWatchRequest(AddWatchRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_int("mode", &v->mode);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : serialize_int(v->mode);
         return rc;
     }
-    void deallocate_AddWatchRequest(AddWatchRequest *v)
+    int iarchive::AddWatchRequest(AddWatchRequest_ *v)
+    {
+        int rc = 0;
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : deserialize_int(&v->mode);
+        return rc;
+    }
+    void deallocate_AddWatchRequest(AddWatchRequest_ *v)
     {
         v->path.clear();
     }
-    int oarchive::serialize_WatcherEvent(const char *tag, WatcherEvent *v)
+    int oarchive::WatcherEvent(WatcherEvent_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_int("type", v->type);
-        rc = rc ? rc : serialize_int("state", v->state);
-        rc = rc ? rc : serialize_string("path", v->path);
+        rc = rc ? rc : serialize_int(v->type);
+        rc = rc ? rc : serialize_int(v->state);
+        rc = rc ? rc : serialize_string(v->path);
         return rc;
     }
-    int iarchive::deserialize_WatcherEvent(const char *tag, WatcherEvent *v)
+    int iarchive::WatcherEvent(WatcherEvent_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_int("type", &v->type);
-        rc = rc ? rc : deserialize_int("state", &v->state);
-        rc = rc ? rc : deserialize_string("path", v->path);
+        rc = rc ? rc : deserialize_int(&v->type);
+        rc = rc ? rc : deserialize_int(&v->state);
+        rc = rc ? rc : deserialize_string(v->path);
         return rc;
     }
-    void WatcherEvent::clear()
+    void WatcherEvent_::clear()
     {
         path.clear();
     }
 
-    int oarchive::serialize_ErrorResponse(const char *tag, ErrorResponse *v)
+    int oarchive::ErrorResponse(ErrorResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_int("err", v->err);
+        rc = rc ? rc : serialize_int(v->err);
         return rc;
     }
-    int iarchive::deserialize_ErrorResponse(const char *tag, ErrorResponse *v)
+    int iarchive::ErrorResponse(ErrorResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_int("err", &v->err);
+        rc = rc ? rc : deserialize_int(&v->err);
         return rc;
     }
-    void deallocate_ErrorResponse(ErrorResponse *v)
+    void deallocate_ErrorResponse(ErrorResponse_ *v)
     {
     }
-    int oarchive::serialize_CreateResponse(const char *tag, CreateResponse *v)
-    {
-        int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        return rc;
-    }
-    int iarchive::deserialize_CreateResponse(const char *tag, CreateResponse *v)
+    int oarchive::CreateResponse(CreateResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
+        rc = rc ? rc : serialize_string(v->path);
         return rc;
     }
-    void deallocate_CreateResponse(CreateResponse *v)
+    int iarchive::CreateResponse(CreateResponse_ *v)
+    {
+        int rc = 0;
+        rc = rc ? rc : deserialize_string(v->path);
+        return rc;
+    }
+    void deallocate_CreateResponse(CreateResponse_ *v)
     {
         v->path.clear();
     }
-    int oarchive::serialize_Create2Response(const char *tag, Create2Response *v)
+    int oarchive::Create2Response(Create2Response_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_Stat("stat", &v->stat);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : Stat(&v->stat);
         return rc;
     }
-    int iarchive::deserialize_Create2Response(const char *tag, Create2Response *v)
+    int iarchive::Create2Response(Create2Response_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_Stat("stat", &v->stat);
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : Stat(&v->stat);
         return rc;
     }
-    void deallocate_Create2Response(Create2Response *v)
+    void deallocate_Create2Response(Create2Response_ *v)
     {
         v->path.clear();
     }
-    int oarchive::serialize_ExistsRequest(const char *tag, ExistsRequest *v)
+    int oarchive::ExistsRequest(ExistsRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_bool("watch", v->watch);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : serialize_bool(v->watch);
         return rc;
     }
-    int iarchive::deserialize_ExistsRequest(const char *tag, ExistsRequest *v)
+    int iarchive::ExistsRequest(ExistsRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_bool("watch", &v->watch);
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : deserialize_bool(&v->watch);
         return rc;
     }
-    void deallocate_ExistsRequest(ExistsRequest *v)
+    void deallocate_ExistsRequest(ExistsRequest_ *v)
     {
         v->path.clear();
     }
-    int oarchive::serialize_ExistsResponse(const char *tag, ExistsResponse *v)
+    int oarchive::ExistsResponse(ExistsResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_Stat("stat", &v->stat);
+        rc = rc ? rc : Stat(&v->stat);
         return rc;
     }
-    int iarchive::deserialize_ExistsResponse(const char *tag, ExistsResponse *v)
+    int iarchive::ExistsResponse(ExistsResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_Stat("stat", &v->stat);
+        rc = rc ? rc : Stat(&v->stat);
         return rc;
     }
-    void deallocate_ExistsResponse(ExistsResponse *v)
+    void deallocate_ExistsResponse(ExistsResponse_ *v)
     {
     }
-    int oarchive::serialize_GetDataResponse(const char *tag, GetDataResponse *v)
+    int oarchive::GetDataResponse(GetDataResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_buffer("data", v->data);
-        rc = rc ? rc : serialize_Stat("stat", &v->stat);
+        rc = rc ? rc : serialize_buffer(v->data);
+        rc = rc ? rc : Stat(&v->stat);
         return rc;
     }
-    int iarchive::deserialize_GetDataResponse(const char *tag, GetDataResponse *v)
+    int iarchive::GetDataResponse(GetDataResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_buffer("data", v->data);
-        rc = rc ? rc : deserialize_Stat("stat", &v->stat);
+        rc = rc ? rc : deserialize_buffer(v->data);
+        rc = rc ? rc : Stat(&v->stat);
         return rc;
     }
 
-    int oarchive::serialize_GetChildrenResponse(const char *tag, GetChildrenResponse *v)
+    int oarchive::GetChildrenResponse(GetChildrenResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_StringVec("children", &v->children);
+        rc = rc ? rc : StringVec(&v->children);
         return rc;
     }
-    int iarchive::deserialize_GetChildrenResponse(const char *tag, GetChildrenResponse *v)
+    int iarchive::GetChildrenResponse(GetChildrenResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_String_vector("children", &v->children);
+        rc = rc ? rc : StringVec(&v->children);
         return rc;
     }
-    void deallocate_GetChildrenResponse(GetChildrenResponse *v)
+    void deallocate_GetChildrenResponse(GetChildrenResponse_ *v)
     {
         v->children.clear();
     }
-    int oarchive::serialize_GetAllChildrenNumberResponse(const char *tag, GetAllChildrenNumberResponse *v)
+    int oarchive::GetAllChildrenNumberResponse(GetAllChildrenNumberResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_int("totalNumber", v->totalNumber);
+        rc = rc ? rc : serialize_int(v->totalNumber);
         return rc;
     }
-    int iarchive::deserialize_GetAllChildrenNumberResponse(const char *tag, GetAllChildrenNumberResponse *v)
+    int iarchive::GetAllChildrenNumberResponse(GetAllChildrenNumberResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_int("totalNumber", &v->totalNumber);
+        rc = rc ? rc : deserialize_int(&v->totalNumber);
         return rc;
     }
-    void deallocate_GetAllChildrenNumberResponse(GetAllChildrenNumberResponse *v)
+    void deallocate_GetAllChildrenNumberResponse(GetAllChildrenNumberResponse_ *v)
     {
     }
-    int oarchive::serialize_GetChildren2Response(const char *tag, GetChildren2Response *v)
-    {
-        int rc = 0;
-        rc = rc ? rc : serialize_StringVec("children", &v->children);
-        rc = rc ? rc : serialize_Stat("stat", &v->stat);
-        return rc;
-    }
-    int iarchive::deserialize_GetChildren2Response(const char *tag, GetChildren2Response *v)
+    int oarchive::GetChildren2Response(GetChildren2Response_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_String_vector("children", &v->children);
-        rc = rc ? rc : deserialize_Stat("stat", &v->stat);
+        rc = rc ? rc : StringVec(&v->children);
+        rc = rc ? rc : Stat(&v->stat);
         return rc;
     }
-    void deallocate_GetChildren2Response(GetChildren2Response *v)
+    int iarchive::GetChildren2Response(GetChildren2Response_ *v)
+    {
+        int rc = 0;
+        rc = rc ? rc : StringVec(&v->children);
+        rc = rc ? rc : Stat(&v->stat);
+        return rc;
+    }
+    void deallocate_GetChildren2Response(GetChildren2Response_ *v)
     {
         v->children.clear();
     }
-    int oarchive::serialize_GetACLResponse(const char *tag, GetACLResponse *v)
+    int oarchive::GetACLResponse(GetACLResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_ACL_vector("acl", &v->acl);
-        rc = rc ? rc : serialize_Stat("stat", &v->stat);
+        rc = rc ? rc : ACLVec(&v->acl);
+        rc = rc ? rc : Stat(&v->stat);
         return rc;
     }
-    int iarchive::deserialize_GetACLResponse(const char *tag, GetACLResponse *v)
+    int iarchive::GetACLResponse(GetACLResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_ACLVec("acl", &v->acl);
-        rc = rc ? rc : deserialize_Stat("stat", &v->stat);
+        rc = rc ? rc : ACLVec(&v->acl);
+        rc = rc ? rc : Stat(&v->stat);
         return rc;
     }
 
-    void GetACLResponse::clear()
+    void GetACLResponse_::clear()
     {
         acl.clear();
     }
 
-    int oarchive::serialize_CheckWatchesRequest(const char *tag, CheckWatchesRequest *v)
+    int oarchive::CheckWatchesRequest(CheckWatchesRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_int("type", v->type);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : serialize_int(v->type);
         return rc;
     }
-    int iarchive::deserialize_CheckWatchesRequest(const char *tag, CheckWatchesRequest *v)
+    int iarchive::CheckWatchesRequest(CheckWatchesRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_int("type", &v->type);
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : deserialize_int(&v->type);
         return rc;
     }
-    void deallocate_CheckWatchesRequest(CheckWatchesRequest *v)
+    void deallocate_CheckWatchesRequest(CheckWatchesRequest_ *v)
     {
         v->path.clear();
     }
-    int oarchive::serialize_RemoveWatchesRequest(const char *tag, RemoveWatchesRequest *v)
+    int oarchive::RemoveWatchesRequest(RemoveWatchesRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_int("type", v->type);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : serialize_int(v->type);
         return rc;
     }
-    int iarchive::deserialize_RemoveWatchesRequest(const char *tag, RemoveWatchesRequest *v)
+    int iarchive::RemoveWatchesRequest(RemoveWatchesRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_int("type", &v->type);
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : deserialize_int(&v->type);
         return rc;
     }
-    void deallocate_RemoveWatchesRequest(RemoveWatchesRequest *v)
+    void deallocate_RemoveWatchesRequest(RemoveWatchesRequest_ *v)
     {
         v->path.clear();
     }
-    int oarchive::serialize_GetEphemeralsRequest(const char *tag, GetEphemeralsRequest *v)
+    int oarchive::GetEphemeralsRequest(GetEphemeralsRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("prefixPath", v->prefixPath);
+        rc = rc ? rc : serialize_string(v->prefixPath);
         return rc;
     }
-    int iarchive::deserialize_GetEphemeralsRequest(const char *tag, GetEphemeralsRequest *v)
+    int iarchive::GetEphemeralsRequest(GetEphemeralsRequest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("prefixPath", v->prefixPath);
+        rc = rc ? rc : deserialize_string(v->prefixPath);
         return rc;
     }
-    void deallocate_GetEphemeralsRequest(GetEphemeralsRequest *v)
+    void deallocate_GetEphemeralsRequest(GetEphemeralsRequest_ *v)
     {
         v->prefixPath.clear();
     }
-    int oarchive::serialize_GetEphemeralsResponse(const char *tag, GetEphemeralsResponse *v)
+    int oarchive::GetEphemeralsResponse(GetEphemeralsResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_StringVec("ephemerals", &v->ephemerals);
+        rc = rc ? rc : StringVec(&v->ephemerals);
         return rc;
     }
-    int iarchive::deserialize_GetEphemeralsResponse(const char *tag, GetEphemeralsResponse *v)
+    int iarchive::GetEphemeralsResponse(GetEphemeralsResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_String_vector("ephemerals", &v->ephemerals);
+        rc = rc ? rc : StringVec(&v->ephemerals);
         return rc;
     }
-    void deallocate_GetEphemeralsResponse(GetEphemeralsResponse *v)
+    void deallocate_GetEphemeralsResponse(GetEphemeralsResponse_ *v)
     {
         v->ephemerals.clear();
     }
-    int allocate_ClientInfo_vector(ClientInfoVec *v, int32_t len)
+    int allocate_ClientInfo_vector(ClientInfoVec_ *v, int32_t len)
     {
 
         v->resize(len);
         return 0;
     }
-    int deallocate_ClientInfo_vector(ClientInfoVec *v)
+    int deallocate_ClientInfo_vector(ClientInfoVec_ *v)
     {
         v->clear();
         return 0;
     }
-    int oarchive::serialize_ClientInfo_vector(const char *tag, ClientInfoVec *v)
+    int oarchive::ClientInfoVec(ClientInfoVec_ *v)
     {
         int32_t count = v->size();
-        int rc = start_vector(tag, &count);
+        int rc = serialize_int(count);
         for (auto i = 0; i < (int32_t)v->size(); i++)
         {
-            rc = rc ? rc : serialize_ClientInfo("data", &(*v)[i]);
+            rc = rc ? rc : ClientInfo(&(*v)[i]);
         }
         return rc;
     }
-    int iarchive::deserialize_ClientInfo_vector(const char *tag, ClientInfoVec *v)
+    int iarchive::ClientInfoVec(ClientInfoVec_ *v)
     {
         int32_t count = 0;
-        auto rc = deserialize_int(tag, &count);
+        auto rc = deserialize_int(&count);
         v->resize(count);
         for (auto i = 0; i < (int32_t)v->size(); i++)
         {
-            rc = rc ? rc : deserialize_ClientInfo("value", &(*v)[i]);
+            rc = rc ? rc : ClientInfo(&(*v)[i]);
         }
         return rc;
     }
-    int oarchive::serialize_WhoAmIResponse(const char *tag, WhoAmIResponse *v)
+    int oarchive::WhoAmIResponse(WhoAmIResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_ClientInfo_vector("clientInfo", &v->clientInfo);
+        rc = rc ? rc : ClientInfoVec(&v->clientInfo);
         return rc;
     }
-    int iarchive::deserialize_WhoAmIResponse(const char *tag, WhoAmIResponse *v)
+    int iarchive::WhoAmIResponse(WhoAmIResponse_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_ClientInfo_vector("clientInfo", &v->clientInfo);
+        rc = rc ? rc : ClientInfoVec(&v->clientInfo);
         return rc;
     }
-    WhoAmIResponse::~WhoAmIResponse()
+    WhoAmIResponse_::~WhoAmIResponse_()
     {
         clientInfo.clear();
     }
 
-    int oarchive::serialize_LearnerInfo(const char *tag, LearnerInfo *v)
+    int oarchive::LearnerInfo(LearnerInfo_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_log("serverid", v->serverid);
-        rc = rc ? rc : serialize_int("protocolVersion", v->protocolVersion);
-        rc = rc ? rc : serialize_log("configVersion", v->configVersion);
+        rc = rc ? rc : serialize_log(v->serverid);
+        rc = rc ? rc : serialize_int(v->protocolVersion);
+        rc = rc ? rc : serialize_log(v->configVersion);
         return rc;
     }
-    int iarchive::deserialize_LearnerInfo(const char *tag, LearnerInfo *v)
+    int iarchive::LearnerInfo(LearnerInfo_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_long("serverid", &v->serverid);
-        rc = rc ? rc : deserialize_int("protocolVersion", &v->protocolVersion);
-        rc = rc ? rc : deserialize_long("configVersion", &v->configVersion);
+        rc = rc ? rc : deserialize_long(&v->serverid);
+        rc = rc ? rc : deserialize_int(&v->protocolVersion);
+        rc = rc ? rc : deserialize_long(&v->configVersion);
         return rc;
     }
 
-    int allocate_Id_vector(IdVec *v, int32_t len)
+    int allocate_Id_vector(IdVec_ *v, int32_t len)
     {
         v->reserve(len);
         return 0;
     }
 
-    int oarchive::serialize_Id_vector(const char *tag, IdVec *v)
+    int oarchive::IdVec(IdVec_ *v)
     {
         int32_t count = v->size();
-        int rc = start_vector(tag, &count);
+        int rc = serialize_int(count);
         for (auto i = 0; i < (int32_t)v->size(); i++)
         {
-            rc = rc ? rc : serialize_Id("data", &(*v)[i]);
+            rc = rc ? rc : Id(&(*v)[i]);
         }
         return rc;
     }
-    int iarchive::deserialize_Id_vector(const char *tag, IdVec *v)
+    int iarchive::IdVec(IdVec_ *v)
     {
         int32_t count;
-        int rc = deserialize_int(tag, &count);
+        int rc = deserialize_int(&count);
         v->resize(count);
         for (auto i = 0; i < (int32_t)v->size(); i++)
         {
-            rc = rc ? rc : deserialize_Id("value", &(*v)[i]);
+            rc = rc ? rc : Id(&(*v)[i]);
         }
         return rc;
     }
-    int oarchive::serialize_QuorumPacket(const char *tag, QuorumPacket *v)
+    int oarchive::QuorumPacket(QuorumPacket_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_int("type", v->type);
-        rc = rc ? rc : serialize_log("zxid", v->zxid);
-        rc = rc ? rc : serialize_buffer("data", v->data);
-        rc = rc ? rc : serialize_Id_vector("authinfo", &v->authinfo);
+        rc = rc ? rc : serialize_int(v->type);
+        rc = rc ? rc : serialize_log(v->zxid);
+        rc = rc ? rc : serialize_buffer(v->data);
+        rc = rc ? rc : IdVec(&v->authinfo);
         return rc;
     }
-    int iarchive::deserialize_QuorumPacket(const char *tag, QuorumPacket *v)
+    int iarchive::QuorumPacket(QuorumPacket_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_int("type", &v->type);
-        rc = rc ? rc : deserialize_long("zxid", &v->zxid);
-        rc = rc ? rc : deserialize_buffer("data", v->data);
-        rc = rc ? rc : deserialize_Id_vector("authinfo", &v->authinfo);
+        rc = rc ? rc : deserialize_int(&v->type);
+        rc = rc ? rc : deserialize_long(&v->zxid);
+        rc = rc ? rc : deserialize_buffer(v->data);
+        rc = rc ? rc : IdVec(&v->authinfo);
         return rc;
     }
-    void QuorumPacket::clear()
+    void QuorumPacket_::clear()
     {
         data.clear();
         authinfo.clear();
     }
-    int oarchive::serialize_QuorumAuthPacket(const char *tag, QuorumAuthPacket *v)
+    int oarchive::QuorumAuthPacket(QuorumAuthPacket_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_log("magic", v->magic);
-        rc = rc ? rc : serialize_int("status", v->status);
-        rc = rc ? rc : serialize_buffer("token", v->token);
+        rc = rc ? rc : serialize_log(v->magic);
+        rc = rc ? rc : serialize_int(v->status);
+        rc = rc ? rc : serialize_buffer(v->token);
         return rc;
     }
-    int iarchive::deserialize_QuorumAuthPacket(const char *tag, QuorumAuthPacket *v)
+    int iarchive::QuorumAuthPacket(QuorumAuthPacket_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_long("magic", &v->magic);
-        rc = rc ? rc : deserialize_int("status", &v->status);
-        rc = rc ? rc : deserialize_buffer("token", v->token);
+        rc = rc ? rc : deserialize_long(&v->magic);
+        rc = rc ? rc : deserialize_int(&v->status);
+        rc = rc ? rc : deserialize_buffer(v->token);
         return rc;
     }
-    void deallocate_QuorumAuthPacket(QuorumAuthPacket *v)
+    void deallocate_QuorumAuthPacket(QuorumAuthPacket_ *v)
     {
         v->token.clear();
     }
-    int oarchive::serialize_FileHeader(const char *tag, FileHeader *v)
+    int oarchive::FileHeader(FileHeader_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_int("magic", v->magic);
-        rc = rc ? rc : serialize_int("version", v->version);
-        rc = rc ? rc : serialize_log("dbid", v->dbid);
+        rc = rc ? rc : serialize_int(v->magic);
+        rc = rc ? rc : serialize_int(v->version);
+        rc = rc ? rc : serialize_log(v->dbid);
         return rc;
     }
-    int iarchive::deserialize_FileHeader(const char *tag, FileHeader *v)
+    int iarchive::FileHeader(FileHeader_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_int("magic", &v->magic);
-        rc = rc ? rc : deserialize_int("version", &v->version);
-        rc = rc ? rc : deserialize_long("dbid", &v->dbid);
+        rc = rc ? rc : deserialize_int(&v->magic);
+        rc = rc ? rc : deserialize_int(&v->version);
+        rc = rc ? rc : deserialize_long(&v->dbid);
         return rc;
     }
-    void deallocate_FileHeader(FileHeader *v)
+    void deallocate_FileHeader(FileHeader_ *v)
     {
     }
-    int oarchive::serialize_TxnDigest(const char *tag, TxnDigest *v)
+    int oarchive::TxnDigest(TxnDigest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_int("version", v->version);
-        rc = rc ? rc : serialize_log("treeDigest", v->treeDigest);
+        rc = rc ? rc : serialize_int(v->version);
+        rc = rc ? rc : serialize_log(v->treeDigest);
         return rc;
     }
-    int iarchive::deserialize_TxnDigest(const char *tag, TxnDigest *v)
+    int iarchive::TxnDigest(TxnDigest_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_int("version", &v->version);
-        rc = rc ? rc : deserialize_long("treeDigest", &v->treeDigest);
+        rc = rc ? rc : deserialize_int(&v->version);
+        rc = rc ? rc : deserialize_long(&v->treeDigest);
         return rc;
     }
-    void deallocate_TxnDigest(TxnDigest *v)
+    void deallocate_TxnDigest(TxnDigest_ *v)
     {
     }
-    int oarchive::serialize_TxnHeader(const char *tag, TxnHeader *v)
+    int oarchive::TxnHeader(TxnHeader_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_log("clientId", v->clientId);
-        rc = rc ? rc : serialize_int("cxid", v->cxid);
-        rc = rc ? rc : serialize_log("zxid", v->zxid);
-        rc = rc ? rc : serialize_log("time", v->time);
-        rc = rc ? rc : serialize_int("type", v->type);
+        rc = rc ? rc : serialize_log(v->clientId);
+        rc = rc ? rc : serialize_int(v->cxid);
+        rc = rc ? rc : serialize_log(v->zxid);
+        rc = rc ? rc : serialize_log(v->time);
+        rc = rc ? rc : serialize_int(v->type);
         return rc;
     }
-    int iarchive::deserialize_TxnHeader(const char *tag, TxnHeader *v)
+    int iarchive::TxnHeader(TxnHeader_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_long("clientId", &v->clientId);
-        rc = rc ? rc : deserialize_int("cxid", &v->cxid);
-        rc = rc ? rc : deserialize_long("zxid", &v->zxid);
-        rc = rc ? rc : deserialize_long("time", &v->time);
-        rc = rc ? rc : deserialize_int("type", &v->type);
+        rc = rc ? rc : deserialize_long(&v->clientId);
+        rc = rc ? rc : deserialize_int(&v->cxid);
+        rc = rc ? rc : deserialize_long(&v->zxid);
+        rc = rc ? rc : deserialize_long(&v->time);
+        rc = rc ? rc : deserialize_int(&v->type);
         return rc;
     }
-    void deallocate_TxnHeader(TxnHeader *v)
+    void deallocate_TxnHeader(TxnHeader_ *v)
     {
     }
-    int oarchive::serialize_CreateTxnV0(const char *tag, CreateTxnV0 *v)
-    {
-        int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_buffer("data", v->data);
-        rc = rc ? rc : serialize_ACL_vector("acl", &v->acl);
-        rc = rc ? rc : serialize_bool("ephemeral", v->ephemeral);
-        return rc;
-    }
-    int iarchive::deserialize_CreateTxnV0(const char *tag, CreateTxnV0 *v)
+    int oarchive::CreateTxnV0(CreateTxnV0_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_buffer("data", v->data);
-        rc = rc ? rc : deserialize_ACLVec("acl", &v->acl);
-        rc = rc ? rc : deserialize_bool("ephemeral", &v->ephemeral);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : serialize_buffer(v->data);
+        rc = rc ? rc : ACLVec(&v->acl);
+        rc = rc ? rc : serialize_bool(v->ephemeral);
         return rc;
     }
-    void deallocate_CreateTxnV0(CreateTxnV0 *v)
+    int iarchive::CreateTxnV0(CreateTxnV0_ *v)
+    {
+        int rc = 0;
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : deserialize_buffer(v->data);
+        rc = rc ? rc : ACLVec(&v->acl);
+        rc = rc ? rc : deserialize_bool(&v->ephemeral);
+        return rc;
+    }
+    void deallocate_CreateTxnV0(CreateTxnV0_ *v)
     {
         v->path.clear();
         v->data.clear();
         v->acl.clear();
     }
-    int oarchive::serialize_CreateTxn(const char *tag, CreateTxn *v)
+    int oarchive::CreateTxn(CreateTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_buffer("data", v->data);
-        rc = rc ? rc : serialize_ACL_vector("acl", &v->acl);
-        rc = rc ? rc : serialize_bool("ephemeral", v->ephemeral);
-        rc = rc ? rc : serialize_int("parentCVersion", v->parentCVersion);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : serialize_buffer(v->data);
+        rc = rc ? rc : ACLVec(&v->acl);
+        rc = rc ? rc : serialize_bool(v->ephemeral);
+        rc = rc ? rc : serialize_int(v->parentCVersion);
         return rc;
     }
-    int iarchive::deserialize_CreateTxn(const char *tag, CreateTxn *v)
+    int iarchive::CreateTxn(CreateTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_buffer("data", v->data);
-        rc = rc ? rc : deserialize_ACLVec("acl", &v->acl);
-        rc = rc ? rc : deserialize_bool("ephemeral", &v->ephemeral);
-        rc = rc ? rc : deserialize_int("parentCVersion", &v->parentCVersion);
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : deserialize_buffer(v->data);
+        rc = rc ? rc : ACLVec(&v->acl);
+        rc = rc ? rc : deserialize_bool(&v->ephemeral);
+        rc = rc ? rc : deserialize_int(&v->parentCVersion);
         return rc;
     }
-    void deallocate_CreateTxn(CreateTxn *v)
+    void deallocate_CreateTxn(CreateTxn_ *v)
     {
         v->path.clear();
         v->data.clear();
         v->acl.clear();
     }
-    int oarchive::serialize_CreateTTLTxn(const char *tag, CreateTTLTxn *v)
+    int oarchive::CreateTTLTxn(CreateTTLTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_buffer("data", v->data);
-        rc = rc ? rc : serialize_ACL_vector("acl", &v->acl);
-        rc = rc ? rc : serialize_int("parentCVersion", v->parentCVersion);
-        rc = rc ? rc : serialize_log("ttl", v->ttl);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : serialize_buffer(v->data);
+        rc = rc ? rc : ACLVec(&v->acl);
+        rc = rc ? rc : serialize_int(v->parentCVersion);
+        rc = rc ? rc : serialize_log(v->ttl);
         return rc;
     }
-    int iarchive::deserialize_CreateTTLTxn(const char *tag, CreateTTLTxn *v)
+    int iarchive::CreateTTLTxn(CreateTTLTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_buffer("data", v->data);
-        rc = rc ? rc : deserialize_ACLVec("acl", &v->acl);
-        rc = rc ? rc : deserialize_int("parentCVersion", &v->parentCVersion);
-        rc = rc ? rc : deserialize_long("ttl", &v->ttl);
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : deserialize_buffer(v->data);
+        rc = rc ? rc : ACLVec(&v->acl);
+        rc = rc ? rc : deserialize_int(&v->parentCVersion);
+        rc = rc ? rc : deserialize_long(&v->ttl);
         return rc;
     }
-    void deallocate_CreateTTLTxn(CreateTTLTxn *v)
+    void deallocate_CreateTTLTxn(CreateTTLTxn_ *v)
     {
         v->path.clear();
         v->data.clear();
         v->acl.clear();
     }
-    int oarchive::serialize_CreateContainerTxn(const char *tag, CreateContainerTxn *v)
+    int oarchive::CreateContainerTxn(CreateContainerTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_buffer("data", v->data);
-        rc = rc ? rc : serialize_ACL_vector("acl", &v->acl);
-        rc = rc ? rc : serialize_int("parentCVersion", v->parentCVersion);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : serialize_buffer(v->data);
+        rc = rc ? rc : ACLVec(&v->acl);
+        rc = rc ? rc : serialize_int(v->parentCVersion);
         return rc;
     }
-    int iarchive::deserialize_CreateContainerTxn(const char *tag, CreateContainerTxn *v)
+    int iarchive::CreateContainerTxn(CreateContainerTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_buffer("data", v->data);
-        rc = rc ? rc : deserialize_ACLVec("acl", &v->acl);
-        rc = rc ? rc : deserialize_int("parentCVersion", &v->parentCVersion);
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : deserialize_buffer(v->data);
+        rc = rc ? rc : ACLVec(&v->acl);
+        rc = rc ? rc : deserialize_int(&v->parentCVersion);
         return rc;
     }
-    void deallocate_CreateContainerTxn(CreateContainerTxn *v)
+    void deallocate_CreateContainerTxn(CreateContainerTxn_ *v)
     {
         v->path.clear();
         v->data.clear();
         v->acl.clear();
     }
-    int oarchive::serialize_DeleteTxn(const char *tag, DeleteTxn *v)
+    int oarchive::DeleteTxn(DeleteTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
+        rc = rc ? rc : serialize_string(v->path);
         return rc;
     }
-    int iarchive::deserialize_DeleteTxn(const char *tag, DeleteTxn *v)
+    int iarchive::DeleteTxn(DeleteTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
+        rc = rc ? rc : deserialize_string(v->path);
         return rc;
     }
-    void deallocate_DeleteTxn(DeleteTxn *v)
+    void deallocate_DeleteTxn(DeleteTxn_ *v)
     {
         v->path.clear();
     }
-    int oarchive::serialize_SetDataTxn(const char *tag, SetDataTxn *v)
+    int oarchive::SetDataTxn(SetDataTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_buffer("data", v->data);
-        rc = rc ? rc : serialize_int("version", v->version);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : serialize_buffer(v->data);
+        rc = rc ? rc : serialize_int(v->version);
         return rc;
     }
-    int iarchive::deserialize_SetDataTxn(const char *tag, SetDataTxn *v)
+    int iarchive::SetDataTxn(SetDataTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_buffer("data", v->data);
-        rc = rc ? rc : deserialize_int("version", &v->version);
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : deserialize_buffer(v->data);
+        rc = rc ? rc : deserialize_int(&v->version);
         return rc;
     }
-    void deallocate_SetDataTxn(SetDataTxn *v)
+    void deallocate_SetDataTxn(SetDataTxn_ *v)
     {
         v->path.clear();
         v->data.clear();
     }
-    int oarchive::serialize_CheckVersionTxn(const char *tag, CheckVersionTxn *v)
+    int oarchive::CheckVersionTxn(CheckVersionTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_int("version", v->version);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : serialize_int(v->version);
         return rc;
     }
-    int iarchive::deserialize_CheckVersionTxn(const char *tag, CheckVersionTxn *v)
+    int iarchive::CheckVersionTxn(CheckVersionTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_int("version", &v->version);
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : deserialize_int(&v->version);
         return rc;
     }
-    void deallocate_CheckVersionTxn(CheckVersionTxn *v)
+    void deallocate_CheckVersionTxn(CheckVersionTxn_ *v)
     {
         v->path.clear();
     }
-    int oarchive::serialize_SetACLTxn(const char *tag, SetACLTxn *v)
+    int oarchive::SetACLTxn(SetACLTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_ACL_vector("acl", &v->acl);
-        rc = rc ? rc : serialize_int("version", v->version);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : ACLVec(&v->acl);
+        rc = rc ? rc : serialize_int(v->version);
         return rc;
     }
-    int iarchive::deserialize_SetACLTxn(const char *tag, SetACLTxn *v)
+    int iarchive::SetACLTxn(SetACLTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_ACLVec("acl", &v->acl);
-        rc = rc ? rc : deserialize_int("version", &v->version);
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : ACLVec(&v->acl);
+        rc = rc ? rc : deserialize_int(&v->version);
         return rc;
     }
-    void deallocate_SetACLTxn(SetACLTxn *v)
+    void deallocate_SetACLTxn(SetACLTxn_ *v)
     {
         v->path.clear();
         v->acl.clear();
     }
-    int oarchive::serialize_SetMaxChildrenTxn(const char *tag, SetMaxChildrenTxn *v)
+    int oarchive::SetMaxChildrenTxn(SetMaxChildrenTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_string("path", v->path);
-        rc = rc ? rc : serialize_int("max", v->max);
+        rc = rc ? rc : serialize_string(v->path);
+        rc = rc ? rc : serialize_int(v->max);
         return rc;
     }
-    int iarchive::deserialize_SetMaxChildrenTxn(const char *tag, SetMaxChildrenTxn *v)
+    int iarchive::SetMaxChildrenTxn(SetMaxChildrenTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_string("path", v->path);
-        rc = rc ? rc : deserialize_int("max", &v->max);
+        rc = rc ? rc : deserialize_string(v->path);
+        rc = rc ? rc : deserialize_int(&v->max);
         return rc;
     }
-    void deallocate_SetMaxChildrenTxn(SetMaxChildrenTxn *v)
+    void deallocate_SetMaxChildrenTxn(SetMaxChildrenTxn_ *v)
     {
         v->path.clear();
     }
-    int oarchive::serialize_CreateSessionTxn(const char *tag, CreateSessionTxn *v)
+    int oarchive::CreateSessionTxn(CreateSessionTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_int("timeOut", v->timeOut);
+        rc = rc ? rc : serialize_int(v->timeOut);
         return rc;
     }
-    int iarchive::deserialize_CreateSessionTxn(const char *tag, CreateSessionTxn *v)
+    int iarchive::CreateSessionTxn(CreateSessionTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_int("timeOut", &v->timeOut);
+        rc = rc ? rc : deserialize_int(&v->timeOut);
         return rc;
     }
-    void deallocate_CreateSessionTxn(CreateSessionTxn *v)
+    void deallocate_CreateSessionTxn(CreateSessionTxn_ *v)
     {
     }
-    int oarchive::serialize_CloseSessionTxn(const char *tag, CloseSessionTxn *v)
-    {
-        int rc = 0;
-        rc = rc ? rc : serialize_StringVec("paths2Delete", &v->paths2Delete);
-        return rc;
-    }
-    int iarchive::deserialize_CloseSessionTxn(const char *tag, CloseSessionTxn *v)
+    int oarchive::CloseSessionTxn(CloseSessionTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_String_vector("paths2Delete", &v->paths2Delete);
+        rc = rc ? rc : StringVec(&v->paths2Delete);
         return rc;
     }
-    void deallocate_CloseSessionTxn(CloseSessionTxn *v)
+    int iarchive::CloseSessionTxn(CloseSessionTxn_ *v)
+    {
+        int rc = 0;
+        rc = rc ? rc : StringVec(&v->paths2Delete);
+        return rc;
+    }
+    void deallocate_CloseSessionTxn(CloseSessionTxn_ *v)
     {
         v->paths2Delete.clear();
     }
-    int oarchive::serialize_ErrorTxn(const char *tag, ErrorTxn *v)
+    int oarchive::ErrorTxn(ErrorTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_int("err", v->err);
+        rc = rc ? rc : serialize_int(v->err);
         return rc;
     }
-    int iarchive::deserialize_ErrorTxn(const char *tag, ErrorTxn *v)
+    int iarchive::ErrorTxn(ErrorTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_int("err", &v->err);
+        rc = rc ? rc : deserialize_int(&v->err);
         return rc;
     }
-    void deallocate_ErrorTxn(ErrorTxn *v)
+    void deallocate_ErrorTxn(ErrorTxn_ *v)
     {
     }
-    int oarchive::serialize_Txn(const char *tag, Txn *v)
-    {
-        int rc = 0;
-        rc = rc ? rc : serialize_int("type", v->type);
-        rc = rc ? rc : serialize_buffer("data", v->data);
-        return rc;
-    }
-    int iarchive::deserialize_Txn(const char *tag, Txn *v)
+    int oarchive::Txn(Txn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_int("type", &v->type);
-        rc = rc ? rc : deserialize_buffer("data", v->data);
+        rc = rc ? rc : serialize_int(v->type);
+        rc = rc ? rc : serialize_buffer(v->data);
         return rc;
     }
-    void deallocate_Txn(Txn *v)
+    int iarchive::Txn(Txn_ *v)
+    {
+        int rc = 0;
+        rc = rc ? rc : deserialize_int(&v->type);
+        rc = rc ? rc : deserialize_buffer(v->data);
+        return rc;
+    }
+    void deallocate_Txn(Txn_ *v)
     {
         v->data.clear();
     }
-    int allocate_Txn_vector(Txn_vector *v, int32_t len)
+
+    int oarchive::TxnVec(TxnVec_ *v)
     {
-        if (!len)
+        int32_t count = v->size();
+        auto rc = serialize_int(count);
+        for (auto i = 0; i < (int)v->size(); i++)
         {
-            v->count = 0;
-            v->data = 0;
-        }
-        else
-        {
-            v->count = len;
-            v->data = (Txn *)calloc(sizeof(*v->data), len);
-        }
-        return 0;
-    }
-    int deallocate_Txn_vector(Txn_vector *v)
-    {
-        if (v->data)
-        {
-            int32_t i;
-            for (i = 0; i < v->count; i++)
-            {
-                deallocate_Txn(&v->data[i]);
-            }
-            free(v->data);
-            v->data = 0;
-        }
-        return 0;
-    }
-    int oarchive::serialize_Txn_vector(const char *tag, Txn_vector *v)
-    {
-        int32_t count = v->count;
-        int rc = 0;
-        int32_t i;
-        rc = start_vector(tag, &count);
-        for (i = 0; i < v->count; i++)
-        {
-            rc = rc ? rc : serialize_Txn("data", &v->data[i]);
+            rc = rc ? rc : Txn(&(*v)[i]);
         }
         return rc;
     }
-    int iarchive::deserialize_Txn_vector(const char *tag, Txn_vector *v)
+    int iarchive::TxnVec(TxnVec_ *v)
     {
-        int rc = 0;
-        int32_t i;
-        rc = deserialize_int(tag, &v->count);
-        v->data = (Txn *)calloc(v->count, sizeof(*v->data));
-        for (i = 0; i < v->count; i++)
+
+        int32_t count = 0;
+        auto rc = deserialize_int(&count);
+        v->resize(count);
+
+        for (auto i = 0; i < (int)v->size(); i++)
         {
-            rc = rc ? rc : deserialize_Txn("value", &v->data[i]);
+            rc = rc ? rc : Txn(&(*v)[i]);
         }
         return rc;
     }
-    int oarchive::serialize_MultiTxn(const char *tag, MultiTxn *v)
+    int oarchive::MultiTxn(MultiTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : serialize_Txn_vector("txns", &v->txns);
+        rc = rc ? rc : TxnVec(&v->txns);
         return rc;
     }
-    int iarchive::deserialize_MultiTxn(const char *tag, MultiTxn *v)
+    int iarchive::MultiTxn(MultiTxn_ *v)
     {
         int rc = 0;
-        rc = rc ? rc : deserialize_Txn_vector("txns", &v->txns);
+        rc = rc ? rc : TxnVec(&v->txns);
         return rc;
     }
-    void deallocate_MultiTxn(MultiTxn *v)
+    void deallocate_MultiTxn(MultiTxn_ *v)
     {
-        deallocate_Txn_vector(&v->txns);
+        v->txns.clear();
     }
 
 }

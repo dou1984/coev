@@ -21,7 +21,7 @@ namespace coev
 
         awaitable<int> connect(const char *host, int port);
 
-        awaitable<int> zoo_exists(const char *path, Stat &data);
+        awaitable<int> zoo_exists(const char *path, Stat_ &data);
         awaitable<int> zoo_get(const char *path, const std::string &data);
         awaitable<int> zoo_get_config(std::string &data);
         awaitable<int> zoo_reconfig(const char *path, const std::string &joining, const std::string leaving, const std::string members, int64_t version);
@@ -29,12 +29,12 @@ namespace coev
         awaitable<int> zoo_get_children(const char *path, std::string &data);
         awaitable<int> zoo_get_children2(const char *path, std::vector<std::string> &data);
         awaitable<int> zoo_async(const char *path, std::string &data);
-        awaitable<int> zoo_get_acl(const char *path, Stat &stat);
-        awaitable<int> zoo_set_acl(const char *path, int version, ACLVec &acl, Stat &stat);
+        awaitable<int> zoo_get_acl(const char *path, Stat_ &stat);
+        awaitable<int> zoo_set_acl(const char *path, int version, ACLVec_ &acl, Stat_ &stat);
         awaitable<int> zoo_multi(int count, const ZooOp *ops);
         awaitable<int> zoo_delete(const char *path, int version);
-        awaitable<int> zoo_create2(const char *path, const std::string &value, const ACLVec &acl, int mode);
-        awaitable<int> zoo_create2_ttl(const char *path, const std::string &value, const ACLVec &acl_entries, int mode, int64_t ttl);
+        awaitable<int> zoo_create2(const char *path, const std::string &value, const ACLVec_ &acl, int mode);
+        awaitable<int> zoo_create2_ttl(const char *path, const std::string &value, const ACLVec_ &acl_entries, int mode, int64_t ttl);
         awaitable<int> zoo_set_watches();
         awaitable<int> zoo_wait_watcher();
         awaitable<int> close();
@@ -48,7 +48,7 @@ namespace coev
         awaitable<int> send_periodic_ping();
         awaitable<int> send_ping();
         awaitable<int> process();
-        awaitable<int> deserialize_response(const ReplyHeader &hdr, iarchive &ia);
+        awaitable<int> deserialize_response(const ReplyHeader_ &hdr, iarchive &ia);
         awaitable<int> completion(iarchive &ia);
 
         std::string path_string(const std::string &client_path);

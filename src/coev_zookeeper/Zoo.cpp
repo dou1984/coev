@@ -14,4 +14,15 @@ namespace coev
         return ++xid;
     }
 
+    const clientid_t &clientid_t::operator=(const clientid_t &o)
+    {
+        client_id = o.client_id;
+        strncpy(passwd, o.passwd, sizeof(passwd));
+        return *this;
+    }
+    void clientid_t::clear()
+    {
+        client_id = 0;
+        memset(passwd, 0, sizeof(passwd));
+    }
 }

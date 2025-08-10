@@ -8,21 +8,21 @@
 namespace coev
 {
 
-    struct Id
+    struct Id_
     {
         std::string scheme;
         std::string id;
-        ~Id();
+        ~Id_();
     };
 
-    struct ACL
+    struct ACL_
     {
         int32_t perms;
-        Id id;
-        ~ACL();
+        Id_ id;
+        ~ACL_();
     };
 
-    struct Stat
+    struct Stat_
     {
         int64_t czxid;
         int64_t mzxid;
@@ -37,7 +37,7 @@ namespace coev
         int64_t pzxid;
     };
 
-    struct StatPersisted
+    struct StatPersisted_
     {
         int64_t czxid;
         int64_t mzxid;
@@ -49,12 +49,12 @@ namespace coev
         int64_t ephemeralOwner;
         int64_t pzxid;
     };
-    struct ClientInfo
+    struct ClientInfo_
     {
         std::string authScheme;
         std::string user;
     };
-    struct ConnectRequest
+    struct ConnectRequest_
     {
         int32_t protocolVersion;
         int64_t lastZxidSeen;
@@ -63,7 +63,7 @@ namespace coev
         std::string passwd;
         int32_t readOnly;
     };
-    struct ConnectResponse
+    struct ConnectResponse_
     {
         int32_t protocolVersion;
         int32_t timeout;
@@ -71,291 +71,291 @@ namespace coev
         std::string passwd;
         int32_t readOnly;
     };
-    struct StringVec : std::vector<std::string>
+    struct StringVec_ : std::vector<std::string>
     {
         auto operator=(std::vector<std::string> &&o)
         {
             std::vector<std::string>::operator=(std::move(o));
             return *this;
         }
-        ~StringVec();
+        ~StringVec_();
     };
-    struct SetWatches
+    struct SetWatches_
     {
         int64_t relativeZxid;
-        StringVec dataWatches;
-        StringVec existWatches;
-        StringVec childWatches;
+        StringVec_ dataWatches;
+        StringVec_ existWatches;
+        StringVec_ childWatches;
     };
-    struct SetWatches2
+    struct SetWatches2_
     {
         int64_t relativeZxid;
-        StringVec dataWatches;
-        StringVec existWatches;
-        StringVec childWatches;
-        StringVec persistentWatches;
-        StringVec persistentRecursiveWatches;
+        StringVec_ dataWatches;
+        StringVec_ existWatches;
+        StringVec_ childWatches;
+        StringVec_ persistentWatches;
+        StringVec_ persistentRecursiveWatches;
     };
-    struct RequestHeader
+    struct RequestHeader_
     {
         int32_t xid;
         int32_t type;
     };
-    struct MultiHeader
+    struct MultiHeader_
     {
         int32_t type;
         int32_t done;
         int32_t err;
     };
-    struct AuthPacket
+    struct AuthPacket_
     {
         int32_t type;
         std::string scheme;
         std::string auth;
     };
-    struct ReplyHeader
+    struct ReplyHeader_
     {
         int32_t xid;
         int64_t zxid;
         int32_t err;
     };
-    struct GetDataRequest
+    struct GetDataRequest_
     {
         std::string path;
         int32_t watch;
     };
-    struct SetDataRequest
+    struct SetDataRequest_
     {
         std::string path;
         std::string data;
         int32_t version;
     };
-    struct ReconfigRequest
+    struct ReconfigRequest_
     {
         std::string joiningServers;
         std::string leavingServers;
         std::string newMembers;
         int64_t curConfigId;
     };
-    struct SetDataResponse
+    struct SetDataResponse_
     {
-        struct Stat stat;
+        struct Stat_ stat;
     };
-    struct GetSASLRequest
-    {
-        std::string token;
-    };
-    struct SetSASLRequest
+    struct GetSASLRequest_
     {
         std::string token;
     };
-    struct SetSASLResponse
+    struct SetSASLRequest_
     {
         std::string token;
     };
-    struct ACLVec : std::vector<ACL>
+    struct SetSASLResponse_
+    {
+        std::string token;
+    };
+    struct ACLVec_ : std::vector<ACL_>
     {
     };
 
-    struct CreateRequest
+    struct CreateRequest_
     {
         std::string path;
         std::string data;
-        ACLVec acl;
+        ACLVec_ acl;
         int32_t flags;
         void clear();
     };
-    struct CreateTTLRequest
+    struct CreateTTLRequest_
     {
         std::string path;
         std::string data;
-        ACLVec acl;
+        ACLVec_ acl;
         int32_t flags;
         int64_t ttl;
-        ~CreateTTLRequest();
+        ~CreateTTLRequest_();
     };
-    struct DeleteRequest
+    struct DeleteRequest_
     {
         std::string path;
         int32_t version;
     };
-    struct GetChildrenRequest
+    struct GetChildrenRequest_
     {
         std::string path;
         int32_t watch;
     };
-    struct GetAllChildrenNumberRequest
+    struct GetAllChildrenNumberRequest_
     {
         std::string path;
     };
-    struct GetChildren2Request
+    struct GetChildren2Request_
     {
         std::string path;
         int32_t watch;
     };
-    struct CheckVersionRequest
+    struct CheckVersionRequest_
     {
         std::string path;
         int32_t version;
     };
-    struct GetMaxChildrenRequest
+    struct GetMaxChildrenRequest_
     {
         std::string path;
     };
-    struct GetMaxChildrenResponse
+    struct GetMaxChildrenResponse_
     {
         int32_t max;
     };
-    struct SetMaxChildrenRequest
+    struct SetMaxChildrenRequest_
     {
         std::string path;
         int32_t max;
     };
-    struct SyncRequest
+    struct SyncRequest_
     {
         std::string path;
     };
-    struct SyncResponse
+    struct SyncResponse_
     {
         std::string path;
     };
-    struct GetACLRequest
+    struct GetACLRequest_
     {
         std::string path;
     };
-    struct SetACLRequest
+    struct SetACLRequest_
     {
         std::string path;
-        ACLVec acl;
+        ACLVec_ acl;
         int32_t version;
     };
-    struct SetACLResponse
+    struct SetACLResponse_
     {
-        struct Stat stat;
+        struct Stat_ stat;
     };
-    struct AddWatchRequest
+    struct AddWatchRequest_
     {
         std::string path;
         int32_t mode;
     };
-    struct WatcherEvent
+    struct WatcherEvent_
     {
         int32_t type;
         int32_t state;
         std::string path;
         void clear();
     };
-    struct ErrorResponse
+    struct ErrorResponse_
     {
         int32_t err;
     };
-    struct CreateResponse
+    struct CreateResponse_
     {
         std::string path;
     };
-    struct Create2Response
+    struct Create2Response_
     {
         std::string path;
-        Stat stat;
+        Stat_ stat;
     };
-    struct ExistsRequest
+    struct ExistsRequest_
     {
         std::string path;
         int32_t watch;
     };
-    struct ExistsResponse
+    struct ExistsResponse_
     {
-        Stat stat;
+        Stat_ stat;
     };
-    struct GetDataResponse
+    struct GetDataResponse_
     {
         std::string data;
-        Stat stat;
+        Stat_ stat;
     };
-    struct GetChildrenResponse
+    struct GetChildrenResponse_
     {
-        StringVec children;
+        StringVec_ children;
     };
-    struct GetAllChildrenNumberResponse
+    struct GetAllChildrenNumberResponse_
     {
         int32_t totalNumber;
     };
-    struct GetChildren2Response
+    struct GetChildren2Response_
     {
-        StringVec children;
-        Stat stat;
+        StringVec_ children;
+        Stat_ stat;
     };
-    struct GetACLResponse
+    struct GetACLResponse_
     {
-        ACLVec acl;
-        Stat stat;
+        ACLVec_ acl;
+        Stat_ stat;
         void clear();
     };
-    struct CheckWatchesRequest
+    struct CheckWatchesRequest_
     {
         std::string path;
         int32_t type;
     };
 
-    struct RemoveWatchesRequest
+    struct RemoveWatchesRequest_
     {
         std::string path;
         int32_t type;
-        ~RemoveWatchesRequest() = default;
+        ~RemoveWatchesRequest_() = default;
     };
-    struct GetEphemeralsRequest
+    struct GetEphemeralsRequest_
     {
         std::string prefixPath;
     };
-    struct GetEphemeralsResponse
+    struct GetEphemeralsResponse_
     {
-        StringVec ephemerals;
+        StringVec_ ephemerals;
     };
-    struct ClientInfoVec : std::vector<ClientInfo>
+    struct ClientInfoVec_ : std::vector<ClientInfo_>
     {
     };
 
-    struct WhoAmIResponse
+    struct WhoAmIResponse_
     {
-        ClientInfoVec clientInfo;
-        ~WhoAmIResponse();
+        ClientInfoVec_ clientInfo;
+        ~WhoAmIResponse_();
     };
-    struct LearnerInfo
+    struct LearnerInfo_
     {
         int64_t serverid;
         int32_t protocolVersion;
         int64_t configVersion;
     };
-    struct IdVec : std::vector<Id>
+    struct IdVec_ : std::vector<Id_>
     {
     };
 
-    struct QuorumPacket
+    struct QuorumPacket_
     {
         int32_t type;
         int64_t zxid;
         std::string data;
-        IdVec authinfo;
+        IdVec_ authinfo;
         void clear();
     };
-    struct QuorumAuthPacket
+    struct QuorumAuthPacket_
     {
         int64_t magic;
         int32_t status;
         std::string token;
     };
-    struct FileHeader
+    struct FileHeader_
     {
         int32_t magic;
         int32_t version;
         int64_t dbid;
     };
-    struct TxnDigest
+    struct TxnDigest_
     {
         int32_t version;
         int64_t treeDigest;
     };
-    struct TxnHeader
+    struct TxnHeader_
     {
         int64_t clientId;
         int32_t cxid;
@@ -363,181 +363,179 @@ namespace coev
         int64_t time;
         int32_t type;
     };
-    struct CreateTxnV0
+    struct CreateTxnV0_
     {
         std::string path;
         std::string data;
-        ACLVec acl;
+        ACLVec_ acl;
         int32_t ephemeral;
     };
-    struct CreateTxn
+    struct CreateTxn_
     {
         std::string path;
         std::string data;
-        ACLVec acl;
+        ACLVec_ acl;
         int32_t ephemeral;
         int32_t parentCVersion;
     };
-    struct CreateTTLTxn
+    struct CreateTTLTxn_
     {
         std::string path;
         std::string data;
-        ACLVec acl;
+        ACLVec_ acl;
         int32_t parentCVersion;
         int64_t ttl;
     };
-    struct CreateContainerTxn
+    struct CreateContainerTxn_
     {
         std::string path;
         std::string data;
-        ACLVec acl;
+        ACLVec_ acl;
         int32_t parentCVersion;
     };
-    struct DeleteTxn
+    struct DeleteTxn_
     {
         std::string path;
     };
-    struct SetDataTxn
+    struct SetDataTxn_
     {
         std::string path;
         std::string data;
         int32_t version;
     };
-    struct CheckVersionTxn
+    struct CheckVersionTxn_
     {
         std::string path;
         int32_t version;
     };
-    struct SetACLTxn
+    struct SetACLTxn_
     {
         std::string path;
-        ACLVec acl;
+        ACLVec_ acl;
         int32_t version;
     };
-    struct SetMaxChildrenTxn
+    struct SetMaxChildrenTxn_
     {
         std::string path;
         int32_t max;
     };
-    struct CreateSessionTxn
+    struct CreateSessionTxn_
     {
         int32_t timeOut;
     };
-    struct CloseSessionTxn
+    struct CloseSessionTxn_
     {
-        StringVec paths2Delete;
+        StringVec_ paths2Delete;
     };
-    struct ErrorTxn
+    struct ErrorTxn_
     {
         int32_t err;
     };
-    struct Txn
+    struct Txn_
     {
         int32_t type;
         std::string data;
     };
-    struct Txn_vector
+    struct TxnVec_ : std::vector<Txn_>
     {
-        int32_t count;
-        Txn *data;
     };
-    struct MultiTxn
+    struct MultiTxn_
     {
-        Txn_vector txns;
+        TxnVec_ txns;
     };
 
     struct iarchive
     {
         std::string_view m_view;
-        ReplyHeader m_header;
+        ReplyHeader_ m_header;
         iarchive() = default;
         iarchive(const char *data, size_t size);
         iarchive(const std::string &data);
 
-        int deserialize_bool(const char *name, int32_t *);
-        int deserialize_int(const char *name, int32_t *);
-        int deserialize_long(const char *name, int64_t *);
+        int deserialize_bool(int32_t *);
+        int deserialize_int(int32_t *);
+        int deserialize_long(int64_t *);
 
-        int deserialize_buffer(const char *name, std::string &);
-        int deserialize_string(const char *name, std::string &s);
+        int deserialize_buffer(std::string &);
+        int deserialize_string(std::string &s);
 
-        int deserialize_Id(const char *tag, Id *v);
-        int deserialize_ACL(const char *tag, ACL *v);
-        int deserialize_Stat(const char *tag, Stat *v);
-        int deserialize_StatPersisted(const char *tag, StatPersisted *v);
-        int deserialize_ClientInfo(const char *tag, ClientInfo *v);
-        int deserialize_ConnectRequest(const char *tag, ConnectRequest *v);
-        int deserialize_ConnectResponse(const char *tag, ConnectResponse *v);
-        int deserialize_String_vector(const char *tag, StringVec *v);
-        int deserialize_SetWatches(const char *tag, SetWatches *v);
-        int deserialize_SetWatches2(const char *tag, SetWatches2 *v);
-        int deserialize_RequestHeader(const char *tag, RequestHeader *v);
-        int deserialize_MultiHeader(const char *tag, MultiHeader *v);
-        int deserialize_AuthPacket(const char *tag, AuthPacket *v);
-        int deserialize_ReplyHeader(const char *tag, ReplyHeader *v);
-        int deserialize_GetDataRequest(const char *tag, GetDataRequest *v);
-        int deserialize_SetDataRequest(const char *tag, SetDataRequest *v);
-        int deserialize_ReconfigRequest(const char *tag, ReconfigRequest *v);
-        int deserialize_SetDataResponse(const char *tag, SetDataResponse *v);
-        int deserialize_GetSASLRequest(const char *tag, GetSASLRequest *v);
-        int deserialize_SetSASLRequest(const char *tag, SetSASLRequest *v);
-        int deserialize_SetSASLResponse(const char *tag, SetSASLResponse *v);
-        int deserialize_ACLVec(const char *tag, ACLVec *v);
-        int deserialize_CreateRequest(const char *tag, CreateRequest *v);
-        int deserialize_CreateTTLRequest(const char *tag, CreateTTLRequest *v);
-        int deserialize_DeleteRequest(const char *tag, DeleteRequest *v);
-        int deserialize_GetChildrenRequest(const char *tag, GetChildrenRequest *v);
-        int deserialize_GetAllChildrenNumberRequest(const char *tag, GetAllChildrenNumberRequest *v);
-        int deserialize_GetChildren2Request(const char *tag, GetChildren2Request *v);
-        int deserialize_CheckVersionRequest(const char *tag, CheckVersionRequest *v);
-        int deserialize_GetMaxChildrenRequest(const char *tag, GetMaxChildrenRequest *v);
-        int deserialize_GetMaxChildrenResponse(const char *tag, GetMaxChildrenResponse *v);
-        int deserialize_SetMaxChildrenRequest(const char *tag, SetMaxChildrenRequest *v);
-        int deserialize_SyncRequest(const char *tag, SyncRequest *v);
-        int deserialize_SyncResponse(const char *tag, SyncResponse *v);
-        int deserialize_GetACLRequest(const char *tag, GetACLRequest *v);
-        int deserialize_SetACLRequest(const char *tag, SetACLRequest *v);
-        int deserialize_SetACLResponse(const char *tag, SetACLResponse *v);
-        int deserialize_AddWatchRequest(const char *tag, AddWatchRequest *v);
-        int deserialize_WatcherEvent(const char *tag, WatcherEvent *v);
-        int deserialize_ErrorResponse(const char *tag, ErrorResponse *v);
-        int deserialize_CreateResponse(const char *tag, CreateResponse *v);
-        int deserialize_Create2Response(const char *tag, Create2Response *v);
-        int deserialize_ExistsRequest(const char *tag, ExistsRequest *v);
-        int deserialize_ExistsResponse(const char *tag, ExistsResponse *v);
-        int deserialize_GetDataResponse(const char *tag, GetDataResponse *v);
-        int deserialize_GetChildrenResponse(const char *tag, GetChildrenResponse *v);
-        int deserialize_GetAllChildrenNumberResponse(const char *tag, GetAllChildrenNumberResponse *v);
-        int deserialize_GetChildren2Response(const char *tag, GetChildren2Response *v);
-        int deserialize_GetACLResponse(const char *tag, GetACLResponse *v);
-        int deserialize_CheckWatchesRequest(const char *tag, CheckWatchesRequest *v);
-        int deserialize_RemoveWatchesRequest(const char *tag, RemoveWatchesRequest *v);
-        int deserialize_GetEphemeralsRequest(const char *tag, GetEphemeralsRequest *v);
-        int deserialize_GetEphemeralsResponse(const char *tag, GetEphemeralsResponse *v);
-        int deserialize_ClientInfo_vector(const char *tag, ClientInfoVec *v);
-        int deserialize_WhoAmIResponse(const char *tag, WhoAmIResponse *v);
-        int deserialize_LearnerInfo(const char *tag, LearnerInfo *v);
-        int deserialize_Id_vector(const char *tag, IdVec *v);
-        int deserialize_QuorumPacket(const char *tag, QuorumPacket *v);
-        int deserialize_QuorumAuthPacket(const char *tag, QuorumAuthPacket *v);
-        int deserialize_FileHeader(const char *tag, FileHeader *v);
-        int deserialize_TxnDigest(const char *tag, TxnDigest *v);
-        int deserialize_TxnHeader(const char *tag, TxnHeader *v);
-        int deserialize_CreateTxnV0(const char *tag, CreateTxnV0 *v);
-        int deserialize_CreateTxn(const char *tag, CreateTxn *v);
-        int deserialize_CreateTTLTxn(const char *tag, CreateTTLTxn *v);
-        int deserialize_CreateContainerTxn(const char *tag, CreateContainerTxn *v);
-        int deserialize_DeleteTxn(const char *tag, DeleteTxn *v);
-        int deserialize_SetDataTxn(const char *tag, SetDataTxn *v);
-        int deserialize_CheckVersionTxn(const char *tag, CheckVersionTxn *v);
-        int deserialize_SetACLTxn(const char *tag, SetACLTxn *v);
-        int deserialize_SetMaxChildrenTxn(const char *tag, SetMaxChildrenTxn *v);
-        int deserialize_CreateSessionTxn(const char *tag, CreateSessionTxn *v);
-        int deserialize_CloseSessionTxn(const char *tag, CloseSessionTxn *v);
-        int deserialize_ErrorTxn(const char *tag, ErrorTxn *v);
-        int deserialize_Txn(const char *tag, Txn *v);
-        int deserialize_Txn_vector(const char *tag, Txn_vector *v);
-        int deserialize_MultiTxn(const char *tag, MultiTxn *v);
+        int Id(Id_ *v);
+        int ACL(ACL_ *v);
+        int Stat(Stat_ *v);
+        int StatPersisted(StatPersisted_ *v);
+        int ClientInfo(ClientInfo_ *v);
+        int ConnectRequest(ConnectRequest_ *v);
+        int ConnectResponse(ConnectResponse_ *v);
+        int StringVec(StringVec_ *v);
+        int SetWatches(SetWatches_ *v);
+        int SetWatches2(SetWatches2_ *v);
+        int RequestHeader(RequestHeader_ *v);
+        int MultiHeader(MultiHeader_ *v);
+        int AuthPacket(AuthPacket_ *v);
+        int ReplyHeader(ReplyHeader_ *v);
+        int GetDataRequest(GetDataRequest_ *v);
+        int SetDataRequest(SetDataRequest_ *v);
+        int ReconfigRequest(ReconfigRequest_ *v);
+        int SetDataResponse(SetDataResponse_ *v);
+        int GetSASLRequest(GetSASLRequest_ *v);
+        int SetSASLRequest(SetSASLRequest_ *v);
+        int SetSASLResponse(SetSASLResponse_ *v);
+        int ACLVec(ACLVec_ *v);
+        int CreateRequest(CreateRequest_ *v);
+        int CreateTTLRequest(CreateTTLRequest_ *v);
+        int DeleteRequest(DeleteRequest_ *v);
+        int GetChildrenRequest(GetChildrenRequest_ *v);
+        int GetAllChildrenNumberRequest(GetAllChildrenNumberRequest_ *v);
+        int GetChildren2Request(GetChildren2Request_ *v);
+        int CheckVersionRequest(CheckVersionRequest_ *v);
+        int GetMaxChildrenRequest(GetMaxChildrenRequest_ *v);
+        int GetMaxChildrenResponse(GetMaxChildrenResponse_ *v);
+        int SetMaxChildrenRequest(SetMaxChildrenRequest_ *v);
+        int SyncRequest(SyncRequest_ *v);
+        int SyncResponse(SyncResponse_ *v);
+        int GetACLRequest(GetACLRequest_ *v);
+        int SetACLRequest(SetACLRequest_ *v);
+        int SetACLResponse(SetACLResponse_ *v);
+        int AddWatchRequest(AddWatchRequest_ *v);
+        int WatcherEvent(WatcherEvent_ *v);
+        int ErrorResponse(ErrorResponse_ *v);
+        int CreateResponse(CreateResponse_ *v);
+        int Create2Response(Create2Response_ *v);
+        int ExistsRequest(ExistsRequest_ *v);
+        int ExistsResponse(ExistsResponse_ *v);
+        int GetDataResponse(GetDataResponse_ *v);
+        int GetChildrenResponse(GetChildrenResponse_ *v);
+        int GetAllChildrenNumberResponse(GetAllChildrenNumberResponse_ *v);
+        int GetChildren2Response(GetChildren2Response_ *v);
+        int GetACLResponse(GetACLResponse_ *v);
+        int CheckWatchesRequest(CheckWatchesRequest_ *v);
+        int RemoveWatchesRequest(RemoveWatchesRequest_ *v);
+        int GetEphemeralsRequest(GetEphemeralsRequest_ *v);
+        int GetEphemeralsResponse(GetEphemeralsResponse_ *v);
+        int ClientInfoVec(ClientInfoVec_ *v);
+        int WhoAmIResponse(WhoAmIResponse_ *v);
+        int LearnerInfo(LearnerInfo_ *v);
+        int IdVec(IdVec_ *v);
+        int QuorumPacket(QuorumPacket_ *v);
+        int QuorumAuthPacket(QuorumAuthPacket_ *v);
+        int FileHeader(FileHeader_ *v);
+        int TxnDigest(TxnDigest_ *v);
+        int TxnHeader(TxnHeader_ *v);
+        int CreateTxnV0(CreateTxnV0_ *v);
+        int CreateTxn(CreateTxn_ *v);
+        int CreateTTLTxn(CreateTTLTxn_ *v);
+        int CreateContainerTxn(CreateContainerTxn_ *v);
+        int DeleteTxn(DeleteTxn_ *v);
+        int SetDataTxn(SetDataTxn_ *v);
+        int CheckVersionTxn(CheckVersionTxn_ *v);
+        int SetACLTxn(SetACLTxn_ *v);
+        int SetMaxChildrenTxn(SetMaxChildrenTxn_ *v);
+        int CreateSessionTxn(CreateSessionTxn_ *v);
+        int CloseSessionTxn(CloseSessionTxn_ *v);
+        int ErrorTxn(ErrorTxn_ *v);
+        int Txn(Txn_ *v);
+        int TxnVec(TxnVec_ *v);
+        int MultiTxn(MultiTxn_ *v);
     };
     struct oarchive
     {
@@ -547,93 +545,91 @@ namespace coev
         const char *get_buffer() const;
         int get_buffer_len() const;
 
-        int start_vector(const char *tag, int32_t *count);
-
-        int serialize_bool(const char *name, int32_t);
-        int serialize_int(const char *name, int32_t);
-        int serialize_log(const char *name, int64_t);
-        int serialize_buffer(const char *name, const std::string &);
-        int serialize_string(const char *name, const std::string &);
+        int serialize_bool(int32_t);
+        int serialize_int(int32_t);
+        int serialize_log(int64_t);
+        int serialize_buffer(const std::string &);
+        int serialize_string(const std::string &);
 
         std::string m_buff;
 
-        int serialize_Id(const char *tag, Id *v);
-        int serialize_ACL(const char *tag, ACL *v);
-        int serialize_Stat(const char *tag, Stat *v);
-        int serialize_StatPersisted(const char *tag, StatPersisted *v);
-        int serialize_ClientInfo(const char *tag, ClientInfo *v);
-        int serialize_ConnectRequest(const char *tag, ConnectRequest *v);
-        int serialize_ConnectResponse(const char *tag, ConnectResponse *v);
-        int serialize_StringVec(const char *tag, StringVec *v);
-        int serialize_SetWatches(const char *tag, SetWatches *v);
-        int serialize_SetWatches2(const char *tag, SetWatches2 *v);
-        int serialize_RequestHeader(const char *tag, RequestHeader *v);
-        int serialize_MultiHeader(const char *tag, MultiHeader *v);
-        int serialize_AuthPacket(const char *tag, AuthPacket *v);
-        int serialize_ReplyHeader(const char *tag, ReplyHeader *v);
-        int serialize_GetDataRequest(const char *tag, GetDataRequest *v);
-        int serialize_SetDataRequest(const char *tag, SetDataRequest *v);
-        int serialize_ReconfigRequest(const char *tag, ReconfigRequest *v);
-        int serialize_SetDataResponse(const char *tag, SetDataResponse *v);
-        int serialize_GetSASLRequest(const char *tag, GetSASLRequest *v);
-        int serialize_SetSASLRequest(const char *tag, SetSASLRequest *v);
-        int serialize_SetSASLResponse(const char *tag, SetSASLResponse *v);
-        int serialize_ACL_vector(const char *tag, ACLVec *v);
-        int serialize_CreateRequest(const char *tag, CreateRequest *v);
-        int serialize_CreateTTLRequest(const char *tag, CreateTTLRequest *v);
-        int serialize_DeleteRequest(const char *tag, DeleteRequest *v);
-        int serialize_GetChildrenRequest(const char *tag, GetChildrenRequest *v);
-        int serialize_GetAllChildrenNumberRequest(const char *tag, GetAllChildrenNumberRequest *v);
-        int serialize_GetChildren2Request(const char *tag, GetChildren2Request *v);
-        int serialize_CheckVersionRequest(const char *tag, CheckVersionRequest *v);
-        int serialize_GetMaxChildrenRequest(const char *tag, GetMaxChildrenRequest *v);
-        int serialize_GetMaxChildrenResponse(const char *tag, GetMaxChildrenResponse *v);
-        int serialize_SetMaxChildrenRequest(const char *tag, SetMaxChildrenRequest *v);
-        int serialize_SyncRequest(const char *tag, SyncRequest *v);
-        int serialize_SyncResponse(const char *tag, SyncResponse *v);
-        int serialize_GetACLRequest(const char *tag, GetACLRequest *v);
-        int serialize_SetACLRequest(const char *tag, SetACLRequest *v);
-        int serialize_SetACLResponse(const char *tag, SetACLResponse *v);
-        int serialize_AddWatchRequest(const char *tag, AddWatchRequest *v);
-        int serialize_WatcherEvent(const char *tag, WatcherEvent *v);
-        int serialize_ErrorResponse(const char *tag, ErrorResponse *v);
-        int serialize_CreateResponse(const char *tag, CreateResponse *v);
-        int serialize_Create2Response(const char *tag, Create2Response *v);
-        int serialize_ExistsRequest(const char *tag, ExistsRequest *v);
-        int serialize_ExistsResponse(const char *tag, ExistsResponse *v);
-        int serialize_GetDataResponse(const char *tag, GetDataResponse *v);
-        int serialize_GetChildrenResponse(const char *tag, GetChildrenResponse *v);
-        int serialize_GetAllChildrenNumberResponse(const char *tag, GetAllChildrenNumberResponse *v);
-        int serialize_GetChildren2Response(const char *tag, GetChildren2Response *v);
-        int serialize_GetACLResponse(const char *tag, GetACLResponse *v);
-        int serialize_CheckWatchesRequest(const char *tag, CheckWatchesRequest *v);
-        int serialize_RemoveWatchesRequest(const char *tag, RemoveWatchesRequest *v);
-        int serialize_GetEphemeralsRequest(const char *tag, GetEphemeralsRequest *v);
-        int serialize_GetEphemeralsResponse(const char *tag, GetEphemeralsResponse *v);
-        int serialize_ClientInfo_vector(const char *tag, ClientInfoVec *v);
-        int serialize_WhoAmIResponse(const char *tag, WhoAmIResponse *v);
-        int serialize_LearnerInfo(const char *tag, LearnerInfo *v);
-        int serialize_Id_vector(const char *tag, IdVec *v);
-        int serialize_QuorumPacket(const char *tag, QuorumPacket *v);
-        int serialize_QuorumAuthPacket(const char *tag, QuorumAuthPacket *v);
-        int serialize_FileHeader(const char *tag, FileHeader *v);
-        int serialize_TxnDigest(const char *tag, TxnDigest *v);
-        int serialize_TxnHeader(const char *tag, TxnHeader *v);
-        int serialize_CreateTxnV0(const char *tag, CreateTxnV0 *v);
-        int serialize_CreateTxn(const char *tag, CreateTxn *v);
-        int serialize_CreateTTLTxn(const char *tag, CreateTTLTxn *v);
-        int serialize_CreateContainerTxn(const char *tag, CreateContainerTxn *v);
-        int serialize_DeleteTxn(const char *tag, DeleteTxn *v);
-        int serialize_SetDataTxn(const char *tag, SetDataTxn *v);
-        int serialize_CheckVersionTxn(const char *tag, CheckVersionTxn *v);
-        int serialize_SetACLTxn(const char *tag, SetACLTxn *v);
-        int serialize_SetMaxChildrenTxn(const char *tag, SetMaxChildrenTxn *v);
-        int serialize_CreateSessionTxn(const char *tag, CreateSessionTxn *v);
-        int serialize_CloseSessionTxn(const char *tag, CloseSessionTxn *v);
-        int serialize_ErrorTxn(const char *tag, ErrorTxn *v);
-        int serialize_Txn(const char *tag, Txn *v);
-        int serialize_Txn_vector(const char *tag, Txn_vector *v);
-        int serialize_MultiTxn(const char *tag, MultiTxn *v);
+        int Id(Id_ *v);
+        int ACL(ACL_ *v);
+        int Stat(Stat_ *v);
+        int StatPersisted(StatPersisted_ *v);
+        int ClientInfo(ClientInfo_ *v);
+        int ConnectRequest(ConnectRequest_ *v);
+        int ConnectResponse(ConnectResponse_ *v);
+        int StringVec(StringVec_ *v);
+        int SetWatches(SetWatches_ *v);
+        int SetWatches2(SetWatches2_ *v);
+        int RequestHeader(RequestHeader_ *v);
+        int MultiHeader(MultiHeader_ *v);
+        int AuthPacket(AuthPacket_ *v);
+        int ReplyHeader(ReplyHeader_ *v);
+        int GetDataRequest(GetDataRequest_ *v);
+        int SetDataRequest(SetDataRequest_ *v);
+        int ReconfigRequest(ReconfigRequest_ *v);
+        int SetDataResponse(SetDataResponse_ *v);
+        int GetSASLRequest(GetSASLRequest_ *v);
+        int SetSASLRequest(SetSASLRequest_ *v);
+        int SetSASLResponse(SetSASLResponse_ *v);
+        int ACLVec(ACLVec_ *v);
+        int CreateRequest(CreateRequest_ *v);
+        int CreateTTLRequest(CreateTTLRequest_ *v);
+        int DeleteRequest(DeleteRequest_ *v);
+        int GetChildrenRequest(GetChildrenRequest_ *v);
+        int GetAllChildrenNumberRequest(GetAllChildrenNumberRequest_ *v);
+        int GetChildren2Request(GetChildren2Request_ *v);
+        int CheckVersionRequest(CheckVersionRequest_ *v);
+        int GetMaxChildrenRequest(GetMaxChildrenRequest_ *v);
+        int GetMaxChildrenResponse(GetMaxChildrenResponse_ *v);
+        int SetMaxChildrenRequest(SetMaxChildrenRequest_ *v);
+        int SyncRequest(SyncRequest_ *v);
+        int SyncResponse(SyncResponse_ *v);
+        int GetACLRequest(GetACLRequest_ *v);
+        int SetACLRequest(SetACLRequest_ *v);
+        int SetACLResponse(SetACLResponse_ *v);
+        int AddWatchRequest(AddWatchRequest_ *v);
+        int WatcherEvent(WatcherEvent_ *v);
+        int ErrorResponse(ErrorResponse_ *v);
+        int CreateResponse(CreateResponse_ *v);
+        int Create2Response(Create2Response_ *v);
+        int ExistsRequest(ExistsRequest_ *v);
+        int ExistsResponse(ExistsResponse_ *v);
+        int GetDataResponse(GetDataResponse_ *v);
+        int GetChildrenResponse(GetChildrenResponse_ *v);
+        int GetAllChildrenNumberResponse(GetAllChildrenNumberResponse_ *v);
+        int GetChildren2Response(GetChildren2Response_ *v);
+        int GetACLResponse(GetACLResponse_ *v);
+        int CheckWatchesRequest(CheckWatchesRequest_ *v);
+        int RemoveWatchesRequest(RemoveWatchesRequest_ *v);
+        int GetEphemeralsRequest(GetEphemeralsRequest_ *v);
+        int GetEphemeralsResponse(GetEphemeralsResponse_ *v);
+        int ClientInfoVec(ClientInfoVec_ *v);
+        int WhoAmIResponse(WhoAmIResponse_ *v);
+        int LearnerInfo(LearnerInfo_ *v);
+        int IdVec(IdVec_ *v);
+        int QuorumPacket(QuorumPacket_ *v);
+        int QuorumAuthPacket(QuorumAuthPacket_ *v);
+        int FileHeader(FileHeader_ *v);
+        int TxnDigest(TxnDigest_ *v);
+        int TxnHeader(TxnHeader_ *v);
+        int CreateTxnV0(CreateTxnV0_ *v);
+        int CreateTxn(CreateTxn_ *v);
+        int CreateTTLTxn(CreateTTLTxn_ *v);
+        int CreateContainerTxn(CreateContainerTxn_ *v);
+        int DeleteTxn(DeleteTxn_ *v);
+        int SetDataTxn(SetDataTxn_ *v);
+        int CheckVersionTxn(CheckVersionTxn_ *v);
+        int SetACLTxn(SetACLTxn_ *v);
+        int SetMaxChildrenTxn(SetMaxChildrenTxn_ *v);
+        int CreateSessionTxn(CreateSessionTxn_ *v);
+        int CloseSessionTxn(CloseSessionTxn_ *v);
+        int ErrorTxn(ErrorTxn_ *v);
+        int Txn(Txn_ *v);
+        int TxnVec(TxnVec_ *v);
+        int MultiTxn(MultiTxn_ *v);
     };
 
     std::unique_ptr<oarchive> create_buffer_oarchive(void);

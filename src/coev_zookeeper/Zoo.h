@@ -8,17 +8,8 @@ namespace coev
     {
         int64_t client_id;
         char passwd[16] = {0};
-        const clientid_t &operator=(const clientid_t &o)
-        {
-            client_id = o.client_id;
-            strncpy(passwd, o.passwd, sizeof(passwd));
-            return *this;
-        }
-        void clear()
-        {
-            client_id = 0;
-            memset(passwd, 0, sizeof(passwd));
-        }
+        const clientid_t &operator=(const clientid_t &o);
+        void clear();
     };
 
     struct prime_struct

@@ -21,7 +21,7 @@ namespace coev
             return default_op;
         }
     }
-    void ZooOp::zoo_create_op_init(const char *path, const std::string &value, ACLVec &acl, int mode, char *path_buffer, int path_buffer_len)
+    void ZooOp::zoo_create_op_init(const char *path, const std::string &value, ACLVec_ &acl, int mode, char *path_buffer, int path_buffer_len)
     {
         m_type = get_create_op_type(mode, ZOO_CREATE_OP);
         m_create_op.path = path;
@@ -34,7 +34,7 @@ namespace coev
         m_create_op.buflen = path_buffer_len;
     }
 
-    void ZooOp::zoo_create2_op_init(const char *path, const std::string &value, ACLVec &acl, int mode, char *path_buffer, int path_buffer_len)
+    void ZooOp::zoo_create2_op_init(const char *path, const std::string &value, ACLVec_ &acl, int mode, char *path_buffer, int path_buffer_len)
     {
         m_type = get_create_op_type(mode, ZOO_CREATE2_OP);
         m_create_op.path = path;
@@ -53,7 +53,7 @@ namespace coev
         m_delete_op.version = version;
     }
 
-    void ZooOp::zoo_set_op_init(const char *path, const std::string &buffer, int version, Stat *stat)
+    void ZooOp::zoo_set_op_init(const char *path, const std::string &buffer, int version, Stat_ *stat)
     {
         m_type = ZOO_SETDATA_OP;
         m_set_op.path = path;

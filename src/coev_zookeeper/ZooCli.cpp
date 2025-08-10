@@ -136,12 +136,12 @@ namespace coev
         int64_t lastZxidSeen = m_last_zxid;
         std::string password(m_client_id.passwd, sizeof(m_client_id.passwd));
         int32_t readOnly = m_allow_read_only;
-        oa.serialize_int("protocolVersion", protocolVersion);
-        oa.serialize_log("lastZxidSeen", lastZxidSeen);
-        oa.serialize_int("timeout", timeOut);
-        oa.serialize_log("sessionId", sessionId);
-        oa.serialize_string("passwd", password);
-        oa.serialize_bool("readOnly", readOnly);
+        oa.serialize_int(protocolVersion);
+        oa.serialize_log(lastZxidSeen);
+        oa.serialize_int(timeOut);
+        oa.serialize_log(sessionId);
+        oa.serialize_string(password);
+        oa.serialize_bool(readOnly);
         assert(oa.m_buff.size() == HANDSHAKE_REQ_SIZE);
 
         co_await send(oa.m_buff);
@@ -158,15 +158,15 @@ namespace coev
         m_primer_storage.len = r;
 
         iarchive ia(msg.data(), r);
-        ia.deserialize_int("protocolVersion", &m_primer_storage.protocolVersion);
-        ia.deserialize_int("timeOut", &m_primer_storage.timeOut);
-        ia.deserialize_long("sessionId", &m_primer_storage.sessionId);
+        ia.deserialize_int(&m_primer_storage.protocolVersion);
+        ia.deserialize_int(&m_primer_storage.timeOut);
+        ia.deserialize_long(&m_primer_storage.sessionId);
         std::string password;
-        ia.deserialize_string("password", password);
+        ia.deserialize_string(password);
         strncpy(m_primer_storage.passwd, password.c_str(), sizeof(m_primer_storage.passwd));
         m_primer_storage.passwd_len = std::min(password.size(), sizeof(m_primer_storage.passwd));
         int32_t readOnly;
-        ia.deserialize_bool("readOnly", &readOnly);
+        ia.deserialize_bool(&readOnly);
         m_primer_storage.readOnly = readOnly;
 
         assert(ia.m_view.size() == 0);
@@ -189,8 +189,8 @@ namespace coev
     {
         oarchive oa;
 
-        RequestHeader h = {PING_XID, ZOO_PING_OP};
-        oa.serialize_RequestHeader("header", &h);
+        RequestHeader_ h = {PING_XID, ZOO_PING_OP};
+        oa.RequestHeader(&h);
         m_last_ping = std::chrono::system_clock::now();
 
         auto r = co_await send(oa.m_buff);
@@ -225,8 +225,8 @@ namespace coev
             }
             assert(r == (int)response.size());
             iarchive ia(response.data(), response.size());
-            ReplyHeader hdr;
-            ia.deserialize_ReplyHeader("hdr", &hdr);
+            ReplyHeader_ hdr;
+            ia.ReplyHeader(&hdr);
             if (hdr.xid == PING_XID)
             {
                 m_last_ping = std::chrono::system_clock::now();
@@ -237,8 +237,8 @@ namespace coev
             else if (hdr.xid == WATCHER_EVENT_XID)
             {
                 std::string path;
-                WatcherEvent evt;
-                ia.deserialize_WatcherEvent("event", &evt);
+                WatcherEvent_ evt;
+                ia.WatcherEvent(&evt);
                 collect_watchers(evt.type, evt.path);
                 m_watcher.resume_next_loop();
             }
@@ -262,7 +262,7 @@ namespace coev
         m_completion_list.pop_front();
 
         ia.m_view = std::string_view(response.data(), response.size());
-        ia.deserialize_ReplyHeader("head", &ia.m_header);
+        ia.ReplyHeader(&ia.m_header);
 
         if (ia.m_header.err)
         {
@@ -274,15 +274,15 @@ namespace coev
     awaitable<int> ZooCli::send_auth_info(auth_info *auth)
     {
 
-        RequestHeader h = {AUTH_XID, ZOO_SETAUTH_OP};
+        RequestHeader_ h = {AUTH_XID, ZOO_SETAUTH_OP};
         oarchive oa;
 
-        AuthPacket req;
+        AuthPacket_ req;
         req.type = 0;
         req.scheme = auth->m_scheme;
         req.auth = auth->m_auth;
-        auto r = oa.serialize_RequestHeader("header", &h);
-        r = r < 0 ? r : oa.serialize_AuthPacket("req", &req);
+        auto r = oa.RequestHeader(&h);
+        r = r < 0 ? r : oa.AuthPacket(&req);
 
         r = co_await send(oa.m_buff);
         if (r == INVALID)
@@ -293,24 +293,24 @@ namespace coev
         iarchive ia;
         co_await completion(ia);
 
-        AuthPacket resp;
-        ia.deserialize_AuthPacket("resp", &resp);
+        AuthPacket_ resp;
+        ia.AuthPacket(&resp);
 
         co_return 0;
     }
-    awaitable<int> ZooCli::zoo_exists(const char *path, Stat &data)
+    awaitable<int> ZooCli::zoo_exists(const char *path, Stat_ &data)
     {
 
-        RequestHeader h = {get_xid(), ZOO_EXISTS_OP};
-        ExistsRequest req;
+        RequestHeader_ h = {get_xid(), ZOO_EXISTS_OP};
+        ExistsRequest_ req;
         auto r = path_init(req.path, path);
         if (r == INVALID)
         {
             co_return INVALID;
         }
         oarchive oa;
-        r = r < 0 ? r : oa.serialize_RequestHeader("header", &h);
-        r = r < 0 ? r : oa.serialize_ExistsRequest("req", &req);
+        r = r < 0 ? r : oa.RequestHeader(&h);
+        r = r < 0 ? r : oa.ExistsRequest(&req);
         if (r == INVALID)
         {
             co_return INVALID;
@@ -327,8 +327,8 @@ namespace coev
         {
             co_return INVALID;
         }
-        ExistsResponse res;
-        r = ia.deserialize_ExistsResponse("reply", &res);
+        ExistsResponse_ res;
+        r = ia.ExistsResponse(&res);
         if (r == INVALID)
         {
             co_return INVALID;
@@ -339,8 +339,8 @@ namespace coev
     awaitable<int> ZooCli::zoo_get(const char *path, const std::string &data)
     {
 
-        RequestHeader h = {get_xid(), ZOO_GETDATA_OP};
-        GetDataRequest req;
+        RequestHeader_ h = {get_xid(), ZOO_GETDATA_OP};
+        GetDataRequest_ req;
         req.watch = false;
         auto r = path_init(req.path, path);
         if (r == INVALID)
@@ -349,8 +349,8 @@ namespace coev
         }
 
         oarchive oa;
-        r = oa.serialize_RequestHeader("header", &h);
-        r = r < 0 ? r : oa.serialize_GetDataRequest("req", &req);
+        r = oa.RequestHeader(&h);
+        r = r < 0 ? r : oa.GetDataRequest(&req);
         if (r == INVALID)
         {
             co_return INVALID;
@@ -364,8 +364,8 @@ namespace coev
         iarchive ia;
         co_await completion(ia);
 
-        GetDataResponse res;
-        ia.deserialize_GetDataResponse("reply", &res);
+        GetDataResponse_ res;
+        ia.GetDataResponse(&res);
 
         co_return 0;
     }
@@ -374,10 +374,10 @@ namespace coev
         const std::string path = ZOO_CONFIG_NODE;
         const std::string server_path = ZOO_CONFIG_NODE;
 
-        RequestHeader h = {get_xid(), ZOO_GETDATA_OP};
+        RequestHeader_ h = {get_xid(), ZOO_GETDATA_OP};
 
         oarchive oa;
-        GetDataRequest req;
+        GetDataRequest_ req;
         req.path = server_path;
         req.watch = false;
         auto r = path_init(req.path, path);
@@ -385,8 +385,8 @@ namespace coev
         {
             co_return INVALID;
         }
-        r = oa.serialize_RequestHeader("header", &h);
-        r = r < 0 ? r : oa.serialize_GetDataRequest("req", &req);
+        r = oa.RequestHeader(&h);
+        r = r < 0 ? r : oa.GetDataRequest(&req);
         if (r == INVALID)
         {
             co_return INVALID;
@@ -399,8 +399,8 @@ namespace coev
         iarchive ia;
         co_await completion(ia);
 
-        GetDataResponse resp;
-        ia.deserialize_GetDataResponse("resp", &resp);
+        GetDataResponse_ resp;
+        ia.GetDataResponse(&resp);
 
         co_return 0;
     }
@@ -408,16 +408,16 @@ namespace coev
     awaitable<int> ZooCli::zoo_reconfig(const char *path, const std::string &joining, const std::string leaving, const std::string members, int64_t version)
     {
 
-        RequestHeader h = {get_xid(), ZOO_RECONFIG_OP};
-        ReconfigRequest req;
+        RequestHeader_ h = {get_xid(), ZOO_RECONFIG_OP};
+        ReconfigRequest_ req;
         req.joiningServers = joining;
         req.leavingServers = leaving;
         req.newMembers = members;
         req.curConfigId = version;
 
         oarchive oa;
-        auto r = oa.serialize_RequestHeader("header", &h);
-        r = r < 0 ? r : oa.serialize_ReconfigRequest("req", &req);
+        auto r = oa.RequestHeader(&h);
+        r = r < 0 ? r : oa.ReconfigRequest(&req);
         if (r == INVALID)
         {
             co_return INVALID;
@@ -429,15 +429,15 @@ namespace coev
         }
         iarchive ia;
         co_await completion(ia);
-        ReconfigRequest res;
-        ia.deserialize_ReconfigRequest("res", &res);
+        ReconfigRequest_ res;
+        ia.ReconfigRequest(&res);
         co_return 0;
     }
     awaitable<int> ZooCli::zoo_set(const char *path, const std::string buffer, int version)
     {
 
-        RequestHeader h = {get_xid(), ZOO_SETDATA_OP};
-        SetDataRequest req;
+        RequestHeader_ h = {get_xid(), ZOO_SETDATA_OP};
+        SetDataRequest_ req;
         req.data = buffer;
         req.version = version;
         auto r = path_init(req.path, path);
@@ -447,8 +447,8 @@ namespace coev
         }
 
         oarchive oa;
-        r = oa.serialize_RequestHeader("header", &h);
-        r = r < 0 ? r : oa.serialize_SetDataRequest("req", &req);
+        r = oa.RequestHeader(&h);
+        r = r < 0 ? r : oa.SetDataRequest(&req);
         if (r == INVALID)
         {
             co_return INVALID;
@@ -460,8 +460,8 @@ namespace coev
         }
         iarchive ia;
         co_await completion(ia);
-        GetDataResponse res;
-        ia.deserialize_GetDataResponse("res", &res);
+        GetDataResponse_ res;
+        ia.GetDataResponse(&res);
 
         co_return 0;
     }
@@ -469,16 +469,16 @@ namespace coev
     awaitable<int> ZooCli::zoo_get_children(const char *path, std::string &data)
     {
 
-        RequestHeader h = {get_xid(), ZOO_GETCHILDREN_OP};
-        GetChildrenRequest req;
+        RequestHeader_ h = {get_xid(), ZOO_GETCHILDREN_OP};
+        GetChildrenRequest_ req;
         auto r = path_init(req.path, path);
         if (r == INVALID)
         {
             co_return INVALID;
         }
         oarchive oa;
-        r = oa.serialize_RequestHeader("header", &h);
-        r = r < 0 ? r : oa.serialize_GetChildrenRequest("req", &req);
+        r = oa.RequestHeader(&h);
+        r = r < 0 ? r : oa.GetChildrenRequest(&req);
         if (r == INVALID)
         {
             co_return INVALID;
@@ -494,8 +494,8 @@ namespace coev
         {
             co_return INVALID;
         }
-        GetChildrenResponse res;
-        r = ia.deserialize_GetChildrenResponse("res", &res);
+        GetChildrenResponse_ res;
+        r = ia.GetChildrenResponse(&res);
 
         co_return ZOK;
     }
@@ -503,8 +503,8 @@ namespace coev
     awaitable<int> ZooCli::zoo_get_children2(const char *path, std::vector<std::string> &data)
     {
 
-        RequestHeader h = {get_xid(), ZOO_GETCHILDREN2_OP};
-        GetChildren2Request req = {
+        RequestHeader_ h = {get_xid(), ZOO_GETCHILDREN2_OP};
+        GetChildren2Request_ req = {
             .watch = 0,
         };
         auto r = path_init(req.path, path);
@@ -513,8 +513,8 @@ namespace coev
             co_return INVALID;
         }
         oarchive oa;
-        r = oa.serialize_RequestHeader("header", &h);
-        r = r < 0 ? r : oa.serialize_GetChildren2Request("req", &req);
+        r = oa.RequestHeader(&h);
+        r = r < 0 ? r : oa.GetChildren2Request(&req);
         if (r == INVALID)
         {
             co_return INVALID;
@@ -530,8 +530,8 @@ namespace coev
         {
             co_return INVALID;
         }
-        GetChildren2Response res;
-        r = ia.deserialize_GetChildren2Response("res", &res);
+        GetChildren2Response_ res;
+        r = ia.GetChildren2Response(&res);
         data = std::move(res.children);
 
         co_return 0;
@@ -539,16 +539,16 @@ namespace coev
 
     awaitable<int> ZooCli::zoo_async(const char *path, std::string &data)
     {
-        SyncRequest req = {};
+        SyncRequest_ req = {};
         auto r = path_init(req.path, path);
         if (r == INVALID)
         {
             co_return INVALID;
         }
-        RequestHeader h = {get_xid(), ZOO_SYNC_OP};
+        RequestHeader_ h = {get_xid(), ZOO_SYNC_OP};
         oarchive oa;
-        r = oa.serialize_RequestHeader("header", &h);
-        r = r < 0 ? r : oa.serialize_SyncRequest("req", &req);
+        r = oa.RequestHeader(&h);
+        r = r < 0 ? r : oa.SyncRequest(&req);
         if (r == INVALID)
         {
             co_return INVALID;
@@ -564,25 +564,25 @@ namespace coev
         {
             co_return INVALID;
         }
-        SyncResponse resp;
-        r = r < 0 ? r : ia.deserialize_SyncResponse("res", &resp);
+        SyncResponse_ resp;
+        r = r < 0 ? r : ia.SyncResponse(&resp);
         data = std::move(resp.path);
 
         co_return 0;
     }
-    awaitable<int> ZooCli::zoo_get_acl(const char *path, Stat &stat)
+    awaitable<int> ZooCli::zoo_get_acl(const char *path, Stat_ &stat)
     {
 
-        GetACLRequest req = {};
+        GetACLRequest_ req = {};
         auto r = path_init(req.path, path);
         if (r == INVALID)
         {
             co_return INVALID;
         }
-        RequestHeader h = {get_xid(), ZOO_GETACL_OP};
+        RequestHeader_ h = {get_xid(), ZOO_GETACL_OP};
         oarchive oa;
-        r = oa.serialize_RequestHeader("header", &h);
-        r = r < 0 ? r : oa.serialize_GetACLRequest("req", &req);
+        r = oa.RequestHeader(&h);
+        r = r < 0 ? r : oa.GetACLRequest(&req);
         if (r == INVALID)
         {
             co_return INVALID;
@@ -598,15 +598,15 @@ namespace coev
         {
             co_return INVALID;
         }
-        SetACLResponse resp;
-        r = r < 0 ? r : ia.deserialize_SetACLResponse("res", &resp);
+        SetACLResponse_ resp;
+        r = r < 0 ? r : ia.SetACLResponse(&resp);
         stat = resp.stat;
         co_return 0;
     }
-    awaitable<int> ZooCli::zoo_set_acl(const char *path, int version, ACLVec &acl, Stat &stat)
+    awaitable<int> ZooCli::zoo_set_acl(const char *path, int version, ACLVec_ &acl, Stat_ &stat)
     {
 
-        SetACLRequest req = {
+        SetACLRequest_ req = {
             .acl = acl,
             .version = version,
         };
@@ -615,10 +615,10 @@ namespace coev
         {
             co_return INVALID;
         }
-        RequestHeader h = {get_xid(), ZOO_SETACL_OP};
+        RequestHeader_ h = {get_xid(), ZOO_SETACL_OP};
         oarchive oa;
-        r = oa.serialize_RequestHeader("header", &h);
-        r = r < 0 ? r : oa.serialize_SetACLRequest("req", &req);
+        r = oa.RequestHeader(&h);
+        r = r < 0 ? r : oa.SetACLRequest(&req);
         if (r == INVALID)
         {
             co_return INVALID;
@@ -634,75 +634,75 @@ namespace coev
         {
             co_return INVALID;
         }
-        SetACLResponse resp;
-        r = r < 0 ? r : ia.deserialize_SetACLResponse("res", &resp);
+        SetACLResponse_ resp;
+        r = r < 0 ? r : ia.SetACLResponse(&resp);
         stat = resp.stat;
         co_return 0;
     }
     awaitable<int> ZooCli::zoo_multi(int count, const ZooOp *ops)
     {
-        RequestHeader h = {get_xid(), ZOO_MULTI_OP};
-        MultiHeader mh = {-1, 1, -1};
+        RequestHeader_ h = {get_xid(), ZOO_MULTI_OP};
+        MultiHeader_ mh = {-1, 1, -1};
         oarchive oa;
 
-        int r = oa.serialize_RequestHeader("header", &h);
+        int r = oa.RequestHeader(&h);
 
         int index = 0;
         for (index = 0; index < count; index++)
         {
             const ZooOp *op = ops + index;
 
-            struct MultiHeader mh = {op->m_type, 0, -1};
-            r = r < 0 ? r : oa.serialize_MultiHeader("multiheader", &mh);
+            struct MultiHeader_ mh = {op->m_type, 0, -1};
+            r = r < 0 ? r : oa.MultiHeader(&mh);
 
             switch (op->m_type)
             {
             case ZOO_CREATE_CONTAINER_OP:
             case ZOO_CREATE_OP:
             {
-                CreateRequest req = {
+                CreateRequest_ req = {
                     .data = op->m_create_op.data,
                     .acl = *op->m_create_op.acl,
                     .flags = op->m_create_op.flags,
                 };
                 r = path_init(req.path, op->m_create_op.path);
-                r = r < 0 ? r : oa.serialize_CreateRequest("req", &req);
+                r = r < 0 ? r : oa.CreateRequest(&req);
                 break;
             }
 
             case ZOO_DELETE_OP:
             {
-                DeleteRequest req = {
+                DeleteRequest_ req = {
                     .version = op->m_delete_op.version,
                 };
                 r = path_init(req.path, op->m_delete_op.path);
-                r = r < 0 ? r : oa.serialize_DeleteRequest("req", &req);
+                r = r < 0 ? r : oa.DeleteRequest(&req);
 
                 break;
             }
 
             case ZOO_SETDATA_OP:
             {
-                SetDataRequest req = {
+                SetDataRequest_ req = {
                     .data = op->m_set_op.data,
                     .version = op->m_set_op.version,
                 };
                 r = path_init(req.path, op->m_set_op.path);
-                r = r < 0 ? r : oa.serialize_SetDataRequest("req", &req);
+                r = r < 0 ? r : oa.SetDataRequest(&req);
                 break;
             }
 
             case ZOO_CHECK_OP:
             {
-                CheckVersionRequest req = {};
+                CheckVersionRequest_ req = {};
                 r = path_init(req.path, op->m_check_op.path);
-                r = r < 0 ? r : oa.serialize_CheckVersionRequest("req", &req);
+                r = r < 0 ? r : oa.CheckVersionRequest(&req);
                 break;
             }
             }
         }
 
-        r = r < 0 ? r : oa.serialize_MultiHeader("multiheader", &mh);
+        r = r < 0 ? r : oa.MultiHeader(&mh);
         r = co_await send(oa.m_buff);
         if (r == INVALID)
         {
@@ -714,16 +714,16 @@ namespace coev
     awaitable<int> ZooCli::zoo_delete(const char *path, int version)
     {
 
-        RequestHeader h = {get_xid(), ZOO_DELETE_OP};
-        DeleteRequest req;
+        RequestHeader_ h = {get_xid(), ZOO_DELETE_OP};
+        DeleteRequest_ req;
         auto r = path_init(req.path, path);
         if (r == INVALID)
         {
             co_return INVALID;
         }
         oarchive oa;
-        r = oa.serialize_RequestHeader("header", &h);
-        r = r < 0 ? r : oa.serialize_DeleteRequest("req", &req);
+        r = oa.RequestHeader(&h);
+        r = r < 0 ? r : oa.DeleteRequest(&req);
         if (r == INVALID)
         {
             co_return INVALID;
@@ -742,21 +742,21 @@ namespace coev
 
         co_return 0;
     }
-    awaitable<int> ZooCli::zoo_create2(const char *path, const std::string &value, const ACLVec &acl, int mode)
+    awaitable<int> ZooCli::zoo_create2(const char *path, const std::string &value, const ACLVec_ &acl, int mode)
     {
         return zoo_create2_ttl(path, value, acl, mode, -1);
     }
-    awaitable<int> ZooCli::zoo_create2_ttl(const char *path, const std::string &value, const ACLVec &acl_entries, int mode, int64_t ttl)
+    awaitable<int> ZooCli::zoo_create2_ttl(const char *path, const std::string &value, const ACLVec_ &acl_entries, int mode, int64_t ttl)
     {
 
-        RequestHeader h = {get_xid(), get_create_op_type(mode, ZOO_CREATE2_OP)};
+        RequestHeader_ h = {get_xid(), get_create_op_type(mode, ZOO_CREATE2_OP)};
         if (ZOOKEEPER_IS_TTL(mode))
         {
             if (ttl <= 0 || ttl > ZOO_MAX_TTL)
             {
                 co_return INVALID;
             }
-            CreateTTLRequest req = {
+            CreateTTLRequest_ req = {
                 .data = value,
                 .acl = acl_entries,
                 .flags = mode,
@@ -770,8 +770,8 @@ namespace coev
             }
 
             oarchive oa;
-            r = r < 0 ? r : oa.serialize_RequestHeader("header", &h);
-            r = r < 0 ? r : oa.serialize_CreateTTLRequest("req", &req);
+            r = r < 0 ? r : oa.RequestHeader(&h);
+            r = r < 0 ? r : oa.CreateTTLRequest(&req);
 
             r = co_await send(oa.m_buff);
             if (r == INVALID)
@@ -785,8 +785,8 @@ namespace coev
                 co_return INVALID;
             }
 
-            Create2Response res;
-            ia.deserialize_Create2Response("reply", &res);
+            Create2Response_ res;
+            ia.Create2Response(&res);
         }
         else
         {
@@ -794,7 +794,7 @@ namespace coev
             {
                 co_return INVALID;
             }
-            CreateRequest req = {
+            CreateRequest_ req = {
                 .data = value,
                 .acl = acl_entries,
                 .flags = mode,
@@ -805,8 +805,8 @@ namespace coev
                 co_return INVALID;
             }
             oarchive oa;
-            r = r < 0 ? r : oa.serialize_RequestHeader("header", &h);
-            r = r < 0 ? r : oa.serialize_CreateRequest("req", &req);
+            r = r < 0 ? r : oa.RequestHeader(&h);
+            r = r < 0 ? r : oa.CreateRequest(&req);
 
             r = co_await send(oa.m_buff);
             if (r == INVALID)
@@ -820,24 +820,24 @@ namespace coev
             {
                 co_return INVALID;
             }
-            Create2Response res;
-            ia.deserialize_Create2Response("reply", &res);
+            Create2Response_ res;
+            ia.Create2Response(&res);
         }
     }
 
     awaitable<int> ZooCli::zoo_set_watches()
     {
         auto r = 0;
-        RequestHeader h = {SET_WATCHES_XID, ZOO_SETWATCHES_OP};
-        SetWatches req;
+        RequestHeader_ h = {SET_WATCHES_XID, ZOO_SETWATCHES_OP};
+        SetWatches_ req;
         req.relativeZxid = m_last_zxid;
         // req.dataWatches = m_active_node_watchers.collect_keys();
         // req.existWatches = m_active_exist_watchers.collect_keys();
         // req.childWatches = m_active_child_watchers.collect_keys();
 
         oarchive oa;
-        r = r < 0 ? r : oa.serialize_RequestHeader("header", &h);
-        r = r < 0 ? r : oa.serialize_SetWatches("req", &req);
+        r = r < 0 ? r : oa.RequestHeader(&h);
+        r = r < 0 ? r : oa.SetWatches(&req);
         r = co_await send(oa.m_buff);
         if (r == INVALID)
         {
@@ -871,10 +871,10 @@ namespace coev
 
     awaitable<int> ZooCli::close()
     {
-        RequestHeader h = {get_xid(), ZOO_CLOSE_OP};
+        RequestHeader_ h = {get_xid(), ZOO_CLOSE_OP};
 
         oarchive oa;
-        oa.serialize_RequestHeader("header", &h);
+        oa.RequestHeader(&h);
 
         auto r = co_await send(oa.m_buff);
         if (r == INVALID)
