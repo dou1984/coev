@@ -2,7 +2,6 @@
  *	coev - c++20 coroutine library
  *
  *	Copyright (c) 2023, Zhao Yun Shan
- *	All rights reserved.
  *
  */
 #pragma once
@@ -12,36 +11,36 @@
 
 namespace coev
 {
-	template <class S>
+	template <class SRV>
 	class server_pool
 	{
 		int m_fd = INVALID;
-		std::unordered_map<uint64_t, S> m_pool;
+		std::unordered_map<uint64_t, SRV> m_pool;
 		std::mutex m_mutex;
 
 	public:
-		S &get()
+		SRV &get()
 		{
 			auto _tid = gtid();
 			std::lock_guard<std::mutex> _(m_mutex);
-			auto &s = m_pool[_tid];
+			auto &srv = m_pool[_tid];
 			if (m_fd == INVALID)
 			{
 			}
-			else if (!s.valid())
+			else if (!srv.valid())
 			{
-				s.insert(m_fd);
+				srv.insert(m_fd);
 			}
-			return s;
+			return srv;
 		}
 		int start(const char *ip, int port)
 		{
 			auto _tid = gtid();
 			std::lock_guard<std::mutex> _(m_mutex);
-			auto &s = m_pool[_tid];
+			auto &srv = m_pool[_tid];
 			if (m_fd == INVALID)
 			{
-				m_fd = s.start(ip, port);
+				m_fd = srv.start(ip, port);
 				LOG_CORE("server_pool start fd=%d ip=%s port=%d\n", m_fd, ip, port);
 			}
 			return m_fd;
@@ -51,10 +50,10 @@ namespace coev
 			std::lock_guard<std::mutex> _(m_mutex);
 			for (auto it = m_pool.begin(); it != m_pool.end(); ++it)
 			{
-				auto &s = it->second;
-				if (s.m_fd != INVALID)
+				auto &srv = it->second;
+				if (srv.m_fd != INVALID)
 				{
-					s.__remove();
+					srv.__remove();
 				}
 			}
 			if (m_fd != INVALID)

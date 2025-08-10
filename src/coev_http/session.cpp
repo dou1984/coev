@@ -2,7 +2,6 @@
  *	coev - c++20 coroutine library
  *
  *	Copyright (c) 2023, Zhao Yun Shan
- *	All rights reserved.
  *
  */
 #include <bitset>
@@ -116,7 +115,6 @@ namespace coev::http
 			if (r == _finished)
 			{
 				LOG_CORE("finished\n")
-				// request = std::move(m_request);
 				co_return 0;
 			}
 		} while (true);

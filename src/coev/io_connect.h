@@ -8,7 +8,7 @@ namespace coev
     public:
         using io_context::operator bool;
         io_connect();
-        awaitable<int> connect(const char *, int);
+        virtual awaitable<int> connect(const char *, int);
 
     protected:
         void __init_connect();

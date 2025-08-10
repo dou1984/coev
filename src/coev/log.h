@@ -2,7 +2,6 @@
  *	coev - c++20 coroutine library
  *
  *	Copyright (c) 2023, Zhao Yun Shan
- *	All rights reserved.
  *
  */
 #pragma once
@@ -11,12 +10,12 @@
 #include <mutex>
 
 #define PRINT(...) printf(__VA_ARGS__)
-#define LOG(LEVEL, ...)                                         \
+#define LOG(LEVEL, ...)                                               \
 	if (get_log_level() <= LEVEL)                               \
-	{                                                           \
+	{                                                                 \
 		std::lock_guard<std::mutex> _(get_log_mutex());         \
 		print_log_str(LEVEL, __FILE__, __FUNCTION__, __LINE__); \
-		PRINT(__VA_ARGS__);                                     \
+		PRINT(__VA_ARGS__);                                           \
 	}
 
 #define LOG_CORE(...) \

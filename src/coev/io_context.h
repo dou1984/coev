@@ -2,7 +2,6 @@
  *	coev - c++20 coroutine library
  *
  *	Copyright (c) 2023, Zhao Yun Shan
- *	All rights reserved.
  *
  */
 #pragma once
@@ -15,6 +14,9 @@ namespace coev
 {
 #define IO_CLIENT 0x1
 #define IO_SSL 0x2
+#define IO_TCP 0x4
+#define IO_UDP 0x8
+
 	class io_context
 	{
 	public:
@@ -22,10 +24,21 @@ namespace coev
 		io_context(int fd);
 		io_context(io_context &&) = delete;
 		virtual ~io_context();
-		awaitable<int> send(const char *, int);
-		awaitable<int> recv(char *, int);
-		awaitable<int> recvfrom(char *, int, addrInfo &);
-		awaitable<int> sendto(const char *, int, addrInfo &);
+		virtual awaitable<int> send(const char *, int);
+		virtual awaitable<int> recv(char *, int);
+		template <class T = std::string>
+		awaitable<int> send(const T &msg)
+		{
+			return send(msg.data(), msg.size());
+		}
+		template <class T = std::string>
+		awaitable<int> recv(T &msg)
+		{
+			return recv(msg.data(), msg.size());
+		}
+
+		virtual awaitable<int> recvfrom(char *, int, addrInfo &);
+		virtual awaitable<int> sendto(const char *, int, addrInfo &);
 		int close();
 		operator bool() const;
 

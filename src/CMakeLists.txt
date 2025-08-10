@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.14.0)
 
 add_subdirectory(./coev)
-add_subdirectory(./common)
 add_subdirectory(./coev_ssl)
 add_subdirectory(./coev_mysql)
 add_subdirectory(./coev_redis)
 add_subdirectory(./coev_http)
 add_subdirectory(./coev_nghttp)
 # add_subdirectory(./coev_kafka)
+add_subdirectory(./coev_zookeeper)

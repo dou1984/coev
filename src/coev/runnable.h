@@ -2,7 +2,6 @@
  *	coev - c++20 coroutine library
  *
  *	Copyright (c) 2023, Zhao Yun Shan
- *	All rights reserved.
  *
  */
 #pragma once
@@ -12,6 +11,7 @@
 #include "singleton.h"
 #include "cosys.h"
 #include "awaitable.h"
+#include "co_task.h"
 
 namespace coev
 {

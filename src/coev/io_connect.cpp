@@ -27,12 +27,11 @@ namespace coev
             m_fd = INVALID;
             return;
         }
-        __add_connect();
     }
     io_connect::io_connect()
     {
         __init_connect();
-        m_type |= IO_CLIENT;
+        m_type |= IO_CLIENT | IO_TCP;
     }
     int io_connect::__add_connect()
     {
@@ -53,6 +52,7 @@ namespace coev
         {
             if (isInprocess())
             {
+                __add_connect();
                 return m_fd;
             }
         }

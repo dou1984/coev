@@ -5,9 +5,9 @@ link_directories(${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Debug)
+    set(CMAKE_BUILD_TYPE Release)
 endif()
-project(test_nghttp)
+project(co_nghttp)
 
 aux_source_directory(./ SRC_DIR)
 link_directories(/usr/local/lib64/ /usr/local/lib/)

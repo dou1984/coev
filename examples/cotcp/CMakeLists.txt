@@ -7,7 +7,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 if(NOT CMAKE_BUILD_TYPE)
 	 SET(CMAKE_BUILD_TYPE Release CACHE INTERNAL "cmake_build_type")
 endif()
-project(test_tcp)
+project(co_tcp)
 
 aux_source_directory(./ SRC_DIR)
 

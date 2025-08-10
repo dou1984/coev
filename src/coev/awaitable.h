@@ -2,7 +2,6 @@
  *	coev - c++20 coroutine library
  *
  *	Copyright (c) 2023, Zhao Yun Shan
- *	All rights reserved.
  *
  */
 #pragma once
@@ -32,7 +31,7 @@ namespace coev
 		};
 
 	public:
-		awaitable() =default;
+		awaitable() = default;
 		awaitable(std::coroutine_handle<promise_type> h) : m_callee(h)
 		{
 			m_callee.promise().m_this = m_callee;
@@ -43,6 +42,7 @@ namespace coev
 		const awaitable &operator=(const awaitable &&) = delete;
 		~awaitable()
 		{
+
 			if (local<is_destroying>::instance())
 			{
 				destroy();

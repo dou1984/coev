@@ -14,7 +14,7 @@ namespace coev
         co_event suspend_util_next_loop();
         bool resume();
         bool resume_next_loop();
-        int resume_all();        
+        int resume_all();
     };
 
     namespace guard

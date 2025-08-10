@@ -38,28 +38,11 @@ namespace coev
                 value = _value;
                 return {};
             }
-            /*
-            std::suspend_always yield_void()
-            {
-                return {};
-            }
-            */
-            std::suspend_never return_value(T &&_value)
-            {
-                value = std::move(_value);
-                return {};
-            }
-            std::suspend_never return_value(T &_value)
-            {
-                value = _value;
-                return {};
-            }
-            /*
+
             std::suspend_never return_void()
             {
                 return {};
             }
-            */
             statable<T> get_return_object()
             {
                 return {std::coroutine_handle<promise_type>::from_promise(*this)};
@@ -80,6 +63,7 @@ namespace coev
             }
             return false;
         }
+        int operator co_await() = delete;
         T &operator()()
         {
             return m_callee.promise().value;
@@ -97,6 +81,6 @@ namespace coev
         auto await_resume() = delete;
 
     private:
-        std::coroutine_handle<promise_type> m_callee;
+        std::coroutine_handle<promise_type> m_callee = nullptr;
     };
 }

@@ -2,7 +2,6 @@
  *	coev - c++20 coroutine library
  *
  *	Copyright (c) 2023, Zhao Yun Shan
- *	All rights reserved.
  *
  */
 #include <ev.h>
@@ -16,14 +15,14 @@ namespace coev
 	{
 		co_timer _timer(t, 0);
 		LOG_CORE("sleep_for %lds\n", t);
-		_timer.active();		
+		_timer.active();
 		co_await _timer.suspend();
 	}
 	awaitable<void> usleep_for(long t)
 	{
 		co_timer _timer((float)t / 1000000, 0);
 		LOG_CORE("usleep_for %ldus\n", t);
-		_timer.active();		
+		_timer.active();
 		co_await _timer.suspend();
 	}
 }

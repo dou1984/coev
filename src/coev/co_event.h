@@ -2,7 +2,6 @@
  *	coev - c++20 coroutine library
  *
  *	Copyright (c) 2023, Zhao Yun Shan
- *	All rights reserved.
  *
  */
 #pragma once
@@ -15,6 +14,10 @@
 
 namespace coev
 {
+	namespace guard
+	{
+		class async;
+	}
 	class co_event final : public queue
 	{
 		std::coroutine_handle<> m_caller = nullptr;
@@ -22,8 +25,10 @@ namespace coev
 		uint64_t m_tid;
 		uint64_t m_reserved;
 		void __resume();
-		friend void __ev_set_reserved(co_event &, uint64_t x);
-		friend uint64_t __ev_get_reserved(co_event &);
+		void __set_reserved(uint64_t x);
+		uint64_t __get_reserved();
+
+		friend class coev::guard::async;
 
 	public:
 		co_event(queue *_eventchain);

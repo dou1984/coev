@@ -3,8 +3,6 @@
 #include "local.h"
 namespace coev
 {
-	extern void __ev_set_reserved(co_event &, uint64_t x);
-	extern uint64_t __ev_get_reserved(co_event &);
 	const std::function<void()> __empty_set = []() {};
 	co_event async::suspend()
 	{
@@ -60,7 +58,7 @@ namespace coev
 				m_mutex.unlock();
 				co_await ev;
 				m_mutex.lock();
-				value = __ev_get_reserved(ev);
+				value = ev.__get_reserved();
 			}
 			_get();
 			m_mutex.unlock();
@@ -79,7 +77,7 @@ namespace coev
 		{
 			if (auto c = __ev(__empty_set); c != nullptr)
 			{
-				__ev_set_reserved(*c, value);
+				c->__set_reserved(value);
 				c->resume();
 				return true;
 			}
@@ -90,7 +88,7 @@ namespace coev
 		{
 			if (auto c = __ev(__empty_set); c != nullptr)
 			{
-				__ev_set_reserved(*c, value);
+				c->__set_reserved(value);
 				if (c->id() == gtid())
 				{
 					c->resume();

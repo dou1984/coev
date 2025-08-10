@@ -5,11 +5,9 @@
 
 namespace coev::ssl
 {
-    class context : virtual protected io_context
+    class context : virtual public io_context
     {
     public:
-        using io_context::operator bool;
-        using io_context::close;
         context(context &&) = delete;
         context(int fd, SSL_CTX *);
         ~context();

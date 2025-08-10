@@ -2,7 +2,6 @@
  *	coev - c++20 coroutine library
  *
  *	Copyright (c) 2023, Zhao Yun Shan
- *	All rights reserved.
  *
  */
 #include <unistd.h>
@@ -103,7 +102,7 @@ namespace coev
 			ev_io_stop(m_loop, &m_write);
 		}
 		return 0;
-	}	
+	}
 	io_context::~io_context()
 	{
 		__close();
@@ -154,7 +153,8 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	awaitable<int> io_context::recvfrom(char *buffer, int size, addrInfo &info)
+
+		awaitable<int> io_context::recvfrom(char *buffer, int size, addrInfo &info)
 	{
 		while (__valid())
 		{
