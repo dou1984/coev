@@ -4,112 +4,66 @@ c++20 coroutine libev
 
 ---
 
-coev is a c++20 event-based coroutine solution. In 2019, the C++ Committee proposed a draft of coroutines. There are also many solutions of coroutines on github. but the libraries are not friendly to developers. The author encapsulates a relatively simple library for the convenience of C++ developers.
+coev is a high-performance coroutine programming library built on C++20 coroutines. It provides a comprehensive and user-friendly abstraction over C++20 coroutines, leveraging the mature and stable libev networking library as its foundation to deliver excellent network throughput.
 
-The coroutine of c++20 is a stackless coroutine, which greatly improves the switching efficiency of the coroutine compared with the traditional stackful coroutine. Compared with the classic boost::context, c++20 coroutines have changed a lot in the development mode.
+The primary design goal of coev is to simplify the notoriously complex and obscure usage of C++20 coroutines. Through high-level abstraction and modular decoupling, developers can write asynchronous logic as intuitively as synchronous code—simply using co_await to wait for I/O operations to complete—while enjoying clear and straightforward control flow and full support for temporary variables within functions, including their seamless passing across suspension points.
 
-The development of c++20 coroutines is difficult, so coev encapsulates three commonly used Awaiters, which reduces the difficulty of understanding c++20 coroutines and improves development efficiency. coev can also quickly convert asynchronous processes into coroutines.
+Most importantly, coev completely decouples coroutines from networking logic, enabling developers to transform any asynchronous operation into a coroutine seamlessly. Coroutine resumption can be triggered either manually or automatically via events, offering exceptional flexibility and fine-grained control.
 
-# install
+In terms of task scheduling, coev provides powerful concurrency primitives:
+1. wait_for_all – waits until all tasks complete
+2. wait_for_any – returns as soon as any one task completes
+3. These primitives can be arbitrarily combined and nested to construct sophisticated concurrent workflows
 
-```sh
-#ubuntu
-make build
-cd build
-cmake ..
-make 
+All tasks automatically release their resources upon completion, eliminating the need for manual lifetime management.
 
-#compile examples
-make build
-cd build
-cmake BUILD_EXAMPLES=ON ..
-make
-```
+Additionally, coev includes a type-safe and thread-safe Channel mechanism for efficiently passing data of any type between coroutines or threads, significantly enhancing expressiveness in multi-coroutine collaboration.
 
-The author encapsulates three classes "awaitable", "event", "async" and "task" through the c++20 coroutine library. The main idea of ​​these three subpackage classes is to be event-based. Developers no longer need to association coroutine with file's I/O, networks and pipelines etc. Coroutine codes are highly abstract, and completely separated from other module codes. In the development, the only things needed is to store current context and wait for data complished. When the data is ready, we can trigger the recovery context and continue the coroutine.
+To further boost developer productivity, coev offers coroutine-ready wrappers for commonly used components, including:
+1. TCP / UDP
+2. MySQL client (based on mysqlclient)
+3. Redis client (based on hiredis)
+4. HTTP / HTTP/2 (based on http_parser and libnghttp2)
 
-## event
 
-event is the smallest coroutine class, used to quickly convert asynchronous calls into coroutines. "eventchain" and "wait_for<eventchain>" cooperate with each other to quickly implement coroutines.
+## Examples
+
+Call co_await g_trigger.suspend() to wait for a command response, and invoke g_trigger.resume() to resume the suspended coroutine. Temporary variables can be passed through parameters, and the entire process is thread-safe—making it remarkably simple to implement complex control flows with ease.
 
 ```cpp
-async g_listener;
-
+using namespace coev;
+async g_trigger;
 awaitable<int> co_waiting()
 { 
- co_await wait_for(&g_listener);
+ co_await g_trigger.suppend(); // wait for event trigger
  co_return 0;
 }
 awaitable<int> co_trigger()
 {
  co_await sleep_for(5);
- notify(&g_listener);
+ g_trigger.resume();  // Trigger an event to jump to the coroutine co_waiting.
  co_return 0;
-}
-```
-
-## awaitable
-
-awaitable is a coroutine class of coev. awaitable is very convenient to use. Defining awaitable as a function return can create a coroutine.
-
-```cpp
-awaitable<int> co_sleep(int t)  
-{  
- co_await sleep_for(t); 
- co_return 0；  
-} 
-awaitable<int> co_iterator(int t)
-{
- if (t > 0)
- {
-  co_await co_iterator(t - 1);
-  co_await sleep_for(1);
- }
- co_return 0;
-}
-```
-
-awaitable can be called hierarchically, which solves the most commonly used multi-level calling problem in coroutine.
-
-```cpp
-awaitable<int> test_lower()
-{
- co_await co_sleep(1);
-}
-awaitable<int> test_upper()
-{
- co_await test_lower();
-}
-```
-
-awaitable is used to wait for the completion of the coroutine. awaitable can choose two modes, one is to wait for all tasks to complete before exiting, and the other is to exit as long as one task is completed.
-
-```cpp
-awaitable<int> co_sleep(int t)
-{
-  co_await sleep_for(t);
-  co_return 0；
 }
 awaitable<int> test_any()
 {
- co_await wait_for_any(co_sleep(1), co_sleep(2));
+ co_await wait_for_any(sleep_for(1), sleep_for(2)); // Wait for the result from any coroutine.
 }
 awaitable<int> test_all()
 {
- co_await wait_for_all(co_sleep(1), co_sleep(2));
+  co_await wait_for_all(sleep_for(1), sleep_for(2)); // Wait for results from all coroutines.
 }
 ```
 
-## channel
+## Channel
 
-channel is used for data transmission.
+Channels are used for data transmission, which is also one of the most important use cases in coroutines, and channels are thread-safe.
 
 ```cpp
 channel<int> ch;  
 awaitable<int> co_channel_input()  
 {  
  int x = 1;  
- co_await ch.set(x); 
+ ch.set(x); 
  co_return 0;  
 }  
 awaitable<int> co_channel_output()  
@@ -119,5 +73,15 @@ awaitable<int> co_channel_output()
  co_return  0;  
 }  
 ```
-More information link to 
-https://github.com/dou1984/coev/wiki/High-performance-event%E2%80%90based-stackless-coroutine
+
+# How to install
+
+The compiler must support the C++20 standard or higher.
+
+```sh
+#ubuntu
+make build
+cd build
+cmake ..
+make 
+```

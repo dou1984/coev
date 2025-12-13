@@ -1,7 +1,7 @@
 /*
  *	coev - c++20 coroutine library
  *
- *	Copyright (c) 2023, Zhao Yun Shan
+ *	Copyright (c) 2023-2025, Zhao Yun Shan
  *
  */
 #include "co_event.h"
@@ -32,9 +32,34 @@ namespace coev
 		for (auto it : _promises)
 		{
 			auto p = it.first;
-			assert(p->m_caller == nullptr);
-			p->m_task = nullptr;
+			// assert(p->m_that == nullptr);
+			// p->m_task = nullptr;
+			// assert(std::holds_alternative<std::nullptr_t>(p->m_that));
 			std::lock_guard<is_destroying> _(local<is_destroying>::instance());
+			p->m_this.destroy();
+		}
+	}
+	void co_task::destroy(uint64_t id)
+	{
+		promise *p = nullptr;
+		{
+			std::lock_guard<std::mutex> _(m_waiter.lock());
+			for (auto it = m_promises.begin(); it != m_promises.end(); ++it)
+			{
+				if (it->second == id)
+				{
+					p = it->first;
+					m_promises.erase(it);
+					break;
+				}
+			}
+		}
+		// assert(p->m_that == nullptr);
+		// p->m_task = nullptr;
+		// assert(std::holds_alternative<std::nullptr_t>(p->m_that));
+		std::lock_guard<is_destroying> _(local<is_destroying>::instance());
+		if (p)
+		{
 			p->m_this.destroy();
 		}
 	}
@@ -62,11 +87,12 @@ namespace coev
 	}
 	int co_task::load(promise *_promise)
 	{
+		assert(_promise != nullptr);
 		auto __insert = [this](promise *_promise) -> int
 		{
 			assert(_promise->m_tid == gtid());
 			std::lock_guard<std::mutex> _(m_waiter.lock());
-			_promise->m_task = this;
+			_promise->m_that = this;
 			auto id = ++m_id;
 			m_promises.emplace(_promise, id);
 			return id;

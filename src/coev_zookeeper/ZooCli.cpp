@@ -831,9 +831,6 @@ namespace coev
         RequestHeader_ h = {SET_WATCHES_XID, ZOO_SETWATCHES_OP};
         SetWatches_ req;
         req.relativeZxid = m_last_zxid;
-        // req.dataWatches = m_active_node_watchers.collect_keys();
-        // req.existWatches = m_active_exist_watchers.collect_keys();
-        // req.childWatches = m_active_child_watchers.collect_keys();
 
         oarchive oa;
         r = r < 0 ? r : oa.RequestHeader(&h);

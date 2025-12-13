@@ -5,23 +5,37 @@
 
 namespace coev
 {
+    promise::promise()
+    {
+        LOG_CORE("promise this:%p\n", this);
+    }
     promise::~promise()
     {
+        struct release
+        {
+            promise *m_this;
+            release(promise *_this) : m_this(_this) {}
+            void operator()(co_task *_task)
+            {
+                LOG_CORE("~promise this:%p task:%p\n", m_this, _task);
+                assert(_task != nullptr);
+                _task->unload(m_this);
+            }
+            void operator()(std::coroutine_handle<> _caller)
+            {
+                LOG_CORE("~promise this:%p caller:%p\n", m_this, _caller.address());
+                assert(!_caller.done());
+                _caller.resume();
+            }
+            void operator()(nullptr_t)
+            {
+                LOG_CORE("~promise this:%p nullptr_t\n", m_this);
+            }
+        } _(this);
+
         m_status = CORO_FINISHED;
-        if (m_task)
-        {
-            assert(m_caller.address() == nullptr);
-            X(m_task)->unload(this);
-        }
-        else if (m_caller)
-        {
-            assert(!m_caller.done());
-            X(m_caller).resume();
-        }
-        else
-        {
-            assert(false);
-        }
+        std::visit(_, m_that);
+        m_that = nullptr;
     }
     void promise::unhandled_exception()
     {
@@ -30,7 +44,22 @@ namespace coev
 
     suspend_bool promise::initial_suspend()
     {
-        auto _ready = m_caller || m_task;
+        struct ready
+        {
+            promise *m_this;
+            ready(promise *_this) : m_this(_this) {}
+            bool operator()(co_task *_task)
+            {
+                return _task != nullptr;
+            }
+            bool operator()(std::coroutine_handle<> _caller)
+            {
+                return _caller.address() != nullptr;
+            }
+            bool operator()(nullptr_t) { return false; }
+
+        } _(this);
+        auto _ready = std::visit(_, m_that);
         m_status = _ready ? CORO_RUNNING : CORO_SUSPEND;
         return {.m_ready = _ready};
     }

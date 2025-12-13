@@ -1,7 +1,7 @@
 /*
  *	coev - c++20 coroutine library
  *
- *	Copyright (c) 2023, Zhao Yun Shan 
+ *	Copyright (c) 2023-2025, Zhao Yun Shan
  *
  */
 #include <coev/coev.h>
@@ -62,17 +62,20 @@ awaitable<void> co_await_destroy()
 {
 	g.add();
 
-	auto x = []() -> awaitable<void>
+	auto id = co_start << []() -> awaitable<void>
 	{
 		co_await sleep_for(5);
 		LOG_DBG("error called !!!\n");
+		g.done();
 	}();
+
 	LOG_DBG("co_await_destroy sleep begin\n");
 	co_await sleep_for(1);
 	LOG_DBG("co_await_destroy destroy\n");
-	x.destroy();
 
-	g.done();
+	co_start.destroy(id);
+
+	LOG_DBG("co_await_destroy sleep end\n");
 }
 int main()
 {
@@ -90,7 +93,7 @@ int main()
 			{
 				co_await wait_for_all(co_awaitable_sleep(), co_awaitable_resume());
 				LOG_DBG("co_awaitable_sleep co_awaitable_resume finish\n");
-			})		
+			})
 		.start(co_await_destroy)
 		.start(
 			[]() -> awaitable<void>

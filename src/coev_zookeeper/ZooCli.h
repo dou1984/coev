@@ -71,9 +71,5 @@ namespace coev
         std::list<std::string> m_completion_list;
         async m_completion;
         async m_watcher;
-
-        // zk_watchers m_active_node_watchers;
-        // zk_watchers m_active_exist_watchers;
-        // zk_watchers m_active_child_watchers;
     };
 }

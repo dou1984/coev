@@ -1,7 +1,7 @@
 /*
  *	coev - c++20 coroutine library
  *
- *	Copyright (c) 2023, Zhao Yun Shan
+ *	Copyright (c) 2023-2025, Zhao Yun Shan
  *
  */
 #include <thread>
@@ -21,7 +21,7 @@ awaitable<void> go()
 	{
 		x++;
 		ch.set(x);
-		x = co_await ch.move();
+		x = co_await ch.get();
 		LOG_DBG("x=%d\n", x);
 	}
 	total += x;

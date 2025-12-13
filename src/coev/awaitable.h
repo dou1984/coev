@@ -1,7 +1,7 @@
 /*
  *	coev - c++20 coroutine library
  *
- *	Copyright (c) 2023, Zhao Yun Shan
+ *	Copyright (c) 2023-2025, Zhao Yun Shan
  *
  */
 #pragma once
@@ -9,7 +9,6 @@
 #include <atomic>
 #include <memory>
 #include <iostream>
-#include <tuple>
 #include "queue.h"
 #include "promise.h"
 #include "log.h"
@@ -42,7 +41,6 @@ namespace coev
 		const awaitable &operator=(const awaitable &&) = delete;
 		~awaitable()
 		{
-
 			if (local<is_destroying>::instance())
 			{
 				destroy();
@@ -64,15 +62,15 @@ namespace coev
 			if (!done())
 			{
 				auto &_promise = m_callee.promise();
-				_promise.m_task = nullptr;
-				_promise.m_caller = nullptr;
+				_promise.m_that = nullptr;
 				std::lock_guard<is_destroying> _(local<is_destroying>::instance());
 				m_callee.destroy();
 			}
 		}
 		void await_suspend(std::coroutine_handle<> caller) // co_await调用， 传入上层coroutine_handle
 		{
-			m_callee.promise().m_caller = caller;
+			LOG_CORE("await_suspend this:%p caller:%p\n", this, caller.address());
+			m_callee.promise().m_that = caller;
 			if (m_callee.promise().m_status == CORO_SUSPEND)
 			{
 				// m_callee should be resumed here

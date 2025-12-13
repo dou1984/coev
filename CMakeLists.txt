@@ -3,8 +3,7 @@ cmake_minimum_required(VERSION 3.14.0)
 project(coev)
 
 if(NOT CMAKE_BUILD_TYPE)
-  # SET(CMAKE_BUILD_TYPE Release CACHE INTERNAL "cmake_build_type")
-  SET(CMAKE_BUILD_TYPE Debug CACHE INTERNAL "cmake_build_type")
+  SET(CMAKE_BUILD_TYPE Release CACHE INTERNAL "cmake_build_type")  
 endif()
 
 add_subdirectory(./src)

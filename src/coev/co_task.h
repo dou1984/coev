@@ -1,7 +1,7 @@
 /*
  *	coev - c++20 coroutine library
  *
- *	Copyright (c) 2023, Zhao Yun Shan
+ *	Copyright (c) 2023-2025, Zhao Yun Shan
  *
  */
 #pragma once
@@ -25,6 +25,7 @@ namespace coev
 	public:
 		virtual ~co_task();
 		void destroy();
+		void destroy(uint64_t id);
 
 		int operator<<(promise *);
 		int operator>>(promise *);

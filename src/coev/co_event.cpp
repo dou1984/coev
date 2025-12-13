@@ -1,7 +1,7 @@
 /*
  *	coev - c++20 coroutine library
  *
- *	Copyright (c) 2023, Zhao Yun Shan
+ *	Copyright (c) 2023-2025, Zhao Yun Shan
  *
  */
 #include <thread>
@@ -39,7 +39,6 @@ namespace coev
 	}
 	bool co_event::await_ready()
 	{
-		
 		return m_status.load(std::memory_order_consume);
 	}
 	void co_event::await_suspend(std::coroutine_handle<> _awaitable)

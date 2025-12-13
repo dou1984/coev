@@ -1,11 +1,11 @@
 /*
  *	coev - c++20 coroutine library
  *
- *	Copyright (c) 2023, Zhao Yun Shan
+ *	Copyright (c) 2023-2025, Zhao Yun Shan
  *
  */
 #pragma once
-#include <list>
+#include <queue>
 #include "awaitable.h"
 #include "wait_for.h"
 #include "async.h"
@@ -28,7 +28,7 @@ namespace coev
 				[this, d]()
 				{ m_data.push_back(d); });
 		}
-		awaitable<TYPE> move()
+		awaitable<TYPE> get()
 		{
 			TYPE d;
 			co_await m_waiter.suspend(

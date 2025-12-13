@@ -1,7 +1,7 @@
 /*
  *	coev - c++20 coroutine library
  *
- *	Copyright (c) 2023, Zhao Yun Shan
+ *	Copyright (c) 2023-2025, Zhao Yun Shan
  *
  */
 #pragma once
@@ -9,6 +9,7 @@
 #include <iostream>
 #include <string.h>
 #include <atomic>
+#include <variant>
 #include "gtid.h"
 #include "log.h"
 #include "queue.h"
@@ -30,12 +31,11 @@ namespace coev
 	class co_task;
 	struct promise : queue
 	{
-		std::coroutine_handle<> m_this = nullptr;
-		std::coroutine_handle<> m_caller = nullptr;
-		co_task *m_task = nullptr;
+		std::coroutine_handle<> m_this = nullptr;		
+		std::variant<co_task *, std::coroutine_handle<>, nullptr_t> m_that;
 		int m_status = CORO_INIT;
 		uint64_t m_tid = gtid();
-		promise() = default;
+		promise();
 		~promise();
 		void unhandled_exception();
 		suspend_bool initial_suspend();
