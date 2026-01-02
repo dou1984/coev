@@ -14,6 +14,7 @@
 #include "protocol_body.h"
 
 struct Broker;
+
 struct PartitionMetadata : VDecoder, VEncoder
 {
     int16_t Version;

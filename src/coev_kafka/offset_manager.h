@@ -32,7 +32,7 @@ struct OffsetManager : IOffsetManager, std::enable_shared_from_this<OffsetManage
     coev::awaitable<int> Commit();
 
     std::shared_ptr<PartitionOffsetManager> ManagePartition(const std::string &topic, int32_t partition);
-    OffsetManager(std::shared_ptr<IClient> client, std::shared_ptr<Config> conf,
+    OffsetManager(std::shared_ptr<Client> client, std::shared_ptr<Config> conf,
                   const std::string &group, std::function<void()> sessionCanceler,
                   const std::string &memberID, int32_t generation);
     std::chrono::milliseconds ComputeBackoff(int retries);
@@ -50,7 +50,7 @@ struct OffsetManager : IOffsetManager, std::enable_shared_from_this<OffsetManage
     std::shared_ptr<PartitionOffsetManager> findPOM(const std::string &topic, int32_t partition);
     void tryCancelSession();
 
-    std::shared_ptr<IClient> client;
+    std::shared_ptr<Client> client;
     std::shared_ptr<Config> conf;
     std::string group;
     std::function<void()> sessionCanceler;
@@ -71,6 +71,6 @@ struct OffsetManager : IOffsetManager, std::enable_shared_from_this<OffsetManage
     coev::co_task task_;
 };
 
-coev::awaitable<int> NewOffsetManagerFromClient(const std::string &group, std::shared_ptr<IClient> client, std::shared_ptr<OffsetManager> &om);
+coev::awaitable<int> NewOffsetManagerFromClient(const std::string &group, std::shared_ptr<Client> client, std::shared_ptr<OffsetManager> &om);
 coev::awaitable<int> NewOffsetManagerFromClient(const std::string &group, const std::string &memberID, int32_t generation,
-                                                std::shared_ptr<IClient> client, std::function<void()> sessionCanceler, std::shared_ptr<OffsetManager> &om);
+                                                std::shared_ptr<Client> client, std::function<void()> sessionCanceler, std::shared_ptr<OffsetManager> &om);

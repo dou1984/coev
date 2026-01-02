@@ -34,7 +34,7 @@ coev::awaitable<int> OffsetManager::NewPartitionOffsetManager(
 }
 
 OffsetManager::OffsetManager(
-    std::shared_ptr<IClient> client,
+    std::shared_ptr<Client> client,
     std::shared_ptr<Config> conf,
     const std::string &group,
     std::function<void()> sessionCanceler,
@@ -464,14 +464,14 @@ void OffsetManager::tryCancelSession()
     }
 }
 
-coev::awaitable<int> NewOffsetManagerFromClient(const std::string &group, std::shared_ptr<IClient> client, std::shared_ptr<OffsetManager> &om)
+coev::awaitable<int> NewOffsetManagerFromClient(const std::string &group, std::shared_ptr<Client> client, std::shared_ptr<OffsetManager> &om)
 {
     return NewOffsetManagerFromClient(group, "", GroupGenerationUndefined, client, nullptr, om);
 }
 
 coev::awaitable<int> NewOffsetManagerFromClient(
     const std::string &group, const std::string &memberID, int32_t generation,
-    std::shared_ptr<IClient> client, std::function<void()> sessionCanceler, std::shared_ptr<OffsetManager> &om)
+    std::shared_ptr<Client> client, std::function<void()> sessionCanceler, std::shared_ptr<OffsetManager> &om)
 {
 
     if (client->Closed())

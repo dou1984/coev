@@ -242,7 +242,7 @@ coev::awaitable<int> Broker::GetAvailableOffsets(std::shared_ptr<OffsetRequest> 
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::AsyncProduce(std::shared_ptr<ProduceRequest> request, std::function<void(std::shared_ptr<ProduceResponse>, KError)> cb)
+coev::awaitable<int> Broker::AsyncProduce(std::shared_ptr<ProduceRequest> request, std::function<void(std::shared_ptr<ProduceResponse>, KError)> f)
 {
     std::lock_guard<std::mutex> lock(m_Lock);
     bool needAcks = request->Acks_ != NoResponse;
@@ -253,22 +253,22 @@ coev::awaitable<int> Broker::AsyncProduce(std::shared_ptr<ProduceRequest> reques
         auto response = std::make_shared<ProduceResponse>();
         promise = std::make_shared<ResponsePromise>();
         promise->Response = response;
-        promise->Handler = [cb, response, request, this](std::string &packets, KError err)
+        promise->Handler = [f, response, request, this](std::string &packets, KError err)
         {
             if (err)
             {
-                cb({nullptr}, err);
+                f({nullptr}, err);
                 return;
             }
             bool decodeErr = versionedDecode(packets, std::dynamic_pointer_cast<VDecoder>(response), request->version(), metricRegistry);
             if (decodeErr)
             {
-                cb({nullptr}, ErrDecodeError);
+                f({nullptr}, ErrDecodeError);
                 return;
             }
 
             UandleThrottledResponse(response);
-            cb(response, ErrNoError);
+            f(response, ErrNoError);
         };
     }
     co_return co_await SendWithPromise(request, promise);
@@ -295,7 +295,6 @@ coev::awaitable<int> Broker::Fetch(std::shared_ptr<FetchRequest> request, std::s
     }
     if (brokerFetchRate)
     {
-
         brokerFetchRate->Mark(1);
     }
     response = std::make_shared<FetchResponse>();
@@ -437,119 +436,83 @@ coev::awaitable<int> Broker::DeleteAcls(std::shared_ptr<DeleteAclsRequest> reque
 
 coev::awaitable<int> Broker::InitProducerID(std::shared_ptr<InitProducerIDRequest> request, std::shared_ptr<InitProducerIDResponse> &response)
 {
-    if (response == nullptr)
-    {
-        response = std::make_shared<InitProducerIDResponse>();
-    }
+    response = std::make_shared<InitProducerIDResponse>();
     response->Version = request->version();
     return SendAndReceive(request, response);
 }
 
 coev::awaitable<int> Broker::AddPartitionsToTxn(std::shared_ptr<AddPartitionsToTxnRequest> request, std::shared_ptr<AddPartitionsToTxnResponse> &response)
 {
-    if (response == nullptr)
-    {
-        response = std::make_shared<AddPartitionsToTxnResponse>();
-    }
+    response = std::make_shared<AddPartitionsToTxnResponse>();
     return SendAndReceive(request, response);
 }
 
 coev::awaitable<int> Broker::AddOffsetsToTxn(std::shared_ptr<AddOffsetsToTxnRequest> request, std::shared_ptr<AddOffsetsToTxnResponse> &response)
 {
-    if (response == nullptr)
-    {
-        response = std::make_shared<AddOffsetsToTxnResponse>();
-    }
+    response = std::make_shared<AddOffsetsToTxnResponse>();
     return SendAndReceive(request, response);
 }
 
 coev::awaitable<int> Broker::EndTxn(std::shared_ptr<EndTxnRequest> request, std::shared_ptr<EndTxnResponse> &response)
 {
-    if (response == nullptr)
-    {
-        response = std::make_shared<EndTxnResponse>();
-    }
+    response = std::make_shared<EndTxnResponse>();
     return SendAndReceive(request, response);
 }
 
 coev::awaitable<int> Broker::TxnOffsetCommit(std::shared_ptr<TxnOffsetCommitRequest> request, std::shared_ptr<TxnOffsetCommitResponse> &response)
 {
-    if (response == nullptr)
-    {
-        response = std::make_shared<TxnOffsetCommitResponse>();
-    }
+    response = std::make_shared<TxnOffsetCommitResponse>();
     return SendAndReceive(request, response);
 }
 
 coev::awaitable<int> Broker::DescribeConfigs(std::shared_ptr<DescribeConfigsRequest> request, std::shared_ptr<DescribeConfigsResponse> &response)
 {
-    if (response == nullptr)
-    {
-        response = std::make_shared<DescribeConfigsResponse>();
-    }
+    response = std::make_shared<DescribeConfigsResponse>();
     return SendAndReceive(request, response);
 }
 
 coev::awaitable<int> Broker::AlterConfigs(std::shared_ptr<AlterConfigsRequest> request, std::shared_ptr<AlterConfigsResponse> &response)
 {
-    if (response == nullptr)
-    {
-        response = std::make_shared<AlterConfigsResponse>();
-    }
+    response = std::make_shared<AlterConfigsResponse>();
     return SendAndReceive(request, response);
 }
 
 coev::awaitable<int> Broker::IncrementalAlterConfigs(std::shared_ptr<IncrementalAlterConfigsRequest> request, std::shared_ptr<IncrementalAlterConfigsResponse> &response)
 {
-    if (response == nullptr)
-    {
-        response = std::make_shared<IncrementalAlterConfigsResponse>();
-    }
+
+    response = std::make_shared<IncrementalAlterConfigsResponse>();
     return SendAndReceive(request, response);
 }
 
 coev::awaitable<int> Broker::DeleteGroups(std::shared_ptr<DeleteGroupsRequest> request, std::shared_ptr<DeleteGroupsResponse> &response)
 {
-    if (response == nullptr)
-    {
-        response = std::make_shared<DeleteGroupsResponse>();
-    }
+
+    response = std::make_shared<DeleteGroupsResponse>();
     return SendAndReceive(request, response);
 }
 
 coev::awaitable<int> Broker::DeleteOffsets(std::shared_ptr<DeleteOffsetsRequest> request, std::shared_ptr<DeleteOffsetsResponse> &response)
 {
-    if (response == nullptr)
-    {
-        response = std::make_shared<DeleteOffsetsResponse>();
-    }
+    response = std::make_shared<DeleteOffsetsResponse>();
     return SendAndReceive(request, response);
 }
 
 coev::awaitable<int> Broker::DescribeLogDirs(std::shared_ptr<DescribeLogDirsRequest> request, std::shared_ptr<DescribeLogDirsResponse> &response)
 {
-    if (response == nullptr)
-    {
-        response = std::make_shared<DescribeLogDirsResponse>();
-    }
+
+    response = std::make_shared<DescribeLogDirsResponse>();
     return SendAndReceive(request, response);
 }
 
 coev::awaitable<int> Broker::DescribeUserScramCredentials(std::shared_ptr<DescribeUserScramCredentialsRequest> request, std::shared_ptr<DescribeUserScramCredentialsResponse> &response)
 {
-    if (response == nullptr)
-    {
-        response = std::make_shared<DescribeUserScramCredentialsResponse>();
-    }
+    response = std::make_shared<DescribeUserScramCredentialsResponse>();
     return SendAndReceive(request, response);
 }
 
 coev::awaitable<int> Broker::AlterUserScramCredentials(std::shared_ptr<AlterUserScramCredentialsRequest> request, std::shared_ptr<AlterUserScramCredentialsResponse> &response)
 {
-    if (response == nullptr)
-    {
-        response = std::make_shared<AlterUserScramCredentialsResponse>();
-    }
+    response = std::make_shared<AlterUserScramCredentialsResponse>();
     return SendAndReceive(request, response);
 }
 
@@ -571,8 +534,7 @@ coev::awaitable<int> Broker::AlterClientQuotas(std::shared_ptr<AlterClientQuotas
 coev::awaitable<int> Broker::ReadFull(std::string &buf, size_t &n)
 {
     auto deadline = std::chrono::system_clock::now() + m_Conf->Net.ReadTimeout;
-    // 设置读取超时逻辑
-    // 读取数据到buf
+
     co_return 0;
 }
 
@@ -606,15 +568,17 @@ coev::awaitable<int> Broker::SendWithPromise(std::shared_ptr<protocolBody> rb, s
     {
         co_return ErrNotConnected;
     }
+    int err = 0;
     if (clientSessionReauthenticationTime > 0 && CurrentUnixMilli() > clientSessionReauthenticationTime)
     {
-        int32_t err = co_await AuthenticateViaSASLv1();
+        err = co_await AuthenticateViaSASLv1();
         if (err)
         {
             co_return err;
         }
     }
-    co_return co_await SendInternal(rb, promise);
+    err = co_await SendInternal(rb, promise);
+    co_return err;
 }
 
 coev::awaitable<int> Broker::SendInternal(std::shared_ptr<protocolBody> rb, std::shared_ptr<ResponsePromise> promise)
@@ -1540,23 +1504,14 @@ void Broker::RegisterMetrics()
 {
 
     brokerIncomingByteRate = RegisterMeter("incoming-byte-rate");
-
     brokerRequestRate = RegisterMeter("request-rate");
-
     brokerFetchRate = RegisterMeter("consumer-fetch-rate");
-
     brokerRequestSize = RegisterHistogram("request-size");
-
     brokerRequestLatency = RegisterHistogram("request-latency-in-ms");
-
     brokerOutgoingByteRate = RegisterMeter("outgoing-byte-rate");
-
     brokerResponseRate = RegisterMeter("response-rate");
-
     brokerResponseSize = RegisterHistogram("response-size");
-
     brokerRequestsInFlight = RegisterCounter("requests-in-flight");
-
     brokerThrottleTime = RegisterHistogram("throttle-time-in-ms");
 
     brokerProtocolRequestsRate.clear();
@@ -1594,23 +1549,22 @@ std::shared_ptr<tls::Config> ValidServerNameTLS(const std::string &addr, std::sh
     {
         return cfg;
     }
-    auto c = std::make_shared<tls::Config>(*cfg);
     size_t colon = addr.find(':');
     if (colon != std::string::npos)
     {
-        c->ServerName = addr.substr(0, colon);
+        cfg->ServerName = addr.substr(0, colon);
     }
     else
     {
-        c->ServerName = addr;
+        cfg->ServerName = addr;
     }
-    return c;
+    return cfg;
 }
 
 void Broker::safeAsyncClose()
 {
     auto b = shared_from_this();
-    co_start << [b]() -> coev::awaitable<int>
+    m_task << [b]() -> coev::awaitable<void>
     {
         if (!b->Connected())
         {
@@ -1620,6 +1574,6 @@ void Broker::safeAsyncClose()
                 Logger::Println("Error closing broker", b->ID(), ":", err);
             }
         }
-        co_return 0;
+        co_return;
     }();
 }

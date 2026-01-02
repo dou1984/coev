@@ -58,12 +58,12 @@ struct Consumer : IConsumer, std::enable_shared_from_this<Consumer>
     std::shared_ptr<Config> conf;
     std::map<std::string, std::map<int32_t, std::shared_ptr<PartitionConsumer>>> children;
     std::map<std::shared_ptr<Broker>, std::shared_ptr<BrokerConsumer>> brokerConsumers;
-    std::shared_ptr<IClient> client;
+    std::shared_ptr<Client> client;
     std::shared_ptr<metrics::Registry> metricRegistry;
     std::mutex lock_;
     coev::co_task task_;
 };
 
-int NewConsumer(const std::shared_ptr<IClient> &client, std::shared_ptr<IConsumer> &consumer_);
-int NewConsumerFromClient(const std::shared_ptr<IClient> &client, std::shared_ptr<IConsumer> &consumer_);
+int NewConsumer(const std::shared_ptr<Client> &client, std::shared_ptr<IConsumer> &consumer_);
+int NewConsumerFromClient(const std::shared_ptr<Client> &client, std::shared_ptr<IConsumer> &consumer_);
 coev::awaitable<int> NewConsumer(const std::vector<std::string> &addrs, const std::shared_ptr<Config> &config, std::shared_ptr<IConsumer> &consumer_);

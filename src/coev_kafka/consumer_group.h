@@ -44,7 +44,7 @@ struct IConsumerGroup
 
 struct ConsumerGroup : IConsumerGroup, std::enable_shared_from_this<ConsumerGroup>
 {
-    std::shared_ptr<IClient> client_;
+    std::shared_ptr<Client> client_;
     std::shared_ptr<Config> config_;
     std::shared_ptr<IConsumer> consumer_;
     std::string groupId;
@@ -61,7 +61,7 @@ struct ConsumerGroup : IConsumerGroup, std::enable_shared_from_this<ConsumerGrou
     std::shared_ptr<Broker> coordinator;
     coev::co_task task_;
 
-    ConsumerGroup(std::shared_ptr<IClient> client, std::shared_ptr<IConsumer> consumer, std::shared_ptr<Config> config, const std::string &group_id);
+    ConsumerGroup(std::shared_ptr<Client> client, std::shared_ptr<IConsumer> consumer, std::shared_ptr<Config> config, const std::string &group_id);
 
     coev::awaitable<int> Consume(std::shared_ptr<Context> &ctx, const std::vector<std::string> &topics, std::shared_ptr<ConsumerGroupHandler> handler);
     coev::awaitable<int> Close();
@@ -95,5 +95,5 @@ struct ConsumerGroup : IConsumerGroup, std::enable_shared_from_this<ConsumerGrou
 };
 
 std::shared_ptr<IConsumerGroup> NewConsumerGroup(const std::vector<std::string> &addrs, const std::string &groupID, std::shared_ptr<Config> config);
-std::shared_ptr<IConsumerGroup> NewConsumerGroupFromClient(const std::string &groupID, std::shared_ptr<IClient> client);
+std::shared_ptr<IConsumerGroup> NewConsumerGroupFromClient(const std::string &groupID, std::shared_ptr<Client> client);
 coev::awaitable<int> NewConsumerGroupSession(std::shared_ptr<Context> context, std::shared_ptr<ConsumerGroup> parent, std::map<std::string, std::vector<int32_t>> &claims, const std::string &memberID, int32_t generationID, std::shared_ptr<ConsumerGroupHandler> &handler, std::shared_ptr<ConsumerGroupSession> &session);

@@ -73,7 +73,7 @@ struct TransactionManager
     std::map<std::string, int32_t> sequenceNumbers_;
     std::string transactionalID_;
     std::chrono::milliseconds transactionTimeout_;
-    std::shared_ptr<IClient> client_;
+    std::shared_ptr<Client> client_;
     bool coordinatorSupportsBumpingEpoch_;
     bool epochBumpRequired_;
     int lastError_;
@@ -83,4 +83,4 @@ struct TransactionManager
     std::map<std::string, TopicPartitionOffsets> offsetsInCurrentTxn_;
 };
 
-coev::awaitable<int> NewTransactionManager(std::shared_ptr<Config> conf, std::shared_ptr<IClient> client, std::shared_ptr<TransactionManager> &txnmgr);
+coev::awaitable<int> NewTransactionManager(std::shared_ptr<Config> conf, std::shared_ptr<Client> client, std::shared_ptr<TransactionManager> &txnmgr);

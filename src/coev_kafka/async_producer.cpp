@@ -14,17 +14,13 @@
 #include "partitioner.h"
 #include "topic_partition.h"
 #include "topic_producer.h"
-#include "nop_closer_client.h"
 #include "consumer_message.h"
 
 const int minFunctionalRetryBufferLength = 4 * 1024;
 const int minFunctionalRetryBufferBytes = 32 * 1024 * 1024;
 
-AsyncProducer::AsyncProducer(std::shared_ptr<IClient> client, std::shared_ptr<TransactionManager> txnmgr)
-    : client_(client),
-      conf_(client->GetConfig()),
-      txnmgr_(txnmgr),
-      in_flight_(0)
+AsyncProducer::AsyncProducer(std::shared_ptr<Client> client, std::shared_ptr<TransactionManager> txnmgr)
+    : client_(client), conf_(client->GetConfig()), txnmgr_(txnmgr), in_flight_(0)
 {
     MetricsRegistry = std::make_shared<metrics::CleanupRegistry>(client->GetConfig()->MetricRegistry);
 }
@@ -521,7 +517,7 @@ coev::awaitable<int> NewAsyncProducer(const std::vector<std::string> &addrs, std
     }
     co_return co_await NewAsyncProducer(client, producer);
 }
-coev::awaitable<int> NewAsyncProducer(std::shared_ptr<IClient> client, std::shared_ptr<AsyncProducer> &producer)
+coev::awaitable<int> NewAsyncProducer(std::shared_ptr<Client> client, std::shared_ptr<AsyncProducer> &producer)
 {
     if (client->Closed())
     {
@@ -540,8 +536,7 @@ coev::awaitable<int> NewAsyncProducer(std::shared_ptr<IClient> client, std::shar
     co_return ErrNoError;
 }
 
-coev::awaitable<int> NewAsyncProducerFromClient(std::shared_ptr<IClient> client, std::shared_ptr<AsyncProducer> &producer)
+coev::awaitable<int> NewAsyncProducerFromClient(std::shared_ptr<Client> client, std::shared_ptr<AsyncProducer> &producer)
 {
-    auto cli = std::make_shared<NopCloserClient>(client);
-    return NewAsyncProducer(cli, producer);
+    return NewAsyncProducer(client, producer);
 }

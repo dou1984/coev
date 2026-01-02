@@ -650,7 +650,7 @@ coev::awaitable<int> TransactionManager::InitializeTransactions()
     return InitProducerId(producerID_, producerEpoch_);
 }
 
-coev::awaitable<int> NewTransactionManager(std::shared_ptr<Config> conf, std::shared_ptr<IClient> client, std::shared_ptr<TransactionManager> &txnmgr)
+coev::awaitable<int> NewTransactionManager(std::shared_ptr<Config> conf, std::shared_ptr<Client> client, std::shared_ptr<TransactionManager> &txnmgr)
 {
     txnmgr = std::make_shared<TransactionManager>();
     txnmgr->producerID_ = noProducerID;

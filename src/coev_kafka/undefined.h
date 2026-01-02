@@ -5,7 +5,7 @@
 #include <coev.h>
 #include "access_token.h"
 
-struct IClient;
+struct Client;
 struct pushDecoder;
 struct AccessTokenProvider
 {
@@ -20,7 +20,7 @@ struct ProxyDialer : std::enable_shared_from_this<ProxyDialer>
         : Timeout(timeout), KeepAlive(keepAlive), LocalAddr(localAddr)
     {
     }
-    std::shared_ptr<IClient> Dial(const std::string &, const std::string &)
+    std::shared_ptr<Client> Dial(const std::string &, const std::string &)
     {
         return {nullptr};
     }

@@ -51,12 +51,12 @@ static bool dependsOnSpecificNode(const ConfigResource &resource)
            resource.Type == BrokerLoggerResource;
 }
 
-std::shared_ptr<ClusterAdmin> ClusterAdmin::Create(std::shared_ptr<IClient> client, std::shared_ptr<Config> conf)
+std::shared_ptr<ClusterAdmin> ClusterAdmin::Create(std::shared_ptr<Client> client, std::shared_ptr<Config> conf)
 {
     return std::make_shared<ClusterAdmin>(client, conf);
 }
 
-ClusterAdmin::ClusterAdmin(std::shared_ptr<IClient> client, std::shared_ptr<Config> conf)
+ClusterAdmin::ClusterAdmin(std::shared_ptr<Client> client, std::shared_ptr<Config> conf)
     : client_(client), conf_(conf) {}
 
 int ClusterAdmin::Close()

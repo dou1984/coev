@@ -14,7 +14,7 @@
 #include "consumer_group_claim.h"
 #include "consumer_group_handler.h"
 
-ConsumerGroup::ConsumerGroup(std::shared_ptr<IClient> client, std::shared_ptr<IConsumer> consumer, std::shared_ptr<Config> config, const std::string &group_)
+ConsumerGroup::ConsumerGroup(std::shared_ptr<Client> client, std::shared_ptr<IConsumer> consumer, std::shared_ptr<Config> config, const std::string &group_)
     : client_(client), config_(config), consumer_(consumer), groupId(group_)
 {
 

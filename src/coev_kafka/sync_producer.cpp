@@ -19,7 +19,7 @@ static void putExpectation(std::shared_ptr<ProducerError> &p)
     expectationsPool.set(p);
 }
 
-int verifyProducerConfig(std::shared_ptr<Config> config)
+int VerifyProducerConfig(std::shared_ptr<Config> config)
 {
     if (config->Producer.Return.Errors)
     {
@@ -187,7 +187,7 @@ coev::awaitable<int> NewSyncProducer(const std::vector<std::string> &addrs, std:
         config->Producer.Return.Successes = true;
     }
 
-    int err = verifyProducerConfig(config);
+    int err = VerifyProducerConfig(config);
     if (err != 0)
     {
         co_return err;
@@ -205,7 +205,7 @@ coev::awaitable<int> NewSyncProducer(const std::vector<std::string> &addrs, std:
 coev::awaitable<int> NewSyncProducerFromClient(std::shared_ptr<Client> client, std::shared_ptr<ISyncProducer> &producer)
 {
 
-    int err = verifyProducerConfig(client->GetConfig());
+    int err = VerifyProducerConfig(client->GetConfig());
     if (err != 0)
     {
         co_return err;

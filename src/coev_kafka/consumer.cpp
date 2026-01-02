@@ -11,7 +11,6 @@
 #include "interceptors.h"
 #include "client.h"
 #include "consumer.h"
-#include "nop_closer_client.h"
 #include "partition_consumer.h"
 #include "broker_consumer.h"
 
@@ -218,7 +217,7 @@ void Consumer::abandonBrokerConsumer(std::shared_ptr<BrokerConsumer> brokerWorke
     brokerConsumers.erase(brokerWorker->broker);
 }
 
-int NewConsumer(const std::shared_ptr<IClient> &client, std::shared_ptr<IConsumer> &consumer_)
+int NewConsumer(const std::shared_ptr<Client> &client, std::shared_ptr<IConsumer> &consumer_)
 {
     if (client->Closed())
     {
@@ -232,10 +231,9 @@ int NewConsumer(const std::shared_ptr<IClient> &client, std::shared_ptr<IConsume
     consumer_ = consumer;
     return 0;
 }
-int NewConsumerFromClient(const std::shared_ptr<IClient> &client, std::shared_ptr<IConsumer> &consumer)
+int NewConsumerFromClient(const std::shared_ptr<Client> &client, std::shared_ptr<IConsumer> &consumer)
 {
-    auto cli = std::make_shared<NopCloserClient>(client);
-    return NewConsumer(cli, consumer);
+    return NewConsumer(client, consumer);
 }
 coev::awaitable<int> NewConsumer(const std::vector<std::string> &addrs, const std::shared_ptr<Config> &config, std::shared_ptr<IConsumer> &consumer_)
 {
@@ -245,10 +243,5 @@ coev::awaitable<int> NewConsumer(const std::vector<std::string> &addrs, const st
     {
         co_return err;
     }
-    err = NewConsumer(client, consumer_);
-    if (err != 0)
-    {
-        co_return err;
-    }
-    co_return err;
+    co_return NewConsumer(client, consumer_);
 }

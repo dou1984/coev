@@ -166,7 +166,6 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
     coev::awaitable<int> AlterUserScramCredentials(std::shared_ptr<AlterUserScramCredentialsRequest> req, std::shared_ptr<AlterUserScramCredentialsResponse> &res);
     coev::awaitable<int> DescribeClientQuotas(std::shared_ptr<DescribeClientQuotasRequest> request, std::shared_ptr<DescribeClientQuotasResponse> &response);
     coev::awaitable<int> AlterClientQuotas(std::shared_ptr<AlterClientQuotasRequest> request, std::shared_ptr<AlterClientQuotasResponse> &response);
-
     coev::awaitable<int> AsyncProduce(std::shared_ptr<ProduceRequest> request, std::function<void(std::shared_ptr<ProduceResponse>, KError)> callback);
 
     std::shared_ptr<Config> m_Conf;
@@ -203,7 +202,6 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
     ApiVersionMap brokerAPIVersions;
     std::shared_ptr<GSSAPIKerberosAuth> kerberosAuthenticator;
     int64_t clientSessionReauthenticationTime;
-    // std::chrono::system_clock::time_point throttleTimer;
 
     std::mutex throttleTimerLock;
     coev::co_task m_task;

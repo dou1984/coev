@@ -31,4 +31,4 @@ struct ISyncProducer
 
 coev::awaitable<int> NewSyncProducer(const std::vector<std::string> &addrs, std::shared_ptr<Config> &config, std::shared_ptr<ISyncProducer> &);
 
-coev::awaitable<int> NewSyncProducerFromClient(std::shared_ptr<IClient> client, std::shared_ptr<ISyncProducer> &);
+coev::awaitable<int> NewSyncProducerFromClient(std::shared_ptr<Client> client, std::shared_ptr<ISyncProducer> &);
