@@ -12,7 +12,6 @@ struct AlterConfigError
 {
     KError Err;
     std::string ErrMsg;
-
     std::string Error() const;
 };
 

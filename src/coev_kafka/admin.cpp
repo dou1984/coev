@@ -79,12 +79,12 @@ coev::awaitable<int> ClusterAdmin::RefreshController(std::shared_ptr<Broker> &ou
     return client_->RefreshController(out);
 }
 
-coev::awaitable<int> ClusterAdmin::RetryOnError(std::function<bool(int)> retryable, std::function<coev::awaitable<int>()> fn)
+coev::awaitable<int> ClusterAdmin::RetryOnError(std::function<bool(int)> retryable, std::function<coev::awaitable<int>()> f)
 {
     int attemptsRemaining = conf_->Admin.Retry.Max + 1;
     while (true)
     {
-        int err = co_await fn();
+        int err = co_await f();
         attemptsRemaining--;
         if (err == 0 || attemptsRemaining <= 0 || !retryable(err))
         {

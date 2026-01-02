@@ -9,6 +9,7 @@
 #include "packet_encoder.h"
 #include "packet_decoder.h"
 #include "protocol_body.h"
+
 struct AlterConfigsResource : VDecoder, IEncoder
 {
     ConfigResourceType Type;
