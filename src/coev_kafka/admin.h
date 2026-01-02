@@ -98,10 +98,12 @@ struct ClusterAdmin : IClusterAdmin
     coev::awaitable<int> RemoveMemberFromConsumerGroup(const std::string &groupId, const std::vector<std::string> &groupInstanceIds, std::shared_ptr<LeaveGroupResponse> &out);
 
     ClusterAdmin(std::shared_ptr<IClient> client, std::shared_ptr<Config> conf);
+
+    coev::awaitable<int> RetryOnError(std::function<bool(int)> retryable, std::function<coev::awaitable<int>()> fn);
+    coev::awaitable<int> RefreshController(std::shared_ptr<Broker> &out);
+    int FindBroker(int32_t id, std::shared_ptr<Broker> &out);
+    int FindAnyBroker(std::shared_ptr<Broker> &out);
+
     std::shared_ptr<IClient> client_;
     std::shared_ptr<Config> conf_;
-    coev::awaitable<int> retryOnError(std::function<bool(int)> retryable, std::function<coev::awaitable<int>()> fn);
-    coev::awaitable<int> refreshController(std::shared_ptr<Broker> &out);
-    int findBroker(int32_t id, std::shared_ptr<Broker> &out);
-    int findAnyBroker(std::shared_ptr<Broker> &out);
 };

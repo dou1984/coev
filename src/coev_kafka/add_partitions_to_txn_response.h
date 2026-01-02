@@ -13,7 +13,6 @@
 #include "protocol_body.h"
 #include "partition_error.h"
 
-
 struct AddPartitionsToTxnResponse : protocolBody
 {
 
