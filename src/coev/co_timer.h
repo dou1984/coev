@@ -25,6 +25,7 @@ namespace coev
 		int active();
 		int stop();
 		bool is_active();
+		int reset(ev_tstamp itimer, ev_tstamp rtimer);
 		ev_tstamp remaining();
 	};
 }

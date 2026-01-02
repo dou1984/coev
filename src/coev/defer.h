@@ -23,4 +23,4 @@ namespace coev
 // 宏定义简化使用
 #define CONCAT_(a, b) a##b
 #define CONCAT(a, b) CONCAT_(a, b)
-#define defer(body) Defer CONCAT(_defer_, __LINE__)([&]() { body; })
+#define defer(body) coev::Defer CONCAT(_defer_, __LINE__)([&]() { body; })

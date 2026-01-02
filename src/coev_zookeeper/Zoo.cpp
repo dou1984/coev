@@ -1,7 +1,13 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2023-2025, Zhao Yun Shan
+ *
+ */
 #include <atomic>
 #include <chrono>
 #include "Zoo.h"
-#
+
 namespace coev
 {
     int32_t get_xid()

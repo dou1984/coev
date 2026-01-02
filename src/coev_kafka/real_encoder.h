@@ -1,0 +1,94 @@
+#pragma once
+
+#include <cstdint>
+#include <vector>
+#include <string>
+#include <memory>
+
+#include "packet_encoder.h"
+
+#include "errors.h"
+#include "version.h"
+#include "metrics.h"
+
+struct realEncoder : PEncoder
+{
+
+    std::string Raw;
+    size_t Off = 0;
+    std::vector<std::shared_ptr<pushEncoder>> Stack;
+    std::shared_ptr<metrics::Registry> Registry;
+    realEncoder() = default;
+    realEncoder(size_t capacity, std::shared_ptr<metrics::Registry> reg = nullptr)
+    {
+        Raw.resize(capacity);
+        Registry = reg;
+    }
+
+    void putInt8(int8_t in);
+    void putInt16(int16_t in);
+    void putInt32(int32_t in);
+    void putInt64(int64_t in);
+    void putVariant(int64_t in);
+    void putUVarint(uint64_t in);
+    void putFloat64(double in);
+    void putBool(bool in);
+    void putKError(KError in);
+    void putDurationMs(std::chrono::milliseconds ms);
+    int putArrayLength(int in);
+    int putRawBytes(const std::string &in);
+    int putBytes(const std::string &in);
+    int putVariantBytes(const std::string &in);
+    int putString(const std::string &in);
+    int putNullableString(const std::string &in);
+    int putStringArray(const std::vector<std::string> &in);
+    int putInt32Array(const std::vector<int32_t> &in);
+    int putNullableInt32Array(const std::vector<int32_t> &in);
+    int putInt64Array(const std::vector<int64_t> &in);
+    void putEmptyTaggedFieldArray();
+    int offset() const { return static_cast<int>(Off); }
+    void push(std::shared_ptr<pushEncoder> in);
+    int pop();
+    std::shared_ptr<metrics::Registry> metricRegistry() { return Registry; }
+};
+
+struct realFlexibleEncoder : realEncoder
+{
+
+    std::shared_ptr<realEncoder> base;
+
+    realFlexibleEncoder(const realEncoder &re)
+    {
+        base = std::make_shared<realEncoder>(re);
+    }
+    realFlexibleEncoder(std::shared_ptr<realEncoder> re) : base(std::move(re)) {}
+
+    int putArrayLength(int in);
+    int putBytes(const std::string &in);
+    int putString(const std::string &in);
+    int putNullableString(const std::string &in);
+    int putStringArray(const std::vector<std::string> &in);
+    int putInt32Array(const std::vector<int32_t> &in);
+    int putNullableInt32Array(const std::vector<int32_t> &in);
+    void putEmptyTaggedFieldArray();
+
+    // Delegate others
+    void putInt8(int8_t in);
+    void putInt16(int16_t in);
+    void putInt32(int32_t in);
+    void putInt64(int64_t in);
+    void putVariant(int64_t in);
+    void putUVarint(uint64_t in);
+    void putFloat64(double in);
+    void putBool(bool in);
+    void putKError(KError in);
+    void putDurationMs(std::chrono::milliseconds ms);
+    int putRawBytes(const std::string &in);
+    int putVariantBytes(const std::string &in);
+    int putInt64Array(const std::vector<int64_t> &in);
+    int offset() const;
+    void push(std::shared_ptr<pushEncoder> in);
+    int pop();
+    std::shared_ptr<metrics::Registry> metricRegistry();
+};
+int encodeVariant(uint8_t *buf, int64_t x);

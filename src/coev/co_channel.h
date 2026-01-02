@@ -38,6 +38,17 @@ namespace coev
 				{ d = __pop_front(); });
 			co_return d;
 		}
+		bool try_get(TYPE &d)
+		{
+			std::lock_guard<std::mutex> _(m_waiter.lock());
+			if (!__invalid())
+			{
+				d = __pop_front();
+				return true;
+			}
+			return false;
+		}
+		auto size() const { return m_data.size(); }
 
 	private:
 		std::list<TYPE> m_data;
