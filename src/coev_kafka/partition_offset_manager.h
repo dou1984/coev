@@ -1,6 +1,6 @@
 #pragma once
 #include <memory>
-#include <coev.h>
+#include <coev/coev.h>
 #include "offset_manager.h"
 #include "consumer.h"
 #include "consumer_error.h"

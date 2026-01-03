@@ -8,7 +8,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-project(coev_kafka)
+project(coev_dns)
 
 aux_source_directory(. SRC_DIR)
 

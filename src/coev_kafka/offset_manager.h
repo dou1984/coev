@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <functional>
 #include <chrono>
-#include <coev.h>
+#include <coev/coev.h>
 #include "version.h"
 #include "client.h"
 #include "broker.h"

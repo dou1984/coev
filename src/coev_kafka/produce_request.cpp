@@ -20,7 +20,7 @@ int ProduceRequest::encode(PEncoder &pe)
         }
     }
 
-    pe.putInt16(static_cast<int16_t>(Acks_));
+    pe.putInt16(static_cast<int16_t>(Acks));
     pe.putDurationMs(Timeout);
 
     auto metricRegistry = pe.metricRegistry();
@@ -110,7 +110,7 @@ int ProduceRequest::decode(PDecoder &pd, int16_t version)
     int16_t acks;
     if (int err = pd.getInt16(acks); err != 0)
         return err;
-    Acks_ = static_cast<RequiredAcks>(acks);
+    Acks = static_cast<RequiredAcks>(acks);
 
     if (int err = pd.getDurationMs(Timeout); err != 0)
         return err;

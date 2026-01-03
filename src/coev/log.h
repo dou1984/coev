@@ -1,7 +1,7 @@
 /*
  *	coev - c++20 coroutine library
  *
- *	Copyright (c) 2023-2025, Zhao Yun Shan
+ *	Copyright (c) 2023-2026, Zhao Yun Shan
  *
  */
 #pragma once
@@ -11,23 +11,23 @@
 
 #define PRINT(...) printf(__VA_ARGS__)
 #define LOG(LEVEL, ...)                                               \
-	if (get_log_level() <= LEVEL)                               \
+	if (coev::get_log_level() <= LEVEL)                               \
 	{                                                                 \
-		std::lock_guard<std::mutex> _(get_log_mutex());         \
-		print_log_str(LEVEL, __FILE__, __FUNCTION__, __LINE__); \
+		std::lock_guard<std::mutex> _(coev::get_log_mutex());         \
+		coev::print_log_str(LEVEL, __FILE__, __FUNCTION__, __LINE__); \
 		PRINT(__VA_ARGS__);                                           \
 	}
 
 #define LOG_CORE(...) \
-	LOG(LOG_LEVEL_CORE, __VA_ARGS__)
+	LOG(coev::LOG_LEVEL_CORE, __VA_ARGS__)
 #define LOG_DBG(...) \
-	LOG(LOG_LEVEL_DEBUG, __VA_ARGS__)
+	LOG(coev::LOG_LEVEL_DEBUG, __VA_ARGS__)
 #define LOG_WARN(...) \
-	LOG(LOG_LEVEL_WARN, __VA_ARGS__)
+	LOG(coev::LOG_LEVEL_WARN, __VA_ARGS__)
 #define LOG_ERR(...) \
-	LOG(LOG_LEVEL_ERROR, __VA_ARGS__)
+	LOG(coev::LOG_LEVEL_ERROR, __VA_ARGS__)
 #define LOG_INFO(...) \
-	LOG(LOG_LEVEL_INFO, __VA_ARGS__)
+	LOG(coev::LOG_LEVEL_INFO, __VA_ARGS__)
 #define TRACE() LOG_CORE("\n")
 
 namespace coev

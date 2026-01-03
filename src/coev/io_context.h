@@ -1,7 +1,7 @@
 /*
  *	coev - c++20 coroutine library
  *
- *	Copyright (c) 2023-2025, Zhao Yun Shan
+ *	Copyright (c) 2023-2026, Zhao Yun Shan
  *
  */
 #pragma once
@@ -12,10 +12,10 @@
 
 namespace coev
 {
-#define IO_CLIENT 0x1
-#define IO_SSL 0x2
-#define IO_TCP 0x4
-#define IO_UDP 0x8
+#define IO_CLIENT (0x1 << 0)
+#define IO_SSL (0x1 << 1)
+#define IO_TCP (0x1 << 2)
+#define IO_UDP (0x1 << 3)
 
 	class io_context
 	{

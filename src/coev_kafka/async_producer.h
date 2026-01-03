@@ -5,7 +5,7 @@
 #include <map>
 #include <mutex>
 #include <atomic>
-#include <coev.h>
+#include <coev/coev.h>
 #include "client.h"
 #include "config.h"
 #include "broker.h"

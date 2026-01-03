@@ -2,7 +2,7 @@
 #include <unordered_map>
 #include <memory>
 #include <cstdint>
-#include <coev.h>
+#include <coev/coev.h>
 #include "consumer.h"
 #include "fetch_request.h"
 #include "consumer_message.h"

@@ -16,7 +16,7 @@ struct ProduceRequest : protocolBody
 {
 
     std::string TransactionalID;
-    RequiredAcks Acks_ = RequiredAcks::WaitForLocal;
+    RequiredAcks Acks = RequiredAcks::WaitForLocal;
     std::chrono::milliseconds Timeout;
     int16_t Version = 0;
 

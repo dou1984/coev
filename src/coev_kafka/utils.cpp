@@ -8,7 +8,7 @@
 #include <regex>
 #include <cctype>
 #include <limits>
-#include <coev.h>
+#include <coev/coev.h>
 
 std::vector<int32_t> dupInt32Slice(const std::vector<int32_t> &input)
 {

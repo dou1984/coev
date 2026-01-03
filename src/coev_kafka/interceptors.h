@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include <coev.h>
+#include <coev/coev.h>
 
 struct ProducerMessage;
 struct ConsumerMessage;

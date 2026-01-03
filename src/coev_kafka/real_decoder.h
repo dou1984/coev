@@ -7,7 +7,7 @@
 #include <vector>
 #include <functional>
 #include <unordered_map>
-#include <coev.h>
+#include <coev/coev.h>
 #include "packet_decoder.h"
 #include "errors.h"
 #include "encoder_decoder.h"

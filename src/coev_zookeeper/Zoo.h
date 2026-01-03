@@ -1,7 +1,7 @@
 /*
  *	coev - c++20 coroutine library
  *
- *	Copyright (c) 2023-2025, Zhao Yun Shan
+ *	Copyright (c) 2023-2026, Zhao Yun Shan
  *
  */
 #pragma once
@@ -24,7 +24,7 @@ namespace coev
         int32_t protocolVersion;
         int32_t timeOut;
         int64_t sessionId;
-        int32_t passwd_len;
+        int32_t passwdLen;
         char passwd[16];
         char readOnly;
     };

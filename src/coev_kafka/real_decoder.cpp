@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <cstring>
 #include <limits>
-#include <coev.h>
+#include <coev/coev.h>
 
 int realDecoder::getInt8(int8_t &result)
 {

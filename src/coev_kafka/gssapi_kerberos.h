@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <functional>
-#include <coev.h>
+#include <coev/coev.h>
 #include "broker.h"
 #include "sasl_authenticate_request.h"
 #include "sasl_authenticate_response.h"

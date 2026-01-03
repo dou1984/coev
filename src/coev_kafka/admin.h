@@ -5,7 +5,7 @@
 #include <vector>
 #include <map>
 #include <functional>
-#include <coev.h>
+#include <coev/coev.h>
 #include "config.h"
 #include "client.h"
 #include "broker.h"

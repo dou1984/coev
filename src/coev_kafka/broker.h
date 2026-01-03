@@ -6,7 +6,7 @@
 #include <atomic>
 #include <mutex>
 #include <chrono>
-#include <coev.h>
+#include <coev/coev.h>
 
 #include "config.h"
 #include "connect.h"

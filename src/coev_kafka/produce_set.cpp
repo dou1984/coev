@@ -220,7 +220,7 @@ int ProduceSet::Add(std::shared_ptr<ProducerMessage> msg)
 std::shared_ptr<ProduceRequest> ProduceSet::BuildRequest()
 {
     auto req = std::make_shared<ProduceRequest>();
-    req->Acks_ = Parent->conf_->Producer.Acks;
+    req->Acks = Parent->conf_->Producer.Acks;
     req->Timeout = Parent->conf_->Producer.Timeout;
 
     if (Parent->conf_->Version.IsAtLeast(V0_10_0_0))

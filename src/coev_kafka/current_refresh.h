@@ -5,8 +5,8 @@
 #include <unordered_map>
 #include <memory>
 #include <mutex>
-#include <coev.h>
-#include <coev.h>
+#include <coev/coev.h>
+#include <coev/coev.h>
 #include "errors.h"
 
 using MetadataRefresh = std::function<coev::awaitable<int>(const std::vector<std::string> &)>;

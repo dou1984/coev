@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <coev.h>
+#include <coev/coev.h>
 #include "errors.h"
 
 struct SCRAMClient

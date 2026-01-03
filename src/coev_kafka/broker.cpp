@@ -5,7 +5,7 @@
 #include <chrono>
 #include <random>
 #include <cstring>
-#include <coev.h>
+#include <coev/coev.h>
 #include "undefined.h"
 #include "access_token.h"
 #include "broker.h"
@@ -245,7 +245,7 @@ coev::awaitable<int> Broker::GetAvailableOffsets(std::shared_ptr<OffsetRequest> 
 coev::awaitable<int> Broker::AsyncProduce(std::shared_ptr<ProduceRequest> request, std::function<void(std::shared_ptr<ProduceResponse>, KError)> f)
 {
     std::lock_guard<std::mutex> lock(m_Lock);
-    bool needAcks = request->Acks_ != NoResponse;
+    bool needAcks = request->Acks != NoResponse;
     std::shared_ptr<ResponsePromise> promise;
     if (needAcks)
     {
@@ -276,7 +276,7 @@ coev::awaitable<int> Broker::AsyncProduce(std::shared_ptr<ProduceRequest> reques
 
 coev::awaitable<int> Broker::Produce(std::shared_ptr<ProduceRequest> request, std::shared_ptr<ProduceResponse> &response)
 {
-    if (request->Acks_ == RequiredAcks::NoResponse)
+    if (request->Acks == RequiredAcks::NoResponse)
     {
         return SendAndReceive(request, nullptr);
     }

@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
-#include <coev.h>
+#include <coev/coev.h>
 #include "protocol_body.h"
 #include "errors.h"
 

@@ -4,7 +4,7 @@
 #include <map>
 #include <string>
 #include <memory>
-#include <coev.h>
+#include <coev/coev.h>
 #include "version.h"
 #include "client.h"
 #include "consumer.h"

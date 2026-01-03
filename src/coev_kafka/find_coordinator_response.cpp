@@ -17,24 +17,32 @@ int FindCoordinatorResponse::decode(PDecoder &pd, int16_t version)
         Version = version;
         int err = pd.getDurationMs(ThrottleTime);
         if (err != 0)
+        {
             return err;
+        }
     }
 
     int err = pd.getKError(Err);
     if (err != 0)
+    {
         return err;
+    }
 
     if (version >= 1)
     {
         err = pd.getNullableString(ErrMsg);
         if (err != 0)
+        {
             return err;
+        }
     }
 
     auto coordinator = std::shared_ptr<Broker>();
     err = coordinator->decode(pd, 0);
     if (err != 0)
+    {
         return err;
+    }
 
     if (coordinator->m_Addr != ":0")
     {

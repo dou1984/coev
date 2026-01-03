@@ -4,7 +4,7 @@
 #include <vector>
 #include <map>
 #include <memory>
-#include "coev.h"
+#include <coev/coev.h>
 #include "packet_decoder.h"
 #include "packet_encoder.h"
 #include "topic_partition_assignment.h"

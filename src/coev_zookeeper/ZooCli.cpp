@@ -1,7 +1,7 @@
 /*
  *	coev - c++20 coroutine library
  *
- *	Copyright (c) 2023-2025, Zhao Yun Shan
+ *	Copyright (c) 2023-2026, Zhao Yun Shan
  *
  */
 #include <cassert>
@@ -169,8 +169,8 @@ namespace coev
         ia.deserialize_long(&m_primer_storage.sessionId);
         std::string password;
         ia.deserialize_string(password);
-        strncpy(m_primer_storage.passwd, password.c_str(), sizeof(m_primer_storage.passwd));
-        m_primer_storage.passwd_len = std::min(password.size(), sizeof(m_primer_storage.passwd));
+        strncpy(m_primer_storage.passwd, password.c_str(), sizeof(m_primer_storage.passwd) - 1);
+        m_primer_storage.passwdLen = std::min(password.size(), sizeof(m_primer_storage.passwd));
         int32_t readOnly;
         ia.deserialize_bool(&readOnly);
         m_primer_storage.readOnly = readOnly;

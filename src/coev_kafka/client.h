@@ -6,7 +6,7 @@
 #include <map>
 #include <atomic>
 #include <shared_mutex>
-#include <coev.h>
+#include <coev/coev.h>
 #include <cstdint>
 #include "config.h"
 #include "metadata_response.h"
