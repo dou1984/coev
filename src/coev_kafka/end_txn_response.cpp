@@ -15,11 +15,11 @@ int EndTxnResponse::encode(PEncoder &pe)
 
 int EndTxnResponse::decode(PDecoder &pd, int16_t)
 {
-    if (!pd.getDurationMs(ThrottleTime))
+    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
     {
         return ErrDecodeError;
     }
-    if (!pd.getKError(Err))
+    if (pd.getKError(Err) != ErrNoError)
     {
         return ErrDecodeError;
     }

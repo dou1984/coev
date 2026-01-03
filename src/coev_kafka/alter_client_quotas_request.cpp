@@ -32,7 +32,7 @@ int AlterClientQuotasRequest::decode(PDecoder &pd, int16_t version)
 {
     // Entries
     int32_t entryCount;
-    if (!pd.getArrayLength(entryCount))
+    if (pd.getArrayLength(entryCount) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -54,7 +54,7 @@ int AlterClientQuotasRequest::decode(PDecoder &pd, int16_t version)
 
     // ValidateOnly
     bool validateOnly;
-    if (!pd.getBool(validateOnly))
+    if (pd.getBool(validateOnly) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -123,7 +123,7 @@ int AlterClientQuotasEntry::decode(PDecoder &pd, int16_t version)
 {
     // Entity
     int32_t componentCount;
-    if (!pd.getArrayLength(componentCount))
+    if (pd.getArrayLength(componentCount) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -145,7 +145,7 @@ int AlterClientQuotasEntry::decode(PDecoder &pd, int16_t version)
 
     // Ops
     int32_t opCount;
-    if (!pd.getArrayLength(opCount))
+    if (pd.getArrayLength(opCount) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -189,7 +189,7 @@ int ClientQuotasOp::decode(PDecoder &pd, int16_t version)
 {
     // Key
     std::string key;
-    if (!pd.getString(key))
+    if (pd.getString(key) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -197,7 +197,7 @@ int ClientQuotasOp::decode(PDecoder &pd, int16_t version)
 
     // Value
     double value;
-    if (!pd.getFloat64(value))
+    if (pd.getFloat64(value) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -205,7 +205,7 @@ int ClientQuotasOp::decode(PDecoder &pd, int16_t version)
 
     // Remove
     bool remove;
-    if (!pd.getBool(remove))
+    if (pd.getBool(remove) != ErrNoError)
     {
         return ErrEncodeError;
     }

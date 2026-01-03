@@ -1,3 +1,9 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2023-2026, Zhao Yun Shan
+ *
+ */
 #include <ares.h>
 #include <memory>
 #include <coev/coev.h>

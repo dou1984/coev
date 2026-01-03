@@ -39,7 +39,7 @@ int CreateTopicsRequest::encode(PEncoder &pe)
 int CreateTopicsRequest::decode(PDecoder &pd, int16_t version)
 {
     int32_t n;
-    if (!pd.getArrayLength(n))
+    if (pd.getArrayLength(n) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -48,7 +48,7 @@ int CreateTopicsRequest::decode(PDecoder &pd, int16_t version)
     for (int32_t i = 0; i < n; ++i)
     {
         std::string topic;
-        if (!pd.getString(topic))
+        if (pd.getString(topic) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -60,14 +60,14 @@ int CreateTopicsRequest::decode(PDecoder &pd, int16_t version)
         TopicDetails[topic] = detail;
     }
 
-    if (!pd.getDurationMs(Timeout))
+    if (pd.getDurationMs(Timeout) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     if (version >= 1)
     {
-        if (!pd.getBool(ValidateOnly))
+        if (pd.getBool(ValidateOnly) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -171,17 +171,17 @@ int TopicDetail::encode(PEncoder &pe)
 
 int TopicDetail::decode(PDecoder &pd, int16_t version)
 {
-    if (!pd.getInt32(NumPartitions))
+    if (pd.getInt32(NumPartitions) != ErrNoError)
     {
         return ErrDecodeError;
     }
-    if (!pd.getInt16(ReplicationFactor))
+    if (pd.getInt16(ReplicationFactor) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     int32_t n;
-    if (!pd.getArrayLength(n))
+    if (pd.getArrayLength(n) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -192,25 +192,25 @@ int TopicDetail::decode(PDecoder &pd, int16_t version)
         for (int32_t i = 0; i < n; ++i)
         {
             int32_t partition;
-            if (!pd.getInt32(partition))
+            if (pd.getInt32(partition) != ErrNoError)
             {
                 return ErrDecodeError;
             }
             std::vector<int32_t> replicas;
-            if (!pd.getInt32Array(replicas))
+            if (pd.getInt32Array(replicas) != ErrNoError)
             {
                 return ErrDecodeError;
             }
             ReplicaAssignment[partition] = std::move(replicas);
             int32_t _;
-            if (!pd.getEmptyTaggedFieldArray(_))
+            if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
             {
                 return ErrDecodeError;
             }
         }
     }
 
-    if (!pd.getArrayLength(n))
+    if (pd.getArrayLength(n) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -221,18 +221,18 @@ int TopicDetail::decode(PDecoder &pd, int16_t version)
         for (int32_t i = 0; i < n; ++i)
         {
             std::string key;
-            if (!pd.getString(key))
+            if (pd.getString(key) != ErrNoError)
             {
                 return ErrDecodeError;
             }
             std::string value;
-            if (!pd.getNullableString(value))
+            if (pd.getNullableString(value) != ErrNoError)
             {
                 return ErrDecodeError;
             }
             ConfigEntries[key] = value;
             int32_t _;
-            if (!pd.getEmptyTaggedFieldArray(_))
+            if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
             {
                 return ErrDecodeError;
             }

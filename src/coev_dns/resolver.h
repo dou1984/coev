@@ -1,3 +1,9 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2023-2026, Zhao Yun Shan
+ *
+ */
 #pragma once
 #include <string>
 #include <ares.h>
@@ -6,7 +12,7 @@
 
 namespace coev
 {
-    class resolver
+    class resolver final
     {
         ares_channel m_channel;
         std::string m_ip;

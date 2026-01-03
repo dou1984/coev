@@ -39,7 +39,7 @@ int DescribeLogDirsRequest::decode(PDecoder &pd, int16_t version)
 {
     Version = version;
     int32_t n;
-    if (!pd.getArrayLength(n))
+    if (pd.getArrayLength(n) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -53,19 +53,19 @@ int DescribeLogDirsRequest::decode(PDecoder &pd, int16_t version)
     for (int32_t i = 0; i < n; ++i)
     {
         std::string topic;
-        if (!pd.getString(topic))
+        if (pd.getString(topic) != ErrNoError)
         {
             return ErrDecodeError;
         }
         topics[i].Topic = topic;
 
-        if (!pd.getInt32Array(topics[i].PartitionIDs))
+        if (pd.getInt32Array(topics[i].PartitionIDs) != ErrNoError)
         {
             return ErrDecodeError;
         }
 
         int32_t dummy;
-        if (!pd.getEmptyTaggedFieldArray(dummy))
+        if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -73,7 +73,7 @@ int DescribeLogDirsRequest::decode(PDecoder &pd, int16_t version)
     DescribeTopics = std::move(topics);
 
     int32_t dummy;
-    if (!pd.getEmptyTaggedFieldArray(dummy))
+    if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
     {
         return ErrDecodeError;
     }

@@ -35,21 +35,21 @@ int DescribeLogDirsResponse::encode(PEncoder &pe)
 int DescribeLogDirsResponse::decode(PDecoder &pd, int16_t version)
 {
     Version = version;
-    if (!pd.getDurationMs(ThrottleTime))
+    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     if (version >= 3)
     {
-        if (!pd.getKError(ErrorCode))
+        if (pd.getKError(ErrorCode) != ErrNoError)
         {
             return ErrDecodeError;
         }
     }
 
     int32_t n;
-    if (!pd.getArrayLength(n))
+    if (pd.getArrayLength(n) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -64,7 +64,7 @@ int DescribeLogDirsResponse::decode(PDecoder &pd, int16_t version)
     }
 
     int32_t dummy;
-    if (!pd.getEmptyTaggedFieldArray(dummy))
+    if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -161,18 +161,18 @@ int DescribeLogDirsResponseDirMetadata::encode(PEncoder &pe, int16_t version)
 
 int DescribeLogDirsResponseDirMetadata::decode(PDecoder &pd, int16_t version)
 {
-    if (!pd.getKError(ErrorCode))
+    if (pd.getKError(ErrorCode) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
-    if (!pd.getString(Path))
+    if (pd.getString(Path) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     int32_t n;
-    if (!pd.getArrayLength(n))
+    if (pd.getArrayLength(n) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -188,14 +188,14 @@ int DescribeLogDirsResponseDirMetadata::decode(PDecoder &pd, int16_t version)
 
     if (version >= 4)
     {
-        if (!pd.getInt64(TotalBytes))
+        if (pd.getInt64(TotalBytes) != ErrNoError)
             return ErrDecodeError;
-        if (!pd.getInt64(UsableBytes))
+        if (pd.getInt64(UsableBytes) != ErrNoError)
             return ErrDecodeError;
     }
 
     int32_t dummy;
-    if (!pd.getEmptyTaggedFieldArray(dummy))
+    if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -228,13 +228,13 @@ int DescribeLogDirsResponseTopic::encode(PEncoder &pe, int16_t version)
 
 int DescribeLogDirsResponseTopic::decode(PDecoder &pd, int16_t version)
 {
-    if (!pd.getString(Topic))
+    if (pd.getString(Topic) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     int32_t n;
-    if (!pd.getArrayLength(n))
+    if (pd.getArrayLength(n) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -249,7 +249,7 @@ int DescribeLogDirsResponseTopic::decode(PDecoder &pd, int16_t version)
     }
 
     int32_t dummy;
-    if (!pd.getEmptyTaggedFieldArray(dummy))
+    if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -273,17 +273,17 @@ int DescribeLogDirsResponsePartition::encode(PEncoder &pe, int16_t version)
 
 int DescribeLogDirsResponsePartition::decode(PDecoder &pd, int16_t version)
 {
-    if (!pd.getInt32(PartitionID))
+    if (pd.getInt32(PartitionID) != ErrNoError)
         return ErrDecodeError;
-    if (!pd.getInt64(Size))
+    if (pd.getInt64(Size) != ErrNoError)
         return ErrDecodeError;
-    if (!pd.getInt64(OffsetLag))
+    if (pd.getInt64(OffsetLag) != ErrNoError)
         return ErrDecodeError;
-    if (!pd.getBool(IsTemporary))
+    if (pd.getBool(IsTemporary) != ErrNoError)
         return ErrDecodeError;
 
     int32_t dummy;
-    if (!pd.getEmptyTaggedFieldArray(dummy))
+    if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
     {
         return ErrDecodeError;
     }

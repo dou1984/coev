@@ -46,7 +46,7 @@ int DescribeConfigsRequest::decode(PDecoder &pd, int16_t version)
     Version = version;
 
     int32_t n;
-    if (!pd.getArrayLength(n))
+    if (pd.getArrayLength(n) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -59,21 +59,21 @@ int DescribeConfigsRequest::decode(PDecoder &pd, int16_t version)
         Resources[i] = std::make_shared<ConfigResource>();
 
         int8_t t;
-        if (!pd.getInt8(t))
+        if (pd.getInt8(t) != ErrNoError)
         {
             return ErrDecodeError;
         }
         Resources[i]->Type = static_cast<ConfigResourceType>(t);
 
         std::string name;
-        if (!pd.getString(name))
+        if (pd.getString(name) != ErrNoError)
         {
             return ErrDecodeError;
         }
         Resources[i]->Name = name;
 
         int32_t confLength;
-        if (!pd.getArrayLength(confLength))
+        if (pd.getArrayLength(confLength) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -87,7 +87,7 @@ int DescribeConfigsRequest::decode(PDecoder &pd, int16_t version)
         for (int32_t j = 0; j < confLength; ++j)
         {
             std::string s;
-            if (!pd.getString(s))
+            if (pd.getString(s) != ErrNoError)
             {
                 return ErrDecodeError;
             }
@@ -98,7 +98,7 @@ int DescribeConfigsRequest::decode(PDecoder &pd, int16_t version)
     if (Version >= 1)
     {
         bool b;
-        if (!pd.getBool(b))
+        if (pd.getBool(b) != ErrNoError)
         {
             return ErrDecodeError;
         }

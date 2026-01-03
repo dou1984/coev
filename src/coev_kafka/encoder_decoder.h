@@ -19,7 +19,7 @@ struct IEncoder
     virtual int encode(PEncoder &pe) = 0;
 };
 
-struct encoderWithHeader : IEncoder
+struct HEncoder : IEncoder
 {
     virtual int16_t headerVersion() const = 0;
 };

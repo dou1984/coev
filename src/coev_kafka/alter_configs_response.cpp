@@ -34,13 +34,13 @@ int AlterConfigsResponse::encode(PEncoder &pe)
 
 int AlterConfigsResponse::decode(PDecoder &pd, int16_t version)
 {
-    if (!pd.getDurationMs(ThrottleTime))
+    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     int32_t responseCount;
-    if (!pd.getArrayLength(responseCount))
+    if (pd.getArrayLength(responseCount) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -77,25 +77,25 @@ int AlterConfigsResourceResponse::encode(PEncoder &pe)
 int AlterConfigsResourceResponse::decode(PDecoder &pd, int16_t version)
 {
     int16_t errCode;
-    if (!pd.getInt16(errCode))
+    if (pd.getInt16(errCode) != ErrNoError)
     {
         return ErrDecodeError;
     }
     ErrorCode = errCode;
 
-    if (!pd.getNullableString(ErrorMsg))
+    if (pd.getNullableString(ErrorMsg) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     int8_t t;
-    if (!pd.getInt8(t))
+    if (pd.getInt8(t) != ErrNoError)
     {
         return ErrDecodeError;
     }
     Type = static_cast<ConfigResourceType>(t);
 
-    if (!pd.getString(Name))
+    if (pd.getString(Name) != ErrNoError)
     {
         return ErrDecodeError;
     }

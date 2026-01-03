@@ -7,7 +7,7 @@
 #include "version.h"
 #include "throttle_support.h"
 
-struct protocolBody : VDecoder, encoderWithHeader
+struct protocolBody : VDecoder, HEncoder
 {
     virtual ~protocolBody() = default;
 

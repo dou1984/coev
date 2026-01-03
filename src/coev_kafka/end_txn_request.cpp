@@ -20,19 +20,19 @@ int EndTxnRequest::encode(PEncoder &pe)
 
 int EndTxnRequest::decode(PDecoder &pd, int16_t /*version*/)
 {
-    if (!pd.getString(TransactionalID))
+    if (pd.getString(TransactionalID) != ErrNoError)
     {
         return ErrDecodeError;
     }
-    if (!pd.getInt64(ProducerID))
+    if (pd.getInt64(ProducerID) != ErrNoError)
     {
         return ErrDecodeError;
     }
-    if (!pd.getInt16(ProducerEpoch))
+    if (pd.getInt16(ProducerEpoch) != ErrNoError)
     {
         return ErrDecodeError;
     }
-    if (!pd.getBool(TransactionResult))
+    if (pd.getBool(TransactionResult) != ErrNoError)
     {
         return ErrDecodeError;
     }

@@ -15,11 +15,11 @@ int alterPartitionReassignmentsErrorBlock::encode(PEncoder &pe)
 
 int alterPartitionReassignmentsErrorBlock::decode(PDecoder &pd)
 {
-    if (!pd.getKError(errorCode))
+    if (pd.getKError(errorCode) != ErrNoError)
     {
         return ErrEncodeError;
     }
-    if (!pd.getNullableString(errorMessage))
+    if (pd.getNullableString(errorMessage) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -86,23 +86,23 @@ int AlterPartitionReassignmentsResponse::decode(PDecoder &pd, int16_t version)
 {
     Version = version;
 
-    if (!pd.getDurationMs(ThrottleTime))
+    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
-    if (!pd.getKError(ErrorCode))
+    if (pd.getKError(ErrorCode) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
-    if (!pd.getNullableString(ErrorMessage))
+    if (pd.getNullableString(ErrorMessage) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     int32_t numTopics;
-    if (!pd.getArrayLength(numTopics))
+    if (pd.getArrayLength(numTopics) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -112,13 +112,13 @@ int AlterPartitionReassignmentsResponse::decode(PDecoder &pd, int16_t version)
         for (int32_t i = 0; i < numTopics; ++i)
         {
             std::string topic;
-            if (!pd.getString(topic))
+            if (pd.getString(topic) != ErrNoError)
             {
                 return ErrDecodeError;
             }
 
             int32_t ongoingPartitionReassignments;
-            if (!pd.getArrayLength(ongoingPartitionReassignments))
+            if (pd.getArrayLength(ongoingPartitionReassignments) != ErrNoError)
             {
                 return ErrDecodeError;
             }
@@ -127,7 +127,7 @@ int AlterPartitionReassignmentsResponse::decode(PDecoder &pd, int16_t version)
             for (int32_t j = 0; j < ongoingPartitionReassignments; ++j)
             {
                 int32_t partition;
-                if (!pd.getInt32(partition))
+                if (pd.getInt32(partition) != ErrNoError)
                 {
                     return ErrDecodeError;
                 }
@@ -140,7 +140,7 @@ int AlterPartitionReassignmentsResponse::decode(PDecoder &pd, int16_t version)
                 partitionMap[partition] = block;
             }
             int32_t _;
-            if (!pd.getEmptyTaggedFieldArray(_))
+            if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
             {
                 return ErrDecodeError;
             }

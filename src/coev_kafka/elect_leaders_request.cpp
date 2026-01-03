@@ -43,7 +43,7 @@ int ElectLeadersRequest::decode(PDecoder &pd, int16_t version)
     if (Version > 0)
     {
         int8_t t;
-        if (!pd.getInt8(t))
+        if (pd.getInt8(t) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -51,7 +51,7 @@ int ElectLeadersRequest::decode(PDecoder &pd, int16_t version)
     }
 
     int32_t topicCount;
-    if (!pd.getArrayLength(topicCount))
+    if (pd.getArrayLength(topicCount) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -62,13 +62,13 @@ int ElectLeadersRequest::decode(PDecoder &pd, int16_t version)
         for (int32_t i = 0; i < topicCount; ++i)
         {
             std::string topic;
-            if (!pd.getString(topic))
+            if (pd.getString(topic) != ErrNoError)
             {
                 return ErrDecodeError;
             }
 
             int32_t partitionCount;
-            if (!pd.getArrayLength(partitionCount))
+            if (pd.getArrayLength(partitionCount) != ErrNoError)
             {
                 return ErrDecodeError;
             }
@@ -76,7 +76,7 @@ int ElectLeadersRequest::decode(PDecoder &pd, int16_t version)
             std::vector<int32_t> partitions(partitionCount);
             for (int32_t j = 0; j < partitionCount; ++j)
             {
-                if (!pd.getInt32(partitions[j]))
+                if (pd.getInt32(partitions[j]) != ErrNoError)
                 {
                     return ErrDecodeError;
                 }
@@ -85,20 +85,20 @@ int ElectLeadersRequest::decode(PDecoder &pd, int16_t version)
             TopicPartitions[topic] = std::move(partitions);
 
             int32_t dummy;
-            if (!pd.getEmptyTaggedFieldArray(dummy))
+            if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
             {
                 return ErrDecodeError;
             }
         }
     }
 
-    if (!pd.getDurationMs(Timeout))
+    if (pd.getDurationMs(Timeout) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     int32_t dummy;
-    if (!pd.getEmptyTaggedFieldArray(dummy))
+    if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
     {
         return ErrDecodeError;
     }

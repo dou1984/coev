@@ -41,13 +41,13 @@ int DeleteTopicsRequest::decode(PDecoder &pd, int16_t version)
 {
     Version = version;
 
-    if (!pd.getStringArray(Topics))
+    if (pd.getStringArray(Topics) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     int32_t timeout;
-    if (!pd.getInt32(timeout))
+    if (pd.getInt32(timeout) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -56,7 +56,7 @@ int DeleteTopicsRequest::decode(PDecoder &pd, int16_t version)
     if (isFlexibleVersion(version))
     {
         int32_t _;
-        if (!pd.getEmptyTaggedFieldArray(_))
+        if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
         {
             return ErrDecodeError;
         }

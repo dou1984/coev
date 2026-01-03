@@ -1,3 +1,9 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2023-2026, Zhao Yun Shan
+ *
+ */
 #include "async.h"
 #include "co_deliver.h"
 #include "local.h"

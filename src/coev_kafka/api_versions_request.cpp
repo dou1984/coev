@@ -32,11 +32,11 @@ int ApiVersionsRequest::decode(PDecoder &pd, int16_t version)
     Version = version;
     if (Version >= 3)
     {
-        if (!pd.getString(ClientSoftwareName))
+        if (pd.getString(ClientSoftwareName) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        if (!pd.getString(ClientSoftwareVersion))
+        if (pd.getString(ClientSoftwareVersion) != ErrNoError)
         {
             return ErrDecodeError;
         }

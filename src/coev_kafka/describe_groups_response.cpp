@@ -33,14 +33,14 @@ int DescribeGroupsResponse::decode(PDecoder &pd, int16_t version)
     Version = version;
     if (Version >= 1)
     {
-        if (!pd.getDurationMs(ThrottleTime))
+        if (pd.getDurationMs(ThrottleTime) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
     int32_t numGroups;
-    if (!pd.getArrayLength(numGroups))
+    if (pd.getArrayLength(numGroups) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -60,7 +60,7 @@ int DescribeGroupsResponse::decode(PDecoder &pd, int16_t version)
     }
 
     int32_t dummy;
-    if (!pd.getEmptyTaggedFieldArray(dummy))
+    if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -166,21 +166,21 @@ int GroupDescription::encode(PEncoder &pe, int16_t version)
 int GroupDescription::decode(PDecoder &pd, int16_t version)
 {
     Version = version;
-    if (!pd.getInt16(ErrorCode))
+    if (pd.getInt16(ErrorCode) != ErrNoError)
         return ErrDecodeError;
     Err = static_cast<KError>(ErrorCode);
 
-    if (!pd.getString(GroupId))
+    if (pd.getString(GroupId) != ErrNoError)
         return ErrDecodeError;
-    if (!pd.getString(State))
+    if (pd.getString(State) != ErrNoError)
         return ErrDecodeError;
-    if (!pd.getString(ProtocolType))
+    if (pd.getString(ProtocolType) != ErrNoError)
         return ErrDecodeError;
-    if (!pd.getString(Protocol))
+    if (pd.getString(Protocol) != ErrNoError)
         return ErrEncodeError;
 
     int32_t numMembers;
-    if (!pd.getArrayLength(numMembers))
+    if (pd.getArrayLength(numMembers) != ErrNoError)
         return ErrDecodeError;
 
     Members.clear();
@@ -199,14 +199,14 @@ int GroupDescription::decode(PDecoder &pd, int16_t version)
 
     if (Version >= 3)
     {
-        if (!pd.getInt32(AuthorizedOperations))
+        if (pd.getInt32(AuthorizedOperations) != ErrNoError)
         {
             return ErrDecodeError;
         }
     }
 
     int32_t dummy;
-    if (!pd.getEmptyTaggedFieldArray(dummy))
+    if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -241,26 +241,26 @@ int GroupMemberDescription::encode(PEncoder &pe, int16_t version)
 int GroupMemberDescription::decode(PDecoder &pd, int16_t version)
 {
     Version = version;
-    if (!pd.getString(MemberId))
+    if (pd.getString(MemberId) != ErrNoError)
         return ErrDecodeError;
 
     if (version >= 4)
     {
-        if (!pd.getNullableString(GroupInstanceId))
+        if (pd.getNullableString(GroupInstanceId) != ErrNoError)
             return ErrDecodeError;
     }
 
-    if (!pd.getString(ClientId))
+    if (pd.getString(ClientId) != ErrNoError)
         return ErrDecodeError;
-    if (!pd.getString(ClientHost))
+    if (pd.getString(ClientHost) != ErrNoError)
         return ErrDecodeError;
-    if (!pd.getBytes(MemberMetadata))
+    if (pd.getBytes(MemberMetadata) != ErrNoError)
         return ErrDecodeError;
-    if (!pd.getBytes(MemberAssignment))
+    if (pd.getBytes(MemberAssignment) != ErrNoError)
         return ErrDecodeError;
 
     int32_t dummy;
-    if (!pd.getEmptyTaggedFieldArray(dummy))
+    if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
     {
         return ErrDecodeError;
     }

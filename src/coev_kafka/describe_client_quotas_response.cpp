@@ -39,27 +39,27 @@ int DescribeClientQuotasResponse::decode(PDecoder &pd, int16_t version)
     Version = version;
 
     int32_t throttle;
-    if (!pd.getInt32(throttle))
+    if (pd.getInt32(throttle) != ErrNoError)
     {
         return ErrDecodeError;
     }
     ThrottleTime = std::chrono::milliseconds(throttle);
 
     int16_t errorCode;
-    if (!pd.getInt16(errorCode))
+    if (pd.getInt16(errorCode) != ErrNoError)
     {
         return ErrDecodeError;
     }
     ErrorCode = static_cast<KError>(errorCode);
 
-    if (!pd.getNullableString(ErrorMsg))
+    if (pd.getNullableString(ErrorMsg) != ErrNoError)
     {
 
         return ErrDecodeError;
     }
 
     int32_t entryCount;
-    if (!pd.getArrayLength(entryCount))
+    if (pd.getArrayLength(entryCount) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -77,7 +77,7 @@ int DescribeClientQuotasResponse::decode(PDecoder &pd, int16_t version)
         }
     }
     int32_t _;
-    if (!pd.getEmptyTaggedFieldArray(_))
+    if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -119,7 +119,7 @@ int DescribeClientQuotasEntry::encode(PEncoder &pe)
 int DescribeClientQuotasEntry::decode(PDecoder &pd, int16_t version)
 {
     int32_t componentCount;
-    if (!pd.getArrayLength(componentCount))
+    if (pd.getArrayLength(componentCount) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -138,7 +138,7 @@ int DescribeClientQuotasEntry::decode(PDecoder &pd, int16_t version)
     }
 
     int32_t valueCount;
-    if (!pd.getArrayLength(valueCount))
+    if (pd.getArrayLength(valueCount) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -149,25 +149,25 @@ int DescribeClientQuotasEntry::decode(PDecoder &pd, int16_t version)
         for (int32_t i = 0; i < valueCount; ++i)
         {
             std::string key;
-            if (!pd.getString(key))
+            if (pd.getString(key) != ErrNoError)
             {
                 return ErrDecodeError;
             }
             double value;
-            if (!pd.getFloat64(value))
+            if (pd.getFloat64(value) != ErrNoError)
             {
                 return ErrDecodeError;
             }
             Values[key] = value;
             int32_t _;
-            if (!pd.getEmptyTaggedFieldArray(_))
+            if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
             {
                 return ErrDecodeError;
             }
         }
     }
     int32_t _;
-    if (!pd.getEmptyTaggedFieldArray(_))
+    if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -204,13 +204,13 @@ int QuotaEntityComponent::encode(PEncoder &pe)
 int QuotaEntityComponent::decode(PDecoder &pd, int16_t /*version*/)
 {
     std::string entityType;
-    if (!pd.getString(entityType))
+    if (pd.getString(entityType) != ErrNoError)
     {
         return ErrDecodeError;
     }
     EntityType = entityType;
 
-    if (!pd.getNullableString(Name))
+    if (pd.getNullableString(Name) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -218,7 +218,7 @@ int QuotaEntityComponent::decode(PDecoder &pd, int16_t /*version*/)
     MatchType = Name.empty() ? QuotaMatchType::QuotaMatchDefault : QuotaMatchType::QuotaMatchExact;
 
     int32_t _;
-    if (!pd.getEmptyTaggedFieldArray(_))
+    if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
     {
         return ErrDecodeError;
     }

@@ -29,7 +29,7 @@ int DescribeClientQuotasRequest::decode(PDecoder &pd, int16_t version)
     Version = version;
 
     int32_t componentCount;
-    if (!pd.getArrayLength(componentCount))
+    if (pd.getArrayLength(componentCount) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -47,12 +47,12 @@ int DescribeClientQuotasRequest::decode(PDecoder &pd, int16_t version)
         }
     }
 
-    if (!pd.getBool(Strict))
+    if (pd.getBool(Strict) != ErrNoError)
     {
         return ErrDecodeError;
     }
     int32_t _;
-    if (!pd.getEmptyTaggedFieldArray(_))
+    if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -90,26 +90,26 @@ int QuotaFilterComponent::encode(PEncoder &pe)
 int QuotaFilterComponent::decode(PDecoder &pd, int16_t /*version*/)
 {
     std::string entityType;
-    if (!pd.getString(entityType))
+    if (pd.getString(entityType) != ErrNoError)
     {
         return ErrDecodeError;
     }
     EntityType = entityType;
 
     int8_t matchType;
-    if (!pd.getInt8(matchType))
+    if (pd.getInt8(matchType) != ErrNoError)
     {
         return ErrDecodeError;
     }
     MatchType = static_cast<QuotaMatchType>(matchType);
 
-    if (!pd.getNullableString(Match))
+    if (pd.getNullableString(Match) != ErrNoError)
     {
 
         return ErrDecodeError;
     }
     int32_t _;
-    if (!pd.getEmptyTaggedFieldArray(_))
+    if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
     {
         return ErrDecodeError;
     }

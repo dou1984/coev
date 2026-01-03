@@ -20,7 +20,7 @@ int DeleteGroupsRequest::encode(PEncoder &pe)
 int DeleteGroupsRequest::decode(PDecoder &pd, int16_t version)
 {
     Version = version;
-    if (!pd.getStringArray(Groups))
+    if (pd.getStringArray(Groups) != ErrNoError)
     {
         return ErrDecodeError;
     }

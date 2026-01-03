@@ -35,13 +35,13 @@ int AlterUserScramCredentialsResponse::encode(PEncoder &pe)
 
 int AlterUserScramCredentialsResponse::decode(PDecoder &pd, int16_t version)
 {
-    if (!pd.getDurationMs(ThrottleTime))
+    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
     int32_t numResults;
-    if (!pd.getArrayLength(numResults))
+    if (pd.getArrayLength(numResults) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -52,22 +52,22 @@ int AlterUserScramCredentialsResponse::decode(PDecoder &pd, int16_t version)
         for (int32_t i = 0; i < numResults; ++i)
         {
             auto result = std::make_shared<AlterUserScramCredentialsResult>();
-            if (!pd.getString(result->User))
+            if (pd.getString(result->User) != ErrNoError)
             {
                 return ErrEncodeError;
             }
 
-            if (!pd.getKError(result->ErrorCode))
+            if (pd.getKError(result->ErrorCode) != ErrNoError)
             {
                 return ErrEncodeError;
             }
 
-            if (!pd.getNullableString(result->ErrorMessage))
+            if (pd.getNullableString(result->ErrorMessage) != ErrNoError)
             {
                 return ErrEncodeError;
             }
             int32_t _;
-            if (!pd.getEmptyTaggedFieldArray(_))
+            if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
             {
                 return ErrEncodeError;
             }

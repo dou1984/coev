@@ -22,7 +22,7 @@ namespace coev
 		std::string m_charset;
 		int m_port;
 	};
-	class MysqlCli : MysqlConf
+	class MysqlCli final : MysqlConf
 	{
 	public:
 		MysqlCli(const MysqlConf &);

@@ -43,13 +43,13 @@ int DeleteOffsetsRequest::decode(PDecoder &pd, int16_t version)
 {
     Version = version;
 
-    if (!pd.getString(Group))
+    if (pd.getString(Group) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     int32_t partitionCount;
-    if (!pd.getArrayLength(partitionCount))
+    if (pd.getArrayLength(partitionCount) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -69,13 +69,13 @@ int DeleteOffsetsRequest::decode(PDecoder &pd, int16_t version)
     for (int32_t i = 0; i < partitionCount; ++i)
     {
         std::string topic;
-        if (!pd.getString(topic))
+        if (pd.getString(topic) != ErrNoError)
         {
             return ErrDecodeError;
         }
 
         std::vector<int32_t> partitionsList;
-        if (!pd.getInt32Array(partitionsList))
+        if (pd.getInt32Array(partitionsList) != ErrNoError)
         {
             return ErrDecodeError;
         }

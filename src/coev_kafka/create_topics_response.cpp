@@ -59,14 +59,14 @@ int CreateTopicsResponse::decode(PDecoder &pd, int16_t version)
 
     if (version >= 2)
     {
-        if (!pd.getDurationMs(ThrottleTime))
+        if (pd.getDurationMs(ThrottleTime) != ErrNoError)
         {
             return ErrDecodeError;
         }
     }
 
     int32_t n;
-    if (!pd.getArrayLength(n))
+    if (pd.getArrayLength(n) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -80,7 +80,7 @@ int CreateTopicsResponse::decode(PDecoder &pd, int16_t version)
     for (int32_t i = 0; i < n; ++i)
     {
         std::string topic;
-        if (!pd.getString(topic))
+        if (pd.getString(topic) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -195,7 +195,7 @@ int TopicError::encode(PEncoder &pe, int16_t version)
 int TopicError::decode(PDecoder &pd, int16_t version)
 {
     int16_t errCode;
-    if (!pd.getInt16(errCode))
+    if (pd.getInt16(errCode) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -204,7 +204,7 @@ int TopicError::decode(PDecoder &pd, int16_t version)
     if (version >= 1)
     {
 
-        if (!pd.getNullableString(ErrMsg))
+        if (pd.getNullableString(ErrMsg) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -231,24 +231,24 @@ int CreatableTopicConfigs::encode(PEncoder &pe, int16_t /*version*/)
 int CreatableTopicConfigs::decode(PDecoder &pd, int16_t /*version*/)
 {
 
-    if (!pd.getNullableString(Value))
+    if (pd.getNullableString(Value) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
-    if (!pd.getBool(ReadOnly))
+    if (pd.getBool(ReadOnly) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     int8_t source;
-    if (!pd.getInt8(source))
+    if (pd.getInt8(source) != ErrNoError)
     {
         return ErrDecodeError;
     }
     ConfigSource_ = static_cast<ConfigSource>(source);
 
-    if (!pd.getBool(IsSensitive))
+    if (pd.getBool(IsSensitive) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -297,17 +297,17 @@ int CreatableTopicResult::encode(PEncoder &pe, int16_t /*version*/)
 
 int CreatableTopicResult::decode(PDecoder &pd, int16_t /*version*/)
 {
-    if (!pd.getInt32(NumPartitions))
+    if (pd.getInt32(NumPartitions) != ErrNoError)
     {
         return ErrDecodeError;
     }
-    if (!pd.getInt16(ReplicationFactor))
+    if (pd.getInt16(ReplicationFactor) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     int32_t n;
-    if (!pd.getArrayLength(n))
+    if (pd.getArrayLength(n) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -316,7 +316,7 @@ int CreatableTopicResult::decode(PDecoder &pd, int16_t /*version*/)
     for (int32_t i = 0; i < n; ++i)
     {
         std::string name;
-        if (!pd.getString(name))
+        if (pd.getString(name) != ErrNoError)
         {
             return ErrDecodeError;
         }

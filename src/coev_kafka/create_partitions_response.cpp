@@ -32,13 +32,13 @@ int CreatePartitionsResponse::encode(PEncoder &pe)
 
 int CreatePartitionsResponse::decode(PDecoder &pd, int16_t version)
 {
-    if (!pd.getDurationMs(ThrottleTime))
+    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     int32_t n;
-    if (!pd.getArrayLength(n))
+    if (pd.getArrayLength(n) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -47,7 +47,7 @@ int CreatePartitionsResponse::decode(PDecoder &pd, int16_t version)
     for (int32_t i = 0; i < n; ++i)
     {
         std::string topic;
-        if (!pd.getString(topic))
+        if (pd.getString(topic) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -121,12 +121,12 @@ int TopicPartitionError::encode(PEncoder &pe)
 
 int TopicPartitionError::decode(PDecoder &pd, int16_t version)
 {
-    if (!pd.getKError(Err))
+    if (pd.getKError(Err) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    if (!pd.getNullableString(ErrMsg))
+    if (pd.getNullableString(ErrMsg) != ErrNoError)
     {
         return ErrEncodeError;
     }

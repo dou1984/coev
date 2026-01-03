@@ -54,19 +54,19 @@ int DeleteOffsetsResponse::decode(PDecoder &pd, int16_t version)
     Version = version;
 
     int16_t errCode;
-    if (!pd.getInt16(errCode))
+    if (pd.getInt16(errCode) != ErrNoError)
     {
         return ErrDecodeError;
     }
     ErrorCode = static_cast<KError>(errCode);
 
-    if (!pd.getDurationMs(ThrottleTime))
+    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     int32_t numTopics;
-    if (!pd.getArrayLength(numTopics))
+    if (pd.getArrayLength(numTopics) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -83,13 +83,13 @@ int DeleteOffsetsResponse::decode(PDecoder &pd, int16_t version)
     for (int32_t i = 0; i < numTopics; ++i)
     {
         std::string topic;
-        if (!pd.getString(topic))
+        if (pd.getString(topic) != ErrNoError)
         {
             return ErrDecodeError;
         }
 
         int32_t numPartitions;
-        if (!pd.getArrayLength(numPartitions))
+        if (pd.getArrayLength(numPartitions) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -100,13 +100,13 @@ int DeleteOffsetsResponse::decode(PDecoder &pd, int16_t version)
         for (int32_t j = 0; j < numPartitions; ++j)
         {
             int32_t partition;
-            if (!pd.getInt32(partition))
+            if (pd.getInt32(partition) != ErrNoError)
             {
                 return ErrDecodeError;
             }
 
             int16_t partErr;
-            if (!pd.getInt16(partErr))
+            if (pd.getInt16(partErr) != ErrNoError)
             {
                 return ErrDecodeError;
             }

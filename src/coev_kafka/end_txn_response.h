@@ -10,7 +10,7 @@
 #include "errors.h"
 #include "protocol_body.h"
 
-struct EndTxnResponse :  protocolBody
+struct EndTxnResponse : protocolBody
 {
 
     int16_t Version = 0;
@@ -21,8 +21,8 @@ struct EndTxnResponse :  protocolBody
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
-    int16_t version()const;
-    int16_t headerVersion()const;
+    int16_t version() const;
+    int16_t headerVersion() const;
     bool isValidVersion() const;
     KafkaVersion requiredVersion() const;
     std::chrono::milliseconds throttleTime() const;

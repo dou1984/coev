@@ -36,7 +36,7 @@ int DeleteTopicsResponse::decode(PDecoder &pd, int16_t version)
     if (version >= 1)
     {
 
-        if (!pd.getDurationMs(ThrottleTime))
+        if (pd.getDurationMs(ThrottleTime) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -45,7 +45,7 @@ int DeleteTopicsResponse::decode(PDecoder &pd, int16_t version)
     }
 
     int32_t n;
-    if (!pd.getArrayLength(n))
+    if (pd.getArrayLength(n) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -55,25 +55,25 @@ int DeleteTopicsResponse::decode(PDecoder &pd, int16_t version)
     for (int32_t i = 0; i < n; ++i)
     {
         std::string topic;
-        if (!pd.getString(topic))
+        if (pd.getString(topic) != ErrNoError)
         {
             return ErrDecodeError;
         }
         int16_t errCode;
-        if (!pd.getInt16(errCode))
+        if (pd.getInt16(errCode) != ErrNoError)
         {
             return ErrDecodeError;
         }
         TopicErrorCodes[topic] = static_cast<KError>(errCode);
 
         int32_t _;
-        if (!pd.getEmptyTaggedFieldArray(_))
+        if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
         {
             return ErrDecodeError;
         }
     }
     int32_t _;
-    if (!pd.getEmptyTaggedFieldArray(_))
+    if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
     {
         return ErrDecodeError;
     }

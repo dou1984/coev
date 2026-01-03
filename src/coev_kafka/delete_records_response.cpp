@@ -12,13 +12,13 @@ int DeleteRecordsResponsePartition::encode(PEncoder &pe)
 
 int DeleteRecordsResponsePartition::decode(PDecoder &pd, int16_t /*version*/)
 {
-    if (!pd.getInt64(LowWatermark))
+    if (pd.getInt64(LowWatermark) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
     int16_t errCode;
-    if (!pd.getInt16(errCode))
+    if (pd.getInt16(errCode) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -57,7 +57,7 @@ int DeleteRecordsResponseTopic::encode(PEncoder &pe)
 int DeleteRecordsResponseTopic::decode(PDecoder &pd, int16_t version)
 {
     int32_t n;
-    if (!pd.getArrayLength(n))
+    if (pd.getArrayLength(n) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -68,7 +68,7 @@ int DeleteRecordsResponseTopic::decode(PDecoder &pd, int16_t version)
         for (int32_t i = 0; i < n; ++i)
         {
             int32_t partition;
-            if (!pd.getInt32(partition))
+            if (pd.getInt32(partition) != ErrNoError)
             {
                 return ErrEncodeError;
             }
@@ -132,13 +132,13 @@ int DeleteRecordsResponse::decode(PDecoder &pd, int16_t version)
 {
     Version = version;
 
-    if (!pd.getDurationMs(ThrottleTime))
+    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     int32_t n;
-    if (!pd.getArrayLength(n))
+    if (pd.getArrayLength(n) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -150,7 +150,7 @@ int DeleteRecordsResponse::decode(PDecoder &pd, int16_t version)
         for (int32_t i = 0; i < n; ++i)
         {
             std::string topic;
-            if (!pd.getString(topic))
+            if (pd.getString(topic) != ErrNoError)
             {
                 return ErrDecodeError;
             }

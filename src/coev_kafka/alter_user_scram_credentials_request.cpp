@@ -63,7 +63,7 @@ int AlterUserScramCredentialsRequest::encode(PEncoder &pe)
 int AlterUserScramCredentialsRequest::decode(PDecoder &pd, int16_t version)
 {
     int32_t numDeletions;
-    if (!pd.getArrayLength(numDeletions))
+    if (pd.getArrayLength(numDeletions) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -71,25 +71,25 @@ int AlterUserScramCredentialsRequest::decode(PDecoder &pd, int16_t version)
     Deletions.resize(numDeletions);
     for (int32_t i = 0; i < numDeletions; ++i)
     {
-        if (!pd.getString(Deletions[i].Name))
+        if (pd.getString(Deletions[i].Name) != ErrNoError)
         {
             return ErrDecodeError;
         }
         int8_t mechanism;
-        if (!pd.getInt8(mechanism))
+        if (pd.getInt8(mechanism) != ErrNoError)
         {
             return ErrDecodeError;
         }
         Deletions[i].Mechanism = static_cast<ScramMechanismType>(mechanism);
         int32_t _;
-        if (!pd.getEmptyTaggedFieldArray(_))
+        if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
         {
             return ErrDecodeError;
         }
     }
 
     int32_t numUpsertions;
-    if (!pd.getArrayLength(numUpsertions))
+    if (pd.getArrayLength(numUpsertions) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -97,31 +97,31 @@ int AlterUserScramCredentialsRequest::decode(PDecoder &pd, int16_t version)
     Upsertions.resize(numUpsertions);
     for (int32_t i = 0; i < numUpsertions; ++i)
     {
-        if (!pd.getString(Upsertions[i].Name))
+        if (pd.getString(Upsertions[i].Name) != ErrNoError)
         {
             return ErrDecodeError;
         }
         int8_t mechanism;
-        if (!pd.getInt8(mechanism))
+        if (pd.getInt8(mechanism) != ErrNoError)
         {
             return ErrDecodeError;
         }
         Upsertions[i].Mechanism = static_cast<ScramMechanismType>(mechanism);
 
-        if (!pd.getInt32(Upsertions[i].Iterations))
+        if (pd.getInt32(Upsertions[i].Iterations) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        if (!pd.getBytes(Upsertions[i].Salt))
+        if (pd.getBytes(Upsertions[i].Salt) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        if (!pd.getBytes(Upsertions[i].saltedPassword))
+        if (pd.getBytes(Upsertions[i].saltedPassword) != ErrNoError)
         {
             return ErrDecodeError;
         }
         int32_t _;
-        if (!pd.getEmptyTaggedFieldArray(_))
+        if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
         {
             return ErrDecodeError;
         }

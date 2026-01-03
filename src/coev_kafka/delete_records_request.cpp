@@ -30,7 +30,7 @@ int DeleteRecordsRequestTopic::encode(PEncoder &pe)
 int DeleteRecordsRequestTopic::decode(PDecoder &pd, int16_t /*version*/)
 {
     int32_t n;
-    if (!pd.getArrayLength(n))
+    if (pd.getArrayLength(n) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -44,7 +44,7 @@ int DeleteRecordsRequestTopic::decode(PDecoder &pd, int16_t /*version*/)
         {
             int32_t partition;
             int64_t offset;
-            if (!pd.getInt32(partition) || !pd.getInt64(offset))
+            if (pd.getInt32(partition) || !pd.getInt64(offset) != ErrNoError)
             {
                 return ErrEncodeError;
             }
@@ -96,7 +96,7 @@ int DeleteRecordsRequest::decode(PDecoder &pd, int16_t version)
     Version = version;
 
     int32_t n;
-    if (!pd.getArrayLength(n))
+    if (pd.getArrayLength(n) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -108,7 +108,7 @@ int DeleteRecordsRequest::decode(PDecoder &pd, int16_t version)
         for (int32_t i = 0; i < n; ++i)
         {
             std::string topic;
-            if (!pd.getString(topic))
+            if (pd.getString(topic) != ErrNoError)
             {
                 return ErrDecodeError;
             }
@@ -123,7 +123,7 @@ int DeleteRecordsRequest::decode(PDecoder &pd, int16_t version)
         }
     }
 
-    if (!pd.getDurationMs(Timeout))
+    if (pd.getDurationMs(Timeout) != ErrNoError)
     {
         return ErrDecodeError;
     }

@@ -13,7 +13,7 @@ int AlterPartitionReassignmentsBlock::encode(PEncoder &pe)
 
 int AlterPartitionReassignmentsBlock::decode(PDecoder &pd)
 {
-    if (!pd.getInt32Array(replicas))
+    if (pd.getInt32Array(replicas) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -70,14 +70,14 @@ int AlterPartitionReassignmentsRequest::decode(PDecoder &pd, int16_t version)
 {
     Version = version;
     int32_t timeout;
-    if (!pd.getInt32(timeout))
+    if (pd.getInt32(timeout) != ErrNoError)
     {
         return ErrDecodeError;
     }
     Timeout = std::chrono::milliseconds(timeout);
 
     int32_t topicCount;
-    if (!pd.getArrayLength(topicCount))
+    if (pd.getArrayLength(topicCount) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -87,13 +87,13 @@ int AlterPartitionReassignmentsRequest::decode(PDecoder &pd, int16_t version)
         for (int32_t i = 0; i < topicCount; ++i)
         {
             std::string topic;
-            if (!pd.getString(topic))
+            if (pd.getString(topic) != ErrNoError)
             {
                 return ErrDecodeError;
             }
 
             int32_t partitionCount;
-            if (!pd.getArrayLength(partitionCount))
+            if (pd.getArrayLength(partitionCount) != ErrNoError)
             {
                 return ErrDecodeError;
             }
@@ -102,7 +102,7 @@ int AlterPartitionReassignmentsRequest::decode(PDecoder &pd, int16_t version)
             for (int32_t j = 0; j < partitionCount; ++j)
             {
                 int32_t partition;
-                if (!pd.getInt32(partition))
+                if (pd.getInt32(partition) != ErrNoError)
                 {
                     return ErrDecodeError;
                 }
@@ -115,7 +115,7 @@ int AlterPartitionReassignmentsRequest::decode(PDecoder &pd, int16_t version)
                 partitionMap[partition] = block;
             }
             int32_t _;
-            if (!pd.getEmptyTaggedFieldArray(_))
+            if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
             {
                 return ErrDecodeError;
             }

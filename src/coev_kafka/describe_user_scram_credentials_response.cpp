@@ -55,23 +55,23 @@ int DescribeUserScramCredentialsResponse::decode(PDecoder &pd, int16_t version)
 {
     Version = version;
 
-    if (!pd.getDurationMs(ThrottleTime))
+    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
-    if (!pd.getKError(ErrorCode))
+    if (pd.getKError(ErrorCode) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
-    if (!pd.getNullableString(ErrorMessage))
+    if (pd.getNullableString(ErrorMessage) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     int32_t numUsers;
-    if (!pd.getArrayLength(numUsers))
+    if (pd.getArrayLength(numUsers) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -82,23 +82,23 @@ int DescribeUserScramCredentialsResponse::decode(PDecoder &pd, int16_t version)
     {
         auto result = std::make_unique<DescribeUserScramCredentialsResult>();
 
-        if (!pd.getString(result->User))
+        if (pd.getString(result->User) != ErrNoError)
         {
             return ErrDecodeError;
         }
 
-        if (!pd.getKError(result->ErrorCode))
+        if (pd.getKError(result->ErrorCode) != ErrNoError)
         {
             return ErrDecodeError;
         }
 
-        if (!pd.getNullableString(result->ErrorMessage))
+        if (pd.getNullableString(result->ErrorMessage) != ErrNoError)
         {
             return ErrDecodeError;
         }
 
         int32_t numCreds;
-        if (!pd.getArrayLength(numCreds))
+        if (pd.getArrayLength(numCreds) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -109,19 +109,19 @@ int DescribeUserScramCredentialsResponse::decode(PDecoder &pd, int16_t version)
             auto cred = std::make_shared<UserScramCredentialsResponseInfo>();
 
             int8_t mech;
-            if (!pd.getInt8(mech))
+            if (pd.getInt8(mech) != ErrNoError)
             {
                 return ErrDecodeError;
             }
             cred->Mechanism = static_cast<ScramMechanismType>(mech);
 
-            if (!pd.getInt32(cred->Iterations))
+            if (pd.getInt32(cred->Iterations) != ErrNoError)
             {
                 return ErrDecodeError;
             }
 
             int32_t dummy;
-            if (!pd.getEmptyTaggedFieldArray(dummy))
+            if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
             {
                 return ErrDecodeError;
             }
@@ -130,7 +130,7 @@ int DescribeUserScramCredentialsResponse::decode(PDecoder &pd, int16_t version)
         }
 
         int32_t dummy;
-        if (!pd.getEmptyTaggedFieldArray(dummy))
+        if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -139,7 +139,7 @@ int DescribeUserScramCredentialsResponse::decode(PDecoder &pd, int16_t version)
     }
 
     int32_t dummy;
-    if (!pd.getEmptyTaggedFieldArray(dummy))
+    if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
     {
         return ErrDecodeError;
     }

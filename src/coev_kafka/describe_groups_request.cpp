@@ -23,21 +23,21 @@ int DescribeGroupsRequest::encode(PEncoder &pe)
 int DescribeGroupsRequest::decode(PDecoder &pd, int16_t version)
 {
     Version = version;
-    if (!pd.getStringArray(Groups))
+    if (pd.getStringArray(Groups) != ErrNoError)
     {
         return ErrDecodeError;
     }
     if (Version >= 3)
     {
         bool val;
-        if (!pd.getBool(val))
+        if (pd.getBool(val) != ErrNoError)
         {
             return ErrDecodeError;
         }
         IncludeAuthorizedOperations = val;
     }
     int32_t dummy;
-    if (!pd.getEmptyTaggedFieldArray(dummy))
+    if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
     {
         return ErrDecodeError;
     }

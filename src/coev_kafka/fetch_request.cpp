@@ -7,8 +7,8 @@ FetchRequest::FetchRequest()
       SessionID(0), SessionEpoch(0)
 {
 }
-FetchRequest::FetchRequest(int16_t v) : Version(v), MaxBytes(0), Isolation(ReadUncommitted),
-                                        SessionID(0), SessionEpoch(0)
+FetchRequest::FetchRequest(int16_t v)
+    : Version(v), MaxBytes(0), Isolation(ReadUncommitted), SessionID(0), SessionEpoch(0)
 {
 }
 

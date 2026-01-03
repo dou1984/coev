@@ -29,7 +29,7 @@ int AlterConfigsRequest::encode(PEncoder &pe)
 int AlterConfigsRequest::decode(PDecoder &pd, int16_t version)
 {
     int32_t resourceCount;
-    if (!pd.getArrayLength(resourceCount))
+    if (pd.getArrayLength(resourceCount) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -45,7 +45,7 @@ int AlterConfigsRequest::decode(PDecoder &pd, int16_t version)
     }
 
     bool validateOnly;
-    if (!pd.getBool(validateOnly))
+    if (pd.getBool(validateOnly) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -86,21 +86,21 @@ int AlterConfigsResource::encode(PEncoder &pe)
 int AlterConfigsResource::decode(PDecoder &pd, int16_t version)
 {
     int8_t t;
-    if (!pd.getInt8(t))
+    if (pd.getInt8(t) != ErrNoError)
     {
         return ErrDecodeError;
     }
     Type = static_cast<ConfigResourceType>(t);
 
     std::string name;
-    if (!pd.getString(name))
+    if (pd.getString(name) != ErrNoError)
     {
         return ErrDecodeError;
     }
     Name = name;
 
     int32_t n;
-    if (!pd.getArrayLength(n))
+    if (pd.getArrayLength(n) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -111,12 +111,12 @@ int AlterConfigsResource::decode(PDecoder &pd, int16_t version)
         for (int32_t i = 0; i < n; ++i)
         {
             std::string configKey;
-            if (!pd.getString(configKey))
+            if (pd.getString(configKey) != ErrNoError)
             {
                 return ErrDecodeError;
             }
             std::string configValue;
-            if (!pd.getNullableString(configValue))
+            if (pd.getNullableString(configValue) != ErrNoError)
             {
                 return ErrDecodeError;
             }

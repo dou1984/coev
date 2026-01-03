@@ -31,13 +31,13 @@ int TopicPartition::encode(PEncoder &pe)
 
 int TopicPartition::decode(PDecoder &pd, int16_t version)
 {
-    if (!pd.getInt32(Count))
+    if (pd.getInt32(Count) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     int32_t n;
-    if (!pd.getInt32(n))
+    if (pd.getInt32(n) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -50,7 +50,7 @@ int TopicPartition::decode(PDecoder &pd, int16_t version)
     Assignment.resize(static_cast<size_t>(n));
     for (int32_t i = 0; i < n; ++i)
     {
-        if (!pd.getInt32Array(Assignment[i]))
+        if (pd.getInt32Array(Assignment[i]) != ErrNoError)
         {
             return ErrDecodeError;
         }

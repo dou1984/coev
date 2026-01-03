@@ -29,7 +29,7 @@ int DescribeUserScramCredentialsRequest::decode(PDecoder &pd, int16_t version)
 {
     Version = version;
     int32_t n;
-    if (!pd.getArrayLength(n))
+    if (pd.getArrayLength(n) != ErrNoError)
     {
         return ErrDecodeError;
     }

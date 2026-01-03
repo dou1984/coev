@@ -15,18 +15,18 @@ int PartitionResult::encode(PEncoder &pe, int16_t /*version*/)
 
 int PartitionResult::decode(PDecoder &pd, int16_t /*version*/)
 {
-    if (!pd.getKError(ErrorCode))
+    if (pd.getKError(ErrorCode) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    if (!pd.getNullableString(ErrorMessage))
+    if (pd.getNullableString(ErrorMessage) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
     int32_t dummy;
-    if (!pd.getEmptyTaggedFieldArray(dummy))
+    if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -87,21 +87,21 @@ int ElectLeadersResponse::encode(PEncoder &pe)
 int ElectLeadersResponse::decode(PDecoder &pd, int16_t version)
 {
     Version = version;
-    if (!pd.getDurationMs(ThrottleTime))
+    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     if (Version > 0)
     {
-        if (!pd.getKError(ErrorCode))
+        if (pd.getKError(ErrorCode) != ErrNoError)
         {
             return ErrDecodeError;
         }
     }
 
     int32_t numTopics;
-    if (!pd.getArrayLength(numTopics))
+    if (pd.getArrayLength(numTopics) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -112,13 +112,13 @@ int ElectLeadersResponse::decode(PDecoder &pd, int16_t version)
     for (int32_t i = 0; i < numTopics; ++i)
     {
         std::string topic;
-        if (!pd.getString(topic))
+        if (pd.getString(topic) != ErrNoError)
         {
             return ErrDecodeError;
         }
 
         int32_t numPartitions;
-        if (!pd.getArrayLength(numPartitions))
+        if (pd.getArrayLength(numPartitions) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -129,7 +129,7 @@ int ElectLeadersResponse::decode(PDecoder &pd, int16_t version)
         for (int32_t j = 0; j < numPartitions; ++j)
         {
             int32_t partition;
-            if (!pd.getInt32(partition))
+            if (pd.getInt32(partition) != ErrNoError)
             {
                 return ErrDecodeError;
             }
@@ -144,14 +144,14 @@ int ElectLeadersResponse::decode(PDecoder &pd, int16_t version)
         }
 
         int32_t dummy;
-        if (!pd.getEmptyTaggedFieldArray(dummy))
+        if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
         {
             return ErrDecodeError;
         }
     }
 
     int32_t dummy;
-    if (!pd.getEmptyTaggedFieldArray(dummy))
+    if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
     {
         return ErrDecodeError;
     }

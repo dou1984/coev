@@ -18,17 +18,17 @@ int ApiVersionsResponseKey::encode(PEncoder &pe, int16_t version)
 
 int ApiVersionsResponseKey::decode(PDecoder &pd, int16_t version)
 {
-    if (!pd.getInt16(ApiKey))
+    if (pd.getInt16(ApiKey) != ErrNoError)
         return ErrEncodeError;
-    if (!pd.getInt16(MinVersion))
+    if (pd.getInt16(MinVersion) != ErrNoError)
         return ErrEncodeError;
-    if (!pd.getInt16(MaxVersion))
+    if (pd.getInt16(MaxVersion) != ErrNoError)
         return ErrEncodeError;
 
     if (version >= 3)
     {
         int32_t _;
-        if (!pd.getEmptyTaggedFieldArray(_))
+        if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
             return ErrEncodeError;
     }
 
@@ -85,7 +85,7 @@ int ApiVersionsResponse::decode(PDecoder &pd, int16_t version)
 {
     Version = version;
 
-    if (!pd.getInt16(ErrorCode))
+    if (pd.getInt16(ErrorCode) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -97,7 +97,7 @@ int ApiVersionsResponse::decode(PDecoder &pd, int16_t version)
     }
 
     int32_t numApiKeys;
-    if (!pd.getArrayLength(numApiKeys))
+    if (pd.getArrayLength(numApiKeys) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -113,7 +113,7 @@ int ApiVersionsResponse::decode(PDecoder &pd, int16_t version)
 
     if (Version >= 1)
     {
-        if (!pd.getDurationMs(ThrottleTime))
+        if (pd.getDurationMs(ThrottleTime) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -122,7 +122,7 @@ int ApiVersionsResponse::decode(PDecoder &pd, int16_t version)
     if (Version >= 3)
     {
         int32_t _;
-        if (!pd.getEmptyTaggedFieldArray(_))
+        if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
         {
             return ErrDecodeError;
         }

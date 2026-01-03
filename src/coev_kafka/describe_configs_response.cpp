@@ -30,13 +30,13 @@ int DescribeConfigsResponse::decode(PDecoder &pd, int16_t version)
 {
     Version = version;
 
-    if (!pd.getDurationMs(ThrottleTime))
+    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     int32_t n;
-    if (!pd.getArrayLength(n))
+    if (pd.getArrayLength(n) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -127,21 +127,21 @@ int ResourceResponse::encode(PEncoder &pe, int16_t version)
 
 int ResourceResponse::decode(PDecoder &pd, int16_t version)
 {
-    if (!pd.getInt16(ErrorCode))
+    if (pd.getInt16(ErrorCode) != ErrNoError)
         return ErrDecodeError;
-    if (!pd.getString(ErrorMsg))
+    if (pd.getString(ErrorMsg) != ErrNoError)
         return ErrDecodeError;
 
     int8_t t;
-    if (!pd.getInt8(t))
+    if (pd.getInt8(t) != ErrNoError)
         return ErrDecodeError;
     Type = static_cast<ConfigResourceType>(t);
 
-    if (!pd.getString(Name))
+    if (pd.getString(Name) != ErrNoError)
         return ErrDecodeError;
 
     int32_t n;
-    if (!pd.getArrayLength(n))
+    if (pd.getArrayLength(n) != ErrNoError)
         return ErrDecodeError;
 
     Configs.clear();
@@ -201,16 +201,16 @@ int ConfigEntry::decode(PDecoder &pd, int16_t version)
         Source = ConfigSource::SourceUnknown;
     }
 
-    if (!pd.getString(Name))
+    if (pd.getString(Name) != ErrNoError)
         return ErrDecodeError;
-    if (!pd.getString(Value))
+    if (pd.getString(Value) != ErrNoError)
         return ErrDecodeError;
-    if (!pd.getBool(ReadOnly))
+    if (pd.getBool(ReadOnly) != ErrNoError)
         return ErrDecodeError;
 
     if (version == 0)
     {
-        if (!pd.getBool(Default))
+        if (pd.getBool(Default) != ErrNoError)
             return ErrDecodeError;
         if (Default)
         {
@@ -220,19 +220,19 @@ int ConfigEntry::decode(PDecoder &pd, int16_t version)
     else
     {
         int8_t src;
-        if (!pd.getInt8(src))
+        if (pd.getInt8(src) != ErrNoError)
             return ErrDecodeError;
         Source = static_cast<ConfigSource>(src);
         Default = (Source == ConfigSource::SourceDefault);
     }
 
-    if (!pd.getBool(Sensitive))
+    if (pd.getBool(Sensitive) != ErrNoError)
         return ErrDecodeError;
 
     if (version > 0)
     {
         int32_t n;
-        if (!pd.getArrayLength(n))
+        if (pd.getArrayLength(n) != ErrNoError)
             return ErrDecodeError;
 
         Synonyms.clear();
@@ -262,13 +262,13 @@ int ConfigSynonym::encode(PEncoder &pe, int16_t /*version*/)
 
 int ConfigSynonym::decode(PDecoder &pd, int16_t /*version*/)
 {
-    if (!pd.getString(ConfigName))
+    if (pd.getString(ConfigName) != ErrNoError)
         return ErrDecodeError;
-    if (!pd.getString(ConfigValue))
+    if (pd.getString(ConfigValue) != ErrNoError)
         return ErrDecodeError;
 
     int8_t src;
-    if (!pd.getInt8(src))
+    if (pd.getInt8(src) != ErrNoError)
         return ErrDecodeError;
     Source = static_cast<ConfigSource>(src);
     return ErrNoError;
