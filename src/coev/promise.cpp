@@ -7,7 +7,7 @@ namespace coev
 {
     promise::promise()
     {
-        LOG_CORE("promise this:%p\n", this);
+        LOG_CORE("promise this:%p tid:%ld\n", this, m_tid);
     }
     promise::~promise()
     {

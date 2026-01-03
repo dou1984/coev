@@ -7,10 +7,17 @@ using namespace coev;
 awaitable<void> co_parse_dns()
 {
     std::string url = "www.baidu.com";
+    // std::string url = "xxxxxxxx";
     std::string addr = "";
-    co_await parse_dns(url, addr);
+    auto r = co_await parse_dns(url, addr);
+    if (r != 0)
+    {
+        LOG_ERR("parse_dns error \n");
+        co_return;
+    }
+    LOG_INFO("baidu -> %s\n", addr.c_str());
 
-    LOG_ERR("baidu -> %s\n", addr.c_str());
+    cosys::stop();
     co_return;
 }
 

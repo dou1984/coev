@@ -37,7 +37,7 @@ int FindCoordinatorResponse::decode(PDecoder &pd, int16_t version)
         }
     }
 
-    auto coordinator = std::shared_ptr<Broker>();
+    auto coordinator = std::make_shared<Broker>();
     err = coordinator->decode(pd, 0);
     if (err != 0)
     {

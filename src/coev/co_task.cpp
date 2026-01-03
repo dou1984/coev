@@ -32,9 +32,6 @@ namespace coev
 		for (auto it : _promises)
 		{
 			auto p = it.first;
-			// assert(p->m_that == nullptr);
-			// p->m_task = nullptr;
-			// assert(std::holds_alternative<std::nullptr_t>(p->m_that));
 			std::lock_guard<is_destroying> _(local<is_destroying>::instance());
 			p->m_this.destroy();
 		}
@@ -54,9 +51,6 @@ namespace coev
 				}
 			}
 		}
-		// assert(p->m_that == nullptr);
-		// p->m_task = nullptr;
-		// assert(std::holds_alternative<std::nullptr_t>(p->m_that));
 		std::lock_guard<is_destroying> _(local<is_destroying>::instance());
 		if (p)
 		{
