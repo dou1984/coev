@@ -2,6 +2,8 @@
 
 namespace coev
 {
+    constexpr int READ = 0;
+    constexpr int WRITE = 1;
     class init_curl_context
     {
     public:
@@ -14,155 +16,224 @@ namespace coev
             curl_global_cleanup();
         }
     };
-
-    CurlCli::CurlCli()
+    struct CurlCli::Context : io_context
     {
+
+        using io_context::io_context;
+        auto read_waiter() { return m_read_waiter.suspend(); }
+        auto write_waiter() { return m_write_waiter.suspend(); }
+        auto id() { return m_fd; }
+    };
+
+    CurlCli::Instance::Instance()
+    {
+    }
+    CurlCli::Instance::Instance(CURLM *m, CURL *c) : m_multi(m), m_curl(c)
+    {
+    }
+
+    CurlCli::Instance::~Instance()
+    {
+        if (m_multi && m_curl)
+        {
+            curl_multi_remove_handle(m_multi, m_curl);
+            m_multi = nullptr;
+        }
+        if (m_curl)
+        {
+            curl_easy_cleanup(m_curl);
+            m_curl = nullptr;
+        }
+    }
+    CurlCli::Instance::operator CURL *()
+    {
+        return m_curl;
+    }
+    CurlCli::Instance::operator bool() const
+    {
+        return m_curl && m_multi;
+    }
+
+    awaitable<int> CurlCli::Instance::action()
+    {
+        curl_easy_setopt(m_curl, CURLOPT_PRIVATE, this);
+        auto r = curl_multi_add_handle(m_multi, m_curl);
+        if (r != CURLM_OK)
+        {
+            LOG_ERR("curl_multi_add_handle failed\n");
+            curl_easy_cleanup(m_curl);
+            clear();
+            co_return INVALID;
+        }
+        int running_handles = 0;
+        curl_multi_socket_action(m_multi, CURL_SOCKET_TIMEOUT, 0, &running_handles);
+        co_await m_done.suspend();
+        co_return 0;
+    }
+    void CurlCli::Instance::done()
+    {
+        m_done.resume_next_loop();
+    }
+    void CurlCli::Instance::clear()
+    {
+        m_multi = nullptr;
+        m_curl = nullptr;
+    }
+
+    CurlCli::CurlCli() : m_timer(100000000, 0)
+    {
+        singleton<init_curl_context>::instance();
+
         m_multi = curl_multi_init();
-        if (m_multi == nullptr)
+        if (m_multi != nullptr)
+        {
+            curl_multi_setopt(m_multi, CURLMOPT_SOCKETFUNCTION, CurlCli::cb_socket_event);
+            curl_multi_setopt(m_multi, CURLMOPT_SOCKETDATA, this);
+            curl_multi_setopt(m_multi, CURLMOPT_TIMERFUNCTION, CurlCli::cb_timer);
+            curl_multi_setopt(m_multi, CURLMOPT_TIMERDATA, this);
+            LOG_CORE("init success\n");
+        }
+        else
         {
             LOG_ERR("curl_multi_init error \n");
         }
+
+        m_task << [](auto _this) -> awaitable<void>
+        {
+            while (true)
+            {
+                co_await _this->m_timer.suspend();
+                _this->action(CURL_SOCKET_TIMEOUT, 0);
+            }
+        }(this);
     }
     CurlCli::~CurlCli()
     {
-        curl_multi_cleanup(m_multi);
-    }
-
-    static struct curl_context *create_curl_context(curl_socket_t sockfd, struct datauv *uv)
-    {
-        struct curl_context *context;
-
-        context = (struct curl_context *)malloc(sizeof(*context));
-
-        context->sockfd = sockfd;
-        context->uv = uv;
-
-        uv_poll_init_socket(uv->loop, &context->poll_handle, sockfd);
-        context->poll_handle.data = context;
-
-        return context;
-    }
-
-    void CurlCli::download(const char *url, int num)
-    {
-        char filename[50];
-        FILE *file;
-        CURL *curl;
-
-        snprintf(filename, sizeof(filename), "%d.download", num);
-
-        file = fopen(filename, "wb");
-        if (!file)
+        if (m_multi != nullptr)
         {
-            fprintf(stderr, "Error opening %s\n", filename);
-            return;
+            curl_multi_cleanup(m_multi);
+            LOG_CORE("curl client \n");
         }
-
-        curl = curl_easy_init();
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
-        curl_easy_setopt(curl, CURLOPT_PRIVATE, file);
-        curl_easy_setopt(curl, CURLOPT_URL, url);
-        curl_multi_add_handle(m_multi, curl);
-        fprintf(stderr, "Added download %s -> %s\n", url, filename);
     }
 
-    static void curl_close_cb(uv_handle_t *handle)
+    void CurlCli::check_multi_finished()
     {
-        struct curl_context *context = (struct curl_context *)handle->data;
-        free(context);
-    }
-
-    static void check_multi_info(CurlCli *cli)
-    {
-        char *done_url;
-        CURLMsg *message;
         int pending;
-        CURL *curl;
-        FILE *file;
-
-        while ((message = curl_multi_info_read(cli->m_multi, &pending)))
+        CURLMsg *message;
+        while ((message = curl_multi_info_read(m_multi, &pending)))
         {
-            switch (message->msg)
+            if (message && message->msg == CURLMSG_DONE)
             {
-            case CURLMSG_DONE:
-                /* Do not use message data after calling curl_multi_remove_handle() and
-                   curl_easy_cleanup(). As per curl_multi_info_read() docs:
-                   "WARNING: The data the returned pointer points to does not survive
-                   calling curl_multi_cleanup, curl_multi_remove_handle or
-                   curl_easy_cleanup." */
-                curl = message->easy_handle;
-
+                auto curl = message->easy_handle;
+                const char *done_url = nullptr;
                 curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &done_url);
-                curl_easy_getinfo(curl, CURLINFO_PRIVATE, &file);
-                printf("%s DONE\n", done_url);
+                LOG_CORE("%s done\n", done_url);
 
-                curl_multi_remove_handle(cli->multi, curl);
+                CurlCli::Instance *o = nullptr;
+                curl_easy_getinfo(curl, CURLINFO_PRIVATE, &o);
+                o->clear();
+                o->done();
+                curl_multi_remove_handle(m_multi, curl);
                 curl_easy_cleanup(curl);
-                if (file)
-                {
-                    fclose(file);
-                }
-                break;
-
-            default:
-                fprintf(stderr, "CURLMSG default\n");
-                break;
             }
         }
     }
-
-    static void on_uv_socket(uv_poll_t *req, int status, int events)
+    void CurlCli::action(curl_socket_t fd, int flags)
     {
         int running_handles;
-        int flags = 0;
-        struct curl_context *context = (struct curl_context *)req->data;
-        (void)status;
-        if (events & UV_READABLE)
-            flags |= CURL_CSELECT_IN;
-        if (events & UV_WRITABLE)
-            flags |= CURL_CSELECT_OUT;
-
-        curl_multi_socket_action(context->uv->multi, context->sockfd, flags,
-                                 &running_handles);
-        check_multi_info(context->uv);
+        curl_multi_socket_action(m_multi, fd, flags, &running_handles);
+        check_multi_finished();
     }
-
-    static int cb_socket(CURL *curl, curl_socket_t s, int action, void *userp, void *socketp)
+    void CurlCli::init_socket(curl_socket_t fd, int action)
     {
-        struct datauv *uv = (struct datauv *)userp;
-        struct curl_context *curl_context;
-        int events = 0;
-        (void)curl;
-
+        auto __get_or_create = [this](auto fd) -> auto
+        {
+            auto it = m_clients.find(fd);
+            if (it == m_clients.end())
+            {
+                auto context = m_clients[fd] = std::make_shared<Context>(fd);
+                return context;
+            }
+            return it->second;
+        };
+        auto context = __get_or_create(fd);
+        if (action == CURL_POLL_IN)
+        {
+            m_task << [](auto _this, auto context) -> coev::awaitable<void>
+            {
+                while (*context)
+                {
+                    co_await context->read_waiter();
+                    if (context)
+                    {
+                        _this->action(context->id(), CURL_CSELECT_IN);
+                    }
+                }
+            }(this, context);
+        }
+        if (action == CURL_POLL_OUT)
+        {
+            m_task << [](auto _this, auto context) -> coev::awaitable<void>
+            {
+                while (*context)
+                {
+                    co_await context->write_waiter();
+                    if (context)
+                    {
+                        _this->action(context->id(), CURL_CSELECT_OUT);
+                    }
+                }
+            }(this, context);
+        }
+    }
+    int CurlCli::cb_socket_event(CURL *curl, curl_socket_t fd, int action, void *data, void *socketp)
+    {
+        LOG_CORE("cb_socket %d action %d data:%p %p\n", fd, action, data, socketp)
+        auto _this = static_cast<CurlCli *>(data);
         switch (action)
         {
         case CURL_POLL_IN:
+            _this->init_socket(fd, CURL_POLL_IN);
+            break;
         case CURL_POLL_OUT:
+            _this->init_socket(fd, CURL_POLL_OUT);
+            break;
         case CURL_POLL_INOUT:
-            curl_context = socketp ? (CurlCli *)socketp : CurlCli(s);
-
-            curl_multi_assign(uv->multi, s, (void *)curl_context);
-
-            if (action != CURL_POLL_IN)
-                events |= UV_WRITABLE;
-            if (action != CURL_POLL_OUT)
-                events |= UV_READABLE;
-
-            uv_poll_start(&curl_context->poll_handle, events, on_uv_socket);
+            _this->init_socket(fd, CURL_POLL_IN);
+            _this->init_socket(fd, CURL_POLL_OUT);
             break;
         case CURL_POLL_REMOVE:
-            if (socketp)
-            {
-                uv_poll_stop(&((struct curl_context *)socketp)->poll_handle);
-                destroy_curl_context((struct curl_context *)socketp);
-                curl_multi_assign(uv->multi, s, NULL);
-            }
+            _this->m_clients.erase(fd);
             break;
         default:
-            abort();
+            LOG_ERR("cb_socket error %d\n", action);
+            break;
         }
-
+        return 0;
+    }
+    int CurlCli::cb_timer(CURLM *multi, long timeout_ms, void *userp)
+    {
+        LOG_CORE("timer %ld \n", timeout_ms)
+        auto _this = static_cast<CurlCli *>(userp);
+        if (timeout_ms < 0)
+        {
+            _this->m_timer.stop();
+        }
+        else if (timeout_ms == 0)
+        {
+            _this->action(CURL_SOCKET_TIMEOUT, 0);
+        }
+        else
+        {
+            _this->m_timer.reset(double(timeout_ms) / 1000, 0);
+        }
         return 0;
     }
 
+    CurlCli::Instance CurlCli::get(const char *url)
+    {
+        auto curl = curl_easy_init();
+        curl_easy_setopt(curl, CURLOPT_URL, url);
+        return {m_multi, curl};
+    }
 }

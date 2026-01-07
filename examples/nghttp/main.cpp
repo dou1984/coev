@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     if (strcmp(argv[1], "server") == 0)
     {
         g_srv_mgr.use_certificate_file("server.pem");
-        g_srv_mgr.use_PrivateKey_file("server.pem");
+        g_srv_mgr.use_private_key_file("server.pem");
         runnable::instance()
             .start(proc_server)
             .join();

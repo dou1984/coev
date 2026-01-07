@@ -17,8 +17,7 @@ awaitable<void> co_parse_dns()
     }
     LOG_INFO("baidu -> %s\n", addr.c_str());
 
-    cosys::stop();
-    co_return;
+        co_return;
 }
 
 int main()

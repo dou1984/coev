@@ -6,18 +6,19 @@
  */
 #include <coev/coev.h>
 
-#define g singleton<coev::co_waitgroup>::instance()
-
 using namespace coev;
 
-async g_test;
+#define g singleton<co_waitgroup>::instance()
+
+async g_waiter;
+async g_t_waiter;
 
 awaitable<int> co_awaitable()
 {
 	g.add();
 
 	LOG_DBG("awaitable begin\n");
-	co_await g_test.suspend();
+	co_await g_waiter.suspend();
 	LOG_DBG("awaitable end\n");
 
 	g.done();
@@ -29,7 +30,7 @@ awaitable<int> co_resume()
 	LOG_DBG("resume begin\n");
 	co_await sleep_for(5);
 	LOG_DBG("resume end\n");
-	g_test.resume();
+	g_waiter.resume();
 
 	g.done();
 	co_return 0;
@@ -42,7 +43,7 @@ awaitable<int> co_awaitable_sleep()
 	LOG_DBG("awaitable sleep\n");
 	co_await sleep_for(1);
 	LOG_DBG("awaitable wakeup\n");
-	co_await g_test.suspend();
+	co_await g_t_waiter.suspend();
 	LOG_DBG("co_awaitable_sleep end\n");
 	g.done();
 	co_return 0;
@@ -53,7 +54,7 @@ awaitable<int> co_awaitable_resume()
 
 	co_await sleep_for(2);
 	LOG_DBG("co_awaitable_resume wakeup\n");
-	g_test.resume();
+	g_t_waiter.resume();
 	g.done();
 	co_return 0;
 }
@@ -64,9 +65,9 @@ awaitable<void> co_await_destroy()
 
 	auto id = co_start << []() -> awaitable<void>
 	{
+		defer(g.done());
 		co_await sleep_for(5);
-		LOG_DBG("error called !!!\n");
-		g.done();
+		std::runtime_error("error called !!!\n");
 	}();
 
 	LOG_DBG("co_await_destroy sleep begin\n");

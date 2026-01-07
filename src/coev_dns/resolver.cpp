@@ -46,7 +46,8 @@ namespace coev
         }
         else
         {
-            auto cli = m_clients[_fd] = std::make_shared<dns_cli>(_fd, m_channel);
+            auto cli = std::make_shared<dns_cli>(_fd, m_channel);
+            m_clients[_fd] = cli;
             return cli;
         }
     }

@@ -63,6 +63,7 @@ namespace coev
 				co_start << [=]() -> awaitable<void>
 				{
 					co_await _f();
+					cosys::stop();
 				}();
 				cosys::start();
 			});

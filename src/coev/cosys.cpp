@@ -51,13 +51,11 @@ namespace coev
 		auto _loop = g_loop.get();
 		auto id = local<co_deliver>::instance().id();
 		ev_run(_loop, 0);
-		ev_loop_destroy(_loop);
 	}
 	void cosys::stop()
 	{
 		local<co_deliver>::instance().stop();
 		auto _loop = g_loop.get();
-		g_loop.set(nullptr);
 		ev_break(_loop, EVBREAK_ALL);
 	}
 

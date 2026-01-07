@@ -25,7 +25,7 @@ awaitable<void> test_timer()
 {
 	co_timer t(3.0, 3.0);
 	t.active();
-	while (true)
+	for (auto i = 0; i < 10; ++i)
 	{
 		co_await t.suspend();
 		LOG_DBG("co_timer %f\n", 3.0);

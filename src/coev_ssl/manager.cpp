@@ -59,7 +59,7 @@ namespace coev::ssl
             exit(INVALID);
         }
     }
-    void manager::use_PrivateKey_file(const char *key_file)
+    void manager::use_private_key_file(const char *key_file)
     {
         if (m_context == nullptr)
         {
