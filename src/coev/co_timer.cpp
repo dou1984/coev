@@ -29,10 +29,8 @@ namespace coev
 	}
 	co_timer::~co_timer()
 	{
-		if (ev_is_active(&m_data))
-		{
-			ev_timer_stop(m_loop, &m_data);
-		}
+		LOG_CORE("timer stop \n");
+		ev_timer_stop(m_loop, &m_data);
 	}
 	int co_timer::stop()
 	{

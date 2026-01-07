@@ -1,35 +1,40 @@
 #include <iostream>
 #include <coev/coev.h>
-#include <coev_nghttp/NghttpSession.h>
+#include <coev_nghttp/co_nghttp2.h>
 
-coev::awaitable<int> co_request()
+using namespace coev;
+
+awaitable<void> co_request()
 {
-    http2::Nghttprequest parser;
-    int fd = co_await parser.connect("157.148.69.80");
+    nghttp2::client parser(nullptr);
+    int fd = co_await parser.connect("157.148.69.186");
 
     if (fd < 0)
     {
         std::cout << "connect failed" << std::endl;
-        co_return -1;
+        co_return;
     }
-    co_await parser.send("GET / HTTP/1.1\r\nHost: www.baidu.com\r\n\r\n");
-    co_return 0;
+    const char w[] = "GET / HTTP/1.1\r\nHost: www.baidu.com\r\n\r\n";
+    co_await parser.send(w, sizeof(w));
 }
 
-coev::awaitable<int> co_response()
+awaitable<void> co_response()
 {
-    http2::Nghttprequest parser;
+    nghttp2::client parser(nullptr);
     int fd = co_await parser.connect("www.baidu.com");
 
     if (fd < 0)
     {
         std::cout << "connect failed" << std::endl;
-        co_return -1;
+        co_return;
     }
-    co_await parser.send()
+    const char w[] = "GET / HTTP/1.1\r\nHost: www.baidu.com\r\n\r\n";
+    co_await parser.send(w, sizeof(w));
 }
 int main()
 {
-    coev::runnable::instance(co_request).join();
+    runnable::instance()
+        .start(co_request)
+        .join();
     return 0;
 }

@@ -58,7 +58,6 @@ namespace coev
 		auto _loop = g_loop.get();
 		ev_break(_loop, EVBREAK_ALL);
 	}
-
 	struct ev_loop *cosys::data()
 	{
 		return g_loop.get();

@@ -8,20 +8,21 @@
 #include "cosys.h"
 #include "sleep_for.h"
 #include "co_timer.h"
+#include "defer.h"
 
 namespace coev
 {
-	awaitable<void> sleep_for(long t)
+	awaitable<void> sleep_for(double t)
 	{
 		co_timer _timer(t, 0);
-		LOG_CORE("sleep_for %lds\n", t);
+		LOG_CORE("sleep_for %fs\n", t);
 		_timer.active();
 		co_await _timer.suspend();
 	}
-	awaitable<void> usleep_for(long t)
+	awaitable<void> usleep_for(double t)
 	{
-		co_timer _timer((float)t / 1000000, 0);
-		LOG_CORE("usleep_for %ldus\n", t);
+		co_timer _timer(t / 1000000, 0);
+		LOG_CORE("usleep_for %fus\n", t);
 		_timer.active();
 		co_await _timer.suspend();
 	}

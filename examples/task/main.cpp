@@ -36,13 +36,11 @@ awaitable<int> proc_task(bool for_all)
 
 awaitable<void> co_task_t()
 {
-	proc_task(true);
-	co_return;
+	co_await proc_task(true);
 }
 awaitable<void> co_task_f()
 {
-	proc_task(false);
-	co_return;
+	co_await proc_task(false);
 }
 
 awaitable<int> co_completed(int t)
@@ -152,7 +150,7 @@ awaitable<void> co_task6()
 }
 int main()
 {
-	set_log_level(LOG_LEVEL_DEBUG);
+	set_log_level(LOG_LEVEL_CORE);
 
 	runnable::instance()
 		.start(co_task_t)

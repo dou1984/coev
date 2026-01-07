@@ -9,6 +9,6 @@
 
 namespace coev
 {
-	awaitable<void> sleep_for(long);
-	awaitable<void> usleep_for(long);
+	awaitable<void> sleep_for(double);
+	awaitable<void> usleep_for(double);
 }
