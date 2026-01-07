@@ -34,10 +34,7 @@ namespace coev
 	}
 	int co_timer::stop()
 	{
-		if (ev_is_active(&m_data))
-		{
-			ev_timer_stop(m_loop, &m_data);
-		}
+		ev_timer_stop(m_loop, &m_data);
 		return 0;
 	}
 	int co_timer::active()
@@ -59,9 +56,7 @@ namespace coev
 	int co_timer::reset(ev_tstamp itimer, ev_tstamp rtimer)
 	{
 		ev_timer_stop(m_loop, &m_data);
-
 		ev_timer_set(&m_data, itimer, rtimer);
-
 		ev_timer_start(m_loop, &m_data);
 		return 0;
 	}

@@ -11,9 +11,10 @@
 #include "cosys.h"
 #include "local.h"
 #include "co_deliver.h"
+#include "io_terminal.h"
+#include "x.h"
 
 #define g_loop local<__ev_loop>::instance()
-
 namespace coev
 {
 	class __ev_loop
@@ -30,19 +31,14 @@ namespace coev
 		{
 			if (m_loop)
 			{
-				LOG_CORE("ev_loop_destroy %p\n", m_loop);
-				auto _loop = m_loop;
-				m_loop = nullptr;
+				auto _loop = X(m_loop);
 				ev_loop_destroy(_loop);
+				LOG_CORE("ev_loop_destroy %p\n", _loop);
 			}
 		}
 		struct ev_loop *get() const
 		{
 			return m_loop;
-		}
-		void set(struct ev_loop *loop)
-		{
-			m_loop = loop;
 		}
 	};
 
@@ -62,5 +58,4 @@ namespace coev
 	{
 		return g_loop.get();
 	}
-
 }

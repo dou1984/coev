@@ -120,7 +120,8 @@ int main(int argc, char **argv)
 	if (method == "server")
 	{
 		pool.start(host.c_str(), port);
-		runnable::instance().start(1, co_server).join();
+		// runnable::instance().start(2, co_server).wait_signal();
+		runnable::instance().start(2, co_server).join();
 	}
 	else if (method == "client")
 	{

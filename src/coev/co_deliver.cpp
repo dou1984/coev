@@ -72,7 +72,7 @@ namespace coev
 		all_delivers.erase(m_tid);
 	}
 
-	int co_deliver::call_resume(co_event *ev)
+	int co_deliver::__call_resume(co_event *ev)
 	{
 		std::lock_guard<std::mutex> _(m_lock);
 		m_waiter.push_back(ev);
@@ -89,22 +89,12 @@ namespace coev
 		_waiter.resume_all();
 		return 0;
 	}
-	bool co_deliver::resume(async &waiter)
-	{
-		auto c = waiter.pop_front();
-		if (c == nullptr)
-		{
-			return false;
-		}
-		auto ev = static_cast<co_event *>(c);
-		return resume(ev);
-	}
 	bool co_deliver::resume(co_event *ev)
 	{
 		std::lock_guard<std::mutex> _(g_mutex);
 		if (auto it = all_delivers.find(ev->id()); it != all_delivers.end())
 		{
-			it->second->call_resume(ev);
+			it->second->__call_resume(ev);
 			return true;
 		}
 		return false;

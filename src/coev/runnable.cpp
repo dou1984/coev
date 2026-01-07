@@ -12,35 +12,34 @@
 #include "co_task.h"
 #include "co_deliver.h"
 #include "sleep_for.h"
+#include "io_terminal.h"
 
 namespace coev
 {
-	void ingore_signal(int sign)
-	{
-		struct sigaction s = {};
-		s.sa_handler = SIG_IGN;
-		s.sa_flags = 0;
-		sigaction(sign, &s, NULL);
-	}
+
 	runnable::runnable()
 	{
 		ingore_signal(SIGPIPE);
+		// intercept_singal();
 	}
 
-	void runnable::join()
+	runnable &runnable::join()
 	{
 		for (auto &it : m_list)
 		{
 			it.join();
 		}
+		return *this;
 	}
-	void runnable::detach()
-	{
-		for (auto &it : m_list)
-		{
-			it.detach();
-		}
-	}
+	// runnable &runnable::wait_signal()
+	// {
+	// 	for (auto &it : m_list)
+	// 	{
+	// 		it.detach();
+	// 	}
+	// 	cosys::start();
+	// 	return *this;
+	// }
 	runnable &runnable::start(const func &_f)
 	{
 		__add(_f);

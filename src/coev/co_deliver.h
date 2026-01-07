@@ -7,6 +7,7 @@
 #pragma once
 #include <ev.h>
 #include <mutex>
+#include <functional>
 #include "async.h"
 #include "co_event.h"
 namespace coev
@@ -17,14 +18,14 @@ namespace coev
 		co_deliver();
 		virtual ~co_deliver();
 
-		static bool resume(async &waiter);
 		static bool resume(co_event *ev);
 		int id() const { return m_tid; }
 		void stop();
 		static void stop(int tid);
+		void for_each(const std::function<void()> &);
 
 	protected:
-		int call_resume(co_event *ev);
+		int __call_resume(co_event *ev);
 
 	private:
 		ev_async m_deliver;

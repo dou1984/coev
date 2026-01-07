@@ -29,7 +29,7 @@ namespace coev
 		runnable &start(const func &_f);
 		runnable &start(int count, const func &_f);
 
-		void join();
-		void detach();
+		runnable &join();
+		// runnable &wait_signal();
 	};
 }
