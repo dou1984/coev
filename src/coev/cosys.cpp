@@ -11,6 +11,7 @@
 #include "cosys.h"
 #include "local.h"
 #include "co_deliver.h"
+#include "co_task.h"
 #include "io_terminal.h"
 #include "x.h"
 
@@ -31,6 +32,7 @@ namespace coev
 		{
 			if (m_loop)
 			{
+				co_start.destroy();
 				auto _loop = X(m_loop);
 				ev_loop_destroy(_loop);
 				LOG_CORE("ev_loop_destroy %p\n", _loop);
@@ -40,6 +42,7 @@ namespace coev
 		{
 			return m_loop;
 		}
+		void reset() { m_loop = nullptr; }
 	};
 
 	void cosys::start()

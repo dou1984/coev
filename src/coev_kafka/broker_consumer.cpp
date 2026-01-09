@@ -33,7 +33,7 @@ coev::awaitable<void> BrokerConsumer::subscriptionManager()
             }
         }
 
-        newSubscriptions.move(std::move(partitionConsumers));
+        newSubscriptions.set(std::move(partitionConsumers));
     }
 }
 

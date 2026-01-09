@@ -16,7 +16,7 @@ static coev::awaitable<int> getExpectation(std::shared_ptr<ProducerError> &err)
 
 static void putExpectation(std::shared_ptr<ProducerError> &p)
 {
-    expectationsPool.set(p);
+    expectationsPool = p;
 }
 
 int VerifyProducerConfig(std::shared_ptr<Config> config)

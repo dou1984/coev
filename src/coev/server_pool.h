@@ -11,25 +11,26 @@
 
 namespace coev
 {
-	template <class SRV>
+	template <class T>
 	class server_pool
 	{
 		int m_fd = INVALID;
-		std::unordered_map<uint64_t, SRV> m_pool;
+		std::unordered_map<uint64_t, T> m_pool;
 		std::mutex m_mutex;
 
 	public:
-		SRV &get()
+		T &get()
 		{
 			auto _tid = gtid();
 			std::lock_guard<std::mutex> _(m_mutex);
 			auto &srv = m_pool[_tid];
 			if (m_fd == INVALID)
 			{
+				LOG_ERR("server is not running\n");
 			}
 			else if (!srv.valid())
 			{
-				srv.insert(m_fd);
+				srv.bind(m_fd);
 			}
 			return srv;
 		}
@@ -51,7 +52,7 @@ namespace coev
 			for (auto it = m_pool.begin(); it != m_pool.end(); ++it)
 			{
 				auto &srv = it->second;
-				if (srv.m_fd != INVALID)
+				if (srv.valid())
 				{
 					srv.__remove();
 				}

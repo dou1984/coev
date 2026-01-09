@@ -18,14 +18,13 @@ namespace coev
         class instance
         {
             client_list &m_connections;
-            
+
         public:
             instance(client_list &pool) : m_this_pool(pool)
             {
             }
             ~instance()
             {
-
             }
         };
 

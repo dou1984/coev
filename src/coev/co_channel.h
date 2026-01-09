@@ -16,13 +16,25 @@ namespace coev
 	class co_channel
 	{
 	public:
-		void move(TYPE &&d)
+		void set(TYPE &&d)
 		{
 			m_waiter.resume(
 				[this, d = std::move(d)]()
 				{ m_data.emplace_back(std::move(d)); });
 		}
 		void set(const TYPE &d)
+		{
+			m_waiter.resume(
+				[this, d]()
+				{ m_data.push_back(d); });
+		}
+		void operator=(TYPE &&d)
+		{
+			m_waiter.resume(
+				[this, d = std::move(d)]()
+				{ m_data.emplace_back(std::move(d)); });
+		}
+		void operator=(const TYPE &d)
 		{
 			m_waiter.resume(
 				[this, d]()

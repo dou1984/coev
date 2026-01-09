@@ -15,12 +15,13 @@ awaitable<void> co_download()
     defer(fclose(file));
 
     CurlCli cli;
-    auto curl = cli.get("www.baidu.com");
+    auto curl = cli.get();
     if (!curl)
     {
         LOG_ERR("download error \n");
         co_return;
     }
+    curl.setopt(CURLOPT_URL, "www.baidu.com");
     curl.setopt(CURLOPT_WRITEDATA, file);
     auto r = co_await curl.action();
     if (r == INVALID)
@@ -54,8 +55,13 @@ awaitable<void> co_upload()
 
     rewind(file);
     CurlCli cli;
-    auto curl = cli.get("0.0.0.0:80");
-
+    auto curl = cli.get();
+    if (curl == nullptr)
+    {
+        LOG_ERR("upload error \n");
+        co_return;
+    }
+    curl.setopt(CURLOPT_URL, "0.0.0.0:80");
     curl.setopt(CURLOPT_READDATA, file);
     curl.setopt(CURLOPT_INFILESIZE_LARGE, filesize);
 

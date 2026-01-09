@@ -13,5 +13,5 @@ void ResponsePromise::Handle(std::string &packets_, KError err)
         return;
     }
 
-    Packets.move(std::move(packets_));
+    Packets.set(std::move(packets_));
 }

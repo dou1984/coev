@@ -230,10 +230,9 @@ namespace coev
         return 0;
     }
 
-    CurlCli::Instance CurlCli::get(const char *url)
+    CurlCli::Instance CurlCli::get()
     {
         auto curl = curl_easy_init();
-        curl_easy_setopt(curl, CURLOPT_URL, url);
         return {m_multi, curl};
     }
 }

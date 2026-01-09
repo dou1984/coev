@@ -83,7 +83,7 @@ namespace coev::tcp
 		}
 		return 0;
 	}
-	int server::insert(int fd)
+	int server::bind(int fd)
 	{
 		m_fd = fd;
 		return __insert();

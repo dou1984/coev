@@ -105,7 +105,8 @@ struct Context
     }
     void done()
     {
-        ch.set(true);
+        // ch.set(true);
+        ch = true;
     }
     coev::co_channel<bool> ch;
 };

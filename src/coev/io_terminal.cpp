@@ -6,7 +6,7 @@
 
 namespace coev
 {
-    /*
+
     ev_signal m_sigint;
     ev_signal m_sigterm;
 
@@ -25,7 +25,7 @@ namespace coev
         ev_signal_start(loop, &m_sigint);
         ev_signal_start(loop, &m_sigterm);
     }
-    */
+
     void ingore_signal(int sign)
     {
         struct sigaction s = {};

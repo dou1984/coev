@@ -116,16 +116,20 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	set_log_level(LOG_LEVEL_DEBUG);
+	set_log_level(LOG_LEVEL_CORE);
 	if (method == "server")
 	{
 		pool.start(host.c_str(), port);
-		// runnable::instance().start(2, co_server).wait_signal();
-		runnable::instance().start(2, co_server).join();
+		runnable::instance()
+			.start(2, co_server)
+			.endless([]()
+					 { pool.stop(); });
 	}
 	else if (method == "client")
 	{
-		runnable::instance().start(4, co_test).join();
+		runnable::instance()
+			.start(4, co_test)
+			.join();
 	}
 	else
 	{

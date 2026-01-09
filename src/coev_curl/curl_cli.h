@@ -33,7 +33,7 @@ namespace coev
     public:
         CurlCli();
         ~CurlCli();
-        Instance get(const char *url);
+        Instance get();
 
     protected:
         std::unordered_map<curl_socket_t, std::shared_ptr<Context>> m_clients;
