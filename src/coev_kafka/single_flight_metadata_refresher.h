@@ -17,6 +17,6 @@ struct singleFlightMetadataRefresher
     coev::awaitable<int> Refresh(const std::vector<std::string> &topics);
     bool RefreshOrQueue(const std::vector<std::string> &topics, coev::co_channel<int> &ch);
 
-    std::shared_ptr<CurrentRefresh> Current;
-    std::shared_ptr<NextRefresh> Next;
+    std::shared_ptr<CurrentRefresh> m_current;
+    std::shared_ptr<NextRefresh> m_next;
 };

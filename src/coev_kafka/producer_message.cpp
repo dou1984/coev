@@ -3,13 +3,13 @@
 #include <cstdint>
 
 ProducerMessage::ProducerMessage()
-    : Offset(0),
-      Partition(0),
-      Retries(0),
-      Flags(static_cast<FlagSet>(0)),
-      SequenceNumber(0),
-      ProducerEpoch(0),
-      hasSequence(false)
+    : m_offset(0),
+      m_partition(0),
+      m_retries(0),
+      m_flags(static_cast<FlagSet>(0)),
+      m_sequence_number(0),
+      m_producer_epoch(0),
+      m_has_sequence(false)
 {
 }
 
@@ -19,24 +19,24 @@ int ProducerMessage::ByteSize(int version) const
 
     if (version >= 2)
     {
-        size = maximumRecordOverhead;
-        for (auto &h : Headers)
+        size = MaximumRecordOverhead;
+        for (auto &h : m_headers)
         {
             size += static_cast<int>(h.Key.size()) + static_cast<int>(h.Value.size()) + 2 * 5;
         }
     }
     else
     {
-        size = producerMessageOverhead;
+        size = ProducerMessageOverhead;
     }
 
-    if (Key)
+    if (m_key)
     {
-        size += Key->Length();
+        size += m_key->Length();
     }
-    if (Value)
+    if (m_value)
     {
-        size += Value->Length();
+        size += m_value->Length();
     }
 
     return size;
@@ -44,9 +44,9 @@ int ProducerMessage::ByteSize(int version) const
 
 void ProducerMessage::Clear()
 {
-    Flags = static_cast<FlagSet>(0);
-    Retries = 0;
-    SequenceNumber = 0;
-    ProducerEpoch = 0;
-    hasSequence = false;
+    m_flags = static_cast<FlagSet>(0);
+    m_retries = 0;
+    m_sequence_number = 0;
+    m_producer_epoch = 0;
+    m_has_sequence = false;
 }

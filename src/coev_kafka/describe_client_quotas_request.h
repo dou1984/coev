@@ -14,32 +14,32 @@
 
 struct QuotaFilterComponent
 {
-    std::string EntityType;
-    QuotaMatchType MatchType;
-    std::string Match;
+    std::string m_entity_type;
+    QuotaMatchType m_match_type;
+    std::string m_match;
 
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
 };
 
-struct DescribeClientQuotasRequest : protocolBody
+struct DescribeClientQuotasRequest : protocol_body
 {
-    int16_t Version;
-    std::vector<QuotaFilterComponent> Components;
-    bool Strict;
+    int16_t m_version;
+    std::vector<QuotaFilterComponent> m_components;
+    bool m_strict;  
     DescribeClientQuotasRequest() = default;
-    DescribeClientQuotasRequest(int16_t v) : Version(v)
+    DescribeClientQuotasRequest(int16_t v) : m_version(v)
     {
     }
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible() const;
     static bool isFlexibleVersion(int16_t version);
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
 };
 std::shared_ptr<DescribeClientQuotasRequest> NewDescribeClientQuotasRequest(KafkaVersion kafkaVersion, const std::vector<QuotaFilterComponent> &components, bool strict);

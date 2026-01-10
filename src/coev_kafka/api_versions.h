@@ -6,15 +6,15 @@
 
 struct ApiVersionRange
 {
-    int16_t minVersion;
-    int16_t maxVersion;
+    int16_t m_min_version = 0;
+    int16_t m_max_version = 0;
 
-    ApiVersionRange(int16_t min = 0, int16_t max = 0) : minVersion(min), maxVersion(max) {}
+    ApiVersionRange(int16_t min = 0, int16_t max = 0) : m_min_version(min), m_max_version(max) {}
 };
 
 using ApiVersionMap = std::map<int16_t, ApiVersionRange>;
 
-void restrictApiVersion(std::shared_ptr<protocolBody> pb, const ApiVersionMap &brokerVersions);
+void restrictApiVersion(std::shared_ptr<protocol_body> pb, const ApiVersionMap &brokerVersions);
 
 inline constexpr int16_t apiKeyProduce = 0;
 inline constexpr int16_t apiKeyFetch = 1;

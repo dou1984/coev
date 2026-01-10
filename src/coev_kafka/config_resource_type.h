@@ -14,9 +14,9 @@ enum ConfigResourceType : int8_t
 
 struct ConfigResource
 {
-    ConfigResourceType Type;
-    std::string Name;
-    std::vector<std::string> ConfigNames;
+    ConfigResourceType m_type;
+    std::string m_name;
+    std::vector<std::string> m_config_names;
 };
 
 std::string toString(ConfigResourceType crt);

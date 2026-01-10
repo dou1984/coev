@@ -12,28 +12,28 @@
 #include "records.h"
 #include "version.h"
 
-struct ProduceRequest : protocolBody
+struct ProduceRequest : protocol_body
 {
 
-    std::string TransactionalID;
-    RequiredAcks Acks = RequiredAcks::WaitForLocal;
-    std::chrono::milliseconds Timeout;
-    int16_t Version = 0;
+    std::string m_transactional_id;
+    RequiredAcks m_acks = RequiredAcks::WaitForLocal;
+    std::chrono::milliseconds m_timeout;
+    int16_t m_version = 0;
 
-    std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<Records>>> records;
+    std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<Records>>> m_records;
 
     ProduceRequest() = default;
-    ProduceRequest(int16_t v) : Version(v)
+    ProduceRequest(int16_t v) : m_version(v)
     {
     }
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
 
     void EnsureRecords(const std::string &topic, int32_t partition);
     void AddMessage(const std::string &topic, int32_t partition, std::shared_ptr<Message> msg);

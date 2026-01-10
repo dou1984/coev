@@ -98,25 +98,25 @@ int request::encode(PEncoder &pe)
 {
     auto lengthField = std::make_shared<LengthField>();
     pe.push(lengthField);
-    pe.putInt16(body->key());
-    pe.putInt16(body->version());
-    pe.putInt32(correlationID);
+    pe.putInt16(m_body->key());
+    pe.putInt16(m_body->version());
+    pe.putInt32(m_correlation_id);
 
     int err = 0;
-    if (body->headerVersion() >= 1)
+    if (m_body->headerVersion() >= 1)
     {
-        err = pe.putString(clientID);
+        err = pe.putString(m_client_id);
         if (err != 0)
         {
             return err;
         }
     }
 
-    if (body->headerVersion() >= 2)
+    if (m_body->headerVersion() >= 2)
     {
         pe.putUVarint(0);
     }
-    err = prepareFlexibleEncoder(&pe, body);
+    err = prepareFlexibleEncoder(&pe, m_body);
     if (err != 0)
     {
         return err;
@@ -143,20 +143,20 @@ int request::decode(PDecoder &pd)
     err = pd.getInt32(corrID);
     if (err != 0)
         return err;
-    correlationID = corrID;
+    m_correlation_id = corrID;
 
     err = pd.getString(clientID);
     if (err != 0)
         return err;
-    this->clientID = clientID;
+    this->m_client_id = clientID;
 
-    body = allocateBody(key, version);
-    if (!body)
+    m_body = allocateBody(key, version);
+    if (!m_body)
     {
         return -1;
     }
 
-    if (body->headerVersion() >= 2)
+    if (m_body->headerVersion() >= 2)
     {
         uint64_t tagCount;
         err = pd.getUVariant(tagCount);
@@ -164,7 +164,7 @@ int request::decode(PDecoder &pd)
             return err;
     }
 
-    return prepareFlexibleDecoder(&pd, body, version);
+    return prepareFlexibleDecoder(&pd, m_body, version);
 }
 
 coev::awaitable<int> decodeRequest(std::shared_ptr<Broker> &broker, std::shared_ptr<request> &req, int &size)
@@ -211,7 +211,7 @@ coev::awaitable<int> decodeRequest(std::shared_ptr<Broker> &broker, std::shared_
     co_return 0;
 }
 
-std::shared_ptr<protocolBody> allocateBody(int16_t key, int16_t version)
+std::shared_ptr<protocol_body> allocateBody(int16_t key, int16_t version)
 {
     switch (key)
     {

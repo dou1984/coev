@@ -9,7 +9,7 @@ int ControlRecord::decode(PDecoder &key, PDecoder &value)
     {
         return ErrDecodeError;
     }
-    Version = tempVersion;
+    m_version = tempVersion;
 
     int16_t recordType;
     success = key.getInt16(recordType);
@@ -21,24 +21,24 @@ int ControlRecord::decode(PDecoder &key, PDecoder &value)
     switch (recordType)
     {
     case 0:
-        Type = ControlRecordType::ControlRecordAbort;
+        m_type = ControlRecordType::ControlRecordAbort;
         break;
     case 1:
-        Type = ControlRecordType::ControlRecordCommit;
+        m_type = ControlRecordType::ControlRecordCommit;
         break;
     default:
-        Type = ControlRecordType::ControlRecordUnknown;
+        m_type = ControlRecordType::ControlRecordUnknown;
         break;
     }
 
-    if (Type != ControlRecordType::ControlRecordUnknown)
+    if (m_type != ControlRecordType::ControlRecordUnknown)
     {
         success = value.getInt16(tempVersion);
         if (!success)
         {
             return ErrDecodeError;
         }
-        Version = tempVersion;
+        m_version = tempVersion;
 
         int32_t tempCoordinatorEpoch;
         success = value.getInt32(tempCoordinatorEpoch);
@@ -46,7 +46,7 @@ int ControlRecord::decode(PDecoder &key, PDecoder &value)
         {
             return ErrDecodeError;
         }
-        CoordinatorEpoch = tempCoordinatorEpoch;
+        m_coordinator_epoch = tempCoordinatorEpoch;
     }
 
     return ErrNoError;
@@ -54,11 +54,11 @@ int ControlRecord::decode(PDecoder &key, PDecoder &value)
 
 int ControlRecord::encode(PEncoder &key, PEncoder &value)
 {
-    value.putInt16(Version);
-    value.putInt32(CoordinatorEpoch);
-    key.putInt16(Version);
+    value.putInt16(m_version);
+    value.putInt32(m_coordinator_epoch);
+    key.putInt16(m_version);
 
-    switch (Type)
+    switch (m_type)
     {
     case ControlRecordType::ControlRecordAbort:
         key.putInt16(0);

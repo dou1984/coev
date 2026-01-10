@@ -5,24 +5,24 @@
 
 auto NoNode = std::make_shared<Broker>(-1, ":-1");
 
-void FindCoordinatorResponse::setVersion(int16_t v)
+void FindCoordinatorResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int FindCoordinatorResponse::decode(PDecoder &pd, int16_t version)
 {
     if (version >= 1)
     {
-        Version = version;
-        int err = pd.getDurationMs(ThrottleTime);
+        m_version = version;
+        int err = pd.getDurationMs(m_throttle_time);
         if (err != 0)
         {
             return err;
         }
     }
 
-    int err = pd.getKError(Err);
+    int err = pd.getKError(m_err);
     if (err != 0)
     {
         return err;
@@ -30,7 +30,7 @@ int FindCoordinatorResponse::decode(PDecoder &pd, int16_t version)
 
     if (version >= 1)
     {
-        err = pd.getNullableString(ErrMsg);
+        err = pd.getNullableString(m_err_msg);
         if (err != 0)
         {
             return err;
@@ -44,13 +44,13 @@ int FindCoordinatorResponse::decode(PDecoder &pd, int16_t version)
         return err;
     }
 
-    if (coordinator->m_Addr != ":0")
+    if (coordinator->m_addr != ":0")
     {
-        Coordinator = coordinator;
+        m_coordinator = coordinator;
     }
     else
     {
-        Coordinator.reset(); // addr == ":0" 视为空节点
+        m_coordinator.reset(); // addr == ":0" 视为空节点
     }
 
     return 0;
@@ -58,22 +58,22 @@ int FindCoordinatorResponse::decode(PDecoder &pd, int16_t version)
 
 int FindCoordinatorResponse::encode(PEncoder &pe)
 {
-    if (Version >= 1)
+    if (m_version >= 1)
     {
-        pe.putDurationMs(ThrottleTime);
+        pe.putDurationMs(m_throttle_time);
     }
 
-    pe.putKError(Err);
+    pe.putKError(m_err);
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
 
-        int err = pe.putNullableString(ErrMsg);
+        int err = pe.putNullableString(m_err_msg);
         if (err != 0)
             return err;
     }
 
-    Broker *coord = Coordinator ? Coordinator.get() : NoNode.get();
+    Broker *coord = m_coordinator ? m_coordinator.get() : NoNode.get();
     int err = coord->encode(pe, 0); // 硬编码使用 Broker 编码版本 0
     if (err != 0)
         return err;
@@ -88,7 +88,7 @@ int16_t FindCoordinatorResponse::key() const
 
 int16_t FindCoordinatorResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t FindCoordinatorResponse::headerVersion() const
@@ -96,14 +96,14 @@ int16_t FindCoordinatorResponse::headerVersion() const
     return 0;
 }
 
-bool FindCoordinatorResponse::isValidVersion() const
+bool FindCoordinatorResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 2;
+    return m_version >= 0 && m_version <= 2;
 }
 
-KafkaVersion FindCoordinatorResponse::requiredVersion() const
+KafkaVersion FindCoordinatorResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 2:
         return V2_0_0_0;
@@ -116,5 +116,5 @@ KafkaVersion FindCoordinatorResponse::requiredVersion() const
 
 std::chrono::milliseconds FindCoordinatorResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }

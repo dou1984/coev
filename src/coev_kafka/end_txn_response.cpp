@@ -1,25 +1,25 @@
 #include "version.h"
 #include "end_txn_response.h"
 
-void EndTxnResponse::setVersion(int16_t v)
+void EndTxnResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int EndTxnResponse::encode(PEncoder &pe)
 {
-    pe.putDurationMs(ThrottleTime);
-    pe.putKError(Err);
+    pe.putDurationMs(m_throttle_time);
+    pe.putKError(m_err);
     return true;
 }
 
 int EndTxnResponse::decode(PDecoder &pd, int16_t)
 {
-    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
+    if (pd.getDurationMs(m_throttle_time) != ErrNoError)
     {
         return ErrDecodeError;
     }
-    if (pd.getKError(Err) != ErrNoError)
+    if (pd.getKError(m_err) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -33,7 +33,7 @@ int16_t EndTxnResponse::key() const
 
 int16_t EndTxnResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t EndTxnResponse::headerVersion() const
@@ -41,14 +41,14 @@ int16_t EndTxnResponse::headerVersion() const
     return 0;
 }
 
-bool EndTxnResponse::isValidVersion() const
+bool EndTxnResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 2;
+    return m_version >= 0 && m_version <= 2;
 }
 
-KafkaVersion EndTxnResponse::requiredVersion() const
+KafkaVersion EndTxnResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 2:
         return V2_7_0_0;
@@ -61,5 +61,5 @@ KafkaVersion EndTxnResponse::requiredVersion() const
 
 std::chrono::milliseconds EndTxnResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }

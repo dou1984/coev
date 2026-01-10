@@ -20,20 +20,20 @@ int encode(std::shared_ptr<IEncoder> e, std::string &out, std::shared_ptr<metric
         throw PacketEncodingError{"encoding failed"};
     }
 
-    if (prepEnc->Length < 0 || prepEnc->Length > static_cast<int>(MaxRequestSize))
+    if (prepEnc->m_length < 0 || prepEnc->m_length > static_cast<int>(MaxRequestSize))
     {
-        throw PacketEncodingError{"invalid request size (" + std::to_string(prepEnc->Length) + ")"};
+        throw PacketEncodingError{"invalid request size (" + std::to_string(prepEnc->m_length) + ")"};
     }
 
     auto realEnc = std::make_shared<realEncoder>();
-    realEnc->Raw.resize(prepEnc->Length);
-    realEnc->Registry = metricRegistry;
+    realEnc->m_raw.resize(prepEnc->m_length);
+    realEnc->m_metric_registry = metricRegistry;
     if (!prepareFlexibleEncoder(realEnc.get(), e))
     {
         throw PacketEncodingError{"encoding failed"};
     }
 
-    out.insert(out.end(), realEnc->Raw.begin(), realEnc->Raw.end());
+    out.insert(out.end(), realEnc->m_raw.begin(), realEnc->m_raw.end());
     return ErrNoError;
 }
 int decode(const std::string &buf, std::shared_ptr<IDecoder> in, std::shared_ptr<metrics::Registry> metricRegistry)
@@ -44,17 +44,17 @@ int decode(const std::string &buf, std::shared_ptr<IDecoder> in, std::shared_ptr
     }
 
     realDecoder helper;
-    helper.Raw = buf;
-    helper.MetricRegistry = metricRegistry;
+    helper.m_raw = buf;
+    helper.m_metric_registry = metricRegistry;
 
     if (!in->decode(helper))
     {
         return ErrDecodeError;
     }
 
-    if (helper.Off != static_cast<int>(buf.size()))
+    if (helper.m_offset != static_cast<int>(buf.size()))
     {
-        throw PacketDecodingError{"invalid length: buf=" + std::to_string(buf.size()) + " decoded=" + std::to_string(helper.Off)};
+        throw PacketDecodingError{"invalid length: buf=" + std::to_string(buf.size()) + " decoded=" + std::to_string(helper.m_offset)};
     }
 
     return ErrNoError;
@@ -68,8 +68,8 @@ bool versionedDecode(const std::string &buf, const std::shared_ptr<VDecoder> &in
     }
 
     auto baseHelper = std::make_shared<realDecoder>();
-    baseHelper->Raw = buf;
-    baseHelper->MetricRegistry = metricRegistry;
+    baseHelper->m_raw = buf;
+    baseHelper->m_metric_registry = metricRegistry;
 
     auto err = prepareFlexibleDecoder(baseHelper.get(), in, version);
     if (err)
@@ -88,9 +88,9 @@ bool versionedDecode(const std::string &buf, const std::shared_ptr<VDecoder> &in
 
 int prepareFlexibleDecoder(PDecoder *pd, std::shared_ptr<VDecoder> req, int16_t version)
 {
-    if (auto fv = std::dynamic_pointer_cast<flexibleVersion>(req))
+    if (auto fv = std::dynamic_pointer_cast<flexible_version>(req))
     {
-        if (fv->isFlexibleVersion(version))
+        if (fv->is_flexible_version(version))
         {
             return req->decode(*dynamic_cast<realFlexibleDecoder *>(pd), version);
         }
@@ -101,9 +101,9 @@ int prepareFlexibleDecoder(PDecoder *pd, std::shared_ptr<VDecoder> req, int16_t 
 
 int prepareFlexibleEncoder(PEncoder *pe, std::shared_ptr<IEncoder> req)
 {
-    if (auto fv = std::dynamic_pointer_cast<flexibleVersion>(req))
+    if (auto fv = std::dynamic_pointer_cast<flexible_version>(req))
     {
-        if (fv->isFlexible())
+        if (fv->is_flexible())
         {
             if (dynamic_cast<prepEncoder *>(pe))
             {

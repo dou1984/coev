@@ -7,16 +7,16 @@
 #include "packet_encoder.h"
 #include "packet_decoder.h"
 #include "protocol_body.h"
-struct DeleteGroupsResponse : protocolBody
+struct DeleteGroupsResponse : protocol_body
 {
-    int16_t Version;
-    std::chrono::milliseconds ThrottleTime;
-    std::map<std::string, KError> GroupErrorCodes;
+    int16_t m_version;
+    std::chrono::milliseconds m_throttle_time;
+    std::map<std::string, KError> m_group_error_codes;
     DeleteGroupsResponse() = default;
-    DeleteGroupsResponse(int16_t v) : Version(v)
+    DeleteGroupsResponse(int16_t v) : m_version(v)
     {
     }
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
@@ -24,7 +24,7 @@ struct DeleteGroupsResponse : protocolBody
     int16_t headerVersion() const;
     bool isFlexible() const;
     static bool isFlexibleVersion(int16_t version);
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
     std::chrono::milliseconds throttleTime() const;
 };

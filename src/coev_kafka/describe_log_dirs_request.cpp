@@ -1,30 +1,30 @@
 #include "version.h"
 #include "describe_log_dirs_request.h"
 
-void DescribeLogDirsRequest::setVersion(int16_t v)
+void DescribeLogDirsRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int DescribeLogDirsRequest::encode(PEncoder &pe)
 {
-    int32_t length = static_cast<int32_t>(DescribeTopics.size());
+    int32_t length = static_cast<int32_t>(m_describe_topics.size());
     if (length == 0)
     {
         length = -1;
     }
-    if (!pe.putArrayLength(length))
+    if (pe.putArrayLength(length) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &d : DescribeTopics)
+    for (auto &d : m_describe_topics)
     {
-        if (!pe.putString(d.Topic))
+        if (pe.putString(d.m_topic) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        if (!pe.putInt32Array(d.PartitionIDs))
+        if (pe.putInt32Array(d.m_partition_ids) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -32,12 +32,12 @@ int DescribeLogDirsRequest::encode(PEncoder &pe)
     }
 
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int DescribeLogDirsRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
     int32_t n;
     if (pd.getArrayLength(n) != ErrNoError)
     {
@@ -57,9 +57,9 @@ int DescribeLogDirsRequest::decode(PDecoder &pd, int16_t version)
         {
             return ErrDecodeError;
         }
-        topics[i].Topic = topic;
+        topics[i].m_topic = topic;
 
-        if (pd.getInt32Array(topics[i].PartitionIDs) != ErrNoError)
+        if (pd.getInt32Array(topics[i].m_partition_ids) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -70,7 +70,7 @@ int DescribeLogDirsRequest::decode(PDecoder &pd, int16_t version)
             return ErrDecodeError;
         }
     }
-    DescribeTopics = std::move(topics);
+    m_describe_topics = std::move(topics);
 
     int32_t dummy;
     if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
@@ -87,26 +87,26 @@ int16_t DescribeLogDirsRequest::key() const
 
 int16_t DescribeLogDirsRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t DescribeLogDirsRequest::headerVersion() const
 {
-    if (Version >= 2)
+    if (m_version >= 2)
     {
         return 2;
     }
     return 1;
 }
 
-bool DescribeLogDirsRequest::isValidVersion() const
+bool DescribeLogDirsRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 4;
+    return m_version >= 0 && m_version <= 4;
 }
 
 bool DescribeLogDirsRequest::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool DescribeLogDirsRequest::isFlexibleVersion(int16_t version)
@@ -114,9 +114,9 @@ bool DescribeLogDirsRequest::isFlexibleVersion(int16_t version)
     return version >= 2;
 }
 
-KafkaVersion DescribeLogDirsRequest::requiredVersion() const
+KafkaVersion DescribeLogDirsRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 4:
         return V3_3_0_0;

@@ -14,10 +14,10 @@
 
 struct CreatableTopicConfigs : VEncoder, VDecoder
 {
-    std::string Value;
-    bool ReadOnly;
-    ConfigSource ConfigSource_;
-    bool IsSensitive;
+    std::string m_value;
+    bool m_read_only;
+    ConfigSource m_config_source;
+    bool m_is_sensitive;
 
     int encode(PEncoder &pe, int16_t version);
     int decode(PDecoder &pd, int16_t version);
@@ -25,10 +25,10 @@ struct CreatableTopicConfigs : VEncoder, VDecoder
 
 struct CreatableTopicResult : VEncoder, VDecoder
 {
-    KError TopicConfigErrorCode;
-    int32_t NumPartitions;
-    int16_t ReplicationFactor;
-    std::map<std::string, std::shared_ptr<CreatableTopicConfigs>> Configs;
+    KError m_topic_config_error_code;
+    int32_t m_num_partitions;
+    int16_t m_replication_factor;
+    std::map<std::string, std::shared_ptr<CreatableTopicConfigs>> m_configs;
 
     int encode(PEncoder &pe, int16_t version);
     int decode(PDecoder &pd, int16_t version);
@@ -36,26 +36,26 @@ struct CreatableTopicResult : VEncoder, VDecoder
 
 struct TopicError : VEncoder, VDecoder
 {
-    KError Err;
-    std::string ErrMsg;
+    KError m_err;
+    std::string m_err_msg;
 
     std::string Error() const;
     int encode(PEncoder &pe, int16_t version);
     int decode(PDecoder &pd, int16_t version);
 };
 
-struct CreateTopicsResponse : protocolBody
+struct CreateTopicsResponse : protocol_body
 {
-    int16_t Version;
-    std::chrono::milliseconds ThrottleTime;
-    std::map<std::string, std::shared_ptr<TopicError>> TopicErrors;
-    std::map<std::string, std::shared_ptr<CreatableTopicResult>> TopicResults;
+    int16_t m_version;
+    std::chrono::milliseconds m_throttle_time;
+    std::map<std::string, std::shared_ptr<TopicError>> m_topic_errors;
+    std::map<std::string, std::shared_ptr<CreatableTopicResult>> m_topic_results;
     CreateTopicsResponse() = default;
-    CreateTopicsResponse(int16_t v) : Version(v)
+    CreateTopicsResponse(int16_t v) : m_version(v)
     {
     }
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
@@ -63,7 +63,7 @@ struct CreateTopicsResponse : protocolBody
     int16_t headerVersion() const;
     bool isFlexible() const;
     static bool isFlexibleVersion(int16_t version);
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
     std::chrono::milliseconds throttleTime() const;
 };

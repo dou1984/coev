@@ -4,43 +4,43 @@
 
 int PartitionMetadata::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
-    if (int err = pd.getKError(Err); err != 0)
+    m_version = version;
+    if (int err = pd.getKError(m_err); err != 0)
     {
         return err;
     }
 
-    if (int err = pd.getInt32(ID); err != 0)
+    if (int err = pd.getInt32(m_id); err != 0)
     {
         return err;
     }
 
-    if (int err = pd.getInt32(Leader); err != 0)
+    if (int err = pd.getInt32(m_leader); err != 0)
     {
         return err;
     }
 
-    if (Version >= 7)
+    if (m_version >= 7)
     {
-        if (int err = pd.getInt32(LeaderEpoch); err != 0)
+        if (int err = pd.getInt32(m_leader_epoch); err != 0)
         {
             return err;
         }
     }
 
-    if (int err = pd.getInt32Array(Replicas); err != 0)
+    if (int err = pd.getInt32Array(m_replicas); err != 0)
     {
         return err;
     }
 
-    if (int err = pd.getInt32Array(Isr); err != 0)
+    if (int err = pd.getInt32Array(m_isr); err != 0)
     {
         return err;
     }
 
-    if (Version >= 5)
+    if (m_version >= 5)
     {
-        if (int err = pd.getInt32Array(OfflineReplicas); err != 0)
+        if (int err = pd.getInt32Array(m_offline_replicas); err != 0)
         {
             return err;
         }
@@ -53,31 +53,31 @@ int PartitionMetadata::decode(PDecoder &pd, int16_t version)
 
 int PartitionMetadata::encode(PEncoder &pe, int16_t version)
 {
-    Version = version;
-    pe.putKError(Err);
+    m_version = version;
+    pe.putKError(m_err);
 
-    pe.putInt32(ID);
+    pe.putInt32(m_id);
 
-    pe.putInt32(Leader);
+    pe.putInt32(m_leader);
 
-    if (Version >= 7)
+    if (m_version >= 7)
     {
-        pe.putInt32(LeaderEpoch);
+        pe.putInt32(m_leader_epoch);
     }
 
-    if (int err = pe.putInt32Array(Replicas); err != 0)
+    if (int err = pe.putInt32Array(m_replicas); err != 0)
     {
         return err;
     }
 
-    if (int err = pe.putInt32Array(Isr); err != 0)
+    if (int err = pe.putInt32Array(m_isr); err != 0)
     {
         return err;
     }
 
-    if (Version >= 5)
+    if (m_version >= 5)
     {
-        if (int err = pe.putInt32Array(OfflineReplicas); err != 0)
+        if (int err = pe.putInt32Array(m_offline_replicas); err != 0)
         {
             return err;
         }
@@ -89,8 +89,8 @@ int PartitionMetadata::encode(PEncoder &pe, int16_t version)
 
 int TopicMetadata::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
-    if (int err = pd.getKError(Err); err != 0)
+    m_version = version;
+    if (int err = pd.getKError(m_err); err != 0)
     {
         return err;
     }
@@ -100,7 +100,7 @@ int TopicMetadata::decode(PDecoder &pd, int16_t version)
         return err;
     }
 
-    if (Version >= 10)
+    if (m_version >= 10)
     {
         std::string uuidBytes;
         if (int err = pd.getRawBytes(16, uuidBytes); err != 0)
@@ -113,7 +113,7 @@ int TopicMetadata::decode(PDecoder &pd, int16_t version)
         }
     }
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
         if (int err = pd.getBool(IsInternal); err != 0)
         {
@@ -130,14 +130,14 @@ int TopicMetadata::decode(PDecoder &pd, int16_t version)
     for (int32_t i = 0; i < n; ++i)
     {
         auto block = std::make_shared<PartitionMetadata>();
-        if (int err = block->decode(pd, Version); err != 0)
+        if (int err = block->decode(pd, m_version); err != 0)
         {
             return err;
         }
         Partitions[i] = block;
     }
 
-    if (Version >= 8)
+    if (m_version >= 8)
     {
         if (int err = pd.getInt32(TopicAuthorizedOperations); err != 0)
         {
@@ -152,15 +152,15 @@ int TopicMetadata::decode(PDecoder &pd, int16_t version)
 
 int TopicMetadata::encode(PEncoder &pe, int16_t version)
 {
-    Version = version;
-    pe.putKError(Err);
+    m_version = version;
+    pe.putKError(m_err);
 
     if (int err = pe.putString(Name); err != 0)
     {
         return err;
     }
 
-    if (Version >= 10)
+    if (m_version >= 10)
     {
         std::string uuidBytes(Uuid_.data.begin(), Uuid_.data.end());
         if (int err = pe.putRawBytes(uuidBytes); err != 0)
@@ -169,7 +169,7 @@ int TopicMetadata::encode(PEncoder &pe, int16_t version)
         }
     }
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
         pe.putBool(IsInternal);
     }
@@ -180,13 +180,13 @@ int TopicMetadata::encode(PEncoder &pe, int16_t version)
     }
     for (auto &block : Partitions)
     {
-        if (int err = block->encode(pe, Version); err != 0)
+        if (int err = block->encode(pe, m_version); err != 0)
         {
             return err;
         }
     }
 
-    if (Version >= 8)
+    if (m_version >= 8)
     {
         pe.putInt32(TopicAuthorizedOperations);
     }
@@ -195,17 +195,17 @@ int TopicMetadata::encode(PEncoder &pe, int16_t version)
     return 0;
 }
 
-void MetadataResponse::setVersion(int16_t v)
+void MetadataResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int MetadataResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
-    if (Version >= 3)
+    m_version = version;
+    if (m_version >= 3)
     {
-        if (int err = pd.getDurationMs(ThrottleTime); err != 0)
+        if (int err = pd.getDurationMs(m_throttle_time); err != 0)
         {
             return err;
         }
@@ -228,7 +228,7 @@ int MetadataResponse::decode(PDecoder &pd, int16_t version)
         Brokers[i] = broker;
     }
 
-    if (Version >= 2)
+    if (m_version >= 2)
     {
         if (int err = pd.getNullableString(ClusterID); err != 0)
         {
@@ -236,7 +236,7 @@ int MetadataResponse::decode(PDecoder &pd, int16_t version)
         }
     }
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
         if (int err = pd.getInt32(ControllerID); err != 0)
         {
@@ -261,7 +261,7 @@ int MetadataResponse::decode(PDecoder &pd, int16_t version)
         Topics[i] = topic;
     }
 
-    if (Version >= 8)
+    if (m_version >= 8)
     {
         if (int err = pd.getInt32(ClusterAuthorizedOperations); err != 0)
         {
@@ -276,9 +276,9 @@ int MetadataResponse::decode(PDecoder &pd, int16_t version)
 
 int MetadataResponse::encode(PEncoder &pe)
 {
-    if (Version >= 3)
+    if (m_version >= 3)
     {
-        pe.putDurationMs(ThrottleTime);
+        pe.putDurationMs(m_throttle_time);
     }
     int err = ErrNoError;
     if (err = pe.putArrayLength(static_cast<int32_t>(Brokers.size())); err != 0)
@@ -288,13 +288,13 @@ int MetadataResponse::encode(PEncoder &pe)
 
     for (auto &broker : Brokers)
     {
-        if (int err = broker->encode(pe, Version); err != 0)
+        if (int err = broker->encode(pe, m_version); err != 0)
         {
             return err;
         }
     }
 
-    if (Version >= 2)
+    if (m_version >= 2)
     {
         if (int err = pe.putNullableString(ClusterID); err != 0)
         {
@@ -302,7 +302,7 @@ int MetadataResponse::encode(PEncoder &pe)
         }
     }
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
         pe.putInt32(ControllerID);
     }
@@ -313,13 +313,13 @@ int MetadataResponse::encode(PEncoder &pe)
     }
     for (auto &block : Topics)
     {
-        if (int err = block->encode(pe, Version); err != 0)
+        if (int err = block->encode(pe, m_version); err != 0)
         {
             return err;
         }
     }
 
-    if (Version >= 8)
+    if (m_version >= 8)
     {
         pe.putInt32(ClusterAuthorizedOperations);
     }
@@ -335,12 +335,12 @@ int16_t MetadataResponse::key() const
 
 int16_t MetadataResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t MetadataResponse::headerVersion() const
 {
-    if (Version < 9)
+    if (m_version < 9)
     {
         return 0;
     }
@@ -350,14 +350,14 @@ int16_t MetadataResponse::headerVersion() const
     }
 }
 
-bool MetadataResponse::isValidVersion() const
+bool MetadataResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 10;
+    return m_version >= 0 && m_version <= 10;
 }
 
 bool MetadataResponse::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool MetadataResponse::isFlexibleVersion(int16_t version) const
@@ -365,9 +365,9 @@ bool MetadataResponse::isFlexibleVersion(int16_t version) const
     return version >= 9;
 }
 
-KafkaVersion MetadataResponse::requiredVersion() const
+KafkaVersion MetadataResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 10:
         return V2_8_0_0;
@@ -397,14 +397,14 @@ KafkaVersion MetadataResponse::requiredVersion() const
 
 std::chrono::milliseconds MetadataResponse::throttleTime() const
 {
-    return std::chrono::milliseconds(ThrottleTime);
+    return std::chrono::milliseconds(m_throttle_time);
 }
 
 void MetadataResponse::AddBroker(const std::string &addr, int32_t id)
 {
     auto broker = std::make_shared<Broker>();
-    broker->m_ID = id;
-    broker->m_Addr = addr;
+    broker->m_id = id;
+    broker->m_addr = addr;
     Brokers.push_back(broker);
 }
 
@@ -414,14 +414,14 @@ std::shared_ptr<TopicMetadata> MetadataResponse::AddTopic(const std::string &top
     {
         if (tm->Name == topic)
         {
-            tm->Err = (KError)err;
+            tm->m_err = (KError)err;
             return tm;
         }
     }
 
     auto tmatch = std::make_shared<TopicMetadata>();
     tmatch->Name = topic;
-    tmatch->Err = (KError)err;
+    tmatch->m_err = (KError)err;
     Topics.push_back(tmatch);
     return tmatch;
 }
@@ -433,24 +433,24 @@ int MetadataResponse::AddTopicPartition(const std::string &topic, int32_t partit
     auto tmatch = AddTopic(topic, 0);
     for (auto &pm : tmatch->Partitions)
     {
-        if (pm->ID == partition)
+        if (pm->m_id == partition)
         {
-            pm->Leader = brokerID;
-            pm->Replicas = replicas.empty() ? std::vector<int32_t>{} : replicas;
-            pm->Isr = isr.empty() ? std::vector<int32_t>{} : isr;
-            pm->OfflineReplicas = offline.empty() ? std::vector<int32_t>{} : offline;
-            pm->Err = (KError)err;
+            pm->m_leader = brokerID;
+            pm->m_replicas = replicas.empty() ? std::vector<int32_t>{} : replicas;
+            pm->m_isr = isr.empty() ? std::vector<int32_t>{} : isr;
+            pm->m_offline_replicas = offline.empty() ? std::vector<int32_t>{} : offline;
+            pm->m_err = (KError)err;
             return 0;
         }
     }
 
     auto pmatch = std::make_shared<PartitionMetadata>();
-    pmatch->ID = partition;
-    pmatch->Leader = brokerID;
-    pmatch->Replicas = replicas.empty() ? std::vector<int32_t>{} : replicas;
-    pmatch->Isr = isr.empty() ? std::vector<int32_t>{} : isr;
-    pmatch->OfflineReplicas = offline.empty() ? std::vector<int32_t>{} : offline;
-    pmatch->Err = (KError)err;
+    pmatch->m_id = partition;
+    pmatch->m_leader = brokerID;
+    pmatch->m_replicas = replicas.empty() ? std::vector<int32_t>{} : replicas;
+    pmatch->m_isr = isr.empty() ? std::vector<int32_t>{} : isr;
+    pmatch->m_offline_replicas = offline.empty() ? std::vector<int32_t>{} : offline;
+    pmatch->m_err = (KError)err;
     tmatch->Partitions.push_back(pmatch);
     return 0;
 }

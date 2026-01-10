@@ -11,7 +11,7 @@ coev::awaitable<void> BrokerConsumer::subscriptionManager()
     {
         std::vector<std::shared_ptr<PartitionConsumer>> partitionConsumers;
 
-        auto pc = co_await input.get();
+        auto pc = co_await m_input.get();
         if (!pc)
             co_return;
         partitionConsumers.emplace_back(pc);
@@ -20,7 +20,7 @@ coev::awaitable<void> BrokerConsumer::subscriptionManager()
         while (std::chrono::steady_clock::now() < timerEnd)
         {
 
-            if (pc = co_await input.get())
+            if (pc = co_await m_input.get())
             {
                 if (pc)
                 {
@@ -33,7 +33,7 @@ coev::awaitable<void> BrokerConsumer::subscriptionManager()
             }
         }
 
-        newSubscriptions.set(std::move(partitionConsumers));
+        m_new_subscriptions.set(std::move(partitionConsumers));
     }
 }
 
@@ -42,10 +42,10 @@ coev::awaitable<void> BrokerConsumer::subscriptionConsumer()
 
     while (true)
     {
-        std::vector<std::shared_ptr<PartitionConsumer>> sub = co_await newSubscriptions.get();
+        std::vector<std::shared_ptr<PartitionConsumer>> sub = co_await m_new_subscriptions.get();
         updateSubscriptions(sub);
 
-        if (subscriptions.empty())
+        if (m_subscriptions.empty())
         {
             co_await sleep_for(partitionConsumersBatchTimeout);
             continue;
@@ -65,39 +65,39 @@ coev::awaitable<void> BrokerConsumer::subscriptionConsumer()
             co_return;
         }
 
-        for (auto &child : subscriptions)
+        for (auto &child : m_subscriptions)
         {
-            auto it1 = response->Blocks.find(child.first->topic);
-            if (it1 == response->Blocks.end())
+            auto it1 = response->m_blocks.find(child.first->m_topic);
+            if (it1 == response->m_blocks.end())
             {
                 continue;
             }
-            auto it2 = it1->second.find(child.first->partition);
+            auto it2 = it1->second.find(child.first->m_partition);
             if (it2 == it1->second.end())
             {
                 continue;
             }
-            child.first->feeder.set(response);
+            child.first->m_feeder.set(response);
         }
 
         co_await handleResponses();
     }
 }
-void BrokerConsumer::updateSubscriptions(const std::vector<std::shared_ptr<PartitionConsumer>> &newSubscriptions)
+void BrokerConsumer::updateSubscriptions(const std::vector<std::shared_ptr<PartitionConsumer>> &m_new_subscriptions)
 {
-    for (auto &child : newSubscriptions)
+    for (auto &child : m_new_subscriptions)
     {
-        subscriptions[child] = true;
+        m_subscriptions[child] = true;
     }
 
-    for (auto it = subscriptions.begin(); it != subscriptions.end();)
+    for (auto it = m_subscriptions.begin(); it != m_subscriptions.end();)
     {
         bool found = false;
         auto child = it->first;
-        if (child->dying.try_get(found))
+        if (child->m_dying.try_get(found))
         {
-            child->trigger.set(true);
-            it = subscriptions.erase(it);
+            child->m_trigger.set(true);
+            it = m_subscriptions.erase(it);
         }
         else
         {
@@ -108,78 +108,78 @@ void BrokerConsumer::updateSubscriptions(const std::vector<std::shared_ptr<Parti
 
 coev::awaitable<void> BrokerConsumer::handleResponses()
 {
-    for (auto it = subscriptions.begin(); it != subscriptions.end();)
+    for (auto it = m_subscriptions.begin(); it != m_subscriptions.end();)
     {
         auto child = it->first;
-        auto result = child->responseResult;
-        child->responseResult = ErrNoError;
+        auto result = child->m_response_result;
+        child->m_response_result = ErrNoError;
 
         if (!result)
         {
             std::shared_ptr<Broker> preferredBroker;
             int _;
             auto err_code = co_await child->preferredBroker(preferredBroker, _);
-            if (err_code == 0 && broker->ID() != preferredBroker->ID())
+            if (err_code == 0 && m_broker->ID() != preferredBroker->ID())
             {
-                child->trigger.set(true);
-                it = subscriptions.erase(it);
+                child->m_trigger.set(true);
+                it = m_subscriptions.erase(it);
                 continue;
             }
             ++it;
             continue;
         }
 
-        child->preferredReadReplica = invalidPreferredReplicaID;
+        child->m_preferred_read_replica = invalidPreferredReplicaID;
 
         if (result == ErrTimedOut)
         {
-            it = subscriptions.erase(it);
+            it = m_subscriptions.erase(it);
         }
         else if (result == ErrOffsetOutOfRange)
         {
             child->SendError(result);
-            child->trigger.set(true);
-            it = subscriptions.erase(it);
+            child->m_trigger.set(true);
+            it = m_subscriptions.erase(it);
         }
         else if (result == ErrUnknownTopicOrPartition || result == ErrNotLeaderForPartition ||
                  result == ErrLeaderNotAvailable || result == ErrReplicaNotAvailable ||
                  result == ErrFencedLeaderEpoch || result == ErrUnknownLeaderEpoch)
         {
-            child->trigger.set(true);
-            it = subscriptions.erase(it);
+            child->m_trigger.set(true);
+            it = m_subscriptions.erase(it);
         }
         else
         {
             child->SendError(result);
-            child->trigger.set(true);
-            it = subscriptions.erase(it);
+            child->m_trigger.set(true);
+            it = m_subscriptions.erase(it);
         }
     }
 }
 
 coev::awaitable<void> BrokerConsumer::abort(int err)
 {
-    consumer_->abandonBrokerConsumer(shared_from_this());
-    broker->Close();
+    m_consumer->abandonBrokerConsumer(shared_from_this());
+    m_broker->Close();
 
-    for (auto &child : subscriptions)
+    for (auto &child : m_subscriptions)
     {
         child.first->SendError(err);
-        child.first->trigger.set(true);
+        child.first->m_trigger.set(true);
     }
 
     while (true)
     {
-        auto _subscriptions = co_await newSubscriptions.get();
-        if (_subscriptions.empty())
+        auto _m_subscriptions = co_await m_new_subscriptions.get();
+        if (_m_subscriptions.empty())
         {
             co_await sleep_for(partitionConsumersBatchTimeout);
             continue;
         }
-        for (auto &child : _subscriptions)
+        for (auto &child : _m_subscriptions)
         {
             child->SendError(err);
-            child->trigger.set(true);
+            child->m_trigger.set(true);
         }
     }
 }
@@ -187,111 +187,111 @@ coev::awaitable<void> BrokerConsumer::abort(int err)
 coev::awaitable<int> BrokerConsumer::fetchNewMessages(std::shared_ptr<FetchResponse> &response)
 {
     auto request = std::make_shared<FetchRequest>();
-    request->MinBytes = consumer_->conf->Consumer.Fetch.Min;
-    request->MaxWaitTime = static_cast<int32_t>(consumer_->conf->Consumer.MaxWaitTime.count() / std::chrono::milliseconds(1).count());
+    request->m_min_bytes = m_consumer->m_conf->Consumer.Fetch.Min;
+    request->m_max_wait_time = static_cast<int32_t>(m_consumer->m_conf->Consumer.MaxWaitTime.count() / std::chrono::milliseconds(1).count());
 
-    if (consumer_->conf->Version.IsAtLeast(V0_9_0_0))
+    if (m_consumer->m_conf->Version.IsAtLeast(V0_9_0_0))
     {
-        request->Version = 1;
+        request->m_version = 1;
     }
-    if (consumer_->conf->Version.IsAtLeast(V0_10_0_0))
+    if (m_consumer->m_conf->Version.IsAtLeast(V0_10_0_0))   
     {
-        request->Version = 2;
+        request->m_version = 2;
     }
-    if (consumer_->conf->Version.IsAtLeast(V0_10_1_0))
+    if (m_consumer->m_conf->Version.IsAtLeast(V0_10_1_0))
     {
-        request->Version = 3;
-        request->MaxBytes = MaxResponseSize;
+        request->m_version = 3;
+        request->m_max_bytes = MaxResponseSize;
     }
-    if (consumer_->conf->Version.IsAtLeast(V0_11_0_0))
+    if (m_consumer->m_conf->Version.IsAtLeast(V0_11_0_0))
     {
-        request->Version = 5;
-        request->Isolation = consumer_->conf->Consumer.IsolationLevel_;
+        request->m_version = 5;
+        request->m_isolation = m_consumer->m_conf->Consumer.IsolationLevel_;
     }
-    if (consumer_->conf->Version.IsAtLeast(V1_0_0_0))
+    if (m_consumer->m_conf->Version.IsAtLeast(V1_0_0_0))
     {
-        request->Version = 6;
+        request->m_version = 6;
     }
-    if (consumer_->conf->Version.IsAtLeast(V1_1_0_0))
+    if (m_consumer->m_conf->Version.IsAtLeast(V1_1_0_0))
     {
-        request->Version = 7;
-        request->SessionID = 0;
-        request->SessionEpoch = -1;
+        request->m_version = 7;
+        request->m_session_id = 0;
+        request->m_session_epoch = -1;
     }
-    if (consumer_->conf->Version.IsAtLeast(V2_0_0_0))
+    if (m_consumer->m_conf->Version.IsAtLeast(V2_0_0_0))
     {
-        request->Version = 8;
+        request->m_version = 8;
     }
-    if (consumer_->conf->Version.IsAtLeast(V2_1_0_0))
+    if (m_consumer->m_conf->Version.IsAtLeast(V2_1_0_0))
     {
-        request->Version = 10;
+        request->m_version = 10;
     }
-    if (consumer_->conf->Version.IsAtLeast(V2_3_0_0))
+    if (m_consumer->m_conf->Version.IsAtLeast(V2_3_0_0))
     {
-        request->Version = 11;
-        request->RackID = consumer_->conf->RackId;
+        request->m_version = 11;
+        request->m_rack_id = m_consumer->m_conf->RackId;
     }
 
-    for (auto &child : subscriptions)
+    for (auto &child : m_subscriptions)
     {
         if (!child.first->IsPaused())
         {
-            request->AddBlock(child.first->topic, child.first->partition, child.first->offset, child.first->fetchSize, child.first->leaderEpoch);
+            request->AddBlock(child.first->m_topic, child.first->m_partition, child.first->m_offset, child.first->m_fetch_size, child.first->m_leader_epoch);
         }
     }
 
-    if (request->blocks.empty())
+    if (request->m_blocks.empty())
     {
         response = nullptr;
         co_return 0;
     }
 
-    co_return co_await broker->Fetch(request, response);
+    co_return co_await m_broker->Fetch(request, response);
 }
 
-std::shared_ptr<BrokerConsumer> NewBrokerConsumer(std::shared_ptr<Consumer> c, std::shared_ptr<Broker> broker)
+std::shared_ptr<BrokerConsumer> NewBrokerConsumer(std::shared_ptr<Consumer> c, std::shared_ptr<Broker> m_broker)
 {
     auto bc = std::make_shared<BrokerConsumer>();
-    bc->consumer_ = c;
-    bc->broker = broker;
-    bc->refs = 0;
+    bc->m_consumer = c;
+    bc->m_broker = m_broker;
+    bc->m_refs = 0;
 
-    bc->task_ << bc->subscriptionManager();
-    bc->task_ << bc->subscriptionConsumer();
+    bc->m_task << bc->subscriptionManager();
+    bc->m_task << bc->subscriptionConsumer();
 
     return bc;
 }
 
 int BrokerConsumer::Topics(std::vector<std::string> &out)
 {
-    return consumer_->Topics(out);
+    return m_consumer->Topics(out);
 }
 coev::awaitable<int> BrokerConsumer::Partitions(const std::string &topic, std::vector<int32_t> &out)
 {
-    return consumer_->Partitions(topic, out);
+    return m_consumer->Partitions(topic, out);
 }
 coev::awaitable<int> BrokerConsumer::Close()
 {
-    return consumer_->Close();
+    return m_consumer->Close();
 }
 std::map<std::string, std::map<int32_t, int64_t>> BrokerConsumer::HighWaterMarks()
 {
-    return consumer_->HighWaterMarks();
+    return m_consumer->HighWaterMarks();
 }
 
 void BrokerConsumer::Pause(const std::map<std::string, std::vector<int32_t>> &topicPartitions)
 {
-    consumer_->Pause(topicPartitions);
+    m_consumer->Pause(topicPartitions);
 }
 void BrokerConsumer::Resume(const std::map<std::string, std::vector<int32_t>> &topicPartitions)
 {
-    consumer_->Resume(topicPartitions);
+    m_consumer->Resume(topicPartitions);
 }
 void BrokerConsumer::PauseAll()
 {
-    consumer_->PauseAll();
+    m_consumer->PauseAll();
 }
 void BrokerConsumer::ResumeAll()
 {
-    consumer_->ResumeAll();
+    m_consumer->ResumeAll();
 }

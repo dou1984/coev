@@ -3,26 +3,26 @@
 #include "sasl_authenticate_response.h"
 #include <utility>
 
-void SaslAuthenticateResponse::setVersion(int16_t v)
+void SaslAuthenticateResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int SaslAuthenticateResponse::encode(PEncoder &pe)
 {
-    pe.putKError(Err);
+    pe.putKError(m_err);
 
-    int err = pe.putNullableString(ErrorMessage);
+    int err = pe.putNullableString(m_error_message);
     if (err != 0)
         return err;
 
-    err = pe.putBytes(SaslAuthBytes);
+    err = pe.putBytes(m_sasl_auth_bytes);
     if (err != 0)
         return err;
 
-    if (Version > 0)
+    if (m_version > 0)
     {
-        pe.putInt64(SessionLifetimeMs);
+        pe.putInt64(m_session_lifetime_ms);
     }
 
     return 0;
@@ -30,9 +30,9 @@ int SaslAuthenticateResponse::encode(PEncoder &pe)
 
 int SaslAuthenticateResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    int err = pd.getKError(Err);
+    int err = pd.getKError(m_err);
     if (err != 0)
         return err;
 
@@ -41,13 +41,13 @@ int SaslAuthenticateResponse::decode(PDecoder &pd, int16_t version)
     if (err != 0)
         return err;
 
-    err = pd.getBytes(SaslAuthBytes);
+    err = pd.getBytes(m_sasl_auth_bytes);
     if (err != 0)
         return err;
 
     if (version > 0)
     {
-        err = pd.getInt64(SessionLifetimeMs);
+        err = pd.getInt64(m_session_lifetime_ms);
         if (err != 0)
             return err;
     }
@@ -62,7 +62,7 @@ int16_t SaslAuthenticateResponse::key() const
 
 int16_t SaslAuthenticateResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t SaslAuthenticateResponse::headerVersion() const
@@ -70,14 +70,14 @@ int16_t SaslAuthenticateResponse::headerVersion() const
     return 0;
 }
 
-bool SaslAuthenticateResponse::isValidVersion() const
+bool SaslAuthenticateResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 1;
+    return m_version >= 0 && m_version <= 1;
 }
 
-KafkaVersion SaslAuthenticateResponse::requiredVersion() const
+KafkaVersion SaslAuthenticateResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 1:
         return V2_2_0_0;

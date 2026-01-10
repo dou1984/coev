@@ -1,46 +1,46 @@
 #include "describe_user_scram_credentials_response.h"
 #include <memory>
 
-void DescribeUserScramCredentialsResponse::setVersion(int16_t v)
+void DescribeUserScramCredentialsResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int DescribeUserScramCredentialsResponse::encode(PEncoder &pe)
 {
-    pe.putDurationMs(ThrottleTime);
-    pe.putKError(ErrorCode);
-    if (!pe.putNullableString(ErrorMessage))
+    pe.putDurationMs(m_throttle_time);
+    pe.putKError(m_error_code);
+    if (pe.putNullableString(m_error_message) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    if (!pe.putArrayLength(static_cast<int32_t>(Results.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_results.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &u : Results)
+    for (auto &u : m_results)
     {
-        if (!pe.putString(u->User))
+        if (pe.putString(u->m_user) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        pe.putKError(u->ErrorCode);
-        if (!pe.putNullableString(u->ErrorMessage))
-        {
-            return ErrEncodeError;
-        }
-
-        if (!pe.putArrayLength(static_cast<int32_t>(u->CredentialInfos.size())))
+        pe.putKError(u->m_error_code);
+        if (pe.putNullableString(u->m_error_message) != ErrNoError)
         {
             return ErrEncodeError;
         }
 
-        for (auto &c : u->CredentialInfos)
+        if (pe.putArrayLength(static_cast<int32_t>(u->m_credential_infos.size())) != ErrNoError)
         {
-            pe.putInt8(static_cast<int8_t>(c->Mechanism));
-            pe.putInt32(c->Iterations);
+            return ErrEncodeError;
+        }
+
+        for (auto &c : u->m_credential_infos)
+        {
+            pe.putInt8(static_cast<int8_t>(c->m_mechanism));
+            pe.putInt32(c->m_iterations);
             pe.putEmptyTaggedFieldArray();
         }
 
@@ -48,24 +48,24 @@ int DescribeUserScramCredentialsResponse::encode(PEncoder &pe)
     }
 
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int DescribeUserScramCredentialsResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
+    if (pd.getDurationMs(m_throttle_time) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
-    if (pd.getKError(ErrorCode) != ErrNoError)
+    if (pd.getKError(m_error_code) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
-    if (pd.getNullableString(ErrorMessage) != ErrNoError)
+    if (pd.getNullableString(m_error_message) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -76,23 +76,23 @@ int DescribeUserScramCredentialsResponse::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    Results.clear();
-    Results.reserve(numUsers);
+    m_results.clear();
+    m_results.reserve(numUsers);
     for (int32_t i = 0; i < numUsers; ++i)
     {
         auto result = std::make_unique<DescribeUserScramCredentialsResult>();
 
-        if (pd.getString(result->User) != ErrNoError)
+        if (pd.getString(result->m_user) != ErrNoError)
         {
             return ErrDecodeError;
         }
 
-        if (pd.getKError(result->ErrorCode) != ErrNoError)
+        if (pd.getKError(result->m_error_code) != ErrNoError)
         {
             return ErrDecodeError;
         }
 
-        if (pd.getNullableString(result->ErrorMessage) != ErrNoError)
+        if (pd.getNullableString(result->m_error_message) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -103,7 +103,7 @@ int DescribeUserScramCredentialsResponse::decode(PDecoder &pd, int16_t version)
             return ErrDecodeError;
         }
 
-        result->CredentialInfos.reserve(numCreds);
+        result->m_credential_infos.reserve(numCreds);
         for (int32_t j = 0; j < numCreds; ++j)
         {
             auto cred = std::make_shared<UserScramCredentialsResponseInfo>();
@@ -113,9 +113,9 @@ int DescribeUserScramCredentialsResponse::decode(PDecoder &pd, int16_t version)
             {
                 return ErrDecodeError;
             }
-            cred->Mechanism = static_cast<ScramMechanismType>(mech);
+            cred->m_mechanism = static_cast<ScramMechanismType>(mech);
 
-            if (pd.getInt32(cred->Iterations) != ErrNoError)
+            if (pd.getInt32(cred->m_iterations) != ErrNoError)
             {
                 return ErrDecodeError;
             }
@@ -126,7 +126,7 @@ int DescribeUserScramCredentialsResponse::decode(PDecoder &pd, int16_t version)
                 return ErrDecodeError;
             }
 
-            result->CredentialInfos.emplace_back(std::move(cred));
+            result->m_credential_infos.emplace_back(std::move(cred));
         }
 
         int32_t dummy;
@@ -135,7 +135,7 @@ int DescribeUserScramCredentialsResponse::decode(PDecoder &pd, int16_t version)
             return ErrDecodeError;
         }
 
-        Results.emplace_back(std::move(result));
+        m_results.emplace_back(std::move(result));
     }
 
     int32_t dummy;
@@ -154,7 +154,7 @@ int16_t DescribeUserScramCredentialsResponse::key() const
 
 int16_t DescribeUserScramCredentialsResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t DescribeUserScramCredentialsResponse::headerVersion() const
@@ -162,14 +162,14 @@ int16_t DescribeUserScramCredentialsResponse::headerVersion() const
     return 2;
 }
 
-bool DescribeUserScramCredentialsResponse::isValidVersion() const
+bool DescribeUserScramCredentialsResponse::is_valid_version() const
 {
-    return Version == 0;
+    return m_version == 0;
 }
 
 bool DescribeUserScramCredentialsResponse::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool DescribeUserScramCredentialsResponse::isFlexibleVersion(int16_t version)
@@ -177,12 +177,12 @@ bool DescribeUserScramCredentialsResponse::isFlexibleVersion(int16_t version)
     return version >= 0; // all versions use flexible format (tagged fields)
 }
 
-KafkaVersion DescribeUserScramCredentialsResponse::requiredVersion() const
+KafkaVersion DescribeUserScramCredentialsResponse::required_version() const
 {
     return V2_7_0_0;
 }
 
 std::chrono::milliseconds DescribeUserScramCredentialsResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }

@@ -13,32 +13,32 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
-struct OffsetFetchRequest : protocolBody
+struct OffsetFetchRequest : protocol_body
 {
-    int16_t Version;
-    std::string ConsumerGroup;
-    bool RequireStable;
+    int16_t m_version;
+    std::string m_consumer_group;
+    bool m_require_stable;
 
     OffsetFetchRequest();
-    OffsetFetchRequest(int16_t v) : Version(v)
+    OffsetFetchRequest(int16_t v) : m_version(v)
     {
     }
 
     static std::shared_ptr<OffsetFetchRequest> NewOffsetFetchRequest(const KafkaVersion &version, const std::string &group, const std::map<std::string, std::vector<int32_t>> &partitions);
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible() const;
     static bool isFlexibleVersion(int16_t version);
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
     void ZeroPartitions();
     void AddPartition(const std::string &topic, int32_t partitionID);
 
 private:
-    std::map<std::string, std::vector<int32_t>> partitions;
+    std::map<std::string, std::vector<int32_t>> m_partitions;
 };

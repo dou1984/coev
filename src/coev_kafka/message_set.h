@@ -11,11 +11,11 @@
 
 struct MessageBlock : IEncoder, IDecoder
 {
-    int64_t Offset = 0;
-    std::shared_ptr<Message> Msg;
+    int64_t m_offset = 0;
+    std::shared_ptr<Message> m_msg;
 
     MessageBlock() = default;
-    MessageBlock(std::shared_ptr<Message> msg, int64_t offset) : Msg(msg), Offset(offset)
+    MessageBlock(std::shared_ptr<Message> msg, int64_t offset) : m_msg(msg), m_offset(offset)
     {
     }
     std::vector<std::shared_ptr<MessageBlock>> Messages();
@@ -25,17 +25,17 @@ struct MessageBlock : IEncoder, IDecoder
 
 struct MessageSet : IEncoder, IDecoder
 {
-    bool PartialTrailingMessage = false;
-    bool OverflowMessage = false;
-    std::vector<std::shared_ptr<MessageBlock>> Messages;
+    bool m_partial_trailing_message = false;
+    bool m_overflow_message = false;
+    std::vector<std::shared_ptr<MessageBlock>> m_messages;
     MessageSet() = default;
     MessageSet(std::shared_ptr<MessageBlock> msg)
     {
-        Messages.push_back(msg);
+        m_messages.push_back(msg);
     }
-    MessageSet(const MessageSet &o) : PartialTrailingMessage(o.PartialTrailingMessage), OverflowMessage(o.OverflowMessage)
+    MessageSet(const MessageSet &o) : m_partial_trailing_message(o.m_partial_trailing_message), m_overflow_message(o.m_overflow_message)
     {
-        Messages = o.Messages;
+        m_messages = o.m_messages;
     }
     int encode(PEncoder &pe);
     int decode(PDecoder &pd);

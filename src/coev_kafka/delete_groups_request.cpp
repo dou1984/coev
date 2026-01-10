@@ -2,25 +2,25 @@
 #include "api_versions.h"
 #include "delete_groups_request.h"
 
-void DeleteGroupsRequest::setVersion(int16_t v)
+void DeleteGroupsRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int DeleteGroupsRequest::encode(PEncoder &pe)
 {
-    if (!pe.putStringArray(Groups))
+    if (pe.putStringArray(m_groups) != ErrNoError)
     {
         return ErrEncodeError;
     }
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int DeleteGroupsRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
-    if (pd.getStringArray(Groups) != ErrNoError)
+    m_version = version;
+    if (pd.getStringArray(m_groups) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -35,17 +35,17 @@ int16_t DeleteGroupsRequest::key() const
 
 int16_t DeleteGroupsRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t DeleteGroupsRequest::headerVersion() const
 {
-    return Version >= 2 ? 2 : 1;
+    return m_version >= 2 ? 2 : 1;
 }
 
 bool DeleteGroupsRequest::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool DeleteGroupsRequest::isFlexibleVersion(int16_t version)
@@ -53,14 +53,14 @@ bool DeleteGroupsRequest::isFlexibleVersion(int16_t version)
     return version >= 2;
 }
 
-bool DeleteGroupsRequest::isValidVersion() const
+bool DeleteGroupsRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 2;
+    return m_version >= 0 && m_version <= 2;
 }
 
-KafkaVersion DeleteGroupsRequest::requiredVersion() const
+KafkaVersion DeleteGroupsRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 2:
         return V2_4_0_0;
@@ -75,5 +75,5 @@ KafkaVersion DeleteGroupsRequest::requiredVersion() const
 
 void DeleteGroupsRequest::AddGroup(const std::string &group)
 {
-    Groups.push_back(group);
+    m_groups.push_back(group);
 }

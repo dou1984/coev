@@ -55,13 +55,13 @@ struct Consumer : IConsumer, std::enable_shared_from_this<Consumer>
     void unrefBrokerConsumer(std::shared_ptr<BrokerConsumer> brokerWorker);
     void abandonBrokerConsumer(std::shared_ptr<BrokerConsumer> brokerWorker);
 
-    std::shared_ptr<Config> conf;
-    std::map<std::string, std::map<int32_t, std::shared_ptr<PartitionConsumer>>> children;
-    std::map<std::shared_ptr<Broker>, std::shared_ptr<BrokerConsumer>> brokerConsumers;
-    std::shared_ptr<Client> client;
-    std::shared_ptr<metrics::Registry> metricRegistry;
-    std::mutex lock_;
-    coev::co_task task_;
+    std::shared_ptr<Config> m_conf;
+    std::map<std::string, std::map<int32_t, std::shared_ptr<PartitionConsumer>>> m_children;
+    std::map<std::shared_ptr<Broker>, std::shared_ptr<BrokerConsumer>> m_broker_consumers;
+    std::shared_ptr<Client> m_client;
+    std::shared_ptr<metrics::Registry> m_metric_registry;
+    std::mutex m_lock;
+    coev::co_task m_task;
 };
 
 int NewConsumer(const std::shared_ptr<Client> &client, std::shared_ptr<IConsumer> &consumer_);

@@ -1,40 +1,40 @@
 #include "version.h"
 #include "describe_groups_request.h"
 
-void DescribeGroupsRequest::setVersion(int16_t v)
+void DescribeGroupsRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int DescribeGroupsRequest::encode(PEncoder &pe)
 {
-    if (!pe.putStringArray(Groups))
+    if (pe.putStringArray(m_groups) != ErrNoError)
     {
         return ErrEncodeError;
     }
-    if (Version >= 3)
+    if (m_version >= 3)
     {
-        pe.putBool(IncludeAuthorizedOperations);
+        pe.putBool(m_include_authorized_operations);
     }
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int DescribeGroupsRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
-    if (pd.getStringArray(Groups) != ErrNoError)
+    m_version = version;
+    if (pd.getStringArray(m_groups) != ErrNoError)
     {
         return ErrDecodeError;
     }
-    if (Version >= 3)
+    if (m_version >= 3)
     {
         bool val;
         if (pd.getBool(val) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        IncludeAuthorizedOperations = val;
+        m_include_authorized_operations = val;
     }
     int32_t dummy;
     if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
@@ -51,26 +51,26 @@ int16_t DescribeGroupsRequest::key() const
 
 int16_t DescribeGroupsRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t DescribeGroupsRequest::headerVersion() const
 {
-    if (Version >= 5)
+    if (m_version >= 5)
     {
         return 2;
     }
     return 1;
 }
 
-bool DescribeGroupsRequest::isValidVersion() const
+bool DescribeGroupsRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 5;
+    return m_version >= 0 && m_version <= 5;
 }
 
 bool DescribeGroupsRequest::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool DescribeGroupsRequest::isFlexibleVersion(int16_t version)
@@ -78,9 +78,9 @@ bool DescribeGroupsRequest::isFlexibleVersion(int16_t version)
     return version >= 5;
 }
 
-KafkaVersion DescribeGroupsRequest::requiredVersion() const
+KafkaVersion DescribeGroupsRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 5:
         return V2_4_0_0;
@@ -101,5 +101,5 @@ KafkaVersion DescribeGroupsRequest::requiredVersion() const
 
 void DescribeGroupsRequest::AddGroup(const std::string &group)
 {
-    Groups.push_back(group);
+    m_groups.push_back(group);
 }

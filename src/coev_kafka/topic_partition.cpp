@@ -1,37 +1,37 @@
 #include "topic_partition.h"
 
-TopicPartition::TopicPartition(const std::string &t, int32_t p) : topic(t), partition(p)
+TopicPartition::TopicPartition(const std::string &t, int32_t p) : m_topic(t), m_partition(p)
 {
 }
 int TopicPartition::encode(PEncoder &pe)
 {
-    pe.putInt32(Count);
+    pe.putInt32(m_count);
 
-    if (Assignment.empty())
+    if (m_assignment.empty())
     {
         pe.putInt32(-1);
-        return true;
+        return ErrNoError;
     }
 
-    if (!pe.putArrayLength(static_cast<int32_t>(Assignment.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_assignment.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &assign : Assignment)
+    for (auto &assign : m_assignment)
     {
-        if (!pe.putInt32Array(assign))
+        if (pe.putInt32Array(assign) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int TopicPartition::decode(PDecoder &pd, int16_t version)
 {
-    if (pd.getInt32(Count) != ErrNoError)
+    if (pd.getInt32(m_count) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -44,13 +44,13 @@ int TopicPartition::decode(PDecoder &pd, int16_t version)
 
     if (n <= 0)
     {
-        return true;
+        return ErrNoError;
     }
 
-    Assignment.resize(static_cast<size_t>(n));
+    m_assignment.resize(static_cast<size_t>(n));
     for (int32_t i = 0; i < n; ++i)
     {
-        if (pd.getInt32Array(Assignment[i]) != ErrNoError)
+        if (pd.getInt32Array(m_assignment[i]) != ErrNoError)
         {
             return ErrDecodeError;
         }

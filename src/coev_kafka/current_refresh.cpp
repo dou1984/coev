@@ -2,18 +2,18 @@
 #include "next_refresh.h"
 
 CurrentRefresh::CurrentRefresh(MetadataRefresh refresh_func)
-    : ongoing(false), allTopics(false), refresh(std::move(refresh_func)) {}
+    : m_ongoing(false), m_all_topics(false), m_refresh_func(std::move(refresh_func)) {}
 
 void CurrentRefresh::addTopicsFrom(std::shared_ptr<NextRefresh> next)
 {
-    if (next->allTopics)
+    if (next->m_all_topics)
     {
-        allTopics = true;
+        m_all_topics = true;
         return;
     }
-    if (!next->topics.empty())
+    if (!next->m_topics.empty())
     {
-        addTopics(next->topics);
+        addTopics(next->m_topics);
     }
 }
 
@@ -21,17 +21,17 @@ void CurrentRefresh::addTopics(const std::vector<std::string> &topics)
 {
     if (topics.empty())
     {
-        allTopics = true;
+        m_all_topics = true;
         return;
     }
     for (const auto &topic : topics)
     {
-        if (topicsMap.find(topic) != topicsMap.end())
+        if (m_topics_map.find(topic) != m_topics_map.end())
         {
             continue;
         }
-        topicsMap[topic] = true;
-        this->topics.push_back(topic);
+        m_topics_map[topic] = true;
+        m_topics.push_back(topic);
     }
 }
 
@@ -39,15 +39,15 @@ bool CurrentRefresh::hasTopics(const std::vector<std::string> &topics)
 {
     if (topics.empty())
     {
-        return allTopics;
+        return m_all_topics;
     }
-    if (allTopics)
+    if (m_all_topics)
     {
         return true;
     }
     for (const auto &topic : topics)
     {
-        if (topicsMap.find(topic) == topicsMap.end())
+        if (m_topics_map.find(topic) == m_topics_map.end())
         {
             return false;
         }
@@ -58,27 +58,27 @@ bool CurrentRefresh::hasTopics(const std::vector<std::string> &topics)
 void CurrentRefresh::start()
 {
 
-    std::vector<std::string> topics_to_refresh = topics;
-    if (allTopics)
+    std::vector<std::string> topics_to_refresh = m_topics;
+    if (m_all_topics)
     {
         topics_to_refresh.clear();
     }
 
     co_start << [this, topics_to_refresh]() -> coev::awaitable<void>
     {
-        auto err = co_await this->refresh(topics_to_refresh);
-        std::lock_guard<std::mutex> lock(mu);
-        ongoing = false;
-        chans.set(err);
+        auto err = co_await this->m_refresh_func(topics_to_refresh);
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_ongoing = false;
+        m_chans.set(err);
         clear();
     }();
 }
 
 void CurrentRefresh::clear()
 {
-    topics.clear();
-    topicsMap.clear();
-    allTopics = false;
+    m_topics.clear();
+    m_topics_map.clear();
+    m_all_topics = false;
 }
 
 void CurrentRefresh::wait()

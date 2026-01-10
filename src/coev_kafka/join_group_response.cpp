@@ -2,51 +2,51 @@
 #include "join_group_response.h"
 #include "api_versions.h"
 
-void JoinGroupResponse::setVersion(int16_t v)
+void JoinGroupResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int JoinGroupResponse::encode(PEncoder &pe)
 {
-    if (Version >= 2)
+    if (m_version >= 2)
     {
-        pe.putDurationMs(ThrottleTime);
+        pe.putDurationMs(m_throttle_time);
     }
 
-    pe.putKError(Err);
-    pe.putInt32(GenerationId);
+    pe.putKError(m_err);
+    pe.putInt32(m_generation_id);
 
-    int err = pe.putString(GroupProtocol);
+    int err = pe.putString(m_group_protocol);
     if (err != 0)
         return err;
 
-    err = pe.putString(LeaderId);
+    err = pe.putString(m_leader_id);
     if (err != 0)
         return err;
 
-    err = pe.putString(MemberId);
+    err = pe.putString(m_member_id);
     if (err != 0)
         return err;
 
-    err = pe.putArrayLength(static_cast<int32_t>(Members.size()));
+    err = pe.putArrayLength(static_cast<int32_t>(m_members.size()));
     if (err != 0)
         return err;
 
-    for (auto &member : Members)
+    for (auto &member : m_members)
     {
-        err = pe.putString(member.MemberId);
+        err = pe.putString(member.m_member_id);
         if (err != 0)
             return err;
 
-        if (Version >= 5)
+        if (m_version >= 5)
         {
-            err = pe.putNullableString(member.GroupInstanceId);
+            err = pe.putNullableString(member.m_group_instance_id);
             if (err != 0)
                 return err;
         }
 
-        err = pe.putBytes(member.Metadata);
+        err = pe.putBytes(member.m_metadata);
         if (err != 0)
             return err;
 
@@ -59,32 +59,32 @@ int JoinGroupResponse::encode(PEncoder &pe)
 
 int JoinGroupResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
     if (version >= 2)
     {
-        int err = pd.getDurationMs(ThrottleTime);
+        int err = pd.getDurationMs(m_throttle_time);
         if (err != 0)
             return err;
     }
 
-    int err = pd.getKError(Err);
+    int err = pd.getKError(m_err);
     if (err != 0)
         return err;
 
-    err = pd.getInt32(GenerationId);
+    err = pd.getInt32(m_generation_id);
     if (err != 0)
         return err;
 
-    err = pd.getString(GroupProtocol);
+    err = pd.getString(m_group_protocol);
     if (err != 0)
         return err;
 
-    err = pd.getString(LeaderId);
+    err = pd.getString(m_leader_id);
     if (err != 0)
         return err;
 
-    err = pd.getString(MemberId);
+    err = pd.getString(m_member_id);
     if (err != 0)
         return err;
 
@@ -99,7 +99,7 @@ int JoinGroupResponse::decode(PDecoder &pd, int16_t version)
         return pd.getEmptyTaggedFieldArray(_);
     }
 
-    Members.resize(n);
+    m_members.resize(n);
     for (int32_t i = 0; i < n; ++i)
     {
         std::string memberId;
@@ -108,7 +108,7 @@ int JoinGroupResponse::decode(PDecoder &pd, int16_t version)
             return err;
 
         std::string groupInstanceId;
-        if (Version >= 5)
+        if (m_version >= 5)
         {
             err = pd.getNullableString(groupInstanceId);
             if (err != 0)
@@ -120,7 +120,7 @@ int JoinGroupResponse::decode(PDecoder &pd, int16_t version)
         if (err != 0)
             return err;
 
-        Members[i] = {memberId, groupInstanceId, metadata};
+        m_members[i] = {memberId, groupInstanceId, metadata};
         int32_t _;
         err = pd.getEmptyTaggedFieldArray(_);
         if (err != 0)
@@ -137,22 +137,22 @@ int16_t JoinGroupResponse::key() const
 
 int16_t JoinGroupResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t JoinGroupResponse::headerVersion() const
 {
-    return (Version >= 6) ? 1 : 0;
+    return (m_version >= 6) ? 1 : 0;
 }
 
-bool JoinGroupResponse::isValidVersion() const
+bool JoinGroupResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 6;
+    return m_version >= 0 && m_version <= 6;
 }
 
 bool JoinGroupResponse::isFlexible()
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool JoinGroupResponse::isFlexibleVersion(int16_t ver)
@@ -160,9 +160,9 @@ bool JoinGroupResponse::isFlexibleVersion(int16_t ver)
     return ver >= 6;
 }
 
-KafkaVersion JoinGroupResponse::requiredVersion() const
+KafkaVersion JoinGroupResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 6:
         return V2_4_0_0;
@@ -185,17 +185,17 @@ KafkaVersion JoinGroupResponse::requiredVersion() const
 
 std::chrono::milliseconds JoinGroupResponse::throttleTime() const
 {
-    return std::chrono::milliseconds(ThrottleTime);
+    return std::chrono::milliseconds(m_throttle_time);
 }
 
 int JoinGroupResponse::GetMembers(std::map<std::string, ConsumerGroupMemberMetadata> &members_)
 {
     members_.clear();
 
-    for (auto &member : Members)
+    for (auto &member : m_members)
     {
         auto meta = std::make_shared<ConsumerGroupMemberMetadata>();
-        int err = ::decode(member.Metadata, std::dynamic_pointer_cast<IDecoder>(meta), nullptr);
+        int err = ::decode(member.m_metadata, std::dynamic_pointer_cast<IDecoder>(meta), nullptr);
         if (err != 0)
             return err;
         // members_[member.MemberId] = meta;

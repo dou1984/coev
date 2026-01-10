@@ -25,20 +25,20 @@ struct IConsumerGroupSession
 
 struct ConsumerGroupSession : IConsumerGroupSession, std::enable_shared_from_this<ConsumerGroupSession>
 {
-    std::shared_ptr<ConsumerGroup> parent;
-    std::string memberID;
-    int32_t generationID;
-    std::shared_ptr<ConsumerGroupHandler> handler;
+    std::shared_ptr<ConsumerGroup> m_parent;
+    std::string m_member_id;
+    int32_t m_generation_id;
+    std::shared_ptr<ConsumerGroupHandler> m_handler;
 
-    std::map<std::string, std::vector<int32_t>> claims;
-    std::shared_ptr<IOffsetManager> offsets;
-    std::shared_ptr<Context> context;
-    std::function<void()> cancel;
+    std::map<std::string, std::vector<int32_t>> m_claims;
+    std::shared_ptr<IOffsetManager> m_offsets;
+    std::shared_ptr<Context> m_context;
+    std::function<void()> m_cancel;
 
-    std::atomic<bool> hbDying{false};
-    std::atomic<bool> hbDead{false};
-    coev::co_task task_;
-    coev::co_waitgroup waitgroup_;
+    std::atomic<bool> m_hd_dying{false};
+    std::atomic<bool> m_hd_dead{false};
+    coev::co_task m_task;
+    coev::co_waitgroup m_waitgroup;
 
     ConsumerGroupSession() = default;
     ConsumerGroupSession(std::shared_ptr<ConsumerGroup> &, const std::string &,

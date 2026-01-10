@@ -12,28 +12,28 @@
 
 struct DescribeLogDirsRequestTopic
 {
-    std::string Topic;
-    std::vector<int32_t> PartitionIDs;
+    std::string m_topic;
+    std::vector<int32_t> m_partition_ids;
 };
 
-struct DescribeLogDirsRequest : protocolBody
+struct DescribeLogDirsRequest : protocol_body
 {
 
-    int16_t Version;
-    std::vector<DescribeLogDirsRequestTopic> DescribeTopics;
+    int16_t m_version;
+    std::vector<DescribeLogDirsRequestTopic> m_describe_topics;
     DescribeLogDirsRequest() = default;
-    DescribeLogDirsRequest(int16_t v) : Version(v)
+    DescribeLogDirsRequest(int16_t v) : m_version(v)
     {
     }
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible() const;
     static bool isFlexibleVersion(int16_t version);
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
 };

@@ -3,25 +3,25 @@
 #include <vector>
 #include "api_versions.h"
 
-void ListGroupsResponse::setVersion(int16_t v)
+void ListGroupsResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int ListGroupsResponse::encode(PEncoder &pe)
 {
-    if (Version >= 1)
+    if (m_version >= 1)
     {
-        pe.putDurationMs(ThrottleTime);
+        pe.putDurationMs(m_throttle_time);
     }
 
-    pe.putKError(Err);
+    pe.putKError(m_err);
 
-    int err = pe.putArrayLength(static_cast<int32_t>(Groups.size()));
+    int err = pe.putArrayLength(static_cast<int32_t>(m_groups.size()));
     if (err != 0)
         return err;
 
-    for (auto &kv : Groups)
+    for (auto &kv : m_groups)
     {
         const std::string &groupId = kv.first;
         const std::string &protocolType = kv.second;
@@ -34,18 +34,18 @@ int ListGroupsResponse::encode(PEncoder &pe)
         if (err != 0)
             return err;
 
-        if (Version >= 4)
+        if (m_version >= 4)
         {
-            const GroupData &gd = GroupsData[groupId]; // safe: assumed populated
-            err = pe.putString(gd.GroupState);
+            const GroupData &gd = m_groups_data[groupId]; // safe: assumed populated
+            err = pe.putString(gd.m_group_state);
             if (err != 0)
                 return err;
         }
 
-        if (Version >= 5)
+        if (m_version >= 5)
         {
-            const GroupData &gd = GroupsData[groupId];
-            err = pe.putString(gd.GroupType);
+            const GroupData &gd = m_groups_data[groupId];
+            err = pe.putString(gd.m_group_type);
             if (err != 0)
                 return err;
         }
@@ -59,16 +59,16 @@ int ListGroupsResponse::encode(PEncoder &pe)
 
 int ListGroupsResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
-        int err = pd.getDurationMs(ThrottleTime);
+        int err = pd.getDurationMs(m_throttle_time);
         if (err != 0)
             return err;
     }
 
-    int err = pd.getKError(Err);
+    int err = pd.getKError(m_err);
     if (err != 0)
         return err;
 
@@ -79,12 +79,12 @@ int ListGroupsResponse::decode(PDecoder &pd, int16_t version)
 
     if (n > 0)
     {
-        Groups.clear();
-        Groups.reserve(n);
-        if (Version >= 4)
+        m_groups.clear();
+        m_groups.reserve(n);
+        if (m_version >= 4)
         {
-            GroupsData.clear();
-            GroupsData.reserve(n);
+            m_groups_data.clear();
+            m_groups_data.reserve(n);
         }
     }
 
@@ -99,23 +99,23 @@ int ListGroupsResponse::decode(PDecoder &pd, int16_t version)
         if (err != 0)
             return err;
 
-        Groups[groupId] = protocolType;
+        m_groups[groupId] = protocolType;
 
-        if (Version >= 4)
+        if (m_version >= 4)
         {
             GroupData gd;
-            err = pd.getString(gd.GroupState);
+            err = pd.getString(gd.m_group_state);
             if (err != 0)
                 return err;
 
-            if (Version >= 5)
+            if (m_version >= 5)
             {
-                err = pd.getString(gd.GroupType);
+                err = pd.getString(gd.m_group_type);
                 if (err != 0)
                     return err;
             }
 
-            GroupsData[groupId] = std::move(gd);
+            m_groups_data[groupId] = std::move(gd);
         }
         int32_t _;
         err = pd.getEmptyTaggedFieldArray(_);
@@ -133,22 +133,22 @@ int16_t ListGroupsResponse::key() const
 
 int16_t ListGroupsResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t ListGroupsResponse::headerVersion() const
 {
-    return (Version >= 3) ? 1 : 0;
+    return (m_version >= 3) ? 1 : 0;
 }
 
-bool ListGroupsResponse::isValidVersion() const
+bool ListGroupsResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 5;
+    return m_version >= 0 && m_version <= 5;
 }
 
 bool ListGroupsResponse::isFlexible()
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool ListGroupsResponse::isFlexibleVersion(int16_t ver)
@@ -156,9 +156,9 @@ bool ListGroupsResponse::isFlexibleVersion(int16_t ver)
     return ver >= 3;
 }
 
-KafkaVersion ListGroupsResponse::requiredVersion() const
+KafkaVersion ListGroupsResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 5:
         return V3_8_0_0;

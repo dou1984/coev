@@ -1,20 +1,20 @@
 #include "version.h"
 #include "sasl_authenticate_request.h"
 
-void SaslAuthenticateRequest::setVersion(int16_t v)
+void SaslAuthenticateRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int SaslAuthenticateRequest::encode(PEncoder &pe)
 {
-    return pe.putBytes(SaslAuthBytes);
+    return pe.putBytes(m_sasl_auth_bytes);
 }
 
 int SaslAuthenticateRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
-    return pd.getBytes(SaslAuthBytes);
+    m_version = version;
+    return pd.getBytes(m_sasl_auth_bytes);
 }
 
 int16_t SaslAuthenticateRequest::key() const
@@ -24,7 +24,7 @@ int16_t SaslAuthenticateRequest::key() const
 
 int16_t SaslAuthenticateRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t SaslAuthenticateRequest::headerVersion() const
@@ -32,14 +32,14 @@ int16_t SaslAuthenticateRequest::headerVersion() const
     return 1;
 }
 
-bool SaslAuthenticateRequest::isValidVersion() const
+bool SaslAuthenticateRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 1;
+    return m_version >= 0 && m_version <= 1;
 }
 
-KafkaVersion SaslAuthenticateRequest::requiredVersion() const
+KafkaVersion SaslAuthenticateRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 1:
         return V2_2_0_0;

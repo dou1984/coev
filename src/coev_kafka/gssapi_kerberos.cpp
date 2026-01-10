@@ -51,7 +51,7 @@ namespace keyusage
     const int GSSAPI_ACCEPTOR_SEAL = 456;
 }
 
-GSSAPIKerberosAuth::GSSAPIKerberosAuth() : step(0) {}
+GSSAPIKerberosAuth::GSSAPIKerberosAuth() : m_step(0) {}
 
 coev::awaitable<int> GSSAPIKerberosAuth::WritePackage(std::shared_ptr<Broker> broker, const std::string &payload, int &bytes_written)
 {

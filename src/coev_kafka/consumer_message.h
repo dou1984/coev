@@ -6,14 +6,14 @@
 
 struct ConsumerMessage
 {
-    std::vector<std::shared_ptr<RecordHeader>> Headers;
-    std::chrono::system_clock::time_point Timestamp;
-    std::chrono::system_clock::time_point BlockTimestamp;
+    std::vector<std::shared_ptr<RecordHeader>> m_headers;
+    std::chrono::system_clock::time_point m_timestamp;
+    std::chrono::system_clock::time_point m_block_timestamp;
 
-    std::string Key;
-    std::string Value;
-    std::string Topic;
-    int32_t Partition;
-    int64_t Offset;
+    std::string m_key;
+    std::string m_value;
+    std::string m_topic;
+    int32_t m_partition;
+    int64_t m_offset;
     ConsumerMessage() = default;
 };

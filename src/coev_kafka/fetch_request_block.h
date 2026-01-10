@@ -6,11 +6,11 @@
 
 struct FetchRequestBlock : VDecoder, VEncoder
 {
-    int16_t Version;
-    int32_t currentLeaderEpoch;
-    int64_t fetchOffset;
-    int64_t logStartOffset;
-    int32_t maxBytes;
+    int16_t m_version;
+    int32_t m_current_leader_epoch;
+    int64_t m_fetch_offset;
+    int64_t m_log_start_offset;
+    int32_t m_max_bytes;
 
     FetchRequestBlock();
     int encode(PEncoder &pe, int16_t version);

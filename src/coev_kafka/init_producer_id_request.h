@@ -11,26 +11,26 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
-struct InitProducerIDRequest : protocolBody
+struct InitProducerIDRequest : protocol_body
 {
 
-    int16_t Version = 0;
-    std::string TransactionalID;
-    std::chrono::milliseconds TransactionTimeout;
-    int64_t ProducerID = 0;
-    int16_t ProducerEpoch = 0;
+    int16_t m_version = 0;
+    std::string m_transactional_id;
+    std::chrono::milliseconds m_transaction_timeout;
+    int64_t m_producer_id = 0;
+    int16_t m_producer_epoch = 0;
     InitProducerIDRequest() = default;
-    InitProducerIDRequest(int16_t v) : Version(v)
+    InitProducerIDRequest(int16_t v) : m_version(v)
     {
     }
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible();
     static bool isFlexibleVersion(int16_t ver);
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
 };

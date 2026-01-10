@@ -1,25 +1,25 @@
 #include "version.h"
 #include "delete_topics_response.h"
 
-void DeleteTopicsResponse::setVersion(int16_t v)
+void DeleteTopicsResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int DeleteTopicsResponse::encode(PEncoder &pe)
 {
-    if (Version >= 1)
+    if (m_version >= 1)
     {
-        pe.putDurationMs(ThrottleTime);
+        pe.putDurationMs(m_throttle_time);
     }
 
-    if (!pe.putArrayLength(static_cast<int32_t>(TopicErrorCodes.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_topic_error_codes.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
-    for (auto &kv : TopicErrorCodes)
+    for (auto &kv : m_topic_error_codes)
     {
-        if (!pe.putString(kv.first))
+        if (pe.putString(kv.first) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -28,7 +28,7 @@ int DeleteTopicsResponse::encode(PEncoder &pe)
     }
 
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int DeleteTopicsResponse::decode(PDecoder &pd, int16_t version)
@@ -36,12 +36,12 @@ int DeleteTopicsResponse::decode(PDecoder &pd, int16_t version)
     if (version >= 1)
     {
 
-        if (pd.getDurationMs(ThrottleTime) != ErrNoError)
+        if (pd.getDurationMs(m_throttle_time) != ErrNoError)
         {
             return ErrDecodeError;
         }
 
-        Version = version;
+        m_version = version;
     }
 
     int32_t n;
@@ -50,7 +50,7 @@ int DeleteTopicsResponse::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    TopicErrorCodes.clear();
+    m_topic_error_codes.clear();
 
     for (int32_t i = 0; i < n; ++i)
     {
@@ -64,7 +64,7 @@ int DeleteTopicsResponse::decode(PDecoder &pd, int16_t version)
         {
             return ErrDecodeError;
         }
-        TopicErrorCodes[topic] = static_cast<KError>(errCode);
+        m_topic_error_codes[topic] = static_cast<KError>(errCode);
 
         int32_t _;
         if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
@@ -87,12 +87,12 @@ int16_t DeleteTopicsResponse::key() const
 
 int16_t DeleteTopicsResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t DeleteTopicsResponse::headerVersion() const
 {
-    if (Version >= 4)
+    if (m_version >= 4)
     {
         return 1;
     }
@@ -101,7 +101,7 @@ int16_t DeleteTopicsResponse::headerVersion() const
 
 bool DeleteTopicsResponse::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool DeleteTopicsResponse::isFlexibleVersion(int16_t version)
@@ -109,14 +109,14 @@ bool DeleteTopicsResponse::isFlexibleVersion(int16_t version)
     return version >= 4;
 }
 
-bool DeleteTopicsResponse::isValidVersion() const
+bool DeleteTopicsResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 4;
+    return m_version >= 0 && m_version <= 4;
 }
 
-KafkaVersion DeleteTopicsResponse::requiredVersion() const
+KafkaVersion DeleteTopicsResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 4:
         return V2_4_0_0;
@@ -135,5 +135,5 @@ KafkaVersion DeleteTopicsResponse::requiredVersion() const
 
 std::chrono::milliseconds DeleteTopicsResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }

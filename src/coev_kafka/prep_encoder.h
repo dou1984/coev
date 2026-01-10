@@ -40,8 +40,8 @@ struct prepEncoder : PEncoder
     int pop();
     std::shared_ptr<metrics::Registry> metricRegistry();
 
-    std::vector<std::shared_ptr<pushEncoder>> Stack;
-    int Length = 0;
+    std::vector<std::shared_ptr<pushEncoder>> m_stack;
+    int m_length = 0;
 };
 
 struct prepFlexibleEncoder : prepEncoder

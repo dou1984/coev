@@ -2,24 +2,24 @@
 #include "init_producer_id_request.h"
 #include "api_versions.h"
 
-void InitProducerIDRequest::setVersion(int16_t v)
+void InitProducerIDRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int InitProducerIDRequest::encode(PEncoder &pe)
 {
 
-    int err = pe.putNullableString(TransactionalID);
+    int err = pe.putNullableString(m_transactional_id);
     if (err != 0)
         return err;
 
-    pe.putInt32(static_cast<int32_t>(TransactionTimeout.count()));
+    pe.putInt32(static_cast<int32_t>(m_transaction_timeout.count()));
 
-    if (Version >= 3)
+    if (m_version >= 3)
     {
-        pe.putInt64(ProducerID);
-        pe.putInt16(ProducerEpoch);
+        pe.putInt64(m_producer_id);
+        pe.putInt16(m_producer_epoch);
     }
 
     pe.putEmptyTaggedFieldArray();
@@ -28,9 +28,9 @@ int InitProducerIDRequest::encode(PEncoder &pe)
 
 int InitProducerIDRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    int err = pd.getNullableString(TransactionalID);
+    int err = pd.getNullableString(m_transactional_id);
     if (err != 0)
         return err;
 
@@ -38,15 +38,15 @@ int InitProducerIDRequest::decode(PDecoder &pd, int16_t version)
     err = pd.getInt32(timeout);
     if (err != 0)
         return err;
-    TransactionTimeout = std::chrono::milliseconds(timeout);
+    m_transaction_timeout = std::chrono::milliseconds(timeout);
 
-    if (Version >= 3)
+    if (m_version >= 3)
     {
-        err = pd.getInt64(ProducerID);
+        err = pd.getInt64(m_producer_id);
         if (err != 0)
             return err;
 
-        err = pd.getInt16(ProducerEpoch);
+        err = pd.getInt16(m_producer_epoch);
         if (err != 0)
             return err;
     }
@@ -61,22 +61,22 @@ int16_t InitProducerIDRequest::key() const
 
 int16_t InitProducerIDRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t InitProducerIDRequest::headerVersion() const
 {
-    return (Version >= 2) ? 2 : 1;
+    return (m_version >= 2) ? 2 : 1;
 }
 
-bool InitProducerIDRequest::isValidVersion() const
+bool InitProducerIDRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 4;
+    return m_version >= 0 && m_version <= 4;
 }
 
 bool InitProducerIDRequest::isFlexible()
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool InitProducerIDRequest::isFlexibleVersion(int16_t ver)
@@ -84,9 +84,9 @@ bool InitProducerIDRequest::isFlexibleVersion(int16_t ver)
     return ver >= 2;
 }
 
-KafkaVersion InitProducerIDRequest::requiredVersion() const
+KafkaVersion InitProducerIDRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 4:
         return V2_7_0_0;

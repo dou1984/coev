@@ -10,25 +10,25 @@
 #include "protocol_body.h"
 
 struct Broker;
-struct ConsumerMetadataResponse : protocolBody
+struct ConsumerMetadataResponse : protocol_body
 {
 
-    int16_t Version;
-    KError Err;
-    std::shared_ptr<Broker> Coordinator;
-    int32_t CoordinatorID;
-    std::string CoordinatorHost;
-    int32_t CoordinatorPort;
+    int16_t m_version;
+    KError m_err;
+    std::shared_ptr<Broker> m_coordinator;
+    int32_t m_coordinator_id;
+    std::string m_coordinator_host;
+    int32_t m_coordinator_port;
     ConsumerMetadataResponse() = default;
-    ConsumerMetadataResponse(int16_t v) : Version(v)
+    ConsumerMetadataResponse(int16_t v) : m_version(v)
     {
     }
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
     int decode(PDecoder &pd, int16_t version);
     int encode(PEncoder &pe);
 };

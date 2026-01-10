@@ -12,26 +12,26 @@
 #include "election_type.h"
 #include "protocol_body.h"
 
-struct ElectLeadersRequest : protocolBody
+struct ElectLeadersRequest : protocol_body
 {
 
-    int16_t Version = 0;
-    ElectionType Type = ElectionType::Preferred;
-    std::unordered_map<std::string, std::vector<int32_t>> TopicPartitions;
-    std::chrono::milliseconds Timeout;
+    int16_t m_version = 0;
+    ElectionType m_type = ElectionType::Preferred;
+    std::unordered_map<std::string, std::vector<int32_t>> m_topic_partitions;
+    std::chrono::milliseconds m_timeout;
 
     ElectLeadersRequest() = default;
-    ElectLeadersRequest(int16_t v) : Version(v)
+    ElectLeadersRequest(int16_t v) : m_version(v)
     {
     }
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible() const;
     static bool isFlexibleVersion(int16_t version);
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
 };

@@ -3,30 +3,30 @@
 #include <stdexcept>
 
 OffsetCommitResponse::OffsetCommitResponse()
-    : Version(0)
+    : m_version(0)
 {
 }
 
-void OffsetCommitResponse::setVersion(int16_t v)
+void OffsetCommitResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 void OffsetCommitResponse::AddError(const std::string &topic, int32_t partition, KError kerror)
 {
-    auto &partitions = Errors[topic];
+    auto &partitions = m_errors[topic];
     partitions[partition] = kerror;
 }
 
 int OffsetCommitResponse::encode(PEncoder &pe)
 {
-    if (Version >= 3)
+    if (m_version >= 3)
     {
-        pe.putDurationMs(ThrottleTime);
+        pe.putDurationMs(m_throttle_time);
     }
 
-    pe.putArrayLength(static_cast<int32_t>(Errors.size()));
-    for (auto &topicEntry : Errors)
+    pe.putArrayLength(static_cast<int32_t>(m_errors.size()));
+    for (auto &topicEntry : m_errors)
     {
         auto &topic = topicEntry.first;
         auto &partitions = topicEntry.second;
@@ -43,13 +43,13 @@ int OffsetCommitResponse::encode(PEncoder &pe)
 
 int OffsetCommitResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
     int err = ErrNoError;
     if (version >= 3)
     {
 
-        err = pd.getDurationMs(ThrottleTime);
+        err = pd.getDurationMs(m_throttle_time);
         if (err != ErrNoError)
         {
             return err;
@@ -67,8 +67,8 @@ int OffsetCommitResponse::decode(PDecoder &pd, int16_t version)
         return ErrNoError;
     }
 
-    Errors.clear();
-    Errors.reserve(numTopics);
+    m_errors.clear();
+    m_errors.reserve(numTopics);
     for (int i = 0; i < numTopics; ++i)
     {
         std::string name;
@@ -83,7 +83,7 @@ int OffsetCommitResponse::decode(PDecoder &pd, int16_t version)
         {
             return err;
         }
-        auto &partitionMap = Errors[name];
+        auto &partitionMap = m_errors[name];
         partitionMap.reserve(numErrors);
         for (int j = 0; j < numErrors; ++j)
         {
@@ -112,7 +112,7 @@ int16_t OffsetCommitResponse::key() const
 
 int16_t OffsetCommitResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t OffsetCommitResponse::headerVersion() const
@@ -120,14 +120,14 @@ int16_t OffsetCommitResponse::headerVersion() const
     return 0;
 }
 
-bool OffsetCommitResponse::isValidVersion() const
+bool OffsetCommitResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 7;
+    return m_version >= 0 && m_version <= 7;
 }
 
-KafkaVersion OffsetCommitResponse::requiredVersion() const
+KafkaVersion OffsetCommitResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 7:
         return V2_3_0_0;
@@ -150,5 +150,5 @@ KafkaVersion OffsetCommitResponse::requiredVersion() const
 
 std::chrono::milliseconds OffsetCommitResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }

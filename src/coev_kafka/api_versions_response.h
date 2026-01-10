@@ -11,27 +11,27 @@
 
 struct ApiVersionsResponseKey : VEncoder, VDecoder
 {
-    int16_t Version = 0;
-    int16_t ApiKey = 0;
-    int16_t MinVersion = 0;
-    int16_t MaxVersion = 0;
+    int16_t m_version = 0;
+    int16_t m_api_key = 0;
+    int16_t m_min_version = 0;
+    int16_t m_max_version = 0;
 
     int encode(PEncoder &pe, int16_t version);
     int decode(PDecoder &pd, int16_t version);
 };
 
-struct ApiVersionsResponse : protocolBody
+struct ApiVersionsResponse : protocol_body
 {
-    int16_t Version = 0;
-    int16_t ErrorCode = 0;
-    std::vector<ApiVersionsResponseKey> ApiKeys;
-    std::chrono::milliseconds ThrottleTime;
+    int16_t m_version = 0;
+    int16_t m_error_code = 0;
+    std::vector<ApiVersionsResponseKey> m_api_keys;
+    std::chrono::milliseconds m_throttle_time;
     ApiVersionsResponse() = default;
-    ApiVersionsResponse(int16_t v) : Version(v)
+    ApiVersionsResponse(int16_t v) : m_version(v)
     {
     }
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
 
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
@@ -39,10 +39,10 @@ struct ApiVersionsResponse : protocolBody
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible() const;
     bool isFlexibleVersion(int16_t version) const;
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
     std::chrono::milliseconds throttleTime() const;
 
     static PDecoder &downgradeFlexibleDecoder(PDecoder &pd);

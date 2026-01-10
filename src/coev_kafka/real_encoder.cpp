@@ -26,46 +26,46 @@ int encodeVariant(uint8_t *buf, int64_t x)
 
 void realEncoder::putInt8(int8_t in)
 {
-    Raw[Off++] = static_cast<uint8_t>(in);
+    m_raw[m_offset++] = static_cast<uint8_t>(in);
 }
 
 void realEncoder::putInt16(int16_t in)
 {
-    Raw[Off] = static_cast<uint8_t>((in >> 8) & 0xFF);
-    Raw[Off + 1] = static_cast<uint8_t>(in & 0xFF);
-    Off += 2;
+    m_raw[m_offset] = static_cast<uint8_t>((in >> 8) & 0xFF);
+    m_raw[m_offset + 1] = static_cast<uint8_t>(in & 0xFF);
+    m_offset += 2;
 }
 
 void realEncoder::putInt32(int32_t in)
 {
-    Raw[Off] = static_cast<uint8_t>((in >> 24) & 0xFF);
-    Raw[Off + 1] = static_cast<uint8_t>((in >> 16) & 0xFF);
-    Raw[Off + 2] = static_cast<uint8_t>((in >> 8) & 0xFF);
-    Raw[Off + 3] = static_cast<uint8_t>(in & 0xFF);
-    Off += 4;
+    m_raw[m_offset] = static_cast<uint8_t>((in >> 24) & 0xFF);
+    m_raw[m_offset + 1] = static_cast<uint8_t>((in >> 16) & 0xFF);
+    m_raw[m_offset + 2] = static_cast<uint8_t>((in >> 8) & 0xFF);
+    m_raw[m_offset + 3] = static_cast<uint8_t>(in & 0xFF);
+    m_offset += 4;
 }
 
 void realEncoder::putInt64(int64_t in)
 {
-    Raw[Off] = static_cast<uint8_t>((in >> 56) & 0xFF);
-    Raw[Off + 1] = static_cast<uint8_t>((in >> 48) & 0xFF);
-    Raw[Off + 2] = static_cast<uint8_t>((in >> 40) & 0xFF);
-    Raw[Off + 3] = static_cast<uint8_t>((in >> 32) & 0xFF);
-    Raw[Off + 4] = static_cast<uint8_t>((in >> 24) & 0xFF);
-    Raw[Off + 5] = static_cast<uint8_t>((in >> 16) & 0xFF);
-    Raw[Off + 6] = static_cast<uint8_t>((in >> 8) & 0xFF);
-    Raw[Off + 7] = static_cast<uint8_t>(in & 0xFF);
-    Off += 8;
+    m_raw[m_offset] = static_cast<uint8_t>((in >> 56) & 0xFF);
+    m_raw[m_offset + 1] = static_cast<uint8_t>((in >> 48) & 0xFF);
+    m_raw[m_offset + 2] = static_cast<uint8_t>((in >> 40) & 0xFF);
+    m_raw[m_offset + 3] = static_cast<uint8_t>((in >> 32) & 0xFF);
+    m_raw[m_offset + 4] = static_cast<uint8_t>((in >> 24) & 0xFF);
+    m_raw[m_offset + 5] = static_cast<uint8_t>((in >> 16) & 0xFF);
+    m_raw[m_offset + 6] = static_cast<uint8_t>((in >> 8) & 0xFF);
+    m_raw[m_offset + 7] = static_cast<uint8_t>(in & 0xFF);
+    m_offset += 8;
 }
 
 void realEncoder::putVariant(int64_t in)
 {
-    Off += encodeVariant((uint8_t *)Raw.data() + Off, in);
+    m_offset += encodeVariant((uint8_t *)m_raw.data() + m_offset, in);
 }
 
 void realEncoder::putUVarint(uint64_t in)
 {
-    Off += encodeUVariant((uint8_t *)Raw.data() + Off, in);
+    m_offset += encodeUVariant((uint8_t *)m_raw.data() + m_offset, in);
 }
 
 void realEncoder::putFloat64(double in)
@@ -97,8 +97,8 @@ void realEncoder::putDurationMs(std::chrono::milliseconds ms)
 
 int realEncoder::putRawBytes(const std::string &in)
 {
-    Raw += in;
-    Off += in.size();
+    m_raw += in;
+    m_offset += in.size();
     return 0;
 }
 
@@ -129,8 +129,8 @@ int realEncoder::putVariantBytes(const std::string &in)
 int realEncoder::putString(const std::string &in)
 {
     putInt16(static_cast<int16_t>(in.size()));
-    Raw += in;
-    Off += in.size();
+    m_raw += in;
+    m_offset += in.size();
     return 0;
 }
 
@@ -198,37 +198,37 @@ void realEncoder::putEmptyTaggedFieldArray()
 
 void realEncoder::push(std::shared_ptr<pushEncoder> in)
 {
-    in->saveOffset(Off);
-    Off += in->reserveLength();
-    Stack.push_back(in);
+    in->saveOffset(m_offset);
+    m_offset += in->reserveLength();
+    m_stack.push_back(in);
 }
 
 int realEncoder::pop()
 {
-    if (Stack.empty())
+    if (m_stack.empty())
         return 0;
-    auto in = Stack.back();
-    Stack.pop_back();
-    in->run(Off, Raw);
+    auto in = m_stack.back();
+    m_stack.pop_back();
+    in->run(m_offset, m_raw);
     return 0;
 }
 
 int realFlexibleEncoder::putArrayLength(int in)
 {
-    base->putUVarint(static_cast<uint64_t>(in + 1));
+    m_base->putUVarint(static_cast<uint64_t>(in + 1));
     return 0;
 }
 
 int realFlexibleEncoder::putBytes(const std::string &in)
 {
-    base->putUVarint(static_cast<uint64_t>(in.size() + 1));
-    return base->putRawBytes(in);
+    m_base->putUVarint(static_cast<uint64_t>(in.size() + 1));
+    return m_base->putRawBytes(in);
 }
 
 int realFlexibleEncoder::putString(const std::string &in)
 {
     putArrayLength(static_cast<int>(in.size()));
-    base->putRawBytes(std::string(in.begin(), in.end()));
+    m_base->putRawBytes(std::string(in.begin(), in.end()));
     return 0;
 }
 
@@ -236,7 +236,7 @@ int realFlexibleEncoder::putNullableString(const std::string &in)
 {
     if (in.empty())
     {
-        base->putInt8(0);
+        m_base->putInt8(0);
         return 0;
     }
     return putString(in);
@@ -254,10 +254,10 @@ int realFlexibleEncoder::putStringArray(const std::vector<std::string> &in)
 
 int realFlexibleEncoder::putInt32Array(const std::vector<int32_t> &in)
 {
-    base->putUVarint(static_cast<uint64_t>(in.size()) + 1);
+    m_base->putUVarint(static_cast<uint64_t>(in.size()) + 1);
     for (int32_t v : in)
     {
-        base->putInt32(v);
+        m_base->putInt32(v);
     }
     return 0;
 }
@@ -266,18 +266,18 @@ int realFlexibleEncoder::putNullableInt32Array(const std::vector<int32_t> &in)
 {
     if (in.empty())
     {
-        base->putUVarint(0);
+        m_base->putUVarint(0);
         return 0;
     }
-    base->putUVarint(static_cast<uint64_t>(in.size()) + 1);
+    m_base->putUVarint(static_cast<uint64_t>(in.size()) + 1);
     for (int32_t v : in)
     {
-        base->putInt32(v);
+        m_base->putInt32(v);
     }
     return 0;
 }
 
 void realFlexibleEncoder::putEmptyTaggedFieldArray()
 {
-    base->putUVarint(0);
+    m_base->putUVarint(0);
 }

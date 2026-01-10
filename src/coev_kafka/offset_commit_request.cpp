@@ -5,89 +5,89 @@
 
 int OffsetCommitRequestBlock::encode(PEncoder &pe, int16_t version)
 {
-    pe.putInt64(Offset);
+    pe.putInt64(m_offset);
 
     if (version == 1)
     {
-        pe.putInt64(Timestamp);
+        pe.putInt64(m_timestamp);
     }
-    else if (Timestamp != 0)
+    else if (m_timestamp != 0)
     {
     }
     if (version >= 6)
     {
-        pe.putInt32(CommittedLeaderEpoch);
+        pe.putInt32(m_committed_leader_epoch);
     }
-    return pe.putString(Metadata);
+    return pe.putString(m_metadata);
 }
 
 int OffsetCommitRequestBlock::decode(PDecoder &pd, int16_t version)
 {
-    auto err = pd.getInt64(Offset);
+    auto err = pd.getInt64(m_offset);
     if (err != 0)
         return err;
 
     if (version == 1)
     {
-        err = pd.getInt64(Timestamp);
+        err = pd.getInt64(m_timestamp);
         if (err != 0)
             return err;
     }
     if (version >= 6)
     {
-        err = pd.getInt32(CommittedLeaderEpoch);
+        err = pd.getInt32(m_committed_leader_epoch);
         if (err != 0)
             return err;
     }
-    err = pd.getString(Metadata);
+    err = pd.getString(m_metadata);
     return err;
 }
 
 OffsetCommitRequest::OffsetCommitRequest()
-    : ConsumerGroupGeneration(0), RetentionTime(0), Version(0)
+    : m_consumer_group_generation(0), m_retention_time(0), m_version(0)
 {
 }
 
-void OffsetCommitRequest::setVersion(int16_t v)
+void OffsetCommitRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int OffsetCommitRequest::encode(PEncoder &pe)
 {
-    if (Version < 0 || Version > 7)
+    if (m_version < 0 || m_version > 7)
     {
         return ErrConsumerOffsetNotAdvanced;
     }
 
-    auto err = pe.putString(ConsumerGroup);
+    auto err = pe.putString(m_consumer_group);
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
-        pe.putInt32(ConsumerGroupGeneration);
-        pe.putString(ConsumerID);
+        pe.putInt32(m_consumer_group_generation);
+        pe.putString(m_consumer_id);
     }
     else
     {
-        if (ConsumerGroupGeneration != 0)
+        if (m_consumer_group_generation != 0)
         {
         }
-        if (!ConsumerID.empty())
+        if (!m_consumer_id.empty())
         {
         }
     }
 
-    if (Version >= 2 && Version <= 4)
+    if (m_version >= 2 && m_version <= 4)
     {
-        pe.putInt64(RetentionTime);
+        pe.putInt64(m_retention_time);
     }
-    else if (RetentionTime != 0)
+    else if (m_retention_time != 0)
     {
     }
 
-    if (Version >= 7)
+    if (m_version >= 7)
     {
-        pe.putNullableString(GroupInstanceId);
+        pe.putNullableString(m_group_instance_id);
     }
 
     pe.putArrayLength(static_cast<int32_t>(blocks.size()));
@@ -100,7 +100,7 @@ int OffsetCommitRequest::encode(PEncoder &pe)
         for (auto &partitionEntry : partitions)
         {
             pe.putInt32(partitionEntry.first);
-            partitionEntry.second->encode(pe, Version);
+            partitionEntry.second->encode(pe, m_version);
         }
     }
     return 0;
@@ -108,25 +108,25 @@ int OffsetCommitRequest::encode(PEncoder &pe)
 
 int OffsetCommitRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
-    auto err = pd.getString(ConsumerGroup);
+    m_version = version;
+    auto err = pd.getString(m_consumer_group);
     if (err != 0)
         return err;
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
-        pd.getInt32(ConsumerGroupGeneration);
-        pd.getString(ConsumerID);
+        pd.getInt32(m_consumer_group_generation);
+        pd.getString(m_consumer_id);
     }
 
-    if (Version >= 2 && Version <= 4)
+    if (m_version >= 2 && m_version <= 4)
     {
-        pd.getInt64(RetentionTime);
+        pd.getInt64(m_retention_time);
     }
 
-    if (Version >= 7)
+    if (m_version >= 7)
     {
-        pd.getNullableString(GroupInstanceId);
+        pd.getNullableString(m_group_instance_id);
     }
 
     int32_t topicCount;
@@ -161,7 +161,7 @@ int OffsetCommitRequest::decode(PDecoder &pd, int16_t version)
                 return err;
             }
             auto block = std::make_shared<OffsetCommitRequestBlock>();
-            block->decode(pd, Version);
+            block->decode(pd, m_version);
             partitionMap[partition] = block;
         }
     }
@@ -174,7 +174,7 @@ int16_t OffsetCommitRequest::key() const
 }
 int16_t OffsetCommitRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t OffsetCommitRequest::headerVersion() const
@@ -182,14 +182,14 @@ int16_t OffsetCommitRequest::headerVersion() const
     return 1;
 }
 
-bool OffsetCommitRequest::isValidVersion() const
+bool OffsetCommitRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 7;
+    return m_version >= 0 && m_version <= 7;
 }
 
-KafkaVersion OffsetCommitRequest::requiredVersion() const
+KafkaVersion OffsetCommitRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 7:
         return V2_3_0_0;
@@ -238,5 +238,5 @@ std::pair<int64_t, std::string> OffsetCommitRequest::Offset(const std::string &t
         throw std::runtime_error("no such offset");
     }
     auto &block = partIt->second;
-    return std::make_pair(block->Offset, block->Metadata);
+    return std::make_pair(block->m_offset, block->m_metadata);
 }

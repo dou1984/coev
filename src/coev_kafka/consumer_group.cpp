@@ -15,42 +15,42 @@
 #include "consumer_group_handler.h"
 
 ConsumerGroup::ConsumerGroup(std::shared_ptr<Client> client, std::shared_ptr<IConsumer> consumer, std::shared_ptr<Config> config, const std::string &group_)
-    : client_(client), config_(config), consumer_(consumer), groupId(group_)
+    : m_client(client), m_config(config), m_consumer(consumer), m_group_id(group_)
 {
 
-    userData = config_->Consumer.Group.Member.UserData;
+    m_user_data = m_config->Consumer.Group.Member.UserData;
 
-    if (!config_->Version.IsAtLeast(V0_10_2_0))
+    if (!m_config->Version.IsAtLeast(V0_10_2_0))
     {
         throw std::runtime_error("consumer groups require Version to be >= V0_10_2_0");
     }
 
-    if (config_->Consumer.Group.InstanceID != "" && config_->Version.IsAtLeast(V2_3_0_0))
+    if (m_config->Consumer.Group.InstanceID != "" && m_config->Version.IsAtLeast(V2_3_0_0))
     {
-        groupInstanceId = config_->Consumer.Group.InstanceID;
+        m_group_instance_id = m_config->Consumer.Group.InstanceID;
     }
 }
 
 coev::awaitable<int> ConsumerGroup::Consume(std::shared_ptr<Context> &ctx, const std::vector<std::string> &topics, std::shared_ptr<ConsumerGroupHandler> handler)
 {
-    bool isClosed = co_await closed.get();
+    bool isClosed = co_await m_closed.get();
     if (isClosed)
     {
         co_return ErrorGroupClosed;
     }
 
-    std::lock_guard<std::mutex> lock_guard(lock);
+    std::lock_guard<std::mutex> lock_guard(m_lock);
     if (topics.empty())
     {
         co_return ErrTopicsProvided;
     }
 
-    if (int err = co_await client_->RefreshMetadata(topics); err != 0)
+    if (int err = co_await m_client->RefreshMetadata(topics); err != 0)
     {
         co_return err;
     }
     std::shared_ptr<ConsumerGroupSession> session;
-    auto err = co_await NewSession(ctx, topics, handler, config_->Consumer.Group.Rebalance.Retry.Max, session);
+    auto err = co_await NewSession(ctx, topics, handler, m_config->Consumer.Group.Rebalance.Retry.Max, session);
     if (err != ErrNoError)
     {
         co_return err;
@@ -61,12 +61,12 @@ coev::awaitable<int> ConsumerGroup::Consume(std::shared_ptr<Context> &ctx, const
 
 coev::co_channel<std::shared_ptr<ConsumerError>> &ConsumerGroup::Errors()
 {
-    return errors;
+    return m_errors;
 }
 
 coev::awaitable<int> ConsumerGroup::Close()
 {
-    auto isClosed = co_await closed.get();
+    auto isClosed = co_await m_closed.get();
     if (isClosed)
     {
         co_return 0;
@@ -77,11 +77,11 @@ coev::awaitable<int> ConsumerGroup::Close()
         co_return err;
     }
     auto cErr = std::make_shared<ConsumerError>();
-    while (errors.try_get(cErr))
+    while (m_errors.try_get(cErr))
     {
     }
 
-    if (err = client_->Close(); err != 0)
+    if (err = m_client->Close(); err != 0)
     {
         co_return err;
     }
@@ -91,22 +91,22 @@ coev::awaitable<int> ConsumerGroup::Close()
 
 void ConsumerGroup::Pause(const std::map<std::string, std::vector<int32_t>> &partitions)
 {
-    consumer_->Pause(partitions);
+    m_consumer->Pause(partitions);
 }
 
 void ConsumerGroup::Resume(const std::map<std::string, std::vector<int32_t>> &partitions)
 {
-    consumer_->Resume(partitions);
+    m_consumer->Resume(partitions);
 }
 
 void ConsumerGroup::PauseAll()
 {
-    consumer_->PauseAll();
+    m_consumer->PauseAll();
 }
 
 void ConsumerGroup::ResumeAll()
 {
-    consumer_->ResumeAll();
+    m_consumer->ResumeAll();
 }
 
 coev::awaitable<int> ConsumerGroup::RetryNewSession(std::shared_ptr<Context> &ctx, const std::vector<std::string> &topics, std::shared_ptr<ConsumerGroupHandler> handler, int retries, bool refreshCoordinator, std::shared_ptr<ConsumerGroupSession> &out)
@@ -119,12 +119,12 @@ coev::awaitable<int> ConsumerGroup::RetryNewSession(std::shared_ptr<Context> &ct
         }(),
         [this]() -> coev::awaitable<void>
         {
-            co_await closed.get();
+            co_await m_closed.get();
             co_return;
         }(),
         [this]() -> coev::awaitable<void>
         {
-            co_await sleep_for(config_->Consumer.Group.Rebalance.Retry.Backoff);
+            co_await sleep_for(m_config->Consumer.Group.Rebalance.Retry.Backoff);
             co_return;
         }());
     if (select_result == 0)
@@ -138,7 +138,7 @@ coev::awaitable<int> ConsumerGroup::RetryNewSession(std::shared_ptr<Context> &ct
 
     if (refreshCoordinator)
     {
-        auto err = co_await client_->RefreshCoordinator(groupId);
+        auto err = co_await m_client->RefreshCoordinator(m_group_id);
         if (err != ErrNoError)
         {
             if (retries <= 0)
@@ -156,7 +156,7 @@ coev::awaitable<int> ConsumerGroup::RetryNewSession(std::shared_ptr<Context> &ct
 coev::awaitable<int> ConsumerGroup::NewSession(std::shared_ptr<Context> &ctx, const std::vector<std::string> &topics, std::shared_ptr<ConsumerGroupHandler> handler, int retries, std::shared_ptr<ConsumerGroupSession> &session)
 {
 
-    int err = co_await client_->GetCoordinator(groupId, coordinator);
+    int err = co_await m_client->GetCoordinator(m_group_id, m_coordinator);
     if (err != 0)
     {
         if (retries <= 0)
@@ -171,22 +171,22 @@ coev::awaitable<int> ConsumerGroup::NewSession(std::shared_ptr<Context> &ctx, co
     std::shared_ptr<metrics::Counter> consumerGroupSyncTotal;
     std::shared_ptr<metrics::Counter> consumerGroupSyncFailed;
 
-    if (metricRegistry != nullptr)
+    if (m_metric_registry != nullptr)
     {
-        consumerGroupJoinTotal = metrics::GetOrRegisterCounter("consumer-group-join-total-" + groupId, metricRegistry);
-        consumerGroupJoinFailed = metrics::GetOrRegisterCounter("consumer-group-join-failed-" + groupId, metricRegistry);
-        consumerGroupSyncTotal = metrics::GetOrRegisterCounter("consumer-group-sync-total-" + groupId, metricRegistry);
-        consumerGroupSyncFailed = metrics::GetOrRegisterCounter("consumer-group-sync-failed-" + groupId, metricRegistry);
+        consumerGroupJoinTotal = metrics::GetOrRegisterCounter("consumer-group-join-total-" + m_group_id, m_metric_registry);
+        consumerGroupJoinFailed = metrics::GetOrRegisterCounter("consumer-group-join-failed-" + m_group_id, m_metric_registry);
+        consumerGroupSyncTotal = metrics::GetOrRegisterCounter("consumer-group-sync-total-" + m_group_id, m_metric_registry);
+        consumerGroupSyncFailed = metrics::GetOrRegisterCounter("consumer-group-sync-failed-" + m_group_id, m_metric_registry);
     }
     std::shared_ptr<JoinGroupResponse> response;
-    err = co_await JoinGroup(coordinator, topics, response);
+    err = co_await JoinGroup(m_coordinator, topics, response);
     if (consumerGroupJoinTotal != nullptr)
     {
         consumerGroupJoinTotal->Inc(1);
     }
     if (err != 0)
     {
-        co_await coordinator->Close();
+        co_await m_coordinator->Close();
         if (consumerGroupJoinFailed != nullptr)
         {
             consumerGroupJoinFailed->Inc(1);
@@ -194,7 +194,7 @@ coev::awaitable<int> ConsumerGroup::NewSession(std::shared_ptr<Context> &ctx, co
         co_return err;
     }
 
-    if (response->Err != 0)
+    if (response->m_err != 0)
     {
         if (consumerGroupJoinFailed != nullptr)
         {
@@ -202,38 +202,38 @@ coev::awaitable<int> ConsumerGroup::NewSession(std::shared_ptr<Context> &ctx, co
         }
     }
 
-    switch (response->Err)
+    switch (response->m_err)
     {
     case ErrNoError:
-        memberId = response->MemberId;
+        m_member_id = response->m_member_id;
         break;
     case ErrUnknownMemberId:
     case ErrIllegalGeneration:
-        memberId = "";
+        m_member_id = "";
         co_return co_await NewSession(ctx, topics, handler, retries, session);
     case ErrNotCoordinatorForConsumer:
     case ErrRebalanceInProgress:
     case ErrOffsetsLoadInProgress:
         if (retries <= 0)
         {
-            co_return response->Err;
+            co_return response->m_err;
         }
         co_return co_await RetryNewSession(ctx, topics, handler, retries, true, session);
     case ErrMemberIdRequired:
-        memberId = response->MemberId;
+        m_member_id = response->m_member_id;
         co_return co_await NewSession(ctx, topics, handler, retries, session);
     case ErrFencedInstancedId:
-        Logger::Printf("JoinGroup failed: group instance id %s has been fenced\n", groupInstanceId);
-        co_return response->Err;
+        Logger::Printf("JoinGroup failed: group instance id %s has been fenced\n", m_group_instance_id);
+        co_return response->m_err;
     default:
-        co_return response->Err;
+        co_return response->m_err;
     }
 
-    std::shared_ptr<BalanceStrategy> strategy = config_->Consumer.Group.Rebalance.Strategy;
+    std::shared_ptr<BalanceStrategy> strategy = m_config->Consumer.Group.Rebalance.Strategy;
     bool ok = false;
     if (strategy == nullptr)
     {
-        strategy = findStrategy(response->GroupProtocol, config_->Consumer.Group.Rebalance.GroupStrategies, ok);
+        strategy = findStrategy(response->m_group_protocol, m_config->Consumer.Group.Rebalance.GroupStrategies, ok);
         if (!ok)
         {
             co_return ErrStrategyNotFound;
@@ -245,7 +245,7 @@ coev::awaitable<int> ConsumerGroup::NewSession(std::shared_ptr<Context> &ctx, co
     std::vector<std::string> allSubscribedTopics;
     BalanceStrategyPlan plan;
 
-    if (response->LeaderId == response->MemberId)
+    if (response->m_leader_id == response->m_member_id)
     {
         err = response->GetMembers(members);
         if (err != 0)
@@ -260,14 +260,14 @@ coev::awaitable<int> ConsumerGroup::NewSession(std::shared_ptr<Context> &ctx, co
     }
 
     std::shared_ptr<SyncGroupResponse> syncGroupResponse;
-    err = co_await SyncGroup(coordinator, members, plan, response->GenerationId, strategy, syncGroupResponse);
+    err = co_await SyncGroup(m_coordinator, members, plan, response->m_generation_id, strategy, syncGroupResponse);
     if (consumerGroupSyncTotal != nullptr)
     {
         consumerGroupSyncTotal->Inc(1);
     }
     if (err != 0)
     {
-        co_await coordinator->Close();
+        co_await m_coordinator->Close();
         if (consumerGroupSyncFailed != nullptr)
         {
             consumerGroupSyncFailed->Inc(1);
@@ -275,7 +275,7 @@ coev::awaitable<int> ConsumerGroup::NewSession(std::shared_ptr<Context> &ctx, co
         co_return err;
     }
 
-    if (syncGroupResponse->Err != 0)
+    if (syncGroupResponse->m_err != 0)
     {
         if (consumerGroupSyncFailed != nullptr)
         {
@@ -283,31 +283,31 @@ coev::awaitable<int> ConsumerGroup::NewSession(std::shared_ptr<Context> &ctx, co
         }
     }
 
-    switch (syncGroupResponse->Err)
+    switch (syncGroupResponse->m_err)
     {
     case ErrNoError:
         break;
     case ErrUnknownMemberId:
     case ErrIllegalGeneration:
-        memberId = "";
+        m_member_id = "";
         co_return co_await NewSession(ctx, topics, handler, retries, session);
     case ErrNotCoordinatorForConsumer:
     case ErrRebalanceInProgress:
     case ErrOffsetsLoadInProgress:
         if (retries <= 0)
         {
-            co_return syncGroupResponse->Err;
+            co_return syncGroupResponse->m_err;
         }
         co_return co_await RetryNewSession(ctx, topics, handler, retries, true, session);
     case ErrFencedInstancedId:
-        Logger::Printf("JoinGroup failed: group instance id %s has been fenced\n", groupInstanceId);
-        co_return syncGroupResponse->Err;
+        Logger::Printf("JoinGroup failed: group instance id %s has been fenced\n", m_group_instance_id);
+        co_return syncGroupResponse->m_err;
     default:
-        co_return syncGroupResponse->Err;
+        co_return syncGroupResponse->m_err;
     }
 
     std::map<std::string, std::vector<int32_t>> claims;
-    if (!syncGroupResponse->MemberAssignment.empty())
+    if (!syncGroupResponse->m_member_assignment.empty())
     {
         std::shared_ptr<ConsumerGroupMemberAssignment> assignment;
         err = syncGroupResponse->GetMemberAssignment(assignment);
@@ -319,11 +319,11 @@ coev::awaitable<int> ConsumerGroup::NewSession(std::shared_ptr<Context> &ctx, co
 
         if (assignment->UserData.size() > 0)
         {
-            userData = std::move(assignment->UserData);
+            m_user_data = std::move(assignment->UserData);
         }
         else
         {
-            userData = config_->Consumer.Group.Member.UserData;
+            m_user_data = m_config->Consumer.Group.Member.UserData;
         }
 
         for (auto &kv : claims)
@@ -332,7 +332,7 @@ coev::awaitable<int> ConsumerGroup::NewSession(std::shared_ptr<Context> &ctx, co
         }
     }
 
-    err = co_await NewConsumerGroupSession(ctx, shared_from_this(), claims, response->MemberId, response->GenerationId, handler, session);
+    err = co_await NewConsumerGroupSession(ctx, shared_from_this(), claims, response->m_member_id, response->m_generation_id, handler, session);
 
     if (err != 0)
     {
@@ -340,9 +340,9 @@ coev::awaitable<int> ConsumerGroup::NewSession(std::shared_ptr<Context> &ctx, co
         co_return err;
     }
 
-    if (response->LeaderId == response->MemberId)
+    if (response->m_leader_id == response->m_member_id)
     {
-        task_ << LoopCheckPartitionNumbers(allSubscribedTopicPartitions, allSubscribedTopics, session);
+        m_task << LoopCheckPartitionNumbers(allSubscribedTopicPartitions, allSubscribedTopics, session);
     }
 
     co_return err;
@@ -351,44 +351,44 @@ coev::awaitable<int> ConsumerGroup::NewSession(std::shared_ptr<Context> &ctx, co
 coev::awaitable<int> ConsumerGroup::JoinGroup(std::shared_ptr<Broker> coordinator, const std::vector<std::string> &topics, std::shared_ptr<JoinGroupResponse> &response)
 {
     auto request = std::make_shared<JoinGroupRequest>();
-    request->GroupId = groupId;
-    request->MemberId = memberId;
-    request->SessionTimeout = static_cast<int32_t>(config_->Consumer.Group.Session.Timeout.count() / 1000000); // assuming time.Millisecond = 1e6 ns
-    request->ProtocolType = "consumer";
+    request->m_group_id = m_group_id;
+    request->m_member_id = m_member_id;
+    request->m_session_timeout = static_cast<int32_t>(m_config->Consumer.Group.Session.Timeout.count() / 1000000); // assuming time.Millisecond = 1e6 ns
+    request->m_protocol_type = "consumer";
 
-    if (config_->Version.IsAtLeast(V0_10_1_0))
+    if (m_config->Version.IsAtLeast(V0_10_1_0))
     {
-        request->Version = 1;
-        request->RebalanceTimeout = static_cast<int32_t>(config_->Consumer.Group.Rebalance.Timeout.count() / 1000000);
+        request->m_version = 1;
+        request->m_rebalance_timeout = static_cast<int32_t>(m_config->Consumer.Group.Rebalance.Timeout.count() / 1000000);
     }
-    if (config_->Version.IsAtLeast(V0_11_0_0))
+    if (m_config->Version.IsAtLeast(V0_11_0_0))
     {
-        request->Version = 2;
+        request->m_version = 2;
     }
-    if (config_->Version.IsAtLeast(V2_0_0_0))
+    if (m_config->Version.IsAtLeast(V2_0_0_0))
     {
-        request->Version = 3;
+        request->m_version = 3;
     }
-    if (config_->Version.IsAtLeast(V2_2_0_0))
+    if (m_config->Version.IsAtLeast(V2_2_0_0))
     {
-        request->Version = 4;
+        request->m_version = 4;
     }
-    if (config_->Version.IsAtLeast(V2_3_0_0))
+    if (m_config->Version.IsAtLeast(V2_3_0_0))
     {
-        request->Version = 5;
-        request->GroupInstanceId = groupInstanceId;
-        if (config_->Version.IsAtLeast(V2_4_0_0))
+        request->m_version = 5;
+        request->m_group_instance_id = m_group_instance_id;
+        if (m_config->Version.IsAtLeast(V2_4_0_0))
         {
-            request->Version = 6;
+            request->m_version = 6;
         }
     }
 
     auto meta = std::make_shared<ConsumerGroupMemberMetadata>();
-    meta->Topics = topics;
-    meta->UserData = userData;
+    meta->m_topics = topics;
+    meta->m_user_data = m_user_data;
 
     int err = 0;
-    auto strategy = config_->Consumer.Group.Rebalance.Strategy;
+    auto strategy = m_config->Consumer.Group.Rebalance.Strategy;
     if (strategy != nullptr)
     {
         err = request->AddGroupProtocolMetadata(strategy->Name(), meta);
@@ -399,7 +399,7 @@ coev::awaitable<int> ConsumerGroup::JoinGroup(std::shared_ptr<Broker> coordinato
     }
     else
     {
-        for (const auto &s : config_->Consumer.Group.Rebalance.GroupStrategies)
+        for (const auto &s : m_config->Consumer.Group.Rebalance.GroupStrategies)
         {
             err = request->AddGroupProtocolMetadata(s->Name(), meta);
             if (err != 0)
@@ -432,29 +432,29 @@ std::shared_ptr<BalanceStrategy> ConsumerGroup::findStrategy(const std::string &
 }
 
 coev::awaitable<int> ConsumerGroup::SyncGroup(std::shared_ptr<Broker> coordinator, std::map<std::string, ConsumerGroupMemberMetadata> members,
-                                                     const BalanceStrategyPlan &plan, int32_t generationID,
-                                                     std::shared_ptr<BalanceStrategy> strategy, std::shared_ptr<SyncGroupResponse> &response)
+                                              const BalanceStrategyPlan &plan, int32_t generationID,
+                                              std::shared_ptr<BalanceStrategy> strategy, std::shared_ptr<SyncGroupResponse> &response)
 {
     auto req = std::make_shared<SyncGroupRequest>();
-    req->GroupId = groupId;
-    req->MemberId = memberId;
-    req->GenerationId = generationID;
+    req->m_group_id = m_group_id;
+    req->m_member_id = m_member_id;
+    req->m_generation_id = generationID;
 
-    if (config_->Version.IsAtLeast(V1_1_0_0))
-    { // V0_11_0_0
-        req->Version = 1;
+    if (m_config->Version.IsAtLeast(V1_1_0_0))
+    {
+        req->m_version = 1;
     }
-    if (config_->Version.IsAtLeast(V2_0_0_0))
-    { // V2_0_0_0
-        req->Version = 2;
+    if (m_config->Version.IsAtLeast(V2_0_0_0))
+    {
+        req->m_version = 2;
     }
-    if (config_->Version.IsAtLeast(V2_3_0_0))
-    { // V2_3_0_0
-        req->Version = 3;
-        req->GroupInstanceId = groupInstanceId;
-        if (config_->Version.IsAtLeast(V2_4_0_0))
-        { // V2_4_0_0
-            req->Version = 4;
+    if (m_config->Version.IsAtLeast(V2_3_0_0))
+    {
+        req->m_version = 3;
+        req->m_group_instance_id = m_group_instance_id;
+        if (m_config->Version.IsAtLeast(V2_4_0_0))
+        {
+            req->m_version = 4;
         }
     }
 
@@ -502,28 +502,28 @@ coev::awaitable<int> ConsumerGroup::SyncGroup(std::shared_ptr<Broker> coordinato
 }
 
 coev::awaitable<int> ConsumerGroup::Heartbeat(std::shared_ptr<Broker> coordinator, const std::string &memberID, int32_t generationID,
-                                                     std::shared_ptr<HeartbeatResponse> &response)
+                                              std::shared_ptr<HeartbeatResponse> &response)
 {
     auto req = std::make_shared<HeartbeatRequest>();
-    req->GroupId = groupId;
-    req->MemberId = memberID;
-    req->GenerationId = generationID;
+    req->m_group_id = m_group_id;
+    req->m_member_id = memberID;
+    req->m_group_instance_id = generationID;
 
-    if (config_->Version.IsAtLeast(V0_11_0_0))
+    if (m_config->Version.IsAtLeast(V0_11_0_0))
     {
-        req->Version = 1;
+        req->m_version = 1;
     }
-    if (config_->Version.IsAtLeast(V2_0_0_0))
+    if (m_config->Version.IsAtLeast(V2_0_0_0))
     {
-        req->Version = 2;
+        req->m_version = 2;
     }
-    if (config_->Version.IsAtLeast(V2_3_0_0))
+    if (m_config->Version.IsAtLeast(V2_3_0_0))
     {
-        req->Version = 3;
-        req->GroupInstanceId = groupInstanceId;
-        if (config_->Version.IsAtLeast(V2_4_0_0))
+        req->m_version = 3;
+        req->m_group_instance_id = m_group_instance_id;
+        if (m_config->Version.IsAtLeast(V2_4_0_0))
         {
-            req->Version = 4;
+            req->m_version = 4;
         }
     }
 
@@ -538,7 +538,7 @@ coev::awaitable<int> ConsumerGroup::Balance(std::shared_ptr<BalanceStrategy> str
     for (auto &kv : members)
     {
         auto &meta = kv.second;
-        for (auto &topic : meta.Topics)
+        for (auto &topic : meta.m_topics)
         {
             topicPartitions[topic] = std::vector<int32_t>();
         }
@@ -551,7 +551,7 @@ coev::awaitable<int> ConsumerGroup::Balance(std::shared_ptr<BalanceStrategy> str
         allSubscribedTopics.push_back(kv.first);
     }
 
-    int err = co_await client_->RefreshMetadata(allSubscribedTopics);
+    int err = co_await m_client->RefreshMetadata(allSubscribedTopics);
     if (err != 0)
     {
         co_return err;
@@ -561,7 +561,7 @@ coev::awaitable<int> ConsumerGroup::Balance(std::shared_ptr<BalanceStrategy> str
     {
         const std::string &topic = kv.first;
         std::vector<int32_t> partitions;
-        err = co_await client_->Partitions(topic, partitions);
+        err = co_await m_client->Partitions(topic, partitions);
         if (err != 0)
         {
             co_return err;
@@ -574,60 +574,60 @@ coev::awaitable<int> ConsumerGroup::Balance(std::shared_ptr<BalanceStrategy> str
 
 coev::awaitable<int> ConsumerGroup::Leave()
 {
-    std::lock_guard<std::mutex> lock_guard(lock);
-    if (memberId.empty())
+    std::lock_guard<std::mutex> lock_guard(m_lock);
+    if (m_member_id.empty())
     {
         co_return 0;
     }
 
-    auto err = co_await client_->GetCoordinator(groupId, coordinator);
+    auto err = co_await m_client->GetCoordinator(m_group_id, m_coordinator);
     if (err != ErrNoError)
     {
         co_return -1;
     }
 
-    if (groupInstanceId.size() > 0)
+    if (m_group_instance_id.size() > 0)
     {
-        memberId.clear();
+        m_member_id.clear();
         co_return 0;
     }
 
     auto req = std::make_shared<LeaveGroupRequest>();
-    req->GroupId = groupId;
-    req->MemberId = memberId;
+    req->m_group_id = m_group_id;
+    req->m_member_id = m_member_id;
 
-    if (config_->Version.IsAtLeast(V0_11_0_0))
+    if (m_config->Version.IsAtLeast(V0_11_0_0))
     {
-        req->Version = 1;
+        req->m_version = 1;
     }
-    if (config_->Version.IsAtLeast(V2_0_0_0))
+    if (m_config->Version.IsAtLeast(V2_0_0_0))
     {
-        req->Version = 2;
+        req->m_version = 2;
     }
-    if (config_->Version.IsAtLeast(V2_4_0_0))
+    if (m_config->Version.IsAtLeast(V2_4_0_0))
     {
-        req->Version = 4;
-        req->Members.push_back(MemberIdentity{memberId});
+        req->m_version = 4;
+        req->m_members.push_back(MemberIdentity{m_member_id});
     }
 
     std::shared_ptr<LeaveGroupResponse> resp;
-    err = co_await coordinator->LeaveGroup(req, resp);
+    err = co_await m_coordinator->LeaveGroup(req, resp);
     if (err != ErrNoError)
     {
-        co_await coordinator->Close();
+        co_await m_coordinator->Close();
         co_return err;
     }
 
-    memberId = "";
+    m_member_id = "";
 
-    switch (resp->Err)
+    switch (resp->m_err)
     {
     case ErrRebalanceInProgress:
     case ErrUnknownMemberId:
     case ErrNoError:
         co_return ErrNoError;
     default:
-        co_return resp->Err;
+        co_return resp->m_err;
     }
 }
 
@@ -636,37 +636,37 @@ void ConsumerGroup::HandleError(std::shared_ptr<ConsumerError> err, const std::s
     if (!err && !topic.empty() && partition > -1)
     {
         err = std::make_shared<ConsumerError>();
-        err->Topic = topic;
-        err->Partition = partition;
-        err->Err = ErrNoError;
+        err->m_topic = topic;
+        err->m_partition = partition;
+        err->m_err = ErrNoError;
     }
 
-    if (!config_->Consumer.Return.Errors)
+    if (!m_config->Consumer.Return.Errors)
     {
-        Logger::Println(KErrorToString(err->Err));
+        Logger::Println(KErrorToString(err->m_err));
         return;
     }
 
-    std::shared_lock<std::shared_mutex> lock(errorsLock);
+    std::shared_lock<std::shared_mutex> lock(m_errors_lock);
     bool _closed = false;
-    if (closed.try_get(_closed))
+    if (m_closed.try_get(_closed))
     {
         return;
     }
 
-    errors.set(err);
+    m_errors.set(err);
 }
 
 coev::awaitable<void> ConsumerGroup::LoopCheckPartitionNumbers(
     const std::map<std::string, std::vector<int32_t>> &allSubscribedTopicPartitions,
     const std::vector<std::string> &topics, std::shared_ptr<ConsumerGroupSession> &session)
 {
-    if (config_->Metadata.RefreshFrequency == std::chrono::milliseconds(0))
+    if (m_config->Metadata.RefreshFrequency == std::chrono::milliseconds(0))
     {
         co_return;
     }
 
-    session->cancel();
+    session->m_cancel();
 
     std::map<std::string, int> oldTopicToPartitionNum;
     for (auto &kv : allSubscribedTopicPartitions)
@@ -693,7 +693,7 @@ coev::awaitable<void> ConsumerGroup::LoopCheckPartitionNumbers(
             {
                 Logger::Printf(
                     "consumergroup/%s loop check partition number goroutine find partitions in topics %s changed from %d to %d\n",
-                    groupId.c_str(), topics.empty() ? "" : topics[0].c_str(), oldNum, newNum);
+                    m_group_id.c_str(), topics.empty() ? "" : topics[0].c_str(), oldNum, newNum);
                 co_return;
             }
         }
@@ -701,15 +701,15 @@ coev::awaitable<void> ConsumerGroup::LoopCheckPartitionNumbers(
         coev::co_task task_;
         task_ << [this]() -> coev::awaitable<void>
         {
-            co_await sleep_for(config_->Metadata.RefreshFrequency);
+            co_await sleep_for(m_config->Metadata.RefreshFrequency);
         }();
-        task_ << [&session]() -> coev::awaitable<void>
+        m_task << [&session]() -> coev::awaitable<void>
         {
-            co_await session->context->get().get();
+            co_await session->m_context->get().get();
         }();
-        task_ << closed.get();
+        m_task << m_closed.get();
 
-        co_await task_.wait();
+        co_await m_task.wait();
     }
 }
 
@@ -720,12 +720,12 @@ coev::awaitable<int> ConsumerGroup::TopicToPartitionNumbers(const std::vector<st
     for (auto &topic : topics)
     {
         std::vector<int32_t> partitionNum;
-        int err = co_await client_->Partitions(topic, partitionNum);
+        int err = co_await m_client->Partitions(topic, partitionNum);
         if (err != 0)
         {
             Logger::Printf(
                 "consumergroup/%s topic %s get partition number failed due to '%d'\n",
-                groupId.c_str(), topic.c_str(), err);
+                m_group_id.c_str(), topic.c_str(), err);
             co_return err;
         }
         topicToPartitionNum[topic] = static_cast<int>(partitionNum.size());
@@ -764,7 +764,7 @@ coev::awaitable<int> NewConsumerGroupSession(std::shared_ptr<Context> context, s
 
     std::function<void()> cancel;
     std::shared_ptr<OffsetManager> offsets;
-    auto err = co_await NewOffsetManagerFromClient(parent->groupId, "", -1, parent->client_, cancel, offsets);
+    auto err = co_await NewOffsetManagerFromClient(parent->m_group_id, "", -1, parent->m_client, cancel, offsets);
     if (err != ErrNoError)
     {
         co_return err;
@@ -773,7 +773,7 @@ coev::awaitable<int> NewConsumerGroupSession(std::shared_ptr<Context> context, s
     handler = std::make_shared<ConsumerGroupHandler>();
     session = std::make_shared<ConsumerGroupSession>(parent, "", -1, handler, offsets, claims, context, cancel);
 
-    session->task_ << session->HeartbeatLoop_();
+    session->m_task << session->HeartbeatLoop_();
 
     for (auto &claim : claims)
     {
@@ -788,15 +788,15 @@ coev::awaitable<int> NewConsumerGroupSession(std::shared_ptr<Context> context, s
                 co_return ErrNoError;
             }
 
-            session->task_ << [session, pom, topic, partition]() -> coev::awaitable<void>
+            session->m_task << [session, pom, topic, partition]() -> coev::awaitable<void>
             {
                 while (true)
                 {
                     auto err = co_await pom->Errors().get();
-                    if (err->Err != ErrNoError)
+                    if (err->m_err != ErrNoError)
                         break;
-                    auto e = std::make_shared<ConsumerError>(topic, partition, err->Err);
-                    session->parent->HandleError(e, topic, partition);
+                    auto e = std::make_shared<ConsumerError>(topic, partition, err->m_err);
+                    session->m_parent->HandleError(e, topic, partition);
                 }
                 co_return;
             }();
@@ -816,15 +816,15 @@ coev::awaitable<int> NewConsumerGroupSession(std::shared_ptr<Context> context, s
         const std::vector<int32_t> &partitions = claim.second;
         for (int32_t partition : partitions)
         {
-            session->waitgroup_.add();
+            session->m_waitgroup.add();
             co_start << [session, topic, partition]() -> coev::awaitable<void>
             {
-                if (session->parent->client_->PartitionNotReadable(topic, partition))
+                if (session->m_parent->m_client->PartitionNotReadable(topic, partition))
                 {
-                    while (session->parent->client_->PartitionNotReadable(topic, partition))
+                    while (session->m_parent->m_client->PartitionNotReadable(topic, partition))
                     {
                         bool isClosed;
-                        if (session->parent->closed.try_get(isClosed))
+                        if (session->m_parent->m_closed.try_get(isClosed))
                         {
                             co_return;
                         }

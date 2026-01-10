@@ -36,7 +36,7 @@ struct balanceStrategy : BalanceStrategy
         {
             auto &memberId = it.first;
             auto &meta = it.second;
-            for (auto &topic : meta.Topics)
+            for (auto &topic : meta.m_topics)
             {
                 mbt[topic].push_back(memberId);
             }
@@ -455,11 +455,11 @@ std::vector<TopicPartitionAssignment> sortPartitionsByPotentialConsumerAssignmen
                   auto &consumersB = partition2AllPotentialConsumers.at(b);
                   if (consumersA.size() == consumersB.size())
                   {
-                      if (a.Topic == b.Topic)
+                      if (a.m_topic == b.m_topic)
                       {
-                          return a.Partition < b.Partition;
+                          return a.m_partition < b.m_partition;
                       }
-                      return a.Topic < b.Topic;
+                      return a.m_topic < b.m_topic;
                   }
                   return consumersA.size() < consumersB.size();
               });
@@ -601,26 +601,26 @@ void partitionMovements::removeMovementRecordOfPartition(const TopicPartitionAss
 {
     outPair = Movements[partition];
     Movements.erase(partition);
-    auto &topicMap = PartitionMovementsByTopic[partition.Topic];
+    auto &topicMap = PartitionMovementsByTopic[partition.m_topic];
     topicMap[outPair].erase(partition);
     if (topicMap[outPair].empty())
     {
         topicMap.erase(outPair);
     }
-    if (PartitionMovementsByTopic[partition.Topic].empty())
+    if (PartitionMovementsByTopic[partition.m_topic].empty())
     {
-        PartitionMovementsByTopic.erase(partition.Topic);
+        PartitionMovementsByTopic.erase(partition.m_topic);
     }
 }
 
 void partitionMovements::addPartitionMovementRecord(const TopicPartitionAssignment &partition, const consumerPair &pair)
 {
     Movements[partition] = pair;
-    if (PartitionMovementsByTopic.find(partition.Topic) == PartitionMovementsByTopic.end())
+    if (PartitionMovementsByTopic.find(partition.m_topic) == PartitionMovementsByTopic.end())
     {
-        PartitionMovementsByTopic[partition.Topic] = {};
+        PartitionMovementsByTopic[partition.m_topic] = {};
     }
-    auto &topicMap = PartitionMovementsByTopic[partition.Topic];
+    auto &topicMap = PartitionMovementsByTopic[partition.m_topic];
     if (topicMap.find(pair) == topicMap.end())
     {
         topicMap[pair] = {};
@@ -655,7 +655,7 @@ TopicPartitionAssignment partitionMovements::getTheActualPartitionToBeMoved(
     const std::string &oldConsumer,
     const std::string &newConsumer)
 {
-    if (PartitionMovementsByTopic.count(partition.Topic) == 0)
+    if (PartitionMovementsByTopic.count(partition.m_topic) == 0)
     {
         return partition;
     }
@@ -669,11 +669,11 @@ TopicPartitionAssignment partitionMovements::getTheActualPartitionToBeMoved(
         actualOld = Movements[partition].SrcMemberID;
     }
     consumerPair reversePair{newConsumer, actualOld};
-    if (PartitionMovementsByTopic[partition.Topic].count(reversePair) == 0)
+    if (PartitionMovementsByTopic[partition.m_topic].count(reversePair) == 0)
     {
         return partition;
     }
-    auto &revMap = PartitionMovementsByTopic[partition.Topic][reversePair];
+    auto &revMap = PartitionMovementsByTopic[partition.m_topic][reversePair];
     return revMap.begin()->first;
 }
 
@@ -809,7 +809,7 @@ int stickyBalanceStrategy::Plan(
         auto &memberID = it.first;
         auto &meta = it.second;
         std::vector<TopicPartitionAssignment> list;
-        for (auto &topicSubscription : meta.Topics)
+        for (auto &topicSubscription : meta.m_topics)
         {
             if (topics.count(topicSubscription))
             {
@@ -848,9 +848,9 @@ int stickyBalanceStrategy::Plan(
             unvisitedPartitions.erase(partition);
             currentPartitionConsumers[partition] = memberID;
             bool hasTopic = false;
-            for (auto &t : members.at(memberID).Topics)
+            for (auto &t : members.at(memberID).m_topics)
             {
-                if (t == partition.Topic)
+                if (t == partition.m_topic)
                 {
                     hasTopic = true;
                     break;
@@ -899,7 +899,7 @@ int stickyBalanceStrategy::Plan(
         {
             for (auto &assignment : assignments)
             {
-                AddToPlan(plan, memberID, assignment.Topic, {assignment.Partition});
+                AddToPlan(plan, memberID, assignment.m_topic, {assignment.m_partition});
             }
         }
     }
@@ -914,8 +914,8 @@ int stickyBalanceStrategy::AssignmentData(
 {
     // Assume encode exists
     StickyAssignorUserDataV1 userData;
-    userData.Topics = topics;
-    userData.Generation = generationID;
+    userData.m_topics = topics;
+    userData.m_generation = generationID;
     // encode(&userData, data);
     data.clear(); // placeholder
     return 0;
@@ -1025,12 +1025,12 @@ bool stickyBalanceStrategy::performReassignments(
             {
                 auto &prev = prevAssignment.at(partition);
                 if (static_cast<int>(currentAssignment[consumer].size()) >
-                    static_cast<int>(currentAssignment[prev.MemberID].size()) + 1)
+                    static_cast<int>(currentAssignment[prev.m_member_id].size()) + 1)
                 {
                     sortedCurrentSubscriptions = reassignPartition(partition, currentAssignment,
                                                                    sortedCurrentSubscriptions,
                                                                    currentPartitionConsumer,
-                                                                   prev.MemberID);
+                                                                   prev.m_member_id);
                     reassignmentPerformed = true;
                     modified = true;
                     continue;
@@ -1129,7 +1129,7 @@ int roundRobinBalancer::Plan(
     {
         memberAndTopic m;
         m.memberID = memberID;
-        for (auto &t : meta.Topics)
+        for (auto &t : meta.m_topics)
         {
             m.topics.insert(t);
         }

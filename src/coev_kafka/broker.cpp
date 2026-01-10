@@ -25,16 +25,16 @@ int8_t getHeaderLength(int16_t headerVersion)
     }
 }
 
-Broker::Broker(const std::string &addr) : m_ID(-1), m_Addr(addr), m_Opened(false), m_CorrelationID(0), clientSessionReauthenticationTime(0)
+Broker::Broker(const std::string &addr) : m_id(-1), m_addr(addr), m_opened(false), m_correlation_id(0), m_client_session_reauthentication_time(0)
 {
 }
-Broker::Broker(int id, const std::string &addr) : m_ID(id), m_Addr(addr), m_Opened(false), m_CorrelationID(0), clientSessionReauthenticationTime(0)
+Broker::Broker(int id, const std::string &addr) : m_id(id), m_addr(addr), m_opened(false), m_correlation_id(0), m_client_session_reauthentication_time(0)
 {
 }
 coev::awaitable<int> Broker::Open(std::shared_ptr<Config> conf)
 {
     bool expected = false;
-    if (!m_Opened.compare_exchange_strong(expected, true))
+    if (!m_opened.compare_exchange_strong(expected, true))
     {
         co_return 1;
     }
@@ -47,47 +47,47 @@ coev::awaitable<int> Broker::Open(std::shared_ptr<Config> conf)
     {
         co_return err;
     }
-    std::lock_guard<std::mutex> lock(m_Lock);
-    if (!metricRegistry)
+    std::lock_guard<std::mutex> lock(m_lock);
+    if (!m_metric_registry)
     {
-        metricRegistry = metrics::NewRegistry();
+        m_metric_registry = metrics::NewRegistry();
     }
-    m_Conf = conf;
+    m_conf = conf;
     m_task << [this]() -> coev::awaitable<int>
     {
-        std::lock_guard<std::mutex> lock(m_Lock);
+        std::lock_guard<std::mutex> lock(m_lock);
 
-        auto [host, port] = net::SplitHostPort(m_Addr);
-        auto fd = co_await m_Conn.connect(host.data(), port);
+        auto [host, port] = net::SplitHostPort(m_addr);
+        auto fd = co_await m_conn.connect(host.data(), port);
         if (fd == INVALID)
         {
             co_return ErrNotConnected;
         }
 
-        incomingByteRate = metrics::GetOrRegisterMeter("incoming-byte-rate", metricRegistry);
+        m_incoming_byte_rate = metrics::GetOrRegisterMeter("incoming-byte-rate", m_metric_registry);
 
-        requestRate = metrics::GetOrRegisterMeter("request-rate", metricRegistry);
+        m_request_rate = metrics::GetOrRegisterMeter("request-rate", m_metric_registry);
 
-        fetchRate = metrics::GetOrRegisterMeter("consumer-fetch-rate", metricRegistry);
+        m_fetch_rate = metrics::GetOrRegisterMeter("consumer-fetch-rate", m_metric_registry);
 
-        requestSize = metrics::GetOrRegisterHistogram("request-size", metricRegistry);
+        m_request_size = metrics::GetOrRegisterHistogram("request-size", m_metric_registry);
 
-        requestLatency = metrics::GetOrRegisterHistogram("request-latency-in-ms", metricRegistry);
+        m_request_latency = metrics::GetOrRegisterHistogram("request-latency-in-ms", m_metric_registry);
 
-        outgoingByteRate = metrics::GetOrRegisterMeter("outgoing-byte-rate", metricRegistry);
+        m_outgoing_byte_rate = metrics::GetOrRegisterMeter("outgoing-byte-rate", m_metric_registry);
 
-        responseRate = metrics::GetOrRegisterMeter("response-rate", metricRegistry);
+        m_response_rate = metrics::GetOrRegisterMeter("response-rate", m_metric_registry);
 
-        responseSize = metrics::GetOrRegisterHistogram("response-size", metricRegistry);
+        m_response_size = metrics::GetOrRegisterHistogram("response-size", m_metric_registry);
 
-        requestsInFlight = metrics::GetOrRegisterCounter("requests-in-flight", metricRegistry);
+        m_requests_in_flight = metrics::GetOrRegisterCounter("requests-in-flight", m_metric_registry);
 
-        if (m_ID >= 0)
+        if (m_id >= 0)
         {
             RegisterMetrics();
         }
         int err = ErrNoError;
-        if (m_Conf->ApiVersionsRequest)
+        if (m_conf->ApiVersionsRequest)
         {
             std::shared_ptr<ApiVersionsResponse> apiVersionsResponse;
             err = co_await SendAndReceiveApiVersions(3, apiVersionsResponse);
@@ -96,11 +96,11 @@ coev::awaitable<int> Broker::Open(std::shared_ptr<Config> conf)
                 int16_t maxVersion = 0;
                 if (apiVersionsResponse)
                 {
-                    for (auto &k : apiVersionsResponse->ApiKeys)
+                    for (auto &k : apiVersionsResponse->m_api_keys)
                     {
-                        if (k.ApiKey == apiKeyApiVersions)
+                        if (k.m_api_key == apiKeyApiVersions)
                         {
-                            maxVersion = k.MaxVersion;
+                            maxVersion = k.m_max_version;
                             break;
                         }
                     }
@@ -114,36 +114,36 @@ coev::awaitable<int> Broker::Open(std::shared_ptr<Config> conf)
             if (apiVersionsResponse)
             {
 
-                brokerAPIVersions.clear();
-                for (auto &key : apiVersionsResponse->ApiKeys)
+                m_broker_api_versions.clear();
+                for (auto &key : apiVersionsResponse->m_api_keys)
                 {
-                    brokerAPIVersions.emplace(key.ApiKey, ApiVersionRange(key.MinVersion, key.MaxVersion));
+                    m_broker_api_versions.emplace(key.m_api_key, ApiVersionRange(key.m_min_version, key.m_max_version));
                 }
             }
         }
 
-        bool useSaslV0 = m_Conf->Net.SASL.Version == 0;
-        if (m_Conf->Net.SASL.Enable && useSaslV0)
+        bool useSaslV0 = m_conf->Net.SASL.Version == 0;
+        if (m_conf->Net.SASL.Enable && useSaslV0)
         {
 
             err = co_await AuthenticateViaSASLv0();
             if (err)
             {
-                m_Conn.close();
-                m_Opened.store(false);
+                m_conn.close();
+                m_opened.store(false);
                 co_return ErrPermitForbidden;
             }
         }
 
         m_task << SesponseReceiver();
-        if (m_Conf->Net.SASL.Enable && !useSaslV0)
+        if (m_conf->Net.SASL.Enable && !useSaslV0)
         {
             err = co_await AuthenticateViaSASLv1();
             if (err)
             {
-                co_await done.get();
-                int32_t closeErr = m_Conn.close();
-                m_Opened.store(false);
+                co_await m_done.get();
+                int32_t closeErr = m_conn.close();
+                m_opened.store(false);
                 co_return err;
             }
         }
@@ -154,21 +154,21 @@ coev::awaitable<int> Broker::Open(std::shared_ptr<Config> conf)
 
 int Broker::ResponseSize()
 {
-    std::lock_guard<std::mutex> lock(m_Lock);
-    return responses.size();
+    std::lock_guard<std::mutex> lock(m_lock);
+    return m_responses.size();
 }
 
 bool Broker::Connected()
 {
-    std::lock_guard<std::mutex> lock(m_Lock);
-    return m_Conn;
+    std::lock_guard<std::mutex> lock(m_lock);
+    return m_conn;
 }
 
 int Broker::TLSConnectionState()
 {
-    std::lock_guard<std::mutex> lock(m_Lock);
+    std::lock_guard<std::mutex> lock(m_lock);
     tls::ConnectionState state;
-    if (!m_Conn)
+    if (!m_conn)
     {
         return state;
     }
@@ -187,40 +187,40 @@ int Broker::TLSConnectionState()
 
 coev::awaitable<int> Broker::Close()
 {
-    std::lock_guard<std::mutex> lock(m_Lock);
-    if (!m_Conn)
+    std::lock_guard<std::mutex> lock(m_lock);
+    if (!m_conn)
     {
         co_return ErrNotConnected;
     }
 
-    co_await done.get();
-    int32_t err = m_Conn.close();
+    co_await m_done.get();
+    int32_t err = m_conn.close();
 
-    metricRegistry->UnregisterAll();
-    m_Opened.store(false);
+    m_metric_registry->UnregisterAll();
+    m_opened.store(false);
     co_return 0;
 }
 
 int32_t Broker::ID()
 {
-    return m_ID;
+    return m_id;
 }
 
 std::string Broker::Addr()
 {
-    return m_Addr;
+    return m_addr;
 }
 
 std::string Broker::Rack()
 {
 
-    return m_Rack;
+    return m_rack;
 }
 
 coev::awaitable<int> Broker::GetMetadata(std::shared_ptr<MetadataRequest> request, std::shared_ptr<MetadataResponse> &response)
 {
     response = std::make_shared<MetadataResponse>();
-    response->Version = request->Version;
+    response->m_version = request->m_version;
     return SendAndReceive(request, response);
 }
 
@@ -244,23 +244,23 @@ coev::awaitable<int> Broker::GetAvailableOffsets(std::shared_ptr<OffsetRequest> 
 
 coev::awaitable<int> Broker::AsyncProduce(std::shared_ptr<ProduceRequest> request, std::function<void(std::shared_ptr<ProduceResponse>, KError)> f)
 {
-    std::lock_guard<std::mutex> lock(m_Lock);
-    bool needAcks = request->Acks != NoResponse;
+    std::lock_guard<std::mutex> lock(m_lock);
+    bool needAcks = request->m_acks != NoResponse;
     std::shared_ptr<ResponsePromise> promise;
     if (needAcks)
     {
 
         auto response = std::make_shared<ProduceResponse>();
         promise = std::make_shared<ResponsePromise>();
-        promise->Response = response;
-        promise->Handler = [f, response, request, this](std::string &packets, KError err)
+        promise->m_response = response;
+        promise->m_handler = [f, response, request, this](std::string &packets, KError err)
         {
             if (err)
             {
                 f({nullptr}, err);
                 return;
             }
-            bool decodeErr = versionedDecode(packets, std::dynamic_pointer_cast<VDecoder>(response), request->version(), metricRegistry);
+            bool decodeErr = versionedDecode(packets, std::dynamic_pointer_cast<VDecoder>(response), request->version(), m_metric_registry);
             if (decodeErr)
             {
                 f({nullptr}, ErrDecodeError);
@@ -276,26 +276,26 @@ coev::awaitable<int> Broker::AsyncProduce(std::shared_ptr<ProduceRequest> reques
 
 coev::awaitable<int> Broker::Produce(std::shared_ptr<ProduceRequest> request, std::shared_ptr<ProduceResponse> &response)
 {
-    if (request->Acks == RequiredAcks::NoResponse)
+    if (request->m_acks == RequiredAcks::NoResponse)
     {
-        return SendAndReceive(request, nullptr);
+        co_return co_await SendAndReceive(request, nullptr);
     }
     else
     {
         response = std::make_shared<ProduceResponse>();
-        return SendAndReceive(request, response);
+        co_return co_await SendAndReceive(request, response);
     }
 }
 
 coev::awaitable<int> Broker::Fetch(std::shared_ptr<FetchRequest> request, std::shared_ptr<FetchResponse> &response)
 {
-    if (fetchRate)
+    if (m_fetch_rate)
     {
-        fetchRate->Mark(1);
+        m_fetch_rate->Mark(1);
     }
-    if (brokerFetchRate)
+    if (m_broker_fetch_rate)
     {
-        brokerFetchRate->Mark(1);
+        m_broker_fetch_rate->Mark(1);
     }
     response = std::make_shared<FetchResponse>();
     return SendAndReceive(request, response);
@@ -310,7 +310,7 @@ coev::awaitable<int> Broker::CommitOffset(std::shared_ptr<OffsetCommitRequest> r
 coev::awaitable<int> Broker::FetchOffset(std::shared_ptr<OffsetFetchRequest> request, std::shared_ptr<OffsetFetchResponse> &response)
 {
     response = std::make_shared<OffsetFetchResponse>();
-    response->Version = request->Version;
+    response->m_version = request->m_version;
     return SendAndReceive(request, response);
 }
 
@@ -341,7 +341,7 @@ coev::awaitable<int> Broker::Heartbeat(std::shared_ptr<HeartbeatRequest> request
 coev::awaitable<int> Broker::ListGroups(std::shared_ptr<ListGroupsRequest> request, std::shared_ptr<ListGroupsResponse> &response)
 {
     response = std::make_shared<ListGroupsResponse>();
-    response->Version = request->Version;
+    response->m_version = request->m_version;
     return SendAndReceive(request, response);
 }
 
@@ -414,11 +414,11 @@ coev::awaitable<int> Broker::CreateAcls(std::shared_ptr<CreateAclsRequest> reque
         co_return err;
     }
     std::vector<int> errs;
-    for (auto &res : response->AclCreationResponses_)
+    for (auto &res : response->m_acl_creation_responses)
     {
-        if (res->Err != ErrNoError)
+        if (res->m_err != ErrNoError)
         {
-            errs.push_back(res->Err);
+            errs.push_back(res->m_err);
         }
     }
     if (!errs.empty())
@@ -437,7 +437,7 @@ coev::awaitable<int> Broker::DeleteAcls(std::shared_ptr<DeleteAclsRequest> reque
 coev::awaitable<int> Broker::InitProducerID(std::shared_ptr<InitProducerIDRequest> request, std::shared_ptr<InitProducerIDResponse> &response)
 {
     response = std::make_shared<InitProducerIDResponse>();
-    response->Version = request->version();
+    response->m_version = request->version();
     return SendAndReceive(request, response);
 }
 
@@ -533,7 +533,7 @@ coev::awaitable<int> Broker::AlterClientQuotas(std::shared_ptr<AlterClientQuotas
 
 coev::awaitable<int> Broker::ReadFull(std::string &buf, size_t &n)
 {
-    auto deadline = std::chrono::system_clock::now() + m_Conf->Net.ReadTimeout;
+    auto deadline = std::chrono::system_clock::now() + m_conf->Net.ReadTimeout;
 
     co_return 0;
 }
@@ -546,7 +546,7 @@ coev::awaitable<int> Broker::Write(const std::string &buf, size_t &n)
     co_return 0;
 }
 
-coev::awaitable<int> Broker::Send(std::shared_ptr<protocolBody> req, std::shared_ptr<protocolBody> res, std::shared_ptr<ResponsePromise> &promise)
+coev::awaitable<int> Broker::Send(std::shared_ptr<protocol_body> req, std::shared_ptr<protocol_body> res, std::shared_ptr<ResponsePromise> &promise)
 {
     if (res)
     {
@@ -555,21 +555,21 @@ coev::awaitable<int> Broker::Send(std::shared_ptr<protocolBody> req, std::shared
     return SendWithPromise(req, promise);
 }
 
-std::shared_ptr<ResponsePromise> Broker::makeResponsePromise(std::shared_ptr<protocolBody> res)
+std::shared_ptr<ResponsePromise> Broker::makeResponsePromise(std::shared_ptr<protocol_body> res)
 {
     auto promise = std::make_shared<ResponsePromise>();
-    promise->Response = res;
+    promise->m_response = res;
     return promise;
 }
 
-coev::awaitable<int> Broker::SendWithPromise(std::shared_ptr<protocolBody> rb, std::shared_ptr<ResponsePromise> promise)
+coev::awaitable<int> Broker::SendWithPromise(std::shared_ptr<protocol_body> rb, std::shared_ptr<ResponsePromise> promise)
 {
-    if (!m_Conn)
+    if (!m_conn)
     {
         co_return ErrNotConnected;
     }
     int err = 0;
-    if (clientSessionReauthenticationTime > 0 && CurrentUnixMilli() > clientSessionReauthenticationTime)
+    if (m_client_session_reauthentication_time > 0 && CurrentUnixMilli() > m_client_session_reauthentication_time)
     {
         err = co_await AuthenticateViaSASLv1();
         if (err)
@@ -581,24 +581,24 @@ coev::awaitable<int> Broker::SendWithPromise(std::shared_ptr<protocolBody> rb, s
     co_return err;
 }
 
-coev::awaitable<int> Broker::SendInternal(std::shared_ptr<protocolBody> rb, std::shared_ptr<ResponsePromise> promise)
+coev::awaitable<int> Broker::SendInternal(std::shared_ptr<protocol_body> rb, std::shared_ptr<ResponsePromise> promise)
 {
-    restrictApiVersion(rb, brokerAPIVersions);
-    if (promise && promise->Response)
+    restrictApiVersion(rb, m_broker_api_versions);
+    if (promise && promise->m_response)
     {
-        promise->Response->setVersion(rb->version());
+        promise->m_response->set_version(rb->version());
     }
-    if (!m_Conf->Version.IsAtLeast(rb->requiredVersion()))
+    if (!m_conf->Version.IsAtLeast(rb->required_version()))
     {
         co_return ErrUnsupportedVersion;
     }
     auto req = std::make_shared<request>();
-    req->correlationID = m_CorrelationID;
-    req->clientID = m_Conf->ClientID;
-    req->body = rb;
+    req->m_correlation_id = m_correlation_id;
+    req->m_client_id = m_conf->ClientID;
+    req->m_body = rb;
 
     std::string buf;
-    ::encode(req, buf, metricRegistry);
+    ::encode(req, buf, m_metric_registry);
 
     WaitIfThrottled();
     auto requestTime = std::chrono::system_clock::now();
@@ -618,7 +618,7 @@ coev::awaitable<int> Broker::SendInternal(std::shared_ptr<protocolBody> rb, std:
         co_return err;
     }
 
-    m_CorrelationID++;
+    m_correlation_id++;
     if (!promise)
     {
         auto latency = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - requestTime);
@@ -626,27 +626,27 @@ coev::awaitable<int> Broker::SendInternal(std::shared_ptr<protocolBody> rb, std:
         co_return 0;
     }
 
-    promise->RequestTime = requestTime;
-    promise->CorrelationID = req->correlationID;
+    promise->m_request_time = requestTime;
+    promise->m_correlation_id = req->m_correlation_id;
 
-    responses.set(promise);
+    m_responses.set(promise);
     co_return 0;
 }
 
-coev::awaitable<int> HandleResponsePromise(std::shared_ptr<protocolBody> req, std::shared_ptr<protocolBody> res, std::shared_ptr<ResponsePromise> promise, std::shared_ptr<metrics::Registry> metricRegistry)
+coev::awaitable<int> HandleResponsePromise(std::shared_ptr<protocol_body> req, std::shared_ptr<protocol_body> res, std::shared_ptr<ResponsePromise> promise, std::shared_ptr<metrics::Registry> m_metric_registry)
 {
-    auto packets = co_await promise->Packets.get();
+    auto packets = co_await promise->m_packets.get();
     if (packets.empty())
     {
-        auto err = co_await promise->Errors.get();
+        auto err = co_await promise->m_errors.get();
         co_return err;
     }
-    co_return versionedDecode(packets, res, req->version(), metricRegistry);
+    co_return versionedDecode(packets, res, req->version(), m_metric_registry);
 }
 
 int Broker::decode(PDecoder &pd, int16_t version)
 {
-    int32_t err = pd.getInt32(m_ID);
+    int32_t err = pd.getInt32(m_id);
     if (err)
     {
         return err;
@@ -693,13 +693,13 @@ int Broker::decode(PDecoder &pd, int16_t version)
 int Broker::encode(PEncoder &pe, int16_t version)
 {
 
-    auto [host, port] = net::SplitHostPort(m_Addr);
+    auto [host, port] = net::SplitHostPort(m_addr);
     if (host.empty())
     {
         return 1;
     }
 
-    pe.putInt32(m_ID);
+    pe.putInt32(m_id);
 
     int32_t err = pe.putString(host);
     if (err)
@@ -710,7 +710,7 @@ int Broker::encode(PEncoder &pe, int16_t version)
     pe.putInt32(port);
     if (version >= 1)
     {
-        err = pe.putNullableString(m_Rack);
+        err = pe.putNullableString(m_rack);
         if (err)
         {
             return err;
@@ -726,7 +726,7 @@ coev::awaitable<int> Broker::SesponseReceiver()
     int dead;
     while (true)
     {
-        auto promise = co_await responses.get();
+        auto promise = co_await m_responses.get();
 
         if (dead)
         {
@@ -736,18 +736,18 @@ coev::awaitable<int> Broker::SesponseReceiver()
             continue;
         }
 
-        int8_t headerLength = getHeaderLength(promise->Response->headerVersion());
+        int8_t headerLength = getHeaderLength(promise->m_response->headerVersion());
         std::string header;
         header.resize(headerLength);
         size_t bytesReadHeader;
         auto err = co_await ReadFull(header, bytesReadHeader);
-        auto requestLatency = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now() - promise->RequestTime);
+        auto m_request_latency = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now() - promise->m_request_time);
 
         if (err)
         {
 
-            UpdateIncomingCommunicationMetrics(bytesReadHeader, requestLatency);
+            UpdateIncomingCommunicationMetrics(bytesReadHeader, m_request_latency);
             dead = err;
             std::string _;
             promise->Handle(_, (KError)dead);
@@ -755,22 +755,22 @@ coev::awaitable<int> Broker::SesponseReceiver()
         }
 
         auto decodedHeader = std::make_shared<responseHeader>();
-        err = versionedDecode(header, std::dynamic_pointer_cast<VDecoder>(decodedHeader), promise->Response->headerVersion(),
-                              metricRegistry);
+        err = versionedDecode(header, std::dynamic_pointer_cast<VDecoder>(decodedHeader), promise->m_response->headerVersion(),
+                              m_metric_registry);
         if (err)
         {
 
-            UpdateIncomingCommunicationMetrics(bytesReadHeader, requestLatency);
+            UpdateIncomingCommunicationMetrics(bytesReadHeader, m_request_latency);
             dead = err;
             std::string _;
             promise->Handle(_, (KError)dead);
             continue;
         }
 
-        if (decodedHeader->correlationID != promise->CorrelationID)
+        if (decodedHeader->m_correlation_id != promise->m_correlation_id)
         {
 
-            UpdateIncomingCommunicationMetrics(bytesReadHeader, requestLatency);
+            UpdateIncomingCommunicationMetrics(bytesReadHeader, m_request_latency);
             dead = 1;
             std::string _;
             promise->Handle(_, (KError)dead);
@@ -778,11 +778,11 @@ coev::awaitable<int> Broker::SesponseReceiver()
         }
 
         std::string buf;
-        buf.resize(decodedHeader->length - headerLength + 4);
+        buf.resize(decodedHeader->m_length - headerLength + 4);
         size_t bytesReadBody;
         err = co_await ReadFull(buf, bytesReadBody);
 
-        UpdateIncomingCommunicationMetrics(bytesReadHeader + bytesReadBody, requestLatency);
+        UpdateIncomingCommunicationMetrics(bytesReadHeader + bytesReadBody, m_request_latency);
         if (err)
         {
             dead = err;
@@ -793,24 +793,24 @@ coev::awaitable<int> Broker::SesponseReceiver()
         promise->Handle(buf, ErrNoError);
     }
 
-    done.set(true);
+    m_done.set(true);
     co_return 0;
 }
 
 coev::awaitable<int> Broker::SendAndReceiveApiVersions(int16_t v, std::shared_ptr<ApiVersionsResponse> &response)
 {
     auto rb = std::make_shared<ApiVersionsRequest>();
-    rb->Version = v;
-    rb->ClientSoftwareName = defaultClientSoftwareName;
-    rb->ClientSoftwareVersion = version();
+    rb->m_version = v;
+    rb->m_client_software_name = defaultClientSoftwareName;
+    rb->m_client_software_version = version();
 
     auto req = std::make_shared<request>();
-    req->correlationID = m_CorrelationID;
-    req->clientID = m_Conf->ClientID;
-    req->body = rb;
+    req->m_correlation_id = m_correlation_id;
+    req->m_client_id = m_conf->ClientID;
+    req->m_body = rb;
 
     std::string buf;
-    ::encode(std::dynamic_pointer_cast<IEncoder>(req), buf, metricRegistry);
+    ::encode(std::dynamic_pointer_cast<IEncoder>(req), buf, m_metric_registry);
 
     auto requestTime = std::chrono::system_clock::now();
 
@@ -827,7 +827,7 @@ coev::awaitable<int> Broker::SendAndReceiveApiVersions(int16_t v, std::shared_pt
         co_return err;
     }
 
-    m_CorrelationID++;
+    m_correlation_id++;
     std::string header;
     header.resize(8);
     size_t headerBytes = 8;
@@ -855,15 +855,15 @@ coev::awaitable<int> Broker::SendAndReceiveApiVersions(int16_t v, std::shared_pt
     UpdateIncomingCommunicationMetrics(n + 8, latency);
 
     response = std::make_shared<ApiVersionsResponse>();
-    response->Version = rb->version();
+    response->m_version = rb->version();
     err = versionedDecode(payload, response, rb->version(),
-                          metricRegistry);
+                          m_metric_registry);
     if (err)
     {
         co_return err;
     }
 
-    int16_t kerr = response->ErrorCode;
+    int16_t kerr = response->m_error_code;
     if (kerr != 0)
     {
         co_return kerr;
@@ -874,7 +874,7 @@ coev::awaitable<int> Broker::SendAndReceiveApiVersions(int16_t v, std::shared_pt
 coev::awaitable<int> Broker::AuthenticateViaSASLv0()
 {
     std::string mechanism =
-        m_Conf->Net.SASL.Mechanism;
+        m_conf->Net.SASL.Mechanism;
     if (mechanism == "SCRAM-SHA-256" || mechanism == "SCRAM-SHA-512")
     {
         return SendAndReceiveSASLSCRAMv0();
@@ -900,14 +900,14 @@ coev::awaitable<int> Broker::DefaultAuthSendReceiver(const std::string &authByte
     {
         co_return err;
     }
-    err = co_await HandleResponsePromise(authenticateRequest, authenticateResponse, prom, metricRegistry);
+    err = co_await HandleResponsePromise(authenticateRequest, authenticateResponse, prom, m_metric_registry);
     if (err)
     {
         co_return err;
     }
-    if (authenticateResponse->Err != 0)
+    if (authenticateResponse->m_err != 0)
     {
-        co_return authenticateResponse->Err;
+        co_return authenticateResponse->m_err;
     }
 
     computeSaslSessionLifetime(authenticateResponse);
@@ -916,11 +916,11 @@ coev::awaitable<int> Broker::DefaultAuthSendReceiver(const std::string &authByte
 coev::awaitable<int> Broker::AuthenticateViaSASLv1()
 {
 
-    if (m_Conf->Net.SASL.Handshake)
+    if (m_conf->Net.SASL.Handshake)
     {
         auto handshakeRequest = std::make_shared<SaslHandshakeRequest>();
-        handshakeRequest->Mechanism = m_Conf->Net.SASL.Mechanism;
-        handshakeRequest->Version = m_Conf->Net.SASL.Version;
+        handshakeRequest->m_mechanism = m_conf->Net.SASL.Mechanism;
+        handshakeRequest->m_version = m_conf->Net.SASL.Version;
         auto handshakeResponse = std::make_shared<SaslHandshakeResponse>();
         auto prom = makeResponsePromise(handshakeResponse);
         int err = co_await SendInternal(handshakeRequest, prom);
@@ -928,39 +928,39 @@ coev::awaitable<int> Broker::AuthenticateViaSASLv1()
         {
             co_return err;
         }
-        err = co_await HandleResponsePromise(handshakeRequest, handshakeResponse, prom, metricRegistry);
+        err = co_await HandleResponsePromise(handshakeRequest, handshakeResponse, prom, m_metric_registry);
         if (err)
         {
             co_return err;
         }
-        if (handshakeResponse->Err != 0)
+        if (handshakeResponse->m_err != 0)
         {
-            co_return handshakeResponse->Err;
+            co_return handshakeResponse->m_err;
         }
     }
 
-    std::string mechanism = m_Conf->Net.SASL.Mechanism;
+    std::string mechanism = m_conf->Net.SASL.Mechanism;
     if (mechanism == "GSSAPI")
     {
 
-        kerberosAuthenticator->Config = m_Conf->Net.SASL.GSSAPI;
-        if (!kerberosAuthenticator->NewKerberosClientFunc)
+        m_kerberos_authenticator->m_config = m_conf->Net.SASL.GSSAPI;
+        if (!m_kerberos_authenticator->m_new_kerberos_client_func)
         {
-            kerberosAuthenticator->NewKerberosClientFunc = NewKerberosClient;
+            m_kerberos_authenticator->m_new_kerberos_client_func = NewKerberosClient;
         }
-        co_return co_await kerberosAuthenticator->AuthorizeV2(shared_from_this(), [this](auto req, auto res) -> auto
+        co_return co_await m_kerberos_authenticator->AuthorizeV2(shared_from_this(), [this](auto req, auto res) -> auto
                                                               { return DefaultAuthSendReceiver(req, res); });
     }
     else if (mechanism == "OAUTHBEARER")
     {
-        auto provider = m_Conf->Net.SASL.TokenProvider_;
+        auto provider = m_conf->Net.SASL.TokenProvider_;
         co_return co_await SendAndReceiveSASLOAuth(provider, [this](auto req, auto res) -> auto
                                                    { return DefaultAuthSendReceiver(req, res); });
     }
     else if (mechanism == "SCRAM-SHA-256" || mechanism == "SCRAM-SHA-512")
     {
         co_return co_await SendAndReceiveSASLSCRAMv1(
-            m_Conf->Net.SASL.ScramClientGeneratorFunc(), [this](auto req, auto res) -> auto
+            m_conf->Net.SASL.ScramClientGeneratorFunc(), [this](auto req, auto res) -> auto
             { return DefaultAuthSendReceiver(req, res); });
     }
     else
@@ -974,28 +974,28 @@ coev::awaitable<int> Broker::AuthenticateViaSASLv1()
 coev::awaitable<int> Broker::SendAndReceiveKerberos()
 {
 
-    kerberosAuthenticator->Config = m_Conf->Net.SASL.GSSAPI;
-    if (!kerberosAuthenticator->NewKerberosClientFunc)
+    m_kerberos_authenticator->m_config = m_conf->Net.SASL.GSSAPI;
+    if (!m_kerberos_authenticator->m_new_kerberos_client_func)
     {
 
-        kerberosAuthenticator->NewKerberosClientFunc = NewKerberosClient;
+        m_kerberos_authenticator->m_new_kerberos_client_func = NewKerberosClient;
     }
-    co_return co_await kerberosAuthenticator->Authorize(shared_from_this());
+    co_return co_await m_kerberos_authenticator->Authorize(shared_from_this());
 }
 
 coev::awaitable<int> Broker::SendAndReceiveSASLHandshake(const std::string &saslType, int16_t version)
 {
     auto rb = std::make_shared<SaslHandshakeRequest>();
-    rb->Mechanism = saslType;
-    rb->Version = version;
+    rb->m_mechanism = saslType;
+    rb->m_version = version;
 
     auto req = std::make_shared<request>();
-    req->correlationID = m_CorrelationID;
-    req->clientID = m_Conf->ClientID;
-    req->body = rb;
+    req->m_correlation_id = m_correlation_id;
+    req->m_client_id = m_conf->ClientID;
+    req->m_body = rb;
 
     std::string buf;
-    ::encode(std::dynamic_pointer_cast<IEncoder>(req), buf, metricRegistry);
+    ::encode(std::dynamic_pointer_cast<IEncoder>(req), buf, m_metric_registry);
 
     auto requestTime = std::chrono::system_clock::now();
     AddRequestInFlightMetrics(1);
@@ -1010,7 +1010,7 @@ coev::awaitable<int> Broker::SendAndReceiveSASLHandshake(const std::string &sasl
         co_return err;
     }
 
-    m_CorrelationID++;
+    m_correlation_id++;
     std::string header;
     header.resize(8);
     size_t headerBytes = 8;
@@ -1038,33 +1038,33 @@ coev::awaitable<int> Broker::SendAndReceiveSASLHandshake(const std::string &sasl
     UpdateIncomingCommunicationMetrics(n + 8, latency);
 
     auto res = std::make_shared<SaslHandshakeResponse>();
-    err = versionedDecode(payload, res, 0, metricRegistry);
+    err = versionedDecode(payload, res, 0, m_metric_registry);
     if (err)
     {
         co_return err;
     }
 
-    if (res->Err != 0)
+    if (res->m_err != 0)
     {
-        co_return res->Err;
+        co_return res->m_err;
     }
     co_return 0;
 }
 
 coev::awaitable<int> Broker::SendAndReceiveSASLPlainAuthV0()
 {
-    if (m_Conf->Net.SASL.Handshake)
+    if (m_conf->Net.SASL.Handshake)
     {
-        int32_t handshakeErr = co_await SendAndReceiveSASLHandshake("PLAIN", m_Conf->Net.SASL.Version);
+        int32_t handshakeErr = co_await SendAndReceiveSASLHandshake("PLAIN", m_conf->Net.SASL.Version);
         if (handshakeErr)
         {
             co_return handshakeErr;
         }
     }
 
-    size_t length = m_Conf->Net.SASL.AuthIdentity.length() + 1 +
-                    m_Conf->Net.SASL.User.length() + 1 +
-                    m_Conf->Net.SASL.Password.length();
+    size_t length = m_conf->Net.SASL.AuthIdentity.length() + 1 +
+                    m_conf->Net.SASL.User.length() + 1 +
+                    m_conf->Net.SASL.Password.length();
     std::string authBytes;
     authBytes.resize(length + 4);
     uint32_t len = length;
@@ -1075,20 +1075,20 @@ coev::awaitable<int> Broker::SendAndReceiveSASLPlainAuthV0()
 
     size_t offset = 4;
     memcpy(&authBytes[offset],
-           m_Conf->Net.SASL.AuthIdentity.c_str(),
-           m_Conf->Net.SASL.AuthIdentity.length());
+           m_conf->Net.SASL.AuthIdentity.c_str(),
+           m_conf->Net.SASL.AuthIdentity.length());
     offset +=
-        m_Conf->Net.SASL.AuthIdentity.length();
+        m_conf->Net.SASL.AuthIdentity.length();
     authBytes[offset++] = 0;
     memcpy(&authBytes[offset],
-           m_Conf->Net.SASL.User.c_str(),
-           m_Conf->Net.SASL.User.length());
+           m_conf->Net.SASL.User.c_str(),
+           m_conf->Net.SASL.User.length());
     offset +=
-        m_Conf->Net.SASL.User.length();
+        m_conf->Net.SASL.User.length();
     authBytes[offset++] = 0;
     memcpy(&authBytes[offset],
-           m_Conf->Net.SASL.Password.c_str(),
-           m_Conf->Net.SASL.Password.length());
+           m_conf->Net.SASL.Password.c_str(),
+           m_conf->Net.SASL.Password.length());
 
     auto requestTime = std::chrono::system_clock::now();
 
@@ -1121,7 +1121,7 @@ coev::awaitable<int> Broker::SendAndReceiveSASLPlainAuthV0()
 
 coev::awaitable<int> Broker::SendAndReceiveSASLPlainAuthV1(AuthSendReceiver authSendReceiver)
 {
-    std::string authStr = m_Conf->Net.SASL.AuthIdentity + "\x00" + m_Conf->Net.SASL.User + "\x00" + m_Conf->Net.SASL.Password;
+    std::string authStr = m_conf->Net.SASL.AuthIdentity + "\x00" + m_conf->Net.SASL.User + "\x00" + m_conf->Net.SASL.Password;
     std::string authBytes(authStr.begin(), authStr.end());
     std::shared_ptr<SaslAuthenticateResponse> response = std::make_shared<SaslAuthenticateResponse>();
     return authSendReceiver(authBytes, response);
@@ -1155,7 +1155,7 @@ coev::awaitable<int> Broker::SendAndReceiveSASLOAuth(std::shared_ptr<AccessToken
         co_return err;
     }
 
-    bool isChallenge = !res->SaslAuthBytes.empty();
+    bool isChallenge = !res->m_sasl_auth_bytes.empty();
     if (isChallenge)
     {
         std::string challenge = {'\x01'};
@@ -1170,14 +1170,14 @@ coev::awaitable<int> Broker::SendAndReceiveSASLOAuth(std::shared_ptr<AccessToken
 
 coev::awaitable<int> Broker::SendAndReceiveSASLSCRAMv0()
 {
-    int32_t err = co_await SendAndReceiveSASLHandshake(m_Conf->Net.SASL.Mechanism, 0);
+    int32_t err = co_await SendAndReceiveSASLHandshake(m_conf->Net.SASL.Mechanism, 0);
     if (err)
     {
         co_return err;
     }
 
-    auto scramClient = m_Conf->Net.SASL.ScramClientGeneratorFunc();
-    err = scramClient->Begin(m_Conf->Net.SASL.User, m_Conf->Net.SASL.Password, m_Conf->Net.SASL.ScramAuthzID);
+    auto scramClient = m_conf->Net.SASL.ScramClientGeneratorFunc();
+    err = scramClient->Begin(m_conf->Net.SASL.User, m_conf->Net.SASL.Password, m_conf->Net.SASL.ScramAuthzID);
     if (err)
     {
         co_return 1;
@@ -1217,7 +1217,7 @@ coev::awaitable<int> Broker::SendAndReceiveSASLSCRAMv0()
             co_return err;
         }
 
-        m_CorrelationID++;
+        m_correlation_id++;
         std::string header;
         header.resize(4);
         size_t headerBytes = 4;
@@ -1255,7 +1255,7 @@ coev::awaitable<int> Broker::SendAndReceiveSASLSCRAMv0()
 
 coev::awaitable<int> Broker::SendAndReceiveSASLSCRAMv1(std::shared_ptr<SCRAMClient> scramClient, AuthSendReceiver authSendReceiver)
 {
-    int err = scramClient->Begin(m_Conf->Net.SASL.User, m_Conf->Net.SASL.Password, m_Conf->Net.SASL.ScramAuthzID);
+    int err = scramClient->Begin(m_conf->Net.SASL.User, m_conf->Net.SASL.Password, m_conf->Net.SASL.ScramAuthzID);
     if (err)
     {
         co_return err;
@@ -1277,7 +1277,7 @@ coev::awaitable<int> Broker::SendAndReceiveSASLSCRAMv1(std::shared_ptr<SCRAMClie
             co_return err;
         }
 
-        err = scramClient->Step(std::string(res->SaslAuthBytes.begin(), res->SaslAuthBytes.end()), msg);
+        err = scramClient->Step(std::string(res->m_sasl_auth_bytes.begin(), res->m_sasl_auth_bytes.end()), msg);
         if (err)
         {
             co_return err;
@@ -1289,10 +1289,10 @@ coev::awaitable<int> Broker::SendAndReceiveSASLSCRAMv1(std::shared_ptr<SCRAMClie
 std::shared_ptr<SaslAuthenticateRequest> Broker::CreateSaslAuthenticateRequest(const std::string &msg)
 {
     auto authenticateRequest = std::make_shared<SaslAuthenticateRequest>();
-    authenticateRequest->SaslAuthBytes = msg;
-    if (m_Conf->Version.IsAtLeast(V2_2_0_0))
+    authenticateRequest->m_sasl_auth_bytes = msg;
+    if (m_conf->Version.IsAtLeast(V2_2_0_0))
     {
-        authenticateRequest->Version = 1;
+        authenticateRequest->m_version = 1;
     }
     return authenticateRequest;
 }
@@ -1306,17 +1306,17 @@ int Broker::BuildClientFirstMessage(std::shared_ptr<AccessToken> token, std::str
     }
 
     std::string ext;
-    if (!token->Extensions.empty())
+    if (!token->m_extensions.empty())
     {
-        if (token->Extensions.find("auth") != token->Extensions.end())
+        if (token->m_extensions.find("auth") != token->m_extensions.end())
         {
             message.clear();
             return 1;
         }
-        ext = "\x01" + mapToString(token->Extensions, "=", "\x01");
+        ext = "\x01" + mapToString(token->m_extensions, "=", "\x01");
     }
 
-    auto msg = "n,,\x01auth=Bearer " + token->Token + ext + "\x01\x01";
+    auto msg = "n,,\x01auth=Bearer " + token->m_token + ext + "\x01\x01";
     message.assign(msg.begin(), msg.end());
     return 0;
 }
@@ -1343,9 +1343,9 @@ std::string Broker::mapToString(const std::map<std::string, std::string> &extens
 
 void Broker::computeSaslSessionLifetime(std::shared_ptr<SaslAuthenticateResponse> res)
 {
-    if (res->SessionLifetimeMs > 0)
+    if (res->m_session_lifetime_ms > 0)
     {
-        int64_t positiveSessionLifetimeMs = res->SessionLifetimeMs;
+        int64_t positiveSessionLifetimeMs = res->m_session_lifetime_ms;
         int64_t authenticationEndMs = CurrentUnixMilli();
         double pctWindowFactorToTakeNetworkLatencyAndClockDriftIntoAccount = 0.85;
         double pctWindowJitterToAvoidReauthenticationStormAcrossManyChannelsSimultaneously = 0.10;
@@ -1357,47 +1357,47 @@ void Broker::computeSaslSessionLifetime(std::shared_ptr<SaslAuthenticateResponse
         double pctToUse = pctWindowFactorToTakeNetworkLatencyAndClockDriftIntoAccount + dis(gen);
         int64_t sessionLifetimeMsToUse = static_cast<int64_t>(positiveSessionLifetimeMs * pctToUse);
 
-        clientSessionReauthenticationTime = authenticationEndMs + sessionLifetimeMsToUse;
+        m_client_session_reauthentication_time = authenticationEndMs + sessionLifetimeMsToUse;
     }
     else
     {
-        clientSessionReauthenticationTime = 0;
+        m_client_session_reauthentication_time = 0;
     }
 }
 
-void Broker::UpdateIncomingCommunicationMetrics(int bytes, std::chrono::milliseconds requestLatencyMS)
+void Broker::UpdateIncomingCommunicationMetrics(int bytes, std::chrono::milliseconds m_request_latencyMS)
 {
 
-    UpdateRequestLatencyAndInFlightMetrics(requestLatencyMS);
+    UpdateRequestLatencyAndInFlightMetrics(m_request_latencyMS);
 
-    responseRate->Mark(1);
-    if (brokerResponseRate)
+    m_response_rate->Mark(1);
+    if (m_broker_response_rate)
     {
-        brokerResponseRate->Mark(1);
+        m_broker_response_rate->Mark(1);
     }
 
-    incomingByteRate->Mark(bytes);
-    if (brokerIncomingByteRate)
+    m_incoming_byte_rate->Mark(bytes);
+    if (m_broker_incoming_byte_rate)
     {
-        brokerIncomingByteRate->Mark(bytes);
+        m_broker_incoming_byte_rate->Mark(bytes);
     }
 
-    responseSize->Update(bytes);
-    if (brokerResponseSize)
+    m_response_size->Update(bytes);
+    if (m_broker_response_size)
     {
 
-        brokerResponseSize->Update(bytes);
+        m_broker_response_size->Update(bytes);
     }
 }
 
-void Broker::UpdateRequestLatencyAndInFlightMetrics(std::chrono::milliseconds requestLatencyMS)
+void Broker::UpdateRequestLatencyAndInFlightMetrics(std::chrono::milliseconds m_request_latencyMS)
 {
-    int64_t requestLatencyInMs = requestLatencyMS.count();
+    int64_t m_request_latencyInMs = m_request_latencyMS.count();
 
-    requestLatency->Update(requestLatencyInMs);
-    if (brokerRequestLatency)
+    m_request_latency->Update(m_request_latencyInMs);
+    if (m_broker_request_latency)
     {
-        brokerRequestLatency->Update(requestLatencyInMs);
+        m_broker_request_latency->Update(m_request_latencyInMs);
     }
 
     AddRequestInFlightMetrics(-1);
@@ -1406,59 +1406,59 @@ void Broker::UpdateRequestLatencyAndInFlightMetrics(std::chrono::milliseconds re
 void Broker::AddRequestInFlightMetrics(int64_t i)
 {
 
-    requestsInFlight->Inc(i);
-    if (brokerRequestsInFlight)
+    m_requests_in_flight->Inc(i);
+    if (m_broker_requests_in_flight)
     {
 
-        brokerRequestsInFlight->Inc(i);
+        m_broker_requests_in_flight->Inc(i);
     }
 }
 
 void Broker::UpdateOutgoingCommunicationMetrics(int bytes)
 {
 
-    requestRate->Mark(1);
-    if (brokerRequestRate)
+    m_request_rate->Mark(1);
+    if (m_broker_request_rate)
     {
-        brokerRequestRate->Mark(1);
+        m_broker_request_rate->Mark(1);
     }
-    outgoingByteRate->Mark(bytes);
-    if (brokerOutgoingByteRate)
+    m_outgoing_byte_rate->Mark(bytes);
+    if (m_broker_outgoing_byte_rate)
     {
-        brokerOutgoingByteRate->Mark(bytes);
+        m_broker_outgoing_byte_rate->Mark(bytes);
     }
 
-    requestSize->Update(bytes);
-    if (brokerRequestSize)
+    m_request_size->Update(bytes);
+    if (m_broker_request_size)
     {
 
-        brokerRequestSize->Update(bytes);
+        m_broker_request_size->Update(bytes);
     }
 }
 
-void Broker::UpdateProtocolMetrics(std::shared_ptr<protocolBody> rb)
+void Broker::UpdateProtocolMetrics(std::shared_ptr<protocol_body> rb)
 {
     int16_t key = rb->key();
-    auto &_protocolRequestsRate = protocolRequestsRate[key];
+    auto &_protocolRequestsRate = m_protocol_requests_rate[key];
     if (!_protocolRequestsRate)
     {
         std::string name = "protocol-requests-rate-" + std::to_string(key);
-        _protocolRequestsRate = metrics::GetOrRegisterMeter(name, metricRegistry);
+        _protocolRequestsRate = metrics::GetOrRegisterMeter(name, m_metric_registry);
     }
     _protocolRequestsRate->Mark(1);
 
-    auto &_brokerProtocolRequestsRate = brokerProtocolRequestsRate[key];
-    if (!_brokerProtocolRequestsRate)
+    auto &_m_broker_protocol_requests_rate = m_broker_protocol_requests_rate[key];
+    if (!_m_broker_protocol_requests_rate)
     {
         std::string name = "protocol-requests-rate-" + std::to_string(key);
-        _brokerProtocolRequestsRate = GetOrRegisterMeter(name, metricRegistry);
+        _m_broker_protocol_requests_rate = metrics::GetOrRegisterMeter(name, m_metric_registry);
     }
-    _brokerProtocolRequestsRate->Mark(1);
+    _m_broker_protocol_requests_rate->Mark(1);
 }
 
-void Broker::UandleThrottledResponse(std::shared_ptr<protocolBody> resp)
+void Broker::UandleThrottledResponse(std::shared_ptr<protocol_body> resp)
 {
-    auto throttledResponse = std::dynamic_pointer_cast<throttleSupport>(resp);
+    auto throttledResponse = std::dynamic_pointer_cast<throttle_support>(resp);
     if (!throttledResponse)
     {
         return;
@@ -1476,7 +1476,7 @@ void Broker::UandleThrottledResponse(std::shared_ptr<protocolBody> resp)
 
 void Broker::SetThrottle(std::chrono::milliseconds throttleTime)
 {
-    std::lock_guard<std::mutex> lock(throttleTimerLock);
+    std::lock_guard<std::mutex> lock(m_throttle_timer_lock);
     {
         // 停止现有计时器
     }
@@ -1485,7 +1485,7 @@ void Broker::SetThrottle(std::chrono::milliseconds throttleTime)
 
 void Broker::WaitIfThrottled()
 {
-    std::lock_guard<std::mutex> lock(throttleTimerLock);
+    std::lock_guard<std::mutex> lock(m_throttle_timer_lock);
     {
         // 等待计时器
     }
@@ -1493,46 +1493,46 @@ void Broker::WaitIfThrottled()
 
 void Broker::UpdateThrottleMetric(std::chrono::milliseconds throttleTime)
 {
-    if (brokerThrottleTime)
+    if (m_broker_throttle_time)
     {
         int64_t throttleTimeInMs = throttleTime.count();
-        brokerThrottleTime->Update(throttleTimeInMs);
+        m_broker_throttle_time->Update(throttleTimeInMs);
     }
 }
 
 void Broker::RegisterMetrics()
 {
 
-    brokerIncomingByteRate = RegisterMeter("incoming-byte-rate");
-    brokerRequestRate = RegisterMeter("request-rate");
-    brokerFetchRate = RegisterMeter("consumer-fetch-rate");
-    brokerRequestSize = RegisterHistogram("request-size");
-    brokerRequestLatency = RegisterHistogram("request-latency-in-ms");
-    brokerOutgoingByteRate = RegisterMeter("outgoing-byte-rate");
-    brokerResponseRate = RegisterMeter("response-rate");
-    brokerResponseSize = RegisterHistogram("response-size");
-    brokerRequestsInFlight = RegisterCounter("requests-in-flight");
-    brokerThrottleTime = RegisterHistogram("throttle-time-in-ms");
+    m_broker_incoming_byte_rate = RegisterMeter("incoming-byte-rate");
+    m_broker_request_rate = RegisterMeter("request-rate");
+    m_broker_fetch_rate = RegisterMeter("consumer-fetch-rate");
+    m_broker_request_size = RegisterHistogram("request-size");
+    m_broker_request_latency = RegisterHistogram("request-latency-in-ms");
+    m_broker_outgoing_byte_rate = RegisterMeter("outgoing-byte-rate");
+    m_broker_response_rate = RegisterMeter("response-rate");
+    m_broker_response_size = RegisterHistogram("response-size");
+    m_broker_requests_in_flight = RegisterCounter("requests-in-flight");
+    m_broker_throttle_time = RegisterHistogram("throttle-time-in-ms");
 
-    brokerProtocolRequestsRate.clear();
+    m_broker_protocol_requests_rate.clear();
 }
 
 std::shared_ptr<metrics::Meter> Broker::RegisterMeter(const std::string &name)
 {
     std::string nameForBroker = metrics::GetMetricNameForBroker(name, shared_from_this());
-    return metrics::GetOrRegisterMeter(nameForBroker, metricRegistry);
+    return metrics::GetOrRegisterMeter(nameForBroker, m_metric_registry);
 }
 
 std::shared_ptr<metrics::Histogram> Broker::RegisterHistogram(const std::string &name)
 {
     std::string nameForBroker = metrics::GetMetricNameForBroker(name, shared_from_this());
-    return GetOrRegisterHistogram(nameForBroker, metricRegistry);
+    return metrics::GetOrRegisterHistogram(nameForBroker, m_metric_registry);
 }
 
 std::shared_ptr<metrics::Counter> Broker::RegisterCounter(const std::string &name)
 {
     std::string nameForBroker = metrics::GetMetricNameForBroker(name, shared_from_this());
-    return metrics::GetOrRegisterCounter(nameForBroker, metricRegistry);
+    return metrics::GetOrRegisterCounter(nameForBroker, m_metric_registry);
 }
 coev::awaitable<int> Broker::SendOffsetCommit(std::shared_ptr<OffsetCommitRequest> req, std::shared_ptr<OffsetCommitResponse> &resp, std::shared_ptr<ResponsePromise> &promise)
 {

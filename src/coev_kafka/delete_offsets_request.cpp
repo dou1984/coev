@@ -1,49 +1,49 @@
 #include "version.h"
 #include "delete_offsets_request.h"
 
-void DeleteOffsetsRequest::setVersion(int16_t v)
+void DeleteOffsetsRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int DeleteOffsetsRequest::encode(PEncoder &pe)
 {
-    if (!pe.putString(Group))
+    if (pe.putString(m_group) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    if (partitions.empty())
+    if (m_partitions.empty())
     {
         pe.putInt32(0); // array length = 0
     }
     else
     {
-        if (!pe.putArrayLength(static_cast<int32_t>(partitions.size())))
+        if (pe.putArrayLength(static_cast<int32_t>(m_partitions.size())) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        for (auto &kv : partitions)
+        for (auto &kv : m_partitions)
         {
-            if (!pe.putString(kv.first))
+            if (pe.putString(kv.first) != ErrNoError)
             {
                 return ErrEncodeError;
             }
-            if (!pe.putInt32Array(kv.second))
+            if (pe.putInt32Array(kv.second) != ErrNoError)
             {
                 return ErrEncodeError;
             }
         }
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int DeleteOffsetsRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    if (pd.getString(Group) != ErrNoError)
+    if (pd.getString(m_group) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -59,12 +59,12 @@ int DeleteOffsetsRequest::decode(PDecoder &pd, int16_t version)
     // - 如果 partitionCount < 0（理论上不会发生，但保留判断），也跳过
     if ((partitionCount == 0 && version < 2) || partitionCount <= 0)
     {
-        partitions.clear();
+        m_partitions.clear();
         return ErrNoError;
     }
 
-    partitions.clear();
-    partitions.reserve(partitionCount);
+    m_partitions.clear();
+    m_partitions.reserve(partitionCount);
 
     for (int32_t i = 0; i < partitionCount; ++i)
     {
@@ -80,7 +80,7 @@ int DeleteOffsetsRequest::decode(PDecoder &pd, int16_t version)
             return ErrDecodeError;
         }
 
-        partitions[topic] = std::move(partitionsList);
+        m_partitions[topic] = std::move(partitionsList);
     }
 
     return ErrNoError;
@@ -93,7 +93,7 @@ int16_t DeleteOffsetsRequest::key() const
 
 int16_t DeleteOffsetsRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t DeleteOffsetsRequest::headerVersion() const
@@ -101,17 +101,17 @@ int16_t DeleteOffsetsRequest::headerVersion() const
     return 1;
 }
 
-bool DeleteOffsetsRequest::isValidVersion() const
+bool DeleteOffsetsRequest::is_valid_version() const
 {
-    return Version == 0;
+    return m_version == 0;
 }
 
-KafkaVersion DeleteOffsetsRequest::requiredVersion() const
+KafkaVersion DeleteOffsetsRequest::required_version() const
 {
     return V2_4_0_0;
 }
 
 void DeleteOffsetsRequest::AddPartition(const std::string &topic, int32_t partitionID)
 {
-    partitions[topic].push_back(partitionID);
+    m_partitions[topic].push_back(partitionID);
 }

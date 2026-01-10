@@ -3,22 +3,22 @@
 #include "api_versions.h"
 
 FindCoordinatorRequest::FindCoordinatorRequest()
-    : Version(0), CoordinatorType_(CoordinatorGroup) {}
+    : m_version(0), m_coordinator_type(CoordinatorGroup) {}
 
-void FindCoordinatorRequest::setVersion(int16_t v)
+void FindCoordinatorRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int FindCoordinatorRequest::encode(PEncoder &pe)
 {
-    int err = pe.putString(CoordinatorKey);
+    int err = pe.putString(m_coordinator_key);
     if (err != 0)
         return err;
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
-        pe.putInt8(static_cast<int8_t>(CoordinatorType_));
+        pe.putInt8(static_cast<int8_t>(m_coordinator_type));
     }
 
     return 0;
@@ -26,18 +26,18 @@ int FindCoordinatorRequest::encode(PEncoder &pe)
 
 int FindCoordinatorRequest::decode(PDecoder &pd, int16_t version)
 {
-    int err = pd.getString(CoordinatorKey);
+    int err = pd.getString(m_coordinator_key);
     if (err != 0)
         return err;
 
     if (version >= 1)
     {
-        Version = version;
+        m_version = version;
         int8_t coordinatorType;
         err = pd.getInt8(coordinatorType);
         if (err != 0)
             return err;
-        CoordinatorType_ = static_cast<CoordinatorType>(coordinatorType);
+        m_coordinator_type = static_cast<CoordinatorType>(coordinatorType);
     }
 
     return 0;
@@ -50,7 +50,7 @@ int16_t FindCoordinatorRequest::key() const
 
 int16_t FindCoordinatorRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t FindCoordinatorRequest::headerVersion() const
@@ -58,14 +58,14 @@ int16_t FindCoordinatorRequest::headerVersion() const
     return 1;
 }
 
-bool FindCoordinatorRequest::isValidVersion() const
+bool FindCoordinatorRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 2;
+    return m_version >= 0 && m_version <= 2;
 }
 
-KafkaVersion FindCoordinatorRequest::requiredVersion() const
+KafkaVersion FindCoordinatorRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 2:
         return V2_0_0_0;

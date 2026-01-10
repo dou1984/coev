@@ -7,9 +7,9 @@
 
 int ProduceResponseBlock::decode(PDecoder &pd, int16_t version)
 {
-    if (int err = pd.getKError(Err); err != 0)
+    if (int err = pd.getKError(m_err); err != 0)
         return err;
-    if (int err = pd.getInt64(Offset); err != 0)
+    if (int err = pd.getInt64(m_offset); err != 0)
         return err;
 
     if (version >= 2)
@@ -21,13 +21,13 @@ int ProduceResponseBlock::decode(PDecoder &pd, int16_t version)
         {
             auto seconds = millis / 1000;
             auto nanos = (millis % 1000) * 1000000LL;
-            Timestamp = std::chrono::system_clock::from_time_t(seconds) + std::chrono::nanoseconds(nanos);
+            m_timestamp = std::chrono::system_clock::from_time_t(seconds) + std::chrono::nanoseconds(nanos);
         }
     }
 
     if (version >= 5)
     {
-        if (int err = pd.getInt64(StartOffset); err != 0)
+        if (int err = pd.getInt64(m_start_offset); err != 0)
             return err;
     }
 
@@ -36,18 +36,18 @@ int ProduceResponseBlock::decode(PDecoder &pd, int16_t version)
 
 int ProduceResponseBlock::encode(PEncoder &pe, int16_t version)
 {
-    pe.putKError(Err);
-    pe.putInt64(Offset);
+    pe.putKError(m_err);
+    pe.putInt64(m_offset);
 
     if (version >= 2)
     {
         int64_t timestamp = -1;
-        if (Timestamp.time_since_epoch().count() > 0)
+        if (m_timestamp.time_since_epoch().count() > 0)
         {
-            auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(Timestamp.time_since_epoch()).count();
+            auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(m_timestamp.time_since_epoch()).count();
             timestamp = ms;
         }
-        else if (Timestamp != std::chrono::system_clock::time_point{})
+        else if (m_timestamp != std::chrono::system_clock::time_point{})
         {
             return -1;
         }
@@ -56,27 +56,27 @@ int ProduceResponseBlock::encode(PEncoder &pe, int16_t version)
 
     if (version >= 5)
     {
-        pe.putInt64(StartOffset);
+        pe.putInt64(m_start_offset);
     }
 
     return 0;
 }
 
-void ProduceResponse::setVersion(int16_t v)
+void ProduceResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int ProduceResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
     int32_t numTopics;
     if (int err = pd.getArrayLength(numTopics); err != 0)
         return err;
 
-    Blocks.clear();
-    Blocks.reserve(numTopics);
+    m_blocks.clear();
+    m_blocks.reserve(numTopics);
     for (int i = 0; i < numTopics; ++i)
     {
         std::string name;
@@ -87,7 +87,7 @@ int ProduceResponse::decode(PDecoder &pd, int16_t version)
         if (int err = pd.getArrayLength(numBlocks); err != 0)
             return err;
 
-        auto &partitionMap = Blocks[name];
+        auto &partitionMap = m_blocks[name];
         partitionMap.reserve(numBlocks);
         for (int j = 0; j < numBlocks; ++j)
         {
@@ -102,9 +102,9 @@ int ProduceResponse::decode(PDecoder &pd, int16_t version)
         }
     }
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
-        if (int err = pd.getDurationMs(ThrottleTime); err != 0)
+        if (int err = pd.getDurationMs(m_throttle_time); err != 0)
             return err;
     }
 
@@ -113,10 +113,10 @@ int ProduceResponse::decode(PDecoder &pd, int16_t version)
 
 int ProduceResponse::encode(PEncoder &pe)
 {
-    if (int err = pe.putArrayLength(static_cast<int32_t>(Blocks.size())); err != 0)
+    if (int err = pe.putArrayLength(static_cast<int32_t>(m_blocks.size())); err != 0)
         return err;
 
-    for (auto &[topic, partitions] : Blocks)
+    for (auto &[topic, partitions] : m_blocks)
     {
         if (int err = pe.putString(topic); err != 0)
             return err;
@@ -126,14 +126,14 @@ int ProduceResponse::encode(PEncoder &pe)
         for (auto &[id, prb] : partitions)
         {
             pe.putInt32(id);
-            if (int err = prb->encode(pe, Version); err != 0)
+            if (int err = prb->encode(pe, m_version); err != 0)
                 return err;
         }
     }
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
-         pe.putDurationMs(ThrottleTime);
+         pe.putDurationMs(m_throttle_time);
     }
 
     return 0;
@@ -146,7 +146,7 @@ int16_t ProduceResponse::key() const
 
 int16_t ProduceResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t ProduceResponse::headerVersion() const
@@ -154,14 +154,14 @@ int16_t ProduceResponse::headerVersion() const
     return 0;
 }
 
-bool ProduceResponse::isValidVersion() const
+bool ProduceResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 7;
+    return m_version >= 0 && m_version <= 7;
 }
 
-KafkaVersion ProduceResponse::requiredVersion() const
+KafkaVersion ProduceResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 7:
         return V2_1_0_0;
@@ -185,13 +185,13 @@ KafkaVersion ProduceResponse::requiredVersion() const
 
 std::chrono::milliseconds ProduceResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }
 
 std::shared_ptr<ProduceResponseBlock> ProduceResponse::GetBlock(const std::string &topic, int32_t partition) const
 {
-    auto topicIt = Blocks.find(topic);
-    if (topicIt == Blocks.end())
+    auto topicIt = m_blocks.find(topic);
+    if (topicIt == m_blocks.end())
         return nullptr;
     auto partIt = topicIt->second.find(partition);
     if (partIt == topicIt->second.end())
@@ -201,12 +201,12 @@ std::shared_ptr<ProduceResponseBlock> ProduceResponse::GetBlock(const std::strin
 
 void ProduceResponse::AddTopicPartition(const std::string &topic, int32_t partition, KError err)
 {
-    auto &byTopic = Blocks[topic];
+    auto &byTopic = m_blocks[topic];
     auto block = std::make_shared<ProduceResponseBlock>();
-    block->Err = err;
-    if (Version >= 2)
+    block->m_err = err;
+    if (m_version >= 2)
     {
-        block->Timestamp = std::chrono::system_clock::now();
+        block->m_timestamp = std::chrono::system_clock::now();
     }
     byTopic[partition] = block;
 }

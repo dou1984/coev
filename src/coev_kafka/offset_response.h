@@ -16,11 +16,11 @@
 
 struct OffsetResponseBlock
 {
-    KError Err;
-    std::vector<int64_t> Offsets;
-    int64_t Timestamp;
-    int64_t Offset;
-    int32_t LeaderEpoch;
+    KError m_err;
+    std::vector<int64_t> m_offsets;
+    int64_t m_timestamp;
+    int64_t m_offset;
+    int32_t m_leader_epoch;
 
     OffsetResponseBlock();
 
@@ -28,22 +28,22 @@ struct OffsetResponseBlock
     int encode(PEncoder &pe, int16_t version);
 };
 
-struct OffsetResponse : protocolBody
+struct OffsetResponse : protocol_body
 {
 
-    int16_t Version;
-    std::chrono::milliseconds ThrottleTime;
-    std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<OffsetResponseBlock>>> Blocks_;
+    int16_t m_version;
+    std::chrono::milliseconds m_throttle_time;
+    std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<OffsetResponseBlock>>> m_blocks;
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int decode(PDecoder &pd, int16_t version);
     std::shared_ptr<OffsetResponseBlock> GetBlock(const std::string &topic, int32_t partition);
     int encode(PEncoder &pe);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
     std::chrono::milliseconds throttleTime() const;
     void AddTopicPartition(const std::string &topic, int32_t partition, int64_t offset);
 };

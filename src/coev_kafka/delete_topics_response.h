@@ -11,13 +11,13 @@
 #include "version.h"
 #include "protocol_body.h"
 
-struct DeleteTopicsResponse : protocolBody
+struct DeleteTopicsResponse : protocol_body
 {
-    int16_t Version;
-    std::chrono::milliseconds ThrottleTime;
-    std::map<std::string, KError> TopicErrorCodes;
+    int16_t m_version;
+    std::chrono::milliseconds m_throttle_time;
+    std::map<std::string, KError> m_topic_error_codes;
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
@@ -25,7 +25,7 @@ struct DeleteTopicsResponse : protocolBody
     int16_t headerVersion() const;
     bool isFlexible() const;
     static bool isFlexibleVersion(int16_t version);
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
     std::chrono::milliseconds throttleTime() const;
 };

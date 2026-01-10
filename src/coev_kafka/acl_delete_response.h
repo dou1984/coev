@@ -15,10 +15,10 @@
 
 struct MatchingAcl : VEncoder, VDecoder
 {
-    KError Err;
-    std::string ErrMsg;
-    Resource Resource_;
-    Acl Acl_;
+    KError m_err;
+    std::string m_err_msg;
+    Resource m_resource;
+    Acl m_acl;
 
     int encode(PEncoder &pe, int16_t version);
     int decode(PDecoder &pd, int16_t version);
@@ -26,27 +26,27 @@ struct MatchingAcl : VEncoder, VDecoder
 
 struct FilterResponse : VEncoder, VDecoder
 {
-    KError Err;
-    std::string ErrMsg;
-    std::vector<std::shared_ptr<MatchingAcl>> MatchingAcls;
+    KError m_err;
+    std::string m_err_msg;
+    std::vector<std::shared_ptr<MatchingAcl>> m_matching_acls;
 
     int encode(PEncoder &pe, int16_t version);
     int decode(PDecoder &pd, int16_t version);
 };
 
-struct DeleteAclsResponse : protocolBody
+struct DeleteAclsResponse : protocol_body
 {
-    int16_t Version;
-    std::chrono::milliseconds ThrottleTime;
-    std::vector<std::shared_ptr<FilterResponse>> FilterResponses;
+    int16_t m_version;
+    std::chrono::milliseconds m_throttle_time;
+    std::vector<std::shared_ptr<FilterResponse>> m_filter_responses;
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
     std::chrono::milliseconds throttleTime() const;
 };

@@ -12,10 +12,10 @@
 
 struct DescribeLogDirsResponsePartition
 {
-    int64_t Size;
-    int64_t OffsetLag;
-    int32_t PartitionID;
-    bool IsTemporary;
+    int64_t m_size;
+    int64_t m_offset_lag;
+    int32_t m_partition_id;
+    bool m_is_temporary;
 
     int encode(PEncoder &pe, int16_t version);
     int decode(PDecoder &pd, int16_t version);
@@ -23,8 +23,8 @@ struct DescribeLogDirsResponsePartition
 
 struct DescribeLogDirsResponseTopic : VDecoder, VEncoder
 {
-    std::string Topic;
-    std::vector<DescribeLogDirsResponsePartition> Partitions;
+    std::string m_topic;
+    std::vector<DescribeLogDirsResponsePartition> m_partitions;
 
     int encode(PEncoder &pe, int16_t version);
     int decode(PDecoder &pd, int16_t version);
@@ -32,33 +32,33 @@ struct DescribeLogDirsResponseTopic : VDecoder, VEncoder
 
 struct DescribeLogDirsResponseDirMetadata : VDecoder, VEncoder
 {
-    KError ErrorCode;
-    std::string Path;
-    std::vector<DescribeLogDirsResponseTopic> Topics;
-    int64_t TotalBytes;
-    int64_t UsableBytes;
+    KError m_error_code;
+    std::string m_path;
+    std::vector<DescribeLogDirsResponseTopic> m_topics;
+    int64_t m_total_bytes;
+    int64_t m_usable_bytes;
 
     int encode(PEncoder &pe, int16_t version);
     int decode(PDecoder &pd, int16_t version);
 };
 
-struct DescribeLogDirsResponse : protocolBody
+struct DescribeLogDirsResponse : protocol_body
 {
 
-    std::chrono::milliseconds ThrottleTime;
-    int16_t Version;
-    std::vector<DescribeLogDirsResponseDirMetadata> LogDirs;
-    KError ErrorCode;
+    std::chrono::milliseconds m_throttle_time;
+    int16_t m_version;
+    std::vector<DescribeLogDirsResponseDirMetadata> m_log_dirs;
+    KError m_error_code;
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible() const;
     static bool isFlexibleVersion(int16_t version);
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
     std::chrono::milliseconds throttleTime() const;
 };

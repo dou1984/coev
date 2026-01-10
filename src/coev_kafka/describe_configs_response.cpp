@@ -1,36 +1,36 @@
 #include "version.h"
 #include "describe_configs_response.h"
 
-void DescribeConfigsResponse::setVersion(int16_t v)
+void DescribeConfigsResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int DescribeConfigsResponse::encode(PEncoder &pe)
 {
-    pe.putDurationMs(ThrottleTime);
+    pe.putDurationMs(m_throttle_time);
 
-    if (!pe.putArrayLength(static_cast<int32_t>(Resources.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_resources.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &rr : Resources)
+    for (auto &rr : m_resources)
     {
-        if (!rr->encode(pe, Version))
+        if (rr->encode(pe, m_version) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int DescribeConfigsResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
+    if (pd.getDurationMs(m_throttle_time) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -41,13 +41,13 @@ int DescribeConfigsResponse::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    Resources.clear();
-    Resources.resize(n);
+    m_resources.clear();
+    m_resources.resize(n);
 
     for (int32_t i = 0; i < n; ++i)
     {
-        Resources[i] = std::make_shared<ResourceResponse>();
-        if (!Resources[i]->decode(pd, version))
+        m_resources[i] = std::make_shared<ResourceResponse>();
+        if (m_resources[i]->decode(pd, version) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -63,7 +63,7 @@ int16_t DescribeConfigsResponse::key() const
 
 int16_t DescribeConfigsResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t DescribeConfigsResponse::headerVersion() const
@@ -71,14 +71,14 @@ int16_t DescribeConfigsResponse::headerVersion() const
     return 0;
 }
 
-bool DescribeConfigsResponse::isValidVersion() const
+bool DescribeConfigsResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 2;
+    return m_version >= 0 && m_version <= 2;
 }
 
-KafkaVersion DescribeConfigsResponse::requiredVersion() const
+KafkaVersion DescribeConfigsResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 2:
         return V2_0_0_0;
@@ -93,63 +93,63 @@ KafkaVersion DescribeConfigsResponse::requiredVersion() const
 
 std::chrono::milliseconds DescribeConfigsResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }
 
 int ResourceResponse::encode(PEncoder &pe, int16_t version) 
 {
-    pe.putInt16(ErrorCode);
-    if (!pe.putString(ErrorMsg))
+    pe.putInt16(m_error_code);
+    if (pe.putString(m_error_msg) != ErrNoError)
     {
         return ErrEncodeError;
     }
-    pe.putInt8(static_cast<int8_t>(Type));
-    if (!pe.putString(Name))
-    {
-        return ErrEncodeError;
-    }
-
-    if (!pe.putArrayLength(static_cast<int32_t>(Configs.size())))
+    pe.putInt8(static_cast<int8_t>(m_type));
+    if (pe.putString(m_name) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &c : Configs)
+    if (pe.putArrayLength(static_cast<int32_t>(m_configs.size())) != ErrNoError)
     {
-        if (!c->encode(pe, version))
+        return ErrEncodeError;
+    }
+
+    for (auto &c : m_configs)
+    {
+        if (c->encode(pe, version) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int ResourceResponse::decode(PDecoder &pd, int16_t version)
 {
-    if (pd.getInt16(ErrorCode) != ErrNoError)
+    if (pd.getInt16(m_error_code) != ErrNoError)
         return ErrDecodeError;
-    if (pd.getString(ErrorMsg) != ErrNoError)
+    if (pd.getString(m_error_msg) != ErrNoError)
         return ErrDecodeError;
 
     int8_t t;
     if (pd.getInt8(t) != ErrNoError)
         return ErrDecodeError;
-    Type = static_cast<ConfigResourceType>(t);
+    m_type = static_cast<ConfigResourceType>(t);
 
-    if (pd.getString(Name) != ErrNoError)
+    if (pd.getString(m_name) != ErrNoError)
         return ErrDecodeError;
 
     int32_t n;
     if (pd.getArrayLength(n) != ErrNoError)
         return ErrDecodeError;
 
-    Configs.clear();
-    Configs.resize(n);
+    m_configs.clear();
+    m_configs.resize(n);
     for (int32_t i = 0; i < n; ++i)
     {
-        Configs[i] = std::make_shared<ConfigEntry>();
-        if (!Configs[i]->decode(pd, version))
+        m_configs[i] = std::make_shared<ConfigEntry>();
+        if (!m_configs[i]->decode(pd, version))
         {
             return ErrDecodeError;
         }
@@ -162,59 +162,59 @@ int ResourceResponse::decode(PDecoder &pd, int16_t version)
 
 int ConfigEntry::encode(PEncoder &pe, int16_t version)
 {
-    if (!pe.putString(Name))
+    if (pe.putString(m_name) != ErrNoError)
         return ErrEncodeError;
-    if (!pe.putString(Value))
+    if (pe.putString(m_value) != ErrNoError)
         return ErrEncodeError;
-    pe.putBool(ReadOnly);
+    pe.putBool(m_read_only);
 
     if (version == 0)
     {
-        pe.putBool(Default);
-        pe.putBool(Sensitive);
+        pe.putBool(m_default);
+        pe.putBool(m_sensitive);
     }
     else
     {
-        pe.putInt8(static_cast<int8_t>(Source));
-        pe.putBool(Sensitive);
+        pe.putInt8(static_cast<int8_t>(m_source));
+        pe.putBool(m_sensitive);
 
-        if (!pe.putArrayLength(static_cast<int32_t>(Synonyms.size())))
+        if (pe.putArrayLength(static_cast<int32_t>(m_synonyms.size())) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        for (auto &s : Synonyms)
+        for (auto &s : m_synonyms)
         {
-            if (!s->encode(pe, version))
+            if (s->encode(pe, version) != ErrNoError)
             {
                 return ErrEncodeError;
             }
         }
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int ConfigEntry::decode(PDecoder &pd, int16_t version)
 {
     if (version == 0)
     {
-        Source = ConfigSource::SourceUnknown;
+        m_source = ConfigSource::SourceUnknown;
     }
 
-    if (pd.getString(Name) != ErrNoError)
+    if (pd.getString(m_name) != ErrNoError)
         return ErrDecodeError;
-    if (pd.getString(Value) != ErrNoError)
+    if (pd.getString(m_value) != ErrNoError)
         return ErrDecodeError;
-    if (pd.getBool(ReadOnly) != ErrNoError)
+    if (pd.getBool(m_read_only) != ErrNoError)
         return ErrDecodeError;
 
     if (version == 0)
     {
-        if (pd.getBool(Default) != ErrNoError)
+        if (pd.getBool(m_default) != ErrNoError)
             return ErrDecodeError;
-        if (Default)
+        if (m_default)
         {
-            Source = ConfigSource::SourceDefault;
+            m_source = ConfigSource::SourceDefault;
         }
     }
     else
@@ -222,11 +222,11 @@ int ConfigEntry::decode(PDecoder &pd, int16_t version)
         int8_t src;
         if (pd.getInt8(src) != ErrNoError)
             return ErrDecodeError;
-        Source = static_cast<ConfigSource>(src);
-        Default = (Source == ConfigSource::SourceDefault);
+        m_source = static_cast<ConfigSource>(src);
+        m_default = (m_source == ConfigSource::SourceDefault);
     }
 
-    if (pd.getBool(Sensitive) != ErrNoError)
+    if (pd.getBool(m_sensitive) != ErrNoError)
         return ErrDecodeError;
 
     if (version > 0)
@@ -235,12 +235,12 @@ int ConfigEntry::decode(PDecoder &pd, int16_t version)
         if (pd.getArrayLength(n) != ErrNoError)
             return ErrDecodeError;
 
-        Synonyms.clear();
-        Synonyms.resize(n);
+        m_synonyms.clear();
+        m_synonyms.resize(n);
         for (int32_t i = 0; i < n; ++i)
         {
-            Synonyms[i] = std::make_shared<ConfigSynonym>();
-            if (!Synonyms[i]->decode(pd, version))
+            m_synonyms[i] = std::make_shared<ConfigSynonym>();
+            if (!m_synonyms[i]->decode(pd, version))
             {
                 return ErrDecodeError;
             }
@@ -252,24 +252,24 @@ int ConfigEntry::decode(PDecoder &pd, int16_t version)
 
 int ConfigSynonym::encode(PEncoder &pe, int16_t /*version*/)
 {
-    if (!pe.putString(ConfigName))
+    if (pe.putString(m_config_name) != ErrNoError)
         return ErrEncodeError;
-    if (!pe.putString(ConfigValue))
+    if (pe.putString(m_config_value) != ErrNoError)
         return ErrEncodeError;
-    pe.putInt8(static_cast<int8_t>(Source));
+    pe.putInt8(static_cast<int8_t>(m_source));
     return true;
 }
 
 int ConfigSynonym::decode(PDecoder &pd, int16_t /*version*/)
 {
-    if (pd.getString(ConfigName) != ErrNoError)
+    if (pd.getString(m_config_name) != ErrNoError)
         return ErrDecodeError;
-    if (pd.getString(ConfigValue) != ErrNoError)
+    if (pd.getString(m_config_value) != ErrNoError)
         return ErrDecodeError;
 
     int8_t src;
     if (pd.getInt8(src) != ErrNoError)
         return ErrDecodeError;
-    Source = static_cast<ConfigSource>(src);
+    m_source = static_cast<ConfigSource>(src);
     return ErrNoError;
 }

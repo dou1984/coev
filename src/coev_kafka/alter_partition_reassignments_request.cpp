@@ -3,17 +3,17 @@
 #include "alter_partition_reassignments_request.h"
 int AlterPartitionReassignmentsBlock::encode(PEncoder &pe)
 {
-    if (!pe.putNullableInt32Array(replicas))
+    if (pe.putNullableInt32Array(m_replicas) != ErrNoError)
     {
         return ErrEncodeError;
     }
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int AlterPartitionReassignmentsBlock::decode(PDecoder &pd)
 {
-    if (pd.getInt32Array(replicas) != ErrNoError)
+    if (pd.getInt32Array(m_replicas) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -21,31 +21,31 @@ int AlterPartitionReassignmentsBlock::decode(PDecoder &pd)
     return pd.getEmptyTaggedFieldArray(_);
 }
 
-void AlterPartitionReassignmentsRequest::setVersion(int16_t v)
+void AlterPartitionReassignmentsRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int AlterPartitionReassignmentsRequest::encode(PEncoder &pe)
 {
-    pe.putInt32(Timeout.count());
+    pe.putInt32(m_timeout.count());
 
-    if (!pe.putArrayLength(static_cast<int32_t>(blocks.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_blocks.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &topicPair : blocks)
+    for (auto &topicPair : m_blocks)
     {
         auto &topic = topicPair.first;
         auto &partitions = topicPair.second;
 
-        if (!pe.putString(topic))
+        if (pe.putString(topic) != ErrNoError)
         {
             return ErrEncodeError;
         }
 
-        if (!pe.putArrayLength(static_cast<int32_t>(partitions.size())))
+        if (pe.putArrayLength(static_cast<int32_t>(partitions.size())) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -53,7 +53,7 @@ int AlterPartitionReassignmentsRequest::encode(PEncoder &pe)
         for (auto &partitionPair : partitions)
         {
             pe.putInt32(partitionPair.first);
-            if (!partitionPair.second->encode(pe))
+            if (partitionPair.second->encode(pe) != ErrNoError)
             {
                 return ErrEncodeError;
             }
@@ -63,18 +63,18 @@ int AlterPartitionReassignmentsRequest::encode(PEncoder &pe)
     }
 
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int AlterPartitionReassignmentsRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
     int32_t timeout;
     if (pd.getInt32(timeout) != ErrNoError)
     {
         return ErrDecodeError;
     }
-    Timeout = std::chrono::milliseconds(timeout);
+    m_timeout = std::chrono::milliseconds(timeout);
 
     int32_t topicCount;
     if (pd.getArrayLength(topicCount) != ErrNoError)
@@ -98,7 +98,7 @@ int AlterPartitionReassignmentsRequest::decode(PDecoder &pd, int16_t version)
                 return ErrDecodeError;
             }
 
-            auto &partitionMap = blocks[topic];
+            auto &partitionMap = m_blocks[topic];
             for (int32_t j = 0; j < partitionCount; ++j)
             {
                 int32_t partition;
@@ -108,10 +108,10 @@ int AlterPartitionReassignmentsRequest::decode(PDecoder &pd, int16_t version)
                 }
 
                 auto block = std::make_shared<AlterPartitionReassignmentsBlock>();
-                if (!block->decode(pd))
-                {
-                    return ErrDecodeError;
-                }
+            if (block->decode(pd) != ErrNoError)
+            {
+                return ErrDecodeError;
+            }
                 partitionMap[partition] = block;
             }
             int32_t _;
@@ -132,7 +132,7 @@ int16_t AlterPartitionReassignmentsRequest::key() const
 
 int16_t AlterPartitionReassignmentsRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t AlterPartitionReassignmentsRequest::headerVersion() const
@@ -140,14 +140,14 @@ int16_t AlterPartitionReassignmentsRequest::headerVersion() const
     return 2;
 }
 
-bool AlterPartitionReassignmentsRequest::isValidVersion() const
+bool AlterPartitionReassignmentsRequest::is_valid_version() const
 {
-    return Version == 0;
+    return m_version == 0;
 }
 
 bool AlterPartitionReassignmentsRequest::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool AlterPartitionReassignmentsRequest::isFlexibleVersion(int16_t version) const
@@ -155,16 +155,16 @@ bool AlterPartitionReassignmentsRequest::isFlexibleVersion(int16_t version) cons
     return version >= 0;
 }
 
-KafkaVersion AlterPartitionReassignmentsRequest::requiredVersion() const
+KafkaVersion AlterPartitionReassignmentsRequest::required_version() const
 {
     return V2_4_0_0;
 }
 std::chrono::milliseconds AlterPartitionReassignmentsRequest::throttleTime() const
 {
-    return Timeout;
+    return m_timeout;
 }
 
 void AlterPartitionReassignmentsRequest::AddBlock(const std::string &topic, int32_t partitionID, const std::vector<int32_t> &replicas)
 {
-    blocks[topic][partitionID] = std::make_shared<AlterPartitionReassignmentsBlock>(replicas);
+    m_blocks[topic][partitionID] = std::make_shared<AlterPartitionReassignmentsBlock>(replicas);
 }

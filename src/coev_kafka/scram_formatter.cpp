@@ -37,7 +37,7 @@ int ScramFormatter::Hmac(const std::string &key, const std::string &data, std::s
 {
     try
     {
-        const EVP_MD *md = getDigest(mechanism);
+        const EVP_MD *md = getDigest(m_mechanism);
         output = hmacInternal(md, key, data);
         return ErrNoError;
     }

@@ -14,28 +14,28 @@
 
 struct MemberIdentity
 {
-    std::string MemberId;
-    std::string GroupInstanceId;
+    std::string m_member_id;
+    std::string m_group_instance_id;
 };
 
-struct LeaveGroupRequest : protocolBody
+struct LeaveGroupRequest : protocol_body
 {
-    int16_t Version = 0;
-    std::string GroupId;
-    std::string MemberId;
-    std::vector<MemberIdentity> Members;
+    int16_t m_version = 0;
+    std::string m_group_id;
+    std::string m_member_id;
+    std::vector<MemberIdentity> m_members;
     LeaveGroupRequest() = default;
-    LeaveGroupRequest(int16_t v) : Version(v)
+    LeaveGroupRequest(int16_t v) : m_version(v)
     {
     }
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible();
     static bool isFlexibleVersion(int16_t ver);
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
 };

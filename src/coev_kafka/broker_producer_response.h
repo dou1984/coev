@@ -9,5 +9,5 @@ struct BrokerProducerResponse
 {
     std::shared_ptr<ProduceSet> set;
     std::shared_ptr<ProduceResponse> res;
-    KError err;
+    KError m_err;
 };

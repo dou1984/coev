@@ -3,46 +3,46 @@
 #include <stdexcept>
 #include <sstream>
 
-void CreateTopicsResponse::setVersion(int16_t v)
+void CreateTopicsResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int CreateTopicsResponse::encode(PEncoder &pe)
 {
-    if (Version >= 2)
+    if (m_version >= 2)
     {
-        pe.putDurationMs(ThrottleTime);
+        pe.putDurationMs(m_throttle_time);
     }
 
-    if (!pe.putArrayLength(static_cast<int32_t>(TopicErrors.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_topic_errors.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &kv : TopicErrors)
+    for (auto &kv : m_topic_errors)
     {
         const std::string &topic = kv.first;
         auto &topicError = kv.second;
 
-        if (!pe.putString(topic))
+        if (pe.putString(topic) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        if (!topicError->encode(pe, Version))
+        if (topicError->encode(pe, m_version) != ErrNoError)
         {
             return ErrEncodeError;
         }
 
-        if (Version >= 5)
+        if (m_version >= 5)
         {
-            auto it = TopicResults.find(topic);
-            if (it == TopicResults.end())
+            auto it = m_topic_results.find(topic);
+            if (it == m_topic_results.end())
             {
 
                 return ErrEncodeError;
             }
-            if (!it->second->encode(pe, Version))
+            if (it->second->encode(pe, m_version) != ErrNoError)
             {
                 return ErrEncodeError;
             }
@@ -50,16 +50,16 @@ int CreateTopicsResponse::encode(PEncoder &pe)
     }
 
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int CreateTopicsResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
     if (version >= 2)
     {
-        if (pd.getDurationMs(ThrottleTime) != ErrNoError)
+        if (pd.getDurationMs(m_throttle_time) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -71,10 +71,10 @@ int CreateTopicsResponse::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    TopicErrors.clear();
+    m_topic_errors.clear();
     if (version >= 5)
     {
-        TopicResults.clear();
+        m_topic_results.clear();
     }
 
     for (int32_t i = 0; i < n; ++i)
@@ -86,20 +86,20 @@ int CreateTopicsResponse::decode(PDecoder &pd, int16_t version)
         }
 
         auto topicErr = std::make_shared<TopicError>();
-        if (!topicErr->decode(pd, version))
+        if (topicErr->decode(pd, version) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        TopicErrors[topic] = topicErr;
+        m_topic_errors[topic] = topicErr;
 
         if (version >= 5)
         {
             auto result = std::make_shared<CreatableTopicResult>();
-            if (!result->decode(pd, version))
+            if (result->decode(pd, version) != ErrNoError)
             {
                 return ErrDecodeError;
             }
-            TopicResults[topic] = result;
+            m_topic_results[topic] = result;
         }
     }
 
@@ -114,17 +114,17 @@ int16_t CreateTopicsResponse::key() const
 
 int16_t CreateTopicsResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t CreateTopicsResponse::headerVersion() const
 {
-    return Version >= 5 ? 1 : 0;
+    return m_version >= 5 ? 1 : 0;
 }
 
 bool CreateTopicsResponse::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool CreateTopicsResponse::isFlexibleVersion(int16_t version)
@@ -132,14 +132,14 @@ bool CreateTopicsResponse::isFlexibleVersion(int16_t version)
     return version >= 5;
 }
 
-bool CreateTopicsResponse::isValidVersion() const
+bool CreateTopicsResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 5;
+    return m_version >= 0 && m_version <= 5;
 }
 
-KafkaVersion CreateTopicsResponse::requiredVersion() const
+KafkaVersion CreateTopicsResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 5:
         return V2_4_0_0;
@@ -160,7 +160,7 @@ KafkaVersion CreateTopicsResponse::requiredVersion() const
 
 std::chrono::milliseconds CreateTopicsResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }
 
 // === TopicError ===
@@ -169,27 +169,27 @@ std::string TopicError::Error() const
 {
     std::ostringstream oss;
     // 假设 KError 可以通过整数表示错误类型，此处简化处理
-    oss << "Kafka error code " << static_cast<int>(Err);
-    if (!ErrMsg.empty())
+    oss << "Kafka error code " << static_cast<int>(m_err);
+    if (!m_err_msg.empty())
     {
-        oss << " - " << ErrMsg;
+        oss << " - " << m_err_msg;
     }
     return oss.str();
 }
 
 int TopicError::encode(PEncoder &pe, int16_t version)
 {
-    pe.putInt16(Err);
+    pe.putInt16(m_err);
 
     if (version >= 1)
     {
-        if (!pe.putNullableString(ErrMsg))
+        if (pe.putNullableString(m_err_msg) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int TopicError::decode(PDecoder &pd, int16_t version)
@@ -199,44 +199,44 @@ int TopicError::decode(PDecoder &pd, int16_t version)
     {
         return ErrDecodeError;
     }
-    Err = static_cast<KError>(errCode);
+    m_err = static_cast<KError>(errCode);
 
     if (version >= 1)
     {
 
-        if (pd.getNullableString(ErrMsg) != ErrNoError)
+        if (pd.getNullableString(m_err_msg) != ErrNoError)
         {
             return ErrDecodeError;
         }
     }
 
-    return true;
+    return ErrNoError;
 }
 
 // === CreatableTopicConfigs ===
 
 int CreatableTopicConfigs::encode(PEncoder &pe, int16_t /*version*/)
 {
-    if (!pe.putNullableString(Value))
+    if (pe.putNullableString(m_value) != ErrNoError)
     {
         return ErrEncodeError;
     }
-    pe.putBool(ReadOnly);
-    pe.putInt8(static_cast<int8_t>(ConfigSource_));
-    pe.putBool(IsSensitive);
+    pe.putBool(m_read_only);
+    pe.putInt8(static_cast<int8_t>(m_config_source));
+    pe.putBool(m_is_sensitive);
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int CreatableTopicConfigs::decode(PDecoder &pd, int16_t /*version*/)
 {
 
-    if (pd.getNullableString(Value) != ErrNoError)
+    if (pd.getNullableString(m_value) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
-    if (pd.getBool(ReadOnly) != ErrNoError)
+    if (pd.getBool(m_read_only) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -246,9 +246,9 @@ int CreatableTopicConfigs::decode(PDecoder &pd, int16_t /*version*/)
     {
         return ErrDecodeError;
     }
-    ConfigSource_ = static_cast<ConfigSource>(source);
+    m_config_source = static_cast<ConfigSource>(source);
 
-    if (pd.getBool(IsSensitive) != ErrNoError)
+    if (pd.getBool(m_is_sensitive) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -261,47 +261,47 @@ int CreatableTopicConfigs::decode(PDecoder &pd, int16_t /*version*/)
 
 int CreatableTopicResult::encode(PEncoder &pe, int16_t /*version*/)
 {
-    pe.putInt32(NumPartitions);
-    pe.putInt16(ReplicationFactor);
+    pe.putInt32(m_num_partitions);
+    pe.putInt16(m_replication_factor);
 
-    if (!pe.putArrayLength(static_cast<int32_t>(Configs.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_configs.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
-    for (auto &kv : Configs)
+    for (auto &kv : m_configs)
     {
-        if (!pe.putString(kv.first))
+        if (pe.putString(kv.first) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        if (!kv.second->encode(pe, 0))
+        if (kv.second->encode(pe, 0) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
-    if (TopicConfigErrorCode == KError::ErrNoError)
+    if (m_topic_config_error_code == KError::ErrNoError)
     {
         pe.putEmptyTaggedFieldArray();
-        return true;
+        return ErrNoError;
     }
 
     // 写入带标签字段：1 个字段，tag=0，值为 KError
     pe.putUVarint(1); // num tagged fields
     pe.putUVarint(0); // tag id = 0
     pe.putUVarint(2); // length of value = sizeof(int16_t)
-    pe.putInt16(static_cast<int16_t>(TopicConfigErrorCode));
+    pe.putInt16(static_cast<int16_t>(m_topic_config_error_code));
 
-    return true;
+    return ErrNoError;
 }
 
 int CreatableTopicResult::decode(PDecoder &pd, int16_t /*version*/)
 {
-    if (pd.getInt32(NumPartitions) != ErrNoError)
+    if (pd.getInt32(m_num_partitions) != ErrNoError)
     {
         return ErrDecodeError;
     }
-    if (pd.getInt16(ReplicationFactor) != ErrNoError)
+    if (pd.getInt16(m_replication_factor) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -312,7 +312,7 @@ int CreatableTopicResult::decode(PDecoder &pd, int16_t /*version*/)
         return ErrDecodeError;
     }
 
-    Configs.clear();
+    m_configs.clear();
     for (int32_t i = 0; i < n; ++i)
     {
         std::string name;
@@ -321,11 +321,11 @@ int CreatableTopicResult::decode(PDecoder &pd, int16_t /*version*/)
             return ErrDecodeError;
         }
         auto config = std::make_shared<CreatableTopicConfigs>();
-        if (!config->decode(pd, 0))
+        if (config->decode(pd, 0) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        Configs[name] = config;
+        m_configs[name] = config;
     }
 
     bool hasTag0 = false;
@@ -334,13 +334,13 @@ int CreatableTopicResult::decode(PDecoder &pd, int16_t /*version*/)
     handler[0] = [&](PDecoder &inner) -> int
     {
         int16_t err;
-        if (!inner.getInt16(err))
+        if (inner.getInt16(err) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        TopicConfigErrorCode = static_cast<KError>(err);
+        m_topic_config_error_code = static_cast<KError>(err);
         hasTag0 = true;
-        return ErrDecodeError;
+        return ErrNoError;
     };
 
     if (pd.getTaggedFieldArray(handler) != 0)
@@ -350,7 +350,7 @@ int CreatableTopicResult::decode(PDecoder &pd, int16_t /*version*/)
 
     if (!hasTag0)
     {
-        TopicConfigErrorCode = KError::ErrNoError;
+        m_topic_config_error_code = KError::ErrNoError;
     }
 
     return ErrNoError;

@@ -15,35 +15,35 @@
 
 struct UserScramCredentialsResponseInfo
 {
-    ScramMechanismType Mechanism;
-    int32_t Iterations;
+    ScramMechanismType m_mechanism;
+    int32_t m_iterations;
 };
 
 struct DescribeUserScramCredentialsResult
 {
-    std::string User;
-    KError ErrorCode;
-    std::string ErrorMessage;
-    std::vector<std::shared_ptr<UserScramCredentialsResponseInfo>> CredentialInfos;
+    std::string m_user;
+    KError m_error_code;
+    std::string m_error_message;
+    std::vector<std::shared_ptr<UserScramCredentialsResponseInfo>> m_credential_infos;
 };
 
-struct DescribeUserScramCredentialsResponse : protocolBody
+struct DescribeUserScramCredentialsResponse : protocol_body
 {
-    int16_t Version = 0;
-    std::chrono::milliseconds ThrottleTime;
-    KError ErrorCode;
-    std::string ErrorMessage;
-    std::vector<std::shared_ptr<DescribeUserScramCredentialsResult>> Results;
+    int16_t m_version = 0;
+    std::chrono::milliseconds m_throttle_time;
+    KError m_error_code;
+    std::string m_error_message;
+    std::vector<std::shared_ptr<DescribeUserScramCredentialsResult>> m_results;
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible() const;
     static bool isFlexibleVersion(int16_t version);
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
     std::chrono::milliseconds throttleTime() const;
 };

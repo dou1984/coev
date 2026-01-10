@@ -33,26 +33,26 @@ coev::awaitable<int> singleFlightMetadataRefresher::Refresh(const std::vector<st
 
 bool singleFlightMetadataRefresher::RefreshOrQueue(const std::vector<std::string> &topics, coev::co_channel<int> &ch)
 {
-    std::lock_guard<std::mutex> lock_current(Current->mu);
-    if (!Current->ongoing)
+    std::lock_guard<std::mutex> lock_current(m_current->m_mutex);
+    if (!m_current->m_ongoing)
     {
-        std::lock_guard<std::mutex> lock_next(Next->mu);
-        Current->addTopicsFrom(Next);
-        Next->clear();
-        Current->addTopics(topics);
+        std::lock_guard<std::mutex> lock_next(m_next->m_mutex);
+        m_current->addTopicsFrom(m_next);
+        m_next->clear();
+        m_current->addTopics(topics);
 
         return false;
     }
 
-    if (Current->hasTopics(topics))
+    if (m_current->hasTopics(topics))
     {
 
         return false;
     }
 
     {
-        std::lock_guard<std::mutex> lock_next(Next->mu);
-        Next->addTopics(topics);
+        std::lock_guard<std::mutex> lock_next(m_next->m_mutex);
+        m_next->addTopics(topics);
     }
     return true;
 }

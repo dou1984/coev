@@ -16,30 +16,28 @@
 
 struct PartitionReplicaReassignmentsStatus
 {
-    std::vector<int32_t> Replicas;
-    std::vector<int32_t> AddingReplicas;
-    std::vector<int32_t> RemovingReplicas;
+    std::vector<int32_t> m_replicas;
+    std::vector<int32_t> m_adding_replicas;
+    std::vector<int32_t> m_removing_replicas;
 
     int encode(PEncoder &pe);
     int decode(PDecoder &pd);
 };
 
-struct ListPartitionReassignmentsResponse : protocolBody
+struct ListPartitionReassignmentsResponse : protocol_body
 {
 
-    int16_t Version = 0;
-    std::chrono::milliseconds ThrottleTime;
-    KError ErrorCode;
-    std::string ErrorMessage;
-    std::map<std::string, std::map<int32_t, std::shared_ptr<PartitionReplicaReassignmentsStatus>>> TopicStatus;
+    int16_t m_version = 0;
+    std::chrono::milliseconds m_throttle_time;
+    KError m_err;
+    std::string m_error_message;
+    std::map<std::string, std::map<int32_t, std::shared_ptr<PartitionReplicaReassignmentsStatus>>> m_topic_status;
 
-    void setVersion(int16_t v);
-    void AddBlock(
-        const std::string &topic,
-        int32_t partition,
-        const std::vector<int32_t> &replicas,
-        const std::vector<int32_t> &addingReplicas,
-        const std::vector<int32_t> &removingReplicas);
+    void set_version(int16_t v);
+    void AddBlock(const std::string &topic, int32_t partition,
+                  const std::vector<int32_t> &replicas,
+                  const std::vector<int32_t> &addingReplicas,
+                  const std::vector<int32_t> &removingReplicas);
 
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
@@ -47,10 +45,10 @@ struct ListPartitionReassignmentsResponse : protocolBody
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible();
     static bool isFlexibleVersion(int16_t ver);
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
 
     std::chrono::milliseconds throttleTime() const;
 };

@@ -5,11 +5,11 @@
 
 int SyncGroupRequestAssignment::encode(PEncoder &pe, int16_t version)
 {
-    int err = pe.putString(MemberId);
+    int err = pe.putString(m_member_id);
     if (err != 0)
         return err;
 
-    err = pe.putBytes(Assignment);
+    err = pe.putBytes(m_assignment);
     if (err != 0)
         return err;
 
@@ -19,11 +19,11 @@ int SyncGroupRequestAssignment::encode(PEncoder &pe, int16_t version)
 
 int SyncGroupRequestAssignment::decode(PDecoder &pd, int16_t version)
 {
-    int err = pd.getString(MemberId);
+    int err = pd.getString(m_member_id);
     if (err != 0)
         return err;
 
-    err = pd.getBytes(Assignment);
+    err = pd.getBytes(m_assignment);
     if (err != 0)
         return err;
 
@@ -33,37 +33,37 @@ int SyncGroupRequestAssignment::decode(PDecoder &pd, int16_t version)
 
 // --- SyncGroupRequest ---
 
-void SyncGroupRequest::setVersion(int16_t v)
+void SyncGroupRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int SyncGroupRequest::encode(PEncoder &pe)
 {
-    int err = pe.putString(GroupId);
+    int err = pe.putString(m_group_id);
     if (err != 0)
         return err;
 
-    pe.putInt32(GenerationId);
+    pe.putInt32(m_generation_id);
 
-    err = pe.putString(MemberId);
+    err = pe.putString(m_member_id);
     if (err != 0)
         return err;
 
-    if (Version >= 3)
+    if (m_version >= 3)
     {
-        err = pe.putNullableString(GroupInstanceId);
+        err = pe.putNullableString(m_group_instance_id);
         if (err != 0)
             return err;
     }
 
-    err = pe.putArrayLength(static_cast<int>(GroupAssignments.size()));
+    err = pe.putArrayLength(static_cast<int>(m_group_assignments.size()));
     if (err != 0)
         return err;
 
-    for (auto &assignment : GroupAssignments)
+    for (auto &assignment : m_group_assignments)
     {
-        err = assignment.encode(pe, Version);
+        err = assignment.encode(pe, m_version);
         if (err != 0)
             return err;
     }
@@ -74,24 +74,24 @@ int SyncGroupRequest::encode(PEncoder &pe)
 
 int SyncGroupRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    int err = pd.getString(GroupId);
+    int err = pd.getString(m_group_id);
     if (err != 0)
         return err;
 
-    err = pd.getInt32(GenerationId);
+    err = pd.getInt32(m_generation_id);
     if (err != 0)
         return err;
 
-    err = pd.getString(MemberId);
+    err = pd.getString(m_member_id);
     if (err != 0)
         return err;
 
-    if (Version >= 3)
+    if (m_version >= 3)
     {
 
-        err = pd.getNullableString(GroupInstanceId);
+        err = pd.getNullableString(m_group_instance_id);
         if (err != 0)
             return err;
     }
@@ -101,17 +101,17 @@ int SyncGroupRequest::decode(PDecoder &pd, int16_t version)
     if (err != 0)
         return err;
 
-    GroupAssignments.clear();
+    m_group_assignments.clear();
     if (numAssignments > 0)
     {
-        GroupAssignments.reserve(numAssignments);
+        m_group_assignments.reserve(numAssignments);
         for (int i = 0; i < numAssignments; ++i)
         {
             SyncGroupRequestAssignment block;
-            err = block.decode(pd, Version);
+            err = block.decode(pd, m_version);
             if (err != 0)
                 return err;
-            GroupAssignments.push_back(std::move(block));
+            m_group_assignments.push_back(std::move(block));
         }
     }
     int32_t _;
@@ -125,22 +125,22 @@ int16_t SyncGroupRequest::key() const
 
 int16_t SyncGroupRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t SyncGroupRequest::headerVersion() const
 {
-    return (Version >= 4) ? 2 : 1;
+    return (m_version >= 4) ? 2 : 1;
 }
 
-bool SyncGroupRequest::isValidVersion() const
+bool SyncGroupRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 4;
+    return m_version >= 0 && m_version <= 4;
 }
 
 bool SyncGroupRequest::isFlexible()
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool SyncGroupRequest::isFlexibleVersion(int16_t ver)
@@ -148,9 +148,9 @@ bool SyncGroupRequest::isFlexibleVersion(int16_t ver)
     return ver >= 4;
 }
 
-KafkaVersion SyncGroupRequest::requiredVersion() const
+KafkaVersion SyncGroupRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 4:
         return V2_4_0_0;
@@ -170,7 +170,7 @@ KafkaVersion SyncGroupRequest::requiredVersion() const
 void SyncGroupRequest::AddGroupAssignment(const std::string &memberId,
                                           const std::string &memberAssignment)
 {
-    GroupAssignments.emplace_back(memberId, memberAssignment);
+    m_group_assignments.emplace_back(memberId, memberAssignment);
 }
 
 int SyncGroupRequest::AddGroupAssignmentMember(const std::string &memberId, std::shared_ptr<ConsumerGroupMemberAssignment> memberAssignment)

@@ -12,8 +12,8 @@
 #include "errors.h"
 #include "interceptors.h"
 
-inline constexpr int producerMessageOverhead = 26;
-inline constexpr int maximumRecordOverhead = 77; // 5 * 5 + 10 + 1; // binary.MaxVarintLen32=5, binary.MaxVarintLen64=10
+inline constexpr int ProducerMessageOverhead = 26;
+inline constexpr int MaximumRecordOverhead = 77; // 5 * 5 + 10 + 1; // binary.MaxVarintLen32=5, binary.MaxVarintLen64=10
 
 enum FlagSet : int16_t
 {
@@ -27,21 +27,21 @@ enum FlagSet : int16_t
 
 struct ProducerMessage : std::enable_shared_from_this<ProducerMessage>
 {
-    std::string Topic;
-    std::shared_ptr<Encoder> Key;
-    std::shared_ptr<Encoder> Value;
-    std::vector<RecordHeader> Headers;
-    std::shared_ptr<void> Metadata;
+    std::string m_topic;
+    std::shared_ptr<Encoder> m_key;
+    std::shared_ptr<Encoder> m_value;
+    std::vector<RecordHeader> m_headers;
+    std::shared_ptr<void> m_metadata;
 
-    int64_t Offset;
-    int32_t Partition;
-    std::chrono::system_clock::time_point Timestamp;
+    int64_t m_offset;
+    int32_t m_partition;
+    std::chrono::system_clock::time_point m_timestamp;
 
-    int Retries;
-    FlagSet Flags;
-    int32_t SequenceNumber;
-    int16_t ProducerEpoch;
-    bool hasSequence;
+    int m_retries;
+    FlagSet m_flags;
+    int32_t m_sequence_number;
+    int16_t m_producer_epoch;
+    bool m_has_sequence;
 
     ProducerMessage();
     int ByteSize(int version) const;

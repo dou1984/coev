@@ -11,25 +11,25 @@
 #include "protocol_body.h"
 #include "topic_partition.h"
 
-struct CreatePartitionsRequest : protocolBody, throttleSupport
+struct CreatePartitionsRequest : protocol_body, throttle_support
 {
-    int16_t Version;
-    std::map<std::string, std::shared_ptr<TopicPartition>> TopicPartitions;
-    std::chrono::milliseconds Timeout;
-    bool ValidateOnly;
+    int16_t m_version;
+    std::map<std::string, std::shared_ptr<TopicPartition>> m_topic_partitions;
+    std::chrono::milliseconds m_timeout;
+    bool m_validate_only;
 
     CreatePartitionsRequest() = default;
-    CreatePartitionsRequest(int16_t v) : Version(v)
+    CreatePartitionsRequest(int16_t v) : m_version(v)
     {
     }
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
     std::chrono::milliseconds throttleTime() const;
 };

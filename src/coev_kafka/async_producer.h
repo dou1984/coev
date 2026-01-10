@@ -52,29 +52,29 @@ struct AsyncProducer : std::enable_shared_from_this<AsyncProducer>
     coev::awaitable<int> finishTransaction(bool commit);
     coev::awaitable<void> retryBatch(const std::string &topic, int32_t partition, std::shared_ptr<PartitionSet> pSet, KError kerr);
 
-    std::shared_ptr<Client> client_;
-    std::shared_ptr<Config> conf_;
-    std::shared_ptr<TransactionManager> txnmgr_;
-    std::atomic<int> in_flight_;
+    std::shared_ptr<Client> m_client;
+    std::shared_ptr<Config> m_conf;
+    std::shared_ptr<TransactionManager> m_txnmgr;
+    std::atomic<int> m_in_flight;
 
-    std::map<std::shared_ptr<Broker>, std::shared_ptr<BrokerProducer>> brokers_;
-    std::map<std::shared_ptr<BrokerProducer>, int> broker_refs_;
-    std::mutex broker_lock_;
-    std::mutex tx_lock_;
+    std::map<std::shared_ptr<Broker>, std::shared_ptr<BrokerProducer>> m_brokers;
+    std::map<std::shared_ptr<BrokerProducer>, int> m_broker_refs;
+    std::mutex m_broker_lock;
+    std::mutex m_tx_lock;
 
-    std::shared_ptr<metrics::Registry> MetricsRegistry;
+    std::shared_ptr<metrics::Registry> m_metrics_registry;
 
-    coev::co_channel<std::shared_ptr<ProducerError>> errors_;
-    coev::co_channel<std::shared_ptr<ProducerMessage>> input_;
-    coev::co_channel<std::shared_ptr<ProducerMessage>> successes_;
-    coev::co_channel<std::shared_ptr<ProducerMessage>> retries_;
-    coev::co_task task_;
+    coev::co_channel<std::shared_ptr<ProducerError>> m_errors;
+    coev::co_channel<std::shared_ptr<ProducerMessage>> m_input;
+    coev::co_channel<std::shared_ptr<ProducerMessage>> m_successes;
+    coev::co_channel<std::shared_ptr<ProducerMessage>> m_retries;
+    coev::co_task m_task;
 };
 
 struct PartitionRetryState
 {
-    std::vector<std::shared_ptr<ProducerMessage>> buf;
-    bool expect_chaser;
+    std::vector<std::shared_ptr<ProducerMessage>> m_buf;
+    bool m_expect_chaser;
 };
 
 coev::awaitable<int> NewAsyncProducer(const std::vector<std::string> &addrs, std::shared_ptr<Config> conf, std::shared_ptr<AsyncProducer> &producer);

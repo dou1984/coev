@@ -13,8 +13,8 @@ struct ClientQuotasOp;
 
 struct AlterClientQuotasEntry : IEncoder, VDecoder
 {
-    std::vector<QuotaEntityComponent> Entity;
-    std::vector<ClientQuotasOp> Ops;
+    std::vector<QuotaEntityComponent> m_entity;
+    std::vector<ClientQuotasOp> m_ops;
 
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
@@ -22,31 +22,31 @@ struct AlterClientQuotasEntry : IEncoder, VDecoder
 
 struct ClientQuotasOp : IEncoder, VDecoder
 {
-    std::string Key;
-    double Value;
-    bool Remove;
+    std::string m_key;
+    double m_value;
+    bool m_remove = false;
 
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
 };
 
-struct AlterClientQuotasRequest : protocolBody
+struct AlterClientQuotasRequest : protocol_body
 {
     AlterClientQuotasRequest() = default;
-    AlterClientQuotasRequest(int16_t v) : Version(v)
+    AlterClientQuotasRequest(int16_t v) : m_version(v)
     {
     }
-    int16_t Version = 0;
-    std::vector<AlterClientQuotasEntry> Entries;
-    bool ValidateOnly = false;
+    int16_t m_version = 0;
+    std::vector<AlterClientQuotasEntry> m_entries;
+    bool m_validate_only = false;
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
 
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
 };

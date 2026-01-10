@@ -15,9 +15,9 @@
 
 struct ConfigSynonym : VDecoder, VEncoder
 {
-    std::string ConfigName;
-    std::string ConfigValue;
-    ConfigSource Source;
+    std::string m_config_name;
+    std::string m_config_value;
+    ConfigSource m_source;
 
     int encode(PEncoder &pe, int16_t version);
     int decode(PDecoder &pd, int16_t version);
@@ -25,13 +25,13 @@ struct ConfigSynonym : VDecoder, VEncoder
 
 struct ConfigEntry : VDecoder, VEncoder
 {
-    std::string Name;
-    std::string Value;
-    bool ReadOnly;
-    bool Default;
-    bool Sensitive;
-    ConfigSource Source;
-    std::vector<std::shared_ptr<ConfigSynonym>> Synonyms;
+    std::string m_name;
+    std::string m_value;
+    bool m_read_only;
+    bool m_default;
+    bool m_sensitive;
+    ConfigSource m_source;
+    std::vector<std::shared_ptr<ConfigSynonym>> m_synonyms;
 
     int encode(PEncoder &pe, int16_t version);
     int decode(PDecoder &pd, int16_t version);
@@ -39,30 +39,30 @@ struct ConfigEntry : VDecoder, VEncoder
 
 struct ResourceResponse : VDecoder, VEncoder
 {
-    int16_t ErrorCode;
-    std::string ErrorMsg;
-    ConfigResourceType Type;
-    std::string Name;
-    std::vector<std::shared_ptr<ConfigEntry>> Configs;
+    int16_t m_error_code;
+    std::string m_error_msg;
+    ConfigResourceType m_type;
+    std::string m_name;
+    std::vector<std::shared_ptr<ConfigEntry>> m_configs;
 
     int encode(PEncoder &pe, int16_t version);
     int decode(PDecoder &pd, int16_t version);
 };
 
-struct DescribeConfigsResponse : protocolBody
+struct DescribeConfigsResponse : protocol_body
 {
 
-    int16_t Version;
-    std::chrono::milliseconds ThrottleTime;
-    std::vector<std::shared_ptr<ResourceResponse>> Resources;
+    int16_t m_version;
+    std::chrono::milliseconds m_throttle_time;
+    std::vector<std::shared_ptr<ResourceResponse>> m_resources;
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
     std::chrono::milliseconds throttleTime() const;
 };

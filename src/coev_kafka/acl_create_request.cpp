@@ -1,21 +1,21 @@
 #include "version.h"
 #include "acl_create_request.h"
 
-void CreateAclsRequest::setVersion(int16_t v)
+void CreateAclsRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int CreateAclsRequest::encode(PEncoder &pe)
 {
-    if (pe.putArrayLength(static_cast<int32_t>(AclCreations.size())) != 0)
+    if (pe.putArrayLength(static_cast<int32_t>(m_acl_creations.size())) != 0)
     {
         return -1;
     }
 
-    for (auto &aclCreation : AclCreations)
+    for (auto &aclCreation : m_acl_creations)
     {
-        if (aclCreation->encode(pe, Version) != 0)
+        if (aclCreation->encode(pe, m_version) != 0)
         {
             return -1;
         }
@@ -26,18 +26,18 @@ int CreateAclsRequest::encode(PEncoder &pe)
 
 int CreateAclsRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
     int32_t n;
     if (pd.getArrayLength(n) != 0)
     {
         return -1;
     }
 
-    AclCreations.resize(n);
+    m_acl_creations.resize(n);
     for (int32_t i = 0; i < n; ++i)
     {
-        AclCreations[i] = std::make_shared<AclCreation>();
-        if (AclCreations[i]->decode(pd, version) != 0)
+        m_acl_creations[i] = std::make_shared<AclCreation>();
+        if (m_acl_creations[i]->decode(pd, version) != 0)
         {
             return -1;
         }
@@ -53,7 +53,7 @@ int16_t CreateAclsRequest::key() const
 
 int16_t CreateAclsRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t CreateAclsRequest::headerVersion() const
@@ -61,14 +61,14 @@ int16_t CreateAclsRequest::headerVersion() const
     return 1;
 }
 
-bool CreateAclsRequest::isValidVersion() const
+bool CreateAclsRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 1;
+    return m_version >= 0 && m_version <= 1;
 }
 
-KafkaVersion CreateAclsRequest::requiredVersion() const
+KafkaVersion CreateAclsRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 1:
         return V2_0_0_0;
@@ -79,11 +79,11 @@ KafkaVersion CreateAclsRequest::requiredVersion() const
 
 int AclCreation::encode(PEncoder &pe, int16_t version)
 {
-    if (resource.encode(pe, version) != 0)
+    if (m_resource.encode(pe, version) != 0)
     {
         return -1;
     }
-    if (acl.encode(pe) != 0)
+    if (m_acl.encode(pe) != 0)
     {
         return -1;
     }
@@ -92,11 +92,11 @@ int AclCreation::encode(PEncoder &pe, int16_t version)
 
 int AclCreation::decode(PDecoder &pd, int16_t version)
 {
-    if (resource.decode(pd, version) != 0)
+    if (m_resource.decode(pd, version) != 0)
     {
         return -1;
     }
-    if (acl.decode(pd, version) != 0)
+    if (m_acl.decode(pd, version) != 0)
     {
         return -1;
     }

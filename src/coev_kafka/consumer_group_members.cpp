@@ -2,25 +2,25 @@
 
 int ConsumerGroupMemberMetadata::encode(PEncoder &pe)
 {
-    pe.putInt16(Version);
+    pe.putInt16(m_version);
 
-    if (int err = pe.putStringArray(Topics); err != 0)
+    if (int err = pe.putStringArray(m_topics); err != 0)
     {
         return err;
     }
 
-    if (int err = pe.putBytes(UserData); err != 0)
+    if (int err = pe.putBytes(m_user_data); err != 0)
     {
         return err;
     }
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
-        if (int err = pe.putArrayLength(OwnedPartitions.size()); err != 0)
+        if (int err = pe.putArrayLength(m_owned_partitions.size()); err != 0)
         {
             return err;
         }
-        for (auto &op : OwnedPartitions)
+        for (auto &op : m_owned_partitions)
         {
             if (int err = op->encode(pe); err != 0)
             {
@@ -29,14 +29,14 @@ int ConsumerGroupMemberMetadata::encode(PEncoder &pe)
         }
     }
 
-    if (Version >= 2)
+    if (m_version >= 2)
     {
-        pe.putInt32(GenerationId);
+        pe.putInt32(m_generation_id);
     }
 
-    if (Version >= 3)
+    if (m_version >= 3)
     {
-        if (int err = pe.putNullableString(RackId); err != 0)
+        if (int err = pe.putNullableString(m_rack_id); err != 0)
         {
             return err;
         }
@@ -48,22 +48,22 @@ int ConsumerGroupMemberMetadata::encode(PEncoder &pe)
 int ConsumerGroupMemberMetadata::decode(PDecoder &pd)
 {
     int err;
-    if ((err = pd.getInt16(Version)) != 0)
+    if ((err = pd.getInt16(m_version)) != 0)
     {
         return err;
     }
 
-    if ((err = pd.getStringArray(Topics)) != 0)
+    if ((err = pd.getStringArray(m_topics)) != 0)
     {
         return err;
     }
 
-    if ((err = pd.getBytes(UserData)) != 0)
+    if ((err = pd.getBytes(m_user_data)) != 0)
     {
         return err;
     }
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
         int n;
         if ((err = pd.getArrayLength(n)) != 0)
@@ -77,11 +77,11 @@ int ConsumerGroupMemberMetadata::decode(PDecoder &pd)
         }
         if (n > 0)
         {
-            OwnedPartitions.resize(n);
+            m_owned_partitions.resize(n);
             for (int i = 0; i < n; i++)
             {
-                OwnedPartitions[i] = std::make_shared<OwnedPartition>();
-                if ((err = OwnedPartitions[i]->decode(pd)) != 0)
+                m_owned_partitions[i] = std::make_shared<OwnedPartition>();
+                if ((err = m_owned_partitions[i]->decode(pd)) != 0)
                 {
                     return err;
                 }
@@ -89,17 +89,17 @@ int ConsumerGroupMemberMetadata::decode(PDecoder &pd)
         }
     }
 
-    if (Version >= 2)
+    if (m_version >= 2)
     {
-        if ((err = pd.getInt32(GenerationId)) != 0)
+        if ((err = pd.getInt32(m_generation_id)) != 0)
         {
             return err;
         }
     }
 
-    if (Version >= 3)
+    if (m_version >= 3)
     {
-        if ((err = pd.getNullableString(RackId)) != 0)
+        if ((err = pd.getNullableString(m_rack_id)) != 0)
         {
             return err;
         }
@@ -138,7 +138,7 @@ int OwnedPartition::decode(PDecoder &pd)
 
 int ConsumerGroupMemberAssignment::encode(PEncoder &pe)
 {
-    pe.putInt16(Version);
+    pe.putInt16(m_version);
 
     if (int err = pe.putArrayLength(Topics.size()); err != 0)
     {
@@ -168,7 +168,7 @@ int ConsumerGroupMemberAssignment::encode(PEncoder &pe)
 int ConsumerGroupMemberAssignment::decode(PDecoder &pd)
 {
     int err;
-    if ((err = pd.getInt16(Version)) != 0)
+    if ((err = pd.getInt16(m_version)) != 0)
     {
         return err;
     }

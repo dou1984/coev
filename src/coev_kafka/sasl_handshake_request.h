@@ -10,21 +10,21 @@
 #include "version.h"
 #include "protocol_body.h"
 
-struct SaslHandshakeRequest : protocolBody
+struct SaslHandshakeRequest : protocol_body
 {
 
-    std::string Mechanism;
-    int16_t Version = 0;
+    std::string m_mechanism;
+    int16_t m_version = 0;
     SaslHandshakeRequest() = default;
-    SaslHandshakeRequest(int16_t v) : Version(v)
+    SaslHandshakeRequest(int16_t v) : m_version(v)
     {
     }
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
 };

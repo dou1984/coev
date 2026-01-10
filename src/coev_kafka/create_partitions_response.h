@@ -15,27 +15,27 @@
 
 struct TopicPartitionError : IEncoder, VDecoder
 {
-    KError Err;
-    std::string ErrMsg;
+    KError m_err;
+    std::string m_err_msg;
 
     std::string Error() const;
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
 };
 
-struct CreatePartitionsResponse : protocolBody
+struct CreatePartitionsResponse : protocol_body
 {
-    int16_t Version;
-    std::chrono::milliseconds ThrottleTime;
-    std::map<std::string, std::shared_ptr<TopicPartitionError>> TopicPartitionErrors;
+    int16_t m_version;
+    std::chrono::milliseconds m_throttle_time;
+    std::map<std::string, std::shared_ptr<TopicPartitionError>> m_topic_partition_errors;
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
     std::chrono::milliseconds throttleTime() const;
 };

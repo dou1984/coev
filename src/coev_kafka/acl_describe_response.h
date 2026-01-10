@@ -12,25 +12,25 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
-struct DescribeAclsResponse : protocolBody
+struct DescribeAclsResponse : protocol_body
 {
-    int16_t Version;
-    std::chrono::milliseconds ThrottleTime;
-    std::vector<std::shared_ptr<ResourceAcls>> ResourceAcls_;
-    std::string ErrMsg;
-    KError Err;
+    int16_t m_version;
+    std::chrono::milliseconds m_throttle_time;
+    std::vector<std::shared_ptr<ResourceAcls>> m_resource_acls;
+    std::string m_err_msg;
+    KError m_err;
 
     DescribeAclsResponse() = default;
-    DescribeAclsResponse(int16_t v) : Version(v)
+    DescribeAclsResponse(int16_t v) : m_version(v)
     {
     }
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
     std::chrono::milliseconds throttleTime() const;
 };

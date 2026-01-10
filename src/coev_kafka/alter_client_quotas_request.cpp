@@ -2,30 +2,30 @@
 #include "api_versions.h"
 #include "alter_client_quotas_request.h"
 
-void AlterClientQuotasRequest::setVersion(int16_t v)
+void AlterClientQuotasRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int AlterClientQuotasRequest::encode(PEncoder &pe)
 {
     // Entries
-    if (!pe.putArrayLength(static_cast<int32_t>(Entries.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_entries.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
-    for (auto &e : Entries)
+    for (auto &e : m_entries)
     {
-        if (!e.encode(pe))
+        if (e.encode(pe) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
     // ValidateOnly
-    pe.putBool(ValidateOnly);
+    pe.putBool(m_validate_only);
 
-    return true;
+    return ErrNoError;
 }
 
 int AlterClientQuotasRequest::decode(PDecoder &pd, int16_t version)
@@ -38,10 +38,10 @@ int AlterClientQuotasRequest::decode(PDecoder &pd, int16_t version)
     }
     if (entryCount > 0)
     {
-        Entries.resize(entryCount);
-        for (auto &entry : Entries)
+        m_entries.resize(entryCount);
+        for (auto &entry : m_entries)
         {
-            if (!entry.decode(pd, version))
+            if (entry.decode(pd, version) != ErrNoError)
             {
                 return ErrDecodeError;
             }
@@ -49,7 +49,7 @@ int AlterClientQuotasRequest::decode(PDecoder &pd, int16_t version)
     }
     else
     {
-        Entries.clear();
+        m_entries.clear();
     }
 
     // ValidateOnly
@@ -58,9 +58,9 @@ int AlterClientQuotasRequest::decode(PDecoder &pd, int16_t version)
     {
         return ErrDecodeError;
     }
-    ValidateOnly = validateOnly;
+    m_validate_only = validateOnly;
 
-    return true;
+    return ErrNoError;
 }
 
 int16_t AlterClientQuotasRequest::key() const
@@ -70,7 +70,7 @@ int16_t AlterClientQuotasRequest::key() const
 
 int16_t AlterClientQuotasRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t AlterClientQuotasRequest::headerVersion() const
@@ -78,12 +78,12 @@ int16_t AlterClientQuotasRequest::headerVersion() const
     return 1;
 }
 
-bool AlterClientQuotasRequest::isValidVersion() const
+bool AlterClientQuotasRequest::is_valid_version() const
 {
-    return Version == 0;
+    return m_version == 0;
 }
 
-KafkaVersion AlterClientQuotasRequest::requiredVersion() const
+KafkaVersion AlterClientQuotasRequest::required_version() const
 {
     return V2_6_0_0;
 }
@@ -91,32 +91,32 @@ KafkaVersion AlterClientQuotasRequest::requiredVersion() const
 int AlterClientQuotasEntry::encode(PEncoder &pe)
 {
     // Entity
-    if (!pe.putArrayLength(static_cast<int32_t>(Entity.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_entity.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
-    for (auto &component : Entity)
+    for (auto &component : m_entity)
     {
-        if (!component.encode(pe))
+        if (component.encode(pe) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
     // Ops
-    if (!pe.putArrayLength(static_cast<int32_t>(Ops.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_ops.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
-    for (auto &o : Ops)
+    for (auto &o : m_ops)
     {
-        if (!o.encode(pe))
+        if (o.encode(pe) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int AlterClientQuotasEntry::decode(PDecoder &pd, int16_t version)
@@ -129,10 +129,10 @@ int AlterClientQuotasEntry::decode(PDecoder &pd, int16_t version)
     }
     if (componentCount > 0)
     {
-        Entity.resize(componentCount);
-        for (auto &component : Entity)
+        m_entity.resize(componentCount);
+        for (auto &component : m_entity)
         {
-            if (!component.decode(pd, version))
+            if (component.decode(pd, version) != ErrNoError)
             {
                 return ErrEncodeError;
             }
@@ -140,7 +140,7 @@ int AlterClientQuotasEntry::decode(PDecoder &pd, int16_t version)
     }
     else
     {
-        Entity.clear();
+        m_entity.clear();
     }
 
     // Ops
@@ -151,10 +151,10 @@ int AlterClientQuotasEntry::decode(PDecoder &pd, int16_t version)
     }
     if (opCount > 0)
     {
-        Ops.resize(opCount);
-        for (auto &op : Ops)
+        m_ops.resize(opCount);
+        for (auto &op : m_ops)
         {
-            if (!op.decode(pd, version))
+            if (op.decode(pd, version) != ErrNoError)
             {
                 return ErrEncodeError;
             }
@@ -162,27 +162,27 @@ int AlterClientQuotasEntry::decode(PDecoder &pd, int16_t version)
     }
     else
     {
-        Ops.clear();
+        m_ops.clear();
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int ClientQuotasOp::encode(PEncoder &pe)
 {
     // Key
-    if (!pe.putString(Key))
+    if (pe.putString(m_key) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
     // Value
-    pe.putFloat64(Value);
+    pe.putFloat64(m_value);
 
     // Remove
-    pe.putBool(Remove);
+    pe.putBool(m_remove);
 
-    return true;
+    return ErrNoError;
 }
 
 int ClientQuotasOp::decode(PDecoder &pd, int16_t version)
@@ -193,7 +193,7 @@ int ClientQuotasOp::decode(PDecoder &pd, int16_t version)
     {
         return ErrEncodeError;
     }
-    Key = key;
+    m_key = key;
 
     // Value
     double value;
@@ -201,7 +201,7 @@ int ClientQuotasOp::decode(PDecoder &pd, int16_t version)
     {
         return ErrEncodeError;
     }
-    Value = value;
+    m_value = value;
 
     // Remove
     bool remove;
@@ -209,7 +209,7 @@ int ClientQuotasOp::decode(PDecoder &pd, int16_t version)
     {
         return ErrEncodeError;
     }
-    Remove = remove;
+    m_remove = remove;
 
-    return true;
+    return ErrNoError;
 }

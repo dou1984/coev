@@ -2,16 +2,16 @@
 
 void ResponsePromise::Handle(std::string &packets_, KError err)
 {
-    if (Handler)
+    if (m_handler)
     {
-        Handler(packets_, err);
+        m_handler(packets_, err);
         return;
     }
     if (err)
     {
-        Errors.set(err);
+        m_errors.set(err);
         return;
     }
 
-    Packets.set(std::move(packets_));
+    m_packets.set(std::move(packets_));
 }

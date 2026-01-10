@@ -97,28 +97,28 @@
 #include "compress.h"
 
 ProduceSet::ProduceSet(std::shared_ptr<AsyncProducer> parent)
-    : Parent(parent)
+    : m_parent(parent)
 {
-    auto [pid, epoch] = parent->txnmgr_->GetProducerID();
-    producerID = pid;
-    producerEpoch = epoch;
+    auto [pid, epoch] = parent->m_txnmgr->GetProducerID();
+    m_producer_id = pid;
+    m_producer_epoch = epoch;
 }
 
 int ProduceSet::Add(std::shared_ptr<ProducerMessage> msg)
 {
     std::string key, val;
-    if (msg->Key != nullptr)
+    if (msg->m_key != nullptr)
     {
-        if (int err = msg->Key->Encode(key); err != 0)
+        if (int err = msg->m_key->Encode(key); err != 0)
             return err;
     }
-    if (msg->Value != nullptr)
+    if (msg->m_value != nullptr)
     {
-        if (int err = msg->Value->Encode(val); err != 0)
+        if (int err = msg->m_value->Encode(val); err != 0)
             return err;
     }
 
-    auto timestamp = msg->Timestamp;
+    auto timestamp = msg->m_timestamp;
     if (timestamp == std::chrono::system_clock::time_point{})
     {
         timestamp = std::chrono::system_clock::now();
@@ -126,37 +126,37 @@ int ProduceSet::Add(std::shared_ptr<ProducerMessage> msg)
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(timestamp.time_since_epoch()).count();
     timestamp = std::chrono::system_clock::from_time_t(ms / 1000) + std::chrono::milliseconds(ms % 1000);
 
-    auto &partitions = msgs[msg->Topic];
+    auto &partitions = m_msgs[msg->m_topic];
 
     int size = 0;
-    auto setIt = partitions.find(msg->Partition);
+    auto setIt = partitions.find(msg->m_partition);
     std::shared_ptr<PartitionSet> set;
     bool isNewSet = false;
     if (setIt == partitions.end())
     {
-        if (Parent->conf_->Version.IsAtLeast(V0_11_0_0))
+        if (m_parent->m_conf->Version.IsAtLeast(V0_11_0_0))
         {
             auto batch = std::make_shared<RecordBatch>();
-            batch->FirstTimestamp = timestamp;
-            batch->Version = 2;
-            batch->Codec = Parent->conf_->Producer.Compression;
-            batch->CompressionLevel = Parent->conf_->Producer.CompressionLevel;
-            batch->ProducerID = producerID;
-            batch->ProducerEpoch = producerEpoch;
-            if (Parent->conf_->Producer.Idempotent)
+            batch->m_first_timestamp = timestamp;
+            batch->m_version = 2;
+            batch->m_codec = m_parent->m_conf->Producer.Compression;
+            batch->m_compression_level = m_parent->m_conf->Producer.CompressionLevel;
+            batch->m_producer_id = m_producer_id;
+            batch->m_producer_epoch = m_producer_epoch;
+            if (m_parent->m_conf->Producer.Idempotent)
             {
-                batch->FirstSequence = msg->SequenceNumber;
+                batch->m_first_sequence = msg->m_sequence_number;
             }
             set = std::make_shared<PartitionSet>();
-            set->recordsToSend = Records::NewDefaultRecords(batch);
-            size = recordBatchOverhead;
+            set->m_records_to_send = Records::NewDefaultRecords(batch);
+            size = RECORD_BATCH_OVERHEAD;
         }
         else
         {
             set = std::make_shared<PartitionSet>();
-            set->recordsToSend = Records::NewLegacyRecords(std::make_shared<MessageSet>());
+            set->m_records_to_send = Records::NewLegacyRecords(std::make_shared<MessageSet>());
         }
-        partitions[msg->Partition] = set;
+        partitions[msg->m_partition] = set;
         isNewSet = true;
     }
     else
@@ -164,55 +164,55 @@ int ProduceSet::Add(std::shared_ptr<ProducerMessage> msg)
         set = setIt->second;
     }
 
-    if (Parent->conf_->Version.IsAtLeast(V0_11_0_0))
+    if (m_parent->m_conf->Version.IsAtLeast(V0_11_0_0))
     {
-        if (Parent->conf_->Producer.Idempotent && msg->SequenceNumber < set->recordsToSend->RBatch->FirstSequence)
+        if (m_parent->m_conf->Producer.Idempotent && msg->m_sequence_number < set->m_records_to_send->m_record_batch->m_first_sequence)
         {
             return -1; // assertion failed: message out of sequence added to a batch
         }
     }
 
-    set->msgs.push_back(msg);
+    set->m_msgs.push_back(msg);
 
-    if (Parent->conf_->Version.IsAtLeast(V0_11_0_0))
+    if (m_parent->m_conf->Version.IsAtLeast(V0_11_0_0))
     {
-        size += maximumRecordOverhead;
+        size += MaximumRecordOverhead;
         auto rec = std::make_shared<Record>();
-        rec->Key = key;
-        rec->Value = val;
-        rec->TimestampDelta = std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - set->recordsToSend->RBatch->FirstTimestamp);
+        rec->m_key = key;
+        rec->m_value = val;
+        rec->m_timestamp_delta = std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - set->m_records_to_send->m_record_batch->m_first_timestamp);
 
         size += key.size() + val.size();
-        if (!msg->Headers.empty())
+        if (!msg->m_headers.empty())
         {
-            rec->Headers.reserve(msg->Headers.size());
-            for (auto &h : msg->Headers)
+            rec->m_headers.reserve(msg->m_headers.size());
+            for (auto &h : msg->m_headers)
             {
                 auto header = std::make_shared<RecordHeader>(h);
-                rec->Headers.push_back(header);
+                rec->m_headers.push_back(header);
                 size += header->Key.size() + header->Value.size() + 2 * 5; // MaxVarintLen32 ~5
             }
         }
-        set->recordsToSend->RBatch->AddRecord(rec);
+        set->m_records_to_send->m_record_batch->AddRecord(rec);
     }
     else
     {
         auto msgToSend = std::make_shared<Message>();
-        msgToSend->Codec = CompressionCodec::None;
-        msgToSend->Key = key;
-        msgToSend->Value = val;
-        if (Parent->conf_->Version.IsAtLeast(V0_10_0_0))
+        msgToSend->m_codec = CompressionCodec::None;
+        msgToSend->m_key = key;
+        msgToSend->m_value = val;
+        if (m_parent->m_conf->Version.IsAtLeast(V0_10_0_0))
         {
-            msgToSend->Timestamp_.set_time(timestamp);
-            msgToSend->Version = 1;
+            msgToSend->m_timestamp.set_time(timestamp);
+            msgToSend->m_version = 1;
         }
-        set->recordsToSend->MsgSet->addMessage(msgToSend);
-        size = producerMessageOverhead + key.size() + val.size();
+        set->m_records_to_send->m_msg_set->addMessage(msgToSend);
+        size = ProducerMessageOverhead + key.size() + val.size();
     }
 
-    set->bufferBytes += size;
-    bufferBytes += size;
-    bufferCount++;
+    set->m_buffer_bytes += size;
+    m_buffer_bytes += size;
+    m_buffer_count++;
 
     return 0;
 }
@@ -220,26 +220,26 @@ int ProduceSet::Add(std::shared_ptr<ProducerMessage> msg)
 std::shared_ptr<ProduceRequest> ProduceSet::BuildRequest()
 {
     auto req = std::make_shared<ProduceRequest>();
-    req->Acks = Parent->conf_->Producer.Acks;
-    req->Timeout = Parent->conf_->Producer.Timeout;
+    req->m_acks = m_parent->m_conf->Producer.Acks;
+    req->m_timeout = m_parent->m_conf->Producer.Timeout;
 
-    if (Parent->conf_->Version.IsAtLeast(V0_10_0_0))
-        req->Version = 2;
-    if (Parent->conf_->Version.IsAtLeast(V0_11_0_0))
-        req->Version = 3;
-    if (Parent->conf_->Version.IsAtLeast(V1_0_0_0))
-        req->Version = 5;
-    if (Parent->conf_->Version.IsAtLeast(V2_0_0_0))
-        req->Version = 6;
-    if (Parent->conf_->Version.IsAtLeast(V2_1_0_0))
-        req->Version = 7;
+    if (m_parent->m_conf->Version.IsAtLeast(V0_10_0_0))
+        req->m_version = 2;
+    if (m_parent->m_conf->Version.IsAtLeast(V0_11_0_0))
+        req->m_version = 3;
+    if (m_parent->m_conf->Version.IsAtLeast(V1_0_0_0))
+        req->m_version = 5;
+    if (m_parent->m_conf->Version.IsAtLeast(V2_0_0_0))
+        req->m_version = 6;
+    if (m_parent->m_conf->Version.IsAtLeast(V2_1_0_0))
+        req->m_version = 7;
 
-    if (Parent->conf_->Version.IsAtLeast(V0_11_0_0) && Parent->IsTransactional())
+    if (m_parent->m_conf->Version.IsAtLeast(V0_11_0_0) && m_parent->IsTransactional())
     {
-        req->TransactionalID = Parent->conf_->Producer.Transaction.ID;
+        req->m_transactional_id = m_parent->m_conf->Producer.Transaction.ID;
     }
 
-    for (auto &it : msgs)
+    for (auto &it : m_msgs)
     {
         auto &topic = it.first;
         auto &partitionSets = it.second;
@@ -247,56 +247,56 @@ std::shared_ptr<ProduceRequest> ProduceSet::BuildRequest()
         {
             auto &partition = pit.first;
             auto &set = pit.second;
-            if (req->Version >= 3)
+            if (req->m_version >= 3)
             {
-                auto rb = set->recordsToSend->RBatch;
-                if (!rb->Records.empty())
+                auto rb = set->m_records_to_send->m_record_batch;
+                if (!rb->m_records.empty())
                 {
-                    rb->LastOffsetDelta = static_cast<int32_t>(rb->Records.size() - 1);
+                    rb->m_last_offset_delta = static_cast<int32_t>(rb->m_records.size() - 1);
                     std::chrono::milliseconds maxTimestampDelta(0);
-                    for (size_t i = 0; i < rb->Records.size(); ++i)
+                    for (size_t i = 0; i < rb->m_records.size(); ++i)
                     {
-                        rb->Records[i]->OffsetDelta = static_cast<int64_t>(i);
+                        rb->m_records[i]->m_offset_delta = static_cast<int64_t>(i);
                         maxTimestampDelta = std::max(maxTimestampDelta,
-                                                     std::chrono::duration_cast<std::chrono::milliseconds>(rb->Records[i]->TimestampDelta));
+                                                     std::chrono::duration_cast<std::chrono::milliseconds>(rb->m_records[i]->m_timestamp_delta));
                     }
-                    rb->MaxTimestamp = rb->FirstTimestamp + maxTimestampDelta;
+                    rb->m_max_timestamp = rb->m_first_timestamp + maxTimestampDelta;
                 }
-                rb->IsTransactional = Parent->IsTransactional();
+                rb->m_is_transactional = m_parent->IsTransactional();
                 req->AddBatch(topic, partition, rb);
                 continue;
             }
 
-            if (Parent->conf_->Producer.Compression == CompressionCodec::None)
+            if (m_parent->m_conf->Producer.Compression == CompressionCodec::None)
             {
-                req->AddSet(topic, partition, set->recordsToSend->MsgSet);
+                req->AddSet(topic, partition, set->m_records_to_send->m_msg_set);
             }
             else
             {
-                if (Parent->conf_->Version.IsAtLeast(V0_10_0_0))
+                if (m_parent->m_conf->Version.IsAtLeast(V0_10_0_0))
                 {
-                    for (size_t i = 0; i < set->recordsToSend->MsgSet->Messages.size(); ++i)
+                    for (size_t i = 0; i < set->m_records_to_send->m_msg_set->m_messages.size(); ++i)
                     {
-                        set->recordsToSend->MsgSet->Messages[i]->Offset = static_cast<int64_t>(i);
+                        set->m_records_to_send->m_msg_set->m_messages[i]->m_offset = static_cast<int64_t>(i);
                     }
                 }
 
                 std::string payload;
-                ::encode(set->recordsToSend->MsgSet, payload, Parent->MetricsRegistry);
+                ::encode(set->m_records_to_send->m_msg_set, payload, m_parent->m_metrics_registry);
 
                 auto compMsg = std::make_shared<Message>();
-                compMsg->Codec = Parent->conf_->Producer.Compression;
-                compMsg->CompressionLevel = Parent->conf_->Producer.CompressionLevel;
-                compMsg->Key.clear();
-                compMsg->Value = payload;
-                compMsg->Set = set->recordsToSend->MsgSet;
+                compMsg->m_codec = m_parent->m_conf->Producer.Compression;
+                compMsg->m_compression_level = m_parent->m_conf->Producer.CompressionLevel;
+                compMsg->m_key.clear();
+                compMsg->m_value = payload;
+                compMsg->m_set = set->m_records_to_send->m_msg_set;
 
-                if (Parent->conf_->Version.IsAtLeast(V0_10_0_0))
+                if (m_parent->m_conf->Version.IsAtLeast(V0_10_0_0))
                 {
-                    compMsg->Version = 1;
-                    if (!set->recordsToSend->MsgSet->Messages.empty())
+                    compMsg->m_version = 1;
+                    if (!set->m_records_to_send->m_msg_set->m_messages.empty())
                     {
-                        compMsg->Timestamp_ = set->recordsToSend->MsgSet->Messages[0]->Msg->Timestamp_;
+                        compMsg->m_timestamp = set->m_records_to_send->m_msg_set->m_messages[0]->m_msg->m_timestamp;
                     }
                 }
                 req->AddMessage(topic, partition, compMsg);
@@ -309,7 +309,7 @@ std::shared_ptr<ProduceRequest> ProduceSet::BuildRequest()
 
 void ProduceSet::EachPartition(std::function<void(const std::string &, int32_t, std::shared_ptr<PartitionSet>)> cb)
 {
-    for (auto &it : msgs)
+    for (auto &it : m_msgs)
     {
         auto &topic = it.first;
         auto &partitionSet = it.second;
@@ -324,8 +324,8 @@ void ProduceSet::EachPartition(std::function<void(const std::string &, int32_t, 
 
 std::vector<std::shared_ptr<ProducerMessage>> ProduceSet::DropPartition(const std::string &topic, int32_t partition)
 {
-    auto topicIt = msgs.find(topic);
-    if (topicIt == msgs.end())
+    auto topicIt = m_msgs.find(topic);
+    if (topicIt == m_msgs.end())
         return {};
     auto &partitionMap = topicIt->second;
     auto partIt = partitionMap.find(partition);
@@ -333,36 +333,36 @@ std::vector<std::shared_ptr<ProducerMessage>> ProduceSet::DropPartition(const st
         return {};
 
     auto set = partIt->second;
-    bufferBytes -= set->bufferBytes;
-    bufferCount -= static_cast<int>(set->msgs.size());
+    m_buffer_bytes -= set->m_buffer_bytes;
+    m_buffer_count -= static_cast<int>(set->m_msgs.size());
     partitionMap.erase(partIt);
-    return set->msgs;
+    return set->m_msgs;
 }
 
 bool ProduceSet::WouldOverflow(std::shared_ptr<ProducerMessage> msg)
 {
-    int version = Parent->conf_->Version.IsAtLeast(V0_11_0_0) ? 2 : 1;
+    int version = m_parent->m_conf->Version.IsAtLeast(V0_11_0_0) ? 2 : 1;
 
-    if (bufferBytes + msg->ByteSize(version) >= MaxRequestSize - 10 * 1024)
+    if (m_buffer_bytes + msg->ByteSize(version) >= MaxRequestSize - 10 * 1024)
     {
         return true;
     }
 
-    auto topicIt = msgs.find(msg->Topic);
-    if (topicIt != msgs.end())
+    auto topicIt = m_msgs.find(msg->m_topic);
+    if (topicIt != m_msgs.end())
     {
         auto &partitions = topicIt->second;
-        auto partIt = partitions.find(msg->Partition);
+        auto partIt = partitions.find(msg->m_partition);
         if (partIt != partitions.end())
         {
-            if (partIt->second->bufferBytes + msg->ByteSize(version) >= Parent->conf_->Producer.MaxMessageBytes)
+            if (partIt->second->m_buffer_bytes + msg->ByteSize(version) >= m_parent->m_conf->Producer.MaxMessageBytes)
             {
                 return true;
             }
         }
     }
 
-    if (Parent->conf_->Producer.Flush.MaxMessages > 0 && bufferCount >= Parent->conf_->Producer.Flush.MaxMessages)
+    if (m_parent->m_conf->Producer.Flush.MaxMessages > 0 && m_buffer_count >= m_parent->m_conf->Producer.Flush.MaxMessages)
     {
         return true;
     }
@@ -374,17 +374,17 @@ bool ProduceSet::ReadyToFlush()
 {
     if (Empty())
         return false;
-    if (Parent->conf_->Producer.Flush.Frequency == std::chrono::milliseconds(0) &&
-        Parent->conf_->Producer.Flush.Bytes == 0 &&
-        Parent->conf_->Producer.Flush.Messages == 0)
+    if (m_parent->m_conf->Producer.Flush.Frequency == std::chrono::milliseconds(0) &&
+        m_parent->m_conf->Producer.Flush.Bytes == 0 &&
+        m_parent->m_conf->Producer.Flush.Messages == 0)
     {
         return true;
     }
-    if (Parent->conf_->Producer.Flush.Messages > 0 && bufferCount >= Parent->conf_->Producer.Flush.Messages)
+    if (m_parent->m_conf->Producer.Flush.Messages > 0 && m_buffer_count >= m_parent->m_conf->Producer.Flush.Messages)
     {
         return true;
     }
-    if (Parent->conf_->Producer.Flush.Bytes > 0 && bufferBytes >= Parent->conf_->Producer.Flush.Bytes)
+    if (m_parent->m_conf->Producer.Flush.Bytes > 0 && m_buffer_bytes >= m_parent->m_conf->Producer.Flush.Bytes)
     {
         return true;
     }
@@ -393,5 +393,5 @@ bool ProduceSet::ReadyToFlush()
 
 bool ProduceSet::Empty() const
 {
-    return bufferCount == 0;
+    return m_buffer_count == 0;
 }

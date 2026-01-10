@@ -3,6 +3,6 @@
 
 struct PacketDecodingError
 {
-    std::string message;
-    PacketDecodingError(const std::string &msg) : message(msg) {}
+    std::string m_message;
+    PacketDecodingError(const std::string &msg) : m_message(msg) {}
 };

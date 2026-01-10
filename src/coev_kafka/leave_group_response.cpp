@@ -1,37 +1,37 @@
 #include "version.h"
 #include "leave_group_response.h"
 
-void LeaveGroupResponse::setVersion(int16_t v)
+void LeaveGroupResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int LeaveGroupResponse::encode(PEncoder &pe)
 {
-    if (Version >= 1)
+    if (m_version >= 1)
     {
-        pe.putDurationMs(ThrottleTime);
+        pe.putDurationMs(m_throttle_time);
     }
 
-    pe.putKError(Err);
+    pe.putKError(m_err);
 
-    if (Version >= 3)
+    if (m_version >= 3)
     {
-        int err = pe.putArrayLength(static_cast<int32_t>(Members.size()));
+        int err = pe.putArrayLength(static_cast<int32_t>(m_member_responses.size()));
         if (err != 0)
             return err;
 
-        for (auto &member : Members)
+        for (auto &member : m_member_responses)
         {
-            err = pe.putString(member.MemberId);
+            err = pe.putString(member.m_member_id);
             if (err != 0)
                 return err;
 
-            err = pe.putNullableString(member.GroupInstanceId);
+            err = pe.putNullableString(member.m_group_instance_id);
             if (err != 0)
                 return err;
 
-            pe.putKError(member.Err);
+            pe.putKError(member.m_err);
             pe.putEmptyTaggedFieldArray();
         }
     }
@@ -42,38 +42,38 @@ int LeaveGroupResponse::encode(PEncoder &pe)
 
 int LeaveGroupResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
-        int err = pd.getDurationMs(ThrottleTime);
+        int err = pd.getDurationMs(m_throttle_time);
         if (err != 0)
             return err;
     }
 
-    int err = pd.getKError(Err);
+    int err = pd.getKError(m_err);
     if (err != 0)
         return err;
 
-    if (Version >= 3)
+    if (m_version >= 3)
     {
         int32_t membersLen;
         err = pd.getArrayLength(membersLen);
         if (err != 0)
             return err;
 
-        Members.resize(membersLen);
+        m_member_responses.resize(membersLen);
         for (int32_t i = 0; i < membersLen; ++i)
         {
-            err = pd.getString(Members[i].MemberId);
+            err = pd.getString(m_member_responses[i].m_member_id);
             if (err != 0)
                 return err;
 
-            err = pd.getNullableString(Members[i].GroupInstanceId);
+            err = pd.getNullableString(m_member_responses[i].m_group_instance_id);
             if (err != 0)
                 return err;
 
-            err = pd.getKError(Members[i].Err);
+            err = pd.getKError(m_member_responses[i].m_err);
             if (err != 0)
                 return err;
             int32_t _;
@@ -93,22 +93,22 @@ int16_t LeaveGroupResponse::key() const
 
 int16_t LeaveGroupResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t LeaveGroupResponse::headerVersion() const
 {
-    return (Version >= 4) ? 1 : 0;
+    return (m_version >= 4) ? 1 : 0;
 }
 
-bool LeaveGroupResponse::isValidVersion() const
+bool LeaveGroupResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 4;
+    return m_version >= 0 && m_version <= 4;
 }
 
 bool LeaveGroupResponse::isFlexible()
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool LeaveGroupResponse::isFlexibleVersion(int16_t ver)
@@ -116,9 +116,9 @@ bool LeaveGroupResponse::isFlexibleVersion(int16_t ver)
     return ver >= 4;
 }
 
-KafkaVersion LeaveGroupResponse::requiredVersion() const
+KafkaVersion LeaveGroupResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 4:
         return V2_4_0_0;
@@ -137,5 +137,5 @@ KafkaVersion LeaveGroupResponse::requiredVersion() const
 
 std::chrono::milliseconds LeaveGroupResponse::throttleTime() const
 {
-    return std::chrono::milliseconds(ThrottleTime);
+    return std::chrono::milliseconds(m_throttle_time);
 }

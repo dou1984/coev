@@ -3,15 +3,15 @@
 
 int PartitionReplicaReassignmentsStatus::encode(PEncoder &pe)
 {
-    int err = pe.putInt32Array(Replicas);
+    int err = pe.putInt32Array(m_replicas);
     if (err != 0)
         return err;
 
-    err = pe.putInt32Array(AddingReplicas);
+    err = pe.putInt32Array(m_adding_replicas);
     if (err != 0)
         return err;
 
-    err = pe.putInt32Array(RemovingReplicas);
+    err = pe.putInt32Array(m_removing_replicas);
     if (err != 0)
         return err;
 
@@ -21,15 +21,15 @@ int PartitionReplicaReassignmentsStatus::encode(PEncoder &pe)
 
 int PartitionReplicaReassignmentsStatus::decode(PDecoder &pd)
 {
-    int err = pd.getInt32Array(Replicas);
+    int err = pd.getInt32Array(m_replicas);
     if (err != 0)
         return err;
 
-    err = pd.getInt32Array(AddingReplicas);
+    err = pd.getInt32Array(m_adding_replicas);
     if (err != 0)
         return err;
 
-    err = pd.getInt32Array(RemovingReplicas);
+    err = pd.getInt32Array(m_removing_replicas);
     if (err != 0)
         return err;
     int32_t _;
@@ -38,9 +38,9 @@ int PartitionReplicaReassignmentsStatus::decode(PDecoder &pd)
 
 // ---------- ListPartitionReassignmentsResponse ----------
 
-void ListPartitionReassignmentsResponse::setVersion(int16_t v)
+void ListPartitionReassignmentsResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 void ListPartitionReassignmentsResponse::AddBlock(
@@ -51,27 +51,27 @@ void ListPartitionReassignmentsResponse::AddBlock(
     const std::vector<int32_t> &removingReplicas)
 {
 
-    auto &partitions = TopicStatus[topic];
+    auto &partitions = m_topic_status[topic];
     auto block = std::make_unique<PartitionReplicaReassignmentsStatus>();
-    block->Replicas = replicas;
-    block->AddingReplicas = addingReplicas;
-    block->RemovingReplicas = removingReplicas;
+    block->m_replicas = replicas;
+    block->m_adding_replicas = addingReplicas;
+    block->m_removing_replicas = removingReplicas;
     partitions[partition] = std::move(block);
 }
 
 int ListPartitionReassignmentsResponse::encode(PEncoder &pe)
 {
-    pe.putDurationMs(ThrottleTime);
-    pe.putKError(ErrorCode);
-    int err = pe.putNullableString(ErrorMessage);
+    pe.putDurationMs(m_throttle_time);
+    pe.putKError(m_err);
+    int err = pe.putNullableString(m_error_message);
     if (err != 0)
         return err;
 
-    err = pe.putArrayLength(static_cast<int32_t>(TopicStatus.size()));
+    err = pe.putArrayLength(static_cast<int32_t>(m_topic_status.size()));
     if (err != 0)
         return err;
 
-    for (auto &topicEntry : TopicStatus)
+    for (auto &topicEntry : m_topic_status)
     {
         auto &topic = topicEntry.first;
         auto &partitions = topicEntry.second;
@@ -104,17 +104,17 @@ int ListPartitionReassignmentsResponse::encode(PEncoder &pe)
 
 int ListPartitionReassignmentsResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    int err = pd.getDurationMs(ThrottleTime);
+    int err = pd.getDurationMs(m_throttle_time);
     if (err != 0)
         return err;
 
-    err = pd.getKError(ErrorCode);
+    err = pd.getKError(m_err);
     if (err != 0)
         return err;
 
-    err = pd.getNullableString(ErrorMessage);
+    err = pd.getNullableString(m_error_message);
     if (err != 0)
         return err;
 
@@ -123,7 +123,7 @@ int ListPartitionReassignmentsResponse::decode(PDecoder &pd, int16_t version)
     if (err != 0)
         return err;
 
-    TopicStatus.clear();
+    m_topic_status.clear();
 
     for (int32_t i = 0; i < numTopics; ++i)
     {
@@ -137,7 +137,7 @@ int ListPartitionReassignmentsResponse::decode(PDecoder &pd, int16_t version)
         if (err != 0)
             return err;
 
-        auto &partitionsMap = TopicStatus[topic];
+        auto &partitionsMap = m_topic_status[topic];
 
         for (int32_t j = 0; j < numPartitions; ++j)
         {
@@ -169,7 +169,7 @@ int16_t ListPartitionReassignmentsResponse::key() const
 
 int16_t ListPartitionReassignmentsResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t ListPartitionReassignmentsResponse::headerVersion() const
@@ -177,14 +177,14 @@ int16_t ListPartitionReassignmentsResponse::headerVersion() const
     return 1; // flexible response header starts at version 1
 }
 
-bool ListPartitionReassignmentsResponse::isValidVersion() const
+bool ListPartitionReassignmentsResponse::is_valid_version() const
 {
-    return Version == 0;
+    return m_version == 0;
 }
 
 bool ListPartitionReassignmentsResponse::isFlexible()
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool ListPartitionReassignmentsResponse::isFlexibleVersion(int16_t /*ver*/)
@@ -192,12 +192,12 @@ bool ListPartitionReassignmentsResponse::isFlexibleVersion(int16_t /*ver*/)
     return true; // version 0 uses flexible format
 }
 
-KafkaVersion ListPartitionReassignmentsResponse::requiredVersion() const
+KafkaVersion ListPartitionReassignmentsResponse::required_version() const
 {
     return V2_4_0_0;
 }
 
 std::chrono::milliseconds ListPartitionReassignmentsResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }

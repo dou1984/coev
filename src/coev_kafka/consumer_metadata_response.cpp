@@ -6,9 +6,9 @@
 #include <sstream>
 #include <stdexcept>
 
-void ConsumerMetadataResponse::setVersion(int16_t v)
+void ConsumerMetadataResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int ConsumerMetadataResponse::decode(PDecoder &pd, int16_t version)
@@ -20,15 +20,15 @@ int ConsumerMetadataResponse::decode(PDecoder &pd, int16_t version)
         return err;
     }
 
-    Err = tmp->Err;
-    Coordinator = tmp->Coordinator;
+    m_err = tmp->m_err;
+    m_coordinator = tmp->m_coordinator;
 
-    if (Coordinator == nullptr)
+    if (m_coordinator == nullptr)
     {
         return 0;
     }
 
-    std::string addr = Coordinator->Addr();
+    std::string addr = m_coordinator->Addr();
     size_t colonPos = addr.find_last_of(':');
     if (colonPos == std::string::npos)
     {
@@ -40,9 +40,9 @@ int ConsumerMetadataResponse::decode(PDecoder &pd, int16_t version)
     try
     {
         int64_t port = std::stoll(portstr);
-        CoordinatorID = Coordinator->ID();
-        CoordinatorHost = host;
-        CoordinatorPort = static_cast<int32_t>(port);
+        m_coordinator_id = m_coordinator->ID();
+        m_coordinator_host = host;
+        m_coordinator_port = static_cast<int32_t>(port);
     }
     catch (...)
     {
@@ -54,19 +54,19 @@ int ConsumerMetadataResponse::decode(PDecoder &pd, int16_t version)
 
 int ConsumerMetadataResponse::encode(PEncoder &pe)
 {
-    if (Coordinator == nullptr)
+    if (m_coordinator == nullptr)
     {
-        Coordinator = std::make_shared<Broker>();
-        Coordinator->m_ID = CoordinatorID;
+        m_coordinator = std::make_shared<Broker>();
+        m_coordinator->m_id = m_coordinator_id;
         std::ostringstream oss;
-        oss << CoordinatorHost << ":" << CoordinatorPort;
-        Coordinator->m_Addr = oss.str();
+        oss << m_coordinator_host << ":" << m_coordinator_port;
+        m_coordinator->m_addr = oss.str();
     }
 
     FindCoordinatorResponse tmp;
-    tmp.Version = Version;
-    tmp.Err = Err;
-    tmp.Coordinator = Coordinator;
+    tmp.m_version = m_version;
+    tmp.m_err = m_err;
+    tmp.m_coordinator = m_coordinator;
 
     if (int err = tmp.encode(pe); err != 0)
     {
@@ -84,7 +84,7 @@ int16_t ConsumerMetadataResponse::key() const
 
 int16_t ConsumerMetadataResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t ConsumerMetadataResponse::headerVersion() const
@@ -92,14 +92,14 @@ int16_t ConsumerMetadataResponse::headerVersion() const
     return 0;
 }
 
-bool ConsumerMetadataResponse::isValidVersion() const
+bool ConsumerMetadataResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 2;
+    return m_version >= 0 && m_version <= 2;
 }
 
-KafkaVersion ConsumerMetadataResponse::requiredVersion() const
+KafkaVersion ConsumerMetadataResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 2:
         return V2_0_0_0;

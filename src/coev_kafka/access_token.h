@@ -5,6 +5,6 @@
 
 struct AccessToken
 {
-    std::string Token;
-    std::map<std::string, std::string> Extensions;
+    std::string m_token;
+    std::map<std::string, std::string> m_extensions;
 };

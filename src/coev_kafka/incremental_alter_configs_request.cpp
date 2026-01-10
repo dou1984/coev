@@ -4,9 +4,9 @@
 
 int IncrementalAlterConfigsEntry::encode(PEncoder &pe)
 {
-    pe.putInt8(static_cast<int8_t>(Operation));
+    pe.putInt8(static_cast<int8_t>(m_operation));
 
-    int err = pe.putNullableString(Value);
+    int err = pe.putNullableString(m_value);
     if (err != 0)
         return err;
 
@@ -20,9 +20,9 @@ int IncrementalAlterConfigsEntry::decode(PDecoder &pd, int16_t /*version*/)
     int err = pd.getInt8(op);
     if (err != 0)
         return err;
-    Operation = static_cast<IncrementalAlterConfigsOperation>(op);
+    m_operation = static_cast<IncrementalAlterConfigsOperation>(op);
 
-    err = pd.getNullableString(Value);
+    err = pd.getNullableString(m_value);
     if (err != 0)
         return err;
 
@@ -32,17 +32,17 @@ int IncrementalAlterConfigsEntry::decode(PDecoder &pd, int16_t /*version*/)
 
 int IncrementalAlterConfigsResource::encode(PEncoder &pe)
 {
-    pe.putInt8(Type);
+    pe.putInt8(m_type);
 
-    int err = pe.putString(Name);
+    int err = pe.putString(m_name);
     if (err != 0)
         return err;
 
-    err = pe.putArrayLength(static_cast<int32_t>(ConfigEntries.size()));
+    err = pe.putArrayLength(static_cast<int32_t>(m_config_entries.size()));
     if (err != 0)
         return err;
 
-    for (auto &it : ConfigEntries)
+    for (auto &it : m_config_entries)
     {
         err = pe.putString(it.first);
         if (err != 0)
@@ -63,9 +63,9 @@ int IncrementalAlterConfigsResource::decode(PDecoder &pd, int16_t version)
     int err = pd.getInt8(t);
     if (err != 0)
         return err;
-    Type = static_cast<ConfigResourceType>(t);
+    m_type = static_cast<ConfigResourceType>(t);
 
-    err = pd.getString(Name);
+    err = pd.getString(m_name);
     if (err != 0)
         return err;
 
@@ -74,7 +74,7 @@ int IncrementalAlterConfigsResource::decode(PDecoder &pd, int16_t version)
     if (err != 0)
         return err;
 
-    ConfigEntries.clear();
+    m_config_entries.clear();
     if (n > 0)
     {
         // ConfigEntries.reserve(n);
@@ -90,32 +90,32 @@ int IncrementalAlterConfigsResource::decode(PDecoder &pd, int16_t version)
             if (err != 0)
                 return err;
 
-            ConfigEntries.emplace(std::move(name), std::move(entry));
+            m_config_entries.emplace(std::move(name), std::move(entry));
         }
     }
     int32_t _;
     return pd.getEmptyTaggedFieldArray(_);
 }
 
-void IncrementalAlterConfigsRequest::setVersion(int16_t v)
+void IncrementalAlterConfigsRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int IncrementalAlterConfigsRequest::encode(PEncoder &pe)
 {
-    int err = pe.putArrayLength(static_cast<int32_t>(Resources.size()));
+    int err = pe.putArrayLength(static_cast<int32_t>(m_resources.size()));
     if (err != 0)
         return err;
 
-    for (auto &r : Resources)
+    for (auto &r : m_resources)
     {
         err = r->encode(pe);
         if (err != 0)
             return err;
     }
 
-    pe.putBool(ValidateOnly);
+    pe.putBool(m_validate_only);
 
     pe.putEmptyTaggedFieldArray();
     return 0;
@@ -123,29 +123,29 @@ int IncrementalAlterConfigsRequest::encode(PEncoder &pe)
 
 int IncrementalAlterConfigsRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
     int32_t count;
     int err = pd.getArrayLength(count);
     if (err != 0)
         return err;
 
-    Resources.clear();
-    Resources.reserve(count);
+    m_resources.clear();
+    m_resources.reserve(count);
     for (int32_t i = 0; i < count; ++i)
     {
         auto r = std::make_unique<IncrementalAlterConfigsResource>();
         err = r->decode(pd, version);
         if (err != 0)
             return err;
-        Resources.push_back(std::move(r));
+        m_resources.push_back(std::move(r));
     }
 
     bool validateOnly;
     err = pd.getBool(validateOnly);
     if (err != 0)
         return err;
-    ValidateOnly = validateOnly;
+    m_validate_only = validateOnly;
 
     int32_t _;
     return pd.getEmptyTaggedFieldArray(_);
@@ -158,22 +158,22 @@ int16_t IncrementalAlterConfigsRequest::key() const
 
 int16_t IncrementalAlterConfigsRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t IncrementalAlterConfigsRequest::headerVersion() const
 {
-    return (Version >= 1) ? 2 : 1;
+    return (m_version >= 1) ? 2 : 1;
 }
 
-bool IncrementalAlterConfigsRequest::isValidVersion() const
+bool IncrementalAlterConfigsRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 1;
+    return m_version >= 0 && m_version <= 1;
 }
 
 bool IncrementalAlterConfigsRequest::isFlexible()
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool IncrementalAlterConfigsRequest::isFlexibleVersion(int16_t ver)
@@ -181,9 +181,9 @@ bool IncrementalAlterConfigsRequest::isFlexibleVersion(int16_t ver)
     return ver >= 1;
 }
 
-KafkaVersion IncrementalAlterConfigsRequest::requiredVersion() const
+KafkaVersion IncrementalAlterConfigsRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 1:
         return V2_4_0_0;

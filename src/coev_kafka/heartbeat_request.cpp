@@ -2,26 +2,26 @@
 #include "heartbeat_request.h"
 #include "api_versions.h"
 
-void HeartbeatRequest::setVersion(int16_t v)
+void HeartbeatRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int HeartbeatRequest::encode(PEncoder &pe)
 {
-    int err = pe.putString(GroupId);
+    int err = pe.putString(m_group_id);
     if (err != 0)
         return err;
 
-    pe.putInt32(GenerationId);
+    pe.putInt32(m_generation_id);
 
-    err = pe.putString(MemberId);
+    err = pe.putString(m_member_id);
     if (err != 0)
         return err;
 
-    if (Version >= 3)
+    if (m_version >= 3)
     {
-        err = pe.putNullableString(GroupInstanceId);
+        err = pe.putNullableString(m_group_instance_id);
         if (err != 0)
         {
             return err;
@@ -36,29 +36,29 @@ int HeartbeatRequest::encode(PEncoder &pe)
 
 int HeartbeatRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    int err = pd.getString(GroupId);
+    int err = pd.getString(m_group_id);
     if (err != 0)
     {
         return err;
     }
 
-    err = pd.getInt32(GenerationId);
+    err = pd.getInt32(m_generation_id);
     if (err != 0)
     {
         return err;
     }
 
-    err = pd.getString(MemberId);
+    err = pd.getString(m_member_id);
     if (err != 0)
     {
         return err;
     }
 
-    if (Version >= 3)
+    if (m_version >= 3)
     {
-        err = pd.getNullableString(GroupInstanceId);
+        err = pd.getNullableString(m_group_instance_id);
         if (err != 0)
         {
             return err;
@@ -76,22 +76,22 @@ int16_t HeartbeatRequest::key() const
 
 int16_t HeartbeatRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t HeartbeatRequest::headerVersion() const
 {
-    return (Version >= 4) ? 2 : 1;
+    return (m_version >= 4) ? 2 : 1;
 }
 
-bool HeartbeatRequest::isValidVersion() const
+bool HeartbeatRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 4;
+    return m_version >= 0 && m_version <= 4;
 }
 
 bool HeartbeatRequest::isFlexible()
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool HeartbeatRequest::isFlexibleVersion(int16_t ver)
@@ -99,9 +99,9 @@ bool HeartbeatRequest::isFlexibleVersion(int16_t ver)
     return ver >= 4;
 }
 
-KafkaVersion HeartbeatRequest::requiredVersion() const
+KafkaVersion HeartbeatRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 4:
         return V2_4_0_0;

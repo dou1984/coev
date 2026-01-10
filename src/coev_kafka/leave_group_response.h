@@ -15,28 +15,28 @@
 
 struct MemberResponse
 {
-    std::string MemberId;
-    std::string GroupInstanceId;
-    KError Err;
+    std::string m_member_id;
+    std::string m_group_instance_id;
+    KError m_err;
 };
 
-struct LeaveGroupResponse : protocolBody
+struct LeaveGroupResponse : protocol_body
 {
 
-    int16_t Version = 0;
-    std::chrono::milliseconds ThrottleTime;
-    KError Err;
-    std::vector<MemberResponse> Members;
+    int16_t m_version = 0;
+    std::chrono::milliseconds m_throttle_time;
+    KError m_err;
+    std::vector<MemberResponse> m_member_responses;
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible();
     static bool isFlexibleVersion(int16_t ver);
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
     std::chrono::milliseconds throttleTime() const;
 };

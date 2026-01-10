@@ -5,14 +5,14 @@
 
 int DeleteRecordsResponsePartition::encode(PEncoder &pe)
 {
-    pe.putInt64(LowWatermark);
-    pe.putInt16(static_cast<int16_t>(Err));
-    return true;
+    pe.putInt64(m_low_watermark);
+    pe.putInt16(static_cast<int16_t>(m_err));
+    return ErrNoError;
 }
 
 int DeleteRecordsResponsePartition::decode(PDecoder &pd, int16_t /*version*/)
 {
-    if (pd.getInt64(LowWatermark) != ErrNoError)
+    if (pd.getInt64(m_low_watermark) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -22,21 +22,21 @@ int DeleteRecordsResponsePartition::decode(PDecoder &pd, int16_t /*version*/)
     {
         return ErrEncodeError;
     }
-    Err = static_cast<KError>(errCode);
+    m_err = static_cast<KError>(errCode);
 
-    return true;
+    return ErrNoError;
 }
 int DeleteRecordsResponseTopic::encode(PEncoder &pe)
 {
-    if (!pe.putArrayLength(static_cast<int32_t>(Partitions.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_partitions.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
     // Sort partition IDs for deterministic encoding
     std::vector<int32_t> keys;
-    keys.reserve(Partitions.size());
-    for (auto &kv : Partitions)
+    keys.reserve(m_partitions.size());
+    for (auto &kv : m_partitions)
     {
         keys.push_back(kv.first);
     }
@@ -45,13 +45,13 @@ int DeleteRecordsResponseTopic::encode(PEncoder &pe)
     for (int32_t partition : keys)
     {
         pe.putInt32(partition);
-        if (!Partitions.at(partition)->encode(pe))
+        if (m_partitions.at(partition)->encode(pe) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int DeleteRecordsResponseTopic::decode(PDecoder &pd, int16_t version)
@@ -62,7 +62,7 @@ int DeleteRecordsResponseTopic::decode(PDecoder &pd, int16_t version)
         return ErrEncodeError;
     }
 
-    Partitions.clear();
+    m_partitions.clear();
     if (n > 0)
     {
         for (int32_t i = 0; i < n; ++i)
@@ -74,11 +74,11 @@ int DeleteRecordsResponseTopic::decode(PDecoder &pd, int16_t version)
             }
 
             auto details = std::shared_ptr<DeleteRecordsResponsePartition>();
-            if (!details->decode(pd, version))
+            if (details->decode(pd, version) != ErrNoError)
             {
                 return ErrEncodeError;
             }
-            Partitions[partition] = details;
+            m_partitions[partition] = details;
         }
     }
 
@@ -87,27 +87,27 @@ int DeleteRecordsResponseTopic::decode(PDecoder &pd, int16_t version)
 
 DeleteRecordsResponseTopic::~DeleteRecordsResponseTopic()
 {
-    Partitions.clear();
+    m_partitions.clear();
 }
 
-void DeleteRecordsResponse::setVersion(int16_t v)
+void DeleteRecordsResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int DeleteRecordsResponse::encode(PEncoder &pe)
 {
-    pe.putDurationMs(ThrottleTime);
+    pe.putDurationMs(m_throttle_time);
 
-    if (!pe.putArrayLength(static_cast<int32_t>(Topics.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_topics.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
     // Sort topic names for deterministic encoding
     std::vector<std::string> keys;
-    keys.reserve(Topics.size());
-    for (auto &kv : Topics)
+    keys.reserve(m_topics.size());
+    for (auto &kv : m_topics)
     {
         keys.push_back(kv.first);
     }
@@ -115,11 +115,11 @@ int DeleteRecordsResponse::encode(PEncoder &pe)
 
     for (const std::string &topic : keys)
     {
-        if (!pe.putString(topic))
+        if (pe.putString(topic) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        if (!Topics.at(topic)->encode(pe))
+        if (m_topics.at(topic)->encode(pe) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -130,9 +130,9 @@ int DeleteRecordsResponse::encode(PEncoder &pe)
 
 int DeleteRecordsResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
+    if (pd.getDurationMs(m_throttle_time) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -143,7 +143,7 @@ int DeleteRecordsResponse::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    Topics.clear();
+    m_topics.clear();
 
     if (n > 0)
     {
@@ -156,11 +156,11 @@ int DeleteRecordsResponse::decode(PDecoder &pd, int16_t version)
             }
 
             auto details = std::make_shared<DeleteRecordsResponseTopic>();
-            if (!details->decode(pd, version))
+            if (details->decode(pd, version) != ErrNoError)
             {
                 return ErrDecodeError;
             }
-            Topics[topic] = details;
+            m_topics[topic] = details;
         }
     }
 
@@ -174,7 +174,7 @@ int16_t DeleteRecordsResponse::key() const
 
 int16_t DeleteRecordsResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t DeleteRecordsResponse::headerVersion() const
@@ -182,14 +182,14 @@ int16_t DeleteRecordsResponse::headerVersion() const
     return 0; // non-flexible format
 }
 
-bool DeleteRecordsResponse::isValidVersion() const
+bool DeleteRecordsResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 1;
+    return m_version >= 0 && m_version <= 1;
 }
 
-KafkaVersion DeleteRecordsResponse::requiredVersion() const
+KafkaVersion DeleteRecordsResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 1:
         return V2_0_0_0;
@@ -200,11 +200,11 @@ KafkaVersion DeleteRecordsResponse::requiredVersion() const
 
 std::chrono::milliseconds DeleteRecordsResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }
 
 DeleteRecordsResponse::~DeleteRecordsResponse()
 {
 
-    Topics.clear();
+    m_topics.clear();
 }

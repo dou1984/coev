@@ -7,13 +7,13 @@
 #include "version.h"
 #include "throttle_support.h"
 
-struct protocolBody : VDecoder, HEncoder
+struct protocol_body : VDecoder, HEncoder
 {
-    virtual ~protocolBody() = default;
+    virtual ~protocol_body() = default;
 
     virtual int16_t key() const = 0;
     virtual int16_t version() const = 0;
-    virtual void setVersion(int16_t version) = 0;
-    virtual bool isValidVersion() const = 0;
-    virtual KafkaVersion requiredVersion() const = 0;
+    virtual void set_version(int16_t version) = 0;
+    virtual bool is_valid_version() const = 0;
+    virtual KafkaVersion required_version() const = 0;
 };

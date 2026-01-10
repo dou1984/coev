@@ -9,15 +9,15 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
-struct ConsumerMetadataRequest : protocolBody
+struct ConsumerMetadataRequest : protocol_body
 {
 
-    int16_t Version;
-    std::string ConsumerGroup;
+    int16_t m_version;
+    std::string m_consumer_group;
 
-    ConsumerMetadataRequest() : Version(0) {}
+    ConsumerMetadataRequest() : m_version(0) {}
     ConsumerMetadataRequest(int16_t v, const std::string &group)
-        : Version(v), ConsumerGroup(group) {}
+        : m_version(v), m_consumer_group(group) {}
 
     void set_version(int16_t v);
     int encode(PEncoder &pe);

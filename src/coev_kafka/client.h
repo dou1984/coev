@@ -79,23 +79,23 @@ struct Client
     std::shared_ptr<Broker> cachedTransactionCoordinator(const std::string &transactionID);
     std::shared_ptr<Broker> cachedController();
 
-    std::atomic<int64_t> updateMetadataMs{0};
-    std::shared_ptr<Config> conf_;
+    std::atomic<int64_t> m_update_metadata_ms{0};
+    std::shared_ptr<Config> m_conf;
 
-    std::vector<std::shared_ptr<Broker>> seedBrokers;
-    std::vector<std::shared_ptr<Broker>> deadSeeds;
-    int32_t controllerID = -1;
-    std::map<int32_t, std::shared_ptr<Broker>> brokers;
-    std::map<std::string, std::map<int32_t, std::shared_ptr<PartitionMetadata>>> metadata;
-    std::map<std::string, bool> metadataTopics;
-    std::map<std::string, int32_t> coordinators;
-    std::map<std::string, int32_t> transactionCoordinators;
-    std::map<std::string, std::array<std::vector<int32_t>, MaxPartitionIndex>> cachedPartitionsResults;
-    std::shared_mutex lock;
+    std::vector<std::shared_ptr<Broker>> m_seed_brokers;
+    std::vector<std::shared_ptr<Broker>> m_dead_seeds;
+    int32_t m_controller_id = -1;
+    std::map<int32_t, std::shared_ptr<Broker>> m_brokers;
+    std::map<std::string, std::map<int32_t, std::shared_ptr<PartitionMetadata>>> m_metadata;
+    std::map<std::string, bool> m_metadata_topics;
+    std::map<std::string, int32_t> m_coordinators;
+    std::map<std::string, int32_t> m_transaction_coordinators;
+    std::map<std::string, std::array<std::vector<int32_t>, MaxPartitionIndex>> m_cached_partitions_results;
+    std::shared_mutex m_lock;
 
-    coev::co_task task_;
-    coev::co_channel<bool> closer;
-    coev::co_channel<bool> closed;
+    coev::co_task m_task;
+    coev::co_channel<bool> m_closer;
+    coev::co_channel<bool> m_closed;
 };
 
 coev::awaitable<int> NewClient(const std::vector<std::string> &addrs, std::shared_ptr<Config> conf, std::shared_ptr<Client> &);

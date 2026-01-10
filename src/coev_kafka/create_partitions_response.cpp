@@ -1,38 +1,38 @@
 #include "create_partitions_response.h"
 #include <sstream>
 
-void CreatePartitionsResponse::setVersion(int16_t v)
+void CreatePartitionsResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int CreatePartitionsResponse::encode(PEncoder &pe)
 {
-    pe.putDurationMs(ThrottleTime);
+    pe.putDurationMs(m_throttle_time);
 
-    if (!pe.putArrayLength(static_cast<int32_t>(TopicPartitionErrors.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_topic_partition_errors.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &pair : TopicPartitionErrors)
+    for (auto &pair : m_topic_partition_errors)
     {
-        if (!pe.putString(pair.first))
+        if (pe.putString(pair.first) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        if (!pair.second->encode(pe))
+        if (pair.second->encode(pe) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int CreatePartitionsResponse::decode(PDecoder &pd, int16_t version)
 {
-    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
+    if (pd.getDurationMs(m_throttle_time) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -43,7 +43,7 @@ int CreatePartitionsResponse::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    TopicPartitionErrors.clear();
+    m_topic_partition_errors.clear();
     for (int32_t i = 0; i < n; ++i)
     {
         std::string topic;
@@ -52,11 +52,11 @@ int CreatePartitionsResponse::decode(PDecoder &pd, int16_t version)
             return ErrDecodeError;
         }
         auto err = std::make_shared<TopicPartitionError>();
-        if (!err->decode(pd, version))
+        if (err->decode(pd, version) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        TopicPartitionErrors[topic] = err;
+        m_topic_partition_errors[topic] = err;
     }
 
     return ErrNoError;
@@ -68,7 +68,7 @@ int16_t CreatePartitionsResponse::key()const{
 
 int16_t CreatePartitionsResponse::version()const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t CreatePartitionsResponse::headerVersion()const
@@ -76,14 +76,14 @@ int16_t CreatePartitionsResponse::headerVersion()const
     return 0;
 }
 
-bool CreatePartitionsResponse::isValidVersion()const
+bool CreatePartitionsResponse::is_valid_version()const
 {
-    return Version >= 0 && Version <= 1;
+    return m_version >= 0 && m_version <= 1;
 }
 
-KafkaVersion CreatePartitionsResponse::requiredVersion() const
+KafkaVersion CreatePartitionsResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 1:
         return V2_0_0_0;
@@ -96,37 +96,37 @@ KafkaVersion CreatePartitionsResponse::requiredVersion() const
 
 std::chrono::milliseconds CreatePartitionsResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }
 
 std::string TopicPartitionError::Error() const
 {
     std::string text = ""; // In real code, this would map KError to string
-    if (!ErrMsg.empty())
+    if (!m_err_msg.empty())
     {
-        text += " - " + ErrMsg;
+        text += " - " + m_err_msg;
     }
     return text;
 }
 
 int TopicPartitionError::encode(PEncoder &pe)
 {
-    pe.putKError(Err);
-    if (!pe.putNullableString(ErrMsg))
+    pe.putKError(m_err);
+    if (pe.putNullableString(m_err_msg) != ErrNoError)
     {
         return ErrEncodeError;
     }
-    return true;
+    return ErrNoError;
 }
 
 int TopicPartitionError::decode(PDecoder &pd, int16_t version)
 {
-    if (pd.getKError(Err) != ErrNoError)
+    if (pd.getKError(m_err) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    if (pd.getNullableString(ErrMsg) != ErrNoError)
+    if (pd.getNullableString(m_err_msg) != ErrNoError)
     {
         return ErrEncodeError;
     }

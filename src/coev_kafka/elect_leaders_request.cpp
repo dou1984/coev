@@ -1,53 +1,53 @@
 #include "elect_leaders_request.h"
 #include <vector>
 
-void ElectLeadersRequest::setVersion(int16_t v)
+void ElectLeadersRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int ElectLeadersRequest::encode(PEncoder &pe)
 {
-    if (Version > 0)
+    if (m_version > 0)
     {
-        pe.putInt8(static_cast<int8_t>(Type));
+        pe.putInt8(static_cast<int8_t>(m_type));
     }
 
-    if (!pe.putArrayLength(static_cast<int32_t>(TopicPartitions.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_topic_partitions.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &kv : TopicPartitions)
+    for (auto &kv : m_topic_partitions)
     {
-        if (!pe.putString(kv.first))
+        if (pe.putString(kv.first) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        if (!pe.putInt32Array(kv.second))
+        if (pe.putInt32Array(kv.second) != ErrNoError)
         {
             return ErrEncodeError;
         }
         pe.putEmptyTaggedFieldArray();
     }
 
-    pe.putDurationMs(Timeout);
+    pe.putDurationMs(m_timeout);
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int ElectLeadersRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    if (Version > 0)
+    if (m_version > 0)
     {
         int8_t t;
         if (pd.getInt8(t) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        Type = static_cast<ElectionType>(t);
+        m_type = static_cast<ElectionType>(t);
     }
 
     int32_t topicCount;
@@ -56,7 +56,7 @@ int ElectLeadersRequest::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    TopicPartitions.clear();
+    m_topic_partitions.clear();
     if (topicCount > 0)
     {
         for (int32_t i = 0; i < topicCount; ++i)
@@ -82,7 +82,7 @@ int ElectLeadersRequest::decode(PDecoder &pd, int16_t version)
                 }
             }
 
-            TopicPartitions[topic] = std::move(partitions);
+            m_topic_partitions[topic] = std::move(partitions);
 
             int32_t dummy;
             if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
@@ -92,7 +92,7 @@ int ElectLeadersRequest::decode(PDecoder &pd, int16_t version)
         }
     }
 
-    if (pd.getDurationMs(Timeout) != ErrNoError)
+    if (pd.getDurationMs(m_timeout) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -113,7 +113,7 @@ int16_t ElectLeadersRequest::key() const
 
 int16_t ElectLeadersRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t ElectLeadersRequest::headerVersion() const
@@ -121,14 +121,14 @@ int16_t ElectLeadersRequest::headerVersion() const
     return 2;
 }
 
-bool ElectLeadersRequest::isValidVersion() const
+bool ElectLeadersRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 2;
+    return m_version >= 0 && m_version <= 2;
 }
 
 bool ElectLeadersRequest::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool ElectLeadersRequest::isFlexibleVersion(int16_t version)
@@ -136,9 +136,9 @@ bool ElectLeadersRequest::isFlexibleVersion(int16_t version)
     return version >= 2;
 }
 
-KafkaVersion ElectLeadersRequest::requiredVersion() const
+KafkaVersion ElectLeadersRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 2:
         return V2_4_0_0;

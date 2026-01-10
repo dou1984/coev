@@ -4,86 +4,86 @@
 #include "api_versions.h"
 
 OffsetFetchRequest::OffsetFetchRequest()
-    : Version(0), RequireStable(false)
+    : m_version(0), m_require_stable(false)
 {
 }
 
 std::shared_ptr<OffsetFetchRequest> OffsetFetchRequest::NewOffsetFetchRequest(const KafkaVersion &version, const std::string &group, const std::map<std::string, std::vector<int32_t>> &partitions)
 {
     auto request = std::make_shared<OffsetFetchRequest>();
-    request->ConsumerGroup = group;
-    request->partitions = partitions;
+    request->m_consumer_group = group;
+    request->m_partitions = partitions;
 
     if (version.IsAtLeast(V2_5_0_0))
     {
-        request->Version = 7;
+        request->m_version = 7;
     }
     else if (version.IsAtLeast(V2_4_0_0))
     {
-        request->Version = 6;
+        request->m_version = 6;
     }
     else if (version.IsAtLeast(V2_1_0_0))
     {
-        request->Version = 5;
+        request->m_version = 5;
     }
     else if (version.IsAtLeast(V2_0_0_0))
     {
-        request->Version = 4;
+        request->m_version = 4;
     }
     else if (version.IsAtLeast(V0_11_0_0))
     {
-        request->Version = 3;
+        request->m_version = 3;
     }
     else if (version.IsAtLeast(V0_10_2_0))
     {
-        request->Version = 2;
+        request->m_version = 2;
     }
     else if (version.IsAtLeast(V0_8_2_0))
     {
-        request->Version = 1;
+        request->m_version = 1;
     }
 
     return request;
 }
 
-void OffsetFetchRequest::setVersion(int16_t v)
+void OffsetFetchRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int OffsetFetchRequest::encode(PEncoder &pe)
 {
-    if (Version < 0 || Version > 7)
+    if (m_version < 0 || m_version > 7)
     {
         throw std::runtime_error("invalid or unsupported OffsetFetchRequest version field");
     }
 
-    pe.putString(ConsumerGroup);
+    pe.putString(m_consumer_group);
 
-    if (partitions.empty() && Version >= 2)
+    if (m_partitions.empty() && m_version >= 2)
     {
         pe.putArrayLength(-1);
     }
     else
     {
-        pe.putArrayLength(static_cast<int32_t>(partitions.size()));
+        pe.putArrayLength(static_cast<int32_t>(m_partitions.size()));
     }
 
-    for (auto &entry : partitions)
+    for (auto &entry : m_partitions)
     {
         pe.putString(entry.first);
         pe.putInt32Array(entry.second);
         pe.putEmptyTaggedFieldArray();
     }
 
-    if (RequireStable && Version < 7)
+    if (m_require_stable && m_version < 7)
     {
         throw std::runtime_error("requireStable is not supported. use version 7 or later");
     }
 
-    if (Version >= 7)
+    if (m_version >= 7)
     {
-        pe.putBool(RequireStable);
+        pe.putBool(m_require_stable);
     }
 
     pe.putEmptyTaggedFieldArray();
@@ -92,8 +92,8 @@ int OffsetFetchRequest::encode(PEncoder &pe)
 
 int OffsetFetchRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
-    int err = pd.getString(ConsumerGroup);
+    m_version = version;
+    int err = pd.getString(m_consumer_group);
     if (err != 0)
     {
         return err;
@@ -110,8 +110,8 @@ int OffsetFetchRequest::decode(PDecoder &pd, int16_t version)
         return ErrInvalidPartitions;
     }
 
-    partitions.clear();
-    // partitions.reserve(partitionCount);
+    m_partitions.clear();
+    // m_partitions.reserve(partitionCount);
     for (int i = 0; i < partitionCount; ++i)
     {
         std::string topic;
@@ -133,12 +133,12 @@ int OffsetFetchRequest::decode(PDecoder &pd, int16_t version)
         {
             return err;
         }
-        partitions[topic] = std::move(parts);
+        m_partitions[topic] = std::move(parts);
     }
 
-    if (Version >= 7)
+    if (m_version >= 7)
     {
-        pd.getBool(RequireStable);
+        pd.getBool(m_require_stable);
     }
 
     int32_t _;
@@ -157,22 +157,22 @@ int16_t OffsetFetchRequest::key() const
 
 int16_t OffsetFetchRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t OffsetFetchRequest::headerVersion() const
 {
-    return Version >= 6 ? 2 : 1;
+    return m_version >= 6 ? 2 : 1;
 }
 
-bool OffsetFetchRequest::isValidVersion() const
+bool OffsetFetchRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 7;
+    return m_version >= 0 && m_version <= 7;
 }
 
 bool OffsetFetchRequest::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool OffsetFetchRequest::isFlexibleVersion(int16_t version)
@@ -180,9 +180,9 @@ bool OffsetFetchRequest::isFlexibleVersion(int16_t version)
     return version >= 6;
 }
 
-KafkaVersion OffsetFetchRequest::requiredVersion() const
+KafkaVersion OffsetFetchRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 7:
         return V2_5_0_0;
@@ -206,13 +206,13 @@ KafkaVersion OffsetFetchRequest::requiredVersion() const
 
 void OffsetFetchRequest::ZeroPartitions()
 {
-    if (partitions.empty() && Version >= 2)
+    if (m_partitions.empty() && m_version >= 2)
     {
-        partitions.clear();
+        m_partitions.clear();
     }
 }
 
 void OffsetFetchRequest::AddPartition(const std::string &topic, int32_t partitionID)
 {
-    partitions[topic].push_back(partitionID);
+    m_partitions[topic].push_back(partitionID);
 }

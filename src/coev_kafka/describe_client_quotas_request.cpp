@@ -1,32 +1,32 @@
 #include "describe_client_quotas_request.h"
 
-void DescribeClientQuotasRequest::setVersion(int16_t v)
+void DescribeClientQuotasRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int DescribeClientQuotasRequest::encode(PEncoder &pe)
 {
-    if (!pe.putArrayLength(static_cast<int32_t>(Components.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_components.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
-    for (auto &c : Components)
+    for (auto &c : m_components)
     {
-        if (!c.encode(pe))
+        if (c.encode(pe) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
-    pe.putBool(Strict);
+    pe.putBool(m_strict);
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int DescribeClientQuotasRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
     int32_t componentCount;
     if (pd.getArrayLength(componentCount) != ErrNoError)
@@ -34,20 +34,20 @@ int DescribeClientQuotasRequest::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    Components.clear();
+    m_components.clear();
     if (componentCount > 0)
     {
-        Components.resize(componentCount);
+        m_components.resize(componentCount);
         for (int32_t i = 0; i < componentCount; ++i)
         {
-            if (!Components[i].decode(pd, version))
+            if (!m_components[i].decode(pd, version))
             {
                 return ErrDecodeError;
             }
         }
     }
 
-    if (pd.getBool(Strict) != ErrNoError)
+    if (pd.getBool(m_strict) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -61,30 +61,30 @@ int DescribeClientQuotasRequest::decode(PDecoder &pd, int16_t version)
 
 int QuotaFilterComponent::encode(PEncoder &pe)
 {
-    if (!pe.putString(EntityType))
+    if (pe.putString(m_entity_type) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    pe.putInt8(static_cast<int8_t>(MatchType));
+    pe.putInt8(static_cast<int8_t>(m_match_type));
 
-    if (MatchType == QuotaMatchType::QuotaMatchAny || MatchType == QuotaMatchType::QuotaMatchDefault)
+    if (m_match_type == QuotaMatchType::QuotaMatchAny || m_match_type == QuotaMatchType::QuotaMatchDefault)
     {
-        if (!pe.putNullableString(nullptr))
+        if (pe.putNullableString(nullptr) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
     else
     {
-        if (!pe.putString(Match))
+        if (pe.putString(m_match) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int QuotaFilterComponent::decode(PDecoder &pd, int16_t /*version*/)
@@ -94,16 +94,16 @@ int QuotaFilterComponent::decode(PDecoder &pd, int16_t /*version*/)
     {
         return ErrDecodeError;
     }
-    EntityType = entityType;
+    m_entity_type = entityType;
 
     int8_t matchType;
     if (pd.getInt8(matchType) != ErrNoError)
     {
         return ErrDecodeError;
     }
-    MatchType = static_cast<QuotaMatchType>(matchType);
+    m_match_type = static_cast<QuotaMatchType>(matchType);
 
-    if (pd.getNullableString(Match) != ErrNoError)
+    if (pd.getNullableString(m_match) != ErrNoError)
     {
 
         return ErrDecodeError;
@@ -123,26 +123,26 @@ int16_t DescribeClientQuotasRequest::key() const
 
 int16_t DescribeClientQuotasRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t DescribeClientQuotasRequest::headerVersion() const
 {
-    if (Version >= 1)
+    if (m_version >= 1)
     {
         return 2;
     }
     return 1;
 }
 
-bool DescribeClientQuotasRequest::isValidVersion() const
+bool DescribeClientQuotasRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 1;
+    return m_version >= 0 && m_version <= 1;
 }
 
 bool DescribeClientQuotasRequest::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool DescribeClientQuotasRequest::isFlexibleVersion(int16_t version)
@@ -150,9 +150,9 @@ bool DescribeClientQuotasRequest::isFlexibleVersion(int16_t version)
     return version >= 1;
 }
 
-KafkaVersion DescribeClientQuotasRequest::requiredVersion() const
+KafkaVersion DescribeClientQuotasRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 1:
         return V2_8_0_0;
@@ -166,15 +166,15 @@ KafkaVersion DescribeClientQuotasRequest::requiredVersion() const
 std::shared_ptr<DescribeClientQuotasRequest> NewDescribeClientQuotasRequest(KafkaVersion kafkaVersion, const std::vector<QuotaFilterComponent> &components, bool strict)
 {
     auto d = std::make_shared<DescribeClientQuotasRequest>();
-    d->Components = components;
-    d->Strict = strict;
+    d->m_components = components;
+    d->m_strict = strict;
     if (kafkaVersion.IsAtLeast(V2_8_0_0))
     {
-        d->Version = 1;
+        d->m_version = 1;
     }
     else
     {
-        d->Version = 0;
+        d->m_version = 0;
     }
     return d;
 }

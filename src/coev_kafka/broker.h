@@ -168,53 +168,53 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
     coev::awaitable<int> AlterClientQuotas(std::shared_ptr<AlterClientQuotasRequest> request, std::shared_ptr<AlterClientQuotasResponse> &response);
     coev::awaitable<int> AsyncProduce(std::shared_ptr<ProduceRequest> request, std::function<void(std::shared_ptr<ProduceResponse>, KError)> callback);
 
-    std::shared_ptr<Config> m_Conf;
-    std::string m_Rack;
-    int32_t m_ID;
-    std::string m_Addr;
-    int32_t m_CorrelationID;
-    Connect m_Conn;
-    std::mutex m_Lock;
-    std::atomic<bool> m_Opened;
+    std::shared_ptr<Config> m_conf;
+    std::string m_rack;
+    int32_t m_id;
+    std::string m_addr;
+    int32_t m_correlation_id;
+    Connect m_conn;
+    std::mutex m_lock;
+    std::atomic<bool> m_opened;
 
-    std::shared_ptr<metrics::Registry> metricRegistry;
-    std::shared_ptr<metrics::Meter> incomingByteRate;
-    std::shared_ptr<metrics::Meter> requestRate;
-    std::shared_ptr<metrics::Meter> fetchRate;
-    std::shared_ptr<metrics::Histogram> requestSize;
-    std::shared_ptr<metrics::Histogram> requestLatency;
-    std::shared_ptr<metrics::Meter> outgoingByteRate;
-    std::shared_ptr<metrics::Meter> responseRate;
-    std::shared_ptr<metrics::Histogram> responseSize;
-    std::shared_ptr<metrics::Counter> requestsInFlight;
-    std::shared_ptr<metrics::Meter> brokerIncomingByteRate;
-    std::shared_ptr<metrics::Meter> brokerRequestRate;
-    std::shared_ptr<metrics::Meter> brokerFetchRate;
-    std::shared_ptr<metrics::Histogram> brokerRequestSize;
-    std::shared_ptr<metrics::Histogram> brokerRequestLatency;
-    std::shared_ptr<metrics::Meter> brokerOutgoingByteRate;
-    std::shared_ptr<metrics::Meter> brokerResponseRate;
-    std::shared_ptr<metrics::Histogram> brokerResponseSize;
-    std::shared_ptr<metrics::Counter> brokerRequestsInFlight;
-    std::shared_ptr<metrics::Histogram> brokerThrottleTime;
-    std::map<int16_t, std::shared_ptr<metrics::Meter>> protocolRequestsRate;
-    std::map<int16_t, std::shared_ptr<metrics::Meter>> brokerProtocolRequestsRate;
-    ApiVersionMap brokerAPIVersions;
-    std::shared_ptr<GSSAPIKerberosAuth> kerberosAuthenticator;
-    int64_t clientSessionReauthenticationTime;
+    std::shared_ptr<metrics::Registry> m_metric_registry; 
+    std::shared_ptr<metrics::Meter> m_incoming_byte_rate;
+    std::shared_ptr<metrics::Meter> m_request_rate;
+    std::shared_ptr<metrics::Meter> m_fetch_rate;
+    std::shared_ptr<metrics::Histogram> m_request_size;
+    std::shared_ptr<metrics::Histogram> m_request_latency;
+    std::shared_ptr<metrics::Meter> m_outgoing_byte_rate;
+    std::shared_ptr<metrics::Meter> m_response_rate;
+    std::shared_ptr<metrics::Histogram> m_response_size;
+    std::shared_ptr<metrics::Counter> m_requests_in_flight;
+    std::shared_ptr<metrics::Meter> m_broker_incoming_byte_rate;
+    std::shared_ptr<metrics::Meter> m_broker_request_rate;
+    std::shared_ptr<metrics::Meter> m_broker_fetch_rate;
+    std::shared_ptr<metrics::Histogram> m_broker_request_size;
+    std::shared_ptr<metrics::Histogram> m_broker_request_latency;
+    std::shared_ptr<metrics::Meter> m_broker_outgoing_byte_rate;
+    std::shared_ptr<metrics::Meter> m_broker_response_rate;
+    std::shared_ptr<metrics::Histogram> m_broker_response_size;
+    std::shared_ptr<metrics::Counter> m_broker_requests_in_flight;
+    std::shared_ptr<metrics::Histogram> m_broker_throttle_time;
+    std::map<int16_t, std::shared_ptr<metrics::Meter>> m_protocol_requests_rate;
+    std::map<int16_t, std::shared_ptr<metrics::Meter>> m_broker_protocol_requests_rate;
+    ApiVersionMap m_broker_api_versions;
+    std::shared_ptr<GSSAPIKerberosAuth> m_kerberos_authenticator;
+    int64_t m_client_session_reauthentication_time;
 
-    std::mutex throttleTimerLock;
+    std::mutex  m_throttle_timer_lock;
     coev::co_task m_task;
-    coev::co_channel<std::shared_ptr<ResponsePromise>> responses;
-    coev::co_channel<bool> done;
+    coev::co_channel<std::shared_ptr<ResponsePromise>> m_responses;
+    coev::co_channel<bool> m_done;
 
-    std::shared_ptr<ResponsePromise> makeResponsePromise(std::shared_ptr<protocolBody> res);
+    std::shared_ptr<ResponsePromise> makeResponsePromise(std::shared_ptr<protocol_body> res);
     coev::awaitable<int> ReadFull(std::string &buf, size_t &n);
     coev::awaitable<int> Write(const std::string &buf, size_t &n);
-    coev::awaitable<int> Send(std::shared_ptr<protocolBody> req, std::shared_ptr<protocolBody> res, std::shared_ptr<ResponsePromise> &promise);
-    coev::awaitable<int> SendWithPromise(std::shared_ptr<protocolBody> rb, std::shared_ptr<ResponsePromise> promise);
-    coev::awaitable<int> SendInternal(std::shared_ptr<protocolBody> rb, std::shared_ptr<ResponsePromise> promise);
-    coev::awaitable<int> SendAndReceive(std::shared_ptr<protocolBody> req, std::shared_ptr<protocolBody> res);
+    coev::awaitable<int> Send(std::shared_ptr<protocol_body> req, std::shared_ptr<protocol_body> res, std::shared_ptr<ResponsePromise> &promise);
+    coev::awaitable<int> SendWithPromise(std::shared_ptr<protocol_body> rb, std::shared_ptr<ResponsePromise> promise);
+    coev::awaitable<int> SendInternal(std::shared_ptr<protocol_body> rb, std::shared_ptr<ResponsePromise> promise);
+    coev::awaitable<int> SendAndReceive(std::shared_ptr<protocol_body> req, std::shared_ptr<protocol_body> res);
     coev::awaitable<int> SesponseReceiver();
     coev::awaitable<int> SendAndReceiveApiVersions(int16_t v, std::shared_ptr<ApiVersionsResponse> &response);
     coev::awaitable<int> AuthenticateViaSASLv0();
@@ -242,8 +242,8 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
     void UpdateRequestLatencyAndInFlightMetrics(std::chrono::milliseconds requestLatency);
     void AddRequestInFlightMetrics(int64_t i);
     void UpdateOutgoingCommunicationMetrics(int bytes);
-    void UpdateProtocolMetrics(std::shared_ptr<protocolBody> rb);
-    void UandleThrottledResponse(std::shared_ptr<protocolBody> resp);
+    void UpdateProtocolMetrics(std::shared_ptr<protocol_body> rb);
+    void UandleThrottledResponse(std::shared_ptr<protocol_body> resp);
     void SetThrottle(std::chrono::milliseconds throttleTime);
     void WaitIfThrottled();
     void UpdateThrottleMetric(std::chrono::milliseconds throttleTime);
@@ -256,7 +256,7 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
     template <class Req, class Resp>
     coev::awaitable<int> SendAndReceive(Req &req, Resp &res)
     {
-        std::lock_guard<std::mutex> lock(m_Lock);
+        std::lock_guard<std::mutex> lock(m_lock);
         std::shared_ptr<ResponsePromise> promise;
         int32_t err = co_await Send(req, res, promise);
         if (err)
@@ -267,7 +267,7 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
         {
             co_return 0;
         }
-        err = co_await HandleResponsePromise(req, res, promise, metricRegistry);
+        err = co_await HandleResponsePromise(req, res, promise, m_metric_registry);
         if (err)
         {
             co_return err;
@@ -281,4 +281,4 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
 };
 
 std::shared_ptr<tls::Config> ValidServerNameTLS(const std::string &addr, std::shared_ptr<tls::Config> cfg);
-coev::awaitable<int> HandleResponsePromise(std::shared_ptr<protocolBody> req, std::shared_ptr<protocolBody> res, std::shared_ptr<ResponsePromise> promise, std::shared_ptr<metrics::Registry> metricRegistry);
+coev::awaitable<int> HandleResponsePromise(std::shared_ptr<protocol_body> req, std::shared_ptr<protocol_body> res, std::shared_ptr<ResponsePromise> promise, std::shared_ptr<metrics::Registry> metricRegistry);

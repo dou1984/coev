@@ -56,7 +56,7 @@ std::map<std::string, std::vector<int32_t>> MapToRequest(const TopicPartitionSet
     std::map<std::string, std::vector<int32_t>> result;
     for (auto &kv : s)
     {
-        result[kv.first.topic].push_back(kv.first.partition);
+        result[kv.first.m_topic].push_back(kv.first.m_partition);
     }
     return result;
 }
@@ -66,7 +66,7 @@ std::map<std::string, std::vector<std::shared_ptr<PartitionOffsetMetadata>>> Map
     std::map<std::string, std::vector<std::shared_ptr<PartitionOffsetMetadata>>> result;
     for (auto &kv : s)
     {
-        result[kv.first.topic].push_back(kv.second);
+        result[kv.first.m_topic].push_back(kv.second);
     }
     return result;
 }
@@ -77,7 +77,7 @@ bool TransactionManager::IsTransitionValid(ProducerTxnStatusFlag target) const
     {
         auto &status = it.first;
         auto &allowedTransitions = it.second;
-        if ((status_ & status) != 0)
+        if ((m_status & status) != 0)
         {
             for (ProducerTxnStatusFlag allowed : allowedTransitions)
             {
@@ -93,13 +93,13 @@ bool TransactionManager::IsTransitionValid(ProducerTxnStatusFlag target) const
 
 ProducerTxnStatusFlag TransactionManager::CurrentTxnStatus() const
 {
-    std::shared_lock<std::shared_mutex> lock(statusLock_);
-    return status_;
+    std::shared_lock<std::shared_mutex> lock(m_status_lock);
+    return m_status;
 }
 
 int TransactionManager::TransitionTo(ProducerTxnStatusFlag target, int err)
 {
-    std::unique_lock<std::shared_mutex> lock(statusLock_);
+    std::unique_lock<std::shared_mutex> lock(m_status_lock);
     if (!IsTransitionValid(target))
     {
         return ErrTransitionNotAllowed;
@@ -110,30 +110,30 @@ int TransactionManager::TransitionTo(ProducerTxnStatusFlag target, int err)
         {
             return ErrCannotTransitionNilError;
         }
-        lastError_ = err;
+        m_last_error = err;
     }
     else
     {
-        lastError_ = 0;
+        m_last_error = 0;
     }
-    status_ = target;
+    m_status = target;
     return err;
 }
 
 void TransactionManager::GetAndIncrementSequenceNumber(const std::string &topic, int32_t partition, int32_t &sequence, int16_t &epoch)
 {
     std::string key = topic + "-" + std::to_string(partition);
-    std::lock_guard<std::mutex> lock(mutex_);
-    sequence = sequenceNumbers_[key];
-    sequenceNumbers_[key] = sequence + 1;
-    epoch = producerEpoch_;
+    std::lock_guard<std::mutex> lock(m_mutex);
+    sequence = m_sequence_numbers[key];
+    m_sequence_numbers[key] = sequence + 1;
+    epoch = m_producer_epoch;
 }
 
 void TransactionManager::BumpEpoch()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    producerEpoch_++;
-    for (auto &kv : sequenceNumbers_)
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_producer_epoch++;
+    for (auto &kv : m_sequence_numbers)
     {
         kv.second = 0;
     }
@@ -141,13 +141,13 @@ void TransactionManager::BumpEpoch()
 
 std::pair<int64_t, int16_t> TransactionManager::GetProducerID()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return {producerID_, producerEpoch_};
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return {m_producer_id, m_producer_epoch};
 }
 
 std::chrono::milliseconds TransactionManager::ComputeBackoff(int attemptsRemaining) const
 {
-    auto config = client_->GetConfig();
+    auto config = m_client->GetConfig();
     if (config->Producer.Transaction.Retry.BackoffFunc)
     {
         int maxRetries = config->Producer.Transaction.Retry.Max;
@@ -159,7 +159,7 @@ std::chrono::milliseconds TransactionManager::ComputeBackoff(int attemptsRemaini
 
 bool TransactionManager::IsTransactional() const
 {
-    return !transactionalID_.empty();
+    return !m_transactional_id.empty();
 }
 coev::awaitable<int> TransactionManager::Retry(int attemptsRemaining, const std::function<coev::awaitable<TransactionManager::Result>()> &run)
 {
@@ -172,7 +172,7 @@ coev::awaitable<int> TransactionManager::Retry(int attemptsRemaining, const std:
         }
         auto backoff = ComputeBackoff(attemptsRemaining);
         Logger::Printf("txnmgr [%s] retrying after %lldms %d attempts remaining %d\n",
-                       transactionalID_.c_str(), static_cast<long long>(backoff.count() / 1000000), attemptsRemaining, static_cast<int>(r.Error));
+                       m_transactional_id.c_str(), static_cast<long long>(backoff.count() / 1000000), attemptsRemaining, static_cast<int>(r.Error));
 
         co_await sleep_for(backoff);
         attemptsRemaining--;
@@ -181,26 +181,26 @@ coev::awaitable<int> TransactionManager::Retry(int attemptsRemaining, const std:
 }
 int TransactionManager::AddOffsetsToTxn(const std::map<std::string, std::vector<std::shared_ptr<PartitionOffsetMetadata>>> &offsetsToAdd, const std::string &groupId)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(m_mutex);
     if ((CurrentTxnStatus() & ProducerTxnFlagInTransaction) == 0)
     {
         return ErrTransactionNotReady;
     }
     if ((CurrentTxnStatus() & ProducerTxnFlagFatalError) != 0)
     {
-        return lastError_;
+        return m_last_error;
     }
-    if (offsetsInCurrentTxn_.find(groupId) == offsetsInCurrentTxn_.end())
+    if (m_offsets_in_current_txn.find(groupId) == m_offsets_in_current_txn.end())
     {
-        offsetsInCurrentTxn_[groupId] = TopicPartitionOffsets{};
+        m_offsets_in_current_txn[groupId] = TopicPartitionOffsets{};
     }
     for (auto &topicOffsets : offsetsToAdd)
     {
         const std::string &topic = topicOffsets.first;
         for (auto &offset : topicOffsets.second)
         {
-            TopicPartition tp{topic, offset->Partition};
-            offsetsInCurrentTxn_[groupId][tp] = offset;
+            TopicPartition tp(topic, offset->m_partition);
+            m_offsets_in_current_txn[groupId][tp] = offset;
         }
     }
     return 0;
@@ -209,25 +209,25 @@ int TransactionManager::AddOffsetsToTxn(const std::map<std::string, std::vector<
 coev::awaitable<TransactionManager::Result> TransactionManager::PublishOffsetsToTxnAddOffset(const std::string &groupId)
 {
     std::shared_ptr<Broker> coordinator;
-    int err = co_await client_->TransactionCoordinator(transactionalID_, coordinator);
+    int err = co_await m_client->TransactionCoordinator(m_transactional_id, coordinator);
     if (err != ErrNoError)
     {
         co_return {true, err};
     }
 
     auto request = std::make_shared<AddOffsetsToTxnRequest>();
-    request->TransactionalID = transactionalID_;
-    request->ProducerEpoch = producerEpoch_;
-    request->ProducerID = producerID_;
-    request->GroupID = groupId;
+    request->m_transactional_id = m_transactional_id;
+    request->m_producer_epoch = m_producer_epoch;
+    request->m_producer_id = m_producer_id;
+    request->m_group_id = groupId;
 
-    if (client_->GetConfig()->Version.IsAtLeast(V2_7_0_0))
+    if (m_client->GetConfig()->Version.IsAtLeast(V2_7_0_0))
     {
-        request->Version = 2;
+        request->m_version = 2;
     }
-    else if (client_->GetConfig()->Version.IsAtLeast(V2_0_0_0))
+    else if (m_client->GetConfig()->Version.IsAtLeast(V2_0_0_0))
     {
-        request->Version = 1;
+        request->m_version = 1;
     }
 
     std::shared_ptr<AddOffsetsToTxnResponse> response;
@@ -235,7 +235,7 @@ coev::awaitable<TransactionManager::Result> TransactionManager::PublishOffsetsTo
     if (err != ErrNoError)
     {
         co_await coordinator->Close();
-        err = co_await client_->RefreshTransactionCoordinator(transactionalID_);
+        err = co_await m_client->RefreshTransactionCoordinator(m_transactional_id);
         if (err != ErrNoError)
         {
             co_return {true, err};
@@ -247,55 +247,55 @@ coev::awaitable<TransactionManager::Result> TransactionManager::PublishOffsetsTo
         co_return {true, ErrTxnUnableToParseResponse};
     }
 
-    if (response->Err == ErrNoError)
+    if (response->m_err == ErrNoError)
     {
         DebugLogger::Printf("txnmgr/add-offset-to-txn [%s] successful add-offset-to-txn with group %s\n",
-                            transactionalID_.c_str(), groupId.c_str());
+                            m_transactional_id.c_str(), groupId.c_str());
         co_return {false, ErrNoError};
     }
 
-    switch (response->Err)
+    switch (response->m_err)
     {
     case ErrConsumerCoordinatorNotAvailable:
     case ErrNotCoordinatorForConsumer:
         coordinator->Close();
-        co_await client_->RefreshTransactionCoordinator(transactionalID_);
+        co_await m_client->RefreshTransactionCoordinator(m_transactional_id);
         [[fallthrough]];
     case ErrOffsetsLoadInProgress:
     case ErrConcurrentTransactions:
-        co_return {true, response->Err};
+        co_return {true, response->m_err};
     case ErrUnknownProducerID:
     case ErrInvalidProducerIDMapping:
-        co_return {false, AbortableErrorIfPossible(response->Err)};
+        co_return {false, AbortableErrorIfPossible(response->m_err)};
     case ErrGroupAuthorizationFailed:
-        co_return {false, TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagAbortableError), response->Err)};
+        co_return {false, TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagAbortableError), response->m_err)};
     default:
-        co_return {false, TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagFatalError), response->Err)};
+        co_return {false, TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagFatalError), response->m_err)};
     }
 }
 coev::awaitable<TransactionManager::Result> TransactionManager::PublishOffsetsToTxnCommit(const TopicPartitionOffsets &offsets, const std::string &groupId, TopicPartitionOffsets &outOffsets)
 {
     std::shared_ptr<Broker> consumerGroupCoordinator;
-    int err = co_await client_->GetCoordinator(groupId, consumerGroupCoordinator);
+    int err = co_await m_client->GetCoordinator(groupId, consumerGroupCoordinator);
     if (err != ErrNoError)
     {
         co_return {true, err};
     }
 
     auto request = std::make_shared<TxnOffsetCommitRequest>();
-    request->TransactionalID = transactionalID_;
-    request->ProducerEpoch = producerEpoch_;
-    request->ProducerID = producerID_;
-    request->GroupID = groupId;
-    request->Topics = MapToRequest(offsets);
+    request->m_transactional_id = m_transactional_id;
+    request->m_producer_epoch = m_producer_epoch;
+    request->m_producer_id = m_producer_id;
+    request->m_group_id = groupId;
+    request->m_topics = MapToRequest(offsets);
 
-    if (client_->GetConfig()->Version.IsAtLeast(V2_1_0_0))
+    if (m_client->GetConfig()->Version.IsAtLeast(V2_1_0_0))
     {
-        request->Version = 2;
+        request->m_version = 2;
     }
-    else if (client_->GetConfig()->Version.IsAtLeast(V2_0_0_0))
+    else if (m_client->GetConfig()->Version.IsAtLeast(V2_0_0_0))
     {
-        request->Version = 1;
+        request->m_version = 1;
     }
 
     std::shared_ptr<TxnOffsetCommitResponse> responses;
@@ -303,7 +303,7 @@ coev::awaitable<TransactionManager::Result> TransactionManager::PublishOffsetsTo
     if (err != ErrNoError)
     {
         consumerGroupCoordinator->Close();
-        client_->RefreshCoordinator(groupId);
+        m_client->RefreshCoordinator(groupId);
         co_return {true, err};
     }
 
@@ -315,14 +315,14 @@ coev::awaitable<TransactionManager::Result> TransactionManager::PublishOffsetsTo
     std::vector<KError> responseErrors;
     TopicPartitionOffsets failedTxn;
 
-    for (auto &it : responses->Topics)
+    for (auto &it : responses->m_topics)
     {
         auto &topic = it.first;
         auto &partitionErrors = it.second;
 
         for (auto &partitionError : partitionErrors)
         {
-            switch (partitionError->Err)
+            switch (partitionError->m_err)
             {
             case ErrNoError:
                 continue;
@@ -330,8 +330,7 @@ coev::awaitable<TransactionManager::Result> TransactionManager::PublishOffsetsTo
             case ErrConsumerCoordinatorNotAvailable:
             case ErrNotCoordinatorForConsumer:
                 consumerGroupCoordinator->Close();
-                client_->RefreshCoordinator(groupId);
-                [[fallthrough]];
+                m_client->RefreshCoordinator(groupId);
             case ErrUnknownTopicOrPartition:
             case ErrOffsetsLoadInProgress:
                 break;
@@ -339,13 +338,13 @@ coev::awaitable<TransactionManager::Result> TransactionManager::PublishOffsetsTo
             case ErrUnknownMemberId:
             case ErrFencedInstancedId:
             case ErrGroupAuthorizationFailed:
-                co_return {false, TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagAbortableError), partitionError->Err)};
+                co_return {false, TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagAbortableError), partitionError->m_err)};
             default:
-                co_return {false, TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagFatalError), partitionError->Err)};
+                co_return {false, TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagFatalError), partitionError->m_err)};
             }
-            TopicPartition tp{topic, partitionError->Partition};
+            TopicPartition tp(topic, partitionError->m_partition);
             failedTxn[tp] = offsets.at(tp);
-            responseErrors.push_back(partitionError->Err);
+            responseErrors.push_back(partitionError->m_err);
         }
     }
 
@@ -353,14 +352,14 @@ coev::awaitable<TransactionManager::Result> TransactionManager::PublishOffsetsTo
     if (outOffsets.empty())
     {
         DebugLogger::Printf("txnmgr/txn-offset-commit [%s] successful txn-offset-commit with group %s\n",
-                            transactionalID_.c_str(), groupId.c_str());
+                            m_transactional_id.c_str(), groupId.c_str());
         co_return {false, ErrNoError};
     }
     co_return {true, ErrTxnOffsetCommit};
 }
 coev::awaitable<int> TransactionManager::PublishOffsetsToTxn(const TopicPartitionOffsets &offsets, const std::string &groupId, TopicPartitionOffsets &outOffsets)
 {
-    int attemptsRemaining = client_->GetConfig()->Producer.Transaction.Retry.Max;
+    int attemptsRemaining = m_client->GetConfig()->Producer.Transaction.Retry.Max;
     int err = co_await Retry(
         attemptsRemaining,
         [this, &groupId]() -> coev::awaitable<Result>
@@ -372,7 +371,7 @@ coev::awaitable<int> TransactionManager::PublishOffsetsToTxn(const TopicPartitio
     }
 
     TopicPartitionOffsets resultOffsets = offsets;
-    attemptsRemaining = client_->GetConfig()->Producer.Transaction.Retry.Max;
+    attemptsRemaining = m_client->GetConfig()->Producer.Transaction.Retry.Max;
 
     TopicPartitionOffsets finalOffsets;
     err = co_await Retry(
@@ -395,35 +394,35 @@ coev::awaitable<int> TransactionManager::InitProducerId(int64_t &producerID, int
     std::shared_ptr<InitProducerIDRequest> request;
     if (IsTransactional())
     {
-        request->TransactionalID = transactionalID_;
-        request->TransactionTimeout = transactionTimeout_;
+        request->m_transactional_id = m_transactional_id;
+        request->m_transaction_timeout = m_transaction_timeout;
     }
 
-    if (client_->GetConfig()->Version.IsAtLeast(V2_5_0_0))
+    if (m_client->GetConfig()->Version.IsAtLeast(V2_5_0_0))
     {
-        if (client_->GetConfig()->Version.IsAtLeast(V2_7_0_0))
+        if (m_client->GetConfig()->Version.IsAtLeast(V2_7_0_0))
         {
-            request->Version = 4;
+            request->m_version = 4;
         }
         else
         {
-            request->Version = 3;
+            request->m_version = 3;
         }
         isEpochBump = (producerID != noProducerID) && (producerEpoch != noProducerEpoch);
-        coordinatorSupportsBumpingEpoch_ = true;
-        request->ProducerID = producerID;
-        request->ProducerEpoch = producerEpoch;
+        m_coordinator_supports_bumping_epoch = true;
+        request->m_producer_id = producerID;
+        request->m_producer_epoch = producerEpoch;
     }
-    else if (client_->GetConfig()->Version.IsAtLeast(V2_4_0_0))
+    else if (m_client->GetConfig()->Version.IsAtLeast(V2_4_0_0))
     {
-        request->Version = 2;
+        request->m_version = 2;
     }
-    else if (client_->GetConfig()->Version.IsAtLeast(V2_0_0_0))
+    else if (m_client->GetConfig()->Version.IsAtLeast(V2_0_0_0))
     {
-        request->Version = 1;
+        request->m_version = 1;
     }
 
-    int attemptsRemaining = client_->GetConfig()->Producer.Transaction.Retry.Max;
+    int attemptsRemaining = m_client->GetConfig()->Producer.Transaction.Retry.Max;
     co_return co_await Retry(
         attemptsRemaining,
         [this, &isEpochBump, &request, &producerID, &producerEpoch]() -> coev::awaitable<Result>
@@ -432,7 +431,7 @@ coev::awaitable<int> TransactionManager::InitProducerId(int64_t &producerID, int
             std::shared_ptr<Broker> coordinator;
             if (IsTransactional())
             {
-                err = co_await client_->TransactionCoordinator(transactionalID_, coordinator);
+                err = co_await m_client->TransactionCoordinator(m_transactional_id, coordinator);
                 if (!coordinator)
                 {
                     producerID = noProducerID;
@@ -442,7 +441,7 @@ coev::awaitable<int> TransactionManager::InitProducerId(int64_t &producerID, int
             }
             else
             {
-                err = co_await client_->LeastLoadedBroker(coordinator);
+                err = co_await m_client->LeastLoadedBroker(coordinator);
                 if (err != 0)
                 {
                     producerID = noProducerID;
@@ -458,18 +457,18 @@ coev::awaitable<int> TransactionManager::InitProducerId(int64_t &producerID, int
                 if (IsTransactional())
                 {
                     co_await coordinator->Close();
-                    co_await client_->RefreshTransactionCoordinator(transactionalID_);
+                    co_await m_client->RefreshTransactionCoordinator(m_transactional_id);
                 }
                 producerID = noProducerID;
                 producerEpoch = noProducerEpoch;
                 co_return {true, err};
             }
 
-            if (response->Err == ErrNoError)
+            if (response->m_err == ErrNoError)
             {
                 if (isEpochBump)
                 {
-                    sequenceNumbers_.clear();
+                    m_sequence_numbers.clear();
                 }
                 err = TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagReady), ErrNoError);
                 if (err != ErrNoError)
@@ -478,12 +477,12 @@ coev::awaitable<int> TransactionManager::InitProducerId(int64_t &producerID, int
                     producerEpoch = noProducerEpoch;
                     co_return {true, err};
                 }
-                producerID = response->ProducerID;
-                producerEpoch = response->ProducerEpoch;
+                producerID = response->m_producer_id;
+                producerEpoch = response->m_producer_epoch;
                 co_return {false, ErrNoError};
             }
 
-            switch (response->Err)
+            switch (response->m_err)
             {
             case ErrConsumerCoordinatorNotAvailable:
             case ErrNotCoordinatorForConsumer:
@@ -491,24 +490,24 @@ coev::awaitable<int> TransactionManager::InitProducerId(int64_t &producerID, int
                 if (IsTransactional())
                 {
                     co_await coordinator->Close();
-                    co_await client_->RefreshTransactionCoordinator(transactionalID_);
+                    co_await m_client->RefreshTransactionCoordinator(m_transactional_id);
                 }
-                producerID = response->ProducerID;
-                producerEpoch = response->ProducerEpoch;
-                co_return {true, response->Err};
+                producerID = response->m_producer_id;
+                producerEpoch = response->m_producer_epoch;
+                co_return {true, response->m_err};
             default:
-                TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagFatalError), response->Err);
-                producerID = response->ProducerID;
-                producerEpoch = response->ProducerEpoch;
-                co_return {false, response->Err};
+                TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagFatalError), response->m_err);
+                producerID = response->m_producer_id;
+                producerEpoch = response->m_producer_epoch;
+                co_return {false, response->m_err};
             }
         });
 }
 int TransactionManager::AbortableErrorIfPossible(int err)
 {
-    if (coordinatorSupportsBumpingEpoch_)
+    if (m_coordinator_supports_bumping_epoch)
     {
-        epochBumpRequired_ = true;
+        m_epoch_bump_required = true;
         return TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagAbortableError), err);
     }
     return TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagFatalError), err);
@@ -516,7 +515,7 @@ int TransactionManager::AbortableErrorIfPossible(int err)
 
 int TransactionManager::CompleteTransaction()
 {
-    if (epochBumpRequired_)
+    if (m_epoch_bump_required)
     {
         int err = TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInitializing), 0);
         if (err != 0)
@@ -528,22 +527,22 @@ int TransactionManager::CompleteTransaction()
         if (err != 0)
             return err;
     }
-    lastError_ = 0;
-    epochBumpRequired_ = false;
-    partitionsInCurrentTxn_.clear();
-    pendingPartitionsInCurrentTxn_.clear();
-    offsetsInCurrentTxn_.clear();
+    m_last_error = 0;
+    m_epoch_bump_required = false;
+    m_partitions_in_current_txn.clear();
+    m_pending_partitions_in_current_txn.clear();
+    m_offsets_in_current_txn.clear();
     return 0;
 }
 
 coev::awaitable<int> TransactionManager::EndTxn(bool commit)
 {
-    int attemptsRemaining = client_->GetConfig()->Producer.Transaction.Retry.Max;
+    int attemptsRemaining = m_client->GetConfig()->Producer.Transaction.Retry.Max;
     return Retry(attemptsRemaining,
                  [&]() -> coev::awaitable<Result>
                  {
                      std::shared_ptr<Broker> coordinator;
-                     auto err = co_await client_->TransactionCoordinator(transactionalID_, coordinator);
+                     auto err = co_await m_client->TransactionCoordinator(m_transactional_id, coordinator);
                      if (err != ErrNoError)
                      {
                          co_return {true, -1};
@@ -555,23 +554,23 @@ coev::awaitable<int> TransactionManager::EndTxn(bool commit)
 
 coev::awaitable<int> TransactionManager::FinishTransaction(bool commit)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(m_mutex);
     if (commit && (CurrentTxnStatus() & ProducerTxnFlagInError) != 0)
     {
-        co_return lastError_;
+        co_return m_last_error;
     }
     else if (!commit && (CurrentTxnStatus() & ProducerTxnFlagFatalError) != 0)
     {
-        co_return lastError_;
+        co_return m_last_error;
     }
-    if (partitionsInCurrentTxn_.empty())
+    if (m_partitions_in_current_txn.empty())
     {
         co_return CompleteTransaction();
     }
-    bool epochBump = epochBumpRequired_;
-    if (commit && !offsetsInCurrentTxn_.empty())
+    bool epochBump = m_epoch_bump_required;
+    if (commit && !m_offsets_in_current_txn.empty())
     {
-        for (auto it = offsetsInCurrentTxn_.begin(); it != offsetsInCurrentTxn_.end();)
+        for (auto it = m_offsets_in_current_txn.begin(); it != m_offsets_in_current_txn.end();)
         {
             TopicPartitionOffsets newOffsets;
             auto err = co_await PublishOffsetsToTxn(it->second, it->first, newOffsets);
@@ -580,14 +579,14 @@ coev::awaitable<int> TransactionManager::FinishTransaction(bool commit)
                 it->second = newOffsets;
                 co_return err;
             }
-            it = offsetsInCurrentTxn_.erase(it);
+            it = m_offsets_in_current_txn.erase(it);
         }
     }
     if ((CurrentTxnStatus() & ProducerTxnFlagFatalError) != 0)
     {
-        co_return lastError_;
+        co_return m_last_error;
     }
-    if (lastError_ != ErrInvalidProducerIDMapping)
+    if (m_last_error != ErrInvalidProducerIDMapping)
     {
         int err = co_await EndTxn(commit);
         if (err != 0)
@@ -605,38 +604,38 @@ void TransactionManager::MaybeAddPartitionToCurrentTxn(const std::string &topic,
         return;
     }
     TopicPartition tp{topic, partition};
-    std::lock_guard<std::mutex> lock(partitionInTxnLock_);
-    if (partitionsInCurrentTxn_.count(tp) > 0)
+    std::lock_guard<std::mutex> lock(m_partition_in_txn_lock);
+    if (m_partitions_in_current_txn.count(tp) > 0)
     {
         return;
     }
-    pendingPartitionsInCurrentTxn_[tp] = {};
+    m_pending_partitions_in_current_txn[tp] = {};
 }
 
 coev::awaitable<int> TransactionManager::PublishTxnPartitions()
 {
-    std::lock_guard<std::mutex> lock(partitionInTxnLock_);
+    std::lock_guard<std::mutex> lock(m_partition_in_txn_lock);
     if ((CurrentTxnStatus() & ProducerTxnFlagInError) != 0)
     {
-        co_return lastError_;
+        co_return m_last_error;
     }
-    if (pendingPartitionsInCurrentTxn_.empty())
+    if (m_pending_partitions_in_current_txn.empty())
     {
         co_return 0;
     }
     auto removeAllPartitionsOnFatalOrAbortedError = [&]()
     {
-        pendingPartitionsInCurrentTxn_.clear();
+        m_pending_partitions_in_current_txn.clear();
     };
-    auto retryBackoff = client_->GetConfig()->Producer.Transaction.Retry.Backoff;
+    auto retryBackoff = m_client->GetConfig()->Producer.Transaction.Retry.Backoff;
 
-    int attemptsRemaining = client_->GetConfig()->Producer.Transaction.Retry.Max;
+    int attemptsRemaining = m_client->GetConfig()->Producer.Transaction.Retry.Max;
     co_return co_await Retry(
         attemptsRemaining,
         [&]() -> coev::awaitable<Result>
         {
             std::shared_ptr<Broker> coordinator;
-            auto err = co_await client_->TransactionCoordinator(transactionalID_, coordinator);
+            auto err = co_await m_client->TransactionCoordinator(m_transactional_id, coordinator);
             if (err != ErrNoError)
             {
                 co_return {true, -1};
@@ -647,22 +646,22 @@ coev::awaitable<int> TransactionManager::PublishTxnPartitions()
 
 coev::awaitable<int> TransactionManager::InitializeTransactions()
 {
-    return InitProducerId(producerID_, producerEpoch_);
+    return InitProducerId(m_producer_id, m_producer_epoch);
 }
 
 coev::awaitable<int> NewTransactionManager(std::shared_ptr<Config> conf, std::shared_ptr<Client> client, std::shared_ptr<TransactionManager> &txnmgr)
 {
     txnmgr = std::make_shared<TransactionManager>();
-    txnmgr->producerID_ = noProducerID;
-    txnmgr->producerEpoch_ = noProducerEpoch;
-    txnmgr->client_ = client;
-    txnmgr->status_ = ProducerTxnFlagUninitialized;
+    txnmgr->m_producer_id = noProducerID;
+    txnmgr->m_producer_epoch = noProducerEpoch;
+    txnmgr->m_client = client;
+    txnmgr->m_status = ProducerTxnFlagUninitialized;
     if (conf->Producer.Idempotent)
     {
-        txnmgr->transactionalID_ = conf->Producer.Transaction.ID;
-        txnmgr->transactionTimeout_ = conf->Producer.Transaction.Timeout;
-        txnmgr->sequenceNumbers_ = std::map<std::string, int32_t>();
-        co_return co_await txnmgr->InitProducerId(txnmgr->producerID_, txnmgr->producerEpoch_);
+        txnmgr->m_transactional_id = conf->Producer.Transaction.ID;
+        txnmgr->m_transaction_timeout = conf->Producer.Transaction.Timeout;
+        txnmgr->m_sequence_numbers = std::map<std::string, int32_t>();
+        co_return co_await txnmgr->InitProducerId(txnmgr->m_producer_id, txnmgr->m_producer_epoch);
     }
     co_return 0;
 }

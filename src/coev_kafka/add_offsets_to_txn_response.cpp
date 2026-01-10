@@ -1,28 +1,28 @@
 #include "add_offsets_to_txn_response.h"
 
-void AddOffsetsToTxnResponse::setVersion(int16_t v)
+void AddOffsetsToTxnResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int AddOffsetsToTxnResponse::encode(PEncoder &pe)
 {
 
-    pe.putDurationMs(ThrottleTime);
+    pe.putDurationMs(m_throttle_time);
 
-    pe.putKError(Err);
+    pe.putKError(m_err);
     return 0;
 }
 
 int AddOffsetsToTxnResponse::decode(PDecoder &pd, int16_t version)
 {
     int err;
-    if ((err = pd.getDurationMs(ThrottleTime)) != 0)
+    if ((err = pd.getDurationMs(m_throttle_time)) != 0)
     {
         return err;
     }
 
-    if ((err = pd.getKError(Err)) != 0)
+    if ((err = pd.getKError(m_err)) != 0)
     {
         return err;
     }
@@ -37,7 +37,7 @@ int16_t AddOffsetsToTxnResponse::key() const
 
 int16_t AddOffsetsToTxnResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t AddOffsetsToTxnResponse::headerVersion() const
@@ -45,14 +45,14 @@ int16_t AddOffsetsToTxnResponse::headerVersion() const
     return 0;
 }
 
-bool AddOffsetsToTxnResponse::isValidVersion() const
+bool AddOffsetsToTxnResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 2;
+    return m_version >= 0 && m_version <= 2;
 }
 
-KafkaVersion AddOffsetsToTxnResponse::requiredVersion() const
+KafkaVersion AddOffsetsToTxnResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 2:
         return V2_7_0_0;
@@ -67,5 +67,5 @@ KafkaVersion AddOffsetsToTxnResponse::requiredVersion() const
 
 std::chrono::milliseconds AddOffsetsToTxnResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }

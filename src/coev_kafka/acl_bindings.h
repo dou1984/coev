@@ -10,9 +10,9 @@
 
 struct Resource : VDecoder, VEncoder
 {
-    AclResourceType ResourceType;
-    std::string ResourceName;
-    AclResourcePatternType ResourcePatternType;
+    AclResourceType m_resource_type;
+    std::string m_resource_name;
+    AclResourcePatternType m_resource_pattern_type;
 
     int encode(PEncoder &pe, int16_t version);
     int decode(PDecoder &pd, int16_t version);
@@ -20,10 +20,10 @@ struct Resource : VDecoder, VEncoder
 
 struct Acl : VDecoder, IEncoder
 {
-    std::string Principal;
-    std::string Host;
-    AclOperation Operation;
-    AclPermissionType PermissionType;
+    std::string m_principal;
+    std::string m_host;
+    AclOperation m_operation;
+    AclPermissionType m_permission_type;
 
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
@@ -32,8 +32,8 @@ struct Acl : VDecoder, IEncoder
 struct ResourceAcls : VDecoder, VEncoder
 {
 
-    Resource Resource_;
-    std::vector<std::shared_ptr<Acl>> Acls;
+    Resource m_resource;
+    std::vector<std::shared_ptr<Acl>> m_acls;
 
     int encode(PEncoder &pe, int16_t version);
     int decode(PDecoder &pd, int16_t version);

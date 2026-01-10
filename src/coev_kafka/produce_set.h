@@ -14,25 +14,24 @@
 #include "version.h"
 #include "produce_request.h"
 
-inline constexpr int recordBatchOverhead = 49;
 struct AsyncProducer;
 
 struct PartitionSet
 {
-    std::vector<std::shared_ptr<ProducerMessage>> msgs;
-    std::shared_ptr<Records> recordsToSend;
-    int bufferBytes = 0;
+    std::vector<std::shared_ptr<ProducerMessage>> m_msgs;
+    std::shared_ptr<Records> m_records_to_send;
+    int m_buffer_bytes = 0;
 };
 
 struct ProduceSet
 {
 
-    std::shared_ptr<AsyncProducer> Parent;
-    std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<PartitionSet>>> msgs;
-    int64_t producerID = 0;
-    int16_t producerEpoch = 0;
-    int bufferBytes = 0;
-    int bufferCount = 0;
+    std::shared_ptr<AsyncProducer> m_parent;
+    std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<PartitionSet>>> m_msgs;
+    int64_t m_producer_id = 0;
+    int16_t m_producer_epoch = 0;
+    int m_buffer_bytes = 0;
+    int m_buffer_count = 0;
 
     ProduceSet(std::shared_ptr<AsyncProducer> parent);
     int Add(std::shared_ptr<ProducerMessage> msg);

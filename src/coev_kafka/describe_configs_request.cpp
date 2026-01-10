@@ -1,49 +1,49 @@
 #include "version.h"
 #include "describe_configs_request.h"
 
-void DescribeConfigsRequest::setVersion(int16_t v)
+void DescribeConfigsRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int DescribeConfigsRequest::encode(PEncoder &pe)
 {
-    if (!pe.putArrayLength(static_cast<int32_t>(Resources.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_resources.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &c : Resources)
+    for (auto &c : m_resources)
     {
-        pe.putInt8(static_cast<int8_t>(c->Type));
-        if (!pe.putString(c->Name))
+        pe.putInt8(static_cast<int8_t>(c->m_type));
+        if (pe.putString(c->m_name) != ErrNoError)
         {
             return ErrEncodeError;
         }
 
-        if (c->ConfigNames.empty())
+        if (c->m_config_names.empty())
         {
             pe.putInt32(-1);
             continue;
         }
 
-        if (!pe.putStringArray(c->ConfigNames))
+        if (pe.putStringArray(c->m_config_names) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
-        pe.putBool(IncludeSynonyms);
+        pe.putBool(m_include_synonyms);
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int DescribeConfigsRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
     int32_t n;
     if (pd.getArrayLength(n) != ErrNoError)
@@ -51,26 +51,26 @@ int DescribeConfigsRequest::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    Resources.clear();
-    Resources.resize(n);
+    m_resources.clear();
+    m_resources.resize(n);
 
     for (int32_t i = 0; i < n; ++i)
     {
-        Resources[i] = std::make_shared<ConfigResource>();
+        m_resources[i] = std::make_shared<ConfigResource>();
 
         int8_t t;
         if (pd.getInt8(t) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        Resources[i]->Type = static_cast<ConfigResourceType>(t);
+        m_resources[i]->m_type = static_cast<ConfigResourceType>(t);
 
         std::string name;
         if (pd.getString(name) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        Resources[i]->Name = name;
+        m_resources[i]->m_name = name;
 
         int32_t confLength;
         if (pd.getArrayLength(confLength) != ErrNoError)
@@ -83,7 +83,7 @@ int DescribeConfigsRequest::decode(PDecoder &pd, int16_t version)
             continue;
         }
 
-        Resources[i]->ConfigNames.resize(confLength);
+        m_resources[i]->m_config_names.resize(confLength);
         for (int32_t j = 0; j < confLength; ++j)
         {
             std::string s;
@@ -91,18 +91,18 @@ int DescribeConfigsRequest::decode(PDecoder &pd, int16_t version)
             {
                 return ErrDecodeError;
             }
-            Resources[i]->ConfigNames[j] = s;
+            m_resources[i]->m_config_names[j] = s;
         }
     }
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
         bool b;
         if (pd.getBool(b) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        IncludeSynonyms = b;
+        m_include_synonyms = b;
     }
 
     return ErrNoError;
@@ -115,7 +115,7 @@ int16_t DescribeConfigsRequest::key() const
 
 int16_t DescribeConfigsRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t DescribeConfigsRequest::headerVersion() const
@@ -123,14 +123,14 @@ int16_t DescribeConfigsRequest::headerVersion() const
     return 1;
 }
 
-bool DescribeConfigsRequest::isValidVersion() const
+bool DescribeConfigsRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 2;
+    return m_version >= 0 && m_version <= 2;
 }
 
-KafkaVersion DescribeConfigsRequest::requiredVersion() const
+KafkaVersion DescribeConfigsRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 2:
         return V2_0_0_0;

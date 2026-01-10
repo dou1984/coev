@@ -67,6 +67,6 @@ struct ClusterAdmin
     int FindBroker(int32_t id, std::shared_ptr<Broker> &out);
     int FindAnyBroker(std::shared_ptr<Broker> &out);
 
-    std::shared_ptr<Client> client_;
-    std::shared_ptr<Config> conf_;
+    std::shared_ptr<Client> m_client;
+    std::shared_ptr<Config> m_conf;
 };

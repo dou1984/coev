@@ -4,30 +4,30 @@
 #include "length_field.h"
 #include "real_encoder.h"
 AbortedTransaction::AbortedTransaction()
-    : ProducerID(0), FirstOffset(0)
+    : m_producer_id(0), m_first_offset(0)
 {
 }
 
 int AbortedTransaction::decode(PDecoder &pd)
 {
     int err = 0;
-    if ((err = pd.getInt64(ProducerID)) != 0)
+    if ((err = pd.getInt64(m_producer_id)) != 0)
         return err;
-    if ((err = pd.getInt64(FirstOffset)) != 0)
+    if ((err = pd.getInt64(m_first_offset)) != 0)
         return err;
     return 0;
 }
 
 int AbortedTransaction::encode(PEncoder &pe)
 {
-    pe.putInt64(ProducerID);
-    pe.putInt64(FirstOffset);
+    pe.putInt64(m_producer_id);
+    pe.putInt64(m_first_offset);
     return 0;
 }
 
 FetchResponseBlock::FetchResponseBlock()
-    : Err(static_cast<KError>(0)), HighWaterMarkOffset(0), LastStableOffset(0), LogStartOffset(0),
-      PreferredReadReplica(-1), Partial(false)
+    : m_err(static_cast<KError>(0)), m_high_water_mark_offset(0), m_last_stable_offset(0), m_log_start_offset(0),
+      m_preferred_read_replica(-1), m_partial(false)
 {
 }
 
@@ -35,18 +35,18 @@ int FetchResponseBlock::decode(PDecoder &pd, int16_t version)
 {
     int err = 0;
 
-    if ((err = pd.getKError(Err)) != 0)
+    if ((err = pd.getKError(m_err)) != 0)
         return err;
-    if ((err = pd.getInt64(HighWaterMarkOffset)) != 0)
+    if ((err = pd.getInt64(m_high_water_mark_offset)) != 0)
         return err;
 
     if (version >= 4)
     {
-        if ((err = pd.getInt64(LastStableOffset)) != 0)
+        if ((err = pd.getInt64(m_last_stable_offset)) != 0)
             return err;
         if (version >= 5)
         {
-            if ((err = pd.getInt64(LogStartOffset)) != 0)
+            if ((err = pd.getInt64(m_log_start_offset)) != 0)
                 return err;
         }
 
@@ -56,25 +56,25 @@ int FetchResponseBlock::decode(PDecoder &pd, int16_t version)
 
         if (numTransact >= 0)
         {
-            AbortedTransactions.resize(numTransact);
+            m_aborted_transactions.resize(numTransact);
             for (int i = 0; i < numTransact; ++i)
             {
                 auto transact = std::make_shared<AbortedTransaction>();
                 if ((err = transact->decode(pd)) != 0)
                     return err;
-                AbortedTransactions[i] = transact;
+                m_aborted_transactions[i] = transact;
             }
         }
     }
 
     if (version >= 11)
     {
-        if ((err = pd.getInt32(PreferredReadReplica)) != 0)
+        if ((err = pd.getInt32(m_preferred_read_replica)) != 0)
             return err;
     }
     else
     {
-        PreferredReadReplica = -1;
+        m_preferred_read_replica = -1;
     }
 
     int32_t recordsSize;
@@ -89,7 +89,7 @@ int FetchResponseBlock::decode(PDecoder &pd, int16_t version)
         return err;
     }
 
-    RecordsSet.clear();
+    m_records_set.clear();
     while (recordsDecoder_->remaining() > 0)
     {
         auto records = std::make_shared<Records>();
@@ -101,9 +101,9 @@ int FetchResponseBlock::decode(PDecoder &pd, int16_t version)
             return decodeErr;
         }
 
-        if (isInsufficientData && RecordsSet.empty())
+        if (isInsufficientData && m_records_set.empty())
         {
-            Partial = true;
+            m_partial = true;
             break;
         }
 
@@ -112,7 +112,7 @@ int FetchResponseBlock::decode(PDecoder &pd, int16_t version)
         {
             return err;
         }
-        recordsNextOffset = nextOffset;
+        m_records_next_offset = nextOffset;
 
         bool partial = false;
         if ((err = records->isPartial(partial)) != 0)
@@ -126,12 +126,12 @@ int FetchResponseBlock::decode(PDecoder &pd, int16_t version)
             return err;
         }
 
-        if (n > 0 || (partial && RecordsSet.empty()))
+        if (n > 0 || (partial && m_records_set.empty()))
         {
-            RecordsSet.push_back(records);
-            if (!Records_)
+            m_records_set.push_back(records);
+            if (!m_records)
             {
-                Records_ = records;
+                m_records = records;
             }
         }
 
@@ -152,22 +152,22 @@ int FetchResponseBlock::decode(PDecoder &pd, int16_t version)
 
 int FetchResponseBlock::encode(PEncoder &pe, int16_t version)
 {
-    pe.putKError(Err);
-    pe.putInt64(HighWaterMarkOffset);
+    pe.putKError(m_err);
+    pe.putInt64(m_high_water_mark_offset);
 
     if (version >= 4)
     {
-        pe.putInt64(LastStableOffset);
+        pe.putInt64(m_last_stable_offset);
         if (version >= 5)
         {
-            pe.putInt64(LogStartOffset);
+            pe.putInt64(m_log_start_offset);
         }
 
-        int err = pe.putArrayLength(static_cast<int32_t>(AbortedTransactions.size()));
+        int err = pe.putArrayLength(static_cast<int32_t>(m_aborted_transactions.size()));
         if (err != 0)
             return err;
 
-        for (auto &transact : AbortedTransactions)
+        for (auto &transact : m_aborted_transactions)
         {
             if ((err = transact->encode(pe)) != 0)
                 return err;
@@ -176,11 +176,11 @@ int FetchResponseBlock::encode(PEncoder &pe, int16_t version)
 
     if (version >= 11)
     {
-        pe.putInt32(PreferredReadReplica);
+        pe.putInt32(m_preferred_read_replica);
     }
 
     pe.push(std::dynamic_pointer_cast<pushEncoder>(std::make_shared<LengthField>()));
-    for (auto &records : RecordsSet)
+    for (auto &records : m_records_set)
     {
         int err = records->encode(pe);
         if (err != 0)
@@ -195,7 +195,7 @@ int FetchResponseBlock::encode(PEncoder &pe, int16_t version)
 int FetchResponseBlock::numRecords()
 {
     int sum = 0;
-    for (auto &records : RecordsSet)
+    for (auto &records : m_records_set)
     {
         int count = 0;
         int err = records->numRecords(count);
@@ -208,14 +208,14 @@ int FetchResponseBlock::numRecords()
 
 int FetchResponseBlock::isPartial(bool &partial)
 {
-    if (Partial)
+    if (m_partial)
     {
         partial = true;
         return 0;
     }
-    if (RecordsSet.size() == 1)
+    if (m_records_set.size() == 1)
     {
-        RecordsSet[0]->isPartial(partial);
+        m_records_set[0]->isPartial(partial);
         return true;
     }
     return false;
@@ -223,36 +223,36 @@ int FetchResponseBlock::isPartial(bool &partial)
 
 std::vector<std::shared_ptr<AbortedTransaction>> FetchResponseBlock::getAbortedTransactions()
 {
-    std::sort(AbortedTransactions.begin(), AbortedTransactions.end(),
+    std::sort(m_aborted_transactions.begin(), m_aborted_transactions.end(),
               [](const std::shared_ptr<AbortedTransaction> &a, const std::shared_ptr<AbortedTransaction> &b)
               {
-                  return a->FirstOffset < b->FirstOffset;
+                  return a->m_first_offset < b->m_first_offset;
               });
-    return AbortedTransactions;
+    return m_aborted_transactions;
 }
 
 FetchResponse::FetchResponse()
-    : Version(0), ErrorCode(0), SessionID(0), LogAppendTime(false)
+    : m_version(0), ErrorCode(0), SessionID(0), LogAppendTime(false)
 {
 }
 
-void FetchResponse::setVersion(int16_t v)
+void FetchResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int FetchResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
     int err = 0;
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
-        if ((err = pd.getDurationMs(ThrottleTime)) != 0)
+        if ((err = pd.getDurationMs(m_throttle_time)) != 0)
             return err;
     }
 
-    if (Version >= 7)
+    if (m_version >= 7)
     {
         if ((err = pd.getInt16(ErrorCode)) != 0)
             return err;
@@ -264,8 +264,8 @@ int FetchResponse::decode(PDecoder &pd, int16_t version)
     if ((err = pd.getArrayLength(numTopics)) != 0)
         return err;
 
-    Blocks.clear();
-    Blocks.reserve(numTopics);
+    m_blocks.clear();
+    m_blocks.reserve(numTopics);
     for (int i = 0; i < numTopics; ++i)
     {
         std::string name;
@@ -276,7 +276,7 @@ int FetchResponse::decode(PDecoder &pd, int16_t version)
         if ((err = pd.getArrayLength(numBlocks)) != 0)
             return err;
 
-        auto &partitions = Blocks[name];
+        auto &partitions = m_blocks[name];
         partitions.reserve(numBlocks);
         for (int j = 0; j < numBlocks; ++j)
         {
@@ -296,22 +296,22 @@ int FetchResponse::decode(PDecoder &pd, int16_t version)
 
 int FetchResponse::encode(PEncoder &pe)
 {
-    if (Version >= 1)
+    if (m_version >= 1)
     {
-        pe.putDurationMs(ThrottleTime);
+        pe.putDurationMs(m_throttle_time);
     }
 
-    if (Version >= 7)
+    if (m_version >= 7)
     {
         pe.putInt16(ErrorCode);
         pe.putInt32(SessionID);
     }
 
-    int err = pe.putArrayLength(static_cast<int32_t>(Blocks.size()));
+    int err = pe.putArrayLength(static_cast<int32_t>(m_blocks.size()));
     if (err != 0)
         return err;
 
-    for (auto &topic_pair : Blocks)
+    for (auto &topic_pair : m_blocks)
     {
         const std::string &topic = topic_pair.first;
         auto &partitions = topic_pair.second;
@@ -324,7 +324,7 @@ int FetchResponse::encode(PEncoder &pe)
         for (auto &part_pair : partitions)
         {
             pe.putInt32(part_pair.first);
-            if ((err = part_pair.second->encode(pe, Version)) != 0)
+            if ((err = part_pair.second->encode(pe, m_version)) != 0)
                 return err;
         }
     }
@@ -339,7 +339,7 @@ int16_t FetchResponse::key() const
 
 int16_t FetchResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t FetchResponse::headerVersion() const
@@ -347,14 +347,14 @@ int16_t FetchResponse::headerVersion() const
     return 0;
 }
 
-bool FetchResponse::isValidVersion() const
+bool FetchResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 11;
+    return m_version >= 0 && m_version <= 11;
 }
 
-KafkaVersion FetchResponse::requiredVersion() const
+KafkaVersion FetchResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 11:
         return V2_3_0_0;
@@ -385,13 +385,13 @@ KafkaVersion FetchResponse::requiredVersion() const
 
 std::chrono::milliseconds FetchResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }
 
 std::shared_ptr<FetchResponseBlock> FetchResponse::GetBlock(const std::string &topic, int32_t partition)
 {
-    auto topicIt = Blocks.find(topic);
-    if (topicIt == Blocks.end())
+    auto topicIt = m_blocks.find(topic);
+    if (topicIt == m_blocks.end())
         return nullptr;
     auto partIt = topicIt->second.find(partition);
     if (partIt == topicIt->second.end())
@@ -402,12 +402,12 @@ std::shared_ptr<FetchResponseBlock> FetchResponse::GetBlock(const std::string &t
 void FetchResponse::AddError(const std::string &topic, int32_t partition, KError err)
 {
     auto frb = getOrCreateBlock(topic, partition);
-    frb->Err = err;
+    frb->m_err = err;
 }
 
 std::shared_ptr<FetchResponseBlock> FetchResponse::getOrCreateBlock(const std::string &topic, int32_t partition)
 {
-    auto &partitions = Blocks[topic];
+    auto &partitions = m_blocks[topic];
     auto it = partitions.find(partition);
     if (it == partitions.end())
     {
@@ -437,13 +437,13 @@ void FetchResponse::AddMessageWithTimestamp(const std::string &topic, int32_t pa
     auto msg = std::make_shared<Message>(kv.first, kv.second, LogAppendTime, msgTimestamp, version);
     auto msgBlock = std::make_shared<MessageBlock>(msg, offset);
 
-    if (frb->RecordsSet.empty())
+    if (frb->m_records_set.empty())
     {
         auto records = Records::NewLegacyRecords(std::make_shared<MessageSet>(msgBlock));
-        frb->RecordsSet.emplace_back(records);
+        frb->m_records_set.emplace_back(records);
     }
-    auto set = frb->RecordsSet[0]->MsgSet;
-    set->Messages.emplace_back(msgBlock);
+    auto set = frb->m_records_set[0]->m_msg_set;
+    set->m_messages.emplace_back(msgBlock);
 }
 
 void FetchResponse::AddRecordWithTimestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value,
@@ -452,15 +452,15 @@ void FetchResponse::AddRecordWithTimestamp(const std::string &topic, int32_t par
     auto frb = getOrCreateBlock(topic, partition);
     auto kv = encodeKV(key, value);
 
-    if (frb->RecordsSet.empty())
+    if (frb->m_records_set.empty())
     {
         auto batch = std::make_shared<RecordBatch>(2, LogAppendTime, timestamp, Timestamp);
         auto records = Records::NewDefaultRecords(batch);
-        frb->RecordsSet.push_back(records);
+        frb->m_records_set.push_back(records);
     }
 
-    auto batch = frb->RecordsSet[0]->RBatch;
-    auto rec = std::make_shared<Record>(kv.first, kv.second, offset, std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - batch->FirstTimestamp));
+    auto batch = frb->m_records_set[0]->m_record_batch;
+    auto rec = std::make_shared<Record>(kv.first, kv.second, offset, std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - batch->m_first_timestamp));
     batch->AddRecord(rec);
 }
 
@@ -472,21 +472,21 @@ void FetchResponse::AddRecordBatchWithTimestamp(const std::string &topic, int32_
     auto kv = encodeKV(key, value);
 
     auto batch = std::make_shared<RecordBatch>();
-    batch->Version = 2;
-    batch->LogAppendTime = LogAppendTime;
-    batch->FirstTimestamp = timestamp;
-    batch->MaxTimestamp = Timestamp;
-    batch->FirstOffset = offset;
-    batch->LastOffsetDelta = 0;
-    batch->ProducerID = producerID;
-    batch->IsTransactional = isTransactional;
+    batch->m_version = 2;
+    batch->m_log_append_time = LogAppendTime;
+    batch->m_first_timestamp = timestamp;
+    batch->m_max_timestamp = Timestamp;
+    batch->m_first_offset = offset;
+    batch->m_last_offset_delta = 0;
+    batch->m_producer_id = producerID;
+    batch->m_is_transactional = isTransactional;
 
-    auto rec = std::make_shared<Record>(kv.first, kv.second, 0, std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - batch->FirstTimestamp));
+    auto rec = std::make_shared<Record>(kv.first, kv.second, 0, std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - batch->m_first_timestamp));
     batch->AddRecord(rec);
 
     auto records = std::make_shared<Records>();
-    records->RBatch = batch;
-    frb->RecordsSet.push_back(records);
+    records->m_record_batch = batch;
+    frb->m_records_set.push_back(records);
 }
 
 void FetchResponse::AddControlRecordWithTimestamp(const std::string &topic, int32_t partition, int64_t offset,
@@ -496,18 +496,18 @@ void FetchResponse::AddControlRecordWithTimestamp(const std::string &topic, int3
     auto frb = getOrCreateBlock(topic, partition);
 
     auto batch = std::make_shared<RecordBatch>();
-    batch->Version = 2;
-    batch->LogAppendTime = LogAppendTime;
-    batch->FirstTimestamp = timestamp;
-    batch->MaxTimestamp = Timestamp;
-    batch->FirstOffset = offset;
-    batch->LastOffsetDelta = 0;
-    batch->ProducerID = producerID;
-    batch->IsTransactional = true;
-    batch->Control = true;
+    batch->m_version = 2;
+    batch->m_log_append_time = LogAppendTime;
+    batch->m_first_timestamp = timestamp;
+    batch->m_max_timestamp = Timestamp;
+    batch->m_first_offset = offset;
+    batch->m_last_offset_delta = 0;
+    batch->m_producer_id = producerID;
+    batch->m_is_transactional = true;
+    batch->m_control = true;
 
     auto records = std::make_shared<Records>();
-    records->RBatch = batch;
+    records->m_record_batch = batch;
 
     auto crAbort = std::make_shared<ControlRecord>(0, producerID, recordType);
 
@@ -515,10 +515,10 @@ void FetchResponse::AddControlRecordWithTimestamp(const std::string &topic, int3
     realEncoder crValue;
     crAbort->encode(crKey, crValue);
 
-    auto rec = std::make_shared<Record>(crKey.Raw, crValue.Raw, 0, std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - batch->FirstTimestamp));
+    auto rec = std::make_shared<Record>(crKey.m_raw, crValue.m_raw, 0, std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - batch->m_first_timestamp));
     batch->AddRecord(rec);
 
-    frb->RecordsSet.push_back(records);
+    frb->m_records_set.push_back(records);
 }
 
 void FetchResponse::AddMessage(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset)
@@ -548,17 +548,17 @@ void FetchResponse::AddControlRecord(const std::string &topic, int32_t partition
 void FetchResponse::SetLastOffsetDelta(const std::string &topic, int32_t partition, int32_t offset)
 {
     auto frb = getOrCreateBlock(topic, partition);
-    if (frb->RecordsSet.empty())
+    if (frb->m_records_set.empty())
     {
         auto batch = std::make_shared<RecordBatch>(2);
         auto records = Records::NewDefaultRecords(batch);
-        frb->RecordsSet.push_back(records);
+        frb->m_records_set.push_back(records);
     }
-    frb->RecordsSet[0]->RBatch->LastOffsetDelta = offset;
+    frb->m_records_set[0]->m_record_batch->m_last_offset_delta = offset;
 }
 
 void FetchResponse::SetLastStableOffset(const std::string &topic, int32_t partition, int64_t offset)
 {
     auto frb = getOrCreateBlock(topic, partition);
-    frb->LastStableOffset = offset;
+    frb->m_last_stable_offset = offset;
 }

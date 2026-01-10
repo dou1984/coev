@@ -4,22 +4,22 @@
 
 int alterPartitionReassignmentsErrorBlock::encode(PEncoder &pe)
 {
-    pe.putKError(errorCode);
-    if (!pe.putNullableString(errorMessage))
+    pe.putKError(m_error_code);
+    if (pe.putNullableString(m_error_message) != ErrNoError)
     {
         return ErrEncodeError;
     }
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int alterPartitionReassignmentsErrorBlock::decode(PDecoder &pd)
 {
-    if (pd.getKError(errorCode) != ErrNoError)
+    if (pd.getKError(m_error_code) != ErrNoError)
     {
         return ErrEncodeError;
     }
-    if (pd.getNullableString(errorMessage) != ErrNoError)
+    if (pd.getNullableString(m_error_message) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -27,41 +27,41 @@ int alterPartitionReassignmentsErrorBlock::decode(PDecoder &pd)
     return pd.getEmptyTaggedFieldArray(_);
 }
 
-void AlterPartitionReassignmentsResponse::setVersion(int16_t v)
+void AlterPartitionReassignmentsResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 void AlterPartitionReassignmentsResponse::AddError(const std::string &topic, int32_t partition, KError kerror, std::string message)
 {
-    Errors[topic][partition] = std::make_shared<alterPartitionReassignmentsErrorBlock>(kerror, message);
+    m_errors[topic][partition] = std::make_shared<alterPartitionReassignmentsErrorBlock>(kerror, message);
 }
 
 int AlterPartitionReassignmentsResponse::encode(PEncoder &pe)
 {
-    pe.putDurationMs(ThrottleTime);
-    pe.putKError(ErrorCode);
-    if (!pe.putNullableString(ErrorMessage))
+    pe.putDurationMs(m_throttle_time);
+    pe.putKError(m_error_code);
+    if (pe.putNullableString(m_error_message) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    if (!pe.putArrayLength(static_cast<int32_t>(Errors.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_errors.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &topicPair : Errors)
+    for (auto &topicPair : m_errors)
     {
         auto &topic = topicPair.first;
         auto &partitions = topicPair.second;
 
-        if (!pe.putString(topic))
+        if (pe.putString(topic) != ErrNoError)
         {
             return ErrEncodeError;
         }
 
-        if (!pe.putArrayLength(static_cast<int32_t>(partitions.size())))
+        if (pe.putArrayLength(static_cast<int32_t>(partitions.size())) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -69,7 +69,7 @@ int AlterPartitionReassignmentsResponse::encode(PEncoder &pe)
         for (auto &partitionPair : partitions)
         {
             pe.putInt32(partitionPair.first);
-            if (!partitionPair.second->encode(pe))
+            if (partitionPair.second->encode(pe) != ErrNoError)
             {
                 return ErrEncodeError;
             }
@@ -79,24 +79,24 @@ int AlterPartitionReassignmentsResponse::encode(PEncoder &pe)
     }
 
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int AlterPartitionReassignmentsResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
+    if (pd.getDurationMs(m_throttle_time) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
-    if (pd.getKError(ErrorCode) != ErrNoError)
+    if (pd.getKError(m_error_code) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
-    if (pd.getNullableString(ErrorMessage) != ErrNoError)
+    if (pd.getNullableString(m_error_message) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -123,7 +123,7 @@ int AlterPartitionReassignmentsResponse::decode(PDecoder &pd, int16_t version)
                 return ErrDecodeError;
             }
 
-            auto &partitionMap = Errors[topic];
+            auto &partitionMap = m_errors[topic];
             for (int32_t j = 0; j < ongoingPartitionReassignments; ++j)
             {
                 int32_t partition;
@@ -133,10 +133,10 @@ int AlterPartitionReassignmentsResponse::decode(PDecoder &pd, int16_t version)
                 }
 
                 auto block = std::make_shared<alterPartitionReassignmentsErrorBlock>();
-                if (!block->decode(pd))
-                {
-                    return ErrDecodeError;
-                }
+            if (block->decode(pd) != ErrNoError)
+            {
+                return ErrDecodeError;
+            }
                 partitionMap[partition] = block;
             }
             int32_t _;
@@ -157,7 +157,7 @@ int16_t AlterPartitionReassignmentsResponse::key() const
 
 int16_t AlterPartitionReassignmentsResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t AlterPartitionReassignmentsResponse::headerVersion() const
@@ -165,14 +165,14 @@ int16_t AlterPartitionReassignmentsResponse::headerVersion() const
     return 1;
 }
 
-bool AlterPartitionReassignmentsResponse::isValidVersion() const
+bool AlterPartitionReassignmentsResponse::is_valid_version() const
 {
-    return Version == 0;
+    return m_version == 0;
 }
 
 bool AlterPartitionReassignmentsResponse::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool AlterPartitionReassignmentsResponse::isFlexibleVersion(int16_t version) const
@@ -180,12 +180,12 @@ bool AlterPartitionReassignmentsResponse::isFlexibleVersion(int16_t version) con
     return version >= 0;
 }
 
-KafkaVersion AlterPartitionReassignmentsResponse::requiredVersion() const
+KafkaVersion AlterPartitionReassignmentsResponse::required_version() const
 {
     return V2_4_0_0;
 }
 
 std::chrono::milliseconds AlterPartitionReassignmentsResponse::throttleTime() const
 {
-    return std::chrono::milliseconds(ThrottleTime);
+    return std::chrono::milliseconds(m_throttle_time);
 }

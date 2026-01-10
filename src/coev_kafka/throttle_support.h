@@ -2,7 +2,7 @@
 
 #include <chrono>
 
-struct throttleSupport
+struct throttle_support
 {
     virtual std::chrono::milliseconds throttleTime() const = 0;
 };

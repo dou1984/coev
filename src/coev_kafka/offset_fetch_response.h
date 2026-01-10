@@ -15,35 +15,35 @@
 
 struct OffsetFetchResponseBlock : VEncoder, VDecoder
 {
-    int64_t Offset;
-    int32_t LeaderEpoch;
-    std::string Metadata;
-    KError Err;
+    int64_t m_offset;
+    int32_t m_leader_epoch;
+    std::string m_metadata;
+    KError m_err;
 
     int encode(PEncoder &pe, int16_t version);
     int decode(PDecoder &pd, int16_t version);
 };
 
-struct OffsetFetchResponse : protocolBody
+struct OffsetFetchResponse : protocol_body
 {
 
-    int16_t Version;
-    std::chrono::milliseconds ThrottleTime;
-    std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<OffsetFetchResponseBlock>>> Blocks;
-    KError Err;
+    int16_t m_version;
+    std::chrono::milliseconds m_throttle_time;
+    std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<OffsetFetchResponseBlock>>> m_blocks;
+    KError m_err;
 
     OffsetFetchResponse();
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible() const;
     static bool isFlexibleVersion(int16_t version);
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
     std::chrono::milliseconds throttleTime() const;
     std::shared_ptr<OffsetFetchResponseBlock> GetBlock(const std::string &topic, int32_t partition) const;
     void AddBlock(const std::string &topic, int32_t partition, std::shared_ptr<OffsetFetchResponseBlock> block);

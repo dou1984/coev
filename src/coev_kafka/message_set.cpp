@@ -7,33 +7,25 @@
 
 std::vector<std::shared_ptr<MessageBlock>> MessageBlock::Messages()
 {
-    if (Msg && Msg->Set)
+    if (m_msg && m_msg->m_set)
     {
-        return std::move(Msg->Set->Messages);
+        return std::move(m_msg->m_set->m_messages);
     }
     auto self = std::make_shared<MessageBlock>(*this);
 
-    std::vector<std::shared_ptr<MessageBlock>> result;
-    if (Msg && Msg->Set)
-    {
-        return std::move(Msg->Set->Messages);
-    }
-    else
-    {
-        std::vector<std::shared_ptr<MessageBlock>> single;
-        auto clone = std::make_shared<MessageBlock>();
-        clone->Offset = Offset;
-        clone->Msg = std::move(Msg);
-        single.emplace_back(clone);
-        return single;
-    }
+    std::vector<std::shared_ptr<MessageBlock>> single;
+    auto clone = std::make_shared<MessageBlock>();
+    clone->m_offset = m_offset;
+    clone->m_msg = std::move(m_msg);
+    single.emplace_back(clone);
+    return single;
 }
 
 int MessageBlock::encode(PEncoder &pe)
 {
-    pe.putInt64(Offset);
+    pe.putInt64(m_offset);
     pe.push(std::make_shared<LengthField>());
-    int err = Msg->encode(pe);
+    int err = m_msg->encode(pe);
     if (err != 0)
     {
         pe.pop();
@@ -44,7 +36,7 @@ int MessageBlock::encode(PEncoder &pe)
 
 int MessageBlock::decode(PDecoder &pd)
 {
-    int err = pd.getInt64(Offset);
+    int err = pd.getInt64(m_offset);
     if (err != 0)
         return err;
 
@@ -55,8 +47,8 @@ int MessageBlock::decode(PDecoder &pd)
         return err;
     }
 
-    Msg = std::shared_ptr<Message>();
-    err = Msg->decode(pd);
+    m_msg = std::shared_ptr<Message>();
+    err = m_msg->decode(pd);
 
     int popErr = pd.pop();
     if (err == 0)
@@ -67,7 +59,7 @@ int MessageBlock::decode(PDecoder &pd)
 
 int MessageSet::encode(PEncoder &pe)
 {
-    for (auto &msgBlock : Messages)
+    for (auto &msgBlock : m_messages)
     {
         int err = msgBlock->encode(pe);
         if (err != 0)
@@ -78,9 +70,9 @@ int MessageSet::encode(PEncoder &pe)
 
 int MessageSet::decode(PDecoder &pd)
 {
-    Messages.clear();
-    PartialTrailingMessage = false;
-    OverflowMessage = false;
+    m_messages.clear();
+    m_partial_trailing_message = false;
+    m_overflow_message = false;
 
     while (pd.remaining() > 0)
     {
@@ -90,7 +82,7 @@ int MessageSet::decode(PDecoder &pd)
         {
             if (err == ErrInsufficientData)
             {
-                PartialTrailingMessage = true;
+                m_partial_trailing_message = true;
                 return 0;
             }
             return err;
@@ -105,18 +97,18 @@ int MessageSet::decode(PDecoder &pd)
         err = msb->decode(pd);
         if (err == 0)
         {
-            Messages.push_back(std::move(msb));
+            m_messages.push_back(std::move(msb));
         }
         else if (err == ErrInsufficientData)
         {
             // Server may send partial trailing message
-            if (msb->Offset == -1)
+            if (msb->m_offset == -1)
             {
-                OverflowMessage = true;
+                m_overflow_message = true;
             }
             else
             {
-                PartialTrailingMessage = true;
+                m_partial_trailing_message = true;
             }
             return 0;
         }
@@ -132,6 +124,6 @@ int MessageSet::decode(PDecoder &pd)
 void MessageSet::addMessage(std::shared_ptr<Message> msg)
 {
     auto block = std::make_shared<MessageBlock>();
-    block->Msg = std::move(msg);
-    Messages.emplace_back(std::move(block));
+    block->m_msg = std::move(msg);
+    m_messages.emplace_back(std::move(block));
 }

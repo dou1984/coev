@@ -7,12 +7,12 @@ const int defaultGeneration = 0;
 
 int StickyAssignorUserDataV0::encode(PEncoder &pe)
 {
-    if (int err = pe.putArrayLength(static_cast<int>(Topics.size())); err != 0)
+    if (int err = pe.putArrayLength(static_cast<int>(m_topics.size())); err != 0)
     {
         return err;
     }
 
-    for (auto &kv : Topics)
+    for (auto &kv : m_topics)
     {
         if (int err = pe.putString(kv.first); err != 0)
         {
@@ -35,7 +35,7 @@ int StickyAssignorUserDataV0::decode(PDecoder &pd)
         return err;
     }
 
-    Topics.clear();
+    m_topics.clear();
     for (int i = 0; i < topicLen; ++i)
     {
         std::string topic;
@@ -48,15 +48,15 @@ int StickyAssignorUserDataV0::decode(PDecoder &pd)
         {
             return e;
         }
-        Topics[topic] = std::move(partitions);
+        m_topics[topic] = std::move(partitions);
     }
-    topicPartitions = populateTopicPartitions(Topics);
+    m_topic_partitions = populateTopicPartitions(m_topics);
     return 0;
 }
 
 std::vector<TopicPartitionAssignment> StickyAssignorUserDataV0::partitions()
 {
-    return topicPartitions;
+    return m_topic_partitions;
 }
 
 bool StickyAssignorUserDataV0::hasGeneration()
@@ -71,12 +71,12 @@ int StickyAssignorUserDataV0::generation()
 
 int StickyAssignorUserDataV1::encode(PEncoder &pe)
 {
-    if (int err = pe.putArrayLength(static_cast<int>(Topics.size())); err != 0)
+    if (int err = pe.putArrayLength(static_cast<int>(m_topics.size())); err != 0)
     {
         return err;
     }
 
-    for (auto &kv : Topics)
+    for (auto &kv : m_topics)
     {
         if (int err = pe.putString(kv.first); err != 0)
         {
@@ -88,7 +88,7 @@ int StickyAssignorUserDataV1::encode(PEncoder &pe)
         }
     }
 
-    pe.putInt32(Generation);
+    pe.putInt32(m_generation);
     return 0;
 }
 
@@ -101,7 +101,7 @@ int StickyAssignorUserDataV1::decode(PDecoder &pd)
         return err;
     }
 
-    Topics.clear();
+    m_topics.clear();
     for (int i = 0; i < topicLen; ++i)
     {
         std::string topic;
@@ -114,20 +114,20 @@ int StickyAssignorUserDataV1::decode(PDecoder &pd)
         {
             return e;
         }
-        Topics[topic] = std::move(partitions);
+        m_topics[topic] = std::move(partitions);
     }
 
-    if (int e = pd.getInt32(Generation); e != 0)
+    if (int e = pd.getInt32(m_generation); e != 0)
     {
         return e;
     }
-    topicPartitions = populateTopicPartitions(Topics);
+    m_topic_partitions = populateTopicPartitions(m_topics);
     return 0;
 }
 
 std::vector<TopicPartitionAssignment> StickyAssignorUserDataV1::partitions()
 {
-    return topicPartitions;
+    return m_topic_partitions;
 }
 
 bool StickyAssignorUserDataV1::hasGeneration()
@@ -137,7 +137,7 @@ bool StickyAssignorUserDataV1::hasGeneration()
 
 int StickyAssignorUserDataV1::generation()
 {
-    return static_cast<int>(Generation);
+    return static_cast<int>(m_generation);
 }
 
 std::vector<TopicPartitionAssignment> populateTopicPartitions(const std::unordered_map<std::string, std::vector<int32_t>> &topics)

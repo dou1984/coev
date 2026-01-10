@@ -75,21 +75,21 @@ SyncProducer::~SyncProducer()
 coev::awaitable<int> SyncProducer::SendMessage(std::shared_ptr<ProducerMessage> msg, int32_t &partition, int64_t &offset)
 {
 
-    producer->input_.set(msg);
+    producer->m_input.set(msg);
     std::shared_ptr<ProducerError> pErr;
     auto err = co_await getExpectation(pErr);
     if (err != 0)
     {
         co_return err;
     }
-    if (pErr != nullptr && pErr->Err != 0)
+    if (pErr != nullptr && pErr->m_err != 0)
     {
         partition = -1;
         offset = -1;
-        co_return pErr->Err;
+        co_return pErr->m_err;
     }
-    partition = msg->Partition;
-    offset = msg->Offset;
+    partition = msg->m_partition;
+    offset = msg->m_offset;
     co_return 0;
 }
 
@@ -98,7 +98,7 @@ coev::awaitable<int> SyncProducer::SendMessages(const std::vector<std::shared_pt
     std::vector<std::shared_ptr<ProducerError>> expectations(msgs.size());
     for (size_t i = 0; i < msgs.size(); ++i)
     {
-        producer->input_.set(msgs[i]);
+        producer->m_input.set(msgs[i]);
         co_await getExpectation(expectations[i]);
     }
     for (size_t i = 0; i < expectations.size(); ++i)
@@ -113,7 +113,7 @@ coev::awaitable<void> SyncProducer::handleSuccesses()
 {
     while (!closed)
     {
-        auto msg = co_await producer->successes_.get();
+        auto msg = co_await producer->m_successes.get();
         if (msg)
         {
             // putExpectation(msg);
@@ -125,8 +125,8 @@ coev::awaitable<void> SyncProducer::handleErrors()
 {
     while (!closed)
     {
-        auto err = co_await producer->errors_.get();
-        if (err && err->Err != 0)
+        auto err = co_await producer->m_errors.get();
+        if (err && err->m_err != 0)
         {
         }
     }

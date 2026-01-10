@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <stdexcept>
 
-void restrictApiVersion(std::shared_ptr<protocolBody> pb, const ApiVersionMap &brokerVersions)
+void restrictApiVersion(std::shared_ptr<protocol_body> pb, const ApiVersionMap &brokerVersions)
 {
     if (pb)
     {
@@ -15,8 +15,8 @@ void restrictApiVersion(std::shared_ptr<protocolBody> pb, const ApiVersionMap &b
         {
             const ApiVersionRange &range = it->second;
 
-            int16_t selected = std::min(clientMax, std::max(range.minVersion, std::min(clientMax, range.maxVersion)));
-            pb->setVersion(selected);
+            int16_t selected = std::min(clientMax, std::max(range.m_min_version, std::min(clientMax, range.m_max_version)));
+            pb->set_version(selected);
         }
     }
 }

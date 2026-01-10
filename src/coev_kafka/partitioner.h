@@ -45,7 +45,7 @@ struct RandomPartitioner : Partitioner
     bool RequiresConsistency();
 
     RandomPartitioner();
-    std::mt19937 generator_;
+    std::mt19937 m_generator;
 };
 
 struct RoundRobinPartitioner : Partitioner
@@ -56,7 +56,7 @@ struct RoundRobinPartitioner : Partitioner
     bool RequiresConsistency();
 
     RoundRobinPartitioner();
-    int32_t partition_;
+    int32_t m_partition;
 };
 
 struct HashPartitioner : DynamicConsistencyPartitioner
@@ -73,10 +73,10 @@ struct HashPartitioner : DynamicConsistencyPartitioner
     bool MessageRequiresConsistency(std::shared_ptr<ProducerMessage> message);
 
     HashPartitioner();
-    std::shared_ptr<Partitioner> random_;
-    std::shared_ptr<Hash32> hasher_;
-    bool reference_abs_;
-    bool hash_unsigned_;
+    std::shared_ptr<Partitioner> m_random_partitioner;
+    std::shared_ptr<Hash32> m_hasher;
+    bool m_reference_abs;
+    bool m_hash_unsigned;
 };
 
 struct WithAbsFirstOption : HashPartitionerOption
@@ -97,7 +97,7 @@ struct WithCustomHashFunctionOption : HashPartitionerOption
     WithCustomHashFunctionOption(std::function<std::shared_ptr<Hash32>()> hasher);
     void Apply(HashPartitioner *hp);
 
-    std::function<std::shared_ptr<Hash32>()> hasher_;
+    std::function<std::shared_ptr<Hash32>()> m_hasher;
 };
 
 struct WithCustomFallbackPartitionerOption : HashPartitionerOption
@@ -106,5 +106,5 @@ struct WithCustomFallbackPartitionerOption : HashPartitionerOption
     WithCustomFallbackPartitionerOption(std::shared_ptr<Partitioner> randomHP);
     void Apply(HashPartitioner *hp);
 
-    std::shared_ptr<Partitioner> random_;
+    std::shared_ptr<Partitioner> m_random;
 };

@@ -1,58 +1,58 @@
 #include "version.h"
 #include "describe_client_quotas_response.h"
 
-void DescribeClientQuotasResponse::setVersion(int16_t v)
+void DescribeClientQuotasResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int DescribeClientQuotasResponse::encode(PEncoder &pe)
 {
 
-    pe.putDurationMs(ThrottleTime);
+    pe.putDurationMs(m_throttle_time);
 
-    pe.putInt16(static_cast<int16_t>(ErrorCode));
+    pe.putInt16(static_cast<int16_t>(m_error_code));
 
-    if (!pe.putNullableString(ErrorMsg))
+    if (pe.putNullableString(m_error_msg) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    if (!pe.putArrayLength(Entries.size()))
+    if (pe.putArrayLength(static_cast<int32_t>(m_entries.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
-    for (auto &e : Entries)
+    for (auto &e : m_entries)
     {
-        if (!e.encode(pe))
+        if (e.encode(pe) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
     pe.putEmptyTaggedFieldArray();
-    return 0;
+    return ErrNoError;
 }
 
 int DescribeClientQuotasResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
     int32_t throttle;
     if (pd.getInt32(throttle) != ErrNoError)
     {
         return ErrDecodeError;
     }
-    ThrottleTime = std::chrono::milliseconds(throttle);
+    m_throttle_time = std::chrono::milliseconds(throttle);
 
     int16_t errorCode;
     if (pd.getInt16(errorCode) != ErrNoError)
     {
         return ErrDecodeError;
     }
-    ErrorCode = static_cast<KError>(errorCode);
+    m_error_code = static_cast<KError>(errorCode);
 
-    if (pd.getNullableString(ErrorMsg) != ErrNoError)
+    if (pd.getNullableString(m_error_msg) != ErrNoError)
     {
 
         return ErrDecodeError;
@@ -64,13 +64,13 @@ int DescribeClientQuotasResponse::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    Entries.clear();
+    m_entries.clear();
     if (entryCount > 0)
     {
-        Entries.resize(entryCount);
+        m_entries.resize(entryCount);
         for (int32_t i = 0; i < entryCount; ++i)
         {
-            if (!Entries[i].decode(pd, version))
+            if (!m_entries[i].decode(pd, version))
             {
                 return ErrDecodeError;
             }
@@ -86,25 +86,25 @@ int DescribeClientQuotasResponse::decode(PDecoder &pd, int16_t version)
 
 int DescribeClientQuotasEntry::encode(PEncoder &pe)
 {
-    if (!pe.putArrayLength(static_cast<int32_t>(Entity.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_entity.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
-    for (auto &comp : Entity)
+    for (auto &comp : m_entity)
     {
-        if (!comp.encode(pe))
+        if (comp.encode(pe) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
-    if (!pe.putArrayLength(static_cast<int32_t>(Values.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_values.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
-    for (auto &kv : Values)
+    for (auto &kv : m_values)
     {
-        if (!pe.putString(kv.first))
+        if (pe.putString(kv.first) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -124,13 +124,13 @@ int DescribeClientQuotasEntry::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    Entity.clear();
+    m_entity.clear();
     if (componentCount > 0)
     {
-        Entity.resize(componentCount);
+        m_entity.resize(componentCount);
         for (int32_t i = 0; i < componentCount; ++i)
         {
-            if (!Entity[i].decode(pd, version))
+            if (!m_entity[i].decode(pd, version))
             {
                 return ErrDecodeError;
             }
@@ -143,7 +143,7 @@ int DescribeClientQuotasEntry::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    Values.clear();
+    m_values.clear();
     if (valueCount > 0)
     {
         for (int32_t i = 0; i < valueCount; ++i)
@@ -158,7 +158,7 @@ int DescribeClientQuotasEntry::decode(PDecoder &pd, int16_t version)
             {
                 return ErrDecodeError;
             }
-            Values[key] = value;
+            m_values[key] = value;
             int32_t _;
             if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
             {
@@ -176,21 +176,21 @@ int DescribeClientQuotasEntry::decode(PDecoder &pd, int16_t version)
 
 int QuotaEntityComponent::encode(PEncoder &pe)
 {
-    if (!pe.putString(EntityType))
+    if (pe.putString(m_entity_type) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    if (MatchType == QuotaMatchType::QuotaMatchDefault)
+    if (m_match_type == QuotaMatchType::QuotaMatchDefault)
     {
-        if (!pe.putNullableString(nullptr))
+        if (pe.putNullableString(nullptr) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
     else
     {
-        if (!pe.putString(Name))
+        if (pe.putString(m_name) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -208,14 +208,14 @@ int QuotaEntityComponent::decode(PDecoder &pd, int16_t /*version*/)
     {
         return ErrDecodeError;
     }
-    EntityType = entityType;
+    m_entity_type = entityType;
 
-    if (pd.getNullableString(Name) != ErrNoError)
+    if (pd.getNullableString(m_name) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
-    MatchType = Name.empty() ? QuotaMatchType::QuotaMatchDefault : QuotaMatchType::QuotaMatchExact;
+    m_match_type = m_name.empty() ? QuotaMatchType::QuotaMatchDefault : QuotaMatchType::QuotaMatchExact;
 
     int32_t _;
     if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
@@ -232,26 +232,26 @@ int16_t DescribeClientQuotasResponse::key() const
 
 int16_t DescribeClientQuotasResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t DescribeClientQuotasResponse::headerVersion() const
 {
-    if (Version >= 1)
+    if (m_version >= 1)
     {
         return 1;
     }
     return 0;
 }
 
-bool DescribeClientQuotasResponse::isValidVersion() const
+bool DescribeClientQuotasResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 1;
+    return m_version >= 0 && m_version <= 1;
 }
 
 bool DescribeClientQuotasResponse::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool DescribeClientQuotasResponse::isFlexibleVersion(int16_t version)
@@ -259,9 +259,9 @@ bool DescribeClientQuotasResponse::isFlexibleVersion(int16_t version)
     return version >= 1;
 }
 
-KafkaVersion DescribeClientQuotasResponse::requiredVersion() const
+KafkaVersion DescribeClientQuotasResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 1:
         return V2_8_0_0;
@@ -274,5 +274,5 @@ KafkaVersion DescribeClientQuotasResponse::requiredVersion() const
 
 std::chrono::milliseconds DescribeClientQuotasResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }

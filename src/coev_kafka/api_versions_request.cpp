@@ -4,39 +4,39 @@
 
 
 
-void ApiVersionsRequest::setVersion(int16_t v)
+void ApiVersionsRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int ApiVersionsRequest::encode(PEncoder &pe)
 {
-    if (Version >= 3)
+    if (m_version >= 3)
     {
-        if (!pe.putString(ClientSoftwareName))
+        if (pe.putString(m_client_software_name) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        if (!pe.putString(ClientSoftwareVersion))
+        if (pe.putString(m_client_software_version) != ErrNoError)
         {
             return ErrEncodeError;
         }
         pe.putEmptyTaggedFieldArray();
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int ApiVersionsRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
-    if (Version >= 3)
+    m_version = version;
+    if (m_version >= 3)
     {
-        if (pd.getString(ClientSoftwareName) != ErrNoError)
+        if (pd.getString(m_client_software_name) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        if (pd.getString(ClientSoftwareVersion) != ErrNoError)
+        if (pd.getString(m_client_software_version) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -52,22 +52,22 @@ int16_t ApiVersionsRequest::key() const
 
 int16_t ApiVersionsRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t ApiVersionsRequest::headerVersion() const
 {
-    return (Version >= 3) ? 2 : 1;
+    return (m_version >= 3) ? 2 : 1;
 }
 
-bool ApiVersionsRequest::isValidVersion() const
+bool ApiVersionsRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 3;
+    return m_version >= 0 && m_version <= 3;
 }
 
 bool ApiVersionsRequest::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool ApiVersionsRequest::isFlexibleVersion(int16_t version) const
@@ -75,9 +75,9 @@ bool ApiVersionsRequest::isFlexibleVersion(int16_t version) const
     return version >= 3;
 }
 
-KafkaVersion ApiVersionsRequest::requiredVersion() const
+KafkaVersion ApiVersionsRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 3:
         return V2_4_0_0;

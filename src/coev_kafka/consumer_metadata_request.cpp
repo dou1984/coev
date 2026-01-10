@@ -2,15 +2,15 @@
 #include "find_coordinator_request.h"
 void ConsumerMetadataRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int ConsumerMetadataRequest::encode(PEncoder &pe)
 {
     FindCoordinatorRequest tmp;
-    tmp.CoordinatorKey = ConsumerGroup;
-    tmp.CoordinatorType_ = CoordinatorGroup;
-    tmp.Version = Version;
+    tmp.m_coordinator_key = m_consumer_group;
+    tmp.m_coordinator_type = CoordinatorGroup;
+    tmp.m_version = m_version;
     return tmp.encode(pe);
 }
 
@@ -22,7 +22,7 @@ int ConsumerMetadataRequest::decode(PDecoder &pd, int16_t version)
     {
         return err;
     }
-    ConsumerGroup = tmp.CoordinatorKey;
+    m_consumer_group = tmp.m_coordinator_key;
     return 0;
 }
 
@@ -33,7 +33,7 @@ int16_t ConsumerMetadataRequest::key() const
 
 int16_t ConsumerMetadataRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t ConsumerMetadataRequest::header_version() const
@@ -43,5 +43,5 @@ int16_t ConsumerMetadataRequest::header_version() const
 
 bool ConsumerMetadataRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 2;
+    return m_version >= 0 && m_version <= 2;
 }

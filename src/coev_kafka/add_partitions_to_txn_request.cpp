@@ -1,27 +1,27 @@
 #include "version.h"
 #include "add_partitions_to_txn_request.h"
 
-void AddPartitionsToTxnRequest::setVersion(int16_t v)
+void AddPartitionsToTxnRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int AddPartitionsToTxnRequest::encode(PEncoder &pe)
 {
-    if (pe.putString(TransactionalID) != 0)
+    if (pe.putString(m_transactional_id) != 0)
     {
         return -1;
     }
 
-    pe.putInt64(ProducerID);
-    pe.putInt16(ProducerEpoch);
+    pe.putInt64(m_producer_id);
+    pe.putInt16(m_producer_epoch);
 
-    if (pe.putArrayLength(static_cast<int32_t>(TopicPartitions.size())) != 0)
+    if (pe.putArrayLength(static_cast<int32_t>(m_topic_partitions.size())) != 0)
     {
         return -1;
     }
 
-    for (auto &kv : TopicPartitions)
+    for (auto &kv : m_topic_partitions)
     {
         if (pe.putString(kv.first) != 0)
         {
@@ -39,15 +39,15 @@ int AddPartitionsToTxnRequest::encode(PEncoder &pe)
 int AddPartitionsToTxnRequest::decode(PDecoder &pd, int16_t version)
 {
     int err;
-    if ((err = pd.getString(TransactionalID)) != 0)
+    if ((err = pd.getString(m_transactional_id)) != 0)
     {
         return err;
     }
-    if ((err = pd.getInt64(ProducerID)) != 0)
+    if ((err = pd.getInt64(m_producer_id)) != 0)
     {
         return err;
     }
-    if ((err = pd.getInt16(ProducerEpoch)) != 0)
+    if ((err = pd.getInt16(m_producer_epoch)) != 0)
     {
         return err;
     }
@@ -58,7 +58,7 @@ int AddPartitionsToTxnRequest::decode(PDecoder &pd, int16_t version)
         return err;
     }
 
-    TopicPartitions.clear();
+    m_topic_partitions.clear();
     for (int32_t i = 0; i < n; ++i)
     {
         std::string topic;
@@ -73,7 +73,7 @@ int AddPartitionsToTxnRequest::decode(PDecoder &pd, int16_t version)
             return err;
         }
 
-        TopicPartitions[topic] = std::move(partitions);
+        m_topic_partitions[topic] = std::move(partitions);
     }
 
     return 0;
@@ -86,7 +86,7 @@ int16_t AddPartitionsToTxnRequest::key() const
 
 int16_t AddPartitionsToTxnRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t AddPartitionsToTxnRequest::headerVersion() const
@@ -94,14 +94,14 @@ int16_t AddPartitionsToTxnRequest::headerVersion() const
     return 1;
 }
 
-bool AddPartitionsToTxnRequest::isValidVersion() const
+bool AddPartitionsToTxnRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 2;
+    return m_version >= 0 && m_version <= 2;
 }
 
-KafkaVersion AddPartitionsToTxnRequest::requiredVersion() const
+KafkaVersion AddPartitionsToTxnRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 2:
         return V2_7_0_0;

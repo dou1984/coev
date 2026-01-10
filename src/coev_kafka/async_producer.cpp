@@ -20,9 +20,9 @@ const int minFunctionalRetryBufferLength = 4 * 1024;
 const int minFunctionalRetryBufferBytes = 32 * 1024 * 1024;
 
 AsyncProducer::AsyncProducer(std::shared_ptr<Client> client, std::shared_ptr<TransactionManager> txnmgr)
-    : client_(client), conf_(client->GetConfig()), txnmgr_(txnmgr), in_flight_(0)
+    : m_client(client), m_conf(client->GetConfig()), m_txnmgr(txnmgr), m_in_flight(0)
 {
-    MetricsRegistry = std::make_shared<metrics::CleanupRegistry>(client->GetConfig()->MetricRegistry);
+    m_metrics_registry = std::make_shared<metrics::CleanupRegistry>(client->GetConfig()->MetricRegistry);
 }
 
 void AsyncProducer::AsyncClose()
@@ -34,29 +34,29 @@ coev::awaitable<int> AsyncProducer::Close()
 {
     AsyncClose();
 
-    if (conf_->Producer.Return.Successes)
+    if (m_conf->Producer.Return.Successes)
     {
         co_start << [this]() -> coev::awaitable<void>
         {
             std::shared_ptr<ProducerMessage> msg;
-            while ((msg = co_await successes_.get()) != nullptr)
+            while ((msg = co_await m_successes.get()) != nullptr)
             {
             }
         }();
     }
 
     std::vector<std::shared_ptr<ProducerError>> pErrs;
-    if (conf_->Producer.Return.Errors)
+    if (m_conf->Producer.Return.Errors)
     {
         std::shared_ptr<ProducerError> event;
-        while ((event = co_await errors_.get()) != nullptr)
+        while ((event = co_await m_errors.get()) != nullptr)
         {
             pErrs.push_back(event);
         }
     }
     else
     {
-        auto dummy = co_await errors_.get();
+        auto dummy = co_await m_errors.get();
     }
 
     co_return !pErrs.empty();
@@ -64,52 +64,52 @@ coev::awaitable<int> AsyncProducer::Close()
 
 bool AsyncProducer::IsTransactional()
 {
-    return txnmgr_->IsTransactional();
+    return m_txnmgr->IsTransactional();
 }
 
 int AsyncProducer::AddMessageToTxn(std::shared_ptr<ConsumerMessage> msg, const std::string &metadata, const std::string &group_id)
 {
     std::map<std::string, std::vector<std::shared_ptr<PartitionOffsetMetadata>>> offsets;
     auto pom = std::make_shared<PartitionOffsetMetadata>();
-    pom->Partition = msg->Partition;
-    pom->Offset = msg->Offset + 1;
-    pom->Metadata = metadata;
-    offsets[msg->Topic].push_back(pom);
+    pom->m_partition = msg->m_partition;
+    pom->m_offset = msg->m_offset + 1;
+    pom->m_metadata = metadata;
+    offsets[msg->m_topic].push_back(pom);
     return AddOffsetsToTxn(offsets, group_id);
 }
 
 int AsyncProducer::AddOffsetsToTxn(const std::map<std::string, std::vector<std::shared_ptr<PartitionOffsetMetadata>>> &offsets, const std::string &group_id)
 {
-    std::lock_guard<std::mutex> lock(tx_lock_);
+    std::lock_guard<std::mutex> lock(m_tx_lock);
 
     if (!IsTransactional())
     {
         return -1;
     }
 
-    return txnmgr_->AddOffsetsToTxn(offsets, group_id);
+    return m_txnmgr->AddOffsetsToTxn(offsets, group_id);
 }
 
 ProducerTxnStatusFlag AsyncProducer::TxnStatus()
 {
-    return txnmgr_->CurrentTxnStatus();
+    return m_txnmgr->CurrentTxnStatus();
 }
 
 int AsyncProducer::BeginTxn()
 {
-    std::lock_guard<std::mutex> lock(tx_lock_);
+    std::lock_guard<std::mutex> lock(m_tx_lock);
 
     if (!IsTransactional())
     {
         return -1;
     }
 
-    return txnmgr_->TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInTransaction), ErrNoError);
+    return m_txnmgr->TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInTransaction), ErrNoError);
 }
 
 coev::awaitable<int> AsyncProducer::CommitTxn()
 {
-    std::lock_guard<std::mutex> lock(tx_lock_);
+    std::lock_guard<std::mutex> lock(m_tx_lock);
 
     if (!IsTransactional())
     {
@@ -126,7 +126,7 @@ coev::awaitable<int> AsyncProducer::CommitTxn()
 
 coev::awaitable<int> AsyncProducer::AbortTxn()
 {
-    std::lock_guard<std::mutex> lock(tx_lock_);
+    std::lock_guard<std::mutex> lock(m_tx_lock);
 
     if (!IsTransactional())
     {
@@ -143,24 +143,24 @@ coev::awaitable<int> AsyncProducer::AbortTxn()
 
 coev::awaitable<int> AsyncProducer::finishTransaction(bool commit)
 {
-    in_flight_++;
+    m_in_flight++;
     auto msg = std::make_shared<ProducerMessage>();
     if (commit)
     {
-        msg->Flags = static_cast<FlagSet>(FlagSet::Endtxn | FlagSet::Committxn);
+        msg->m_flags = static_cast<FlagSet>(FlagSet::Endtxn | FlagSet::Committxn);
     }
     else
     {
-        msg->Flags = static_cast<FlagSet>(FlagSet::Endtxn | FlagSet::Aborttxn);
+        msg->m_flags = static_cast<FlagSet>(FlagSet::Endtxn | FlagSet::Aborttxn);
     }
-    input_.set(msg);
+    m_input.set(msg);
 
-    while (in_flight_ > 0)
+    while (m_in_flight > 0)
     {
         co_await sleep_for(std::chrono::milliseconds(1));
     }
 
-    co_return co_await txnmgr_->FinishTransaction(commit);
+    co_return co_await m_txnmgr->FinishTransaction(commit);
 }
 
 coev::awaitable<void> AsyncProducer::dispatcher()
@@ -170,111 +170,111 @@ coev::awaitable<void> AsyncProducer::dispatcher()
 
     while (true)
     {
-        std::shared_ptr<ProducerMessage> msg = co_await input_.get();
+        std::shared_ptr<ProducerMessage> msg = co_await m_input.get();
         if (!msg)
         {
             continue;
         }
 
-        if (msg->Flags & FlagSet::Endtxn)
+        if (msg->m_flags & FlagSet::Endtxn)
         {
             int err = 0;
-            if (msg->Flags & FlagSet::Committxn)
+            if (msg->m_flags & FlagSet::Committxn)
             {
-                err = txnmgr_->TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagEndTransaction | ProducerTxnFlagCommittingTransaction), err);
+                err = m_txnmgr->TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagEndTransaction | ProducerTxnFlagCommittingTransaction), err);
             }
             else
             {
-                err = txnmgr_->TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagEndTransaction | ProducerTxnFlagAbortingTransaction), err);
+                err = m_txnmgr->TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagEndTransaction | ProducerTxnFlagAbortingTransaction), err);
             }
             if (err != 0)
             {
             }
-            in_flight_--;
+            m_in_flight--;
             continue;
         }
 
-        if (msg->Flags & FlagSet::Shutdown)
+        if (msg->m_flags & FlagSet::Shutdown)
         {
             shutting_down = true;
-            in_flight_--;
+            m_in_flight--;
             continue;
         }
 
-        if (msg->Retries == 0)
+        if (msg->m_retries == 0)
         {
             if (shutting_down)
             {
                 auto pErr = std::make_shared<ProducerError>();
-                pErr->Msg = msg;
-                pErr->Err = ErrShuttingDown;
-                if (conf_->Producer.Return.Errors)
+                pErr->m_msg = msg;
+                pErr->m_err = ErrShuttingDown;
+                if (m_conf->Producer.Return.Errors)
                 {
-                    errors_.set(pErr);
+                    m_errors.set(pErr);
                 }
                 continue;
             }
-            in_flight_++;
+            m_in_flight++;
 
-            if (IsTransactional() && (txnmgr_->CurrentTxnStatus() & ProducerTxnFlagInTransaction) == 0)
+            if (IsTransactional() && (m_txnmgr->CurrentTxnStatus() & ProducerTxnFlagInTransaction) == 0)
             {
                 returnError(msg, ErrTransactionNotReady);
                 continue;
             }
         }
 
-        for (auto &interceptor : conf_->Producer.Interceptors)
+        for (auto &interceptor : m_conf->Producer.Interceptors)
         {
             co_await safelyApplyInterceptor(msg, interceptor);
         }
 
         int version = 1;
-        if (conf_->Version.IsAtLeast(V0_11_0_0))
+        if (m_conf->Version.IsAtLeast(V0_11_0_0))
         {
             version = 2;
         }
-        else if (!msg->Headers.empty())
+        else if (!msg->m_headers.empty())
         {
             returnError(msg, ErrHeaderVersionIsOld);
             continue;
         }
 
         int size = msg->ByteSize(version);
-        if (size > conf_->Producer.MaxMessageBytes)
+        if (size > m_conf->Producer.MaxMessageBytes)
         {
             returnError(msg, ErrMaxMessageBytes);
             continue;
         }
 
-        if (auto it = handlers.find(msg->Topic); it != handlers.end())
+        if (auto it = handlers.find(msg->m_topic); it != handlers.end())
         {
             it->second.set(msg);
         }
         else
         {
-            auto tp = std::make_shared<TopicProducer>(shared_from_this(), msg->Topic);
-            task_ << tp->dispatch();
-            handlers[msg->Topic].set(msg);
+            auto tp = std::make_shared<TopicProducer>(shared_from_this(), msg->m_topic);
+            m_task << tp->dispatch();
+            handlers[msg->m_topic].set(msg);
         }
     }
 }
 
 coev::awaitable<void> AsyncProducer::retryHandler()
 {
-    int maxBufferLength = conf_->Producer.Retry.MaxBufferLength;
+    int maxBufferLength = m_conf->Producer.Retry.MaxBufferLength;
     if (0 < maxBufferLength && maxBufferLength < minFunctionalRetryBufferLength)
     {
         maxBufferLength = minFunctionalRetryBufferLength;
     }
 
-    int maxBufferBytes = conf_->Producer.Retry.MaxBufferBytes;
+    int maxBufferBytes = m_conf->Producer.Retry.MaxBufferBytes;
     if (0 < maxBufferBytes && maxBufferBytes < minFunctionalRetryBufferBytes)
     {
         maxBufferBytes = minFunctionalRetryBufferBytes;
     }
 
     int version = 1;
-    if (conf_->Version.IsAtLeast(V0_11_0_0))
+    if (m_conf->Version.IsAtLeast(V0_11_0_0))
     {
         version = 2;
     }
@@ -283,7 +283,7 @@ coev::awaitable<void> AsyncProducer::retryHandler()
     std::queue<std::shared_ptr<ProducerMessage>> buf;
     while (true)
     {
-        auto msg = co_await retries_.get();
+        auto msg = co_await m_retries.get();
         if (msg)
         {
             buf.push(msg);
@@ -296,7 +296,7 @@ coev::awaitable<void> AsyncProducer::retryHandler()
 
             auto msgToHandle = buf.front();
             buf.pop();
-            if (msgToHandle->Flags == 0)
+            if (msgToHandle->m_flags == 0)
             {
                 currentByteSize -= msgToHandle->ByteSize(version);
             }
@@ -305,7 +305,7 @@ coev::awaitable<void> AsyncProducer::retryHandler()
         {
             auto msgToHandle = buf.front();
             buf.pop();
-            input_.set(msgToHandle);
+            m_input.set(msgToHandle);
             currentByteSize -= msgToHandle->ByteSize(version);
         }
     }
@@ -313,41 +313,41 @@ coev::awaitable<void> AsyncProducer::retryHandler()
 
 coev::awaitable<void> AsyncProducer::shutdown()
 {
-    in_flight_++;
+    m_in_flight++;
     auto shutdown_msg = std::make_shared<ProducerMessage>();
-    shutdown_msg->Flags = Shutdown;
-    input_.set(shutdown_msg);
+    shutdown_msg->m_flags = Shutdown;
+    m_input.set(shutdown_msg);
 
-    while (in_flight_ > 0)
+    while (m_in_flight > 0)
     {
         co_await sleep_for(std::chrono::milliseconds(1));
     }
 
-    int err = client_->Close();
+    int err = m_client->Close();
     if (err != 0)
     {
         Logger::Println("Error closing client: %s", KErrorToString(err));
     }
 
-    MetricsRegistry->UnregisterAll();
+    m_metrics_registry->UnregisterAll();
 }
 
 coev::awaitable<void> AsyncProducer::bumpIdempotentProducerEpoch()
 {
 
-    auto [pid, epoch] = txnmgr_->GetProducerID();
+    auto [pid, epoch] = m_txnmgr->GetProducerID();
     if (epoch == std::numeric_limits<int16_t>::max())
     {
         std::shared_ptr<TransactionManager> new_txnmgr;
-        auto err = co_await NewTransactionManager(conf_, client_, new_txnmgr);
+        auto err = co_await NewTransactionManager(m_conf, m_client, new_txnmgr);
         if (err == (KError)ErrNoError)
         {
-            txnmgr_ = new_txnmgr;
+            m_txnmgr = new_txnmgr;
         }
     }
     else
     {
-        txnmgr_->BumpEpoch();
+        m_txnmgr->BumpEpoch();
     }
 }
 
@@ -356,13 +356,13 @@ int AsyncProducer::maybeTransitionToErrorState(KError err)
     if (err == ErrClusterAuthorizationFailed || err == ErrProducerFenced ||
         err == ErrUnsupportedVersion || err == ErrTransactionalIDAuthorizationFailed)
     {
-        return txnmgr_->TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagFatalError), err);
+        return m_txnmgr->TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagFatalError), err);
     }
-    if (txnmgr_->coordinatorSupportsBumpingEpoch_ && (txnmgr_->CurrentTxnStatus() & ProducerTxnFlagEndTransaction) == 0)
+    if (m_txnmgr->m_coordinator_supports_bumping_epoch && (m_txnmgr->CurrentTxnStatus() & ProducerTxnFlagEndTransaction) == 0)
     {
-        txnmgr_->epochBumpRequired_ = true;
+        m_txnmgr->m_epoch_bump_required = true;
     }
-    return txnmgr_->TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagAbortableError), err);
+    return m_txnmgr->TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagAbortableError), err);
 }
 
 void AsyncProducer::returnError(std::shared_ptr<ProducerMessage> msg, KError err)
@@ -372,21 +372,21 @@ void AsyncProducer::returnError(std::shared_ptr<ProducerMessage> msg, KError err
         maybeTransitionToErrorState(err);
     }
 
-    if (!IsTransactional() && msg->hasSequence)
+    if (!IsTransactional() && msg->m_has_sequence)
     {
         bumpIdempotentProducerEpoch();
     }
 
     msg->Clear();
     auto pErr = std::make_shared<ProducerError>();
-    pErr->Msg = msg;
-    pErr->Err = err;
+    pErr->m_msg = msg;
+    pErr->m_err = err;
 
-    if (conf_->Producer.Return.Errors)
+    if (m_conf->Producer.Return.Errors)
     {
-        errors_.set(pErr);
+        m_errors.set(pErr);
     }
-    in_flight_--;
+    m_in_flight--;
 }
 
 void AsyncProducer::returnErrors(const std::vector<std::shared_ptr<ProducerMessage>> &batch, KError err)
@@ -401,25 +401,25 @@ void AsyncProducer::returnSuccesses(const std::vector<std::shared_ptr<ProducerMe
 {
     for (auto &msg : batch)
     {
-        if (conf_->Producer.Return.Successes)
+        if (m_conf->Producer.Return.Successes)
         {
             msg->Clear();
-            successes_.set(msg);
+            m_successes.set(msg);
         }
-        in_flight_--;
+        m_in_flight--;
     }
 }
 
 void AsyncProducer::retryMessage(std::shared_ptr<ProducerMessage> msg, KError err)
 {
-    if (msg->Retries >= conf_->Producer.Retry.Max)
+    if (msg->m_retries >= m_conf->Producer.Retry.Max)
     {
         returnError(msg, err);
     }
     else
     {
-        msg->Retries++;
-        retries_.set(msg);
+        msg->m_retries++;
+        m_retries.set(msg);
     }
 }
 
@@ -433,21 +433,21 @@ void AsyncProducer::retryMessages(const std::vector<std::shared_ptr<ProducerMess
 
 coev::awaitable<void> AsyncProducer::retryBatch(const std::string &topic, int32_t partition, std::shared_ptr<PartitionSet> pSet, KError kerr)
 {
-    for (auto &msg : pSet->msgs)
+    for (auto &msg : pSet->m_msgs)
     {
-        if (msg->Retries >= conf_->Producer.Retry.Max)
+        if (msg->m_retries >= m_conf->Producer.Retry.Max)
         {
-            returnErrors(pSet->msgs, kerr);
+            returnErrors(pSet->m_msgs, kerr);
             co_return;
         }
-        msg->Retries++;
+        msg->m_retries++;
     }
 
     std::shared_ptr<Broker> leader;
-    int err = co_await client_->Leader(topic, partition, leader);
+    int err = co_await m_client->Leader(topic, partition, leader);
     if (err != 0)
     {
-        for (auto &msg : pSet->msgs)
+        for (auto &msg : pSet->m_msgs)
         {
             returnError(msg, kerr);
         }
@@ -456,54 +456,54 @@ coev::awaitable<void> AsyncProducer::retryBatch(const std::string &topic, int32_
 
     auto bp = getBrokerProducer(leader);
     auto produce_set = std::make_shared<ProduceSet>(shared_from_this());
-    produce_set->msgs[topic][partition] = pSet;
-    produce_set->bufferBytes += pSet->bufferBytes;
-    produce_set->bufferCount += pSet->msgs.size();
+    produce_set->m_msgs[topic][partition] = pSet;
+    produce_set->m_buffer_bytes += pSet->m_buffer_bytes;
+    produce_set->m_buffer_count += pSet->m_msgs.size();
 
-    bp->output_.set(produce_set);
+    bp->m_output.set(produce_set);
     unrefBrokerProducer(leader, bp);
 }
 
 std::shared_ptr<BrokerProducer> AsyncProducer::getBrokerProducer(std::shared_ptr<Broker> &broker)
 {
-    std::lock_guard<std::mutex> lock(broker_lock_);
-    auto bp = brokers_[broker];
+    std::lock_guard<std::mutex> lock(m_broker_lock);
+    auto bp = m_brokers[broker];
     if (!bp)
     {
         bp = std::make_shared<BrokerProducer>(shared_from_this(), broker);
-        brokers_[broker] = bp;
-        broker_refs_[bp] = 0;
+        m_brokers[broker] = bp;
+        m_broker_refs[bp] = 0;
     }
 
-    broker_refs_[bp]++;
+    m_broker_refs[bp]++;
     return bp;
 }
 
 void AsyncProducer::unrefBrokerProducer(std::shared_ptr<Broker> broker, std::shared_ptr<BrokerProducer> bp)
 {
-    std::lock_guard<std::mutex> lock(broker_lock_);
-    broker_refs_[bp]--;
-    if (broker_refs_[bp] == 0)
+    std::lock_guard<std::mutex> lock(m_broker_lock);
+    m_broker_refs[bp]--;
+    if (m_broker_refs[bp] == 0)
     {
-        broker_refs_.erase(bp);
+        m_broker_refs.erase(bp);
 
-        if (brokers_[broker] == bp)
+        if (m_brokers[broker] == bp)
         {
-            brokers_.erase(broker);
+            m_brokers.erase(broker);
         }
     }
 }
 
 coev::awaitable<void> AsyncProducer::abandonBrokerConnection(std::shared_ptr<Broker> broker)
 {
-    std::lock_guard<std::mutex> lock(broker_lock_);
+    std::lock_guard<std::mutex> lock(m_broker_lock);
 
-    auto &bc = brokers_[broker];
-    auto ok = co_await bc->abandoned_.get();
+    auto &bc = m_brokers[broker];
+    auto ok = co_await bc->m_abandoned.get();
     if (ok)
     {
         co_await broker->Close();
-        brokers_.erase(broker);
+        m_brokers.erase(broker);
     }
 }
 
@@ -531,8 +531,8 @@ coev::awaitable<int> NewAsyncProducer(std::shared_ptr<Client> client, std::share
     }
 
     producer = std::make_shared<AsyncProducer>(client, txnmgr);
-    producer->task_ << producer->dispatcher();
-    producer->task_ << producer->retryHandler();
+    producer->m_task << producer->dispatcher();
+    producer->m_task << producer->retryHandler();
     co_return ErrNoError;
 }
 

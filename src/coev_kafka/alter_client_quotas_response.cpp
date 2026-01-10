@@ -1,20 +1,20 @@
 
 #include "alter_client_quotas_response.h"
 
-void AlterClientQuotasResponse::setVersion(int16_t v)
+void AlterClientQuotasResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int AlterClientQuotasResponse::encode(PEncoder &pe)
 {
-    pe.putDurationMs(ThrottleTime);
+    pe.putDurationMs(m_throttle_time);
 
-    if (int16_t err = pe.putArrayLength(static_cast<int32_t>(Entries.size())); err != 0)
+    if (int16_t err = pe.putArrayLength(static_cast<int32_t>(m_entries.size())); err != 0)
     {
         return err;
     }
-    for (auto &e : Entries)
+    for (auto &e : m_entries)
     {
         if (int16_t err = e.encode(pe); err != 0)
         {
@@ -27,7 +27,7 @@ int AlterClientQuotasResponse::encode(PEncoder &pe)
 
 int AlterClientQuotasResponse::decode(PDecoder &pd, int16_t version)
 {
-    if (int16_t err = pd.getDurationMs(ThrottleTime); err != 0)
+    if (int16_t err = pd.getDurationMs(m_throttle_time); err != 0)
     {
         return err;
     }
@@ -39,7 +39,7 @@ int AlterClientQuotasResponse::decode(PDecoder &pd, int16_t version)
     }
     if (entryCount > 0)
     {
-        Entries.resize(entryCount);
+        m_entries.resize(entryCount);
         for (size_t i = 0; i < static_cast<size_t>(entryCount); ++i)
         {
             AlterClientQuotasEntryResponse e;
@@ -47,12 +47,12 @@ int AlterClientQuotasResponse::decode(PDecoder &pd, int16_t version)
             {
                 return err;
             }
-            Entries[i] = e;
+            m_entries[i] = e;
         }
     }
     else
     {
-        Entries.clear();
+        m_entries.clear();
     }
 
     return 0;
@@ -65,7 +65,7 @@ int16_t AlterClientQuotasResponse::key() const
 
 int16_t AlterClientQuotasResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t AlterClientQuotasResponse::headerVersion() const
@@ -73,35 +73,35 @@ int16_t AlterClientQuotasResponse::headerVersion() const
     return 0;
 }
 
-bool AlterClientQuotasResponse::isValidVersion() const
+bool AlterClientQuotasResponse::is_valid_version() const
 {
-    return Version == 0;
+    return m_version == 0;
 }
 
-KafkaVersion AlterClientQuotasResponse::requiredVersion() const
+KafkaVersion AlterClientQuotasResponse::required_version() const
 {
     return V2_6_0_0;
 }
 
 std::chrono::milliseconds AlterClientQuotasResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }
 
 int AlterClientQuotasEntryResponse::encode(PEncoder &pe)
 {
-    pe.putKError(ErrorCode);
+    pe.putKError(m_error_code);
 
-    if (int err = pe.putNullableString(ErrorMsg); err != 0)
+    if (int err = pe.putNullableString(m_error_msg); err != 0)
     {
         return err;
     }
 
-    if (int err = pe.putArrayLength(static_cast<int32_t>(Entity.size())); err != 0)
+    if (int err = pe.putArrayLength(static_cast<int32_t>(m_entity.size())); err != 0)
     {
         return err;
     }
-    for (auto &component : Entity)
+    for (auto &component : m_entity)
     {
         if (int err = component.encode(pe); err != 0)
         {
@@ -115,7 +115,7 @@ int AlterClientQuotasEntryResponse::encode(PEncoder &pe)
 int AlterClientQuotasEntryResponse::decode(PDecoder &pd, int16_t version)
 {
     int err = ErrNoError;
-    if (err = pd.getKError(ErrorCode); err != 0)
+    if (err = pd.getKError(m_error_code); err != 0)
     {
         return err;
     }
@@ -125,7 +125,7 @@ int AlterClientQuotasEntryResponse::decode(PDecoder &pd, int16_t version)
     {
         return err;
     }
-    ErrorMsg = errMsg;
+    m_error_msg = errMsg;
 
     int32_t componentCount;
     if (err = pd.getArrayLength(componentCount); err != 0)
@@ -134,7 +134,7 @@ int AlterClientQuotasEntryResponse::decode(PDecoder &pd, int16_t version)
     }
     if (componentCount > 0)
     {
-        Entity.resize(componentCount);
+        m_entity.resize(componentCount);
         for (int32_t i = 0; i < componentCount; ++i)
         {
             QuotaEntityComponent component;
@@ -142,12 +142,12 @@ int AlterClientQuotasEntryResponse::decode(PDecoder &pd, int16_t version)
             {
                 return err;
             }
-            Entity[i] = component;
+            m_entity[i] = component;
         }
     }
     else
     {
-        Entity.clear();
+        m_entity.clear();
     }
 
     return 0;
@@ -161,18 +161,18 @@ int16_t AlterClientQuotasEntryResponse::version() const
 {
     return 0;
 }
-void AlterClientQuotasEntryResponse::setVersion(int16_t version)
+void AlterClientQuotasEntryResponse::set_version(int16_t version)
 {
 }
 int16_t AlterClientQuotasEntryResponse::headerVersion() const
 {
     return 0;
 }
-bool AlterClientQuotasEntryResponse::isValidVersion() const
+bool AlterClientQuotasEntryResponse::is_valid_version() const
 {
     return 0;
 }
-KafkaVersion AlterClientQuotasEntryResponse::requiredVersion() const
+KafkaVersion AlterClientQuotasEntryResponse::required_version() const
 {
     return V2_6_0_0;
 }

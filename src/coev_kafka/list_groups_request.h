@@ -11,25 +11,25 @@
 #include "version.h"
 #include "protocol_body.h"
 
-struct ListGroupsRequest : protocolBody
+struct ListGroupsRequest : protocol_body
 {
 
-    int16_t Version = 0;
-    std::vector<std::string> StatesFilter;
-    std::vector<std::string> TypesFilter;
+    int16_t m_version = 0;
+    std::vector<std::string> m_states_filter;
+    std::vector<std::string> m_types_filter;
 
     ListGroupsRequest() = default;
-    ListGroupsRequest(int16_t v) : Version(v)
+    ListGroupsRequest(int16_t v) : m_version(v)
     {
     }
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible();
     static bool isFlexibleVersion(int16_t ver);
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
 };

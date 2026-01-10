@@ -42,26 +42,26 @@ std::string Uuid::String() const
     return base64UrlEncodeWithoutPadding(data.data(), data.size());
 }
 
-void MetadataRequest::setVersion(int16_t v)
+void MetadataRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int MetadataRequest::encode(PEncoder &pe)
 {
-    if (Version < 0 || Version > 10)
+    if (m_version < 0 || m_version > 10)
     {
         return -1;
     }
-    if (Version == 0 || !Topics.empty())
+    if (m_version == 0 || !m_topics.empty())
     {
-        if (int err = pe.putArrayLength(static_cast<int32_t>(Topics.size())); err != 0)
+        if (int err = pe.putArrayLength(static_cast<int32_t>(m_topics.size())); err != 0)
         {
             return err;
         }
-        if (Version <= 9)
+        if (m_version <= 9)
         {
-            for (auto &topicName : Topics)
+            for (auto &topicName : m_topics)
             {
                 if (int err = pe.putString(topicName); err != 0)
                 {
@@ -72,7 +72,7 @@ int MetadataRequest::encode(PEncoder &pe)
         }
         else
         {
-            for (auto &topicName : Topics)
+            for (auto &topicName : m_topics)
             {
                 if (int err = pe.putRawBytes(NullUUID); err != 0)
                 {
@@ -95,14 +95,14 @@ int MetadataRequest::encode(PEncoder &pe)
         }
     }
 
-    if (Version > 3)
+    if (m_version > 3)
     {
-        pe.putBool(AllowAutoTopicCreation);
+        pe.putBool(m_allow_auto_topic_creation);
     }
-    if (Version > 7)
+    if (m_version > 7)
     {
-        pe.putBool(IncludeClusterAuthorizedOperations);
-        pe.putBool(IncludeTopicAuthorizedOperations);
+        pe.putBool(m_include_cluster_authorized_operations);
+        pe.putBool(m_include_topic_authorized_operations);
     }
     pe.putEmptyTaggedFieldArray();
     return 0;
@@ -110,7 +110,7 @@ int MetadataRequest::encode(PEncoder &pe)
 
 int MetadataRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
     int32_t size;
     if (int err = pd.getArrayLength(size); err != 0)
     {
@@ -118,18 +118,18 @@ int MetadataRequest::decode(PDecoder &pd, int16_t version)
     }
     if (size > 0)
     {
-        Topics.resize(size);
+        m_topics.resize(size);
     }
     if (version <= 9)
     {
-        for (size_t i = 0; i < Topics.size(); ++i)
+        for (size_t i = 0; i < m_topics.size(); ++i)
         {
             std::string topic;
             if (int err = pd.getString(topic); err != 0)
             {
                 return err;
             }
-            Topics[i] = topic;
+            m_topics[i] = topic;
             int32_t _;
             if (int err = pd.getEmptyTaggedFieldArray(_); err != 0)
             {
@@ -139,7 +139,7 @@ int MetadataRequest::decode(PDecoder &pd, int16_t version)
     }
     else
     {
-        for (size_t i = 0; i < Topics.size(); ++i)
+        for (size_t i = 0; i < m_topics.size(); ++i)
         {
             std::string t;
             if (int err = pd.getRawBytes(16, t); err != 0)
@@ -151,7 +151,7 @@ int MetadataRequest::decode(PDecoder &pd, int16_t version)
             {
                 return err;
             }
-            Topics[i] = topic;
+            m_topics[i] = topic;
 
             int32_t _;
             if (int err = pd.getEmptyTaggedFieldArray(_); err != 0)
@@ -161,28 +161,28 @@ int MetadataRequest::decode(PDecoder &pd, int16_t version)
         }
     }
 
-    if (Version >= 4)
+    if (m_version >= 4)
     {
-        if (int err = pd.getBool(AllowAutoTopicCreation); err != 0)
+        if (int err = pd.getBool(m_allow_auto_topic_creation); err != 0)
         {
             return err;
         }
     }
 
-    if (Version > 7)
+    if (m_version > 7)
     {
         bool includeClusterAuthz;
         if (int err = pd.getBool(includeClusterAuthz); err != 0)
         {
             return err;
         }
-        IncludeClusterAuthorizedOperations = includeClusterAuthz;
+        m_include_cluster_authorized_operations = includeClusterAuthz;
         bool includeTopicAuthz;
         if (int err = pd.getBool(includeTopicAuthz); err != 0)
         {
             return err;
         }
-        IncludeTopicAuthorizedOperations = includeTopicAuthz;
+        m_include_topic_authorized_operations = includeTopicAuthz;
     }
 
     int err;
@@ -197,26 +197,26 @@ int16_t MetadataRequest::key() const
 
 int16_t MetadataRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t MetadataRequest::headerVersion() const
 {
-    if (Version >= 9)
+    if (m_version >= 9)
     {
         return 2;
     }
     return 1;
 }
 
-bool MetadataRequest::isValidVersion() const
+bool MetadataRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 10;
+    return m_version >= 0 && m_version <= 10;
 }
 
 bool MetadataRequest::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool MetadataRequest::isFlexibleVersion(int16_t version) const
@@ -224,9 +224,9 @@ bool MetadataRequest::isFlexibleVersion(int16_t version) const
     return version >= 9;
 }
 
-KafkaVersion MetadataRequest::requiredVersion() const
+KafkaVersion MetadataRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 10:
         return V2_8_0_0;
@@ -257,42 +257,42 @@ KafkaVersion MetadataRequest::requiredVersion() const
 std::shared_ptr<MetadataRequest> NewMetadataRequest(KafkaVersion version, const std::vector<std::string> &topics)
 {
     auto m = std::make_shared<MetadataRequest>();
-    m->Topics = topics;
+    m->m_topics = topics;
     if (version.IsAtLeast(V2_8_0_0))
     {
-        m->Version = 10;
+        m->m_version = 10;
     }
     else if (version.IsAtLeast(V2_4_0_0))
     {
-        m->Version = 9;
+        m->m_version = 9;
     }
     else if (version.IsAtLeast(V2_4_0_0))
     {
-        m->Version = 8;
+        m->m_version = 8;
     }
     else if (version.IsAtLeast(V2_1_0_0))
     {
-        m->Version = 7;
+        m->m_version = 7;
     }
     else if (version.IsAtLeast(V2_0_0_0))
     {
-        m->Version = 6;
+        m->m_version = 6;
     }
     else if (version.IsAtLeast(V1_0_0_0))
     {
-        m->Version = 5;
+        m->m_version = 5;
     }
     else if (version.IsAtLeast(V0_11_0_0))
     {
-        m->Version = 4;
+        m->m_version = 4;
     }
     else if (version.IsAtLeast(V0_10_1_0))
     {
-        m->Version = 2;
+        m->m_version = 2;
     }
     else if (version.IsAtLeast(V0_10_0_0))
     {
-        m->Version = 1;
+        m->m_version = 1;
     }
     return m;
 }

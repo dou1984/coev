@@ -6,8 +6,8 @@
 
 struct ProducerError
 {
-    std::shared_ptr<ProducerMessage> Msg;
-    KError Err;
+    std::shared_ptr<ProducerMessage> m_msg;
+    KError m_err;
 };
 
 using ProducerErrors = std::vector<ProducerError>;

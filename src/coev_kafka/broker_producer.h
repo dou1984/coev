@@ -24,16 +24,16 @@ struct BrokerProducer
     coev::awaitable<void> handleSuccess(std::shared_ptr<ProduceSet> sent, std::shared_ptr<ProduceResponse> response);
     void handleError(std::shared_ptr<ProduceSet> sent, KError err);
 
-    std::shared_ptr<AsyncProducer> parent_;
-    std::shared_ptr<Broker> broker_;
-    std::shared_ptr<ProduceSet> buffer_;
-    bool timer_fired_;
-    KError closing_;
-    std::map<std::string, std::map<int32_t, KError>> current_retries_;
-
-    coev::co_channel<std::shared_ptr<ProducerMessage>> input_;
-    coev::co_channel<std::shared_ptr<ProduceSet>> output_;
-    coev::co_channel<std::shared_ptr<BrokerProducerResponse>> responses_;
-    coev::co_channel<bool> abandoned_;
-    coev::co_timer timer_;
+    std::shared_ptr<AsyncProducer> m_parent;
+    std::shared_ptr<Broker> m_broker;
+    std::shared_ptr<ProduceSet> m_buffer;
+    bool m_timer_fired = false;
+    KError m_closing = ErrNoError;
+    std::map<std::string, std::map<int32_t, KError>> m_current_retries;
+    
+    coev::co_channel<std::shared_ptr<ProducerMessage>> m_input;
+    coev::co_channel<std::shared_ptr<ProduceSet>> m_output;
+    coev::co_channel<std::shared_ptr<BrokerProducerResponse>> m_responses;
+    coev::co_channel<bool> m_abandoned;
+    coev::co_timer m_timer;
 };

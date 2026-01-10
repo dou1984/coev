@@ -12,39 +12,39 @@
 #include "errors.h"
 #include "protocol_body.h"
 
-struct AlterClientQuotasEntryResponse : protocolBody
+struct AlterClientQuotasEntryResponse : protocol_body
 {
-    int16_t Version;
-    KError ErrorCode;
-    std::string ErrorMsg;
-    std::vector<QuotaEntityComponent> Entity;
+    int16_t m_version;
+    KError m_error_code;
+    std::string m_error_msg;
+    std::vector<QuotaEntityComponent> m_entity;
     AlterClientQuotasEntryResponse() = default;
-    AlterClientQuotasEntryResponse(int16_t v) : Version(v)
+    AlterClientQuotasEntryResponse(int16_t v) : m_version(v)
     {
     }
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
-    void setVersion(int16_t version);
+    void set_version(int16_t version);
     int16_t headerVersion() const;
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
 };
 
-struct AlterClientQuotasResponse : protocolBody, throttleSupport
+struct AlterClientQuotasResponse : protocol_body, throttle_support
 {
-    int16_t Version;
-    std::chrono::milliseconds ThrottleTime;
-    std::vector<AlterClientQuotasEntryResponse> Entries;
+    int16_t m_version;
+    std::chrono::milliseconds m_throttle_time;
+    std::vector<AlterClientQuotasEntryResponse> m_entries;
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
     std::chrono::milliseconds throttleTime() const;
 };

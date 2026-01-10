@@ -3,20 +3,20 @@
 #include <stdexcept>
 
 OffsetRequestBlock::OffsetRequestBlock()
-    : currentLeaderEpoch(-1), timestamp(0), maxNumOffsets(0) {}
+    : m_leader_epoch(-1), m_timestamp(0), m_max_num_offsets(0) {}
 
 int OffsetRequestBlock::encode(PEncoder &pe, int16_t version)
 {
     if (version >= 4)
     {
-        pe.putInt32(currentLeaderEpoch);
+        pe.putInt32(m_leader_epoch);
     }
 
-    pe.putInt64(timestamp);
+    pe.putInt64(m_timestamp);
 
     if (version == 0)
     {
-        pe.putInt32(maxNumOffsets);
+        pe.putInt32(m_max_num_offsets);
     }
 
     return 0;
@@ -24,25 +24,25 @@ int OffsetRequestBlock::encode(PEncoder &pe, int16_t version)
 
 int OffsetRequestBlock::decode(PDecoder &pd, int16_t version)
 {
-    currentLeaderEpoch = -1;
+    m_leader_epoch = -1;
     int err = 0;
 
     if (version >= 4)
     {
-        if ((err = pd.getInt32(currentLeaderEpoch)) != 0)
+        if ((err = pd.getInt32(m_leader_epoch)) != 0)
         {
             return err;
         }
     }
 
-    if ((err = pd.getInt64(timestamp)) != 0)
+    if ((err = pd.getInt64(m_timestamp)) != 0)
     {
         return err;
     }
 
     if (version == 0)
     {
-        if ((err = pd.getInt32(maxNumOffsets)) != 0)
+        if ((err = pd.getInt32(m_max_num_offsets)) != 0)
         {
             return err;
         }
@@ -51,34 +51,34 @@ int OffsetRequestBlock::decode(PDecoder &pd, int16_t version)
     return 0;
 }
 
-void OffsetRequest::setVersion(int16_t v)
+void OffsetRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int OffsetRequest::encode(PEncoder &pe)
 {
-    if (isReplicaIDSet)
+    if (m_is_replica_id_set)
     {
-        pe.putInt32(replicaID);
+        pe.putInt32(m_replica_id);
     }
     else
     {
         pe.putInt32(-1);
     }
 
-    if (Version >= 2)
+    if (m_version >= 2)
     {
-        pe.putBool(Level == ReadCommitted);
+        pe.putBool(m_level == ReadCommitted);
     }
 
-    int err = pe.putArrayLength(static_cast<int32_t>(blocks.size()));
+    int err = pe.putArrayLength(static_cast<int32_t>(m_blocks.size()));
     if (err != 0)
     {
         return err;
     }
 
-    for (auto &topic_pair : blocks)
+    for (auto &topic_pair : m_blocks)
     {
         const std::string &topic = topic_pair.first;
         auto &partitions = topic_pair.second;
@@ -101,7 +101,7 @@ int OffsetRequest::encode(PEncoder &pe)
             auto &block = partition_pair.second;
 
             pe.putInt32(partition);
-            if ((err = block->encode(pe, Version)) != 0)
+            if ((err = block->encode(pe, m_version)) != 0)
             {
                 return err;
             }
@@ -113,7 +113,7 @@ int OffsetRequest::encode(PEncoder &pe)
 
 int OffsetRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
     int32_t replicaID_val;
     int err = pd.getInt32(replicaID_val);
     if (err != 0)
@@ -125,14 +125,14 @@ int OffsetRequest::decode(PDecoder &pd, int16_t version)
         SetReplicaID(replicaID_val);
     }
 
-    if (Version >= 2)
+    if (m_version >= 2)
     {
         bool tmp;
         if ((err = pd.getBool(tmp)) != 0)
         {
             return err;
         }
-        Level = tmp ? ReadCommitted : ReadUncommitted;
+        m_level = tmp ? ReadCommitted : ReadUncommitted;
     }
 
     int32_t blockCount;
@@ -145,7 +145,7 @@ int OffsetRequest::decode(PDecoder &pd, int16_t version)
         return 0;
     }
 
-    blocks.clear();
+    m_blocks.clear();
     for (int i = 0; i < blockCount; ++i)
     {
         std::string topic;
@@ -160,7 +160,7 @@ int OffsetRequest::decode(PDecoder &pd, int16_t version)
             return err;
         }
 
-        auto &partitionMap = blocks[topic];
+        auto &partitionMap = m_blocks[topic];
         for (int j = 0; j < partitionCount; ++j)
         {
             int32_t partition;
@@ -188,7 +188,7 @@ int16_t OffsetRequest::key() const
 
 int16_t OffsetRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t OffsetRequest::headerVersion() const
@@ -196,14 +196,14 @@ int16_t OffsetRequest::headerVersion() const
     return 1;
 }
 
-bool OffsetRequest::isValidVersion() const
+bool OffsetRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 5;
+    return m_version >= 0 && m_version <= 5;
 }
 
-KafkaVersion OffsetRequest::requiredVersion() const
+KafkaVersion OffsetRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 5:
         return V2_2_0_0;
@@ -224,35 +224,35 @@ KafkaVersion OffsetRequest::requiredVersion() const
 
 void OffsetRequest::SetReplicaID(int32_t id)
 {
-    replicaID = id;
-    isReplicaIDSet = true;
+    m_replica_id = id;
+    m_is_replica_id_set = true;
 }
 
 int32_t OffsetRequest::ReplicaID()
 {
-    if (isReplicaIDSet)
+    if (m_is_replica_id_set)
     {
-        return replicaID;
+        return m_replica_id;
     }
     return -1;
 }
 
 void OffsetRequest::AddBlock(const std::string &topic, int32_t partitionID, int64_t timestamp, int32_t maxOffsets)
 {
-    if (blocks.find(topic) == blocks.end())
+    if (m_blocks.find(topic) == m_blocks.end())
     {
-        blocks[topic] = std::unordered_map<int32_t, std::shared_ptr<OffsetRequestBlock>>();
+        m_blocks[topic] = std::unordered_map<int32_t, std::shared_ptr<OffsetRequestBlock>>();
     }
 
     auto block = std::make_shared<OffsetRequestBlock>();
-    block->currentLeaderEpoch = -1;
-    block->timestamp = timestamp;
-    if (Version == 0)
+    block->m_leader_epoch = -1;
+    block->m_timestamp = timestamp;
+    if (m_version == 0)
     {
-        block->maxNumOffsets = maxOffsets;
+        block->m_max_num_offsets = maxOffsets;
     }
 
-    blocks[topic][partitionID] = block;
+    m_blocks[topic][partitionID] = block;
 }
 
 std::shared_ptr<OffsetRequest> NewOffsetRequest(const KafkaVersion &version)
@@ -260,27 +260,27 @@ std::shared_ptr<OffsetRequest> NewOffsetRequest(const KafkaVersion &version)
     auto request = std::make_shared<OffsetRequest>();
     if (version.IsAtLeast(V2_2_0_0))
     {
-        request->Version = 5;
+        request->m_version = 5;
     }
     else if (version.IsAtLeast(V2_1_0_0))
     {
-        request->Version = 4;
+        request->m_version = 4;
     }
     else if (version.IsAtLeast(V2_0_0_0))
     {
-        request->Version = 3;
+        request->m_version = 3;
     }
     else if (version.IsAtLeast(V0_11_0_0))
     {
-        request->Version = 2;
+        request->m_version = 2;
     }
     else if (version.IsAtLeast(V0_10_1_0))
     {
-        request->Version = 1;
+        request->m_version = 1;
     }
     else
     {
-        request->Version = 0;
+        request->m_version = 0;
     }
     return request;
 }

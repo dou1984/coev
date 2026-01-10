@@ -12,32 +12,32 @@
 
 struct AlterConfigsResource : VDecoder, IEncoder
 {
-    ConfigResourceType Type;
-    std::string Name;
-    std::map<std::string, std::string> ConfigEntries;
+    ConfigResourceType m_type;
+    std::string m_name;
+    std::map<std::string, std::string> m_config_entries;
 
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
 };
 
-struct AlterConfigsRequest : protocolBody
+struct AlterConfigsRequest : protocol_body
 {
-    int16_t Version;
-    std::vector<std::shared_ptr<AlterConfigsResource>> Resources;
-    bool ValidateOnly = false;
+    int16_t m_version;
+    std::vector<std::shared_ptr<AlterConfigsResource>> m_resources;
+    bool m_validate_only = false;
 
     AlterConfigsRequest() = default;
-    AlterConfigsRequest(int16_t v) : Version(v)
+    AlterConfigsRequest(int16_t v) : m_version(v)
     {
     }
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
 
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
 };

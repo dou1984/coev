@@ -3,11 +3,11 @@
 #include <stdexcept>
 
 OffsetResponseBlock::OffsetResponseBlock()
-    : Err(static_cast<KError>(0)), Timestamp(0), Offset(0), LeaderEpoch(-1) {}
+    : m_err(static_cast<KError>(0)), m_timestamp(0), m_offset(0), m_leader_epoch(-1) {}
 
 int OffsetResponseBlock::decode(PDecoder &pd, int16_t version)
 {
-    int err = pd.getKError(Err);
+    int err = pd.getKError(m_err);
     if (err != 0)
     {
         return err;
@@ -15,25 +15,25 @@ int OffsetResponseBlock::decode(PDecoder &pd, int16_t version)
 
     if (version == 0)
     {
-        return pd.getInt64Array(Offsets);
+        return pd.getInt64Array(m_offsets);
     }
 
     if (version >= 1)
     {
-        if ((err = pd.getInt64(Timestamp)) != 0)
+        if ((err = pd.getInt64(m_timestamp)) != 0)
         {
             return err;
         }
-        if ((err = pd.getInt64(Offset)) != 0)
+        if ((err = pd.getInt64(m_offset)) != 0)
         {
             return err;
         }
-        Offsets = {Offset};
+        m_offsets = {m_offset};
     }
 
     if (version >= 4)
     {
-        if ((err = pd.getInt32(LeaderEpoch)) != 0)
+        if ((err = pd.getInt32(m_leader_epoch)) != 0)
         {
             return err;
         }
@@ -44,37 +44,37 @@ int OffsetResponseBlock::decode(PDecoder &pd, int16_t version)
 
 int OffsetResponseBlock::encode(PEncoder &pe, int16_t version)
 {
-    pe.putKError(Err);
+    pe.putKError(m_err);
 
     if (version == 0)
     {
-        return pe.putInt64Array(Offsets);
+        return pe.putInt64Array(m_offsets);
     }
 
     if (version >= 1)
     {
-        pe.putInt64(Timestamp);
-        pe.putInt64(Offset);
+        pe.putInt64(m_timestamp);
+        pe.putInt64(m_offset);
     }
 
     if (version >= 4)
     {
-        pe.putInt32(LeaderEpoch);
+        pe.putInt32(m_leader_epoch);
     }
 
     return 0;
 }
 
-void OffsetResponse::setVersion(int16_t v)
+void OffsetResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int OffsetResponse::decode(PDecoder &pd, int16_t version)
 {
     if (version >= 2)
     {
-        int err = pd.getDurationMs(ThrottleTime);
+        int err = pd.getDurationMs(m_throttle_time);
         if (err != 0)
         {
             return err;
@@ -88,8 +88,8 @@ int OffsetResponse::decode(PDecoder &pd, int16_t version)
         return err;
     }
 
-    Blocks_.clear();
-    Blocks_.reserve(numTopics);
+    m_blocks.clear();
+    m_blocks.reserve(numTopics);
     for (int i = 0; i < numTopics; ++i)
     {
         std::string name;
@@ -104,7 +104,7 @@ int OffsetResponse::decode(PDecoder &pd, int16_t version)
             return err;
         }
 
-        auto &partitionMap = Blocks_[name];
+        auto &partitionMap = m_blocks[name];
         partitionMap.reserve(numBlocks);
         for (int j = 0; j < numBlocks; ++j)
         {
@@ -128,8 +128,8 @@ int OffsetResponse::decode(PDecoder &pd, int16_t version)
 
 std::shared_ptr<OffsetResponseBlock> OffsetResponse::GetBlock(const std::string &topic, int32_t partition)
 {
-    auto topicIt = Blocks_.find(topic);
-    if (topicIt == Blocks_.end())
+    auto topicIt = m_blocks.find(topic);
+    if (topicIt == m_blocks.end())
     {
         return nullptr;
     }
@@ -143,18 +143,18 @@ std::shared_ptr<OffsetResponseBlock> OffsetResponse::GetBlock(const std::string 
 
 int OffsetResponse::encode(PEncoder &pe)
 {
-    if (Version >= 2)
+    if (m_version >= 2)
     {
-        pe.putDurationMs(ThrottleTime);
+        pe.putDurationMs(m_throttle_time);
     }
 
-    int err = pe.putArrayLength(static_cast<int32_t>(Blocks_.size()));
+    int err = pe.putArrayLength(static_cast<int32_t>(m_blocks.size()));
     if (err != 0)
     {
         return err;
     }
 
-    for (auto &topic_pair : Blocks_)
+    for (auto &topic_pair : m_blocks)
     {
         const std::string &topic = topic_pair.first;
         auto &partitions = topic_pair.second;
@@ -192,7 +192,7 @@ int16_t OffsetResponse::key() const
 
 int16_t OffsetResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t OffsetResponse::headerVersion() const
@@ -200,14 +200,14 @@ int16_t OffsetResponse::headerVersion() const
     return 0;
 }
 
-bool OffsetResponse::isValidVersion() const
+bool OffsetResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 5;
+    return m_version >= 0 && m_version <= 5;
 }
 
-KafkaVersion OffsetResponse::requiredVersion() const
+KafkaVersion OffsetResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 5:
         return V2_2_0_0;
@@ -228,17 +228,17 @@ KafkaVersion OffsetResponse::requiredVersion() const
 
 std::chrono::milliseconds OffsetResponse::throttleTime() const
 {
-    return std::chrono::milliseconds(ThrottleTime);
+    return std::chrono::milliseconds(m_throttle_time);
 }
 
 void OffsetResponse::AddTopicPartition(const std::string &topic, int32_t partition, int64_t offset)
 {
-    if (Blocks_.find(topic) == Blocks_.end())
+    if (m_blocks.find(topic) == m_blocks.end())
     {
-        Blocks_[topic] = std::unordered_map<int32_t, std::shared_ptr<OffsetResponseBlock>>();
+        m_blocks[topic] = std::unordered_map<int32_t, std::shared_ptr<OffsetResponseBlock>>();
     }
     auto block = std::make_shared<OffsetResponseBlock>();
-    block->Offsets = {offset};
-    block->Offset = offset;
-    Blocks_[topic][partition] = block;
+    block->m_offsets = {offset};
+    block->m_offset = offset;
+    m_blocks[topic][partition] = block;
 }

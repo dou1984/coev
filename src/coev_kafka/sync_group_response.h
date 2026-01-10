@@ -12,15 +12,15 @@
 #include "consumer_group_members.h"
 #include "protocol_body.h"
 
-struct SyncGroupResponse : protocolBody
+struct SyncGroupResponse : protocol_body
 {
 
-    int16_t Version = 0;
-    std::chrono::milliseconds ThrottleTime;
-    KError Err = ErrNoError;
-    std::string MemberAssignment;
+    int16_t m_version = 0;
+    std::chrono::milliseconds m_throttle_time;
+    KError m_err = ErrNoError;
+    std::string m_member_assignment;
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
 
     int GetMemberAssignment(std::shared_ptr<ConsumerGroupMemberAssignment> &);
 
@@ -30,10 +30,10 @@ struct SyncGroupResponse : protocolBody
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible();
     bool isFlexibleVersion(int16_t ver);
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
 
     std::chrono::milliseconds throttleTime() const;
 };

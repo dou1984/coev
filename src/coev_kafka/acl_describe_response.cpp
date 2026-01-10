@@ -1,29 +1,29 @@
 #include "version.h"
 #include "acl_describe_response.h"
 
-void DescribeAclsResponse::setVersion(int16_t v)
+void DescribeAclsResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int DescribeAclsResponse::encode(PEncoder &pe)
 {
-    pe.putDurationMs(ThrottleTime);
-    pe.putKError(Err);
+    pe.putDurationMs(m_throttle_time);
+    pe.putKError(m_err);
 
-    if (pe.putNullableString(ErrMsg) != 0)
+    if (pe.putNullableString(m_err_msg) != 0)
     {
         return -1;
     }
 
-    if (pe.putArrayLength(static_cast<int32_t>(ResourceAcls_.size())) != 0)
+    if (pe.putArrayLength(static_cast<int32_t>(m_resource_acls.size())) != 0)
     {
         return -1;
     }
 
-    for (auto &resourceAcl : ResourceAcls_)
+    for (auto &resourceAcl : m_resource_acls)
     {
-        if (resourceAcl->encode(pe, Version) != 0)
+        if (resourceAcl->encode(pe, m_version) != 0)
         {
             return -1;
         }
@@ -34,12 +34,12 @@ int DescribeAclsResponse::encode(PEncoder &pe)
 
 int DescribeAclsResponse::decode(PDecoder &pd, int16_t version)
 {
-    if (pd.getDurationMs(ThrottleTime) != 0)
+    if (pd.getDurationMs(m_throttle_time) != 0)
     {
         return -1;
     }
 
-    if (pd.getKError(Err) != 0)
+    if (pd.getKError(m_err) != 0)
     {
         return -1;
     }
@@ -51,7 +51,7 @@ int DescribeAclsResponse::decode(PDecoder &pd, int16_t version)
     }
     if (!errmsg.empty())
     {
-        ErrMsg = std::move(errmsg);
+        m_err_msg = std::move(errmsg);
     }
 
     int32_t n;
@@ -60,11 +60,11 @@ int DescribeAclsResponse::decode(PDecoder &pd, int16_t version)
         return -1;
     }
 
-    ResourceAcls_.resize(n);
+    m_resource_acls.resize(n);
     for (int32_t i = 0; i < n; ++i)
     {
-        ResourceAcls_[i] = std::make_shared<ResourceAcls>();
-        if (ResourceAcls_[i]->decode(pd, version) != 0)
+        m_resource_acls[i] = std::make_shared<ResourceAcls>();
+        if (m_resource_acls[i]->decode(pd, version) != 0)
         {
             return -1;
         }
@@ -80,7 +80,7 @@ int16_t DescribeAclsResponse::key() const
 
 int16_t DescribeAclsResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t DescribeAclsResponse::headerVersion() const
@@ -88,14 +88,14 @@ int16_t DescribeAclsResponse::headerVersion() const
     return 0;
 }
 
-bool DescribeAclsResponse::isValidVersion() const
+bool DescribeAclsResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 1;
+    return m_version >= 0 && m_version <= 1;
 }
 
-KafkaVersion DescribeAclsResponse::requiredVersion() const
+KafkaVersion DescribeAclsResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 1:
         return V2_0_0_0;
@@ -106,5 +106,5 @@ KafkaVersion DescribeAclsResponse::requiredVersion() const
 
 std::chrono::milliseconds DescribeAclsResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }

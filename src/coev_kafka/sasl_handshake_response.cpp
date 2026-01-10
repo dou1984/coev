@@ -2,28 +2,28 @@
 #include "sasl_handshake_response.h"
 #include "api_versions.h"
 
-void SaslHandshakeResponse::setVersion(int16_t v)
+void SaslHandshakeResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int SaslHandshakeResponse::encode(PEncoder &pe)
 {
-    pe.putKError(Err);
-    return pe.putStringArray(EnabledMechanisms);
+    pe.putKError(m_err);
+    return pe.putStringArray(m_enabled_mechanisms);
 }
 
 int SaslHandshakeResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    int err = pd.getKError(Err);
+    int err = pd.getKError(m_err);
     if (err != 0)
     {
         return err;
     }
 
-    return pd.getStringArray(EnabledMechanisms);
+    return pd.getStringArray(m_enabled_mechanisms);
 }
 
 int16_t SaslHandshakeResponse::key()const{
@@ -32,7 +32,7 @@ int16_t SaslHandshakeResponse::key()const{
 
 int16_t SaslHandshakeResponse::version()const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t SaslHandshakeResponse::headerVersion() const
@@ -40,14 +40,14 @@ int16_t SaslHandshakeResponse::headerVersion() const
     return 0;
 }
 
-bool SaslHandshakeResponse::isValidVersion()const
+bool SaslHandshakeResponse::is_valid_version()const
 {
-    return Version >= 0 && Version <= 1;
+    return m_version >= 0 && m_version <= 1;
 }
 
-KafkaVersion SaslHandshakeResponse::requiredVersion()const
+KafkaVersion SaslHandshakeResponse::required_version()const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 1:
         return V1_0_0_0;

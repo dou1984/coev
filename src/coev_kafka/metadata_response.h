@@ -17,17 +17,17 @@ struct Broker;
 
 struct PartitionMetadata : VDecoder, VEncoder
 {
-    int16_t Version;
-    KError Err;
-    int32_t ID;
-    int32_t Leader;
-    int32_t LeaderEpoch;
-    std::vector<int32_t> Replicas;
-    std::vector<int32_t> Isr;
-    std::vector<int32_t> OfflineReplicas;
+    int16_t m_version;
+    KError m_err;
+    int32_t m_id;
+    int32_t m_leader;
+    int32_t m_leader_epoch;
+    std::vector<int32_t> m_replicas;
+    std::vector<int32_t> m_isr;
+    std::vector<int32_t> m_offline_replicas;
 
     PartitionMetadata() = default;
-    PartitionMetadata(int16_t v) : Version(v)
+    PartitionMetadata(int16_t v) : m_version(v)
     {
     }
     int decode(PDecoder &pd, int16_t version);
@@ -36,8 +36,8 @@ struct PartitionMetadata : VDecoder, VEncoder
 
 struct TopicMetadata : VDecoder, VEncoder
 {
-    int16_t Version;
-    KError Err;
+    int16_t m_version;
+    KError m_err;
     std::string Name;
     Uuid Uuid_;
     bool IsInternal;
@@ -48,26 +48,26 @@ struct TopicMetadata : VDecoder, VEncoder
     int encode(PEncoder &pe, int16_t version);
 };
 
-struct MetadataResponse : protocolBody
+struct MetadataResponse : protocol_body
 {
-    int16_t Version;
-    std::chrono::milliseconds ThrottleTime;
+    int16_t m_version;
+    std::chrono::milliseconds m_throttle_time;
     std::vector<std::shared_ptr<Broker>> Brokers;
     std::string ClusterID;
     int32_t ControllerID;
     std::vector<std::shared_ptr<TopicMetadata>> Topics;
     int32_t ClusterAuthorizedOperations;
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int decode(PDecoder &pd, int16_t version);
     int encode(PEncoder &pe);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible() const;
     bool isFlexibleVersion(int16_t version) const;
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
     std::chrono::milliseconds throttleTime() const;
 
     void AddBroker(const std::string &addr, int32_t id);

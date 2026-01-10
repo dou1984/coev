@@ -10,22 +10,22 @@
 #include "version.h"
 #include "api_versions.h"
 #include "protocol_body.h"
-struct DeleteOffsetsRequest : protocolBody
+struct DeleteOffsetsRequest : protocol_body
 {
-	int16_t Version;
-	std::string Group;
-	std::unordered_map<std::string, std::vector<int32_t>> partitions;
+	int16_t m_version;
+	std::string m_group;
+	std::unordered_map<std::string, std::vector<int32_t>> m_partitions;
 	DeleteOffsetsRequest() = default;
-	DeleteOffsetsRequest(int16_t v) : Version(v)
+	DeleteOffsetsRequest(int16_t v) : m_version(v)
 	{
 	}
-	void setVersion(int16_t v);
+	void set_version(int16_t v);
 	int encode(PEncoder &pe);
 	int decode(PDecoder &pd, int16_t version);
 	int16_t key() const;
 	int16_t version() const;
 	int16_t headerVersion() const;
-	bool isValidVersion() const;
-	KafkaVersion requiredVersion() const;
+	bool is_valid_version() const;
+	KafkaVersion required_version() const;
 	void AddPartition(const std::string &topic, int32_t partitionID);
 };

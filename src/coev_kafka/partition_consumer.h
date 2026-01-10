@@ -10,26 +10,26 @@
 struct PartitionConsumer : std::enable_shared_from_this<PartitionConsumer>
 {
 
-    std::atomic<int64_t> highWaterMarkOffset{0};
-    std::shared_ptr<Consumer> consumer;
-    std::shared_ptr<Config> conf;
-    std::shared_ptr<BrokerConsumer> broker;
-    coev::co_channel<std::shared_ptr<ConsumerMessage>> messages;
-    coev::co_channel<std::shared_ptr<ConsumerError>> errors;
-    coev::co_channel<std::shared_ptr<FetchResponse>> feeder;
+    std::atomic<int64_t> m_high_water_mark_offset{0};
+    std::shared_ptr<Consumer> m_consumer;
+    std::shared_ptr<Config> m_conf;
+    std::shared_ptr<BrokerConsumer> m_broker;
+    coev::co_channel<std::shared_ptr<ConsumerMessage>> m_messages;
+    coev::co_channel<std::shared_ptr<ConsumerError>> m_errors;
+    coev::co_channel<std::shared_ptr<FetchResponse>> m_feeder;
 
-    int32_t leaderEpoch = 0;
-    int32_t preferredReadReplica = invalidPreferredReplicaID;
+    int32_t m_leader_epoch = 0;
+    int32_t m_preferred_read_replica = invalidPreferredReplicaID;
 
-    coev::co_channel<bool> trigger;
-    coev::co_channel<bool> dying;
-    std::string topic;
-    int32_t partition;
-    KError responseResult;
-    int32_t fetchSize;
-    int64_t offset;
-    std::atomic<int32_t> retries{0};
-    std::atomic<bool> paused{false};
+    coev::co_channel<bool> m_trigger;
+    coev::co_channel<bool> m_dying;
+    std::string m_topic;
+    int32_t m_partition;
+    KError m_response_result;
+    int32_t m_fetch_size;
+    int64_t m_offset;
+    std::atomic<int32_t> m_retries{0};
+    std::atomic<bool> m_paused{false};
 
     PartitionConsumer() = default;
     void SendError(KError err);

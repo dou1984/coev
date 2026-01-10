@@ -12,28 +12,28 @@
 #include "protocol_body.h"
 #include "fetch_request_block.h"
 
-struct FetchRequest : protocolBody
+struct FetchRequest : protocol_body
 {
-    int16_t Version;
-    int32_t MaxWaitTime;
-    int32_t MinBytes;
-    int32_t MaxBytes;
-    IsolationLevel Isolation;
-    int32_t SessionID;
-    int32_t SessionEpoch;
-    std::map<std::string, std::map<int32_t, std::shared_ptr<FetchRequestBlock>>> blocks;
-    std::map<std::string, std::vector<int32_t>> forgotten;
-    std::string RackID;
+    int16_t m_version;
+    int32_t m_max_wait_time;
+    int32_t m_min_bytes;
+    int32_t m_max_bytes;
+    IsolationLevel m_isolation;
+    int32_t m_session_id;
+    int32_t m_session_epoch;
+    std::map<std::string, std::map<int32_t, std::shared_ptr<FetchRequestBlock>>> m_blocks;
+    std::map<std::string, std::vector<int32_t>> m_forgotten;
+    std::string m_rack_id;
 
     FetchRequest();
     FetchRequest(int16_t v);
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
     void AddBlock(const std::string &topic, int32_t partitionID, int64_t fetchOffset, int32_t maxBytes, int32_t leaderEpoch);
 };

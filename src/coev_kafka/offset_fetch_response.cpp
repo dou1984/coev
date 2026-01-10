@@ -4,29 +4,29 @@
 
 int OffsetFetchResponseBlock::encode(PEncoder &pe, int16_t version)
 {
-    pe.putInt64(Offset);
+    pe.putInt64(m_offset);
 
     if (version >= 5)
     {
-        pe.putInt32(LeaderEpoch);
+        pe.putInt32(m_leader_epoch);
     }
 
-    pe.putString(Metadata);
-    pe.putKError(Err);
+    pe.putString(m_metadata);
+    pe.putKError(m_err);
     pe.putEmptyTaggedFieldArray();
     return 0;
 }
 
 int OffsetFetchResponseBlock::decode(PDecoder &pd, int16_t version)
 {
-    auto err = pd.getInt64(Offset);
+    auto err = pd.getInt64(m_offset);
     if (err)
     {
         return err;
     }
     if (version >= 5)
     {
-        err = pd.getInt32(LeaderEpoch);
+        err = pd.getInt32(m_leader_epoch);
         if (err)
         {
             return err;
@@ -34,15 +34,15 @@ int OffsetFetchResponseBlock::decode(PDecoder &pd, int16_t version)
     }
     else
     {
-        LeaderEpoch = -1;
+        m_leader_epoch = -1;
     }
 
-    err = pd.getString(Metadata);
+    err = pd.getString(m_metadata);
     if (err)
     {
         return err;
     }
-    err = pd.getKError(Err);
+    err = pd.getKError(m_err);
     if (err)
     {
         return err;
@@ -54,24 +54,24 @@ int OffsetFetchResponseBlock::decode(PDecoder &pd, int16_t version)
 }
 
 OffsetFetchResponse::OffsetFetchResponse()
-    : Version(0), Err(ErrNoError)
+    : m_version(0), m_err(ErrNoError)
 {
 }
 
-void OffsetFetchResponse::setVersion(int16_t v)
+void OffsetFetchResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int OffsetFetchResponse::encode(PEncoder &pe)
 {
-    if (Version >= 3)
+    if (m_version >= 3)
     {
-        pe.putDurationMs(ThrottleTime);
+        pe.putDurationMs(m_throttle_time);
     }
 
-    pe.putArrayLength(static_cast<int32_t>(Blocks.size()));
-    for (auto &topicEntry : Blocks)
+    pe.putArrayLength(static_cast<int32_t>(m_blocks.size()));
+    for (auto &topicEntry : m_blocks)
     {
         auto &topic = topicEntry.first;
         auto &partitions = topicEntry.second;
@@ -80,14 +80,14 @@ int OffsetFetchResponse::encode(PEncoder &pe)
         for (auto &partEntry : partitions)
         {
             pe.putInt32(partEntry.first);
-            partEntry.second->encode(pe, Version);
+            partEntry.second->encode(pe, m_version);
         }
         pe.putEmptyTaggedFieldArray();
     }
 
-    if (Version >= 2)
+    if (m_version >= 2)
     {
-        pe.putKError(Err);
+        pe.putKError(m_err);
     }
 
     pe.putEmptyTaggedFieldArray();
@@ -96,11 +96,11 @@ int OffsetFetchResponse::encode(PEncoder &pe)
 
 int OffsetFetchResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
     if (version >= 3)
     {
-        auto err = pd.getDurationMs(ThrottleTime);
+        auto err = pd.getDurationMs(m_throttle_time);
         if (err)
         {
             return err;
@@ -115,8 +115,8 @@ int OffsetFetchResponse::decode(PDecoder &pd, int16_t version)
     }
     if (numTopics > 0)
     {
-        Blocks.clear();
-        Blocks.reserve(numTopics);
+        m_blocks.clear();
+        m_blocks.reserve(numTopics);
         for (int i = 0; i < numTopics; ++i)
         {
             std::string name;
@@ -132,7 +132,7 @@ int OffsetFetchResponse::decode(PDecoder &pd, int16_t version)
                 return err;
             }
 
-            auto &partitionMap = Blocks[name];
+            auto &partitionMap = m_blocks[name];
             if (numBlocks > 0)
             {
                 partitionMap.reserve(numBlocks);
@@ -160,7 +160,7 @@ int OffsetFetchResponse::decode(PDecoder &pd, int16_t version)
 
     if (version >= 2)
     {
-        auto err = pd.getKError(Err);
+        auto err = pd.getKError(m_err);
         if (err)
         {
             return err;
@@ -177,22 +177,22 @@ int16_t OffsetFetchResponse::key() const
 
 int16_t OffsetFetchResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t OffsetFetchResponse::headerVersion() const
 {
-    return Version >= 6 ? 1 : 0;
+    return m_version >= 6 ? 1 : 0;
 }
 
-bool OffsetFetchResponse::isValidVersion() const
+bool OffsetFetchResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 7;
+    return m_version >= 0 && m_version <= 7;
 }
 
 bool OffsetFetchResponse::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool OffsetFetchResponse::isFlexibleVersion(int16_t version)
@@ -200,9 +200,9 @@ bool OffsetFetchResponse::isFlexibleVersion(int16_t version)
     return version >= 6;
 }
 
-KafkaVersion OffsetFetchResponse::requiredVersion() const
+KafkaVersion OffsetFetchResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 7:
         return V2_5_0_0;
@@ -226,13 +226,13 @@ KafkaVersion OffsetFetchResponse::requiredVersion() const
 
 std::chrono::milliseconds OffsetFetchResponse::throttleTime() const
 {
-    return std::chrono::milliseconds(ThrottleTime);
+    return std::chrono::milliseconds(m_throttle_time);
 }
 
 std::shared_ptr<OffsetFetchResponseBlock> OffsetFetchResponse::GetBlock(const std::string &topic, int32_t partition) const
 {
-    auto topicIt = Blocks.find(topic);
-    if (topicIt == Blocks.end())
+    auto topicIt = m_blocks.find(topic);
+    if (topicIt == m_blocks.end())
         return nullptr;
     auto partIt = topicIt->second.find(partition);
     if (partIt == topicIt->second.end())
@@ -242,5 +242,5 @@ std::shared_ptr<OffsetFetchResponseBlock> OffsetFetchResponse::GetBlock(const st
 
 void OffsetFetchResponse::AddBlock(const std::string &topic, int32_t partition, std::shared_ptr<OffsetFetchResponseBlock> block)
 {
-    Blocks[topic][partition] = block;
+    m_blocks[topic][partition] = block;
 }

@@ -15,39 +15,39 @@
 
 struct SyncGroupRequestAssignment : VDecoder, VEncoder
 {
-    std::string MemberId;
-    std::string Assignment;
+    std::string m_member_id;
+    std::string m_assignment;
     SyncGroupRequestAssignment() = default;
-    SyncGroupRequestAssignment(const std::string &memberId, const std::string &assignment) : MemberId(memberId), Assignment(assignment)
+    SyncGroupRequestAssignment(const std::string &memberId, const std::string &assignment) : m_member_id(memberId), m_assignment(assignment)
     {
     }
     int encode(PEncoder &pe, int16_t version);
     int decode(PDecoder &pd, int16_t version);
 };
 
-struct SyncGroupRequest : protocolBody
+struct SyncGroupRequest : protocol_body
 {
-    int16_t Version = 0;
-    std::string GroupId;
-    int32_t GenerationId = 0;
-    std::string MemberId;
-    std::string GroupInstanceId;
-    std::vector<SyncGroupRequestAssignment> GroupAssignments;
+    int16_t m_version = 0;
+    std::string m_group_id;
+    int32_t m_generation_id = 0;
+    std::string m_member_id;
+    std::string m_group_instance_id;
+    std::vector<SyncGroupRequestAssignment> m_group_assignments;
     SyncGroupRequest() = default;
-    SyncGroupRequest(int16_t v) : Version(v)
+    SyncGroupRequest(int16_t v) : m_version(v)
     {
     }
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
 
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible();
     bool isFlexibleVersion(int16_t ver);
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
 
     void AddGroupAssignment(const std::string &memberId, const std::string &memberAssignment);
     int AddGroupAssignmentMember(const std::string &memberId, std::shared_ptr<ConsumerGroupMemberAssignment> memberAssignment);

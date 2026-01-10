@@ -8,16 +8,16 @@
 #include "packet_decoder.h"
 #include "protocol_body.h"
 
-struct DeleteTopicsRequest : protocolBody
+struct DeleteTopicsRequest : protocol_body
 {
-    int16_t Version;
-    std::vector<std::string> Topics;
-    std::chrono::milliseconds Timeout;
+    int16_t m_version;
+    std::vector<std::string> m_topics;
+    std::chrono::milliseconds m_timeout;
     DeleteTopicsRequest() = default;
-    DeleteTopicsRequest(int16_t v) : Version(v)
+    DeleteTopicsRequest(int16_t v) : m_version(v)
     {
     }
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
 
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
@@ -26,7 +26,7 @@ struct DeleteTopicsRequest : protocolBody
     int16_t headerVersion() const;
     bool isFlexible() const;
     static bool isFlexibleVersion(int16_t version);
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
 };
 std::shared_ptr<DeleteTopicsRequest> NewDeleteTopicsRequest(KafkaVersion, const std::vector<std::string> &topics, int64_t timeoutMs);

@@ -9,12 +9,12 @@ int realDecoder::getInt8(int8_t &result)
 {
     if (remaining() < 1)
     {
-        Off = Raw.size();
+        m_offset = m_raw.size();
         result = -1;
         return ErrInsufficientData;
     }
-    result = static_cast<int8_t>(Raw[Off]);
-    Off++;
+    result = static_cast<int8_t>(m_raw[m_offset]);
+    m_offset++;
     return 0;
 }
 
@@ -22,12 +22,12 @@ int realDecoder::getInt16(int16_t &result)
 {
     if (remaining() < 2)
     {
-        Off = Raw.size();
+        m_offset = m_raw.size();
         result = -1;
         return ErrInsufficientData;
     }
-    result = static_cast<int16_t>((Raw[Off] << 8) | Raw[Off + 1]);
-    Off += 2;
+    result = static_cast<int16_t>((m_raw[m_offset] << 8) | m_raw[m_offset + 1]);
+    m_offset += 2;
     return 0;
 }
 
@@ -35,12 +35,12 @@ int realDecoder::getInt32(int32_t &result)
 {
     if (remaining() < 4)
     {
-        Off = Raw.size();
+        m_offset = m_raw.size();
         result = -1;
         return ErrInsufficientData;
     }
-    result = static_cast<int32_t>((Raw[Off] << 24) | (Raw[Off + 1] << 16) | (Raw[Off + 2] << 8) | Raw[Off + 3]);
-    Off += 4;
+    result = static_cast<int32_t>((m_raw[m_offset] << 24) | (m_raw[m_offset + 1] << 16) | (m_raw[m_offset + 2] << 8) | m_raw[m_offset + 3]);
+    m_offset += 4;
     return 0;
 }
 
@@ -48,20 +48,20 @@ int realDecoder::getInt64(int64_t &result)
 {
     if (remaining() < 8)
     {
-        Off = Raw.size();
+        m_offset = m_raw.size();
         result = -1;
         return ErrInsufficientData;
     }
     result = static_cast<int64_t>(
-        (static_cast<uint64_t>(Raw[Off]) << 56) |
-        (static_cast<uint64_t>(Raw[Off + 1]) << 48) |
-        (static_cast<uint64_t>(Raw[Off + 2]) << 40) |
-        (static_cast<uint64_t>(Raw[Off + 3]) << 32) |
-        (static_cast<uint64_t>(Raw[Off + 4]) << 24) |
-        (static_cast<uint64_t>(Raw[Off + 5]) << 16) |
-        (static_cast<uint64_t>(Raw[Off + 6]) << 8) |
-        static_cast<uint64_t>(Raw[Off + 7]));
-    Off += 8;
+        (static_cast<uint64_t>(m_raw[m_offset]) << 56) |
+        (static_cast<uint64_t>(m_raw[m_offset + 1]) << 48) |
+        (static_cast<uint64_t>(m_raw[m_offset + 2]) << 40) |
+        (static_cast<uint64_t>(m_raw[m_offset + 3]) << 32) |
+        (static_cast<uint64_t>(m_raw[m_offset + 4]) << 24) |
+        (static_cast<uint64_t>(m_raw[m_offset + 5]) << 16) |
+        (static_cast<uint64_t>(m_raw[m_offset + 6]) << 8) |
+        static_cast<uint64_t>(m_raw[m_offset + 7]));
+    m_offset += 8;
     return 0;
 }
 
@@ -72,21 +72,21 @@ int realDecoder::getVariant(int64_t &result)
     result = 0;
     for (int i = 0; i < 10; i++)
     {
-        if (Off >= Raw.size())
+        if (m_offset >= m_raw.size())
         {
-            Off = Raw.size();
+            m_offset = m_raw.size();
             result = -1;
             return ErrInsufficientData;
         }
-        uint8_t b = Raw[Off];
-        Off++;
+        uint8_t b = m_raw[m_offset];
+        m_offset++;
         ux = static_cast<uint64_t>(b & 0x7F) << shift;
         result |= static_cast<int64_t>(ux);
         if ((b & 0x80) == 0)
         {
             if (i == 9 && ((ux & 0xFE00000000000000ULL) != 0 || (b & 0x7F) > 1))
             {
-                Off -= (i + 1);
+                m_offset -= (i + 1);
                 result = -1;
                 return ErrVariantOverflow;
             }
@@ -94,7 +94,7 @@ int realDecoder::getVariant(int64_t &result)
         }
         shift += 7;
     }
-    Off -= 10;
+    m_offset -= 10;
     result = -1;
     return ErrVariantOverflow;
 }
@@ -105,20 +105,20 @@ int realDecoder::getUVariant(uint64_t &result)
     int shift = 0;
     for (int i = 0; i < 10; i++)
     {
-        if (Off >= Raw.size())
+        if (m_offset >= m_raw.size())
         {
-            Off = Raw.size();
+            m_offset = m_raw.size();
             result = 0;
             return ErrInsufficientData;
         }
-        uint8_t b = Raw[Off];
-        Off++;
+        uint8_t b = m_raw[m_offset];
+        m_offset++;
         result |= static_cast<uint64_t>(b & 0x7F) << shift;
         if ((b & 0x80) == 0)
         {
             if (i == 9 && result >> 63)
             {
-                Off -= (i + 1);
+                m_offset -= (i + 1);
                 result = 0;
                 return ErrUVariantOverflow;
             }
@@ -126,7 +126,7 @@ int realDecoder::getUVariant(uint64_t &result)
         }
         shift += 7;
     }
-    Off -= 10;
+    m_offset -= 10;
     result = 0;
     return ErrUVariantOverflow;
 }
@@ -135,20 +135,20 @@ int realDecoder::getFloat64(double &result)
 {
     if (remaining() < 8)
     {
-        Off = Raw.size();
+        m_offset = m_raw.size();
         result = -1;
         return ErrInsufficientData;
     }
-    uint64_t bits = static_cast<uint64_t>(Raw[Off]) << 56 |
-                    static_cast<uint64_t>(Raw[Off + 1]) << 48 |
-                    static_cast<uint64_t>(Raw[Off + 2]) << 40 |
-                    static_cast<uint64_t>(Raw[Off + 3]) << 32 |
-                    static_cast<uint64_t>(Raw[Off + 4]) << 24 |
-                    static_cast<uint64_t>(Raw[Off + 5]) << 16 |
-                    static_cast<uint64_t>(Raw[Off + 6]) << 8 |
-                    static_cast<uint64_t>(Raw[Off + 7]);
+    uint64_t bits = static_cast<uint64_t>(m_raw[m_offset]) << 56 |
+                    static_cast<uint64_t>(m_raw[m_offset + 1]) << 48 |
+                    static_cast<uint64_t>(m_raw[m_offset + 2]) << 40 |
+                    static_cast<uint64_t>(m_raw[m_offset + 3]) << 32 |
+                    static_cast<uint64_t>(m_raw[m_offset + 4]) << 24 |
+                    static_cast<uint64_t>(m_raw[m_offset + 5]) << 16 |
+                    static_cast<uint64_t>(m_raw[m_offset + 6]) << 8 |
+                    static_cast<uint64_t>(m_raw[m_offset + 7]);
     result = *reinterpret_cast<double *>(&bits);
-    Off += 8;
+    m_offset += 8;
     return 0;
 }
 
@@ -156,15 +156,15 @@ int realDecoder::getArrayLength(int &result)
 {
     if (remaining() < 4)
     {
-        Off = Raw.size();
+        m_offset = m_raw.size();
         result = -1;
         return ErrInsufficientData;
     }
-    result = static_cast<int32_t>((Raw[Off] << 24) | (Raw[Off + 1] << 16) | (Raw[Off + 2] << 8) | Raw[Off + 3]);
-    Off += 4;
+    result = static_cast<int32_t>((m_raw[m_offset] << 24) | (m_raw[m_offset + 1] << 16) | (m_raw[m_offset + 2] << 8) | m_raw[m_offset + 3]);
+    m_offset += 4;
     if (result > remaining())
     {
-        Off = Raw.size();
+        m_offset = m_raw.size();
         result = -1;
         return ErrInsufficientData;
     }
@@ -276,7 +276,7 @@ int realDecoder::getStringLength(int &result)
     }
     else if (n > remaining())
     {
-        Off = Raw.size();
+        m_offset = m_raw.size();
         result = 0;
         return ErrInsufficientData;
     }
@@ -293,8 +293,8 @@ int realDecoder::getString(std::string &result)
         result = "";
         return err;
     }
-    result.assign(reinterpret_cast<const char *>(Raw.data() + Off), n);
-    Off += n;
+    result.assign(reinterpret_cast<const char *>(m_raw.data() + m_offset), n);
+    m_offset += n;
     return 0;
 }
 
@@ -307,8 +307,8 @@ int realDecoder::getNullableString(std::string &result)
         result = "";
         return err;
     }
-    result.assign(reinterpret_cast<const char *>(Raw.data() + Off), n);
-    Off += n;
+    result.assign(reinterpret_cast<const char *>(m_raw.data() + m_offset), n);
+    m_offset += n;
     return 0;
 }
 
@@ -327,14 +327,14 @@ int realDecoder::getInt32Array(std::vector<int32_t> &result)
     }
     if (remaining() < 4 * n)
     {
-        Off = Raw.size();
+        m_offset = m_raw.size();
         return ErrInsufficientData;
     }
     result.resize(n);
     for (int i = 0; i < n; i++)
     {
-        result[i] = static_cast<int32_t>((Raw[Off] << 24) | (Raw[Off + 1] << 16) | (Raw[Off + 2] << 8) | Raw[Off + 3]);
-        Off += 4;
+        result[i] = static_cast<int32_t>((m_raw[m_offset] << 24) | (m_raw[m_offset + 1] << 16) | (m_raw[m_offset + 2] << 8) | m_raw[m_offset + 3]);
+        m_offset += 4;
     }
     return 0;
 }
@@ -354,22 +354,22 @@ int realDecoder::getInt64Array(std::vector<int64_t> &result)
     }
     if (remaining() < 8 * n)
     {
-        Off = Raw.size();
+        m_offset = m_raw.size();
         return ErrInsufficientData;
     }
     result.resize(n);
     for (int i = 0; i < n; i++)
     {
         result[i] = static_cast<int64_t>(
-            (static_cast<uint64_t>(Raw[Off]) << 56) |
-            (static_cast<uint64_t>(Raw[Off + 1]) << 48) |
-            (static_cast<uint64_t>(Raw[Off + 2]) << 40) |
-            (static_cast<uint64_t>(Raw[Off + 3]) << 32) |
-            (static_cast<uint64_t>(Raw[Off + 4]) << 24) |
-            (static_cast<uint64_t>(Raw[Off + 5]) << 16) |
-            (static_cast<uint64_t>(Raw[Off + 6]) << 8) |
-            static_cast<uint64_t>(Raw[Off + 7]));
-        Off += 8;
+            (static_cast<uint64_t>(m_raw[m_offset]) << 56) |
+            (static_cast<uint64_t>(m_raw[m_offset + 1]) << 48) |
+            (static_cast<uint64_t>(m_raw[m_offset + 2]) << 40) |
+            (static_cast<uint64_t>(m_raw[m_offset + 3]) << 32) |
+            (static_cast<uint64_t>(m_raw[m_offset + 4]) << 24) |
+            (static_cast<uint64_t>(m_raw[m_offset + 5]) << 16) |
+            (static_cast<uint64_t>(m_raw[m_offset + 6]) << 8) |
+            static_cast<uint64_t>(m_raw[m_offset + 7]));
+        m_offset += 8;
     }
     return 0;
 }
@@ -403,7 +403,7 @@ int realDecoder::getStringArray(std::vector<std::string> &result)
 
 int realDecoder::remaining()
 {
-    return static_cast<int>(Raw.size()) - Off;
+    return static_cast<int>(m_raw.size()) - m_offset;
 }
 
 int realDecoder::getSubset(int length, std::shared_ptr<PDecoder> &out)
@@ -416,7 +416,7 @@ int realDecoder::getSubset(int length, std::shared_ptr<PDecoder> &out)
         return err;
     }
     auto decoder = std::make_shared<realDecoder>();
-    decoder->Raw = std::move(buf);
+    decoder->m_raw = std::move(buf);
     out = decoder;
     return 0;
 }
@@ -429,11 +429,11 @@ int realDecoder::getRawBytes(int length, std::string &result)
     }
     else if (length > remaining())
     {
-        Off = Raw.size();
+        m_offset = m_raw.size();
         return ErrInsufficientData;
     }
-    result.assign(Raw.begin() + Off, Raw.begin() + Off + length);
-    Off += length;
+    result.assign(m_raw.begin() + m_offset, m_raw.begin() + m_offset + length);
+    m_offset += length;
     return 0;
 }
 
@@ -444,9 +444,9 @@ int realDecoder::peek(int offset, int length, std::shared_ptr<PDecoder> &result)
         result = nullptr;
         return ErrInsufficientData;
     }
-    int start = Off + offset;
+    int start = m_offset + offset;
     auto decoder = std::make_shared<realDecoder>();
-    decoder->Raw.assign(Raw.begin() + start, Raw.begin() + start + length);
+    decoder->m_raw.assign(m_raw.begin() + start, m_raw.begin() + start + length);
     result = decoder;
     return 0;
 }
@@ -459,13 +459,13 @@ int realDecoder::peekInt8(int offset, int8_t &result)
         result = -1;
         return ErrInsufficientData;
     }
-    result = static_cast<int8_t>(Raw[Off + offset]);
+    result = static_cast<int8_t>(m_raw[m_offset + offset]);
     return 0;
 }
 
 int realDecoder::push(std::shared_ptr<pushDecoder> in)
 {
-    in->saveOffset(Off);
+    in->saveOffset(m_offset);
     int reserve = 0;
     auto dpd = std::dynamic_pointer_cast<dynamicPushDecoder>(in);
     if (dpd != nullptr)
@@ -481,25 +481,25 @@ int realDecoder::push(std::shared_ptr<pushDecoder> in)
         reserve = in->reserveLength();
         if (remaining() < reserve)
         {
-            Off = Raw.size();
+            m_offset = m_raw.size();
             return ErrInsufficientData;
         }
     }
-    Stack.push_back(in);
-    Off += reserve;
+    m_stack.push_back(in);
+    m_offset += reserve;
     return 0;
 }
 
 int realDecoder::pop()
 {
-    auto in = Stack.back();
-    Stack.pop_back();
-    return in->check(Off, Raw);
+    auto in = m_stack.back();
+    m_stack.pop_back();
+    return in->check(m_offset, m_raw);
 }
 
 std::shared_ptr<metrics::Registry> realDecoder::metricRegistry()
 {
-    return MetricRegistry;
+    return m_metric_registry;
 }
 int realFlexibleDecoder::getArrayLength(int &result)
 {
@@ -596,7 +596,7 @@ int realFlexibleDecoder::getTaggedFieldArray(const taggedFieldDecoders &decoders
         }
         auto decoder = it->second;
         auto flex_decoder = std::make_shared<realFlexibleDecoder>();
-        flex_decoder->Raw = bytes;
+        flex_decoder->m_raw = bytes;
         err = decoder(*flex_decoder);
         if (err != 0)
         {
@@ -635,7 +635,7 @@ int realFlexibleDecoder::getStringLength(int &result)
     }
     else if (n > remaining())
     {
-        Off = Raw.size();
+        m_offset = m_raw.size();
         result = 0;
         return ErrInsufficientData;
     }
@@ -657,8 +657,8 @@ int realFlexibleDecoder::getString(std::string &result)
         result = "";
         return ErrInvalidStringLength;
     }
-    result.assign(reinterpret_cast<const char *>(Raw.data() + Off), length);
-    Off += length;
+    result.assign(reinterpret_cast<const char *>(m_raw.data() + m_offset), length);
+    m_offset += length;
     return 0;
 }
 
@@ -676,8 +676,8 @@ int realFlexibleDecoder::getNullableString(std::string &result)
         result = "";
         return err;
     }
-    result.assign(reinterpret_cast<const char *>(Raw.data() + Off), length);
-    Off += length;
+    result.assign(reinterpret_cast<const char *>(m_raw.data() + m_offset), length);
+    m_offset += length;
     return 0;
 }
 
@@ -698,8 +698,8 @@ int realFlexibleDecoder::getInt32Array(std::vector<int32_t> &result)
     result.resize(array_length);
     for (int i = 0; i < array_length; i++)
     {
-        result[i] = static_cast<int32_t>((Raw[Off] << 24) | (Raw[Off + 1] << 16) | (Raw[Off + 2] << 8) | Raw[Off + 3]);
-        Off += 4;
+        result[i] = static_cast<int32_t>((m_raw[m_offset] << 24) | (m_raw[m_offset + 1] << 16) | (m_raw[m_offset + 2] << 8) | m_raw[m_offset + 3]);
+        m_offset += 4;
     }
     return 0;
 }

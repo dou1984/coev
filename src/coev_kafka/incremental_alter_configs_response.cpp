@@ -2,21 +2,21 @@
 #include "incremental_alter_configs_response.h"
 #include "alter_configs_response.h"
 
-void IncrementalAlterConfigsResponse::setVersion(int16_t v)
+void IncrementalAlterConfigsResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int IncrementalAlterConfigsResponse::encode(PEncoder &pe)
 {
 
-    pe.putDurationMs(ThrottleTime);
+    pe.putDurationMs(m_throttle_time);
 
-    int err = pe.putArrayLength(static_cast<int32_t>(Resources.size()));
+    int err = pe.putArrayLength(static_cast<int32_t>(m_resources.size()));
     if (err != 0)
         return err;
 
-    for (auto &res : Resources)
+    for (auto &res : m_resources)
     {
         err = res->encode(pe);
         if (err != 0)
@@ -28,7 +28,7 @@ int IncrementalAlterConfigsResponse::encode(PEncoder &pe)
     // - v0: no tagged fields
     // - v1: has empty tagged field array at end
     // So we add it only if flexible
-    if (isFlexibleVersion(Version))
+    if (isFlexibleVersion(m_version))
     {
         pe.putEmptyTaggedFieldArray();
     }
@@ -38,9 +38,9 @@ int IncrementalAlterConfigsResponse::encode(PEncoder &pe)
 
 int IncrementalAlterConfigsResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    int err = pd.getDurationMs(ThrottleTime);
+    int err = pd.getDurationMs(m_throttle_time);
     if (err != 0)
         return err;
 
@@ -49,15 +49,15 @@ int IncrementalAlterConfigsResponse::decode(PDecoder &pd, int16_t version)
     if (err != 0)
         return err;
 
-    Resources.clear();
-    Resources.reserve(count);
+    m_resources.clear();
+    m_resources.reserve(count);
     for (int32_t i = 0; i < count; ++i)
     {
         auto res = std::make_shared<AlterConfigsResourceResponse>();
         err = res->decode(pd, version);
         if (err != 0)
             return err;
-        Resources.push_back(std::move(res));
+        m_resources.push_back(std::move(res));
     }
 
     if (isFlexibleVersion(version))
@@ -78,22 +78,22 @@ int16_t IncrementalAlterConfigsResponse::key() const
 
 int16_t IncrementalAlterConfigsResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t IncrementalAlterConfigsResponse::headerVersion() const
 {
-    return (Version >= 1) ? 1 : 0;
+    return (m_version >= 1) ? 1 : 0;
 }
 
-bool IncrementalAlterConfigsResponse::isValidVersion() const
+bool IncrementalAlterConfigsResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 1;
+    return m_version >= 0 && m_version <= 1;
 }
 
 bool IncrementalAlterConfigsResponse::isFlexible()
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool IncrementalAlterConfigsResponse::isFlexibleVersion(int16_t ver)
@@ -101,9 +101,9 @@ bool IncrementalAlterConfigsResponse::isFlexibleVersion(int16_t ver)
     return ver >= 1;
 }
 
-KafkaVersion IncrementalAlterConfigsResponse::requiredVersion() const
+KafkaVersion IncrementalAlterConfigsResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 1:
         return V2_4_0_0;
@@ -114,5 +114,5 @@ KafkaVersion IncrementalAlterConfigsResponse::requiredVersion() const
 
 std::chrono::milliseconds IncrementalAlterConfigsResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }

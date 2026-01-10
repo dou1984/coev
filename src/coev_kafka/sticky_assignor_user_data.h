@@ -21,8 +21,8 @@ struct StickyAssignorUserData
 struct StickyAssignorUserDataV0 : StickyAssignorUserData
 {
 
-    std::map<std::string, std::vector<int32_t>> Topics;
-    std::vector<TopicPartitionAssignment> topicPartitions;
+    std::map<std::string, std::vector<int32_t>> m_topics;
+    std::vector<TopicPartitionAssignment> m_topic_partitions;
 
     int encode(PEncoder &pe);
     int decode(PDecoder &pd);
@@ -35,9 +35,9 @@ struct StickyAssignorUserDataV0 : StickyAssignorUserData
 struct StickyAssignorUserDataV1 : StickyAssignorUserData
 {
 
-    std::map<std::string, std::vector<int32_t>> Topics;
-    int32_t Generation;
-    std::vector<TopicPartitionAssignment> topicPartitions;
+    std::map<std::string, std::vector<int32_t>> m_topics;
+    int32_t m_generation = 0;
+    std::vector<TopicPartitionAssignment> m_topic_partitions;
 
     int encode(PEncoder &pe);
     int decode(PDecoder &pd);

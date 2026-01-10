@@ -1,39 +1,39 @@
 #include "api_versions.h"
 #include "create_topics_request.h"
 
-void CreateTopicsRequest::setVersion(int16_t v)
+void CreateTopicsRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int CreateTopicsRequest::encode(PEncoder &pe)
 {
-    if (!pe.putArrayLength(static_cast<int32_t>(TopicDetails.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_topic_details.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &kv : TopicDetails)
+    for (auto &kv : m_topic_details)
     {
-        if (!pe.putString(kv.first))
+        if (pe.putString(kv.first) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        if (!kv.second->encode(pe))
+        if (kv.second->encode(pe) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
-    pe.putDurationMs(Timeout);
+    pe.putDurationMs(m_timeout);
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
-        pe.putBool(ValidateOnly);
+        pe.putBool(m_validate_only);
     }
 
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int CreateTopicsRequest::decode(PDecoder &pd, int16_t version)
@@ -44,7 +44,7 @@ int CreateTopicsRequest::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    TopicDetails.clear();
+    m_topic_details.clear();
     for (int32_t i = 0; i < n; ++i)
     {
         std::string topic;
@@ -53,25 +53,25 @@ int CreateTopicsRequest::decode(PDecoder &pd, int16_t version)
             return ErrDecodeError;
         }
         auto detail = std::make_shared<TopicDetail>();
-        if (!detail->decode(pd, version))
+        if (detail->decode(pd, version) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        TopicDetails[topic] = detail;
+        m_topic_details[topic] = detail;
     }
 
-    if (pd.getDurationMs(Timeout) != ErrNoError)
+    if (pd.getDurationMs(m_timeout) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     if (version >= 1)
     {
-        if (pd.getBool(ValidateOnly) != ErrNoError)
+        if (pd.getBool(m_validate_only) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        Version = version;
+        m_version = version;
     }
 
     int32_t _;
@@ -85,17 +85,17 @@ int16_t CreateTopicsRequest::key() const
 
 int16_t CreateTopicsRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t CreateTopicsRequest::headerVersion() const
 {
-    return Version >= 5 ? 2 : 1;
+    return m_version >= 5 ? 2 : 1;
 }
 
 bool CreateTopicsRequest::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool CreateTopicsRequest::isFlexibleVersion(int16_t version)
@@ -103,14 +103,14 @@ bool CreateTopicsRequest::isFlexibleVersion(int16_t version)
     return version >= 5;
 }
 
-bool CreateTopicsRequest::isValidVersion() const
+bool CreateTopicsRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 5;
+    return m_version >= 0 && m_version <= 5;
 }
 
-KafkaVersion CreateTopicsRequest::requiredVersion() const
+KafkaVersion CreateTopicsRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 5:
         return V2_4_0_0;
@@ -131,34 +131,34 @@ KafkaVersion CreateTopicsRequest::requiredVersion() const
 
 int TopicDetail::encode(PEncoder &pe)
 {
-    pe.putInt32(NumPartitions);
-    pe.putInt16(ReplicationFactor);
+    pe.putInt32(m_num_partitions);
+    pe.putInt16(m_replication_factor);
 
-    if (!pe.putArrayLength(static_cast<int32_t>(ReplicaAssignment.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_replica_assignment.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
-    for (auto &partitionAssign : ReplicaAssignment)
+    for (auto &partitionAssign : m_replica_assignment)
     {
         pe.putInt32(partitionAssign.first);
-        if (!pe.putInt32Array(partitionAssign.second))
+        if (pe.putInt32Array(partitionAssign.second) != ErrNoError)
         {
             return ErrEncodeError;
         }
         pe.putEmptyTaggedFieldArray();
     }
 
-    if (!pe.putArrayLength(static_cast<int32_t>(ConfigEntries.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_config_entries.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
-    for (auto &configEntry : ConfigEntries)
+    for (auto &configEntry : m_config_entries)
     {
-        if (!pe.putString(configEntry.first))
+        if (pe.putString(configEntry.first) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        if (!pe.putNullableString(configEntry.second))
+        if (pe.putNullableString(configEntry.second) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -166,16 +166,16 @@ int TopicDetail::encode(PEncoder &pe)
     }
 
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int TopicDetail::decode(PDecoder &pd, int16_t version)
 {
-    if (pd.getInt32(NumPartitions) != ErrNoError)
+    if (pd.getInt32(m_num_partitions) != ErrNoError)
     {
         return ErrDecodeError;
     }
-    if (pd.getInt16(ReplicationFactor) != ErrNoError)
+    if (pd.getInt16(m_replication_factor) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -188,7 +188,7 @@ int TopicDetail::decode(PDecoder &pd, int16_t version)
 
     if (n > 0)
     {
-        ReplicaAssignment.clear();
+        m_replica_assignment.clear();
         for (int32_t i = 0; i < n; ++i)
         {
             int32_t partition;
@@ -201,7 +201,7 @@ int TopicDetail::decode(PDecoder &pd, int16_t version)
             {
                 return ErrDecodeError;
             }
-            ReplicaAssignment[partition] = std::move(replicas);
+            m_replica_assignment[partition] = std::move(replicas);
             int32_t _;
             if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
             {
@@ -217,7 +217,7 @@ int TopicDetail::decode(PDecoder &pd, int16_t version)
 
     if (n > 0)
     {
-        ConfigEntries.clear();
+        m_config_entries.clear();
         for (int32_t i = 0; i < n; ++i)
         {
             std::string key;
@@ -230,7 +230,7 @@ int TopicDetail::decode(PDecoder &pd, int16_t version)
             {
                 return ErrDecodeError;
             }
-            ConfigEntries[key] = value;
+            m_config_entries[key] = value;
             int32_t _;
             if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
             {
@@ -245,29 +245,29 @@ int TopicDetail::decode(PDecoder &pd, int16_t version)
 std::shared_ptr<CreateTopicsRequest> NewCreateTopicsRequest(const KafkaVersion &Version_, std::map<std::string, std::shared_ptr<TopicDetail>> topicDetails, int64_t timeoutMs, bool validateOnly)
 {
     auto r = std::make_shared<CreateTopicsRequest>();
-    r->TopicDetails = topicDetails;
-    r->Timeout = std::chrono::milliseconds(timeoutMs);
-    r->ValidateOnly = validateOnly;
+    r->m_topic_details = topicDetails;
+    r->m_timeout = std::chrono::milliseconds(timeoutMs);
+    r->m_validate_only = validateOnly;
 
     if (Version_ >= V2_4_0_0)
     {
-        r->Version = 5;
+        r->m_version = 5;
     }
     else if (Version_ >= V2_0_0_0)
     {
-        r->Version = 3;
+        r->m_version = 3;
     }
     else if (Version_ >= V0_11_0_0)
     {
-        r->Version = 2;
+        r->m_version = 2;
     }
     else if (Version_ >= V0_10_2_0)
     {
-        r->Version = 1;
+        r->m_version = 1;
     }
     else
     {
-        r->Version = 0;
+        r->m_version = 0;
     }
 
     return r;

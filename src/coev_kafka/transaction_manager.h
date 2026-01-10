@@ -36,8 +36,8 @@ struct TransactionManager
 {
     struct Result
     {
-        bool Retry;
-        int Error;
+        bool Retry = false;
+        int Error = 0;
     };
     TransactionManager() = default;
     ~TransactionManager() = default;
@@ -65,22 +65,22 @@ struct TransactionManager
     bool IsTransitionValid(ProducerTxnStatusFlag target) const;
     int TransitionTo(ProducerTxnStatusFlag target, int err);
 
-    mutable std::shared_mutex statusLock_;
-    ProducerTxnStatusFlag status_;
-    mutable std::mutex mutex_;
-    int64_t producerID_;
-    int16_t producerEpoch_;
-    std::map<std::string, int32_t> sequenceNumbers_;
-    std::string transactionalID_;
-    std::chrono::milliseconds transactionTimeout_;
-    std::shared_ptr<Client> client_;
-    bool coordinatorSupportsBumpingEpoch_;
-    bool epochBumpRequired_;
-    int lastError_;
-    mutable std::mutex partitionInTxnLock_;
-    TopicPartitionSet pendingPartitionsInCurrentTxn_;
-    TopicPartitionSet partitionsInCurrentTxn_;
-    std::map<std::string, TopicPartitionOffsets> offsetsInCurrentTxn_;
+    mutable std::shared_mutex  m_status_lock;
+    ProducerTxnStatusFlag m_status = ProducerTxnFlagUninitialized;
+    mutable std::mutex m_mutex;
+    int64_t m_producer_id= noProducerID;
+    int16_t m_producer_epoch = noProducerEpoch;
+    std::map<std::string, int32_t> m_sequence_numbers;   
+    std::string m_transactional_id;
+    std::chrono::milliseconds m_transaction_timeout;
+    std::shared_ptr<Client> m_client; 
+    bool m_coordinator_supports_bumping_epoch = false;
+    bool m_epoch_bump_required = false;
+    int m_last_error = 0;
+    mutable std::mutex m_partition_in_txn_lock; 
+    TopicPartitionSet m_pending_partitions_in_current_txn;
+    TopicPartitionSet m_partitions_in_current_txn;
+    std::map<std::string, TopicPartitionOffsets> m_offsets_in_current_txn;
 };
 
 coev::awaitable<int> NewTransactionManager(std::shared_ptr<Config> conf, std::shared_ptr<Client> client, std::shared_ptr<TransactionManager> &txnmgr);

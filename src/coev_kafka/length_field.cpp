@@ -4,17 +4,17 @@
 
 int LengthField::decode(PDecoder &pd)
 {
-    int err = pd.getInt32(length);
+    int err = pd.getInt32(m_length);
     if (err != 0)
         return err;
-    if (length > static_cast<int32_t>(pd.remaining()))
+    if (m_length > static_cast<int32_t>(pd.remaining()))
         return ErrInsufficientData;
     return 0;
 }
 
 void LengthField::saveOffset(int in)
 {
-    startOffset = in;
+    m_start_offset = in;
 }
 
 int LengthField::reserveLength()
@@ -23,17 +23,17 @@ int LengthField::reserveLength()
 }
 int LengthField::run(int curOffset, std::string &buf)
 {
-    uint32_t val = static_cast<uint32_t>(curOffset - startOffset - 4);
-    buf[startOffset + 0] = (val >> 24) & 0xFF;
-    buf[startOffset + 1] = (val >> 16) & 0xFF;
-    buf[startOffset + 2] = (val >> 8) & 0xFF;
-    buf[startOffset + 3] = val & 0xFF;
+    uint32_t val = static_cast<uint32_t>(curOffset - m_start_offset - 4);
+    buf[m_start_offset + 0] = (val >> 24) & 0xFF;
+    buf[m_start_offset + 1] = (val >> 16) & 0xFF;
+    buf[m_start_offset + 2] = (val >> 8) & 0xFF;
+    buf[m_start_offset + 3] = val & 0xFF;
     return 0;
 }
 
 int LengthField::check(int curOffset, const std::string & /*buf*/)
 {
-    if (static_cast<int32_t>(curOffset - startOffset - 4) != length)
+    if (static_cast<int32_t>(curOffset - m_start_offset - 4) != m_length)
     {
         return ErrPacketDecodingError;
     }
@@ -59,10 +59,10 @@ std::shared_ptr<LengthField> acquireLengthField()
 
 void releaseLengthField(std::shared_ptr<LengthField> ptr)
 {
-    if (ptr != nullptr)
+    if (ptr == nullptr)
         return;
-    ptr->startOffset = 0;
-    ptr->length = 0;
+    ptr->m_start_offset = 0;
+    ptr->m_length = 0;
     std::lock_guard<std::mutex> lock(g_lengthFieldPoolMutex);
     g_lengthFieldPool.push(ptr);
 }

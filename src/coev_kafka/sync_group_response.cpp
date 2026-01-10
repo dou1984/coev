@@ -2,25 +2,25 @@
 #include "sync_group_response.h"
 #include "api_versions.h"
 
-void SyncGroupResponse::setVersion(int16_t v)
+void SyncGroupResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int SyncGroupResponse::GetMemberAssignment(std::shared_ptr<ConsumerGroupMemberAssignment> &assignment)
 {
     assignment = std::make_shared<ConsumerGroupMemberAssignment>();
-    return ::decode(MemberAssignment, std::dynamic_pointer_cast<IDecoder>(assignment), nullptr);
+    return ::decode(m_member_assignment, std::dynamic_pointer_cast<IDecoder>(assignment), nullptr);
 }
 
 int SyncGroupResponse::encode(PEncoder &pe)
 {
-    if (Version >= 1)
+    if (m_version >= 1)
     {
-        pe.putDurationMs(ThrottleTime);
+        pe.putDurationMs(m_throttle_time);
     }
-    pe.putKError(Err);
-    int err = pe.putBytes(MemberAssignment);
+    pe.putKError(m_err);
+    int err = pe.putBytes(m_member_assignment);
     if (err != 0)
     {
         return err;
@@ -31,23 +31,23 @@ int SyncGroupResponse::encode(PEncoder &pe)
 
 int SyncGroupResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
     int err = 0;
-    if (Version >= 1)
+    if (m_version >= 1)
     {
 
-        err = pd.getDurationMs(ThrottleTime);
+        err = pd.getDurationMs(m_throttle_time);
         if (err != 0)
         {
             return err;
         }
     }
-    err = pd.getKError(Err);
+    err = pd.getKError(m_err);
     if (err != 0)
     {
         return err;
     }
-    err = pd.getBytes(MemberAssignment);
+    err = pd.getBytes(m_member_assignment);
     if (err != 0)
     {
         return err;
@@ -64,26 +64,26 @@ int16_t SyncGroupResponse::key() const
 
 int16_t SyncGroupResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t SyncGroupResponse::headerVersion() const
 {
-    if (Version >= 4)
+    if (m_version >= 4)
     {
         return 1;
     }
     return 0;
 }
 
-bool SyncGroupResponse::isValidVersion() const
+bool SyncGroupResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 4;
+    return m_version >= 0 && m_version <= 4;
 }
 
 bool SyncGroupResponse::isFlexible()
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool SyncGroupResponse::isFlexibleVersion(int16_t ver)
@@ -91,9 +91,9 @@ bool SyncGroupResponse::isFlexibleVersion(int16_t ver)
     return ver >= 4;
 }
 
-KafkaVersion SyncGroupResponse::requiredVersion() const
+KafkaVersion SyncGroupResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 4:
         return V2_4_0_0;
@@ -112,5 +112,5 @@ KafkaVersion SyncGroupResponse::requiredVersion() const
 
 std::chrono::milliseconds SyncGroupResponse::throttleTime() const
 {
-    return std::chrono::milliseconds(ThrottleTime);
+    return std::chrono::milliseconds(m_throttle_time);
 }

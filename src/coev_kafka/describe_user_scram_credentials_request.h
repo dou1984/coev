@@ -11,25 +11,25 @@
 
 struct DescribeUserScramCredentialsRequestUser
 {
-    std::string Name;
+    std::string m_name;
 };
 
-struct DescribeUserScramCredentialsRequest : protocolBody
+struct DescribeUserScramCredentialsRequest : protocol_body
 {
-    int16_t Version;
-    std::vector<DescribeUserScramCredentialsRequestUser> DescribeUsers;
+    int16_t m_version;
+    std::vector<DescribeUserScramCredentialsRequestUser> m_describe_users;
     DescribeUserScramCredentialsRequest() = default;
-    DescribeUserScramCredentialsRequest(int16_t v) : Version(v)
+    DescribeUserScramCredentialsRequest(int16_t v) : m_version(v)
     {
     }
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible() const;
     static bool isFlexibleVersion(int16_t version);
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
 };

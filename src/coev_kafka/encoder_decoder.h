@@ -10,7 +10,7 @@ struct PEncoder;
 
 struct PacketEncodingError
 {
-    std::string message;
+    std::string m_message;
 };
 
 struct IEncoder
@@ -41,11 +41,11 @@ struct VDecoder
     virtual int decode(PDecoder &pd, int16_t version) = 0;
 };
 
-struct flexibleVersion
+struct flexible_version
 {
-    virtual ~flexibleVersion() = default;
-    virtual bool isFlexibleVersion(int16_t version) = 0;
-    virtual bool isFlexible() = 0;
+    virtual ~flexible_version() = default;
+    virtual bool is_flexible_version(int16_t version) = 0;
+    virtual bool is_flexible() = 0;
 };
 
 int encode(std::shared_ptr<IEncoder> e, std::string &out, std::shared_ptr<metrics::Registry> metricRegistry);

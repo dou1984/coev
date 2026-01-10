@@ -16,8 +16,8 @@
 
 struct IncrementalAlterConfigsEntry : IEncoder, VDecoder
 {
-    IncrementalAlterConfigsOperation Operation;
-    std::string Value;
+    IncrementalAlterConfigsOperation m_operation;
+    std::string m_value;
 
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
@@ -25,32 +25,32 @@ struct IncrementalAlterConfigsEntry : IEncoder, VDecoder
 
 struct IncrementalAlterConfigsResource : IEncoder, VDecoder
 {
-    ConfigResourceType Type;
-    std::string Name;
-    std::map<std::string, IncrementalAlterConfigsEntry> ConfigEntries;
+    ConfigResourceType m_type;
+    std::string m_name;
+    std::map<std::string, IncrementalAlterConfigsEntry> m_config_entries;
 
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
 };
 
-struct IncrementalAlterConfigsRequest : protocolBody
+struct IncrementalAlterConfigsRequest : protocol_body
 {
 
-    int16_t Version = 0;
-    std::vector<std::shared_ptr<IncrementalAlterConfigsResource>> Resources;
-    bool ValidateOnly = false;
+    int16_t m_version = 0;
+    std::vector<std::shared_ptr<IncrementalAlterConfigsResource>> m_resources;
+    bool m_validate_only = false;
     IncrementalAlterConfigsRequest() = default;
-    IncrementalAlterConfigsRequest(int16_t v) : Version(v)
+    IncrementalAlterConfigsRequest(int16_t v) : m_version(v)
     {
     }
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible();
     static bool isFlexibleVersion(int16_t ver);
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
 };

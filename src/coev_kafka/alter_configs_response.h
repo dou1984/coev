@@ -10,40 +10,40 @@
 
 struct AlterConfigError
 {
-    KError Err;
-    std::string ErrMsg;
+    KError m_err;
+    std::string m_err_msg;
     std::string Error() const;
 };
 
 struct AlterConfigsResourceResponse : VDecoder, IEncoder
 {
-    int16_t ErrorCode = 0;
-    std::string ErrorMsg;
-    ConfigResourceType Type;
-    std::string Name;
+    int16_t m_error_code = 0;
+    std::string m_error_msg;
+    ConfigResourceType m_type;
+    std::string m_name;
 
     int encode(class PEncoder &pe);
     int decode(class PDecoder &pd, int16_t version);
 };
 
-struct AlterConfigsResponse : protocolBody
+struct AlterConfigsResponse : protocol_body
 {
-    int16_t Version = 0;
-    std::chrono::milliseconds ThrottleTime;
-    std::vector<std::shared_ptr<AlterConfigsResourceResponse>> Resources;
+    int16_t m_version = 0;
+    std::chrono::milliseconds m_throttle_time;
+    std::vector<std::shared_ptr<AlterConfigsResourceResponse>> m_resources;
 
     AlterConfigsResponse() = default;
-    AlterConfigsResponse(int16_t v) : Version(v)
+    AlterConfigsResponse(int16_t v) : m_version(v)
     {
     }
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
 
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
     std::chrono::milliseconds throttleTime() const;
 };

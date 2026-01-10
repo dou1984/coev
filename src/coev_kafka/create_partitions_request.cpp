@@ -1,33 +1,33 @@
 #include "create_partitions_request.h"
 #include "api_versions.h"
-void CreatePartitionsRequest::setVersion(int16_t v)
+void CreatePartitionsRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int CreatePartitionsRequest::encode(PEncoder &pe)
 {
-    if (!pe.putArrayLength(static_cast<int32_t>(TopicPartitions.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_topic_partitions.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &pair : TopicPartitions)
+    for (auto &pair : m_topic_partitions)
     {
-        if (!pe.putString(pair.first))
+        if (pe.putString(pair.first) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        if (!pair.second->encode(pe))
+        if (pair.second->encode(pe) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
-    pe.putInt32(static_cast<int32_t>(Timeout.count()));
-    pe.putBool(ValidateOnly);
+    pe.putInt32(static_cast<int32_t>(m_timeout.count()));
+    pe.putBool(m_validate_only);
 
-    return true;
+    return ErrNoError;
 }
 
 int CreatePartitionsRequest::decode(PDecoder &pd, int16_t version)
@@ -38,7 +38,7 @@ int CreatePartitionsRequest::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    TopicPartitions.clear();
+    m_topic_partitions.clear();
     for (int32_t i = 0; i < n; ++i)
     {
         std::string topic;
@@ -51,15 +51,15 @@ int CreatePartitionsRequest::decode(PDecoder &pd, int16_t version)
         {
             return ErrDecodeError;
         }
-        TopicPartitions[topic] = partition;
+        m_topic_partitions[topic] = partition;
     }
 
-    if (pd.getDurationMs(Timeout) != ErrNoError)
+    if (pd.getDurationMs(m_timeout) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
-    if (pd.getBool(ValidateOnly) != ErrNoError)
+    if (pd.getBool(m_validate_only) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -74,7 +74,7 @@ int16_t CreatePartitionsRequest::key() const
 
 int16_t CreatePartitionsRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t CreatePartitionsRequest::headerVersion() const
@@ -82,14 +82,14 @@ int16_t CreatePartitionsRequest::headerVersion() const
     return 1;
 }
 
-bool CreatePartitionsRequest::isValidVersion() const
+bool CreatePartitionsRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 1;
+    return m_version >= 0 && m_version <= 1;
 }
 
-KafkaVersion CreatePartitionsRequest::requiredVersion() const
+KafkaVersion CreatePartitionsRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 1:
         return V2_0_0_0;
@@ -102,5 +102,5 @@ KafkaVersion CreatePartitionsRequest::requiredVersion() const
 
 std::chrono::milliseconds CreatePartitionsRequest::throttleTime() const
 {
-    return Timeout;
+    return m_timeout;
 }

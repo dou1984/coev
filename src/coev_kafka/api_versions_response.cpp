@@ -4,25 +4,25 @@
 
 int ApiVersionsResponseKey::encode(PEncoder &pe, int16_t version)
 {
-    pe.putInt16(ApiKey);
-    pe.putInt16(MinVersion);
-    pe.putInt16(MaxVersion);
+    pe.putInt16(m_api_key);
+    pe.putInt16(m_min_version);
+    pe.putInt16(m_max_version);
 
     if (version >= 3)
     {
         pe.putEmptyTaggedFieldArray();
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int ApiVersionsResponseKey::decode(PDecoder &pd, int16_t version)
 {
-    if (pd.getInt16(ApiKey) != ErrNoError)
+    if (pd.getInt16(m_api_key) != ErrNoError)
         return ErrEncodeError;
-    if (pd.getInt16(MinVersion) != ErrNoError)
+    if (pd.getInt16(m_min_version) != ErrNoError)
         return ErrEncodeError;
-    if (pd.getInt16(MaxVersion) != ErrNoError)
+    if (pd.getInt16(m_max_version) != ErrNoError)
         return ErrEncodeError;
 
     if (version >= 3)
@@ -32,46 +32,46 @@ int ApiVersionsResponseKey::decode(PDecoder &pd, int16_t version)
             return ErrEncodeError;
     }
 
-    return true;
+    return ErrNoError;
 }
 
 // --------------------------
 // ApiVersionsResponse
 // --------------------------
 
-void ApiVersionsResponse::setVersion(int16_t v)
+void ApiVersionsResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int ApiVersionsResponse::encode(PEncoder &pe)
 {
-    pe.putInt16(ErrorCode);
+    pe.putInt16(m_error_code);
 
-    if (!pe.putArrayLength(static_cast<int32_t>(ApiKeys.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_api_keys.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &block : ApiKeys)
+    for (auto &block : m_api_keys)
     {
-        if (!block.encode(pe, Version))
+        if (block.encode(pe, m_version) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
-        pe.putDurationMs(ThrottleTime);
+        pe.putDurationMs(m_throttle_time);
     }
 
-    if (Version >= 3)
+    if (m_version >= 3)
     {
         pe.putEmptyTaggedFieldArray();
     }
 
-    return true;
+    return ErrNoError;
 }
 
 PDecoder &ApiVersionsResponse::downgradeFlexibleDecoder(PDecoder &pd)
@@ -83,16 +83,16 @@ PDecoder &ApiVersionsResponse::downgradeFlexibleDecoder(PDecoder &pd)
 
 int ApiVersionsResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    if (pd.getInt16(ErrorCode) != ErrNoError)
+    if (pd.getInt16(m_error_code) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
-    if (ErrorCode == ErrUnsupportedVersion)
+    if (m_error_code == ErrUnsupportedVersion)
     {
-        Version = 0;
+        m_version = 0;
         pd = downgradeFlexibleDecoder(pd);
     }
 
@@ -102,24 +102,24 @@ int ApiVersionsResponse::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    ApiKeys.resize(numApiKeys);
+    m_api_keys.resize(numApiKeys);
     for (int32_t i = 0; i < numApiKeys; ++i)
     {
-        if (!ApiKeys[i].decode(pd, Version))
+        if (m_api_keys[i].decode(pd, m_version) != ErrNoError)
         {
             return ErrDecodeError;
         }
     }
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
-        if (pd.getDurationMs(ThrottleTime) != ErrNoError)
+        if (pd.getDurationMs(m_throttle_time) != ErrNoError)
         {
             return ErrDecodeError;
         }
     }
 
-    if (Version >= 3)
+    if (m_version >= 3)
     {
         int32_t _;
         if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
@@ -128,7 +128,7 @@ int ApiVersionsResponse::decode(PDecoder &pd, int16_t version)
         }
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int16_t ApiVersionsResponse::key() const
@@ -138,7 +138,7 @@ int16_t ApiVersionsResponse::key() const
 
 int16_t ApiVersionsResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t ApiVersionsResponse::headerVersion() const
@@ -147,14 +147,14 @@ int16_t ApiVersionsResponse::headerVersion() const
     return 0;
 }
 
-bool ApiVersionsResponse::isValidVersion() const
+bool ApiVersionsResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 3;
+    return m_version >= 0 && m_version <= 3;
 }
 
 bool ApiVersionsResponse::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool ApiVersionsResponse::isFlexibleVersion(int16_t version) const
@@ -162,9 +162,9 @@ bool ApiVersionsResponse::isFlexibleVersion(int16_t version) const
     return version >= 3;
 }
 
-KafkaVersion ApiVersionsResponse::requiredVersion() const
+KafkaVersion ApiVersionsResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 3:
         return V2_4_0_0;
@@ -181,5 +181,5 @@ KafkaVersion ApiVersionsResponse::requiredVersion() const
 
 std::chrono::milliseconds ApiVersionsResponse::throttleTime() const
 {
-    return std::chrono::milliseconds(ThrottleTime);
+    return std::chrono::milliseconds(m_throttle_time);
 }

@@ -25,8 +25,6 @@
 #include "consumer_group_handler.h"
 #include "undefined.h"
 
-struct IOffsetManager;
-struct IConsumerGroupClaim;
 struct PartitionConsumer;
 struct ConsumerGroupSession;
 
@@ -44,22 +42,22 @@ struct IConsumerGroup
 
 struct ConsumerGroup : IConsumerGroup, std::enable_shared_from_this<ConsumerGroup>
 {
-    std::shared_ptr<Client> client_;
-    std::shared_ptr<Config> config_;
-    std::shared_ptr<IConsumer> consumer_;
-    std::string groupId;
-    std::string groupInstanceId;
-    std::string memberId;
-    coev::co_channel<std::shared_ptr<ConsumerError>> errors;
+    std::shared_ptr<Client> m_client;
+    std::shared_ptr<Config> m_config;
+    std::shared_ptr<IConsumer> m_consumer;
+    std::string m_group_id;
+    std::string m_group_instance_id;
+    std::string m_member_id;
+    coev::co_channel<std::shared_ptr<ConsumerError>> m_errors;
 
-    mutable std::mutex lock;
-    mutable std::shared_mutex errorsLock;
-    coev::co_channel<bool> closed;
-    std::string userData;
+    mutable std::mutex m_lock;
+    mutable std::shared_mutex m_errors_lock;
+    coev::co_channel<bool> m_closed;
+    std::string m_user_data;
 
-    std::shared_ptr<metrics::Registry> metricRegistry;
-    std::shared_ptr<Broker> coordinator;
-    coev::co_task task_;
+    std::shared_ptr<metrics::Registry> m_metric_registry;
+    std::shared_ptr<Broker> m_coordinator;
+    coev::co_task m_task;
 
     ConsumerGroup(std::shared_ptr<Client> client, std::shared_ptr<IConsumer> consumer, std::shared_ptr<Config> config, const std::string &group_id);
 
@@ -78,10 +76,10 @@ struct ConsumerGroup : IConsumerGroup, std::enable_shared_from_this<ConsumerGrou
     std::shared_ptr<BalanceStrategy> findStrategy(const std::string &name, const std::vector<std::shared_ptr<BalanceStrategy>> &groupStrategies, bool &ok);
 
     coev::awaitable<int> SyncGroup(std::shared_ptr<Broker> coordinator, std::map<std::string, ConsumerGroupMemberMetadata> members,
-                                          const BalanceStrategyPlan &plan, int32_t generationID, std::shared_ptr<BalanceStrategy> strategy, std::shared_ptr<SyncGroupResponse> &response);
+                                   const BalanceStrategyPlan &plan, int32_t generationID, std::shared_ptr<BalanceStrategy> strategy, std::shared_ptr<SyncGroupResponse> &response);
 
     coev::awaitable<int> Heartbeat(std::shared_ptr<Broker> coordinator, const std::string &memberID, int32_t generationID,
-                                          std::shared_ptr<HeartbeatResponse> &response);
+                                   std::shared_ptr<HeartbeatResponse> &response);
 
     coev::awaitable<int> Balance(std::shared_ptr<BalanceStrategy> strategy, const std::map<std::string, ConsumerGroupMemberMetadata> &members,
                                  std::map<std::string, std::vector<int32_t>> &topicPartitions, std::vector<std::string> &allSubscribedTopics, BalanceStrategyPlan &plan);

@@ -5,9 +5,9 @@
 #include "partition_producer.h"
 
 TopicProducer::TopicProducer(std::shared_ptr<AsyncProducer> parent, const std::string &topic)
-    : parent_(parent), topic_(topic)
+    : m_parent(parent), m_topic(topic)
 {
-    partitioner_ = parent_->conf_->Producer.Partitioner(topic);
+    m_partitioner = m_parent->m_conf->Producer.Partitioner(topic);
 }
 
 coev::awaitable<void> TopicProducer::dispatch()
@@ -15,25 +15,25 @@ coev::awaitable<void> TopicProducer::dispatch()
 
     while (true)
     {
-        std::shared_ptr<ProducerMessage> msg = co_await input_.get();
-        if (msg->Retries == 0)
+        std::shared_ptr<ProducerMessage> msg = co_await m_input.get();
+        if (msg->m_retries == 0)
         {
             int err = co_await partitionMessage(msg);
             if (err != 0)
             {
-                parent_->returnError(msg, err);
+                m_parent->returnError(msg, err);
                 continue;
             }
         }
 
-        auto &handler = handlers_[msg->Partition];
-        if (auto it = handlers_.find(msg->Partition); it != handlers_.end())
+        auto &handler = m_handlers[msg->m_partition];
+        if (auto it = m_handlers.find(msg->m_partition); it != m_handlers.end())
         {
             it->second.set(msg);
         }
         else
         {
-            auto pp = std::make_shared<PartitionProducer>(parent_, msg->Topic, msg->Partition);
+            auto pp = std::make_shared<PartitionProducer>(m_parent, msg->m_topic, msg->m_partition);
             co_start << pp->Dispatch();
             handler.set(msg);
         }
@@ -45,23 +45,23 @@ coev::awaitable<int> TopicProducer::partitionMessage(std::shared_ptr<ProducerMes
     std::vector<int32_t> partitions;
 
     bool requires_consistency = false;
-    if (auto ep = dynamic_cast<DynamicConsistencyPartitioner *>(partitioner_.get()))
+    if (auto ep = dynamic_cast<DynamicConsistencyPartitioner *>(m_partitioner.get()))
     {
         requires_consistency = ep->MessageRequiresConsistency(msg);
     }
     else
     {
-        requires_consistency = partitioner_->RequiresConsistency();
+        requires_consistency = m_partitioner->RequiresConsistency();
     }
 
     int err = 0;
     if (requires_consistency)
     {
-        err = co_await parent_->client_->Partitions(msg->Topic, partitions);
+        err = co_await m_parent->m_client->Partitions(msg->m_topic, partitions);
     }
     else
     {
-        err = co_await parent_->client_->WritablePartitions(msg->Topic, partitions);
+        err = co_await m_parent->m_client->WritablePartitions(msg->m_topic, partitions);
     }
 
     if (err != 0)
@@ -76,12 +76,12 @@ coev::awaitable<int> TopicProducer::partitionMessage(std::shared_ptr<ProducerMes
     }
 
     int32_t choice;
-    err = partitioner_->Partition(msg, num_partitions, choice);
+    err = m_partitioner->Partition(msg, num_partitions, choice);
     if (choice < 0 || choice >= num_partitions)
     {
         co_return ErrInvalidPartition;
     }
 
-    msg->Partition = partitions[choice];
+    msg->m_partition = partitions[choice];
     co_return 0;
 }

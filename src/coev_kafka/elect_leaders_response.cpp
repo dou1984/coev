@@ -4,23 +4,23 @@
 
 int PartitionResult::encode(PEncoder &pe, int16_t /*version*/)
 {
-    pe.putKError(ErrorCode);
-    if (!pe.putNullableString(ErrorMessage))
+    pe.putKError(m_error_code);
+    if (pe.putNullableString(m_error_message) != ErrNoError)
     {
         return ErrEncodeError;
     }
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int PartitionResult::decode(PDecoder &pd, int16_t /*version*/)
 {
-    if (pd.getKError(ErrorCode) != ErrNoError)
+    if (pd.getKError(m_error_code) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    if (pd.getNullableString(ErrorMessage) != ErrNoError)
+    if (pd.getNullableString(m_error_message) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -30,40 +30,40 @@ int PartitionResult::decode(PDecoder &pd, int16_t /*version*/)
     {
         return ErrEncodeError;
     }
-    return true;
+    return ErrNoError;
 }
 
 // --- ElectLeadersResponse implementation ---
-void ElectLeadersResponse::setVersion(int16_t v)
+void ElectLeadersResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int ElectLeadersResponse::encode(PEncoder &pe)
 {
-    pe.putDurationMs(ThrottleTime);
+    pe.putDurationMs(m_throttle_time);
 
-    if (Version > 0)
+    if (m_version > 0)
     {
-        pe.putKError(ErrorCode);
+        pe.putKError(m_error_code);
     }
 
-    if (!pe.putArrayLength(static_cast<int32_t>(ReplicaElectionResults.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_replica_election_results.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &topicEntry : ReplicaElectionResults)
+    for (auto &topicEntry : m_replica_election_results)
     {
         auto &topic = topicEntry.first;
         auto &partitions = topicEntry.second;
 
-        if (!pe.putString(topic))
+        if (pe.putString(topic) != ErrNoError)
         {
             return ErrEncodeError;
         }
 
-        if (!pe.putArrayLength(static_cast<int32_t>(partitions.size())))
+        if (pe.putArrayLength(static_cast<int32_t>(partitions.size())) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -71,7 +71,7 @@ int ElectLeadersResponse::encode(PEncoder &pe)
         for (auto &partEntry : partitions)
         {
             pe.putInt32(partEntry.first); // partition ID
-            if (!partEntry.second->encode(pe, Version))
+            if (partEntry.second->encode(pe, m_version) != ErrNoError)
             {
                 return ErrEncodeError;
             }
@@ -86,15 +86,15 @@ int ElectLeadersResponse::encode(PEncoder &pe)
 
 int ElectLeadersResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
-    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
+    m_version = version;
+    if (pd.getDurationMs(m_throttle_time) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
-    if (Version > 0)
+    if (m_version > 0)
     {
-        if (pd.getKError(ErrorCode) != ErrNoError)
+        if (pd.getKError(m_error_code) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -106,8 +106,8 @@ int ElectLeadersResponse::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    ReplicaElectionResults.clear();
-    ReplicaElectionResults.reserve(numTopics);
+    m_replica_election_results.clear();
+    m_replica_election_results.reserve(numTopics);
 
     for (int32_t i = 0; i < numTopics; ++i)
     {
@@ -123,7 +123,7 @@ int ElectLeadersResponse::decode(PDecoder &pd, int16_t version)
             return ErrDecodeError;
         }
 
-        auto &partitionMap = ReplicaElectionResults[topic];
+        auto &partitionMap = m_replica_election_results[topic];
         partitionMap.reserve(numPartitions);
 
         for (int32_t j = 0; j < numPartitions; ++j)
@@ -135,7 +135,7 @@ int ElectLeadersResponse::decode(PDecoder &pd, int16_t version)
             }
 
             auto result = std::make_unique<PartitionResult>();
-            if (!result->decode(pd, Version))
+            if (result->decode(pd, m_version) != ErrNoError)
             {
                 return ErrDecodeError;
             }
@@ -166,7 +166,7 @@ int16_t ElectLeadersResponse::key() const
 
 int16_t ElectLeadersResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t ElectLeadersResponse::headerVersion() const
@@ -174,14 +174,14 @@ int16_t ElectLeadersResponse::headerVersion() const
     return 1; // Note: differs from request (which uses header v2)
 }
 
-bool ElectLeadersResponse::isValidVersion() const
+bool ElectLeadersResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 2;
+    return m_version >= 0 && m_version <= 2;
 }
 
 bool ElectLeadersResponse::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool ElectLeadersResponse::isFlexibleVersion(int16_t version)
@@ -189,9 +189,9 @@ bool ElectLeadersResponse::isFlexibleVersion(int16_t version)
     return version >= 2;
 }
 
-KafkaVersion ElectLeadersResponse::requiredVersion() const
+KafkaVersion ElectLeadersResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 2:
         return V2_4_0_0;
@@ -206,5 +206,5 @@ KafkaVersion ElectLeadersResponse::requiredVersion() const
 
 std::chrono::milliseconds ElectLeadersResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }

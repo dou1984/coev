@@ -2,37 +2,37 @@
 #include "leave_group_request.h"
 #include "api_versions.h"
 
-void LeaveGroupRequest::setVersion(int16_t v)
+void LeaveGroupRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int LeaveGroupRequest::encode(PEncoder &pe)
 {
-    int err = pe.putString(GroupId);
+    int err = pe.putString(m_group_id);
     if (err != 0)
         return err;
 
-    if (Version < 3)
+    if (m_version < 3)
     {
-        err = pe.putString(MemberId);
+        err = pe.putString(m_member_id);
         if (err != 0)
             return err;
     }
 
-    if (Version >= 3)
+    if (m_version >= 3)
     {
-        err = pe.putArrayLength(static_cast<int32_t>(Members.size()));
+        err = pe.putArrayLength(static_cast<int32_t>(m_members.size()));
         if (err != 0)
             return err;
 
-        for (auto &member : Members)
+        for (auto &member : m_members)
         {
-            err = pe.putString(member.MemberId);
+            err = pe.putString(member.m_member_id);
             if (err != 0)
                 return err;
 
-            err = pe.putNullableString(member.GroupInstanceId);
+            err = pe.putNullableString(member.m_group_instance_id);
             if (err != 0)
                 return err;
 
@@ -46,27 +46,27 @@ int LeaveGroupRequest::encode(PEncoder &pe)
 
 int LeaveGroupRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    int err = pd.getString(GroupId);
+    int err = pd.getString(m_group_id);
     if (err != 0)
         return err;
 
-    if (Version < 3)
+    if (m_version < 3)
     {
-        err = pd.getString(MemberId);
+        err = pd.getString(m_member_id);
         if (err != 0)
             return err;
     }
 
-    if (Version >= 3)
+    if (m_version >= 3)
     {
         int32_t memberCount;
         err = pd.getArrayLength(memberCount);
         if (err != 0)
             return err;
 
-        Members.resize(memberCount);
+        m_members.resize(memberCount);
         for (int32_t i = 0; i < memberCount; ++i)
         {
             std::string memberId;
@@ -79,8 +79,8 @@ int LeaveGroupRequest::decode(PDecoder &pd, int16_t version)
             if (err != 0)
                 return err;
 
-            Members[i].MemberId = memberId;
-            Members[i].GroupInstanceId = instanceId;
+            m_members[i].m_member_id = memberId;
+            m_members[i].m_group_instance_id = instanceId;
 
             int32_t _;
             err = pd.getEmptyTaggedFieldArray(_);
@@ -99,22 +99,22 @@ int16_t LeaveGroupRequest::key() const
 
 int16_t LeaveGroupRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t LeaveGroupRequest::headerVersion() const
 {
-    return (Version >= 4) ? 2 : 1;
+    return (m_version >= 4) ? 2 : 1;
 }
 
-bool LeaveGroupRequest::isValidVersion() const
+bool LeaveGroupRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 4;
+    return m_version >= 0 && m_version <= 4;
 }
 
 bool LeaveGroupRequest::isFlexible()
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool LeaveGroupRequest::isFlexibleVersion(int16_t ver)
@@ -122,9 +122,9 @@ bool LeaveGroupRequest::isFlexibleVersion(int16_t ver)
     return ver >= 4;
 }
 
-KafkaVersion LeaveGroupRequest::requiredVersion() const
+KafkaVersion LeaveGroupRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 4:
         return V2_4_0_0;

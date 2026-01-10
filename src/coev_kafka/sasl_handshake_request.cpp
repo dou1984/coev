@@ -2,20 +2,20 @@
 #include "sasl_handshake_request.h"
 #include "api_versions.h"
 
-void SaslHandshakeRequest::setVersion(int16_t v)
+void SaslHandshakeRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int SaslHandshakeRequest::encode(PEncoder &pe)
 {
-    return pe.putString(Mechanism);
+    return pe.putString(m_mechanism);
 }
 
 int SaslHandshakeRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
-    return pd.getString(Mechanism);
+    m_version = version;
+    return pd.getString(m_mechanism);
 }
 
 int16_t SaslHandshakeRequest::key() const
@@ -25,7 +25,7 @@ int16_t SaslHandshakeRequest::key() const
 
 int16_t SaslHandshakeRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t SaslHandshakeRequest::headerVersion() const
@@ -33,14 +33,14 @@ int16_t SaslHandshakeRequest::headerVersion() const
     return 1;
 }
 
-bool SaslHandshakeRequest::isValidVersion() const
+bool SaslHandshakeRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 1;
+    return m_version >= 0 && m_version <= 1;
 }
 
-KafkaVersion SaslHandshakeRequest::requiredVersion() const
+KafkaVersion SaslHandshakeRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 1:
         return V1_0_0_0;

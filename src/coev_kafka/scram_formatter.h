@@ -16,8 +16,8 @@ enum ScramMechanismType : int8_t
 
 struct ScramFormatter
 {
-    ScramMechanismType mechanism;
-    ScramFormatter(ScramMechanismType mech) : mechanism(mech) {}
+    ScramMechanismType m_mechanism;
+    ScramFormatter(ScramMechanismType mech) : m_mechanism(mech) {}
 
     int Hmac(const std::string &key, const std::string &data, std::string &) const;
     int SaltedPassword(const std::string &password, const std::string &salt, int iterations, std::string &) const;

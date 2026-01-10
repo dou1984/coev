@@ -12,33 +12,33 @@
 
 struct TopicDetail : IEncoder, VDecoder
 {
-    int32_t NumPartitions;
-    int16_t ReplicationFactor;
-    std::map<int32_t, std::vector<int32_t>> ReplicaAssignment;
-    std::map<std::string, std::string> ConfigEntries;
+    int32_t m_num_partitions;
+    int16_t m_replication_factor;
+    std::map<int32_t, std::vector<int32_t>> m_replica_assignment;
+    std::map<std::string, std::string> m_config_entries;
 
     TopicDetail() = default;
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
 };
 
-struct CreateTopicsRequest : protocolBody
+struct CreateTopicsRequest : protocol_body
 {
 
-    int16_t Version;
-    std::map<std::string, std::shared_ptr<TopicDetail>> TopicDetails;
-    std::chrono::milliseconds Timeout;
-    bool ValidateOnly;
+    int16_t m_version;
+    std::map<std::string, std::shared_ptr<TopicDetail>> m_topic_details;
+    std::chrono::milliseconds m_timeout;
+    bool m_validate_only;       
 
     CreateTopicsRequest() = default;
-    CreateTopicsRequest(int16_t v) : Version(v)
+    CreateTopicsRequest(int16_t v) : m_version(v)
     {
     }
-    CreateTopicsRequest(int16_t v, int64_t timeoutMs, bool validateOnly) : Version(v), Timeout(timeoutMs), ValidateOnly(validateOnly)
+    CreateTopicsRequest(int16_t v, int64_t timeoutMs, bool validateOnly) : m_version(v), m_timeout(timeoutMs), m_validate_only(validateOnly)
     {
     }
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
 
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
@@ -47,8 +47,8 @@ struct CreateTopicsRequest : protocolBody
     int16_t headerVersion() const;
     bool isFlexible() const;
     static bool isFlexibleVersion(int16_t version);
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
 };
 
 std::shared_ptr<CreateTopicsRequest> NewCreateTopicsRequest(const KafkaVersion &Version_, std::map<std::string, std::shared_ptr<TopicDetail>> topicDetails, int64_t timeoutMs, bool validateOnly);

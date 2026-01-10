@@ -7,12 +7,12 @@
 
 struct ControlRecord
 {
-    int16_t Version;
-    int32_t CoordinatorEpoch;
-    ControlRecordType Type;
+    int16_t m_version;
+    int32_t m_coordinator_epoch;
+    ControlRecordType m_type;
     ControlRecord() = default;
     ControlRecord(int16_t v, int32_t c, ControlRecordType t)
-        : Version(v), CoordinatorEpoch(c), Type(t)
+        : m_version(v), m_coordinator_epoch(c), m_type(t)
     {
     }
     int decode(PDecoder &key, PDecoder &value);

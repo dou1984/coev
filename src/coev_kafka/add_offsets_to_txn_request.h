@@ -8,24 +8,24 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
-struct AddOffsetsToTxnRequest : protocolBody
+struct AddOffsetsToTxnRequest : protocol_body
 {
-    int16_t Version;
-    std::string TransactionalID;
-    int64_t ProducerID;
-    int16_t ProducerEpoch;
-    std::string GroupID;
+    int16_t m_version;
+    std::string m_transactional_id;
+    int64_t m_producer_id;
+    int16_t m_producer_epoch;
+    std::string m_group_id;
     AddOffsetsToTxnRequest() = default;
-    AddOffsetsToTxnRequest(int16_t v) : Version(v)
+    AddOffsetsToTxnRequest(int16_t v) : m_version(v)
     {
     }
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
 };

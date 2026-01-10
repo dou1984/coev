@@ -1,22 +1,22 @@
 #include "version.h"
 #include "add_offsets_to_txn_request.h"
 
-void AddOffsetsToTxnRequest::setVersion(int16_t v)
+void AddOffsetsToTxnRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int AddOffsetsToTxnRequest::encode(PEncoder &pe)
 {
-    if (pe.putString(TransactionalID) != 0)
+    if (pe.putString(m_transactional_id) != 0)
     {
         return -1;
     }
 
-    pe.putInt64(ProducerID);
-    pe.putInt16(ProducerEpoch);
+    pe.putInt64(m_producer_id);
+    pe.putInt16(m_producer_epoch);
 
-    if (pe.putString(GroupID) != 0)
+    if (pe.putString(m_group_id) != 0)
     {
         return -1;
     }
@@ -27,19 +27,19 @@ int AddOffsetsToTxnRequest::encode(PEncoder &pe)
 int AddOffsetsToTxnRequest::decode(PDecoder &pd, int16_t version)
 {
     int err;
-    if ((err = pd.getString(TransactionalID)) != 0)
+    if ((err = pd.getString(m_transactional_id)) != 0)
     {
         return err;
     }
-    if ((err = pd.getInt64(ProducerID)) != 0)
+    if ((err = pd.getInt64(m_producer_id)) != 0)
     {
         return err;
     }
-    if ((err = pd.getInt16(ProducerEpoch)) != 0)
+    if ((err = pd.getInt16(m_producer_epoch)) != 0)
     {
         return err;
     }
-    if ((err = pd.getString(GroupID)) != 0)
+    if ((err = pd.getString(m_group_id)) != 0)
     {
         return err;
     }
@@ -53,7 +53,7 @@ int16_t AddOffsetsToTxnRequest::key() const
 
 int16_t AddOffsetsToTxnRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t AddOffsetsToTxnRequest::headerVersion() const
@@ -61,14 +61,14 @@ int16_t AddOffsetsToTxnRequest::headerVersion() const
     return 1;
 }
 
-bool AddOffsetsToTxnRequest::isValidVersion() const
+bool AddOffsetsToTxnRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 2;
+    return m_version >= 0 && m_version <= 2;
 }
 
-KafkaVersion AddOffsetsToTxnRequest::requiredVersion() const
+KafkaVersion AddOffsetsToTxnRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 2:
         return V2_7_0_0;

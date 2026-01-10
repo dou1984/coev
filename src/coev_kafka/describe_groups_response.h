@@ -18,13 +18,13 @@
 struct GroupMemberDescription : VEncoder, VDecoder
 {
 
-    int16_t Version;
-    std::string MemberId;
-    std::string GroupInstanceId;
-    std::string ClientId;
-    std::string ClientHost;
-    std::string MemberMetadata;
-    std::string MemberAssignment;
+    int16_t m_version;
+    std::string m_member_id;
+    std::string m_group_instance_id;
+    std::string m_client_id;
+    std::string m_client_host;
+    std::string m_member_metadata;
+    std::string m_member_assignment;
 
     int encode(PEncoder &pe, int16_t version);
     int decode(PDecoder &pd, int16_t version);
@@ -34,35 +34,35 @@ struct GroupMemberDescription : VEncoder, VDecoder
 
 struct GroupDescription : VEncoder, VDecoder
 {
-    int16_t Version;
-    KError Err;
-    int16_t ErrorCode;
-    std::string GroupId;
-    std::string State;
-    std::string ProtocolType;
-    std::string Protocol;
-    std::map<std::string, std::shared_ptr<GroupMemberDescription>> Members;
-    int32_t AuthorizedOperations;
+    int16_t m_version;
+    KError m_error_code;
+    std::string m_error_msg;
+    std::string m_group_id;
+    std::string m_state;
+    std::string m_protocol_type;
+    std::string m_protocol;
+    std::map<std::string, std::shared_ptr<GroupMemberDescription>> m_members;
+    int32_t m_authorized_operations;
 
     int encode(PEncoder &pe, int16_t version);
     int decode(PDecoder &pd, int16_t version);
 };
 
-struct DescribeGroupsResponse : protocolBody
+struct DescribeGroupsResponse : protocol_body
 {
-    int16_t Version;
-    std::chrono::milliseconds ThrottleTime;
-    std::vector<std::shared_ptr<GroupDescription>> Groups;
+    int16_t m_version;
+    std::chrono::milliseconds m_throttle_time;
+    std::vector<std::shared_ptr<GroupDescription>> m_groups;
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible() const;
     static bool isFlexibleVersion(int16_t version);
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
     std::chrono::milliseconds throttleTime() const;
 };

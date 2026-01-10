@@ -1,21 +1,21 @@
 #include "version.h"
 #include "acl_delete_request.h"
 
-void DeleteAclsRequest::setVersion(int16_t v)
+void DeleteAclsRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int DeleteAclsRequest::encode(PEncoder &pe)
 {
-    if (pe.putArrayLength(static_cast<int32_t>(Filters.size())) != 0)
+    if (pe.putArrayLength(static_cast<int32_t>(m_filters.size())) != 0)
     {
         return -1;
     }
 
-    for (auto &filter : Filters)
+    for (auto &filter : m_filters)
     {
-        filter->Version = Version;
+        filter->m_version = m_version;
         if (filter->encode(pe) != 0)
         {
             return -1;
@@ -27,19 +27,19 @@ int DeleteAclsRequest::encode(PEncoder &pe)
 
 int DeleteAclsRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
     int32_t n;
     if (pd.getArrayLength(n) != 0)
     {
         return -1;
     }
 
-    Filters.resize(n);
+    m_filters.resize(n);
     for (int32_t i = 0; i < n; ++i)
     {
-        Filters[i] = std::make_shared<AclFilter>();
-        Filters[i]->Version = Version;
-        if (Filters[i]->decode(pd, version) != 0)
+        m_filters[i] = std::make_shared<AclFilter>();
+        m_filters[i]->m_version = m_version;
+        if (m_filters[i]->decode(pd, version) != 0)
         {
             return -1;
         }
@@ -55,7 +55,7 @@ int16_t DeleteAclsRequest::key() const
 
 int16_t DeleteAclsRequest::version() const
 {
-    return static_cast<int16_t>(Version);
+    return static_cast<int16_t>(m_version);
 }
 
 int16_t DeleteAclsRequest::headerVersion() const
@@ -63,14 +63,14 @@ int16_t DeleteAclsRequest::headerVersion() const
     return 1;
 }
 
-bool DeleteAclsRequest::isValidVersion() const
+bool DeleteAclsRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 1;
+    return m_version >= 0 && m_version <= 1;
 }
 
-KafkaVersion DeleteAclsRequest::requiredVersion() const
+KafkaVersion DeleteAclsRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 1:
         return V2_0_0_0;

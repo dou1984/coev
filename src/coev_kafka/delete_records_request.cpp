@@ -5,14 +5,14 @@
 
 int DeleteRecordsRequestTopic::encode(PEncoder &pe)
 {
-    if (!pe.putArrayLength(static_cast<int32_t>(PartitionOffsets.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_partition_offsets.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
     std::vector<int32_t> keys;
-    keys.reserve(PartitionOffsets.size());
-    for (auto &kv : PartitionOffsets)
+    keys.reserve(m_partition_offsets.size());
+    for (auto &kv : m_partition_offsets)
     {
         keys.push_back(kv.first);
     }
@@ -21,10 +21,10 @@ int DeleteRecordsRequestTopic::encode(PEncoder &pe)
     for (int32_t partition : keys)
     {
         pe.putInt32(partition);
-        pe.putInt64(PartitionOffsets.at(partition));
+        pe.putInt64(m_partition_offsets.at(partition));
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int DeleteRecordsRequestTopic::decode(PDecoder &pd, int16_t /*version*/)
@@ -35,41 +35,41 @@ int DeleteRecordsRequestTopic::decode(PDecoder &pd, int16_t /*version*/)
         return ErrEncodeError;
     }
 
-    PartitionOffsets.clear();
+    m_partition_offsets.clear();
 
     if (n > 0)
     {
-        PartitionOffsets.reserve(n);
+        m_partition_offsets.reserve(n);
         for (int32_t i = 0; i < n; ++i)
         {
             int32_t partition;
             int64_t offset;
-            if (pd.getInt32(partition) || !pd.getInt64(offset) != ErrNoError)
+            if (pd.getInt32(partition) != ErrNoError || pd.getInt64(offset) != ErrNoError)
             {
                 return ErrEncodeError;
             }
-            PartitionOffsets[partition] = offset;
+            m_partition_offsets[partition] = offset;
         }
     }
 
-    return true;
+    return ErrNoError;
 }
 
-void DeleteRecordsRequest::setVersion(int16_t v)
+void DeleteRecordsRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int DeleteRecordsRequest::encode(PEncoder &pe)
 {
-    if (!pe.putArrayLength(static_cast<int32_t>(Topics.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_topics.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
     std::vector<std::string> keys;
-    keys.reserve(Topics.size());
-    for (auto &kv : Topics)
+    keys.reserve(m_topics.size());
+    for (auto &kv : m_topics)
     {
         keys.push_back(kv.first);
     }
@@ -77,23 +77,23 @@ int DeleteRecordsRequest::encode(PEncoder &pe)
 
     for (const std::string &topic : keys)
     {
-        if (!pe.putString(topic))
+        if (pe.putString(topic) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        if (!Topics.at(topic)->encode(pe))
+        if (m_topics.at(topic)->encode(pe) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
-    pe.putInt32(static_cast<int32_t>(Timeout.count()));
-    return true;
+    pe.putInt32(static_cast<int32_t>(m_timeout.count()));
+    return ErrNoError;
 }
 
 int DeleteRecordsRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
     int32_t n;
     if (pd.getArrayLength(n) != ErrNoError)
@@ -101,7 +101,7 @@ int DeleteRecordsRequest::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    Topics.clear();
+    m_topics.clear();
 
     if (n > 0)
     {
@@ -114,16 +114,15 @@ int DeleteRecordsRequest::decode(PDecoder &pd, int16_t version)
             }
 
             auto details = std::make_shared<DeleteRecordsRequestTopic>();
-            if (!details->decode(pd, version))
+            if (details->decode(pd, version) != ErrNoError)
             {
-
                 return ErrDecodeError;
             }
-            Topics[topic] = details;
+            m_topics[topic] = details;
         }
     }
 
-    if (pd.getDurationMs(Timeout) != ErrNoError)
+    if (pd.getDurationMs(m_timeout) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -138,7 +137,7 @@ int16_t DeleteRecordsRequest::key() const
 
 int16_t DeleteRecordsRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t DeleteRecordsRequest::headerVersion() const
@@ -146,14 +145,14 @@ int16_t DeleteRecordsRequest::headerVersion() const
     return 1;
 }
 
-bool DeleteRecordsRequest::isValidVersion() const
+bool DeleteRecordsRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 1;
+    return m_version >= 0 && m_version <= 1;
 }
 
-KafkaVersion DeleteRecordsRequest::requiredVersion() const
+KafkaVersion DeleteRecordsRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 1:
         return V2_0_0_0;
@@ -165,5 +164,5 @@ KafkaVersion DeleteRecordsRequest::requiredVersion() const
 DeleteRecordsRequest::~DeleteRecordsRequest()
 {
 
-    Topics.clear();
+    m_topics.clear();
 }

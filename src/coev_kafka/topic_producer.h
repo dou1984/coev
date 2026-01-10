@@ -16,10 +16,10 @@ struct TopicProducer
 
     coev::awaitable<int> partitionMessage(std::shared_ptr<ProducerMessage> msg);
 
-    std::shared_ptr<AsyncProducer> parent_;
-    std::string topic_;
-    coev::co_channel<std::shared_ptr<ProducerMessage>> input_;
-    std::shared_ptr<Breaker> breaker_;
-    std::map<int32_t, coev::co_channel<std::shared_ptr<ProducerMessage>>> handlers_;
-    std::shared_ptr<Partitioner> partitioner_;
+    std::shared_ptr<AsyncProducer> m_parent;
+    std::string m_topic;
+    coev::co_channel<std::shared_ptr<ProducerMessage>> m_input;
+    std::shared_ptr<Breaker> m_breaker;
+    std::map<int32_t, coev::co_channel<std::shared_ptr<ProducerMessage>>> m_handlers;
+    std::shared_ptr<Partitioner> m_partitioner;
 };

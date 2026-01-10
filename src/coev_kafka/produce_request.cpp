@@ -5,23 +5,23 @@
 #include "length_field.h"
 #include "metrics.h"
 
-void ProduceRequest::setVersion(int16_t v)
+void ProduceRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int ProduceRequest::encode(PEncoder &pe)
 {
-    if (Version >= 3)
+    if (m_version >= 3)
     {
-        if (int err = pe.putNullableString(TransactionalID); err != 0)
+        if (int err = pe.putNullableString(m_transactional_id); err != 0)
         {
             return err;
         }
     }
 
-    pe.putInt16(static_cast<int16_t>(Acks));
-    pe.putDurationMs(Timeout);
+    pe.putInt16(static_cast<int16_t>(m_acks));
+    pe.putDurationMs(m_timeout);
 
     auto metricRegistry = pe.metricRegistry();
     std::shared_ptr<metrics::Histogram> batchSizeMetric;
@@ -34,12 +34,12 @@ int ProduceRequest::encode(PEncoder &pe)
 
     int64_t totalRecordCount = 0;
 
-    if (int err = pe.putArrayLength(static_cast<int32_t>(records.size())); err != 0)
+    if (int err = pe.putArrayLength(static_cast<int32_t>(m_records.size())); err != 0)
     {
         return err;
     }
 
-    for (auto &[topic, partitions] : records)
+    for (auto &[topic, partitions] : m_records)
     {
         if (int err = pe.putString(topic); err != 0)
             return err;
@@ -65,13 +65,13 @@ int ProduceRequest::encode(PEncoder &pe)
 
             if (metricRegistry)
             {
-                if (Version >= 3)
+                if (m_version >= 3)
                 {
-                    topicRecordCount += UpdateBatchMetrics(recs->RBatch, compressionRatioMetric, topicCompressionRatioMetric);
+                    topicRecordCount += UpdateBatchMetrics(recs->m_record_batch, compressionRatioMetric, topicCompressionRatioMetric);
                 }
                 else
                 {
-                    topicRecordCount += UpdateMsgSetMetrics(recs->MsgSet, compressionRatioMetric, topicCompressionRatioMetric);
+                    topicRecordCount += UpdateMsgSetMetrics(recs->m_msg_set, compressionRatioMetric, topicCompressionRatioMetric);
                 }
 
                 int64_t batchSize = static_cast<int64_t>(pe.offset() - startOffset);
@@ -99,20 +99,20 @@ int ProduceRequest::encode(PEncoder &pe)
 
 int ProduceRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
     if (version >= 3)
     {
-        if (int err = pd.getNullableString(TransactionalID); err != 0)
+        if (int err = pd.getNullableString(m_transactional_id); err != 0)
             return err;
     }
 
     int16_t acks;
     if (int err = pd.getInt16(acks); err != 0)
         return err;
-    Acks = static_cast<RequiredAcks>(acks);
+    m_acks = static_cast<RequiredAcks>(acks);
 
-    if (int err = pd.getDurationMs(Timeout); err != 0)
+    if (int err = pd.getDurationMs(m_timeout); err != 0)
         return err;
 
     int32_t topicCount;
@@ -121,7 +121,7 @@ int ProduceRequest::decode(PDecoder &pd, int16_t version)
     if (topicCount == 0)
         return 0;
 
-    records.clear();
+    m_records.clear();
     for (int i = 0; i < topicCount; ++i)
     {
         std::string topic;
@@ -132,7 +132,7 @@ int ProduceRequest::decode(PDecoder &pd, int16_t version)
         if (int err = pd.getArrayLength(partitionCount); err != 0)
             return err;
 
-        auto &partMap = records[topic];
+        auto &partMap = m_records[topic];
         for (int j = 0; j < partitionCount; ++j)
         {
             int32_t partition;
@@ -164,7 +164,7 @@ int16_t ProduceRequest::key() const
 
 int16_t ProduceRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t ProduceRequest::headerVersion() const
@@ -172,14 +172,14 @@ int16_t ProduceRequest::headerVersion() const
     return 1;
 }
 
-bool ProduceRequest::isValidVersion() const
+bool ProduceRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 7;
+    return m_version >= 0 && m_version <= 7;
 }
 
-KafkaVersion ProduceRequest::requiredVersion() const
+KafkaVersion ProduceRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 7:
         return V2_1_0_0;
@@ -208,28 +208,28 @@ void ProduceRequest::EnsureRecords(const std::string &topic, int32_t partition)
 void ProduceRequest::AddMessage(const std::string &topic, int32_t partition, std::shared_ptr<Message> msg)
 {
 
-    if (records[topic][partition] == nullptr)
+    if (m_records[topic][partition] == nullptr)
     {
         auto msgSet = std::make_shared<MessageSet>();
         msgSet->addMessage(msg);
-        records[topic][partition] = Records::NewLegacyRecords(msgSet);
+        m_records[topic][partition] = Records::NewLegacyRecords(msgSet);
     }
     else
     {
-        records[topic][partition]->MsgSet->addMessage(msg);
+        m_records[topic][partition]->m_msg_set->addMessage(msg);
     }
 }
 
 void ProduceRequest::AddSet(const std::string &topic, int32_t partition, std::shared_ptr<MessageSet> set)
 {
     EnsureRecords(topic, partition);
-    records[topic][partition] = Records::NewLegacyRecords(set);
+    m_records[topic][partition] = Records::NewLegacyRecords(set);
 }
 
 void ProduceRequest::AddBatch(const std::string &topic, int32_t partition, std::shared_ptr<RecordBatch> batch)
 {
     EnsureRecords(topic, partition);
-    records[topic][partition] = Records::NewDefaultRecords(batch);
+    m_records[topic][partition] = Records::NewDefaultRecords(batch);
 }
 
 int64_t ProduceRequest::UpdateMsgSetMetrics(const std::shared_ptr<MessageSet> msgSet, std::shared_ptr<metrics::Histogram> compressionRatioMetric, std::shared_ptr<metrics::Histogram> topicCompressionRatioMetric)
@@ -239,20 +239,20 @@ int64_t ProduceRequest::UpdateMsgSetMetrics(const std::shared_ptr<MessageSet> ms
         return 0;
     }
     int64_t count = 0;
-    for (auto &block : msgSet->Messages)
+    for (auto &block : msgSet->m_messages)
     {
-        if (block->Msg->Set)
+        if (block->m_msg->m_set)
         {
-            count += static_cast<int64_t>(block->Msg->Set->Messages.size());
+            count += static_cast<int64_t>(block->m_msg->m_set->m_messages.size());
         }
         else
         {
             ++count;
         }
 
-        if (block->Msg->compressedSize != 0 && compressionRatioMetric)
+        if (block->m_msg->m_compressed_size != 0 && compressionRatioMetric)
         {
-            double ratio = static_cast<double>(block->Msg->Value.size()) / block->Msg->compressedSize;
+            double ratio = static_cast<double>(block->m_msg->m_value.size()) / block->m_msg->m_compressed_size;
             int64_t intRatio = static_cast<int64_t>(100 * ratio);
             compressionRatioMetric->Update(intRatio);
             if (topicCompressionRatioMetric)
@@ -266,14 +266,14 @@ int64_t ProduceRequest::UpdateMsgSetMetrics(const std::shared_ptr<MessageSet> ms
 
 int64_t ProduceRequest::UpdateBatchMetrics(const std::shared_ptr<RecordBatch> batch, std::shared_ptr<metrics::Histogram> compressionRatioMetric, std::shared_ptr<metrics::Histogram> topicCompressionRatioMetric)
 {
-    if (batch == nullptr || batch->compressedRecords.empty())
+    if (batch == nullptr || batch->m_compressed_records.empty())
     {
-        return static_cast<int64_t>(batch ? batch->Records.size() : 0);
+        return static_cast<int64_t>(batch ? batch->m_records.size() : 0);
     }
 
     if (compressionRatioMetric)
     {
-        double ratio = static_cast<double>(batch->recordsLen) / batch->compressedRecords.size();
+        double ratio = static_cast<double>(batch->m_records_len) / batch->m_compressed_records.size();
         int64_t intRatio = static_cast<int64_t>(100 * ratio);
         compressionRatioMetric->Update(intRatio);
         if (topicCompressionRatioMetric)
@@ -282,5 +282,5 @@ int64_t ProduceRequest::UpdateBatchMetrics(const std::shared_ptr<RecordBatch> ba
         }
     }
 
-    return static_cast<int64_t>(batch->Records.size());
+    return static_cast<int64_t>(batch->m_records.size());
 }

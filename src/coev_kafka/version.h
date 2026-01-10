@@ -21,7 +21,6 @@ struct KafkaVersion
     bool operator>=(const KafkaVersion &other) const;
 };
 
-// Version constants
 #define DEFINE_KAFKA_VERSION(name, a, b, c, d) \
     inline constexpr KafkaVersion name(a, b, c, d);
 DEFINE_KAFKA_VERSION(V0_8_2_0, 0, 8, 2, 0)

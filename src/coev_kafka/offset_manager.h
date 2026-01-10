@@ -50,25 +50,25 @@ struct OffsetManager : IOffsetManager, std::enable_shared_from_this<OffsetManage
     std::shared_ptr<PartitionOffsetManager> findPOM(const std::string &topic, int32_t partition);
     void tryCancelSession();
 
-    std::shared_ptr<Client> client;
-    std::shared_ptr<Config> conf;
-    std::string group;
-    std::function<void()> sessionCanceler;
+    std::shared_ptr<Client> m_client;
+    std::shared_ptr<Config> m_conf;
+    std::string m_group;
+    std::function<void()> m_session_canceler;
 
-    std::string memberID;
-    std::string groupInstanceId;
-    int32_t generation;
+    std::string m_member_id;
+    std::string m_group_instance_id;
+    int32_t m_generation;
 
-    std::shared_mutex brokerLock;
-    std::shared_ptr<Broker> broker;
+    std::shared_mutex m_broker_lock;
+    std::shared_ptr<Broker> m_broker;
 
-    std::shared_mutex pomsLock;
-    std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<PartitionOffsetManager>>> poms;
+    std::shared_mutex m_poms_lock;
+    std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<PartitionOffsetManager>>> m_poms;
 
-    std::atomic<bool> closing = false;
+    std::atomic<bool> m_closing = false;
 
-    coev::co_channel<bool> closed;
-    coev::co_task task_;
+    coev::co_channel<bool> m_closed;
+    coev::co_task m_task;
 };
 
 coev::awaitable<int> NewOffsetManagerFromClient(const std::string &group, std::shared_ptr<Client> client, std::shared_ptr<OffsetManager> &om);

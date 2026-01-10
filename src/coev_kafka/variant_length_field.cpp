@@ -17,37 +17,37 @@ int VariantLengthField::decode(PDecoder &pd)
     int err = pd.getVariant(val);
     if (err != 0)
         return err;
-    length = val;
+    m_length = val;
     return 0;
 }
 
 void VariantLengthField::saveOffset(int in)
 {
-    startOffset = in;
+    m_start_offset = in;
 }
 
 int VariantLengthField::reserveLength()
 {
-    return variantSize(length);
+    return variantSize(m_length);
 }
 
 int VariantLengthField::adjustLength(int currOffset)
 {
     int oldSize = reserveLength();
-    length = static_cast<int64_t>(currOffset - startOffset - oldSize);
+    m_length = static_cast<int64_t>(currOffset - m_start_offset - oldSize);
     int newSize = reserveLength();
     return newSize - oldSize;
 }
 
 int VariantLengthField::run(int curOffset, std::string &buf)
 {
-    int n = encodeVariant((uint8_t *)buf.data() + startOffset, length);
+    int n = encodeVariant((uint8_t *)buf.data() + m_start_offset, m_length);
     return (n > 0) ? 0 : -1;
 }
 
 int VariantLengthField::check(int curOffset, const std::string & /*buf*/)
 {
-    if (static_cast<int64_t>(curOffset - startOffset - reserveLength()) != length)
+    if (static_cast<int64_t>(curOffset - m_start_offset - reserveLength()) != m_length)
     {
         return -1;
     }

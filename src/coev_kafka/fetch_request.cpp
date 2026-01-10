@@ -3,46 +3,46 @@
 #include <stdexcept>
 
 FetchRequest::FetchRequest()
-    : Version(0), MaxWaitTime(0), MinBytes(0), MaxBytes(0), Isolation(ReadUncommitted),
-      SessionID(0), SessionEpoch(0)
+    : m_version(0), m_max_wait_time(0), m_min_bytes(0), m_max_bytes(0), m_isolation(ReadUncommitted),
+      m_session_id(0), m_session_epoch(0)
 {
 }
 FetchRequest::FetchRequest(int16_t v)
-    : Version(v), MaxBytes(0), Isolation(ReadUncommitted), SessionID(0), SessionEpoch(0)
+    : m_version(v), m_max_bytes(0), m_isolation(ReadUncommitted), m_session_id(0), m_session_epoch(0)
 {
 }
 
-void FetchRequest::setVersion(int16_t v)
+void FetchRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int FetchRequest::encode(PEncoder &pe)
 {
     pe.putInt32(-1);
-    pe.putInt32(MaxWaitTime);
-    pe.putInt32(MinBytes);
-    if (Version >= 3)
+    pe.putInt32(m_max_wait_time);
+    pe.putInt32(m_min_bytes);
+    if (m_version >= 3)
     {
-        pe.putInt32(MaxBytes);
+        pe.putInt32(m_max_bytes);
     }
-    if (Version >= 4)
+    if (m_version >= 4)
     {
-        pe.putInt8(static_cast<int8_t>(Isolation));
+        pe.putInt8(static_cast<int8_t>(m_isolation));
     }
-    if (Version >= 7)
+    if (m_version >= 7)
     {
-        pe.putInt32(SessionID);
-        pe.putInt32(SessionEpoch);
+        pe.putInt32(m_session_id);
+        pe.putInt32(m_session_epoch);
     }
 
-    int err = pe.putArrayLength(static_cast<int32_t>(blocks.size()));
+    int err = pe.putArrayLength(static_cast<int32_t>(m_blocks.size()));
     if (err != 0)
     {
         return err;
     }
 
-    for (auto &topic_pair : blocks)
+    for (auto &topic_pair : m_blocks)
     {
         const std::string &topic = topic_pair.first;
         auto &partitions = topic_pair.second;
@@ -65,7 +65,7 @@ int FetchRequest::encode(PEncoder &pe)
             auto &block = partition_pair.second;
 
             pe.putInt32(partition);
-            err = block->encode(pe, Version);
+            err = block->encode(pe, m_version);
             if (err != 0)
             {
                 return err;
@@ -73,15 +73,15 @@ int FetchRequest::encode(PEncoder &pe)
         }
     }
 
-    if (Version >= 7)
+    if (m_version >= 7)
     {
-        err = pe.putArrayLength(static_cast<int32_t>(forgotten.size()));
+        err = pe.putArrayLength(static_cast<int32_t>(m_forgotten.size()));
         if (err != 0)
         {
             return err;
         }
 
-        for (auto &topic_pair : forgotten)
+        for (auto &topic_pair : m_forgotten)
         {
             const std::string &topic = topic_pair.first;
             const std::vector<int32_t> &partitions = topic_pair.second;
@@ -105,9 +105,9 @@ int FetchRequest::encode(PEncoder &pe)
         }
     }
 
-    if (Version >= 11)
+    if (m_version >= 11)
     {
-        err = pe.putString(RackID);
+        err = pe.putString(m_rack_id);
         if (err != 0)
         {
             return err;
@@ -119,7 +119,7 @@ int FetchRequest::encode(PEncoder &pe)
 
 int FetchRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
     int err = 0;
 
     int32_t dummy;
@@ -127,37 +127,37 @@ int FetchRequest::decode(PDecoder &pd, int16_t version)
     {
         return err;
     }
-    if ((err = pd.getInt32(MaxWaitTime)) != 0)
+    if ((err = pd.getInt32(m_max_wait_time)) != 0)
     {
         return err;
     }
-    if ((err = pd.getInt32(MinBytes)) != 0)
+    if ((err = pd.getInt32(m_min_bytes)) != 0)
     {
         return err;
     }
-    if (Version >= 3)
+    if (m_version >= 3)
     {
-        if ((err = pd.getInt32(MaxBytes)) != 0)
+        if ((err = pd.getInt32(m_max_bytes)) != 0)
         {
             return err;
         }
     }
-    if (Version >= 4)
+    if (m_version >= 4)
     {
         int8_t isolation_val;
         if ((err = pd.getInt8(isolation_val)) != 0)
         {
             return err;
         }
-        Isolation = static_cast<IsolationLevel>(isolation_val);
+        m_isolation = static_cast<IsolationLevel>(isolation_val);
     }
-    if (Version >= 7)
+    if (m_version >= 7)
     {
-        if ((err = pd.getInt32(SessionID)) != 0)
+        if ((err = pd.getInt32(m_session_id)) != 0)
         {
             return err;
         }
-        if ((err = pd.getInt32(SessionEpoch)) != 0)
+        if ((err = pd.getInt32(m_session_epoch)) != 0)
         {
             return err;
         }
@@ -173,7 +173,7 @@ int FetchRequest::decode(PDecoder &pd, int16_t version)
         return 0;
     }
 
-    blocks.clear();
+    m_blocks.clear();
     for (int i = 0; i < topicCount; ++i)
     {
         std::string topic;
@@ -198,16 +198,16 @@ int FetchRequest::decode(PDecoder &pd, int16_t version)
             }
 
             auto fetchBlock = std::make_shared<FetchRequestBlock>();
-            if ((err = fetchBlock->decode(pd, Version)) != 0)
+            if ((err = fetchBlock->decode(pd, m_version)) != 0)
             {
                 return err;
             }
             partitionMap[partition] = fetchBlock;
         }
-        blocks[topic] = std::move(partitionMap);
+        m_blocks[topic] = std::move(partitionMap);
     }
 
-    if (Version >= 7)
+    if (m_version >= 7)
     {
         int32_t forgottenCount;
         if ((err = pd.getArrayLength(forgottenCount)) != 0)
@@ -215,7 +215,7 @@ int FetchRequest::decode(PDecoder &pd, int16_t version)
             return err;
         }
 
-        forgotten.clear();
+        m_forgotten.clear();
         for (int i = 0; i < forgottenCount; ++i)
         {
             std::string topic;
@@ -243,13 +243,13 @@ int FetchRequest::decode(PDecoder &pd, int16_t version)
                     return err;
                 }
             }
-            forgotten[topic] = std::move(partitions);
+            m_forgotten[topic] = std::move(partitions);
         }
     }
 
-    if (Version >= 11)
+    if (m_version >= 11)
     {
-        if ((err = pd.getString(RackID)) != 0)
+        if ((err = pd.getString(m_rack_id)) != 0)
         {
             return err;
         }
@@ -265,7 +265,7 @@ int16_t FetchRequest::key() const
 
 int16_t FetchRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t FetchRequest::headerVersion() const
@@ -273,14 +273,14 @@ int16_t FetchRequest::headerVersion() const
     return 1;
 }
 
-bool FetchRequest::isValidVersion() const
+bool FetchRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 11;
+    return m_version >= 0 && m_version <= 11;
 }
 
-KafkaVersion FetchRequest::requiredVersion() const
+KafkaVersion FetchRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 11:
         return V2_3_0_0;
@@ -311,24 +311,24 @@ KafkaVersion FetchRequest::requiredVersion() const
 
 void FetchRequest::AddBlock(const std::string &topic, int32_t partitionID, int64_t fetchOffset, int32_t maxBytes, int32_t leaderEpoch)
 {
-    if (blocks.find(topic) == blocks.end())
+    if (m_blocks.find(topic) == m_blocks.end())
     {
-        blocks[topic] = std::map<int32_t, std::shared_ptr<FetchRequestBlock>>();
+        m_blocks[topic] = std::map<int32_t, std::shared_ptr<FetchRequestBlock>>();
     }
 
     auto tmp = std::make_shared<FetchRequestBlock>();
-    tmp->Version = Version;
-    tmp->maxBytes = maxBytes;
-    tmp->fetchOffset = fetchOffset;
-    if (Version >= 9)
+    tmp->m_version = m_version;
+    tmp->m_max_bytes = maxBytes;
+    tmp->m_fetch_offset = fetchOffset;
+    if (m_version >= 9)
     {
-        tmp->currentLeaderEpoch = leaderEpoch;
+        tmp->m_current_leader_epoch = leaderEpoch;
     }
 
-    blocks[topic][partitionID] = tmp;
+    m_blocks[topic][partitionID] = tmp;
 
-    if (Version >= 7 && forgotten.empty())
+    if (m_version >= 7 && m_forgotten.empty())
     {
-        forgotten = std::map<std::string, std::vector<int32_t>>();
+        m_forgotten = std::map<std::string, std::vector<int32_t>>();
     }
 }

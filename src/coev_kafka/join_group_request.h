@@ -20,39 +20,39 @@
 struct GroupProtocol : IDecoder, IEncoder
 {
 
-    std::string Name;
-    std::string Metadata;
+    std::string m_name;
+    std::string m_metadata;
 
     int decode(PDecoder &pd);
     int encode(PEncoder &pe);
 };
 
-struct JoinGroupRequest : protocolBody
+struct JoinGroupRequest : protocol_body
 {
 
-    int16_t Version = 0;
-    std::string GroupId;
-    int32_t SessionTimeout = 0;
-    int32_t RebalanceTimeout = 0;
-    std::string MemberId;
-    std::string GroupInstanceId;
-    std::string ProtocolType;
-    std::map<std::string, std::string> GroupProtocols;
-    std::vector<std::shared_ptr<GroupProtocol>> OrderedGroupProtocols;
+    int16_t m_version = 0;
+    std::string m_group_id;
+    int32_t m_session_timeout;
+    int32_t m_rebalance_timeout;
+    std::string m_member_id;
+    std::string m_group_instance_id;
+    std::string m_protocol_type;
+    std::map<std::string, std::string> m_group_protocols;
+    std::vector<std::shared_ptr<GroupProtocol>> m_ordered_group_protocols;
     JoinGroupRequest() = default;
-    JoinGroupRequest(int16_t v) : Version(v)
+    JoinGroupRequest(int16_t v) : m_version(v)
     {
     }
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible();
     static bool isFlexibleVersion(int16_t ver);
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
     void AddGroupProtocol(const std::string &name, const std::string &metadata);
     int AddGroupProtocolMetadata(const std::string &name, const std::shared_ptr<ConsumerGroupMemberMetadata> &metadata);
 };

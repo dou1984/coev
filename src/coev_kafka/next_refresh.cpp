@@ -5,15 +5,15 @@ void NextRefresh::addTopics(const std::vector<std::string> &topics_)
 {
     if (topics_.empty())
     {
-        allTopics = true;
-        topics.clear();
+        m_all_topics = true;
+        m_topics.clear();
         return;
     }
-    topics.insert(topics.end(), topics_.begin(), topics_.end());
+    m_topics.insert(m_topics.end(), topics_.begin(), topics_.end());
 }
 
 void NextRefresh::clear()
 {
-    topics.clear();
-    allTopics = false;
+    m_topics.clear();
+    m_all_topics = false;
 }

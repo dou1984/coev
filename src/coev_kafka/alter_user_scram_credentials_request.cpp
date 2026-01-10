@@ -2,54 +2,54 @@
 #include "alter_user_scram_credentials_request.h"
 #include "api_versions.h"
 #include "scram_formatter.h"
-void AlterUserScramCredentialsRequest::setVersion(int16_t v)
+void AlterUserScramCredentialsRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int AlterUserScramCredentialsRequest::encode(PEncoder &pe)
 {
-    if (!pe.putArrayLength(static_cast<int32_t>(Deletions.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_deletions.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
-    for (auto &d : Deletions)
+    for (auto &d : m_deletions)
     {
-        if (!pe.putString(d.Name))
+        if (pe.putString(d.m_name) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        pe.putInt8(static_cast<int8_t>(d.Mechanism));
+        pe.putInt8(static_cast<int8_t>(d.m_mechanism));
         pe.putEmptyTaggedFieldArray();
     }
 
-    if (!pe.putArrayLength(static_cast<int32_t>(Upsertions.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_upsertions.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
-    for (auto &u : Upsertions)
+    for (auto &u : m_upsertions)
     {
-        if (!pe.putString(u.Name))
+        if (pe.putString(u.m_name) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        pe.putInt8(static_cast<int8_t>(u.Mechanism));
-        pe.putInt32(u.Iterations);
+        pe.putInt8(static_cast<int8_t>(u.m_mechanism));
+        pe.putInt32(u.m_iterations);
 
-        if (!pe.putBytes(u.Salt))
+        if (pe.putBytes(u.m_salt) != ErrNoError)
         {
             return ErrEncodeError;
         }
 
         // do not transmit the password over the wire
-        ScramFormatter formatter(u.Mechanism);
+        ScramFormatter formatter(u.m_mechanism);
         std::string salted;
-        if (!formatter.SaltedPassword(u.Password, u.Salt, static_cast<int>(u.Iterations), salted))
+        if (!formatter.SaltedPassword(u.m_password, u.m_salt, static_cast<int>(u.m_iterations), salted))
         {
             return ErrEncodeError;
         }
 
-        if (!pe.putBytes(salted))
+        if (pe.putBytes(salted) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -57,7 +57,7 @@ int AlterUserScramCredentialsRequest::encode(PEncoder &pe)
     }
 
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int AlterUserScramCredentialsRequest::decode(PDecoder &pd, int16_t version)
@@ -68,10 +68,10 @@ int AlterUserScramCredentialsRequest::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    Deletions.resize(numDeletions);
+    m_deletions.resize(numDeletions);
     for (int32_t i = 0; i < numDeletions; ++i)
     {
-        if (pd.getString(Deletions[i].Name) != ErrNoError)
+        if (pd.getString(m_deletions[i].m_name) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -80,7 +80,7 @@ int AlterUserScramCredentialsRequest::decode(PDecoder &pd, int16_t version)
         {
             return ErrDecodeError;
         }
-        Deletions[i].Mechanism = static_cast<ScramMechanismType>(mechanism);
+        m_deletions[i].m_mechanism = static_cast<ScramMechanismType>(mechanism);
         int32_t _;
         if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
         {
@@ -94,10 +94,10 @@ int AlterUserScramCredentialsRequest::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    Upsertions.resize(numUpsertions);
+    m_upsertions.resize(numUpsertions);
     for (int32_t i = 0; i < numUpsertions; ++i)
     {
-        if (pd.getString(Upsertions[i].Name) != ErrNoError)
+        if (pd.getString(m_upsertions[i].m_name) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -106,17 +106,17 @@ int AlterUserScramCredentialsRequest::decode(PDecoder &pd, int16_t version)
         {
             return ErrDecodeError;
         }
-        Upsertions[i].Mechanism = static_cast<ScramMechanismType>(mechanism);
+        m_upsertions[i].m_mechanism = static_cast<ScramMechanismType>(mechanism);
 
-        if (pd.getInt32(Upsertions[i].Iterations) != ErrNoError)
+        if (pd.getInt32(m_upsertions[i].m_iterations) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        if (pd.getBytes(Upsertions[i].Salt) != ErrNoError)
+        if (pd.getBytes(m_upsertions[i].m_salt) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        if (pd.getBytes(Upsertions[i].saltedPassword) != ErrNoError)
+        if (pd.getBytes(m_upsertions[i].m_salted_password) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -137,7 +137,7 @@ int16_t AlterUserScramCredentialsRequest::key() const
 
 int16_t AlterUserScramCredentialsRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t AlterUserScramCredentialsRequest::headerVersion() const
@@ -145,14 +145,14 @@ int16_t AlterUserScramCredentialsRequest::headerVersion() const
     return 2;
 }
 
-bool AlterUserScramCredentialsRequest::isValidVersion() const
+bool AlterUserScramCredentialsRequest::is_valid_version() const
 {
-    return Version == 0;
+    return m_version == 0;
 }
 
 bool AlterUserScramCredentialsRequest::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool AlterUserScramCredentialsRequest::isFlexibleVersion(int16_t version) const
@@ -160,7 +160,7 @@ bool AlterUserScramCredentialsRequest::isFlexibleVersion(int16_t version) const
     return version >= 0;
 }
 
-KafkaVersion AlterUserScramCredentialsRequest::requiredVersion() const
+KafkaVersion AlterUserScramCredentialsRequest::required_version() const
 {
     return V2_7_0_0;
 }

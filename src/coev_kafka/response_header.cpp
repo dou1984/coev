@@ -31,12 +31,12 @@ int responseHeader::decode(PDecoder &pd, int16_t version)
     {
         if (auto decoder = dynamic_cast<realFlexibleDecoder *>(&pd))
         {
-            return ::decode(*decoder, length, correlationID);
+            return ::decode(*decoder, m_length, m_correlation_id);
         }
         else
         {
             return -1;
         }
     }
-    return ::decode(pd, length, correlationID);
+    return ::decode(pd, m_length, m_correlation_id);
 }

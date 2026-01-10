@@ -19,17 +19,17 @@ bool fromString(const std::string &s, CompressionCodec &out);
 
 struct Message
 {
-    CompressionCodec Codec = CompressionCodec::None;
-    int CompressionLevel = CompressionLevelDefault;
-    bool LogAppendTime = false;
-    std::string Key;
-    std::string Value;
-    std::shared_ptr<MessageSet> Set;
-    int8_t Version = 0;
-    Timestamp Timestamp_;
+    CompressionCodec m_codec = CompressionCodec::None;
+    int m_compression_level = CompressionLevelDefault;
+    bool m_log_append_time = false;
+    std::string m_key;
+    std::string m_value;
+    std::shared_ptr<MessageSet> m_set;
+    int8_t m_version = 0;
+    Timestamp m_timestamp;
 
-    std::string compressedCache;
-    int compressedSize = 0;
+    std::string m_compressed_cache;
+    int m_compressed_size = 0;
 
     Message() = default;
 

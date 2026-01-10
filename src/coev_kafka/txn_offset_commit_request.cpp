@@ -3,20 +3,20 @@
 #include "packet_encoder.h"
 #include "packet_decoder.h"
 
-void TxnOffsetCommitRequest::setVersion(int16_t v)
+void TxnOffsetCommitRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int TxnOffsetCommitRequest::encode(PEncoder &pe)
 {
-    pe.putString(TransactionalID);
-    pe.putString(GroupID);
-    pe.putInt64(ProducerID);
-    pe.putInt16(ProducerEpoch);
+    pe.putString(m_transactional_id);
+    pe.putString(m_group_id);
+    pe.putInt64(m_producer_id);
+    pe.putInt16(m_producer_epoch);
 
-    pe.putArrayLength(static_cast<int32_t>(Topics.size()));
-    for (auto &topicPair : Topics)
+    pe.putArrayLength(static_cast<int32_t>(m_topics.size()));
+    for (auto &topicPair : m_topics)
     {
         const std::string &topic = topicPair.first;
         auto &partitions = topicPair.second;
@@ -24,7 +24,7 @@ int TxnOffsetCommitRequest::encode(PEncoder &pe)
         pe.putArrayLength(static_cast<int32_t>(partitions.size()));
         for (auto &partition : partitions)
         {
-            partition->encode(pe, Version);
+            partition->encode(pe, m_version);
         }
     }
     return 0;
@@ -32,15 +32,15 @@ int TxnOffsetCommitRequest::encode(PEncoder &pe)
 
 int TxnOffsetCommitRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
-    pd.getString(TransactionalID);
-    pd.getString(GroupID);
-    pd.getInt64(ProducerID);
-    pd.getInt16(ProducerEpoch);
+    m_version = version;
+    pd.getString(m_transactional_id);
+    pd.getString(m_group_id);
+    pd.getInt64(m_producer_id);
+    pd.getInt16(m_producer_epoch);
 
     int32_t n;
     pd.getArrayLength(n);
-    Topics.clear();
+    m_topics.clear();
     int err = 0;
     for (int i = 0; i < n; ++i)
     {
@@ -59,7 +59,7 @@ int TxnOffsetCommitRequest::decode(PDecoder &pd, int16_t version)
             partitionOffsetMetadata->decode(pd, version);
             partitions[j] = partitionOffsetMetadata;
         }
-        Topics[topic] = std::move(partitions);
+        m_topics[topic] = std::move(partitions);
     }
     return 0;
 }
@@ -71,7 +71,7 @@ int16_t TxnOffsetCommitRequest::key() const
 
 int16_t TxnOffsetCommitRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t TxnOffsetCommitRequest::headerVersion() const
@@ -79,14 +79,14 @@ int16_t TxnOffsetCommitRequest::headerVersion() const
     return 1;
 }
 
-bool TxnOffsetCommitRequest::isValidVersion() const
+bool TxnOffsetCommitRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 2;
+    return m_version >= 0 && m_version <= 2;
 }
 
-KafkaVersion TxnOffsetCommitRequest::requiredVersion() const
+KafkaVersion TxnOffsetCommitRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 2:
         return V2_1_0_0;

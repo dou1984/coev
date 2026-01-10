@@ -15,9 +15,9 @@
 struct OffsetRequestBlock : VDecoder, VEncoder
 {
 
-    int32_t currentLeaderEpoch;
-    int64_t timestamp;
-    int32_t maxNumOffsets;
+    int32_t m_leader_epoch;
+    int64_t m_timestamp;
+    int32_t m_max_num_offsets;
 
     OffsetRequestBlock();
 
@@ -25,27 +25,27 @@ struct OffsetRequestBlock : VDecoder, VEncoder
     int decode(PDecoder &pd, int16_t version);
 };
 
-struct OffsetRequest : protocolBody
+struct OffsetRequest : protocol_body
 {
 
-    int16_t Version;
-    IsolationLevel Level;
-    int32_t replicaID;
-    bool isReplicaIDSet;
-    std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<OffsetRequestBlock>>> blocks;
+    int16_t m_version;
+    IsolationLevel m_level;
+    int32_t m_replica_id;
+    bool m_is_replica_id_set;
+    std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<OffsetRequestBlock>>> m_blocks;
 
     OffsetRequest() = default;
-    OffsetRequest(int16_t v) : Version(v)
+    OffsetRequest(int16_t v) : m_version(v)
     {
     }
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
     void SetReplicaID(int32_t id);
     int32_t ReplicaID();
     void AddBlock(const std::string &topic, int32_t partitionID, int64_t timestamp, int32_t maxOffsets);

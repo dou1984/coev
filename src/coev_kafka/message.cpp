@@ -54,7 +54,7 @@ std::string decompress(CompressionCodec /*codec*/, const std::string &data)
     return data; // dummy
 }
 Message::Message(const std::string &key, const std::string &value, bool logAppendTime, Timestamp msgTimestamp, int8_t version)
-    : Key(key), Value(value), LogAppendTime(logAppendTime), Timestamp_(msgTimestamp), Version(version)
+    : m_key(key), m_value(value), m_log_append_time(logAppendTime), m_timestamp(msgTimestamp), m_version(version)
 {
 }
 int Message::encode(PEncoder &pe)
@@ -62,19 +62,19 @@ int Message::encode(PEncoder &pe)
 
     pe.push(std::dynamic_pointer_cast<pushEncoder>(std::make_shared<CRC32>((int)CrcPolynomial::CrcIEEE)));
 
-    pe.putInt8(Version);
+    pe.putInt8(m_version);
 
-    int8_t attributes = static_cast<int8_t>(Codec) & CompressionCodecMask;
-    if (LogAppendTime)
+    int8_t attributes = static_cast<int8_t>(m_codec) & CompressionCodecMask;
+    if (m_log_append_time)
     {
         attributes |= TimestampTypeMask;
     }
     pe.putInt8(attributes);
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
 
-        auto err = Timestamp_.encode(pe);
+        auto err = m_timestamp.encode(pe);
         if (err != 0)
         {
             pe.pop();
@@ -82,7 +82,7 @@ int Message::encode(PEncoder &pe)
         }
     }
 
-    int err = pe.putBytes(Key);
+    int err = pe.putBytes(m_key);
     if (err != 0)
     {
         pe.pop();
@@ -91,21 +91,21 @@ int Message::encode(PEncoder &pe)
 
     std::string payload;
 
-    if (!compressedCache.empty())
+    if (!m_compressed_cache.empty())
     {
-        payload = std::move(compressedCache);
-        compressedCache.clear();
+        payload = std::move(m_compressed_cache);
+        m_compressed_cache.clear();
     }
-    else if (!Value.empty())
+    else if (!m_value.empty())
     {
-        payload = compress(Codec, CompressionLevel, Value);
-        if (payload.empty() && !Value.empty())
+        payload = compress(m_codec, m_compression_level, m_value);
+        if (payload.empty() && !m_value.empty())
         {
             pe.pop();
             return -1; // compression failed
         }
-        compressedCache = payload;
-        compressedSize = static_cast<int>(payload.size());
+        m_compressed_cache = payload;
+        m_compressed_size = static_cast<int>(payload.size());
     }
 
     err = pe.putBytes(payload);
@@ -124,11 +124,11 @@ int Message::decode(PDecoder &pd)
     if (err != 0)
         return err;
 
-    err = pd.getInt8(Version);
+    err = pd.getInt8(m_version);
     if (err != 0)
         goto pop_and_return;
 
-    if (Version > 1)
+    if (m_version > 1)
     {
         err = -2;
         goto pop_and_return;
@@ -139,36 +139,36 @@ int Message::decode(PDecoder &pd)
     if (err != 0)
         goto pop_and_return;
 
-    Codec = static_cast<CompressionCodec>(attribute & CompressionCodecMask);
-    LogAppendTime = (attribute & TimestampTypeMask) != 0;
+    m_codec = static_cast<CompressionCodec>(attribute & CompressionCodecMask);
+    m_log_append_time = (attribute & TimestampTypeMask) != 0;
 
-    if (Version == 1)
+    if (m_version == 1)
     {
 
-        err = Timestamp_.decode(pd);
+        err = m_timestamp.decode(pd);
         if (err != 0)
             goto pop_and_return;
     }
 
-    err = pd.getBytes(Key);
+    err = pd.getBytes(m_key);
     if (err != 0)
         goto pop_and_return;
 
-    err = pd.getBytes(Value);
+    err = pd.getBytes(m_value);
     if (err != 0)
         goto pop_and_return;
 
-    compressedSize = static_cast<int>(Value.size());
+    m_compressed_size = static_cast<int>(m_value.size());
 
-    if (!Value.empty() && Codec != CompressionCodec::None)
+    if (!m_value.empty() && m_codec != CompressionCodec::None)
     {
-        auto decompressed = decompress(Codec, Value);
+        auto decompressed = decompress(m_codec, m_value);
         if (decompressed.empty())
         {
             err = -3; // decompression failed
             goto pop_and_return;
         }
-        Value = std::move(decompressed);
+        m_value = std::move(decompressed);
 
         err = decodeSet();
         if (err != 0)
@@ -183,7 +183,7 @@ pop_and_return:
 int Message::decodeSet()
 {
     realDecoder innerDecoder;
-    innerDecoder.Raw.assign(Value.begin(), Value.end());
-    Set = std::make_shared<MessageSet>();
-    return Set->decode(innerDecoder);
+    innerDecoder.m_raw.assign(m_value.begin(), m_value.end());
+    m_set = std::make_shared<MessageSet>();
+    return m_set->decode(innerDecoder);
 }

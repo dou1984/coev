@@ -2,20 +2,20 @@
 #include "api_versions.h"
 #include "list_partition_reassignments_request.h"
 
-void ListPartitionReassignmentsRequest::setVersion(int16_t v)
+void ListPartitionReassignmentsRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int ListPartitionReassignmentsRequest::encode(PEncoder &pe)
 {
-    pe.putInt32(static_cast<int32_t>(Timeout.count()));
+    pe.putInt32(static_cast<int32_t>(m_timeout.count()));
 
-    int err = pe.putArrayLength(static_cast<int32_t>(blocks.size()));
+    int err = pe.putArrayLength(static_cast<int32_t>(m_blocks.size()));
     if (err != 0)
         return err;
 
-    for (auto &kv : blocks)
+    for (auto &kv : m_blocks)
     {
         const std::string &topic = kv.first;
         const std::vector<int32_t> &partitions = kv.second;
@@ -37,13 +37,13 @@ int ListPartitionReassignmentsRequest::encode(PEncoder &pe)
 
 int ListPartitionReassignmentsRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
     int32_t timeout;
     int err = pd.getInt32(timeout);
     if (err != 0)
         return err;
-    Timeout = std::chrono::milliseconds(timeout);
+    m_timeout = std::chrono::milliseconds(timeout);
 
     int32_t topicCount;
     err = pd.getArrayLength(topicCount);
@@ -52,8 +52,8 @@ int ListPartitionReassignmentsRequest::decode(PDecoder &pd, int16_t version)
 
     if (topicCount > 0)
     {
-        blocks.clear();
-        blocks.reserve(topicCount);
+        m_blocks.clear();
+        m_blocks.reserve(topicCount);
 
         for (int32_t i = 0; i < topicCount; ++i)
         {
@@ -75,7 +75,7 @@ int ListPartitionReassignmentsRequest::decode(PDecoder &pd, int16_t version)
                     return err;
             }
 
-            blocks[topic] = std::move(partitions);
+            m_blocks[topic] = std::move(partitions);
             int32_t _;
             err = pd.getEmptyTaggedFieldArray(_);
             if (err != 0)
@@ -84,7 +84,7 @@ int ListPartitionReassignmentsRequest::decode(PDecoder &pd, int16_t version)
     }
     else
     {
-        blocks.clear();
+        m_blocks.clear();
     }
     int32_t _;
     return pd.getEmptyTaggedFieldArray(_);
@@ -97,7 +97,7 @@ int16_t ListPartitionReassignmentsRequest::key() const
 
 int16_t ListPartitionReassignmentsRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t ListPartitionReassignmentsRequest::headerVersion() const
@@ -105,14 +105,14 @@ int16_t ListPartitionReassignmentsRequest::headerVersion() const
     return 2; // Always uses flexible (v2+) request header
 }
 
-bool ListPartitionReassignmentsRequest::isValidVersion() const
+bool ListPartitionReassignmentsRequest::is_valid_version() const
 {
-    return Version == 0;
+    return m_version == 0;
 }
 
 bool ListPartitionReassignmentsRequest::isFlexible()
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool ListPartitionReassignmentsRequest::isFlexibleVersion(int16_t /*ver*/)
@@ -120,12 +120,12 @@ bool ListPartitionReassignmentsRequest::isFlexibleVersion(int16_t /*ver*/)
     return true; // Version 0 is flexible (uses tagged fields)
 }
 
-KafkaVersion ListPartitionReassignmentsRequest::requiredVersion() const
+KafkaVersion ListPartitionReassignmentsRequest::required_version() const
 {
     return V2_4_0_0;
 }
 
 void ListPartitionReassignmentsRequest::AddBlock(const std::string &topic, const std::vector<int32_t> &partitionIDs)
 {
-    blocks[topic] = partitionIDs; // overwrite if exists, matching Go semantics
+    m_blocks[topic] = partitionIDs; // overwrite if exists, matching Go semantics
 }

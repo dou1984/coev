@@ -9,17 +9,16 @@
 
 inline const std::string defaultClientSoftwareName = "coev";
 
-struct ApiVersionsRequest : protocolBody
+struct ApiVersionsRequest : protocol_body
 {
-    int16_t Version = 0;
-    std::string ClientSoftwareName;
-    std::string ClientSoftwareVersion;
+    int16_t m_version = 0;
+    std::string m_client_software_name = defaultClientSoftwareName;
+    std::string m_client_software_version;
     ApiVersionsRequest() = default;
-    ApiVersionsRequest(int16_t v) : Version(v)
+    ApiVersionsRequest(int16_t v) : m_version(v)
     {
-        ClientSoftwareName = defaultClientSoftwareName;
     }
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
 
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
@@ -27,8 +26,8 @@ struct ApiVersionsRequest : protocolBody
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible() const;
     bool isFlexibleVersion(int16_t version) const;
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
 };

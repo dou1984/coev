@@ -14,15 +14,15 @@
 struct realEncoder : PEncoder
 {
 
-    std::string Raw;
-    size_t Off = 0;
-    std::vector<std::shared_ptr<pushEncoder>> Stack;
-    std::shared_ptr<metrics::Registry> Registry;
+    std::string m_raw;
+    size_t m_offset = 0;
+    std::vector<std::shared_ptr<pushEncoder>> m_stack;
+    std::shared_ptr<metrics::Registry> m_metric_registry;
     realEncoder() = default;
     realEncoder(size_t capacity, std::shared_ptr<metrics::Registry> reg = nullptr)
     {
-        Raw.resize(capacity);
-        Registry = reg;
+        m_raw.resize(capacity);
+        m_metric_registry = reg;
     }
 
     void putInt8(int8_t in);
@@ -46,22 +46,22 @@ struct realEncoder : PEncoder
     int putNullableInt32Array(const std::vector<int32_t> &in);
     int putInt64Array(const std::vector<int64_t> &in);
     void putEmptyTaggedFieldArray();
-    int offset() const { return static_cast<int>(Off); }
+    int offset() const { return static_cast<int>(m_offset); }
     void push(std::shared_ptr<pushEncoder> in);
     int pop();
-    std::shared_ptr<metrics::Registry> metricRegistry() { return Registry; }
+    std::shared_ptr<metrics::Registry> metricRegistry() { return m_metric_registry; }
 };
 
 struct realFlexibleEncoder : realEncoder
 {
 
-    std::shared_ptr<realEncoder> base;
+    std::shared_ptr<realEncoder> m_base;
 
     realFlexibleEncoder(const realEncoder &re)
     {
-        base = std::make_shared<realEncoder>(re);
+        m_base = std::make_shared<realEncoder>(re);
     }
-    realFlexibleEncoder(std::shared_ptr<realEncoder> re) : base(std::move(re)) {}
+    realFlexibleEncoder(std::shared_ptr<realEncoder> re) : m_base(std::move(re)) {}
 
     int putArrayLength(int in);
     int putBytes(const std::string &in);

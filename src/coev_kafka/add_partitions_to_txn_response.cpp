@@ -3,21 +3,21 @@
 #include "partition_error.h"
 #include "api_versions.h"
 
-void AddPartitionsToTxnResponse::setVersion(int16_t v)
+void AddPartitionsToTxnResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int AddPartitionsToTxnResponse::encode(PEncoder &pe)
 {
-    pe.putDurationMs(ThrottleTime);
+    pe.putDurationMs(m_throttle_time);
 
-    if (pe.putArrayLength(static_cast<int32_t>(Errors.size())) != 0)
+    if (pe.putArrayLength(static_cast<int32_t>(m_errors.size())) != 0)
     {
         return -1;
     }
 
-    for (auto &topicEntry : Errors)
+    for (auto &topicEntry : m_errors)
     {
         const std::string &topic = topicEntry.first;
         auto &errorList = topicEntry.second;
@@ -46,10 +46,10 @@ int AddPartitionsToTxnResponse::encode(PEncoder &pe)
 
 int AddPartitionsToTxnResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
     int err;
-    if ((err = pd.getDurationMs(ThrottleTime)) != 0)
+    if ((err = pd.getDurationMs(m_throttle_time)) != 0)
     {
         return err;
     }
@@ -60,7 +60,7 @@ int AddPartitionsToTxnResponse::decode(PDecoder &pd, int16_t version)
         return err;
     }
 
-    Errors.clear();
+    m_errors.clear();
     for (int32_t i = 0; i < n; ++i)
     {
         std::string topic;
@@ -87,7 +87,7 @@ int AddPartitionsToTxnResponse::decode(PDecoder &pd, int16_t version)
             partitionErrors.emplace_back(partErr);
         }
 
-        Errors[topic] = std::move(partitionErrors);
+        m_errors[topic] = std::move(partitionErrors);
     }
 
     return 0;
@@ -100,7 +100,7 @@ int16_t AddPartitionsToTxnResponse::key() const
 
 int16_t AddPartitionsToTxnResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t AddPartitionsToTxnResponse::headerVersion() const
@@ -108,14 +108,14 @@ int16_t AddPartitionsToTxnResponse::headerVersion() const
     return 0;
 }
 
-bool AddPartitionsToTxnResponse::isValidVersion() const
+bool AddPartitionsToTxnResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 2;
+    return m_version >= 0 && m_version <= 2;
 }
 
-KafkaVersion AddPartitionsToTxnResponse::requiredVersion() const
+KafkaVersion AddPartitionsToTxnResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 2:
         return V2_7_0_0;
@@ -128,5 +128,5 @@ KafkaVersion AddPartitionsToTxnResponse::requiredVersion() const
 
 std::chrono::milliseconds AddPartitionsToTxnResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }

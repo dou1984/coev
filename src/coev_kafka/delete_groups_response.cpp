@@ -2,23 +2,23 @@
 #include "api_versions.h"
 #include "delete_groups_response.h"
 
-void DeleteGroupsResponse::setVersion(int16_t v)
+void DeleteGroupsResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int DeleteGroupsResponse::encode(PEncoder &pe)
 {
-    pe.putDurationMs(ThrottleTime);
+    pe.putDurationMs(m_throttle_time);
 
-    if (!pe.putArrayLength(static_cast<int32_t>(GroupErrorCodes.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_group_error_codes.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &kv : GroupErrorCodes)
+    for (auto &kv : m_group_error_codes)
     {
-        if (!pe.putString(kv.first))
+        if (pe.putString(kv.first) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -27,14 +27,14 @@ int DeleteGroupsResponse::encode(PEncoder &pe)
     }
 
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int DeleteGroupsResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
+    if (pd.getDurationMs(m_throttle_time) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -45,7 +45,7 @@ int DeleteGroupsResponse::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    GroupErrorCodes.clear();
+    m_group_error_codes.clear();
 
     if (n > 0)
     {
@@ -62,7 +62,7 @@ int DeleteGroupsResponse::decode(PDecoder &pd, int16_t version)
             {
                 return ErrDecodeError;
             }
-            GroupErrorCodes[groupID] = static_cast<KError>(errCode);
+            m_group_error_codes[groupID] = static_cast<KError>(errCode);
             int32_t _;
             if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
             {
@@ -82,17 +82,17 @@ int16_t DeleteGroupsResponse::key() const
 
 int16_t DeleteGroupsResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t DeleteGroupsResponse::headerVersion() const
 {
-    return Version >= 2 ? 1 : 0;
+    return m_version >= 2 ? 1 : 0;
 }
 
 bool DeleteGroupsResponse::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool DeleteGroupsResponse::isFlexibleVersion(int16_t version)
@@ -100,14 +100,14 @@ bool DeleteGroupsResponse::isFlexibleVersion(int16_t version)
     return version >= 2;
 }
 
-bool DeleteGroupsResponse::isValidVersion() const
+bool DeleteGroupsResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 2;
+    return m_version >= 0 && m_version <= 2;
 }
 
-KafkaVersion DeleteGroupsResponse::requiredVersion() const
+KafkaVersion DeleteGroupsResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 2:
         return V2_4_0_0;
@@ -122,5 +122,5 @@ KafkaVersion DeleteGroupsResponse::requiredVersion() const
 
 std::chrono::milliseconds DeleteGroupsResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }

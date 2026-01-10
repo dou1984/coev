@@ -2,19 +2,19 @@
 #include "heartbeat_response.h"
 #include "api_versions.h"
 
-void HeartbeatResponse::setVersion(int16_t v)
+void HeartbeatResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int HeartbeatResponse::encode(PEncoder &pe)
 {
-    if (Version >= 1)
+    if (m_version >= 1)
     {
-        pe.putDurationMs(ThrottleTime);
+        pe.putDurationMs(m_throttle_time);
     }
 
-    pe.putKError(Err);
+    pe.putKError(m_err);
 
     pe.putEmptyTaggedFieldArray();
 
@@ -23,17 +23,17 @@ int HeartbeatResponse::encode(PEncoder &pe)
 
 int HeartbeatResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
 
-        int err = pd.getDurationMs(ThrottleTime);
+        int err = pd.getDurationMs(m_throttle_time);
         if (err != 0)
             return err;
     }
 
-    int err = pd.getKError(Err);
+    int err = pd.getKError(m_err);
     if (err != 0)
         return err;
 
@@ -48,23 +48,23 @@ int16_t HeartbeatResponse::key() const
 
 int16_t HeartbeatResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t HeartbeatResponse::headerVersion() const
 {
     // Response header version: 1 for flexible (v4+), otherwise 0
-    return (Version >= 4) ? 1 : 0;
+    return (m_version >= 4) ? 1 : 0;
 }
 
-bool HeartbeatResponse::isValidVersion() const
+bool HeartbeatResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 4;
+    return m_version >= 0 && m_version <= 4;
 }
 
 bool HeartbeatResponse::isFlexible()
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool HeartbeatResponse::isFlexibleVersion(int16_t ver)
@@ -72,9 +72,9 @@ bool HeartbeatResponse::isFlexibleVersion(int16_t ver)
     return ver >= 4;
 }
 
-KafkaVersion HeartbeatResponse::requiredVersion() const
+KafkaVersion HeartbeatResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 4:
         return V2_4_0_0;
@@ -93,5 +93,5 @@ KafkaVersion HeartbeatResponse::requiredVersion() const
 
 std::chrono::milliseconds HeartbeatResponse::throttleTime() const
 {
-    return std::chrono::milliseconds(ThrottleTime);
+    return std::chrono::milliseconds(m_throttle_time);
 }

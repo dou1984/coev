@@ -25,11 +25,11 @@ struct CurrentRefresh
     void wait();
     void clear();
 
-    std::mutex mu;
-    bool ongoing;
-    std::unordered_map<std::string, bool> topicsMap;
-    std::vector<std::string> topics;
-    bool allTopics;
-    MetadataRefresh refresh;
-    coev::co_channel<int> chans;
+    std::mutex m_mutex;
+    bool m_ongoing = false;
+    std::unordered_map<std::string, bool> m_topics_map;
+    std::vector<std::string> m_topics;
+    bool m_all_topics = false;
+    MetadataRefresh m_refresh_func;
+    coev::co_channel<int> m_chans;
 };

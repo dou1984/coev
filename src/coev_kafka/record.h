@@ -14,17 +14,17 @@ const int8_t controlMask = 0x20;
 
 struct Record : IEncoder, IDecoder
 {
-    std::vector<std::shared_ptr<RecordHeader>> Headers;
-    int8_t Attributes;
-    std::chrono::milliseconds TimestampDelta;
-    int64_t OffsetDelta;
-    std::string Key;
-    std::string Value;
-    std::shared_ptr<VariantLengthField> length;
+    std::vector<std::shared_ptr<RecordHeader>> m_headers;
+    int8_t m_attributes;
+    std::chrono::milliseconds m_timestamp_delta;
+    int64_t m_offset_delta;
+    std::string m_key;
+    std::string m_value;
+    std::shared_ptr<VariantLengthField> m_length;
 
     Record() = default;
 
-    Record(std::string &key, std::string &value, int64_t offsetDelta, std::chrono::milliseconds timestampDelta) : Key(key), Value(value), OffsetDelta(offsetDelta), TimestampDelta(timestampDelta)
+    Record(std::string &key, std::string &value, int64_t offsetDelta, std::chrono::milliseconds timestampDelta) : m_key(key), m_value(value), m_offset_delta(offsetDelta), m_timestamp_delta(timestampDelta)
     {
     }
     int encode(PEncoder &pe);

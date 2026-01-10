@@ -2,47 +2,47 @@
 #include "api_versions.h"
 #include "describe_log_dirs_response.h"
 
-void DescribeLogDirsResponse::setVersion(int16_t v)
+void DescribeLogDirsResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int DescribeLogDirsResponse::encode(PEncoder &pe)
 {
-    pe.putDurationMs(ThrottleTime);
-    if (Version >= 3)
+    pe.putDurationMs(m_throttle_time);
+    if (m_version >= 3)
     {
-        pe.putKError(ErrorCode);
+        pe.putKError(m_error_code);
     }
 
-    if (!pe.putArrayLength(static_cast<int32_t>(LogDirs.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_log_dirs.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &dir : LogDirs)
+    for (auto &dir : m_log_dirs)
     {
-        if (!dir.encode(pe, Version))
+        if (dir.encode(pe, m_version) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int DescribeLogDirsResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
-    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
+    m_version = version;
+    if (pd.getDurationMs(m_throttle_time) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     if (version >= 3)
     {
-        if (pd.getKError(ErrorCode) != ErrNoError)
+        if (pd.getKError(m_error_code) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -54,10 +54,10 @@ int DescribeLogDirsResponse::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    LogDirs.resize(n);
+    m_log_dirs.resize(n);
     for (int32_t i = 0; i < n; ++i)
     {
-        if (!LogDirs[i].decode(pd, version))
+        if (!m_log_dirs[i].decode(pd, version))
         {
             return ErrDecodeError;
         }
@@ -78,26 +78,26 @@ int16_t DescribeLogDirsResponse::key() const
 
 int16_t DescribeLogDirsResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t DescribeLogDirsResponse::headerVersion() const
 {
-    if (Version >= 2)
+    if (m_version >= 2)
     {
         return 1;
     }
     return 0;
 }
 
-bool DescribeLogDirsResponse::isValidVersion() const
+bool DescribeLogDirsResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 4;
+    return m_version >= 0 && m_version <= 4;
 }
 
 bool DescribeLogDirsResponse::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool DescribeLogDirsResponse::isFlexibleVersion(int16_t version)
@@ -105,9 +105,9 @@ bool DescribeLogDirsResponse::isFlexibleVersion(int16_t version)
     return version >= 2;
 }
 
-KafkaVersion DescribeLogDirsResponse::requiredVersion() const
+KafkaVersion DescribeLogDirsResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 4:
         return V3_3_0_0;
@@ -124,26 +124,26 @@ KafkaVersion DescribeLogDirsResponse::requiredVersion() const
 
 std::chrono::milliseconds DescribeLogDirsResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }
 
 int DescribeLogDirsResponseDirMetadata::encode(PEncoder &pe, int16_t version)
 {
-    pe.putKError(ErrorCode);
+    pe.putKError(m_error_code);
 
-    if (!pe.putString(Path))
+    if (pe.putString(m_path) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    if (!pe.putArrayLength(static_cast<int32_t>(Topics.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_topics.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &topic : Topics)
+    for (auto &topic : m_topics)
     {
-        if (!topic.encode(pe, version))
+        if (topic.encode(pe, version) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -151,22 +151,22 @@ int DescribeLogDirsResponseDirMetadata::encode(PEncoder &pe, int16_t version)
 
     if (version >= 4)
     {
-        pe.putInt64(TotalBytes);
-        pe.putInt64(UsableBytes);
+        pe.putInt64(m_total_bytes);
+        pe.putInt64(m_usable_bytes);
     }
 
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int DescribeLogDirsResponseDirMetadata::decode(PDecoder &pd, int16_t version)
 {
-    if (pd.getKError(ErrorCode) != ErrNoError)
+    if (pd.getKError(m_error_code) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
-    if (pd.getString(Path) != ErrNoError)
+    if (pd.getString(m_path) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -177,10 +177,10 @@ int DescribeLogDirsResponseDirMetadata::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    Topics.resize(n);
+    m_topics.resize(n);
     for (int32_t i = 0; i < n; ++i)
     {
-        if (!Topics[i].decode(pd, version))
+        if (!m_topics[i].decode(pd, version))
         {
             return ErrDecodeError;
         }
@@ -188,9 +188,9 @@ int DescribeLogDirsResponseDirMetadata::decode(PDecoder &pd, int16_t version)
 
     if (version >= 4)
     {
-        if (pd.getInt64(TotalBytes) != ErrNoError)
+        if (pd.getInt64(m_total_bytes) != ErrNoError)
             return ErrDecodeError;
-        if (pd.getInt64(UsableBytes) != ErrNoError)
+        if (pd.getInt64(m_usable_bytes) != ErrNoError)
             return ErrDecodeError;
     }
 
@@ -204,31 +204,31 @@ int DescribeLogDirsResponseDirMetadata::decode(PDecoder &pd, int16_t version)
 
 int DescribeLogDirsResponseTopic::encode(PEncoder &pe, int16_t version)
 {
-    if (!pe.putString(Topic))
+    if (pe.putString(m_topic) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    if (!pe.putArrayLength(static_cast<int32_t>(Partitions.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_partitions.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &partition : Partitions)
+    for (auto &partition : m_partitions)
     {
-        if (!partition.encode(pe, version))
+        if (partition.encode(pe, version) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int DescribeLogDirsResponseTopic::decode(PDecoder &pd, int16_t version)
 {
-    if (pd.getString(Topic) != ErrNoError)
+    if (pd.getString(m_topic) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -239,10 +239,10 @@ int DescribeLogDirsResponseTopic::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    Partitions.resize(n);
+    m_partitions.resize(n);
     for (int32_t i = 0; i < n; ++i)
     {
-        if (!Partitions[i].decode(pd, version))
+        if (!m_partitions[i].decode(pd, version))
         {
             return ErrDecodeError;
         }
@@ -258,28 +258,28 @@ int DescribeLogDirsResponseTopic::decode(PDecoder &pd, int16_t version)
 
 int DescribeLogDirsResponsePartition::encode(PEncoder &pe, int16_t version)
 {
-    pe.putInt32(PartitionID);
-    pe.putInt64(Size);
-    pe.putInt64(OffsetLag);
-    pe.putBool(IsTemporary);
+    pe.putInt32(m_partition_id);
+    pe.putInt64(m_size);
+    pe.putInt64(m_offset_lag);
+    pe.putBool(m_is_temporary);
 
     if (version >= 2)
     {
         pe.putEmptyTaggedFieldArray();
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int DescribeLogDirsResponsePartition::decode(PDecoder &pd, int16_t version)
 {
-    if (pd.getInt32(PartitionID) != ErrNoError)
+    if (pd.getInt32(m_partition_id) != ErrNoError)
         return ErrDecodeError;
-    if (pd.getInt64(Size) != ErrNoError)
+    if (pd.getInt64(m_size) != ErrNoError)
         return ErrDecodeError;
-    if (pd.getInt64(OffsetLag) != ErrNoError)
+    if (pd.getInt64(m_offset_lag) != ErrNoError)
         return ErrDecodeError;
-    if (pd.getBool(IsTemporary) != ErrNoError)
+    if (pd.getBool(m_is_temporary) != ErrNoError)
         return ErrDecodeError;
 
     int32_t dummy;

@@ -1,38 +1,38 @@
 #include "version.h"
 #include "init_producer_id_response.h"
 
-void InitProducerIDResponse::setVersion(int16_t v)
+void InitProducerIDResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int InitProducerIDResponse::encode(PEncoder &pe)
 {
-    pe.putDurationMs(ThrottleTime);
-    pe.putKError(Err);
-    pe.putInt64(ProducerID);
-    pe.putInt16(ProducerEpoch);
+    pe.putDurationMs(m_throttle_time);
+    pe.putKError(m_err);
+    pe.putInt64(m_producer_id);
+    pe.putInt16(m_producer_epoch);
     pe.putEmptyTaggedFieldArray();
     return 0;
 }
 
 int InitProducerIDResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    int err = pd.getDurationMs(ThrottleTime);
+    int err = pd.getDurationMs(m_throttle_time);
     if (err != 0)
         return err;
 
-    err = pd.getKError(Err);
+    err = pd.getKError(m_err);
     if (err != 0)
         return err;
 
-    err = pd.getInt64(ProducerID);
+    err = pd.getInt64(m_producer_id);
     if (err != 0)
         return err;
 
-    err = pd.getInt16(ProducerEpoch);
+    err = pd.getInt16(m_producer_epoch);
     if (err != 0)
         return err;
     int32_t _;
@@ -46,22 +46,22 @@ int16_t InitProducerIDResponse::key() const
 
 int16_t InitProducerIDResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t InitProducerIDResponse::headerVersion() const
 {
-    return (Version >= 2) ? 1 : 0;
+    return (m_version >= 2) ? 1 : 0;
 }
 
-bool InitProducerIDResponse::isValidVersion() const
+bool InitProducerIDResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 4;
+    return m_version >= 0 && m_version <= 4;
 }
 
 bool InitProducerIDResponse::isFlexible()
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool InitProducerIDResponse::isFlexibleVersion(int16_t ver)
@@ -69,9 +69,9 @@ bool InitProducerIDResponse::isFlexibleVersion(int16_t ver)
     return ver >= 2;
 }
 
-KafkaVersion InitProducerIDResponse::requiredVersion() const
+KafkaVersion InitProducerIDResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 4:
         return V2_7_0_0;
@@ -88,5 +88,5 @@ KafkaVersion InitProducerIDResponse::requiredVersion() const
 
 std::chrono::milliseconds InitProducerIDResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }

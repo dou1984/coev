@@ -10,8 +10,8 @@
 
 struct consumerGenerationPair
 {
-    std::string MemberID;
-    int Generation;
+    std::string m_member_id;
+    int m_generation = 0;
 };
 
 using BalanceStrategyPlan = std::map<std::string, std::map<std::string, std::vector<int32_t>>>;

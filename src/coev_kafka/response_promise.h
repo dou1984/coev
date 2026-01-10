@@ -11,12 +11,12 @@
 
 struct ResponsePromise
 {
-    std::chrono::time_point<std::chrono::system_clock> RequestTime;
-    int32_t CorrelationID;
-    std::shared_ptr<protocolBody> Response;
-    std::function<void(std::string &, KError)> Handler;
-    coev::co_channel<std::string> Packets;
-    coev::co_channel<KError> Errors;
+    std::chrono::time_point<std::chrono::system_clock> m_request_time;
+    int32_t m_correlation_id = 0;
+    std::shared_ptr<protocol_body> m_response;
+    std::function<void(std::string &, KError)> m_handler;
+    coev::co_channel<std::string> m_packets;
+    coev::co_channel<KError> m_errors;
 
     void Handle(std::string &packets_, KError err);
 };

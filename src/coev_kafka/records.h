@@ -17,9 +17,9 @@ const int defaultRecords = 2;
 
 struct Records
 {
-    int RecordsType;
-    std::shared_ptr<MessageSet> MsgSet;
-    std::shared_ptr<RecordBatch> RBatch;
+    int m_records_type = unknownRecords;
+    std::shared_ptr<MessageSet> m_msg_set;
+    std::shared_ptr<RecordBatch> m_record_batch;
 
     Records();
     static std::shared_ptr<Records> NewLegacyRecords(std::shared_ptr<MessageSet> msgSet);

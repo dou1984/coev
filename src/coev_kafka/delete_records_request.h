@@ -14,29 +14,29 @@
 struct DeleteRecordsRequestTopic : VDecoder, IEncoder
 {
 
-  std::unordered_map<int32_t, int64_t> PartitionOffsets;
+  std::unordered_map<int32_t, int64_t> m_partition_offsets;
   int encode(PEncoder &pe);
   int decode(PDecoder &pd, int16_t version);
 };
 
-struct DeleteRecordsRequest : protocolBody
+struct DeleteRecordsRequest : protocol_body
 {
 
-  int16_t Version;
-  std::unordered_map<std::string, std::shared_ptr<DeleteRecordsRequestTopic>> Topics;
-  std::chrono::milliseconds Timeout;
+  int16_t m_version;
+  std::unordered_map<std::string, std::shared_ptr<DeleteRecordsRequestTopic>> m_topics;
+  std::chrono::milliseconds m_timeout;
 
   DeleteRecordsRequest() = default;
-  DeleteRecordsRequest(int16_t v) : Version(v)
+  DeleteRecordsRequest(int16_t v) : m_version(v)
   {
   }
   ~DeleteRecordsRequest();
-  void setVersion(int16_t v);
+  void set_version(int16_t v);
   int encode(PEncoder &pe);
   int decode(PDecoder &pd, int16_t version);
   int16_t key() const;
   int16_t version() const;
   int16_t headerVersion() const;
-  bool isValidVersion() const;
-  KafkaVersion requiredVersion() const;
+  bool is_valid_version() const;
+  KafkaVersion required_version() const;
 };

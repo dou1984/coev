@@ -2,33 +2,33 @@
 #include "list_groups_request.h"
 #include "api_versions.h"
 
-void ListGroupsRequest::setVersion(int16_t v)
+void ListGroupsRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int ListGroupsRequest::encode(PEncoder &pe)
 {
-    if (Version >= 4)
+    if (m_version >= 4)
     {
-        int err = pe.putArrayLength(static_cast<int32_t>(StatesFilter.size()));
+        int err = pe.putArrayLength(static_cast<int32_t>(m_states_filter.size()));
         if (err != 0)
             return err;
 
-        for (auto &filter : StatesFilter)
+        for (auto &filter : m_states_filter)
         {
             err = pe.putString(filter);
             if (err != 0)
                 return err;
         }
 
-        if (Version >= 5)
+        if (m_version >= 5)
         {
-            err = pe.putArrayLength(static_cast<int32_t>(TypesFilter.size()));
+            err = pe.putArrayLength(static_cast<int32_t>(m_types_filter.size()));
             if (err != 0)
                 return err;
 
-            for (auto &filter : TypesFilter)
+            for (auto &filter : m_types_filter)
             {
                 err = pe.putString(filter);
                 if (err != 0)
@@ -43,17 +43,17 @@ int ListGroupsRequest::encode(PEncoder &pe)
 
 int ListGroupsRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    if (Version >= 4)
+    if (m_version >= 4)
     {
-        int err = pd.getStringArray(StatesFilter);
+        int err = pd.getStringArray(m_states_filter);
         if (err != 0)
             return err;
 
-        if (Version >= 5)
+        if (m_version >= 5)
         {
-            err = pd.getStringArray(TypesFilter);
+            err = pd.getStringArray(m_types_filter);
             if (err != 0)
                 return err;
         }
@@ -69,22 +69,22 @@ int16_t ListGroupsRequest::key() const
 
 int16_t ListGroupsRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t ListGroupsRequest::headerVersion() const
 {
-    return (Version >= 3) ? 2 : 1;
+    return (m_version >= 3) ? 2 : 1;
 }
 
-bool ListGroupsRequest::isValidVersion() const
+bool ListGroupsRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 5;
+    return m_version >= 0 && m_version <= 5;
 }
 
 bool ListGroupsRequest::isFlexible()
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool ListGroupsRequest::isFlexibleVersion(int16_t ver)
@@ -92,9 +92,9 @@ bool ListGroupsRequest::isFlexibleVersion(int16_t ver)
     return ver >= 3;
 }
 
-KafkaVersion ListGroupsRequest::requiredVersion() const
+KafkaVersion ListGroupsRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 5:
         return V3_8_0_0;

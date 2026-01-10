@@ -6,13 +6,13 @@
 void PartitionConsumer::SendError(KError err)
 {
     auto cErr = std::make_shared<ConsumerError>();
-    cErr->Topic = topic;
-    cErr->Partition = partition;
-    cErr->Err = err;
+    cErr->m_topic = m_topic;
+    cErr->m_partition = m_partition;
+    cErr->m_err = err;
 
-    if (conf->Consumer.Return.Errors)
+    if (m_conf->Consumer.Return.Errors)
     {
-        errors.set(cErr);
+        m_errors.set(cErr);
     }
     else
     {
@@ -25,22 +25,22 @@ void PartitionConsumer::SendError(int err)
 }
 std::chrono::duration<double> PartitionConsumer::ComputeBackoff()
 {
-    if (conf->Consumer.Retry.BackoffFunc)
+    if (m_conf->Consumer.Retry.BackoffFunc)
     {
-        int32_t retries_val = retries.fetch_add(1) + 1;
-        return conf->Consumer.Retry.BackoffFunc(static_cast<int>(retries_val));
+        int32_t retries_val = m_retries.fetch_add(1) + 1;
+        return m_conf->Consumer.Retry.BackoffFunc(static_cast<int>(retries_val));
     }
-    return conf->Consumer.Retry.Backoff;
+    return m_conf->Consumer.Retry.Backoff;
 }
 
 coev::awaitable<int> PartitionConsumer::Dispatcher()
 {
     while (true)
     {
-        bool dummy = co_await trigger.get();
+        bool dummy = co_await m_trigger.get();
 
         bool dying_received = false;
-        if (dying.try_get(dummy))
+        if (m_dying.try_get(dummy))
         {
             dying_received = true;
         }
@@ -52,25 +52,25 @@ coev::awaitable<int> PartitionConsumer::Dispatcher()
 
         co_await sleep_for(std::chrono::duration_cast<std::chrono::milliseconds>(ComputeBackoff()));
 
-        if (broker != nullptr)
+        if (m_broker != nullptr)
         {
-            consumer->unrefBrokerConsumer(broker);
-            broker = nullptr;
+            m_consumer->unrefBrokerConsumer(m_broker);
+            m_broker = nullptr;
         }
 
         auto err = co_await Dispatch();
         if (err)
         {
             SendError(err);
-            trigger.set(true);
+            m_trigger.set(true);
         }
     }
 
-    if (broker != nullptr)
+    if (m_broker != nullptr)
     {
-        consumer->unrefBrokerConsumer(broker);
+        m_consumer->unrefBrokerConsumer(m_broker);
     }
-    consumer->removeChild(shared_from_this());
+    m_consumer->removeChild(shared_from_this());
     co_return 0;
 }
 
@@ -78,26 +78,26 @@ coev::awaitable<int> PartitionConsumer::preferredBroker(std::shared_ptr<Broker> 
 {
 
     int err = 0;
-    if (preferredReadReplica >= 0)
+    if (m_preferred_read_replica >= 0)
     {
-        err = co_await consumer->client->GetBroker(preferredReadReplica, broker);
+        err = co_await m_consumer->m_client->GetBroker(m_preferred_read_replica, broker);
         if (err != ErrNoError)
         {
-            epoch = leaderEpoch;
+            epoch = m_leader_epoch;
             co_return 0;
         }
 
-        preferredReadReplica = invalidPreferredReplicaID;
+        m_preferred_read_replica = invalidPreferredReplicaID;
 
-        std::vector<std::string> topics = {topic};
-        err = co_await consumer->client->RefreshMetadata(topics);
+        std::vector<std::string> topics = {m_topic};
+        err = co_await m_consumer->m_client->RefreshMetadata(topics);
         if (err != ErrNoError)
         {
             co_return err;
         }
     }
 
-    err = co_await consumer->client->LeaderAndEpoch(topic, partition, broker, epoch);
+    err = co_await m_consumer->m_client->LeaderAndEpoch(m_topic, m_partition, broker, epoch);
     if (err != 0)
     {
         co_return err;
@@ -108,18 +108,18 @@ coev::awaitable<int> PartitionConsumer::preferredBroker(std::shared_ptr<Broker> 
 coev::awaitable<int> PartitionConsumer::Dispatch()
 {
 
-    std::vector<std::string> topics = {topic};
-    int err = co_await consumer->client->RefreshMetadata(topics);
+    std::vector<std::string> topics = {m_topic};
+    int err = co_await m_consumer->m_client->RefreshMetadata(topics);
     if (err)
         co_return err;
 
     std::shared_ptr<Broker> broker;
-    err = co_await preferredBroker(broker, leaderEpoch);
+    err = co_await preferredBroker(broker, m_leader_epoch);
     if (err)
         co_return err;
 
-    auto brokerConsumer = consumer->refBrokerConsumer(broker);
-    brokerConsumer->input.set(shared_from_this());
+    auto brokerConsumer = m_consumer->refBrokerConsumer(broker);
+    brokerConsumer->m_input.set(shared_from_this());
 
     co_return ErrNoError;
 }
@@ -127,13 +127,13 @@ coev::awaitable<int> PartitionConsumer::Dispatch()
 coev::awaitable<int> PartitionConsumer::ChooseStartingOffset(int64_t offset)
 {
     int64_t newestOffset;
-    auto err = co_await consumer->client->GetOffset(topic, partition, OffsetNewest, newestOffset);
+    auto err = co_await m_consumer->m_client->GetOffset(m_topic, m_partition, OffsetNewest, newestOffset);
     if (err)
         co_return err;
-    highWaterMarkOffset.store(newestOffset);
+    m_high_water_mark_offset.store(newestOffset);
 
     int64_t oldestOffset;
-    err = co_await consumer->client->GetOffset(topic, partition, OffsetOldest, oldestOffset);
+    err = co_await m_consumer->m_client->GetOffset(m_topic, m_partition, OffsetOldest, oldestOffset);
     if (err)
         co_return err;
 
@@ -159,7 +159,7 @@ coev::awaitable<int> PartitionConsumer::ChooseStartingOffset(int64_t offset)
 
 void PartitionConsumer::AsyncClose()
 {
-    dying.set(true);
+    m_dying.set(true);
 }
 
 coev::awaitable<int> PartitionConsumer::Close()
@@ -168,7 +168,7 @@ coev::awaitable<int> PartitionConsumer::Close()
 
     std::vector<std::shared_ptr<ConsumerError>> consumerErrors;
     std::shared_ptr<ConsumerError> err;
-    while ((err = co_await errors.get()))
+    while ((err = co_await m_errors.get()))
     {
         consumerErrors.push_back(err);
     }
@@ -178,24 +178,24 @@ coev::awaitable<int> PartitionConsumer::Close()
 
 int64_t PartitionConsumer::HighWaterMarkOffset()
 {
-    return highWaterMarkOffset.load();
+    return m_high_water_mark_offset.load();
 }
 
 coev::awaitable<void> PartitionConsumer::ResponseFeeder()
 {
     std::vector<std::shared_ptr<ConsumerMessage>> msgs;
-    auto expiryTime = conf->Consumer.MaxProcessingTime;
+    auto expiryTime = m_conf->Consumer.MaxProcessingTime;
     auto lastExpiry = std::chrono::steady_clock::now();
     bool firstAttempt = true;
 
     while (true)
     {
-        std::shared_ptr<FetchResponse> response = co_await feeder.get();
-        responseResult = (KError)ParseResponse(response, msgs);
+        std::shared_ptr<FetchResponse> response = co_await m_feeder.get();
+        m_response_result = (KError)ParseResponse(response, msgs);
 
-        if (responseResult != ErrNoError)
+        if (m_response_result != ErrNoError)
         {
-            retries.store(0);
+            m_retries.store(0);
         }
 
         for (size_t i = 0; i < msgs.size(); ++i)
@@ -210,17 +210,17 @@ coev::awaitable<void> PartitionConsumer::ResponseFeeder()
             {
                 if (!firstAttempt)
                 {
-                    responseResult = ErrTimedOut;
-                    broker->acks.done();
+                    m_response_result = ErrTimedOut;
+                    m_broker->m_acks.done();
                     for (size_t j = i; j < msgs.size(); ++j)
                     {
                         Interceptors(msgs[j]);
-                        messages.set(msgs[j]);
+                        m_messages.set(msgs[j]);
 
-                        if (dying.try_get(died) && died)
+                        if (m_dying.try_get(died) && died)
                             break;
                     }
-                    broker->input.set(shared_from_this());
+                    m_broker->m_input.set(shared_from_this());
                     break;
                 }
                 else
@@ -231,17 +231,17 @@ coev::awaitable<void> PartitionConsumer::ResponseFeeder()
                 }
             }
 
-            if (dying.try_get(died) && died)
+            if (m_dying.try_get(died) && died)
             {
-                broker->acks.done();
+                m_broker->m_acks.done();
                 break;
             }
 
-            messages.set(msg);
+            m_messages.set(msg);
             firstAttempt = true;
         }
 
-        broker->acks.done();
+        m_broker->m_acks.done();
     }
     co_return;
 }
@@ -249,39 +249,39 @@ coev::awaitable<void> PartitionConsumer::ResponseFeeder()
 int PartitionConsumer::ParseMessages(std::shared_ptr<MessageSet> msgSet, std::vector<std::shared_ptr<ConsumerMessage>> &messages)
 {
 
-    for (auto &msgBlock : msgSet->Messages)
+    for (auto &msgBlock : msgSet->m_messages)
     {
         auto blockMsgs = msgBlock->Messages();
         for (auto &msg : blockMsgs)
         {
-            int64_t offset = msg->Offset;
-            auto timestamp = msg->Msg->Timestamp_;
-            if (msg->Msg->Version >= 1)
+            int64_t offset = msg->m_offset;
+            auto timestamp = msg->m_msg->m_timestamp;
+            if (msg->m_msg->m_version >= 1)
             {
-                int64_t baseOffset = msgBlock->Offset - blockMsgs[blockMsgs.size() - 1]->Offset;
+                int64_t baseOffset = msgBlock->m_offset - blockMsgs[blockMsgs.size() - 1]->m_offset;
                 offset += baseOffset;
-                if (msg->Msg->LogAppendTime)
+                if (msg->m_msg->m_log_append_time)
                 {
-                    timestamp = msgBlock->Msg->Timestamp_;
+                    timestamp = msgBlock->m_msg->m_timestamp;
                 }
             }
-            if (offset < offset)
+            if (offset < m_offset)
                 continue;
             auto cm = std::make_shared<ConsumerMessage>();
-            cm->Topic = topic;
-            cm->Partition = partition;
-            cm->Key = msg->Msg->Key;
-            cm->Value = msg->Msg->Value;
-            cm->Offset = offset;
-            cm->Timestamp = timestamp.get_time();
-            cm->BlockTimestamp = msgBlock->Msg->Timestamp_.get_time();
+            cm->m_topic = m_topic;
+            cm->m_partition = m_partition;
+            cm->m_key = msg->m_msg->m_key;
+            cm->m_value = msg->m_msg->m_value;
+            cm->m_offset = offset;
+            cm->m_timestamp = timestamp.get_time();
+            cm->m_block_timestamp = msgBlock->m_msg->m_timestamp.get_time();
             messages.push_back(cm);
-            offset = offset + 1;
+            m_offset = offset + 1;
         }
     }
     if (messages.empty())
     {
-        offset++;
+        m_offset++;
     }
     return ErrNoError;
 }
@@ -289,32 +289,32 @@ int PartitionConsumer::ParseMessages(std::shared_ptr<MessageSet> msgSet, std::ve
 int PartitionConsumer::ParseRecords(std::shared_ptr<RecordBatch> batch, std::vector<std::shared_ptr<ConsumerMessage>> &messages)
 {
 
-    messages.reserve(batch->Records.size());
+    messages.reserve(batch->m_records.size());
 
-    for (auto &rec : batch->Records)
+    for (auto &rec : batch->m_records)
     {
-        int64_t offset = batch->FirstOffset + rec->OffsetDelta;
-        if (offset < offset)
+        int64_t offset = batch->m_first_offset + rec->m_offset_delta;
+        if (offset < m_offset)
             continue;
-        auto timestamp = batch->FirstTimestamp + std::chrono::milliseconds(rec->TimestampDelta.count());
-        if (batch->LogAppendTime)
+        auto timestamp = batch->m_first_timestamp + std::chrono::milliseconds(rec->m_timestamp_delta.count());
+        if (batch->m_log_append_time)
         {
-            timestamp = batch->MaxTimestamp;
+            timestamp = batch->m_max_timestamp;
         }
         auto cm = std::make_shared<ConsumerMessage>();
-        cm->Topic = topic;
-        cm->Partition = partition;
-        cm->Key = rec->Key;
-        cm->Value = rec->Value;
-        cm->Offset = offset;
-        cm->Timestamp = timestamp;
-        cm->Headers = rec->Headers;
+        cm->m_topic = m_topic;
+        cm->m_partition = m_partition;
+        cm->m_key = rec->m_key;
+        cm->m_value = rec->m_value;
+        cm->m_offset = offset;
+        cm->m_timestamp = timestamp;
+        cm->m_headers = rec->m_headers;
         messages.push_back(cm);
-        offset = offset + 1;
+        m_offset = offset + 1;
     }
     if (messages.empty())
     {
-        offset++;
+        m_offset++;
     }
     return 0;
 }
@@ -322,27 +322,27 @@ int PartitionConsumer::ParseRecords(std::shared_ptr<RecordBatch> batch, std::vec
 int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, std::vector<std::shared_ptr<ConsumerMessage>> &messages)
 {
     std::shared_ptr<metrics::Histogram> consumerBatchSizeMetric;
-    if (consumer && consumer->metricRegistry)
+    if (m_consumer && m_consumer->m_metric_registry)
     {
-        consumerBatchSizeMetric = metrics::GetOrRegisterHistogram("consumer-batch-size", consumer->metricRegistry);
+        consumerBatchSizeMetric = metrics::GetOrRegisterHistogram("consumer-batch-size", m_consumer->m_metric_registry);
     }
 
-    if (response->ThrottleTime.count() != 0 && response->Blocks.empty())
+    if (response->m_throttle_time.count() != 0 && response->m_blocks.empty())
     {
         Logger::Printf("consumer/broker/%d FetchResponse throttled %v\n",
-                       broker->broker->ID(), std::chrono::duration_cast<std::chrono::milliseconds>(response->ThrottleTime).count());
+                       m_broker->m_broker->ID(), std::chrono::duration_cast<std::chrono::milliseconds>(response->m_throttle_time).count());
         return ErrThrottled;
     }
 
-    auto block = response->GetBlock(topic, partition);
+    auto block = response->GetBlock(m_topic, m_partition);
     if (!block)
     {
         return ErrIncompleteResponse;
     }
 
-    if (!errorsIs(block->Err, ErrNoError))
+    if (!errorsIs(block->m_err, ErrNoError))
     {
-        return block->Err;
+        return block->m_err;
     }
 
     auto nRecs = block->numRecords();
@@ -352,9 +352,9 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
         consumerBatchSizeMetric->Update(static_cast<int64_t>(nRecs));
     }
 
-    if (block->PreferredReadReplica != invalidPreferredReplicaID)
+    if (block->m_preferred_read_replica != invalidPreferredReplicaID)
     {
-        preferredReadReplica = block->PreferredReadReplica;
+        m_preferred_read_replica = block->m_preferred_read_replica;
     }
 
     if (nRecs == 0)
@@ -369,60 +369,60 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
 
         if (partialTrailingMessage)
         {
-            if (conf->Consumer.Fetch.Max > 0 && fetchSize == conf->Consumer.Fetch.Max)
+            if (m_conf->Consumer.Fetch.Max > 0 && m_fetch_size == m_conf->Consumer.Fetch.Max)
             {
                 SendError(ErrMessageTooLarge);
-                offset++;
+                m_offset++;
             }
             else
             {
-                fetchSize *= 2;
-                if (fetchSize < 0)
+                m_fetch_size *= 2;
+                if (m_fetch_size < 0)
                 {
-                    fetchSize = INT32_MAX;
+                    m_fetch_size = INT32_MAX;
                 }
-                if (conf->Consumer.Fetch.Max > 0 && fetchSize > conf->Consumer.Fetch.Max)
+                if (m_conf->Consumer.Fetch.Max > 0 && m_fetch_size > m_conf->Consumer.Fetch.Max)
                 {
-                    fetchSize = conf->Consumer.Fetch.Max;
+                    m_fetch_size = m_conf->Consumer.Fetch.Max;
                 }
             }
         }
-        else if (block->recordsNextOffset <= block->HighWaterMarkOffset)
+        else if (block->m_records_next_offset <= block->m_high_water_mark_offset)
         {
             Logger::Printf("consumer/broker/%d received batch with zero records but high watermark was not reached, topic %s, partition %d, next offset %ld\n",
-                           broker->broker->ID(), topic.c_str(), partition, block->recordsNextOffset);
-            offset = block->recordsNextOffset;
+                           m_broker->m_broker->ID(), m_topic.c_str(), m_partition, block->m_records_next_offset);
+            m_offset = block->m_records_next_offset;
         }
         return 0;
     }
 
-    fetchSize = conf->Consumer.Fetch.DefaultVal;
-    highWaterMarkOffset.store(block->HighWaterMarkOffset);
+    m_fetch_size = m_conf->Consumer.Fetch.DefaultVal;
+    m_high_water_mark_offset.store(block->m_high_water_mark_offset);
 
     std::unordered_set<int64_t> abortedProducerIDs;
     auto abortedTransactions = block->getAbortedTransactions();
 
-    for (auto &records : block->RecordsSet)
+    for (auto &records : block->m_records_set)
     {
-        if (records->RecordsType == legacyRecords)
+        if (records->m_records_type == legacyRecords)
         {
             std::vector<std::shared_ptr<ConsumerMessage>> msgSetMsgs;
-            auto err = ParseMessages(records->MsgSet, msgSetMsgs);
+            auto err = ParseMessages(records->m_msg_set, msgSetMsgs);
             if (err)
                 return err;
             messages.insert(messages.end(), msgSetMsgs.begin(), msgSetMsgs.end());
         }
-        else if (records->RecordsType == defaultRecords)
+        else if (records->m_records_type == defaultRecords)
         {
             for (auto it = abortedTransactions.begin(); it != abortedTransactions.end();)
             {
-                if ((*it)->FirstOffset > records->RBatch->LastOffset())
+                if ((*it)->m_first_offset > records->m_record_batch->LastOffset())
                     break;
-                abortedProducerIDs.insert((*it)->ProducerID);
+                abortedProducerIDs.insert((*it)->m_producer_id);
                 it = abortedTransactions.erase(it);
             }
             std::vector<std::shared_ptr<ConsumerMessage>> batchMsgs;
-            auto err = ParseRecords(records->RBatch, batchMsgs);
+            auto err = ParseRecords(records->m_record_batch, batchMsgs);
             if (err)
                 return err;
 
@@ -430,7 +430,7 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
             auto controlErr = records->isControl(isControl);
             if (controlErr)
             {
-                if (conf->Consumer.IsolationLevel_ == ReadCommitted)
+                if (m_conf->Consumer.IsolationLevel_ == ReadCommitted)
                 {
                     return controlErr;
                 }
@@ -444,16 +444,16 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
                 if (err)
                     return err;
 
-                if (control.Type == ControlRecordAbort)
+                if (control.m_type == ControlRecordType::ControlRecordAbort)
                 {
-                    abortedProducerIDs.erase(records->RBatch->ProducerID);
+                    abortedProducerIDs.erase(records->m_record_batch->m_producer_id);
                 }
                 continue;
             }
 
-            if (conf->Consumer.IsolationLevel_ == ReadCommitted)
+            if (m_conf->Consumer.IsolationLevel_ == ReadCommitted)
             {
-                if (records->RBatch->IsTransactional && abortedProducerIDs.count(records->RBatch->ProducerID))
+                if (records->m_record_batch->m_is_transactional && abortedProducerIDs.count(records->m_record_batch->m_producer_id))
                 {
                     continue;
                 }
@@ -472,7 +472,7 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
 
 coev::awaitable<int> PartitionConsumer::Interceptors(std::shared_ptr<ConsumerMessage> &msg)
 {
-    for (auto &interceptor : conf->Consumer.Interceptors)
+    for (auto &interceptor : m_conf->Consumer.Interceptors)
     {
         auto err = co_await safelyApplyInterceptor(msg, interceptor);
         if (err)
@@ -483,12 +483,12 @@ coev::awaitable<int> PartitionConsumer::Interceptors(std::shared_ptr<ConsumerMes
 
 void PartitionConsumer::Pause()
 {
-    paused.store(true);
+    m_paused.store(true);
 }
 
 void PartitionConsumer::Resume()
 {
-    paused.store(false);
+    m_paused.store(false);
 }
 void PartitionConsumer::PauseAll()
 {
@@ -498,5 +498,5 @@ void PartitionConsumer::ResumeAll()
 }
 bool PartitionConsumer::IsPaused()
 {
-    return paused.load();
+    return m_paused.load();
 }

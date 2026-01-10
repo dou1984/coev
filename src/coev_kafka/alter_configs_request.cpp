@@ -2,28 +2,28 @@
 #include "alter_configs_request.h"
 #include "api_versions.h"
 
-void AlterConfigsRequest::setVersion(int16_t v)
+void AlterConfigsRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int AlterConfigsRequest::encode(PEncoder &pe)
 {
-    if (!pe.putArrayLength(static_cast<int32_t>(Resources.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_resources.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &r : Resources)
+    for (auto &r : m_resources)
     {
-        if (!r->encode(pe))
+        if (r->encode(pe) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
-    pe.putBool(ValidateOnly);
-    return true;
+    pe.putBool(m_validate_only);
+    return ErrNoError;
 }
 
 int AlterConfigsRequest::decode(PDecoder &pd, int16_t version)
@@ -34,11 +34,11 @@ int AlterConfigsRequest::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    Resources.resize(resourceCount);
+    m_resources.resize(resourceCount);
     for (int32_t i = 0; i < resourceCount; ++i)
     {
-        Resources[i] = std::make_shared<AlterConfigsResource>();
-        if (!Resources[i]->decode(pd, version))
+        m_resources[i] = std::make_shared<AlterConfigsResource>();
+        if (m_resources[i]->decode(pd, version) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -49,38 +49,38 @@ int AlterConfigsRequest::decode(PDecoder &pd, int16_t version)
     {
         return ErrDecodeError;
     }
-    ValidateOnly = validateOnly;
+    m_validate_only = validateOnly;
 
-    return true;
+    return ErrNoError;
 }
 
 int AlterConfigsResource::encode(PEncoder &pe)
 {
-    pe.putInt8(static_cast<int8_t>(Type));
+    pe.putInt8(static_cast<int8_t>(m_type));
 
-    if (!pe.putString(Name))
+    if (pe.putString(m_name) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    if (!pe.putArrayLength(static_cast<int32_t>(ConfigEntries.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_config_entries.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &kv : ConfigEntries)
+    for (auto &kv : m_config_entries)
     {
-        if (!pe.putString(kv.first))
+        if (pe.putString(kv.first) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        if (!pe.putNullableString(kv.second))
+        if (pe.putNullableString(kv.second) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int AlterConfigsResource::decode(PDecoder &pd, int16_t version)
@@ -90,14 +90,14 @@ int AlterConfigsResource::decode(PDecoder &pd, int16_t version)
     {
         return ErrDecodeError;
     }
-    Type = static_cast<ConfigResourceType>(t);
+    m_type = static_cast<ConfigResourceType>(t);
 
     std::string name;
     if (pd.getString(name) != ErrNoError)
     {
         return ErrDecodeError;
     }
-    Name = name;
+    m_name = name;
 
     int32_t n;
     if (pd.getArrayLength(n) != ErrNoError)
@@ -107,7 +107,7 @@ int AlterConfigsResource::decode(PDecoder &pd, int16_t version)
 
     if (n > 0)
     {
-        ConfigEntries.clear();
+        m_config_entries.clear();
         for (int32_t i = 0; i < n; ++i)
         {
             std::string configKey;
@@ -120,11 +120,11 @@ int AlterConfigsResource::decode(PDecoder &pd, int16_t version)
             {
                 return ErrDecodeError;
             }
-            ConfigEntries[configKey] = configValue;
+            m_config_entries[configKey] = configValue;
         }
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int16_t AlterConfigsRequest::key() const
@@ -134,7 +134,7 @@ int16_t AlterConfigsRequest::key() const
 
 int16_t AlterConfigsRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t AlterConfigsRequest::headerVersion() const
@@ -142,14 +142,14 @@ int16_t AlterConfigsRequest::headerVersion() const
     return 1;
 }
 
-bool AlterConfigsRequest::isValidVersion() const
+bool AlterConfigsRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 1;
+    return m_version >= 0 && m_version <= 1;
 }
 
-KafkaVersion AlterConfigsRequest::requiredVersion() const
+KafkaVersion AlterConfigsRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 1:
         return V2_0_0_0;

@@ -1,22 +1,22 @@
 #include "version.h"
 #include "acl_describe_request.h"
 
-void DescribeAclsRequest::setVersion(int16_t v)
+void DescribeAclsRequest::set_version(int16_t v)
 {
-    Version = static_cast<int>(v);
-    Filter.Version = Version;
+    m_version = static_cast<int>(v);
+    m_filter.m_version = m_version;
 }
 
 int DescribeAclsRequest::encode(PEncoder &pe)
 {
-    return Filter.encode(pe);
+    return m_filter.encode(pe);
 }
 
 int DescribeAclsRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = static_cast<int>(version);
-    Filter.Version = Version;
-    return Filter.decode(pd, version);
+    m_version = static_cast<int>(version);
+    m_filter.m_version = m_version;
+    return m_filter.decode(pd, version);
 }
 
 int16_t DescribeAclsRequest::key() const
@@ -26,7 +26,7 @@ int16_t DescribeAclsRequest::key() const
 
 int16_t DescribeAclsRequest::version() const
 {
-    return static_cast<int16_t>(Version);
+    return static_cast<int16_t>(m_version);
 }
 
 int16_t DescribeAclsRequest::headerVersion() const
@@ -34,14 +34,14 @@ int16_t DescribeAclsRequest::headerVersion() const
     return 1;
 }
 
-bool DescribeAclsRequest::isValidVersion() const
+bool DescribeAclsRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 1;
+    return m_version >= 0 && m_version <= 1;
 }
 
-KafkaVersion DescribeAclsRequest::requiredVersion() const
+KafkaVersion DescribeAclsRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 1:
         return V2_0_0_0;

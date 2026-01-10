@@ -11,25 +11,25 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
-struct ListPartitionReassignmentsRequest : protocolBody
+struct ListPartitionReassignmentsRequest : protocol_body
 {
-    std::chrono::milliseconds Timeout;
-    std::unordered_map<std::string, std::vector<int32_t>> blocks;
-    int16_t Version = 0;
+    std::chrono::milliseconds m_timeout;
+    std::unordered_map<std::string, std::vector<int32_t>> m_blocks;
+    int16_t m_version = 0;
     ListPartitionReassignmentsRequest() = default;
-    ListPartitionReassignmentsRequest(int16_t v) : Version(v)
+    ListPartitionReassignmentsRequest(int16_t v) : m_version(v)
     {
     }
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible();
     static bool isFlexibleVersion(int16_t ver);
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
 
     void AddBlock(const std::string &topic, const std::vector<int32_t> &partitionIDs);
 };

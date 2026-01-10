@@ -2,9 +2,9 @@
 #include "api_versions.h"
 #include "delete_topics_request.h"
 
-void DeleteTopicsRequest::setVersion(int16_t v)
+void DeleteTopicsRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 static int16_t getVersionFromKafkaVersion(KafkaVersion kafkaVersion)
@@ -22,12 +22,12 @@ static int16_t getVersionFromKafkaVersion(KafkaVersion kafkaVersion)
 
 int DeleteTopicsRequest::encode(PEncoder &pe)
 {
-    if (!pe.putStringArray(Topics))
+    if (pe.putStringArray(m_topics) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    pe.putDurationMs(Timeout);
+    pe.putDurationMs(m_timeout);
 
     if (isFlexible())
     {
@@ -39,9 +39,9 @@ int DeleteTopicsRequest::encode(PEncoder &pe)
 
 int DeleteTopicsRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    if (pd.getStringArray(Topics) != ErrNoError)
+    if (pd.getStringArray(m_topics) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -51,7 +51,7 @@ int DeleteTopicsRequest::decode(PDecoder &pd, int16_t version)
     {
         return ErrDecodeError;
     }
-    Timeout = std::chrono::milliseconds(timeout);
+    m_timeout = std::chrono::milliseconds(timeout);
 
     if (isFlexibleVersion(version))
     {
@@ -72,17 +72,17 @@ int16_t DeleteTopicsRequest::key() const
 
 int16_t DeleteTopicsRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t DeleteTopicsRequest::headerVersion() const
 {
-    return (Version >= 4) ? 2 : 1;
+    return (m_version >= 4) ? 2 : 1;
 }
 
 bool DeleteTopicsRequest::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool DeleteTopicsRequest::isFlexibleVersion(int16_t version)
@@ -90,14 +90,14 @@ bool DeleteTopicsRequest::isFlexibleVersion(int16_t version)
     return version >= 4;
 }
 
-bool DeleteTopicsRequest::isValidVersion() const
+bool DeleteTopicsRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 4;
+    return m_version >= 0 && m_version <= 4;
 }
 
-KafkaVersion DeleteTopicsRequest::requiredVersion() const
+KafkaVersion DeleteTopicsRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 4:
         return V2_4_0_0;
@@ -117,8 +117,8 @@ KafkaVersion DeleteTopicsRequest::requiredVersion() const
 std::shared_ptr<DeleteTopicsRequest> NewDeleteTopicsRequest(KafkaVersion kafkaVersion, const std::vector<std::string> &topics, int64_t timeoutMs)
 {
     auto req = std::shared_ptr<DeleteTopicsRequest>();
-    req->Topics = topics;
-    req->Timeout = std::chrono::milliseconds(timeoutMs);
-    req->Version = getVersionFromKafkaVersion(kafkaVersion);
+    req->m_topics = topics;
+    req->m_timeout = std::chrono::milliseconds(timeoutMs);
+    req->m_version = getVersionFromKafkaVersion(kafkaVersion);
     return req;
 }

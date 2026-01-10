@@ -1,37 +1,37 @@
 #include "version.h"
 #include "delete_offsets_response.h"
 
-void DeleteOffsetsResponse::setVersion(int16_t v)
+void DeleteOffsetsResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 void DeleteOffsetsResponse::AddError(const std::string &topic, int32_t partition, KError errorCode)
 {
-    auto &partitions = Errors[topic];
+    auto &partitions = m_errors[topic];
     partitions[partition] = errorCode;
 }
 
 int DeleteOffsetsResponse::encode(PEncoder &pe)
 {
-    pe.putInt16(static_cast<int16_t>(ErrorCode));
-    pe.putDurationMs(ThrottleTime);
+    pe.putInt16(static_cast<int16_t>(m_error_code));
+    pe.putDurationMs(m_throttle_time);
 
-    if (!pe.putArrayLength(static_cast<int32_t>(Errors.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_errors.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &topicEntry : Errors)
+    for (auto &topicEntry : m_errors)
     {
         const std::string &topic = topicEntry.first;
         auto &partitions = topicEntry.second;
 
-        if (!pe.putString(topic))
+        if (pe.putString(topic) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        if (!pe.putArrayLength(static_cast<int32_t>(partitions.size())))
+        if (pe.putArrayLength(static_cast<int32_t>(partitions.size())) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -46,21 +46,21 @@ int DeleteOffsetsResponse::encode(PEncoder &pe)
         }
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int DeleteOffsetsResponse::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
     int16_t errCode;
     if (pd.getInt16(errCode) != ErrNoError)
     {
         return ErrDecodeError;
     }
-    ErrorCode = static_cast<KError>(errCode);
+    m_error_code = static_cast<KError>(errCode);
 
-    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
+    if (pd.getDurationMs(m_throttle_time) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -73,12 +73,12 @@ int DeleteOffsetsResponse::decode(PDecoder &pd, int16_t version)
 
     if (numTopics <= 0)
     {
-        Errors.clear();
-        return true;
+        m_errors.clear();
+        return ErrNoError;
     }
 
-    Errors.clear();
-    Errors.reserve(numTopics);
+    m_errors.clear();
+    m_errors.reserve(numTopics);
 
     for (int32_t i = 0; i < numTopics; ++i)
     {
@@ -94,7 +94,7 @@ int DeleteOffsetsResponse::decode(PDecoder &pd, int16_t version)
             return ErrDecodeError;
         }
 
-        auto &partitionMap = Errors[topic];
+        auto &partitionMap = m_errors[topic];
         partitionMap.clear();
 
         for (int32_t j = 0; j < numPartitions; ++j)
@@ -114,7 +114,7 @@ int DeleteOffsetsResponse::decode(PDecoder &pd, int16_t version)
         }
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int16_t DeleteOffsetsResponse::key() const
@@ -124,7 +124,7 @@ int16_t DeleteOffsetsResponse::key() const
 
 int16_t DeleteOffsetsResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t DeleteOffsetsResponse::headerVersion() const
@@ -132,17 +132,17 @@ int16_t DeleteOffsetsResponse::headerVersion() const
     return 0;
 }
 
-bool DeleteOffsetsResponse::isValidVersion() const
+bool DeleteOffsetsResponse::is_valid_version() const
 {
-    return Version == 0;
+    return m_version == 0;
 }
 
-KafkaVersion DeleteOffsetsResponse::requiredVersion() const
+KafkaVersion DeleteOffsetsResponse::required_version() const
 {
     return V2_4_0_0;
 }
 
 std::chrono::milliseconds DeleteOffsetsResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }

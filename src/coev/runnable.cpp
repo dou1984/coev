@@ -33,7 +33,7 @@ namespace coev
 			it.join();
 		}
 	}
-	void runnable::endless(const std::function<void()> &_f)
+	void runnable::endless(const std::function<void()> &_cleanup)
 	{
 		for (auto &it : m_list)
 		{
@@ -41,7 +41,7 @@ namespace coev
 		}
 		intercept_singal();
 		cosys::start();
-		_f();
+		_cleanup();
 		LOG_CORE("main runnable is stopped by signal\n");
 		while (g_exception.deliver(0))
 		{
@@ -49,7 +49,7 @@ namespace coev
 		}
 		while (g_loop_count != 0)
 		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
 		}
 	}
 	runnable &runnable::start(const func &_f)

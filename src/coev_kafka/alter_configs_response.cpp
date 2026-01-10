@@ -4,37 +4,37 @@
 
 std::string AlterConfigError::Error() const
 {
-    std::string text = KErrorToString(Err);
-    if (!ErrMsg.empty())
+    std::string text = KErrorToString(m_err);
+    if (!m_err_msg.empty())
     {
-        text = text + " - " + ErrMsg;
+        text = text + " - " + m_err_msg;
     }
     return text;
 }
 
 int AlterConfigsResponse::encode(PEncoder &pe)
 {
-    pe.putDurationMs(ThrottleTime);
+    pe.putDurationMs(m_throttle_time);
 
-    if (!pe.putArrayLength(static_cast<int32_t>(Resources.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_resources.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &r : Resources)
+    for (auto &r : m_resources)
     {
-        if (!r->encode(pe))
+        if (r->encode(pe) != ErrNoError)
         {
             return ErrEncodeError;
         }
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int AlterConfigsResponse::decode(PDecoder &pd, int16_t version)
 {
-    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
+    if (pd.getDurationMs(m_throttle_time) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -45,33 +45,33 @@ int AlterConfigsResponse::decode(PDecoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    Resources.resize(responseCount);
+    m_resources.resize(responseCount);
     for (int32_t i = 0; i < responseCount; ++i)
     {
-        Resources[i] = std::make_shared<AlterConfigsResourceResponse>();
-        if (!Resources[i]->decode(pd, version))
+        m_resources[i] = std::make_shared<AlterConfigsResourceResponse>();
+        if (m_resources[i]->decode(pd, version) != ErrNoError)
         {
             return ErrDecodeError;
         }
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int AlterConfigsResourceResponse::encode(PEncoder &pe)
 {
-    pe.putInt16(ErrorCode);
-    if (!pe.putString(ErrorMsg))
+    pe.putInt16(m_error_code);
+    if (pe.putString(m_error_msg) != ErrNoError)
     {
         return ErrEncodeError;
     }
-    pe.putInt8(static_cast<int8_t>(Type));
-    if (!pe.putString(Name))
+    pe.putInt8(static_cast<int8_t>(m_type));
+    if (pe.putString(m_name) != ErrNoError)
     {
         return ErrEncodeError;
     }
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int AlterConfigsResourceResponse::decode(PDecoder &pd, int16_t version)
@@ -81,9 +81,9 @@ int AlterConfigsResourceResponse::decode(PDecoder &pd, int16_t version)
     {
         return ErrDecodeError;
     }
-    ErrorCode = errCode;
+    m_error_code = errCode;
 
-    if (pd.getNullableString(ErrorMsg) != ErrNoError)
+    if (pd.getNullableString(m_error_msg) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -93,9 +93,9 @@ int AlterConfigsResourceResponse::decode(PDecoder &pd, int16_t version)
     {
         return ErrDecodeError;
     }
-    Type = static_cast<ConfigResourceType>(t);
+    m_type = static_cast<ConfigResourceType>(t);
 
-    if (pd.getString(Name) != ErrNoError)
+    if (pd.getString(m_name) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -103,9 +103,9 @@ int AlterConfigsResourceResponse::decode(PDecoder &pd, int16_t version)
     return pd.getEmptyTaggedFieldArray(_);
 }
 
-void AlterConfigsResponse::setVersion(int16_t v)
+void AlterConfigsResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int16_t AlterConfigsResponse::key() const
@@ -115,7 +115,7 @@ int16_t AlterConfigsResponse::key() const
 
 int16_t AlterConfigsResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t AlterConfigsResponse::headerVersion() const
@@ -123,14 +123,14 @@ int16_t AlterConfigsResponse::headerVersion() const
     return 0;
 }
 
-bool AlterConfigsResponse::isValidVersion() const
+bool AlterConfigsResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 1;
+    return m_version >= 0 && m_version <= 1;
 }
 
-KafkaVersion AlterConfigsResponse::requiredVersion() const
+KafkaVersion AlterConfigsResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 1:
         return V2_0_0_0;
@@ -143,5 +143,5 @@ KafkaVersion AlterConfigsResponse::requiredVersion() const
 
 std::chrono::milliseconds AlterConfigsResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }

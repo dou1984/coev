@@ -13,22 +13,22 @@
 #include "protocol_body.h"
 
 struct Broker;
-struct FindCoordinatorResponse : protocolBody, throttleSupport
+struct FindCoordinatorResponse : protocol_body, throttle_support
 {
 
-    int16_t Version = 0;
-    std::chrono::milliseconds ThrottleTime;
-    KError Err = ErrNoError;
-    std::string ErrMsg;
-    std::shared_ptr<Broker> Coordinator;
+    int16_t m_version = 0;
+    std::chrono::milliseconds m_throttle_time;
+    KError m_err = ErrNoError;
+    std::string m_err_msg;
+    std::shared_ptr<Broker> m_coordinator;
 
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int decode(PDecoder &pd, int16_t version);
     int encode(PEncoder &pe);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
     std::chrono::milliseconds throttleTime() const;
 };

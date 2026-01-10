@@ -1,20 +1,20 @@
 #include "describe_user_scram_credentials_request.h"
 
-void DescribeUserScramCredentialsRequest::setVersion(int16_t v)
+void DescribeUserScramCredentialsRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int DescribeUserScramCredentialsRequest::encode(PEncoder &pe)
 {
-    if (!pe.putArrayLength(static_cast<int32_t>(DescribeUsers.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_describe_users.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &d : DescribeUsers)
+    for (auto &d : m_describe_users)
     {
-        if (!pe.putString(d.Name))
+        if (pe.putString(d.m_name) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -22,12 +22,12 @@ int DescribeUserScramCredentialsRequest::encode(PEncoder &pe)
     }
 
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int DescribeUserScramCredentialsRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
     int32_t n;
     if (pd.getArrayLength(n) != ErrNoError)
     {
@@ -39,23 +39,23 @@ int DescribeUserScramCredentialsRequest::decode(PDecoder &pd, int16_t version)
         n = 0;
     }
 
-    DescribeUsers.resize(n);
+    m_describe_users.resize(n);
     for (int32_t i = 0; i < n; ++i)
     {
-        if (pd.getString(DescribeUsers[i].Name) != 0)
+        if (pd.getString(m_describe_users[i].m_name) != ErrNoError)
         {
             return ErrDecodeError;
         }
 
         int32_t dummy;
-        if (pd.getEmptyTaggedFieldArray(dummy) != 0)
+        if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
         {
             return ErrDecodeError;
         }
     }
 
     int32_t dummy;
-    if (pd.getEmptyTaggedFieldArray(dummy) != 0)
+    if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -69,7 +69,7 @@ int16_t DescribeUserScramCredentialsRequest::key() const
 
 int16_t DescribeUserScramCredentialsRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t DescribeUserScramCredentialsRequest::headerVersion() const
@@ -77,14 +77,14 @@ int16_t DescribeUserScramCredentialsRequest::headerVersion() const
     return 2;
 }
 
-bool DescribeUserScramCredentialsRequest::isValidVersion() const
+bool DescribeUserScramCredentialsRequest::is_valid_version() const
 {
-    return Version == 0;
+    return m_version == 0;
 }
 
 bool DescribeUserScramCredentialsRequest::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool DescribeUserScramCredentialsRequest::isFlexibleVersion(int16_t version)
@@ -92,7 +92,7 @@ bool DescribeUserScramCredentialsRequest::isFlexibleVersion(int16_t version)
     return version >= 0;
 }
 
-KafkaVersion DescribeUserScramCredentialsRequest::requiredVersion() const
+KafkaVersion DescribeUserScramCredentialsRequest::required_version() const
 {
     return V2_7_0_0;
 }

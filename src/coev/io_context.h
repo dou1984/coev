@@ -24,8 +24,10 @@ namespace coev
 		io_context(int fd);
 		io_context(io_context &&) = delete;
 		virtual ~io_context();
-		virtual awaitable<int> send(const char *, int);
-		virtual awaitable<int> recv(char *, int);
+		// virtual
+		awaitable<int> send(const char *, int);
+		// virtual
+		awaitable<int> recv(char *, int);
 		template <class T = std::string>
 		awaitable<int> send(const T &msg)
 		{
@@ -41,7 +43,7 @@ namespace coev
 		virtual awaitable<int> sendto(const char *, int, addrInfo &);
 		int close();
 		operator bool() const;
-		// auto operator->() = delete;
+		auto operator->() = delete;
 
 	protected:
 		uint64_t m_tid = 0;

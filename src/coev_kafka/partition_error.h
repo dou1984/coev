@@ -6,8 +6,8 @@
 
 struct PartitionError : IEncoder, VDecoder
 {
-    int32_t Partition;
-    KError Err;
+    int32_t m_partition;
+    KError m_err;
 
     int encode(PEncoder &pe);
     int decode(PDecoder &pd, int16_t version);

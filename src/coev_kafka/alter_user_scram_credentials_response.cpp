@@ -1,28 +1,28 @@
 #include "alter_user_scram_credentials_response.h"
 #include "api_versions.h"
 
-void AlterUserScramCredentialsResponse::setVersion(int16_t v)
+void AlterUserScramCredentialsResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int AlterUserScramCredentialsResponse::encode(PEncoder &pe)
 {
-     pe.putDurationMs(ThrottleTime);
+     pe.putDurationMs(m_throttle_time);
 
-    if (!pe.putArrayLength(static_cast<int32_t>(Results.size())))
+    if (pe.putArrayLength(static_cast<int32_t>(m_results.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &u : Results)
+    for (auto &u : m_results)
     {
-        if (!pe.putString(u->User))
+        if (pe.putString(u->m_user) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        pe.putKError(u->ErrorCode);
-        if (!pe.putNullableString(u->ErrorMessage))
+        pe.putKError(u->m_error_code);
+        if (pe.putNullableString(u->m_error_message) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -30,12 +30,12 @@ int AlterUserScramCredentialsResponse::encode(PEncoder &pe)
     }
 
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int AlterUserScramCredentialsResponse::decode(PDecoder &pd, int16_t version)
 {
-    if (pd.getDurationMs(ThrottleTime) != ErrNoError)
+    if (pd.getDurationMs(m_throttle_time) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -48,21 +48,21 @@ int AlterUserScramCredentialsResponse::decode(PDecoder &pd, int16_t version)
 
     if (numResults > 0)
     {
-        Results.resize(numResults);
+        m_results.resize(numResults);
         for (int32_t i = 0; i < numResults; ++i)
         {
             auto result = std::make_shared<AlterUserScramCredentialsResult>();
-            if (pd.getString(result->User) != ErrNoError)
+            if (pd.getString(result->m_user) != ErrNoError)
             {
                 return ErrEncodeError;
             }
 
-            if (pd.getKError(result->ErrorCode) != ErrNoError)
+            if (pd.getKError(result->m_error_code) != ErrNoError)
             {
                 return ErrEncodeError;
             }
 
-            if (pd.getNullableString(result->ErrorMessage) != ErrNoError)
+            if (pd.getNullableString(result->m_error_message) != ErrNoError)
             {
                 return ErrEncodeError;
             }
@@ -72,7 +72,7 @@ int AlterUserScramCredentialsResponse::decode(PDecoder &pd, int16_t version)
                 return ErrEncodeError;
             }
 
-            Results[i] = result;
+            m_results[i] = result;
         }
     }
     int32_t _;
@@ -86,7 +86,7 @@ int16_t AlterUserScramCredentialsResponse::key() const
 
 int16_t AlterUserScramCredentialsResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t AlterUserScramCredentialsResponse::headerVersion() const
@@ -94,14 +94,14 @@ int16_t AlterUserScramCredentialsResponse::headerVersion() const
     return 2;
 }
 
-bool AlterUserScramCredentialsResponse::isValidVersion() const
+bool AlterUserScramCredentialsResponse::is_valid_version() const
 {
-    return Version == 0;
+    return m_version == 0;
 }
 
 bool AlterUserScramCredentialsResponse::isFlexible() const
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool AlterUserScramCredentialsResponse::isFlexibleVersion(int16_t version) const
@@ -109,12 +109,12 @@ bool AlterUserScramCredentialsResponse::isFlexibleVersion(int16_t version) const
     return version >= 0;
 }
 
-KafkaVersion AlterUserScramCredentialsResponse::requiredVersion() const
+KafkaVersion AlterUserScramCredentialsResponse::required_version() const
 {
     return V2_7_0_0;
 }
 
 std::chrono::milliseconds AlterUserScramCredentialsResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }

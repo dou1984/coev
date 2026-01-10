@@ -23,8 +23,8 @@
 
 struct AbortedTransaction : IEncoder, IDecoder
 {
-    int64_t ProducerID;
-    int64_t FirstOffset;
+    int64_t m_producer_id;
+    int64_t m_first_offset;
 
     AbortedTransaction();
     int decode(PDecoder &pd);
@@ -33,18 +33,16 @@ struct AbortedTransaction : IEncoder, IDecoder
 
 struct FetchResponseBlock : VDecoder, VEncoder
 {
-    KError Err;
-    int64_t HighWaterMarkOffset;
-    int64_t LastStableOffset;
-    int64_t LogStartOffset;
-    std::vector<std::shared_ptr<AbortedTransaction>> AbortedTransactions;
-    int32_t PreferredReadReplica;
-    std::vector<std::shared_ptr<Records>> RecordsSet;
-
-    bool Partial;
-    std::shared_ptr<Records> Records_;
-
-    int64_t recordsNextOffset;
+    KError m_err;
+    int64_t m_high_water_mark_offset;
+    int64_t m_last_stable_offset;
+    int64_t m_log_start_offset;
+    std::vector<std::shared_ptr<AbortedTransaction>> m_aborted_transactions;
+    int32_t m_preferred_read_replica;
+    std::vector<std::shared_ptr<Records>> m_records_set;
+    std::shared_ptr<Records> m_records;
+    int64_t m_records_next_offset;
+    bool m_partial;
 
     FetchResponseBlock();
     int decode(PDecoder &pd, int16_t version);
@@ -54,26 +52,26 @@ struct FetchResponseBlock : VDecoder, VEncoder
     std::vector<std::shared_ptr<AbortedTransaction>> getAbortedTransactions();
 };
 
-struct FetchResponse : protocolBody
+struct FetchResponse : protocol_body
 {
-    int16_t Version;
-    std::chrono::milliseconds ThrottleTime;
+    int16_t m_version;
+    std::chrono::milliseconds m_throttle_time;
     int16_t ErrorCode;
     int32_t SessionID;
-    std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<FetchResponseBlock>>> Blocks;
+    std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<FetchResponseBlock>>> m_blocks;
 
     bool LogAppendTime;
     std::chrono::system_clock::time_point Timestamp;
 
     FetchResponse();
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     int decode(PDecoder &pd, int16_t version);
     int encode(PEncoder &pe);
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
-    KafkaVersion requiredVersion() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
     std::chrono::milliseconds throttleTime() const;
     std::shared_ptr<FetchResponseBlock> GetBlock(const std::string &topic, int32_t partition);
     void AddError(const std::string &topic, int32_t partition, KError err);

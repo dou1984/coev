@@ -13,15 +13,15 @@ struct OwnedPartition;
 struct ConsumerGroupMemberMetadata : IEncoder, IDecoder
 {
 
-    int16_t Version = 0;
-    std::vector<std::string> Topics;
-    std::string UserData;
-    std::vector<std::shared_ptr<OwnedPartition>> OwnedPartitions;
-    int32_t GenerationId = 0;
-    std::string RackId;
+    int16_t m_version = 0;
+    std::vector<std::string> m_topics;
+    std::string m_user_data;
+    std::vector<std::shared_ptr<OwnedPartition>> m_owned_partitions;
+    int32_t m_generation_id = 0;
+    std::string m_rack_id;
 
     ConsumerGroupMemberMetadata() = default;
-    ConsumerGroupMemberMetadata(int16_t v) : Version(v) {}
+    ConsumerGroupMemberMetadata(int16_t v) : m_version(v) {}
 
     int encode(PEncoder &pe);
     int decode(PDecoder &pd);
@@ -41,12 +41,12 @@ struct OwnedPartition : IEncoder, IDecoder
 
 struct ConsumerGroupMemberAssignment : IEncoder, IDecoder
 {
-    int16_t Version = 0;
+    int16_t m_version = 0;
     std::map<std::string, std::vector<int32_t>> Topics;
     std::string UserData;
 
     ConsumerGroupMemberAssignment() = default;
-    ConsumerGroupMemberAssignment(int16_t v) : Version(v) {}
+    ConsumerGroupMemberAssignment(int16_t v) : m_version(v) {}
 
     int encode(PEncoder &pe);
     int decode(PDecoder &pd);

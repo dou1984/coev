@@ -1,21 +1,21 @@
 #include "version.h"
 #include "acl_create_response.h"
 
-void CreateAclsResponse::setVersion(int16_t v)
+void CreateAclsResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int CreateAclsResponse::encode(PEncoder &pe)
 {
-    pe.putDurationMs(ThrottleTime);
+    pe.putDurationMs(m_throttle_time);
 
-    if (pe.putArrayLength(static_cast<int32_t>(AclCreationResponses_.size())) != 0)
+    if (pe.putArrayLength(static_cast<int32_t>(m_acl_creation_responses.size())) != 0)
     {
         return -1;
     }
 
-    for (auto &resp : AclCreationResponses_)
+    for (auto &resp : m_acl_creation_responses)
     {
         if (resp->encode(pe) != 0)
         {
@@ -28,7 +28,7 @@ int CreateAclsResponse::encode(PEncoder &pe)
 
 int CreateAclsResponse::decode(PDecoder &pd, int16_t version)
 {
-    if (pd.getDurationMs(ThrottleTime) != 0)
+    if (pd.getDurationMs(m_throttle_time) != 0)
     {
         return -1;
     }
@@ -39,11 +39,11 @@ int CreateAclsResponse::decode(PDecoder &pd, int16_t version)
         return -1;
     }
 
-    AclCreationResponses_.resize(n);
+    m_acl_creation_responses.resize(n);
     for (int32_t i = 0; i < n; ++i)
     {
-        AclCreationResponses_[i] = std::make_shared<AclCreationResponse>();
-        if (AclCreationResponses_[i]->decode(pd, version) != 0)
+        m_acl_creation_responses[i] = std::make_shared<AclCreationResponse>();
+        if (m_acl_creation_responses[i]->decode(pd, version) != 0)
         {
             return -1;
         }
@@ -59,7 +59,7 @@ int16_t CreateAclsResponse::key() const
 
 int16_t CreateAclsResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t CreateAclsResponse::headerVersion() const
@@ -67,14 +67,14 @@ int16_t CreateAclsResponse::headerVersion() const
     return 0;
 }
 
-bool CreateAclsResponse::isValidVersion() const
+bool CreateAclsResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 1;
+    return m_version >= 0 && m_version <= 1;
 }
 
-KafkaVersion CreateAclsResponse::requiredVersion() const
+KafkaVersion CreateAclsResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 1:
         return V2_0_0_0;
@@ -85,14 +85,14 @@ KafkaVersion CreateAclsResponse::requiredVersion() const
 
 std::chrono::milliseconds CreateAclsResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }
 
 int AclCreationResponse::encode(PEncoder &pe)
 {
-    pe.putKError(Err);
+    pe.putKError(m_err);
 
-    if (pe.putNullableString(ErrMsg) != 0)
+    if (pe.putNullableString(m_err_msg) != 0)
     {
         return -1;
     }
@@ -102,12 +102,12 @@ int AclCreationResponse::encode(PEncoder &pe)
 
 int AclCreationResponse::decode(PDecoder &pd, int16_t version)
 {
-    if (pd.getKError(Err) != 0)
+    if (pd.getKError(m_err) != 0)
     {
         return -1;
     }
 
-    if (pd.getNullableString(ErrMsg) != 0)
+    if (pd.getNullableString(m_err_msg) != 0)
     {
         return -1;
     }

@@ -3,11 +3,11 @@
 #include "api_versions.h"
 int GroupProtocol::decode(PDecoder &pd)
 {
-    int err = pd.getString(Name);
+    int err = pd.getString(m_name);
     if (err != 0)
         return err;
 
-    err = pd.getBytes(Metadata);
+    err = pd.getBytes(m_metadata);
     if (err != 0)
         return err;
     int32_t _;
@@ -16,11 +16,11 @@ int GroupProtocol::decode(PDecoder &pd)
 
 int GroupProtocol::encode(PEncoder &pe)
 {
-    int err = pe.putString(Name);
+    int err = pe.putString(m_name);
     if (err != 0)
         return err;
 
-    err = pe.putBytes(Metadata);
+    err = pe.putBytes(m_metadata);
     if (err != 0)
         return err;
 
@@ -28,53 +28,53 @@ int GroupProtocol::encode(PEncoder &pe)
     return 0;
 }
 
-void JoinGroupRequest::setVersion(int16_t v)
+void JoinGroupRequest::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int JoinGroupRequest::encode(PEncoder &pe)
 {
-    int err = pe.putString(GroupId);
+    int err = pe.putString(m_group_id);
     if (err != 0)
         return err;
 
-    pe.putInt32(SessionTimeout);
+    pe.putInt32(m_session_timeout);
 
-    if (Version >= 1)
+    if (m_version >= 1)
     {
-        pe.putInt32(RebalanceTimeout);
+        pe.putInt32(m_rebalance_timeout);
     }
 
-    err = pe.putString(MemberId);
+    err = pe.putString(m_member_id);
     if (err != 0)
         return err;
 
-    if (Version >= 5)
+    if (m_version >= 5)
     {
 
-        err = pe.putNullableString(GroupInstanceId);
+        err = pe.putNullableString(m_group_instance_id);
 
         if (err != 0)
             return err;
     }
 
-    err = pe.putString(ProtocolType);
+    err = pe.putString(m_protocol_type);
     if (err != 0)
         return err;
 
-    if (!GroupProtocols.empty())
+    if (!m_group_protocols.empty())
     {
-        if (!OrderedGroupProtocols.empty())
+        if (!m_ordered_group_protocols.empty())
         {
             return -1;
         }
 
-        err = pe.putArrayLength(static_cast<int32_t>(GroupProtocols.size()));
+        err = pe.putArrayLength(static_cast<int32_t>(m_group_protocols.size()));
         if (err != 0)
             return err;
 
-        for (auto &kv : GroupProtocols)
+        for (auto &kv : m_group_protocols)
         {
             err = pe.putString(kv.first);
             if (err != 0)
@@ -87,11 +87,11 @@ int JoinGroupRequest::encode(PEncoder &pe)
     }
     else
     {
-        err = pe.putArrayLength(static_cast<int32_t>(OrderedGroupProtocols.size()));
+        err = pe.putArrayLength(static_cast<int32_t>(m_ordered_group_protocols.size()));
         if (err != 0)
             return err;
 
-        for (auto &protocol : OrderedGroupProtocols)
+        for (auto &protocol : m_ordered_group_protocols)
         {
             err = protocol->encode(pe);
             if (err != 0)
@@ -105,36 +105,36 @@ int JoinGroupRequest::encode(PEncoder &pe)
 
 int JoinGroupRequest::decode(PDecoder &pd, int16_t version)
 {
-    Version = version;
+    m_version = version;
 
-    int err = pd.getString(GroupId);
+    int err = pd.getString(m_group_id);
     if (err != 0)
         return err;
 
-    err = pd.getInt32(SessionTimeout);
+    err = pd.getInt32(m_session_timeout);
     if (err != 0)
         return err;
 
     if (version >= 1)
     {
-        err = pd.getInt32(RebalanceTimeout);
+        err = pd.getInt32(m_rebalance_timeout);
         if (err != 0)
             return err;
     }
 
-    err = pd.getString(MemberId);
+    err = pd.getString(m_member_id);
     if (err != 0)
         return err;
 
     if (version >= 5)
     {
 
-        err = pd.getNullableString(GroupInstanceId);
+        err = pd.getNullableString(m_group_instance_id);
         if (err != 0)
             return err;
     }
 
-    err = pd.getString(ProtocolType);
+    err = pd.getString(m_protocol_type);
     if (err != 0)
         return err;
 
@@ -148,8 +148,8 @@ int JoinGroupRequest::decode(PDecoder &pd, int16_t version)
         return 0;
     }
 
-    GroupProtocols.clear();
-    OrderedGroupProtocols.clear();
+    m_group_protocols.clear();
+    m_ordered_group_protocols.clear();
 
     for (int32_t i = 0; i < n; ++i)
     {
@@ -158,8 +158,8 @@ int JoinGroupRequest::decode(PDecoder &pd, int16_t version)
         if (err != 0)
             return err;
 
-        GroupProtocols[protocol->Name] = protocol->Metadata;
-        OrderedGroupProtocols.push_back(protocol);
+        m_group_protocols[protocol->m_name] = protocol->m_metadata;
+        m_ordered_group_protocols.push_back(protocol);
     }
     int32_t _;
     return pd.getEmptyTaggedFieldArray(_);
@@ -172,22 +172,22 @@ int16_t JoinGroupRequest::key() const
 
 int16_t JoinGroupRequest::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t JoinGroupRequest::headerVersion() const
 {
-    return (Version >= 6) ? 2 : 1;
+    return (m_version >= 6) ? 2 : 1;
 }
 
-bool JoinGroupRequest::isValidVersion() const
+bool JoinGroupRequest::is_valid_version() const
 {
-    return Version >= 0 && Version <= 6;
+    return m_version >= 0 && m_version <= 6;
 }
 
 bool JoinGroupRequest::isFlexible()
 {
-    return isFlexibleVersion(Version);
+    return isFlexibleVersion(m_version);
 }
 
 bool JoinGroupRequest::isFlexibleVersion(int16_t ver)
@@ -195,9 +195,9 @@ bool JoinGroupRequest::isFlexibleVersion(int16_t ver)
     return ver >= 6;
 }
 
-KafkaVersion JoinGroupRequest::requiredVersion() const
+KafkaVersion JoinGroupRequest::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 6:
         return V2_4_0_0;
@@ -221,9 +221,9 @@ KafkaVersion JoinGroupRequest::requiredVersion() const
 void JoinGroupRequest::AddGroupProtocol(const std::string &name, const std::string &metadata)
 {
     auto protocol = std::make_shared<GroupProtocol>();
-    protocol->Name = name;
-    protocol->Metadata = metadata;
-    OrderedGroupProtocols.push_back(protocol);
+    protocol->m_name = name;
+    protocol->m_metadata = metadata;
+    m_ordered_group_protocols.push_back(protocol);
 }
 
 int JoinGroupRequest::AddGroupProtocolMetadata(const std::string &name, const std::shared_ptr< ConsumerGroupMemberMetadata >&metadata)

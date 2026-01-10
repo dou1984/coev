@@ -13,16 +13,16 @@
 struct PrincipalName;
 struct GSSAPIConfig
 {
-    int AuthType;
-    std::string KeyTabPath;
-    std::string CCachePath;
-    std::string KerberosConfigPath;
-    std::string ServiceName;
-    std::string Username;
-    std::string Password;
-    std::string Realm;
-    bool DisablePAFXFAST;
-    std::function<std::string(const std::string &, const std::string &)> BuildSpn;
+    int m_auth_type;
+    std::string m_key_tab_path;
+    std::string m_ccache_path;
+    std::string m_kerberos_config_path;
+    std::string m_service_name;
+    std::string m_username;
+    std::string m_password;
+    std::string m_realm;
+    bool m_disable_pafx_fast;
+    std::function<std::string(const std::string &, const std::string &)> m_build_spn;
 };
 
 struct KerberosClient
@@ -39,11 +39,11 @@ struct KerberosClient
 struct GSSAPIKerberosAuth
 {
 
-    std::shared_ptr<GSSAPIConfig> Config;
-    Ticket ticket;
-    EncryptionKey encKey;
-    std::function<std::shared_ptr<KerberosClient>(std::shared_ptr<GSSAPIConfig>, int &)> NewKerberosClientFunc;
-    int step;
+    std::shared_ptr<GSSAPIConfig> m_config;
+    Ticket m_ticket;
+    EncryptionKey m_enc_key;
+    std::function<std::shared_ptr<KerberosClient>(std::shared_ptr<GSSAPIConfig>, int &)> m_new_kerberos_client_func;
+    int m_step;
 
     GSSAPIKerberosAuth();
 

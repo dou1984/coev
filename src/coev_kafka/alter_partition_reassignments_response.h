@@ -12,30 +12,30 @@
 
 struct alterPartitionReassignmentsErrorBlock : IEncoder, IDecoder
 {
-    KError errorCode;
-    std::string errorMessage;
+    KError m_error_code;
+    std::string m_error_message;
 
     alterPartitionReassignmentsErrorBlock() = default;
-    alterPartitionReassignmentsErrorBlock(KError err, const std::string &msg) : errorCode(err), errorMessage(msg)
+    alterPartitionReassignmentsErrorBlock(KError err, const std::string &msg) : m_error_code(err), m_error_message(msg)
     {
     }
     int encode(PEncoder &pe);
     int decode(PDecoder &pd);
 };
 
-struct AlterPartitionReassignmentsResponse : protocolBody
+struct AlterPartitionReassignmentsResponse : protocol_body
 {
-    int16_t Version = 0;
-    std::chrono::milliseconds ThrottleTime;
-    KError ErrorCode;
-    std::string ErrorMessage;
-    std::map<std::string, std::map<int32_t, std::shared_ptr<alterPartitionReassignmentsErrorBlock>>> Errors;
+    int16_t m_version = 0;
+    std::chrono::milliseconds m_throttle_time;
+    KError m_error_code = ErrNoError;
+    std::string m_error_message;
+    std::map<std::string, std::map<int32_t, std::shared_ptr<alterPartitionReassignmentsErrorBlock>>> m_errors;
 
     AlterPartitionReassignmentsResponse() = default;
-    AlterPartitionReassignmentsResponse(int16_t v) : Version(v)
+    AlterPartitionReassignmentsResponse(int16_t v) : m_version(v)
     {
     }
-    void setVersion(int16_t v);
+    void set_version(int16_t v);
     void AddError(const std::string &topic, int32_t partition, KError kerror, std::string message);
 
     int encode(PEncoder &pe);
@@ -44,9 +44,9 @@ struct AlterPartitionReassignmentsResponse : protocolBody
     int16_t key() const;
     int16_t version() const;
     int16_t headerVersion() const;
-    bool isValidVersion() const;
+    bool is_valid_version() const;
     bool isFlexible() const;
     bool isFlexibleVersion(int16_t version) const;
-    KafkaVersion requiredVersion() const;
+    KafkaVersion required_version() const;
     std::chrono::milliseconds throttleTime() const;
 };

@@ -1,23 +1,23 @@
 #include "version.h"
 #include "acl_delete_response.h"
 
-void DeleteAclsResponse::setVersion(int16_t v)
+void DeleteAclsResponse::set_version(int16_t v)
 {
-    Version = v;
+    m_version = v;
 }
 
 int DeleteAclsResponse::encode(PEncoder &pe)
 {
-    pe.putDurationMs(ThrottleTime);
+    pe.putDurationMs(m_throttle_time);
 
-    if (pe.putArrayLength(static_cast<int32_t>(FilterResponses.size())) != 0)
+    if (pe.putArrayLength(static_cast<int32_t>(m_filter_responses.size())) != 0)
     {
         return -1;
     }
 
-    for (auto &resp : FilterResponses)
+    for (auto &resp : m_filter_responses)
     {
-        if (resp->encode(pe, Version) != 0)
+        if (resp->encode(pe, m_version) != 0)
         {
             return -1;
         }
@@ -28,7 +28,7 @@ int DeleteAclsResponse::encode(PEncoder &pe)
 
 int DeleteAclsResponse::decode(PDecoder &pd, int16_t version)
 {
-    if (pd.getDurationMs(ThrottleTime) != 0)
+    if (pd.getDurationMs(m_throttle_time) != 0)
     {
         return -1;
     }
@@ -39,11 +39,11 @@ int DeleteAclsResponse::decode(PDecoder &pd, int16_t version)
         return -1;
     }
 
-    FilterResponses.resize(n);
+    m_filter_responses.resize(n);
     for (int32_t i = 0; i < n; ++i)
     {
-        FilterResponses[i] = std::make_shared<FilterResponse>();
-        if (FilterResponses[i]->decode(pd, version) != 0)
+        m_filter_responses[i] = std::make_shared<FilterResponse>();
+        if (m_filter_responses[i]->decode(pd, version) != 0)
         {
             return -1;
         }
@@ -59,7 +59,7 @@ int16_t DeleteAclsResponse::key() const
 
 int16_t DeleteAclsResponse::version() const
 {
-    return Version;
+    return m_version;
 }
 
 int16_t DeleteAclsResponse::headerVersion() const
@@ -67,14 +67,14 @@ int16_t DeleteAclsResponse::headerVersion() const
     return 0;
 }
 
-bool DeleteAclsResponse::isValidVersion() const
+bool DeleteAclsResponse::is_valid_version() const
 {
-    return Version >= 0 && Version <= 1;
+    return m_version >= 0 && m_version <= 1;
 }
 
-KafkaVersion DeleteAclsResponse::requiredVersion() const
+KafkaVersion DeleteAclsResponse::required_version() const
 {
-    switch (Version)
+    switch (m_version)
     {
     case 1:
         return V2_0_0_0;
@@ -85,24 +85,24 @@ KafkaVersion DeleteAclsResponse::requiredVersion() const
 
 std::chrono::milliseconds DeleteAclsResponse::throttleTime() const
 {
-    return ThrottleTime;
+    return m_throttle_time;
 }
 
 int MatchingAcl::encode(PEncoder &pe, int16_t version)
 {
-    pe.putKError(Err);
+    pe.putKError(m_err);
 
-    if (pe.putNullableString(ErrMsg) != 0)
+    if (pe.putNullableString(m_err_msg) != 0)
     {
         return -1;
     }
 
-    if (Resource_.encode(pe, version) != 0)
+    if (m_resource.encode(pe, version) != 0)
     {
         return -1;
     }
 
-    if (Acl_.encode(pe) != 0)
+    if (m_acl.encode(pe) != 0)
     {
         return -1;
     }
@@ -112,22 +112,22 @@ int MatchingAcl::encode(PEncoder &pe, int16_t version)
 
 int MatchingAcl::decode(PDecoder &pd, int16_t version)
 {
-    if (pd.getKError(Err) != 0)
+    if (pd.getKError(m_err) != 0)
     {
         return -1;
     }
 
-    if (pd.getNullableString(ErrMsg) != 0)
+    if (pd.getNullableString(m_err_msg) != 0)
     {
         return -1;
     }
 
-    if (Resource_.decode(pd, version) != 0)
+    if (m_resource.decode(pd, version) != 0)
     {
         return -1;
     }
 
-    if (Acl_.decode(pd, version) != 0)
+    if (m_acl.decode(pd, version) != 0)
     {
         return -1;
     }
@@ -137,19 +137,19 @@ int MatchingAcl::decode(PDecoder &pd, int16_t version)
 
 int FilterResponse::encode(PEncoder &pe, int16_t version)
 {
-    pe.putKError(Err);
+    pe.putKError(m_err);
 
-    if (pe.putNullableString(ErrMsg) != 0)
+    if (pe.putNullableString(m_err_msg) != 0)
     {
         return -1;
     }
 
-    if (pe.putArrayLength(static_cast<int32_t>(MatchingAcls.size())) != 0)
+    if (pe.putArrayLength(static_cast<int32_t>(m_matching_acls.size())) != 0)
     {
         return -1;
     }
 
-    for (auto &acl : MatchingAcls)
+    for (auto &acl : m_matching_acls)
     {
         if (acl->encode(pe, version) != 0)
         {
@@ -162,12 +162,12 @@ int FilterResponse::encode(PEncoder &pe, int16_t version)
 
 int FilterResponse::decode(PDecoder &pd, int16_t version)
 {
-    if (pd.getKError(Err) != 0)
+    if (pd.getKError(m_err) != 0)
     {
         return -1;
     }
 
-    if (pd.getNullableString(ErrMsg) != 0)
+    if (pd.getNullableString(m_err_msg) != 0)
     {
         return -1;
     }
@@ -178,11 +178,11 @@ int FilterResponse::decode(PDecoder &pd, int16_t version)
         return -1;
     }
 
-    MatchingAcls.resize(n);
+    m_matching_acls.resize(n);
     for (int32_t i = 0; i < n; ++i)
     {
-        MatchingAcls[i] = std::make_shared<MatchingAcl>();
-        if (MatchingAcls[i]->decode(pd, version) != 0)
+        m_matching_acls[i] = std::make_shared<MatchingAcl>();
+        if (m_matching_acls[i]->decode(pd, version) != 0)
         {
             return -1;
         }
