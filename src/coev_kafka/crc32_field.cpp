@@ -1,30 +1,31 @@
 
 #include <mutex>
 #include <queue>
-#include <zlib.h>
+#include <arpa/inet.h>
 #include "crc32_field.h"
 #include "undefined.h"
+#include "../utils/hash/crc32.h"
 
 static std::mutex pool_mutex;
-static std::queue<std::shared_ptr<crc32Field>> crc32FieldPool;
+static std::queue<std::shared_ptr<crc32_field>> crc32_field_pool;
 
-std::shared_ptr<crc32Field> acquireCrc32Field(CrcPolynomial polynomial)
+std::shared_ptr<crc32_field> acquire_crc32_field(CrcPolynomial polynomial)
 {
     std::lock_guard<std::mutex> lock(pool_mutex);
-    if (!crc32FieldPool.empty())
+    if (!crc32_field_pool.empty())
     {
-        auto c = crc32FieldPool.front();
-        crc32FieldPool.pop();
+        auto c = crc32_field_pool.front();
+        crc32_field_pool.pop();
         c->polynomial = polynomial;
         return c;
     }
-    return std::make_shared<crc32Field>(polynomial);
+    return std::make_shared<crc32_field>(polynomial);
 }
 
-void releaseCrc32Field(std::shared_ptr<crc32Field> c)
+void release_crc32_field(std::shared_ptr<crc32_field> c)
 {
     std::lock_guard<std::mutex> lock(pool_mutex);
-    crc32FieldPool.push(c);
+    crc32_field_pool.push(c);
 }
 
 static const uint32_t *castagnoliTable = []()
@@ -49,20 +50,19 @@ static const uint32_t *castagnoliTable = []()
     return table;
 }();
 
-crc32Field::crc32Field(CrcPolynomial polynomial)
-    : startOffset(0), polynomial(polynomial) {}
+crc32_field::crc32_field(CrcPolynomial polynomial) : startOffset(0), polynomial(polynomial) {}
 
-void crc32Field::saveOffset(int in)
+void crc32_field::save_offset(int in)
 {
     startOffset = in;
 }
 
-int crc32Field::reserveLength()
+int crc32_field::reserve_length()
 {
     return 4;
 }
 
-int crc32Field::run(int curOffset, std::string &buf)
+int crc32_field::run(int curOffset, std::string &buf)
 {
     uint32_t crc_val;
     int err = crc(curOffset, buf, crc_val);
@@ -70,15 +70,16 @@ int crc32Field::run(int curOffset, std::string &buf)
     {
         return err;
     }
-    uint8_t *ptr = reinterpret_cast<uint8_t *>(&crc_val);
-    buf[startOffset] = ptr[3];
-    buf[startOffset + 1] = ptr[2];
-    buf[startOffset + 2] = ptr[1];
-    buf[startOffset + 3] = ptr[0];
+    uint32_t network_crc = htonl(crc_val);
+    uint8_t *ptr = reinterpret_cast<uint8_t *>(&network_crc);
+    buf[startOffset] = ptr[0];
+    buf[startOffset + 1] = ptr[1];
+    buf[startOffset + 2] = ptr[2];
+    buf[startOffset + 3] = ptr[3];
     return 0;
 }
 
-int crc32Field::check(int curOffset, std::string &buf)
+int crc32_field::check(int curOffset, std::string &buf)
 {
     uint32_t crc_val;
     int err = crc(curOffset, buf, crc_val);
@@ -87,10 +88,13 @@ int crc32Field::check(int curOffset, std::string &buf)
         return err;
     }
 
-    uint32_t expected = (static_cast<uint32_t>(buf[startOffset]) << 24) |
-                        (static_cast<uint32_t>(buf[startOffset + 1]) << 16) |
-                        (static_cast<uint32_t>(buf[startOffset + 2]) << 8) |
-                        static_cast<uint32_t>(buf[startOffset + 3]);
+    uint32_t network_expected;
+    uint8_t *ptr = reinterpret_cast<uint8_t *>(&network_expected);
+    ptr[0] = buf[startOffset];
+    ptr[1] = buf[startOffset + 1];
+    ptr[2] = buf[startOffset + 2];
+    ptr[3] = buf[startOffset + 3];
+    uint32_t expected = ntohl(network_expected);
 
     if (crc_val != expected)
     {
@@ -100,26 +104,24 @@ int crc32Field::check(int curOffset, std::string &buf)
     return ErrNoError;
 }
 
-int crc32Field::crc(int curOffset, const std::string &buf, uint32_t &out_crc)
+int crc32_field::crc(int curOffset, const std::string &buf, uint32_t &out_crc)
 {
-    const uint32_t *tab = nullptr;
-    switch (polynomial)
-    {
-    case CrcPolynomial::CrcIEEE:
-        tab = crc32_ieee_table();
-        break;
-    case CrcPolynomial::CrcCastagnoli:
-        tab = castagnoliTable;
-        break;
-    default:
-        return ErrInvalidCRCTYPE;
-    }
-
     uint32_t crc = 0xFFFFFFFF;
     for (int i = startOffset + 4; i < curOffset; ++i)
     {
         uint8_t byte = buf[i];
-        crc = tab[(crc ^ byte) & 0xFF] ^ (crc >> 8);
+        crc ^= static_cast<uint32_t>(byte);
+        for (int j = 0; j < 8; ++j)
+        {
+            if (crc & 1)
+            {
+                crc = (crc >> 1) ^ 0xEDB88320;
+            }
+            else
+            {
+                crc >>= 1;
+            }
+        }
     }
     out_crc = crc ^ 0xFFFFFFFF;
     return ErrNoError;

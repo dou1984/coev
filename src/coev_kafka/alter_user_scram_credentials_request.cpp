@@ -150,12 +150,12 @@ bool AlterUserScramCredentialsRequest::is_valid_version() const
     return m_version == 0;
 }
 
-bool AlterUserScramCredentialsRequest::isFlexible() const
+bool AlterUserScramCredentialsRequest::is_flexible() const
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool AlterUserScramCredentialsRequest::isFlexibleVersion(int16_t version) const
+bool AlterUserScramCredentialsRequest::is_flexible_version(int16_t version) const
 {
     return version >= 0;
 }

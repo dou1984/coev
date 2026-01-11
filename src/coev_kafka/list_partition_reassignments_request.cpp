@@ -110,12 +110,12 @@ bool ListPartitionReassignmentsRequest::is_valid_version() const
     return m_version == 0;
 }
 
-bool ListPartitionReassignmentsRequest::isFlexible()
+bool ListPartitionReassignmentsRequest::is_flexible()
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool ListPartitionReassignmentsRequest::isFlexibleVersion(int16_t /*ver*/)
+bool ListPartitionReassignmentsRequest::is_flexible_version(int16_t /*ver*/)
 {
     return true; // Version 0 is flexible (uses tagged fields)
 }

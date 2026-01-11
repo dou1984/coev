@@ -198,8 +198,8 @@ void realEncoder::putEmptyTaggedFieldArray()
 
 void realEncoder::push(std::shared_ptr<pushEncoder> in)
 {
-    in->saveOffset(m_offset);
-    m_offset += in->reserveLength();
+    in->save_offset(m_offset);
+    m_offset += in->reserve_length();
     m_stack.push_back(in);
 }
 

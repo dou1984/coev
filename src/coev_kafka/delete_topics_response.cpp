@@ -99,12 +99,12 @@ int16_t DeleteTopicsResponse::header_version() const
     return 0;
 }
 
-bool DeleteTopicsResponse::isFlexible() const
+bool DeleteTopicsResponse::is_flexible() const
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool DeleteTopicsResponse::isFlexibleVersion(int16_t version)
+bool DeleteTopicsResponse::is_flexible_version(int16_t version)
 {
     return version >= 4;
 }

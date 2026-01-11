@@ -182,12 +182,12 @@ bool ListPartitionReassignmentsResponse::is_valid_version() const
     return m_version == 0;
 }
 
-bool ListPartitionReassignmentsResponse::isFlexible()
+bool ListPartitionReassignmentsResponse::is_flexible()
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool ListPartitionReassignmentsResponse::isFlexibleVersion(int16_t /*ver*/)
+bool ListPartitionReassignmentsResponse::is_flexible_version(int16_t /*ver*/)
 {
     return true; // version 0 uses flexible format
 }

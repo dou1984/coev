@@ -179,12 +179,12 @@ bool ElectLeadersResponse::is_valid_version() const
     return m_version >= 0 && m_version <= 2;
 }
 
-bool ElectLeadersResponse::isFlexible() const
+bool ElectLeadersResponse::is_flexible() const
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool ElectLeadersResponse::isFlexibleVersion(int16_t version)
+bool ElectLeadersResponse::is_flexible_version(int16_t version)
 {
     return version >= 2;
 }

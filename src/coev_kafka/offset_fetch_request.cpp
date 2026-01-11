@@ -170,12 +170,12 @@ bool OffsetFetchRequest::is_valid_version() const
     return m_version >= 0 && m_version <= 7;
 }
 
-bool OffsetFetchRequest::isFlexible() const
+bool OffsetFetchRequest::is_flexible() const
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool OffsetFetchRequest::isFlexibleVersion(int16_t version)
+bool OffsetFetchRequest::is_flexible_version(int16_t version)
 {
     return version >= 6;
 }

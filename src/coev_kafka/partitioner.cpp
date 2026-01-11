@@ -4,7 +4,8 @@
 #include <functional>
 #include "partitioner.h"
 #include "undefined.h"
-#include "crc32.h"
+#include "../utils/hash/fnv.h"
+#include "../utils/hash/crc32.h"
 
 int ManualPartitioner::Partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result)
 {
@@ -17,7 +18,7 @@ bool ManualPartitioner::RequiresConsistency()
     return true;
 }
 
-std::shared_ptr<Partitioner> RandomPartitioner::NewRandomPartitioner(const std::string &topic)
+std::shared_ptr<Partitioner> NewRandomPartitioner(const std::string &topic)
 {
     return std::make_shared<RandomPartitioner>();
 }
@@ -38,7 +39,7 @@ bool RandomPartitioner::RequiresConsistency()
     return false;
 }
 
-std::shared_ptr<Partitioner> RoundRobinPartitioner::NewRoundRobinPartitioner(const std::string &topic)
+std::shared_ptr<Partitioner> NewRoundRobinPartitioner(const std::string &topic)
 {
     return std::make_shared<RoundRobinPartitioner>();
 }
@@ -61,69 +62,6 @@ int RoundRobinPartitioner::Partition(std::shared_ptr<ProducerMessage> message, i
 bool RoundRobinPartitioner::RequiresConsistency()
 {
     return false;
-}
-
-std::shared_ptr<Partitioner> HashPartitioner::NewHashPartitioner(const std::string &topic)
-{
-    auto p = std::make_shared<HashPartitioner>();
-    p->m_random_partitioner = RandomPartitioner::NewRandomPartitioner(topic);
-    p->m_hasher = fnv::New32a();
-
-    p->m_reference_abs = false;
-    p->m_hash_unsigned = false;
-    return p;
-}
-
-std::shared_ptr<Partitioner> HashPartitioner::NewReferenceHashPartitioner(const std::string &topic)
-{
-    auto p = std::make_shared<HashPartitioner>();
-    p->m_random_partitioner = RandomPartitioner::NewRandomPartitioner(topic);
-    p->m_hasher = fnv::New32a();
-    p->m_reference_abs = true;
-    p->m_hash_unsigned = false;
-    return p;
-}
-
-std::shared_ptr<Partitioner> HashPartitioner::NewConsistentCRCHashPartitioner(const std::string &topic)
-{
-    auto p = std::make_shared<HashPartitioner>();
-    p->m_random_partitioner = RandomPartitioner::NewRandomPartitioner(topic);
-    p->m_hasher = std::make_shared<CRC32>();
-    p->m_reference_abs = false;
-    p->m_hash_unsigned = true;
-    return p;
-}
-
-PartitionerConstructor HashPartitioner::NewCustomHashPartitioner(std::function<std::shared_ptr<Hash32>()> hasher)
-{
-    return [hasher](const std::string &topic) -> std::shared_ptr<Partitioner>
-    {
-        auto p = std::make_shared<HashPartitioner>();
-        p->m_random_partitioner = RandomPartitioner::NewRandomPartitioner(topic);
-        p->m_hasher = hasher();
-        p->m_reference_abs = false;
-        p->m_hash_unsigned = false;
-        return p;
-    };
-}
-
-PartitionerConstructor HashPartitioner::NewCustomPartitioner(const std::vector<std::shared_ptr<HashPartitionerOption>> &options)
-{
-    return [options](const std::string &topic) -> std::shared_ptr<Partitioner>
-    {
-        auto p = std::make_shared<HashPartitioner>();
-        p->m_random_partitioner = RandomPartitioner::NewRandomPartitioner(topic);
-        p->m_hasher = fnv::New32a();
-        p->m_reference_abs = false;
-        p->m_hash_unsigned = false;
-
-        for (auto &option : options)
-        {
-            option->Apply(p.get());
-        }
-
-        return p;
-    };
 }
 
 HashPartitioner::HashPartitioner() : m_reference_abs(false), m_hash_unsigned(false)
@@ -203,4 +141,67 @@ WithCustomFallbackPartitionerOption::WithCustomFallbackPartitionerOption(std::sh
 void WithCustomFallbackPartitionerOption::Apply(HashPartitioner *hp)
 {
     hp->m_random_partitioner = m_random;
+}
+
+std::shared_ptr<Partitioner> NewHashPartitioner(const std::string &topic)
+{
+    auto p = std::make_shared<HashPartitioner>();
+    p->m_random_partitioner = NewRandomPartitioner(topic);
+    p->m_hasher = coev::fnv::New32a();
+
+    p->m_reference_abs = false;
+    p->m_hash_unsigned = false;
+    return p;
+}
+
+std::shared_ptr<Partitioner> NewReferenceHashPartitioner(const std::string &topic)
+{
+    auto p = std::make_shared<HashPartitioner>();
+    p->m_random_partitioner = NewRandomPartitioner(topic);
+    p->m_hasher = coev::fnv::New32a();
+    p->m_reference_abs = true;
+    p->m_hash_unsigned = false;
+    return p;
+}
+
+std::shared_ptr<Partitioner> NewConsistentCRCHashPartitioner(const std::string &topic)
+{
+    auto p = std::make_shared<HashPartitioner>();
+    p->m_random_partitioner = NewRandomPartitioner(topic);
+    p->m_hasher = coev::crc32::NewIEEE();
+    p->m_reference_abs = false;
+    p->m_hash_unsigned = true;
+    return p;
+}
+
+PartitionerConstructor NewCustomHashPartitioner(std::function<std::shared_ptr<Hash32>()> hasher)
+{
+    return [hasher](const std::string &topic) -> std::shared_ptr<Partitioner>
+    {
+        auto p = std::make_shared<HashPartitioner>();
+        p->m_random_partitioner = NewRandomPartitioner(topic);
+        p->m_hasher = hasher();
+        p->m_reference_abs = false;
+        p->m_hash_unsigned = false;
+        return p;
+    };
+}
+
+PartitionerConstructor NewCustomPartitioner(const std::vector<std::shared_ptr<HashPartitionerOption>> &options)
+{
+    return [options](const std::string &topic) -> std::shared_ptr<Partitioner>
+    {
+        auto p = std::make_shared<HashPartitioner>();
+        p->m_random_partitioner = NewRandomPartitioner(topic);
+        p->m_hasher = coev::fnv::New32a();
+        p->m_reference_abs = false;
+        p->m_hash_unsigned = false;
+
+        for (auto &option : options)
+        {
+            option->Apply(p.get());
+        }
+
+        return p;
+    };
 }

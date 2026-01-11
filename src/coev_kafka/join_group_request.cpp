@@ -185,12 +185,12 @@ bool JoinGroupRequest::is_valid_version() const
     return m_version >= 0 && m_version <= 6;
 }
 
-bool JoinGroupRequest::isFlexible()
+bool JoinGroupRequest::is_flexible()
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool JoinGroupRequest::isFlexibleVersion(int16_t ver)
+bool JoinGroupRequest::is_flexible_version(int16_t ver)
 {
     return ver >= 6;
 }

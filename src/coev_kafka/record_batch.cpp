@@ -29,7 +29,7 @@ int RecordBatch::encode(PEncoder &pe)
     pe.putInt32(m_partition_leader_epoch);
     pe.putInt8(m_version);
 
-    auto crcField = std::make_shared<crc32Field>(CrcPolynomial::CrcCastagnoli);
+    auto crcField = std::make_shared<crc32_field>(CrcPolynomial::CrcCastagnoli);
     pe.push(crcField);
 
     pe.putInt16(ComputeAttributes());
@@ -81,7 +81,7 @@ int RecordBatch::decode(PDecoder &pd)
         throw std::runtime_error("unsupported record batch version (" + std::to_string(m_version) + ")");
     }
 
-    auto crcField = std::make_shared<crc32Field>(CrcPolynomial::CrcCastagnoli);
+    auto crcField = std::make_shared<crc32_field>(CrcPolynomial::CrcCastagnoli);
     pd.push(std::dynamic_pointer_cast<pushDecoder>(crcField));
 
     int16_t attributes;

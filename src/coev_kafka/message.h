@@ -36,7 +36,7 @@ struct Message
     Message(const std::string &key, const std::string &value, bool logAppendTime, Timestamp msgTimestamp, int8_t version);
     int encode(PEncoder &pe);
     int decode(PDecoder &pd);
-    int decodeSet();
+    int decode_set();
 };
 
 std::string compress(CompressionCodec codec, int level, const std::string &data);

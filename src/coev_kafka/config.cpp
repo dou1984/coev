@@ -7,6 +7,8 @@
 #include "client.h"
 #include "balance_strategy.h"
 #include "undefined.h"
+#include "partitioner.h"
+#include "../utils/hash/fnv.h"
 
 const int MAX_GROUP_INSTANCE_ID_LENGTH = 249;
 const std::regex GROUP_INSTANCE_ID_REGEXP(R"(^[0-9a-zA-Z\._\-]+$)");
@@ -34,7 +36,7 @@ Config::Config()
     Producer.MaxMessageBytes = 1024 * 1024;
     Producer.Acks = RequiredAcks::WaitForLocal;
     Producer.Timeout = std::chrono::milliseconds(10000);
-    Producer.Partitioner = nullptr; // Will need to be set to NewHashPartitioner equivalent
+    Producer.Partitioner = NewCustomHashPartitioner(coev::fnv::New32a);
     Producer.Retry.Max = 3;
     Producer.Retry.Backoff = std::chrono::milliseconds(100);
     Producer.Return.Errors = true;
@@ -274,7 +276,7 @@ bool Config::Validate()
         return false;
     }
 
-    std::regex validClientID{"A[A-Za-z0-9._-]+"};
+    std::regex validClientID{"^[A-Za-z0-9._-]+$"};
     if (Version.IsAtLeast(V1_0_0_0) && !regex_match(ClientID, validClientID))
     {
         std::cerr << "ClientId must be a valid client ID" << std::endl;

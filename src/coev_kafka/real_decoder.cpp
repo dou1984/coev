@@ -465,7 +465,7 @@ int realDecoder::peekInt8(int offset, int8_t &result)
 
 int realDecoder::push(std::shared_ptr<pushDecoder> in)
 {
-    in->saveOffset(m_offset);
+    in->save_offset(m_offset);
     int reserve = 0;
     auto dpd = std::dynamic_pointer_cast<dynamicPushDecoder>(in);
     if (dpd != nullptr)
@@ -478,7 +478,7 @@ int realDecoder::push(std::shared_ptr<pushDecoder> in)
     }
     else
     {
-        reserve = in->reserveLength();
+        reserve = in->reserve_length();
         if (remaining() < reserve)
         {
             m_offset = m_raw.size();

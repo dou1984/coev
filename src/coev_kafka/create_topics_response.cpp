@@ -122,12 +122,12 @@ int16_t CreateTopicsResponse::header_version() const
     return m_version >= 5 ? 1 : 0;
 }
 
-bool CreateTopicsResponse::isFlexible() const
+bool CreateTopicsResponse::is_flexible() const
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool CreateTopicsResponse::isFlexibleVersion(int16_t version)
+bool CreateTopicsResponse::is_flexible_version(int16_t version)
 {
     return version >= 5;
 }

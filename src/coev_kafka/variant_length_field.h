@@ -11,7 +11,7 @@ struct VariantLengthField : dynamicPushDecoder, dynamicPushEncoder
     int decode(PDecoder &pd);
     void saveOffset(int in);
     int reserveLength();
-    int adjustLength(int currOffset);
+    int adjust_length(int currOffset);
     int run(int curOffset, std::string &buf);
     int check(int curOffset, const std::string &buf);
 };

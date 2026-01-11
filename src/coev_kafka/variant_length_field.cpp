@@ -31,7 +31,7 @@ int VariantLengthField::reserveLength()
     return variantSize(m_length);
 }
 
-int VariantLengthField::adjustLength(int currOffset)
+int VariantLengthField::adjust_length(int currOffset)
 {
     int oldSize = reserveLength();
     m_length = static_cast<int64_t>(currOffset - m_start_offset - oldSize);

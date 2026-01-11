@@ -12,4 +12,4 @@ project(co_kafka)
 aux_source_directory(./ SRC_DIR)
 
 add_executable(${PROJECT_NAME} ${SRC_DIR})
-target_link_libraries(${PROJECT_NAME} coev_kafka coev_compress coev_ssl ssl coev crypto ev pthread)
+target_link_libraries(${PROJECT_NAME} coev_kafka coev_compress coev_hash coev_ssl ssl coev crypto ev pthread)

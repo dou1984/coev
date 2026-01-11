@@ -28,7 +28,7 @@ int IncrementalAlterConfigsResponse::encode(PEncoder &pe)
     // - v0: no tagged fields
     // - v1: has empty tagged field array at end
     // So we add it only if flexible
-    if (isFlexibleVersion(m_version))
+    if (is_flexible_version(m_version))
     {
         pe.putEmptyTaggedFieldArray();
     }
@@ -60,7 +60,7 @@ int IncrementalAlterConfigsResponse::decode(PDecoder &pd, int16_t version)
         m_resources.push_back(std::move(res));
     }
 
-    if (isFlexibleVersion(version))
+    if (is_flexible_version(version))
     {
         int32_t _;
         err = pd.getEmptyTaggedFieldArray(_);
@@ -91,12 +91,12 @@ bool IncrementalAlterConfigsResponse::is_valid_version() const
     return m_version >= 0 && m_version <= 1;
 }
 
-bool IncrementalAlterConfigsResponse::isFlexible()
+bool IncrementalAlterConfigsResponse::is_flexible()
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool IncrementalAlterConfigsResponse::isFlexibleVersion(int16_t ver)
+bool IncrementalAlterConfigsResponse::is_flexible_version(int16_t ver)
 {
     return ver >= 1;
 }

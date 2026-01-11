@@ -42,8 +42,8 @@ struct DescribeUserScramCredentialsResponse : protocol_body
     int16_t version() const;
     int16_t header_version() const;
     bool is_valid_version() const;
-    bool isFlexible() const;
-    static bool isFlexibleVersion(int16_t version);
+    bool is_flexible() const;
+    static bool is_flexible_version(int16_t version);
     KafkaVersion required_version() const;
     std::chrono::milliseconds throttle_time() const;
 };

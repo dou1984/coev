@@ -12,12 +12,12 @@ int LengthField::decode(PDecoder &pd)
     return 0;
 }
 
-void LengthField::saveOffset(int in)
+void LengthField::save_offset(int in)
 {
     m_start_offset = in;
 }
 
-int LengthField::reserveLength()
+int LengthField::reserve_length()
 {
     return 4;
 }

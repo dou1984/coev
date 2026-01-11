@@ -214,12 +214,12 @@ bool MetadataRequest::is_valid_version() const
     return m_version >= 0 && m_version <= 10;
 }
 
-bool MetadataRequest::isFlexible() const
+bool MetadataRequest::is_flexible() const
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool MetadataRequest::isFlexibleVersion(int16_t version) const
+bool MetadataRequest::is_flexible_version(int16_t version) const
 {
     return version >= 9;
 }

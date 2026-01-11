@@ -150,12 +150,12 @@ bool JoinGroupResponse::is_valid_version() const
     return m_version >= 0 && m_version <= 6;
 }
 
-bool JoinGroupResponse::isFlexible()
+bool JoinGroupResponse::is_flexible()
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool JoinGroupResponse::isFlexibleVersion(int16_t ver)
+bool JoinGroupResponse::is_flexible_version(int16_t ver)
 {
     return ver >= 6;
 }

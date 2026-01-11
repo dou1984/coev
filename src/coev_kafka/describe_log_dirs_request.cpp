@@ -104,12 +104,12 @@ bool DescribeLogDirsRequest::is_valid_version() const
     return m_version >= 0 && m_version <= 4;
 }
 
-bool DescribeLogDirsRequest::isFlexible() const
+bool DescribeLogDirsRequest::is_flexible() const
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool DescribeLogDirsRequest::isFlexibleVersion(int16_t version)
+bool DescribeLogDirsRequest::is_flexible_version(int16_t version)
 {
     return version >= 2;
 }

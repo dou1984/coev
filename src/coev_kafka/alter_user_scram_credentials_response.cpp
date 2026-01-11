@@ -99,12 +99,12 @@ bool AlterUserScramCredentialsResponse::is_valid_version() const
     return m_version == 0;
 }
 
-bool AlterUserScramCredentialsResponse::isFlexible() const
+bool AlterUserScramCredentialsResponse::is_flexible() const
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool AlterUserScramCredentialsResponse::isFlexibleVersion(int16_t version) const
+bool AlterUserScramCredentialsResponse::is_flexible_version(int16_t version) const
 {
     return version >= 0;
 }

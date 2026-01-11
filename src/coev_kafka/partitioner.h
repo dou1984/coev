@@ -9,7 +9,6 @@
 #include "producer_message.h"
 #include "undefined.h"
 
-
 struct Partitioner
 {
 
@@ -20,7 +19,6 @@ struct Partitioner
 
 struct DynamicConsistencyPartitioner : Partitioner
 {
-
     virtual bool MessageRequiresConsistency(std::shared_ptr<ProducerMessage> message) = 0;
 };
 
@@ -40,7 +38,6 @@ struct ManualPartitioner : Partitioner
 struct RandomPartitioner : Partitioner
 {
 
-    static std::shared_ptr<Partitioner> NewRandomPartitioner(const std::string &topic);
     int Partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result);
     bool RequiresConsistency();
 
@@ -51,7 +48,6 @@ struct RandomPartitioner : Partitioner
 struct RoundRobinPartitioner : Partitioner
 {
 
-    static std::shared_ptr<Partitioner> NewRoundRobinPartitioner(const std::string &topic);
     int Partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result);
     bool RequiresConsistency();
 
@@ -61,12 +57,6 @@ struct RoundRobinPartitioner : Partitioner
 
 struct HashPartitioner : DynamicConsistencyPartitioner
 {
-
-    static std::shared_ptr<Partitioner> NewHashPartitioner(const std::string &topic);
-    static std::shared_ptr<Partitioner> NewReferenceHashPartitioner(const std::string &topic);
-    static std::shared_ptr<Partitioner> NewConsistentCRCHashPartitioner(const std::string &topic);
-    static PartitionerConstructor NewCustomHashPartitioner(std::function<std::shared_ptr<Hash32>()> hasher);
-    static PartitionerConstructor NewCustomPartitioner(const std::vector<std::shared_ptr<HashPartitionerOption>> &options);
 
     int Partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result);
     bool RequiresConsistency();
@@ -108,3 +98,11 @@ struct WithCustomFallbackPartitionerOption : HashPartitionerOption
 
     std::shared_ptr<Partitioner> m_random;
 };
+
+std::shared_ptr<Partitioner> NewRandomPartitioner(const std::string &topic);
+std::shared_ptr<Partitioner> NewHashPartitioner(const std::string &topic);
+std::shared_ptr<Partitioner> NewReferenceHashPartitioner(const std::string &topic);
+std::shared_ptr<Partitioner> NewConsistentCRCHashPartitioner(const std::string &topic);
+std::shared_ptr<Partitioner> NewRoundRobinPartitioner(const std::string &topic);
+PartitionerConstructor NewCustomHashPartitioner(std::function<std::shared_ptr<Hash32>()> hasher);
+PartitionerConstructor NewCustomPartitioner(const std::vector<std::shared_ptr<HashPartitionerOption>> &options);

@@ -23,8 +23,8 @@ struct DeleteGroupsRequest : protocol_body
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;
-    bool isFlexible() const;
-    static bool isFlexibleVersion(int16_t version);
+    bool is_flexible() const;
+    static bool is_flexible_version(int16_t version);
     bool is_valid_version() const;
     KafkaVersion required_version() const;
     void AddGroup(const std::string &group);

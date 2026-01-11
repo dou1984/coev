@@ -29,7 +29,7 @@ int DeleteTopicsRequest::encode(PEncoder &pe)
 
     pe.putDurationMs(m_timeout);
 
-    if (isFlexible())
+    if (is_flexible())
     {
         pe.putEmptyTaggedFieldArray();
     }
@@ -53,7 +53,7 @@ int DeleteTopicsRequest::decode(PDecoder &pd, int16_t version)
     }
     m_timeout = std::chrono::milliseconds(timeout);
 
-    if (isFlexibleVersion(version))
+    if (is_flexible_version(version))
     {
         int32_t _;
         if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
@@ -80,12 +80,12 @@ int16_t DeleteTopicsRequest::header_version() const
     return (m_version >= 4) ? 2 : 1;
 }
 
-bool DeleteTopicsRequest::isFlexible() const
+bool DeleteTopicsRequest::is_flexible() const
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool DeleteTopicsRequest::isFlexibleVersion(int16_t version)
+bool DeleteTopicsRequest::is_flexible_version(int16_t version)
 {
     return version >= 4;
 }

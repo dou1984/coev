@@ -43,12 +43,12 @@ int16_t DeleteGroupsRequest::header_version() const
     return m_version >= 2 ? 2 : 1;
 }
 
-bool DeleteGroupsRequest::isFlexible() const
+bool DeleteGroupsRequest::is_flexible() const
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool DeleteGroupsRequest::isFlexibleVersion(int16_t version)
+bool DeleteGroupsRequest::is_flexible_version(int16_t version)
 {
     return version >= 2;
 }

@@ -65,8 +65,8 @@ struct MetadataResponse : protocol_body
     int16_t version() const;
     int16_t header_version() const;
     bool is_valid_version() const;
-    bool isFlexible() const;
-    bool isFlexibleVersion(int16_t version) const;
+    bool is_flexible() const;
+    bool is_flexible_version(int16_t version) const;
     KafkaVersion required_version() const;
     std::chrono::milliseconds throttle_time() const;
 

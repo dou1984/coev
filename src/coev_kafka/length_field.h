@@ -16,8 +16,8 @@ struct LengthField : pushEncoder
 
     LengthField() = default;
     int decode(PDecoder &pd);
-    void saveOffset(int in);
-    int reserveLength();
+    void save_offset(int in);
+    int reserve_length();
 
     int run(int curOffset, std::string &buf);
     int check(int curOffset, const std::string &buf);

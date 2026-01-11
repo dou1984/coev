@@ -167,12 +167,12 @@ bool DescribeUserScramCredentialsResponse::is_valid_version() const
     return m_version == 0;
 }
 
-bool DescribeUserScramCredentialsResponse::isFlexible() const
+bool DescribeUserScramCredentialsResponse::is_flexible() const
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool DescribeUserScramCredentialsResponse::isFlexibleVersion(int16_t version)
+bool DescribeUserScramCredentialsResponse::is_flexible_version(int16_t version)
 {
     return version >= 0; // all versions use flexible format (tagged fields)
 }

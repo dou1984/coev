@@ -38,28 +38,6 @@ namespace buf
 
 }
 
-struct Hash32
-{
-    void Reset()
-    {
-    }
-    void Update(const char *data, size_t size)
-    {
-    }
-    uint32_t Final()
-    {
-        return 0;
-    }
-};
-
-namespace fnv
-{
-    inline std::shared_ptr<Hash32> New32a()
-    {
-        return std::make_shared<Hash32>();
-    }
-};
-
 struct Timer
 {
 };
@@ -105,13 +83,7 @@ struct Context
     }
     void done()
     {
-        // ch.set(true);
         ch = true;
     }
     coev::co_channel<bool> ch;
 };
-inline uint32_t *crc32_ieee_table()
-{
-    static uint32_t crc32_ieee_table_[256];
-    return crc32_ieee_table_;
-}

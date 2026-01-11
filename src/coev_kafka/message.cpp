@@ -6,7 +6,7 @@
 #include "real_decoder.h"
 #include "undefined.h"
 #include "crc32_field.h"
-#include "crc32.h"
+#include "../utils/hash/crc32.h"
 std::string toString(CompressionCodec codec)
 {
     switch (codec)
@@ -94,9 +94,8 @@ Message::Message(const std::string &key, const std::string &value, bool logAppen
 }
 int Message::encode(PEncoder &pe)
 {
-
-    pe.push(std::dynamic_pointer_cast<pushEncoder>(std::make_shared<CRC32>((int)CrcPolynomial::CrcIEEE)));
-
+    auto field = acquire_crc32_field(CrcCastagnoli);
+    pe.push(std::dynamic_pointer_cast<pushEncoder>(field));
     pe.putInt8(m_version);
 
     int8_t attributes = static_cast<int8_t>(m_codec) & CompressionCodecMask;
@@ -155,24 +154,29 @@ int Message::encode(PEncoder &pe)
 
 int Message::decode(PDecoder &pd)
 {
-    int err = pd.push(std::make_shared<CRC32>(CrcPolynomial::CrcIEEE));
+    auto field = acquire_crc32_field(CrcIEEE);
+    int err = pd.push(std::dynamic_pointer_cast<pushDecoder>(field));
     if (err != 0)
         return err;
 
+    defer(
+        if (err != 0) {
+            err = pd.pop();
+        });
     err = pd.getInt8(m_version);
     if (err != 0)
-        goto pop_and_return;
+        return err;
 
     if (m_version > 1)
     {
         err = -2;
-        goto pop_and_return;
+        return err;
     }
 
     int8_t attribute;
     err = pd.getInt8(attribute);
     if (err != 0)
-        goto pop_and_return;
+        return err;
 
     m_codec = static_cast<CompressionCodec>(attribute & CompressionCodecMask);
     m_log_append_time = (attribute & TimestampTypeMask) != 0;
@@ -182,16 +186,16 @@ int Message::decode(PDecoder &pd)
 
         err = m_timestamp.decode(pd);
         if (err != 0)
-            goto pop_and_return;
+            return err;
     }
 
     err = pd.getBytes(m_key);
     if (err != 0)
-        goto pop_and_return;
+        return err;
 
     err = pd.getBytes(m_value);
     if (err != 0)
-        goto pop_and_return;
+        return err;
 
     m_compressed_size = static_cast<int>(m_value.size());
     if (!m_value.empty() && m_codec != CompressionCodec::None)
@@ -199,22 +203,19 @@ int Message::decode(PDecoder &pd)
         auto decompressed = decompress(m_codec, m_value);
         if (decompressed.empty())
         {
-            err = -3; // decompression failed
-            goto pop_and_return;
+            err = -3;
+            return err;
         }
         m_value = std::move(decompressed);
 
-        err = decodeSet();
+        err = decode_set();
         if (err != 0)
-            goto pop_and_return;
+            return err;
     }
-
-pop_and_return:
-    int popErr = pd.pop();
-    return err != 0 ? err : popErr;
+    return err;
 }
 
-int Message::decodeSet()
+int Message::decode_set()
 {
     realDecoder innerDecoder;
     innerDecoder.m_raw.assign(m_value.begin(), m_value.end());

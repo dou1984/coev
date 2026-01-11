@@ -249,12 +249,12 @@ bool DescribeClientQuotasResponse::is_valid_version() const
     return m_version >= 0 && m_version <= 1;
 }
 
-bool DescribeClientQuotasResponse::isFlexible() const
+bool DescribeClientQuotasResponse::is_flexible() const
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool DescribeClientQuotasResponse::isFlexibleVersion(int16_t version)
+bool DescribeClientQuotasResponse::is_flexible_version(int16_t version)
 {
     return version >= 1;
 }

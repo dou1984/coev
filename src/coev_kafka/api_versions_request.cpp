@@ -65,12 +65,12 @@ bool ApiVersionsRequest::is_valid_version() const
     return m_version >= 0 && m_version <= 3;
 }
 
-bool ApiVersionsRequest::isFlexible() const
+bool ApiVersionsRequest::is_flexible() const
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool ApiVersionsRequest::isFlexibleVersion(int16_t version) const
+bool ApiVersionsRequest::is_flexible_version(int16_t version) const
 {
     return version >= 3;
 }

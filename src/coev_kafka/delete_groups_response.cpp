@@ -90,12 +90,12 @@ int16_t DeleteGroupsResponse::header_version() const
     return m_version >= 2 ? 1 : 0;
 }
 
-bool DeleteGroupsResponse::isFlexible() const
+bool DeleteGroupsResponse::is_flexible() const
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool DeleteGroupsResponse::isFlexibleVersion(int16_t version)
+bool DeleteGroupsResponse::is_flexible_version(int16_t version)
 {
     return version >= 2;
 }

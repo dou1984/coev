@@ -106,12 +106,12 @@ bool LeaveGroupResponse::is_valid_version() const
     return m_version >= 0 && m_version <= 4;
 }
 
-bool LeaveGroupResponse::isFlexible()
+bool LeaveGroupResponse::is_flexible()
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool LeaveGroupResponse::isFlexibleVersion(int16_t ver)
+bool LeaveGroupResponse::is_flexible_version(int16_t ver)
 {
     return ver >= 4;
 }

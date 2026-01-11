@@ -81,12 +81,12 @@ bool SyncGroupResponse::is_valid_version() const
     return m_version >= 0 && m_version <= 4;
 }
 
-bool SyncGroupResponse::isFlexible()
+bool SyncGroupResponse::is_flexible()
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool SyncGroupResponse::isFlexibleVersion(int16_t ver)
+bool SyncGroupResponse::is_flexible_version(int16_t ver)
 {
     return ver >= 4;
 }

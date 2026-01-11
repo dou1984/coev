@@ -93,12 +93,12 @@ int16_t CreateTopicsRequest::header_version() const
     return m_version >= 5 ? 2 : 1;
 }
 
-bool CreateTopicsRequest::isFlexible() const
+bool CreateTopicsRequest::is_flexible() const
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool CreateTopicsRequest::isFlexibleVersion(int16_t version)
+bool CreateTopicsRequest::is_flexible_version(int16_t version)
 {
     return version >= 5;
 }

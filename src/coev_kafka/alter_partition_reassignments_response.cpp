@@ -170,12 +170,12 @@ bool AlterPartitionReassignmentsResponse::is_valid_version() const
     return m_version == 0;
 }
 
-bool AlterPartitionReassignmentsResponse::isFlexible() const
+bool AlterPartitionReassignmentsResponse::is_flexible() const
 {
-    return isFlexibleVersion(m_version);
+    return is_flexible_version(m_version);
 }
 
-bool AlterPartitionReassignmentsResponse::isFlexibleVersion(int16_t version) const
+bool AlterPartitionReassignmentsResponse::is_flexible_version(int16_t version) const
 {
     return version >= 0;
 }
