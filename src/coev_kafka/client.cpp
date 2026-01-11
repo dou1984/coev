@@ -4,6 +4,7 @@
 #include <chrono>
 #include <functional>
 #include <coev/coev.h>
+#include <coev_dns/parse_dns.h>
 #include "utils.h"
 #include "client.h"
 #include "broker.h"
@@ -11,6 +12,7 @@
 #include "sleep_for.h"
 #include "offset_request.h"
 #include "partition_producer.h"
+#include "single_flight_metadata_refresher.h"
 
 coev::awaitable<int> NewClient(const std::vector<std::string> &addrs, std::shared_ptr<Config> conf, std::shared_ptr<Client> &client_)
 {
@@ -38,6 +40,25 @@ coev::awaitable<int> NewClient(const std::vector<std::string> &addrs, std::share
     }
 
     client_ = std::make_shared<Client>(conf);
+    auto refresh = [client_, conf](const std::vector<std::string> &topics) -> coev::awaitable<int>
+    {
+        auto deadline = std::chrono::steady_clock::now();
+
+        if (conf->Metadata.Timeout.count() > 0)
+        {
+            deadline += conf->Metadata.Timeout;
+        }
+        return client_->TryRefreshMetadata(topics, conf->Metadata.Retry.Max, deadline);
+    };
+    if (conf->Metadata.SingleLight)
+    {
+        client_->m_metadata_refresh = NewSingleFlightRefresher(refresh);
+    }
+    else
+    {
+        client_->m_metadata_refresh = refresh;
+    }
+
     if (conf->Net.ResolveCanonicalBootstrapServers)
     {
         std::vector<std::string> resolved_addrs;
@@ -381,7 +402,7 @@ coev::awaitable<int> Client::RefreshMetadata(const std::vector<std::string> &top
             co_return ErrInvalidTopic;
         }
     }
-    auto err = co_await MetadataRefresh(topics);
+    auto err = co_await m_metadata_refresh(topics);
     co_return err;
 }
 
@@ -798,18 +819,20 @@ coev::awaitable<int> Client::BackgroundMetadataUpdater()
         m_closed.set(true);
         co_return 0;
     }
-    while (true)
-    {
-        co_await sleep_for(m_conf->Metadata.RefreshFrequency);
-        if (co_await m_closer.get())
+    co_await wait_for_any(
+        [this]() -> coev::awaitable<void>
+        { co_await m_closer.get(); }(),
+        [this]() -> coev::awaitable<void>
         {
-            break;
-        }
-        if (int err = co_await RefreshMetadata(); err != 0)
-        {
-            LOG_CORE("background metadata update: %d\n", err);
-        }
-    }
+            while (true)
+            {
+                co_await sleep_for(m_conf->Metadata.RefreshFrequency);
+                if (int err = co_await RefreshMetadata(); err != 0)
+                {
+                    LOG_CORE("background metadata update: %d\n", err);
+                }
+            }
+        }());
     m_closed.set(true);
     co_return 0;
 }
@@ -859,7 +882,7 @@ coev::awaitable<int> Client::RetryRefreshMetadata(const std::vector<std::string>
             co_return err;
         }
         attemptsRemaining--;
-        LOG_CORE("retrying after %lldms... (%d attempts remaining)\n", backoff.count(), attemptsRemaining);
+        LOG_CORE("retrying after %ldms... (%d attempts remaining)\n", backoff.count(), attemptsRemaining);
         co_return co_await TryRefreshMetadata(topics, attemptsRemaining, deadline);
     }
     co_return err;
@@ -989,7 +1012,7 @@ bool Client::UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnow
             retry = true;
             break;
         default:
-            LOG_CORE("Unexpected topic-level metadata error: %s\n", topic->m_err);
+            LOG_CORE("Unexpected topic-level metadata error: %s\n", KErrorToString(topic->m_err));
             err = topic->m_err;
             continue;
         }
@@ -1071,7 +1094,7 @@ coev::awaitable<int> Client::FindCoordinator(const std::string &coordinatorKey, 
         {
             auto backoff = ComputeBackoff(attemptsRemaining);
             attemptsRemaining--;
-            LOG_CORE("retrying after %lldms... (%d attempts remaining)\n", backoff.count(), attemptsRemaining);
+            LOG_CORE("retrying after %ldms %d attempts remaining\n", backoff.count(), attemptsRemaining);
             co_await sleep_for(backoff);
             co_return co_await FindCoordinator(coordinatorKey, coordinatorType, attemptsRemaining, response);
         }
@@ -1153,7 +1176,28 @@ coev::awaitable<int> Client::FindCoordinator(const std::string &coordinatorKey, 
 
 coev::awaitable<int> Client::ResolveCanonicalNames(const std::vector<std::string> &addrs, std::vector<std::string> &ips)
 {
-    // Placeholder: assume DNS resolution is handled externally or not needed in C++ context
+    ips.resize(addrs.size());
+    co_task task;
+    for (auto i = 0; i < addrs.size(); ++i)
+    {
+        auto &addr = addrs[i];
+        std::regex re("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}(:\\d{1,5})?$");
+        if (std::regex_match(addr, re))
+        {
+            ips[i] = addr;
+            continue;
+        }
+        task << [&]() -> coev::awaitable<void>
+        {
+            auto err = co_await coev::parse_dns(addr, ips[i]);
+            if (err != 0)
+            {
+                LOG_CORE("failed to resolve canonical name for %s: %d\n", addr.c_str(), err);
+                co_return;
+            }
+        }();
+    }
+    co_await task.wait_all();
     co_return ErrNoError;
 }
 
@@ -1180,6 +1224,5 @@ coev::awaitable<int> Client::MetadataRefresh(const std::vector<std::string> &top
     {
         deadline = std::chrono::steady_clock::now() + m_conf->Metadata.Timeout;
     }
-    int err = co_await TryRefreshMetadata(topics, m_conf->Metadata.Retry.Max, deadline);
-    co_return err;
+    co_return co_await TryRefreshMetadata(topics, m_conf->Metadata.Retry.Max, deadline);
 }

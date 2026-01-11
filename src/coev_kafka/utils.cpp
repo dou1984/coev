@@ -1,6 +1,6 @@
 #include "utils.h"
-
 #include "errors.h"
+#include <coev/log.h>
 #include <iostream>
 #include <sstream>
 #include <algorithm>

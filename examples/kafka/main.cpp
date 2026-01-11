@@ -12,7 +12,6 @@ std::string topic;
 int main(int argc, char **argv)
 {
 
-    // kafkacli host port topic
     if (argc < 4)
     {
         std::cout << "Usage: " << argv[0] << " host port topic" << std::endl;
@@ -72,6 +71,9 @@ int main(int argc, char **argv)
                         }
                     }();
                 }
+                co_await task.wait_all();
+
+                LOG_DBG("all task done\n");
             })
         .wait();
 

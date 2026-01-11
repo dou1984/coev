@@ -166,7 +166,7 @@ enum KError : int16_t
 
 };
 
-std::string KErrorToString(KError err);
+const char *KErrorToString(KError err);
 template <class T>
 auto KErrorToString(T err)
 {

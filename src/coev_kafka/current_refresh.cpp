@@ -1,7 +1,7 @@
 #include "current_refresh.h"
 #include "next_refresh.h"
 
-CurrentRefresh::CurrentRefresh(MetadataRefresh refresh_func)
+CurrentRefresh::CurrentRefresh(fMetadataRefresh refresh_func)
     : m_ongoing(false), m_all_topics(false), m_refresh_func(std::move(refresh_func)) {}
 
 void CurrentRefresh::addTopicsFrom(std::shared_ptr<NextRefresh> next)

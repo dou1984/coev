@@ -243,5 +243,5 @@ coev::awaitable<int> NewConsumer(const std::vector<std::string> &addrs, const st
     {
         co_return err;
     }
-    co_return NewConsumer(client, consumer_);
+    co_return NewConsumerFromClient(client, consumer_);
 }

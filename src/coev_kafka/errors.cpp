@@ -1,7 +1,8 @@
 #include "errors.h"
+#include <coev/log.h>
 #include <sstream>
 
-std::string KErrorToString(KError err)
+const char *KErrorToString(KError err)
 {
     switch (err)
     {
@@ -316,11 +317,8 @@ std::string KErrorToString(KError err)
     case ErrStrategyNotFound:
         return "kafka: unable to find selected strategy";
     default:
-    {
-        std::ostringstream oss;
-        oss << "Unknown error, how did this happen? Error code = " << static_cast<int16_t>(err);
-        return oss.str();
-    }
+        LOG_ERR("Unknown error %d", err);
+        return "Unknown error";
     }
 }
 

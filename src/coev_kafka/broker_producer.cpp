@@ -271,7 +271,7 @@ coev::awaitable<void> BrokerProducer::handleSuccess(std::shared_ptr<ProduceSet> 
 void BrokerProducer::handleError(std::shared_ptr<ProduceSet> _sent, KError err)
 {
     auto target = KErrorToString(err);
-    if (target.size())
+    if (err != ErrNoError)
     {
         _sent->EachPartition([&](const std::string &topic, int32_t partition, std::shared_ptr<PartitionSet> pSet)
                              { m_parent->returnErrors(pSet->m_msgs, err); });

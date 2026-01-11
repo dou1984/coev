@@ -15,6 +15,7 @@
 #include "find_coordinator_response.h"
 #include "offset_request.h"
 #include "coordinator_type.h"
+#include "single_flight_metadata_refresher.h"
 
 struct Broker;
 struct PartitionMetadata;
@@ -48,6 +49,7 @@ struct Client
     coev::awaitable<int> InitProducerID(std::shared_ptr<InitProducerIDResponse> &response);
     coev::awaitable<int> LeastLoadedBroker(std::shared_ptr<Broker> &);
     coev::awaitable<int> MetadataRefresh(const std::vector<std::string> &);
+    coev::awaitable<int> SingleFlightRefresher(const std::vector<std::string> &);
     coev::awaitable<int> BackgroundMetadataUpdater();
     coev::awaitable<int> RefreshMetadata();
     coev::awaitable<int> RetryRefreshMetadata(const std::vector<std::string> &topics, int attemptsRemaining, std::chrono::steady_clock::time_point deadline, int err);
@@ -79,9 +81,10 @@ struct Client
     std::shared_ptr<Broker> _CachedTransactionCoordinator(const std::string &transactionID);
     std::shared_ptr<Broker> _CachedController();
 
+    fMetadataRefresh m_metadata_refresh;
+
     std::atomic<int64_t> m_update_metadata_ms{0};
     std::shared_ptr<Config> m_conf;
-
     std::vector<std::shared_ptr<Broker>> m_seed_brokers;
     std::vector<std::shared_ptr<Broker>> m_dead_seeds;
     int32_t m_controller_id = -1;

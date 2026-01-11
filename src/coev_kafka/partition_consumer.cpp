@@ -329,8 +329,8 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
 
     if (response->m_throttle_time.count() != 0 && response->m_blocks.empty())
     {
-        LOG_CORE("FetchResponse throttled %dms from broker %d\n", 
-                       std::chrono::duration_cast<std::chrono::milliseconds>(response->m_throttle_time).count(), m_broker->m_broker->ID());
+        LOG_CORE("FetchResponse throttled %ldms from broker %d\n",
+                 std::chrono::duration_cast<std::chrono::milliseconds>(response->m_throttle_time).count(), m_broker->m_broker->ID());
         return ErrThrottled;
     }
 
@@ -389,8 +389,8 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
         }
         else if (block->m_records_next_offset <= block->m_high_water_mark_offset)
         {
-            LOG_DBG("received batch with zero records but high watermark was not reached, topic %s, partition %d, next offset %ld, broker %d\n", 
-                           m_topic.c_str(), m_partition, block->m_records_next_offset, m_broker->m_broker->ID());
+            LOG_DBG("received batch with zero records but high watermark was not reached, topic %s, partition %d, next offset %ld, broker %d\n",
+                    m_topic.c_str(), m_partition, block->m_records_next_offset, m_broker->m_broker->ID());
             m_offset = block->m_records_next_offset;
         }
         return 0;

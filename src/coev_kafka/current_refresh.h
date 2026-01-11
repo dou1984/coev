@@ -9,14 +9,14 @@
 #include <coev/coev.h>
 #include "errors.h"
 
-using MetadataRefresh = std::function<coev::awaitable<int>(const std::vector<std::string> &)>;
+using fMetadataRefresh = std::function<coev::awaitable<int>(const std::vector<std::string> &)>;
 
 struct NextRefresh;
 
 struct CurrentRefresh
 {
 
-    CurrentRefresh(MetadataRefresh refresh_func);
+    CurrentRefresh(fMetadataRefresh refresh_func);
 
     void addTopicsFrom(std::shared_ptr<NextRefresh> next);
     void addTopics(const std::vector<std::string> &topics);
@@ -30,6 +30,6 @@ struct CurrentRefresh
     std::unordered_map<std::string, bool> m_topics_map;
     std::vector<std::string> m_topics;
     bool m_all_topics = false;
-    MetadataRefresh m_refresh_func;
+    fMetadataRefresh m_refresh_func;
     coev::co_channel<int> m_chans;
 };
