@@ -99,7 +99,6 @@
 #include "sasl_handshake_response.h"
 #include "sasl_authenticate_response.h"
 #include "sasl_authenticate_request.h"
-#include "logger.h"
 #include "gssapi_kerberos.h"
 #include "access_token.h"
 #include "response_promise.h"

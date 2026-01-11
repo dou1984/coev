@@ -2,9 +2,9 @@
 #include <mutex>
 #include <queue>
 #include <arpa/inet.h>
+#include <utils/hash/crc32.h>
 #include "crc32_field.h"
 #include "undefined.h"
-#include "../utils/hash/crc32.h"
 
 static std::mutex pool_mutex;
 static std::queue<std::shared_ptr<crc32_field>> crc32_field_pool;
@@ -54,6 +54,7 @@ crc32_field::crc32_field(CrcPolynomial polynomial) : startOffset(0), polynomial(
 
 void crc32_field::save_offset(int in)
 {
+    LOG_CORE("crc32_field::save_offset startOffset: %d\n", in);
     startOffset = in;
 }
 
@@ -64,27 +65,33 @@ int crc32_field::reserve_length()
 
 int crc32_field::run(int curOffset, std::string &buf)
 {
+    LOG_CORE("crc32_field::run startOffset: %d, curOffset: %d\n", startOffset, curOffset);
     uint32_t crc_val;
     int err = crc(curOffset, buf, crc_val);
     if (err != ErrNoError)
     {
+        LOG_ERR("crc32_field::run: crc calculation failed with error %d", err);
         return err;
     }
+    LOG_CORE("crc32_field::run calculated CRC value: 0x%08x\n", crc_val);
     uint32_t network_crc = htonl(crc_val);
     uint8_t *ptr = reinterpret_cast<uint8_t *>(&network_crc);
     buf[startOffset] = ptr[0];
     buf[startOffset + 1] = ptr[1];
     buf[startOffset + 2] = ptr[2];
     buf[startOffset + 3] = ptr[3];
+    LOG_CORE("crc32_field::run CRC value written to buffer\n");
     return 0;
 }
 
 int crc32_field::check(int curOffset, std::string &buf)
 {
+    LOG_CORE("crc32_field::check startOffset: %d, curOffset: %d\n", startOffset, curOffset);
     uint32_t crc_val;
     int err = crc(curOffset, buf, crc_val);
     if (err != ErrNoError)
     {
+        LOG_ERR("crc32_field::check: crc calculation failed with error %d", err);
         return err;
     }
 
@@ -96,11 +103,14 @@ int crc32_field::check(int curOffset, std::string &buf)
     ptr[3] = buf[startOffset + 3];
     uint32_t expected = ntohl(network_expected);
 
+    LOG_CORE("crc32_field::check calculated CRC: 0x%08x, expected CRC: 0x%08x\n", crc_val, expected);
     if (crc_val != expected)
     {
+        LOG_ERR("crc32_field::check: CRC mismatch! calculated = 0x%08x, expected = 0x%08x", crc_val, expected);
         return ErrCRCMismatch;
     }
 
+    LOG_CORE("crc32_field::check CRC check passed\n");
     return ErrNoError;
 }
 

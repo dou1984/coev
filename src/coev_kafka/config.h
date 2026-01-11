@@ -11,8 +11,9 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-#include "../utils/compress/coev_compress.h"
-#include "../utils/hash/fnv.h"
+#include <coev/log.h>
+#include <utils/compress/coev_compress.h>
+#include <utils/hash/fnv.h>
 #include "isolation_level.h"
 #include "version.h"
 #include "metrics.h"

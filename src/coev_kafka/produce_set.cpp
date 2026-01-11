@@ -6,7 +6,7 @@
 #include "record_batch.h"
 #include "message_set.h"
 #include "produce_request.h"
-#include "logger.h"
+
 #include <chrono>
 #include <algorithm>
 #include <stdexcept>

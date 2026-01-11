@@ -5,12 +5,12 @@
 #include <cstdint>
 #include <chrono>
 #include <memory>
+#include <utils/compress/coev_compress.h>
 #include "config.h"
 #include "timestamp.h"
 #include "packet_encoder.h"
 #include "packet_decoder.h"
 #include "version.h"
-#include "../utils/compress/coev_compress.h"
 
 struct MessageSet;
 

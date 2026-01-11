@@ -4,7 +4,6 @@
 
 #include "admin.h"
 #include "errors.h"
-#include "logger.h"
 #include "create_topics_request.h"
 #include "delete_topics_request.h"
 #include "create_partitions_request.h"
@@ -90,7 +89,7 @@ coev::awaitable<int> ClusterAdmin::RetryOnError(std::function<bool(int)> retryab
         {
             co_return err;
         }
-        Logger::Printf("admin/request retrying after %dms... (%d attempts remaining)\n",
+        LOG_CORE("Admin::request retrying after %dms... (%d attempts remaining)\n",
                        static_cast<int>(m_conf->Admin.Retry.Backoff.count()), attemptsRemaining);
         co_await sleep_for(m_conf->Admin.Retry.Backoff);
     }
@@ -1239,7 +1238,7 @@ coev::awaitable<int> ClusterAdmin::DescribeLogDirs(const std::vector<int32_t> &b
         int err = FindBroker(b_id, broker);
         if (err != 0)
         {
-            Logger::Printf("Unable to find broker with ID = %d\n", b_id);
+            LOG_CORE("Admin::DescribeClusterResponse Unable to find broker with ID = %d\n", b_id);
             continue;
         }
         task_ << [this](std::shared_ptr<Broker> broker, std::list<result> &logDirsResults, std::list<int> &errChan) -> coev::awaitable<void>

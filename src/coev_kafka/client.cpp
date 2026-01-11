@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <chrono>
 #include <functional>
-#include "logger.h"
+#include <coev/coev.h>
 #include "utils.h"
 #include "client.h"
 #include "broker.h"
@@ -14,7 +14,7 @@
 
 coev::awaitable<int> NewClient(const std::vector<std::string> &addrs, std::shared_ptr<Config> conf, std::shared_ptr<Client> &client_)
 {
-    DebugLogger::Println("Initializing new client");
+    LOG_DBG("NewClient Initializing new client\n");
     if (conf == nullptr)
     {
         conf = std::make_shared<Config>();
@@ -32,7 +32,7 @@ coev::awaitable<int> NewClient(const std::vector<std::string> &addrs, std::share
     {
         if (conf->Version.IsAtLeast(V1_1_0_0) || !conf->Version.IsAtLeast(V0_11_0_0))
         {
-            Logger::Println("Connecting to Azure Event Hubs, forcing version to V1_0_0_0 for compatibility");
+            LOG_CORE("NewClient Connecting to Azure Event Hubs: forcing version to V1_0_0_0 for compatibility\n");
             conf->Version = V1_0_0_0;
         }
     }
@@ -62,7 +62,7 @@ coev::awaitable<int> NewClient(const std::vector<std::string> &addrs, std::share
                 err == ErrTopicAuthorizationFailed || err == ErrClusterAuthorizationFailed)
             {
 
-                Logger::Println("%d %s", err, KErrorToString(err));
+                LOG_CORE("NewClient Error: %d %s\n", err, KErrorToString(err));
             }
             else
             {
@@ -74,7 +74,7 @@ coev::awaitable<int> NewClient(const std::vector<std::string> &addrs, std::share
     }
 
     client_->m_task << client_->BackgroundMetadataUpdater();
-    DebugLogger::Println("Successfully initialized new client");
+    LOG_DBG("NewClient Successfully initialized new client\n");
 
     co_return ErrNoError;
 }
@@ -143,7 +143,7 @@ coev::awaitable<int> Client::InitProducerID(std::shared_ptr<InitProducerIDRespon
         }
         else
         {
-            Logger::Printf("Client got error from broker %d when issuing InitProducerID : %d\n", broker->ID(), err);
+            LOG_CORE("Client::InitProducerID got error from broker %d when issuing InitProducerID: %d\n", broker->ID(), err);
             broker->Close();
             brokerErrors.push_back(err);
             DeregisterBroker(broker);
@@ -156,13 +156,13 @@ int Client::Close()
 {
     if (Closed())
     {
-        Logger::Printf("Close() called on already m_closed client");
+        LOG_CORE("Client::Close called on already m_closed client\n");
         return ErrClosedClient;
     }
     m_closer.set(true);
 
     std::unique_lock<std::shared_mutex> lk(m_lock);
-    DebugLogger::Println("Closing Client");
+    LOG_DBG("Client::Close Closing Client\n");
     for (auto &kv : m_brokers)
     {
         kv.second->SafeAsyncClose();
@@ -576,13 +576,13 @@ void Client::UpdateBroker(const std::vector<std::shared_ptr<Broker>> &m_brokers_
         if (it == m_brokers.end())
         {
             m_brokers[broker->ID()] = broker;
-            DebugLogger::Printf("client/m_brokers registered new broker #%d at %s", broker->ID(), broker->Addr().c_str());
+            LOG_DBG("Client::UpdateBrokers registered new broker: #%d at %s\n", broker->ID(), broker->Addr().c_str());
         }
         else if (broker->Addr() != it->second->Addr())
         {
             it->second->SafeAsyncClose();
             m_brokers[broker->ID()] = broker;
-            Logger::Printf("client/m_brokers replaced registered broker #%d with %s", broker->ID(), broker->Addr().c_str());
+            LOG_CORE("Client::UpdateBrokers replaced registered broker: #%d with %s\n", broker->ID(), broker->Addr().c_str());
         }
     }
     for (auto it = m_brokers.begin(); it != m_brokers.end();)
@@ -590,7 +590,7 @@ void Client::UpdateBroker(const std::vector<std::shared_ptr<Broker>> &m_brokers_
         if (currentBroker.find(it->first) == currentBroker.end())
         {
             it->second->SafeAsyncClose();
-            Logger::Printf("client/broker remove invalid broker #%d with %s", it->second->ID(), it->second->Addr().c_str());
+            LOG_CORE("Client::UpdateBrokers remove invalid broker: #%d with %s\n", it->second->ID(), it->second->Addr().c_str());
             it = m_brokers.erase(it);
         }
         else
@@ -604,20 +604,20 @@ void Client::RegisterBroker(std::shared_ptr<Broker> broker)
 {
     if (m_brokers.empty())
     {
-        Logger::Printf("cannot register broker #%d at %s, client already m_closed", broker->ID(), broker->Addr().c_str());
+        LOG_CORE("Client::RegisterBroker cannot register broker: #%d at %s, client already m_closed\n", broker->ID(), broker->Addr().c_str());
         return;
     }
     auto it = m_brokers.find(broker->ID());
     if (it == m_brokers.end())
     {
         m_brokers[broker->ID()] = broker;
-        DebugLogger::Printf("client/m_brokers registered new broker #%d at %s", broker->ID(), broker->Addr().c_str());
+        LOG_DBG("Client::RegisterBroker registered new broker: #%d at %s\n", broker->ID(), broker->Addr().c_str());
     }
     else if (broker->Addr() != it->second->Addr())
     {
         it->second->SafeAsyncClose();
         m_brokers[broker->ID()] = broker;
-        Logger::Printf("client/m_brokers replaced registered broker #%d with %s", broker->ID(), broker->Addr().c_str());
+        LOG_CORE("Client::RegisterBroker replaced registered broker: #%d with %s\n", broker->ID(), broker->Addr().c_str());
     }
 }
 
@@ -627,7 +627,7 @@ void Client::DeregisterBroker(std::shared_ptr<Broker> broker)
     auto it = m_brokers.find(broker->ID());
     if (it != m_brokers.end())
     {
-        Logger::Printf("client/m_brokers deregistered broker #%d at %s", broker->ID(), broker->Addr().c_str());
+        LOG_CORE("Client::DeregisterBroker deregistered broker: #%d at %s\n", broker->ID(), broker->Addr().c_str());
         m_brokers.erase(it);
         return;
     }
@@ -641,7 +641,7 @@ void Client::DeregisterBroker(std::shared_ptr<Broker> broker)
 void Client::ResurrectDeadBrokers()
 {
     std::unique_lock<std::shared_mutex> lk(m_lock);
-    Logger::Printf("client/m_brokers resurrecting %zu dead seed m_brokers", m_dead_seeds.size());
+    LOG_CORE("Client::ResurrectDeadBrokers resurrecting dead seed brokers: %zu\n", m_dead_seeds.size());
     m_seed_brokers.insert(m_seed_brokers.end(), m_dead_seeds.begin(), m_dead_seeds.end());
     m_dead_seeds.clear();
 }
@@ -807,7 +807,7 @@ coev::awaitable<int> Client::BackgroundMetadataUpdater()
         }
         if (int err = co_await RefreshMetadata(); err != 0)
         {
-            Logger::Println("Client background m_metadata update:", err);
+            LOG_CORE("background metadata update: %d\n", err);
         }
     }
     m_closed.set(true);
@@ -845,7 +845,7 @@ coev::awaitable<int> Client::RetryRefreshMetadata(const std::vector<std::string>
         auto backoff = ComputeBackoff(attemptsRemaining);
         if (pastDeadline(deadline, backoff))
         {
-            Logger::Println("client/m_metadata skipping last retries as we would go past the m_metadata timeout");
+            LOG_CORE("skipping last retries as we would go past the metadata timeout\n");
             co_return err;
         }
         if (backoff.count() > 0)
@@ -859,7 +859,7 @@ coev::awaitable<int> Client::RetryRefreshMetadata(const std::vector<std::string>
             co_return err;
         }
         attemptsRemaining--;
-        Logger::Printf("client/m_metadata retrying after %lldms... (%d attempts remaining)\n", backoff.count(), attemptsRemaining);
+        LOG_CORE("retrying after %lldms... (%d attempts remaining)\n", backoff.count(), attemptsRemaining);
         co_return co_await TryRefreshMetadata(topics, attemptsRemaining, deadline);
     }
     co_return err;
@@ -875,12 +875,12 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
         bool allowAutoTopicCreation = m_conf->Metadata.AllowAutoTopicCreation;
         if (!topics.empty())
         {
-            DebugLogger::Printf("client/m_metadata fetching m_metadata for %zu topics from broker %s\n", topics.size(), broker->Addr().c_str());
+            LOG_DBG("fetching metadata for %zu topics from broker %s\n", topics.size(), broker->Addr().c_str());
         }
         else
         {
             allowAutoTopicCreation = false;
-            DebugLogger::Printf("client/m_metadata fetching m_metadata for all topics from broker %s\n", broker->Addr().c_str());
+            LOG_DBG("fetching metadata for all topics from broker %s\n", broker->Addr().c_str());
         }
         auto req = NewMetadataRequest(m_conf->Version, topics);
         req->m_allow_auto_topic_creation = allowAutoTopicCreation;
@@ -891,7 +891,7 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
         {
             if (response->Brokers.empty())
             {
-                Logger::Printf("client/m_metadata receiving empty m_brokers from the m_metadata response when requesting the broker #%d at %s", broker->ID(), broker->Addr().c_str());
+                LOG_CORE("receiving empty brokers from the metadata response when requesting the broker #%d at %s\n", broker->ID(), broker->Addr().c_str());
                 broker->Close();
                 DeregisterBroker(broker);
                 continue;
@@ -901,7 +901,7 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
             shouldRetry = UpdateMetadata(response, allKnownMetaData);
             if (shouldRetry)
             {
-                Logger::Println("client/m_metadata found some partitions to be leaderless");
+                LOG_CORE("found some partitions to be leaderless\n");
                 err = co_await RetryRefreshMetadata(topics, attemptsRemaining, deadline, ErrLeaderNotAvailable);
                 co_return err;
             }
@@ -915,21 +915,21 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
         {
             if (err == ErrSASLAuthenticationFailed)
             {
-                Logger::Println("client/m_metadata failed SASL authentication");
+                LOG_CORE("failed SASL authentication\n");
                 co_return err;
             }
             if (err == ErrTopicAuthorizationFailed)
             {
-                Logger::Println("client is not authorized to access this topic. The topics were: ");
+                LOG_CORE("client is not authorized to access this topic. The topics were: \n");
                 co_return err;
             }
-            Logger::Printf("client/m_metadata got error from broker %d while fetching m_metadata: %d\n", broker->ID(), err);
+            LOG_CORE("got error from broker %d while fetching metadata: %d\n", broker->ID(), err);
             broker->Close();
             DeregisterBroker(broker);
         }
         else
         {
-            Logger::Printf("client/m_metadata got error from broker %d while fetching m_metadata: %d\n", broker->ID(), err);
+            LOG_CORE("got error from broker %d while fetching metadata: %d\n", broker->ID(), err);
             brokerErrors.push_back(err);
             broker->Close();
             DeregisterBroker(broker);
@@ -939,10 +939,10 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
     err = co_await LeastLoadedBroker(broker);
     if (err != 0)
     {
-        Logger::Printf("client/m_metadata not fetching m_metadata from broker as we would go past the m_metadata timeout\n");
+        LOG_CORE("not fetching metadata from broker as we would go past the metadata timeout\n");
         co_return co_await RetryRefreshMetadata(topics, attemptsRemaining, deadline, err);
     }
-    Logger::Println("client/m_metadata no available broker to send m_metadata request to");
+    LOG_CORE("no available broker to send metadata request to\n");
     ResurrectDeadBrokers();
     err = co_await RetryRefreshMetadata(topics, attemptsRemaining, deadline, err);
     co_return err;
@@ -989,7 +989,7 @@ bool Client::UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnow
             retry = true;
             break;
         default:
-            Logger::Printf("Unexpected topic-level m_metadata error: %s", topic->m_err);
+            LOG_CORE("Unexpected topic-level metadata error: %s\n", topic->m_err);
             err = topic->m_err;
             continue;
         }
@@ -1071,7 +1071,7 @@ coev::awaitable<int> Client::FindCoordinator(const std::string &coordinatorKey, 
         {
             auto backoff = ComputeBackoff(attemptsRemaining);
             attemptsRemaining--;
-            Logger::Printf("client/coordinator retrying after %lldms... (%d attempts remaining)\n", backoff.count(), attemptsRemaining);
+            LOG_CORE("retrying after %lldms... (%d attempts remaining)\n", backoff.count(), attemptsRemaining);
             co_await sleep_for(backoff);
             co_return co_await FindCoordinator(coordinatorKey, coordinatorType, attemptsRemaining, response);
         }
@@ -1083,7 +1083,7 @@ coev::awaitable<int> Client::FindCoordinator(const std::string &coordinatorKey, 
     int err = 0;
     for (err = co_await LeastLoadedBroker(broker); broker != nullptr; err = co_await LeastLoadedBroker(broker))
     {
-        DebugLogger::Printf("client/coordinator requesting coordinator for %s from %s\n", coordinatorKey.c_str(), broker->Addr().c_str());
+        LOG_DBG("requesting coordinator for %s from %s\n", coordinatorKey.c_str(), broker->Addr().c_str());
         auto request = std::make_shared<FindCoordinatorRequest>();
         request->m_coordinator_key = coordinatorKey;
         request->m_coordinator_type = coordinatorType;
@@ -1098,7 +1098,7 @@ coev::awaitable<int> Client::FindCoordinator(const std::string &coordinatorKey, 
         err = co_await broker->FindCoordinator(request, response);
         if (err != 0)
         {
-            Logger::Printf("client/coordinator request to broker %s failed: %d\n", broker->Addr().c_str(), err);
+            LOG_CORE("request to broker %s failed: %d\n", broker->Addr().c_str(), err);
             if (err == ErrNoError)
             {
                 co_return err;
@@ -1113,23 +1113,23 @@ coev::awaitable<int> Client::FindCoordinator(const std::string &coordinatorKey, 
         }
         if (response->m_err == ErrNoError)
         {
-            DebugLogger::Printf("client/coordinator coordinator for %s is #%d (%s)\n", coordinatorKey.c_str(), response->m_coordinator->ID(), response->m_coordinator->Addr().c_str());
+            LOG_DBG("coordinator for %s is #%d (%s)\n", coordinatorKey.c_str(), response->m_coordinator->ID(), response->m_coordinator->Addr().c_str());
             co_return 0;
         }
         else if (response->m_err == ErrConsumerCoordinatorNotAvailable)
         {
-            Logger::Printf("client/coordinator coordinator for %s is not available\n", coordinatorKey.c_str());
+            LOG_CORE("coordinator for %s is not available\n", coordinatorKey.c_str());
             std::shared_ptr<Broker> leader;
             if (co_await Leader("__consumer_offsets", 0, leader) != 0)
             {
-                Logger::Printf("client/coordinator the __consumer_offsets topic is not initialized completely yet. Waiting 2 seconds...\n");
+                LOG_CORE("the __consumer_offsets topic is not initialized completely yet. Waiting 2 seconds...\n");
                 co_await sleep_for(std::chrono::seconds(2));
             }
             if (coordinatorType == CoordinatorTransaction)
             {
                 if (Leader("__transaction_state", 0, leader) != 0)
                 {
-                    Logger::Printf("client/coordinator the __transaction_state topic is not initialized completely yet. Waiting 2 seconds...\n");
+                    LOG_CORE("the __transaction_state topic is not initialized completely yet. Waiting 2 seconds...\n");
                     co_await sleep_for(std::chrono::seconds(2));
                 }
             }
@@ -1137,7 +1137,7 @@ coev::awaitable<int> Client::FindCoordinator(const std::string &coordinatorKey, 
         }
         else if (response->m_err == ErrGroupAuthorizationFailed)
         {
-            Logger::Printf("client was not authorized to access group %s while attempting to find coordinator", coordinatorKey.c_str());
+            LOG_CORE("client was not authorized to access group %s while attempting to find coordinator\n", coordinatorKey.c_str());
             co_return co_await retry(ErrGroupAuthorizationFailed);
         }
         else
@@ -1145,7 +1145,7 @@ coev::awaitable<int> Client::FindCoordinator(const std::string &coordinatorKey, 
             co_return response->m_err;
         }
     }
-    Logger::Println("client/coordinator no available broker to send consumer m_metadata request to");
+    LOG_CORE("no available broker to send consumer metadata request to\n");
     ResurrectDeadBrokers();
     err = co_await retry(ErrOutOfBrokers);
     co_return err;

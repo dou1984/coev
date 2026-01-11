@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <memory>
-
+#include <coev/log.h>
 #include "acl_types.h"
 #include "packet_encoder.h"
 #include "packet_decoder.h"

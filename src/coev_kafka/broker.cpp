@@ -1558,7 +1558,7 @@ void Broker::SafeAsyncClose()
             auto err = co_await b->Close();
             if (err != ErrNoError)
             {
-                Logger::Println("Error closing broker", b->ID(), ":", err);
+                LOG_CORE("Error closing broker %d: %d\n", b->ID(), err);
             }
         }
         co_return;

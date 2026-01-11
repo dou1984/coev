@@ -171,8 +171,8 @@ coev::awaitable<int> TransactionManager::Retry(int attemptsRemaining, const std:
             co_return r.Error;
         }
         auto backoff = ComputeBackoff(attemptsRemaining);
-        Logger::Printf("txnmgr [%s] retrying after %lldms %d attempts remaining %d\n",
-                       m_transactional_id.c_str(), static_cast<long long>(backoff.count() / 1000000), attemptsRemaining, static_cast<int>(r.Error));
+        LOG_CORE("retrying after %lldms %d attempts remaining %d\n", 
+                       static_cast<long long>(backoff.count() / 1000000), attemptsRemaining, static_cast<int>(r.Error));
 
         co_await sleep_for(backoff);
         attemptsRemaining--;
@@ -249,8 +249,8 @@ coev::awaitable<TransactionManager::Result> TransactionManager::PublishOffsetsTo
 
     if (response->m_err == ErrNoError)
     {
-        DebugLogger::Printf("txnmgr/add-offset-to-txn [%s] successful add-offset-to-txn with group %s\n",
-                            m_transactional_id.c_str(), groupId.c_str());
+        LOG_DBG("successful add-offset-to-txn with group %s, transactional_id: %s\n", 
+                       groupId.c_str(), m_transactional_id.c_str());
         co_return {false, ErrNoError};
     }
 
@@ -351,8 +351,8 @@ coev::awaitable<TransactionManager::Result> TransactionManager::PublishOffsetsTo
     outOffsets = failedTxn;
     if (outOffsets.empty())
     {
-        DebugLogger::Printf("txnmgr/txn-offset-commit [%s] successful txn-offset-commit with group %s\n",
-                            m_transactional_id.c_str(), groupId.c_str());
+        LOG_DBG("successful txn-offset-commit with group %s, transactional_id: %s\n", 
+                       groupId.c_str(), m_transactional_id.c_str());
         co_return {false, ErrNoError};
     }
     co_return {true, ErrTxnOffsetCommit};

@@ -1,5 +1,5 @@
 #include "utils.h"
-#include "logger.h"
+
 #include "errors.h"
 #include <iostream>
 #include <sstream>
@@ -58,7 +58,7 @@ std::function<std::chrono::milliseconds(int, int)> NewExponentialBackoff(
 
     if (backoff > maxBackoff)
     {
-        Logger::Println("Warning: backoff is greater than maxBackoff, using maxBackoff instead.");
+        LOG_CORE("Warning: backoff is greater than maxBackoff, using maxBackoff instead.\n");
         backoff = maxBackoff;
     }
 

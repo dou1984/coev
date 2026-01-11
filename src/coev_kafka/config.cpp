@@ -2,13 +2,13 @@
 #include <iostream>
 #include <algorithm>
 #include <limits>
+#include <utils/hash/fnv.h>
 #include "config.h"
 #include "version.h"
 #include "client.h"
 #include "balance_strategy.h"
 #include "undefined.h"
 #include "partitioner.h"
-#include "../utils/hash/fnv.h"
 
 const int MAX_GROUP_INSTANCE_ID_LENGTH = 249;
 const std::regex GROUP_INSTANCE_ID_REGEXP(R"(^[0-9a-zA-Z\._\-]+$)");

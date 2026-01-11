@@ -223,7 +223,7 @@ coev::awaitable<int> ConsumerGroup::NewSession(std::shared_ptr<Context> &ctx, co
         m_member_id = response->m_member_id;
         co_return co_await NewSession(ctx, topics, handler, retries, session);
     case ErrFencedInstancedId:
-        Logger::Printf("JoinGroup failed: group instance id %s has been fenced\n", m_group_instance_id);
+        LOG_CORE("JoinGroup failed: group instance id %s has been fenced\n", m_group_instance_id);
         co_return response->m_err;
     default:
         co_return response->m_err;
@@ -300,7 +300,7 @@ coev::awaitable<int> ConsumerGroup::NewSession(std::shared_ptr<Context> &ctx, co
         }
         co_return co_await RetryNewSession(ctx, topics, handler, retries, true, session);
     case ErrFencedInstancedId:
-        Logger::Printf("JoinGroup failed: group instance id %s has been fenced\n", m_group_instance_id);
+        LOG_CORE("JoinGroup failed: group instance id %s has been fenced\n", m_group_instance_id);
         co_return syncGroupResponse->m_err;
     default:
         co_return syncGroupResponse->m_err;
@@ -643,7 +643,7 @@ void ConsumerGroup::HandleError(std::shared_ptr<ConsumerError> err, const std::s
 
     if (!m_config->Consumer.Return.Errors)
     {
-        Logger::Println(KErrorToString(err->m_err));
+        LOG_CORE("%s\n", KErrorToString(err->m_err));
         return;
     }
 
@@ -691,9 +691,8 @@ coev::awaitable<void> ConsumerGroup::LoopCheckPartitionNumbers(
             int newNum = newTopicToPartitionNum[topic];
             if (newNum != oldNum)
             {
-                Logger::Printf(
-                    "consumergroup/%s loop check partition number goroutine find partitions in topics %s changed from %d to %d\n",
-                    m_group_id.c_str(), topics.empty() ? "" : topics[0].c_str(), oldNum, newNum);
+                LOG_CORE("loop check partition number goroutine find partitions in topics %s changed from %d to %d\n",
+                    topics.empty() ? "" : topics[0].c_str(), oldNum, newNum);
                 co_return;
             }
         }
@@ -723,9 +722,8 @@ coev::awaitable<int> ConsumerGroup::TopicToPartitionNumbers(const std::vector<st
         int err = co_await m_client->Partitions(topic, partitionNum);
         if (err != 0)
         {
-            Logger::Printf(
-                "consumergroup/%s topic %s get partition number failed due to '%d'\n",
-                m_group_id.c_str(), topic.c_str(), err);
+            LOG_CORE("topic %s get partition number failed due to '%d'\n",
+                topic.c_str(), err);
             co_return err;
         }
         topicToPartitionNum[topic] = static_cast<int>(partitionNum.size());

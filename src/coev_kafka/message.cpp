@@ -1,12 +1,13 @@
 #include <cstring>
 #include <map>
+#include <utils/hash/crc32.h>
 #include "message.h"
 #include "message_set.h"
 #include "timestamp.h"
 #include "real_decoder.h"
 #include "undefined.h"
 #include "crc32_field.h"
-#include "../utils/hash/crc32.h"
+
 std::string toString(CompressionCodec codec)
 {
     switch (codec)

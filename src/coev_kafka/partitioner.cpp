@@ -2,10 +2,10 @@
 #include <cstdint>
 #include <memory>
 #include <functional>
+#include <utils/hash/fnv.h>
+#include <utils/hash/crc32.h>
 #include "partitioner.h"
 #include "undefined.h"
-#include "../utils/hash/fnv.h"
-#include "../utils/hash/crc32.h"
 
 int ManualPartitioner::Partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result)
 {
