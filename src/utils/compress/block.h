@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <arpa/inet.h>
 
-namespace coev::compress::details
+namespace coev::details
 {
     union block
     {

@@ -149,7 +149,7 @@ int ResourceResponse::decode(PDecoder &pd, int16_t version)
     for (int32_t i = 0; i < n; ++i)
     {
         m_configs[i] = std::make_shared<ConfigEntry>();
-        if (!m_configs[i]->decode(pd, version))
+        if (m_configs[i]->decode(pd, version) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -240,10 +240,10 @@ int ConfigEntry::decode(PDecoder &pd, int16_t version)
         for (int32_t i = 0; i < n; ++i)
         {
             m_synonyms[i] = std::make_shared<ConfigSynonym>();
-            if (!m_synonyms[i]->decode(pd, version))
-            {
-                return ErrDecodeError;
-            }
+            if (m_synonyms[i]->decode(pd, version) != ErrNoError)
+        {
+            return ErrDecodeError;
+        }
         }
     }
 
@@ -257,7 +257,7 @@ int ConfigSynonym::encode(PEncoder &pe, int16_t /*version*/)
     if (pe.putString(m_config_value) != ErrNoError)
         return ErrEncodeError;
     pe.putInt8(static_cast<int8_t>(m_source));
-    return true;
+    return ErrNoError;
 }
 
 int ConfigSynonym::decode(PDecoder &pd, int16_t /*version*/)

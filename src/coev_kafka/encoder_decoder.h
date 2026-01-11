@@ -50,7 +50,7 @@ struct flexible_version
 
 int encode(std::shared_ptr<IEncoder> e, std::string &out, std::shared_ptr<metrics::Registry> metricRegistry);
 int decode(const std::string &buf, std::shared_ptr<IDecoder> in, std::shared_ptr<metrics::Registry> metricRegistry);
-bool versionedDecode(const std::string &buf, const std::shared_ptr<VDecoder> &in, int16_t version, std::shared_ptr<metrics::Registry> &metricRegistry);
+int versionedDecode(const std::string &buf, const std::shared_ptr<VDecoder> &in, int16_t version, std::shared_ptr<metrics::Registry> &metricRegistry);
 int magicValue(PDecoder &pd, int8_t &magic);
 
 int prepareFlexibleDecoder(PDecoder *pd, std::shared_ptr<VDecoder> req, int16_t version);

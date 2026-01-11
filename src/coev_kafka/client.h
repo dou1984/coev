@@ -62,22 +62,22 @@ struct Client
     bool UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnownMetaData);
     void RandomizeSeedBrokers(const std::vector<std::string> &addrs);
     void UpdateBroker(const std::vector<std::shared_ptr<Broker>> &brokers);
-    void registerBroker(std::shared_ptr<Broker> broker);
+    void RegisterBroker(std::shared_ptr<Broker> broker);
     void DeregisterBroker(std::shared_ptr<Broker> broker);
     void ResurrectDeadBrokers();
     void DeregisterController();
     std::chrono::milliseconds ComputeBackoff(int attemptsRemaining);
 
-    coev::awaitable<int> getPartitions(const std::string &topic, int64_t pt, std::vector<int32_t> &partitions);
-    coev::awaitable<int> getReplicas(const std::string &topic, int32_t partitionID, std::shared_ptr<PartitionMetadata> &out);
-    coev::awaitable<int> getOffset(const std::string &topic, int32_t partitionID, int64_t timestamp, int64_t &offset);
-    std::shared_ptr<PartitionMetadata> cachedMetadata(const std::string &topic, int32_t partitionID);
-    std::vector<int32_t> cachedPartitions(const std::string &topic, int64_t partitionSet);
-    std::vector<int32_t> setPartitionCache(const std::string &topic, int64_t partitionSet);
-    coev::awaitable<int> cachedLeader(const std::string &topic, int32_t partitionID, std::shared_ptr<Broker> &broker_, int32_t &leaderEpoch);
-    std::shared_ptr<Broker> cachedCoordinator(const std::string &consumerGroup);
-    std::shared_ptr<Broker> cachedTransactionCoordinator(const std::string &transactionID);
-    std::shared_ptr<Broker> cachedController();
+    coev::awaitable<int> _GetPartitions(const std::string &topic, int64_t pt, std::vector<int32_t> &partitions);
+    coev::awaitable<int> _GetReplicas(const std::string &topic, int32_t partitionID, std::shared_ptr<PartitionMetadata> &out);
+    coev::awaitable<int> _GetOffset(const std::string &topic, int32_t partitionID, int64_t timestamp, int64_t &offset);
+    std::shared_ptr<PartitionMetadata> _CachedMetadata(const std::string &topic, int32_t partitionID);
+    std::vector<int32_t> _CachedPartitions(const std::string &topic, int64_t partitionSet);
+    std::vector<int32_t> _SetPartitionCache(const std::string &topic, int64_t partitionSet);
+    coev::awaitable<int> _CachedLeader(const std::string &topic, int32_t partitionID, std::shared_ptr<Broker> &broker_, int32_t &leaderEpoch);
+    std::shared_ptr<Broker> _CachedCoordinator(const std::string &consumerGroup);
+    std::shared_ptr<Broker> _CachedTransactionCoordinator(const std::string &transactionID);
+    std::shared_ptr<Broker> _CachedController();
 
     std::atomic<int64_t> m_update_metadata_ms{0};
     std::shared_ptr<Config> m_conf;

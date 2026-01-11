@@ -1,5 +1,5 @@
 
-#include <coev/utils/compress/compressZ.h>
+#include <coev/utils/compress/coev_compress.h>
 #include <string.h>
 #include <iostream>
 int lz4_text()

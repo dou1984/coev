@@ -30,7 +30,7 @@ endif()
 set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
 set(BUILD_SHARED_LIBS OFF)
 
-project(compressZ)
+project(coev_compress)
 
 aux_source_directory(. SRC_DIR)
 
@@ -50,7 +50,7 @@ include_directories(${GTEST_INCLUDE_DIRS})
 if(BUILD_TESTS)
     # 添加测试程序
     add_executable(${PROJECT_NAME}_test test_compress.cpp)
-    target_link_libraries(${PROJECT_NAME}_test GTest::GTest GTest::Main compressZ)
+    target_link_libraries(${PROJECT_NAME}_test GTest::GTest GTest::Main coev_compress)
 
     enable_testing()
     # 注册测试

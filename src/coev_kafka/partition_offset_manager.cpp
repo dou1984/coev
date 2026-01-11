@@ -23,31 +23,31 @@ coev::co_channel<std::shared_ptr<ConsumerError>> &PartitionOffsetManager::Errors
 void PartitionOffsetManager::MarkOffset(int64_t offset, const std::string &metadata)
 {
     std::unique_lock<std::mutex> l(m_lock);
-    if (offset > this->m_offset)
+    if (offset > m_offset)
     {
-        this->m_offset = offset;
-        this->m_metadata = metadata;
-        this->m_dirty = true;
+        m_offset = offset;
+        m_metadata = metadata;
+        m_dirty = true;
     }
 }
 
 void PartitionOffsetManager::ResetOffset(int64_t offset, const std::string &metadata)
 {
     std::unique_lock<std::mutex> l(m_lock);
-    if (offset <= this->m_offset)
+    if (offset <= m_offset)
     {
-        this->m_offset = offset;
-        this->m_metadata = metadata;
-        this->m_dirty = true;
+        m_offset = offset;
+        m_metadata = metadata;
+        m_dirty = true;
     }
 }
 
 void PartitionOffsetManager::UpdateCommitted(int64_t offset, const std::string &metadata)
 {
     std::unique_lock<std::mutex> l(m_lock);
-    if (this->m_offset == offset && this->m_metadata == metadata)
+    if (m_offset == offset && m_metadata == metadata)
     {
-        this->m_dirty = false;
+        m_dirty = false;
     }
 }
 

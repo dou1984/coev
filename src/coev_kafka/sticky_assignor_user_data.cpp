@@ -50,7 +50,7 @@ int StickyAssignorUserDataV0::decode(PDecoder &pd)
         }
         m_topics[topic] = std::move(partitions);
     }
-    m_topic_partitions = populateTopicPartitions(m_topics);
+    m_topic_partitions = PopulateTopicPartitions(m_topics);
     return 0;
 }
 
@@ -121,7 +121,7 @@ int StickyAssignorUserDataV1::decode(PDecoder &pd)
     {
         return e;
     }
-    m_topic_partitions = populateTopicPartitions(m_topics);
+    m_topic_partitions = PopulateTopicPartitions(m_topics);
     return 0;
 }
 
@@ -140,7 +140,7 @@ int StickyAssignorUserDataV1::generation()
     return static_cast<int>(m_generation);
 }
 
-std::vector<TopicPartitionAssignment> populateTopicPartitions(const std::unordered_map<std::string, std::vector<int32_t>> &topics)
+std::vector<TopicPartitionAssignment> PopulateTopicPartitions(const std::map<std::string, std::vector<int32_t>> &topics)
 {
     std::vector<TopicPartitionAssignment> topicPartitions;
     for (auto &kv : topics)

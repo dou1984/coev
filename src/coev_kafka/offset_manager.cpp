@@ -258,7 +258,7 @@ coev::awaitable<void> OffsetManager::flushToBroker()
         co_return;
     }
 
-    broker->UandleThrottledResponse(resp);
+    broker->HandleThrottledResponse(resp);
     handleResponse(broker, req, resp);
 }
 

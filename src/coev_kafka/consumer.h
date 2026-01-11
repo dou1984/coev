@@ -8,6 +8,7 @@
 #include <mutex>
 #include <chrono>
 #include <cstdint>
+#include "config.h"
 #include "client.h"
 #include "broker.h"
 #include "record.h"
@@ -66,4 +67,4 @@ struct Consumer : IConsumer, std::enable_shared_from_this<Consumer>
 
 int NewConsumer(const std::shared_ptr<Client> &client, std::shared_ptr<IConsumer> &consumer_);
 int NewConsumerFromClient(const std::shared_ptr<Client> &client, std::shared_ptr<IConsumer> &consumer_);
-coev::awaitable<int> NewConsumer(const std::vector<std::string> &addrs, const std::shared_ptr<Config> &config, std::shared_ptr<IConsumer> &consumer_);
+coev::awaitable<int> NewConsumer(const std::vector<std::string> &addrs, const std::shared_ptr<Config> &config, std::shared_ptr<Consumer> &consumer_);

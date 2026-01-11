@@ -10,21 +10,30 @@ struct Connect : io_connect
     using io_connect::connect;
     using io_connect::io_connect;
 
-    coev::awaitable<int> ReadFull(std::string &buf, size_t &n)
+    awaitable<int> ReadFull(std::string &buf, size_t n)
     {
-        n = co_await recv((char *)buf.data(), buf.size());
-        if (n < 0)
+        assert(buf.size() == n);
+        auto res = n;
+        while (res > 0)
         {
-            co_return errno;
+            auto r = co_await recv(buf.data() + (n - res), res);
+            if (r <= 0)
+            {
+                LOG_ERR("ReadFull failed %d %s\n", errno, strerror(errno));
+                co_return INVALID;
+            }
+
+            res -= r;
         }
+
         co_return 0;
     }
-    coev::awaitable<int> Write(const std::string &buf, size_t &n)
+    awaitable<int> Write(const std::string &buf, size_t n)
     {
-        n = co_await send((const char *)buf.data(), buf.size());
-        if (n < 0)
+        auto r = co_await send(buf.data(), n);
+        if (r <= 0)
         {
-            co_return errno;
+            co_return INVALID;
         }
         co_return 0;
     }

@@ -1,6 +1,7 @@
 #include <coev/coev.h>
-#include <coev_kafka/KafkaCli.h>
-#include <coev_kafka/KafkaResult.h>
+#include <coev_kafka/consumer.h>
+#include <coev_kafka/message.h>
+#include <coev_kafka/partition_consumer.h>
 
 using namespace coev;
 
@@ -25,28 +26,52 @@ int main(int argc, char **argv)
         .start(
             []() -> awaitable<void>
             {
-                KafkaCli cli;
-                auto fd = co_await cli.connect(host.c_str(), port);
-                if (fd == INVALID)
+                std::shared_ptr<Config> conf = std::make_shared<Config>();
+
+                std::shared_ptr<Consumer> consumer = std::make_shared<Consumer>();
+
+                std::vector<std::string> addrs = {host + ":" + std::to_string(port)};
+
+                auto err = co_await NewConsumer(addrs, conf, consumer);
+
+                if (err)
                 {
+                    std::cout << "NewConsumer error: " << err << std::endl;
                     co_return;
-                }                
+                }
 
-                co_await cli.fetch_api_versions();
+                std::vector<int32_t> partitions;
 
-                auto config = std::make_shared<kafka_config_t>();
-                config->set_compress_type(Kafka_NoCompress);
-                config->set_client_id("coev");
+                err = co_await consumer->Partitions(topic, partitions);
+                if (err)
+                {
+                    std::cout << "Partitions error: " << err << std::endl;
+                    co_return;
+                }
 
-                auto record = std::make_shared<kafka_record_t>();
+                co_task task;
+                for (auto partition : partitions)
+                {
+                    task << [consumer, partition]() -> awaitable<void>
+                    {
+                        std::shared_ptr<PartitionConsumer> partition_consumer;
+                        auto err = co_await consumer->ConsumePartition(topic, partition, OffsetNewest, partition_consumer);
+                        if (err)
+                        {
+                            std::cout << "ConsumePartition error: " << err << std::endl;
+                            co_return;
+                        }
+                        while (true)
+                        {
+                            auto msg = co_await partition_consumer->Messages();
 
-                record->set_key("hello");
-                record->set_value("world");
-                record->add_header_pair("hi", "everyone");
-
-                co_await cli.produce_message(topic, -1, record);
-
-                co_await sleep_for(1000);
+                            if (msg)
+                            {
+                                LOG_DBG("%s %s \n", msg->Key().c_str(), msg->Value().c_str());
+                            }
+                        }
+                    }();
+                }
             })
         .join();
 

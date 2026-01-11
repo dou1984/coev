@@ -54,14 +54,15 @@ struct realEncoder : PEncoder
 
 struct realFlexibleEncoder : realEncoder
 {
-
-    std::shared_ptr<realEncoder> m_base;
-
+    using base = realEncoder;
     realFlexibleEncoder(const realEncoder &re)
     {
-        m_base = std::make_shared<realEncoder>(re);
+        *this = re;
     }
-    realFlexibleEncoder(std::shared_ptr<realEncoder> re) : m_base(std::move(re)) {}
+    realFlexibleEncoder(std::shared_ptr<realEncoder> re)
+    {
+        *this = *re;
+    }
 
     int putArrayLength(int in);
     int putBytes(const std::string &in);
@@ -71,24 +72,5 @@ struct realFlexibleEncoder : realEncoder
     int putInt32Array(const std::vector<int32_t> &in);
     int putNullableInt32Array(const std::vector<int32_t> &in);
     void putEmptyTaggedFieldArray();
-
-    // Delegate others
-    void putInt8(int8_t in);
-    void putInt16(int16_t in);
-    void putInt32(int32_t in);
-    void putInt64(int64_t in);
-    void putVariant(int64_t in);
-    void putUVarint(uint64_t in);
-    void putFloat64(double in);
-    void putBool(bool in);
-    void putKError(KError in);
-    void putDurationMs(std::chrono::milliseconds ms);
-    int putRawBytes(const std::string &in);
-    int putVariantBytes(const std::string &in);
-    int putInt64Array(const std::vector<int64_t> &in);
-    int offset() const;
-    void push(std::shared_ptr<pushEncoder> in);
-    int pop();
-    std::shared_ptr<metrics::Registry> metricRegistry();
 };
 int encodeVariant(uint8_t *buf, int64_t x);

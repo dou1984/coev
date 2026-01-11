@@ -2,7 +2,7 @@
 #include <arpa/inet.h>
 #include "block.h"
 
-namespace coev::compress::details
+namespace coev::details
 {
 
     void block::set_size(uint32_t val)

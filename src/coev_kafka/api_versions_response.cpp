@@ -35,9 +35,6 @@ int ApiVersionsResponseKey::decode(PDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-// --------------------------
-// ApiVersionsResponse
-// --------------------------
 
 void ApiVersionsResponse::set_version(int16_t v)
 {
@@ -143,7 +140,7 @@ int16_t ApiVersionsResponse::version() const
 
 int16_t ApiVersionsResponse::headerVersion() const
 {
-    // Per KIP-511, ApiVersionsResponse always uses v0 response header
+
     return 0;
 }
 

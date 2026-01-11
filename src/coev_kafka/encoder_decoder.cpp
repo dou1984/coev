@@ -15,7 +15,7 @@ int encode(std::shared_ptr<IEncoder> e, std::string &out, std::shared_ptr<metric
     }
 
     auto prepEnc = std::make_shared<prepEncoder>();
-    if (!prepareFlexibleEncoder(prepEnc.get(), e))
+    if (prepareFlexibleEncoder(prepEnc.get(), e) != ErrNoError)
     {
         throw PacketEncodingError{"encoding failed"};
     }
@@ -28,7 +28,7 @@ int encode(std::shared_ptr<IEncoder> e, std::string &out, std::shared_ptr<metric
     auto realEnc = std::make_shared<realEncoder>();
     realEnc->m_raw.resize(prepEnc->m_length);
     realEnc->m_metric_registry = metricRegistry;
-    if (!prepareFlexibleEncoder(realEnc.get(), e))
+    if (prepareFlexibleEncoder(realEnc.get(), e) != ErrNoError)
     {
         throw PacketEncodingError{"encoding failed"};
     }
@@ -47,7 +47,7 @@ int decode(const std::string &buf, std::shared_ptr<IDecoder> in, std::shared_ptr
     helper.m_raw = buf;
     helper.m_metric_registry = metricRegistry;
 
-    if (!in->decode(helper))
+    if (in->decode(helper) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -60,11 +60,11 @@ int decode(const std::string &buf, std::shared_ptr<IDecoder> in, std::shared_ptr
     return ErrNoError;
 }
 
-bool versionedDecode(const std::string &buf, const std::shared_ptr<VDecoder> &in, int16_t version, std::shared_ptr<metrics::Registry> &metricRegistry)
+int versionedDecode(const std::string &buf, const std::shared_ptr<VDecoder> &in, int16_t version, std::shared_ptr<metrics::Registry> &metricRegistry)
 {
     if (buf.empty())
     {
-        return true;
+        return ErrNoError;
     }
 
     auto baseHelper = std::make_shared<realDecoder>();
@@ -72,9 +72,9 @@ bool versionedDecode(const std::string &buf, const std::shared_ptr<VDecoder> &in
     baseHelper->m_metric_registry = metricRegistry;
 
     auto err = prepareFlexibleDecoder(baseHelper.get(), in, version);
-    if (err)
+    if (err != ErrNoError)
     {
-        return false;
+        return err;
     }
 
     int remaining = baseHelper->remaining();
@@ -83,7 +83,7 @@ bool versionedDecode(const std::string &buf, const std::shared_ptr<VDecoder> &in
         throw PacketDecodingError{"invalid length len=" + std::to_string(buf.size()) + " remaining=" + std::to_string(remaining)};
     }
 
-    return true;
+    return ErrNoError;
 }
 
 int prepareFlexibleDecoder(PDecoder *pd, std::shared_ptr<VDecoder> req, int16_t version)

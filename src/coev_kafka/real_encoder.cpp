@@ -215,20 +215,20 @@ int realEncoder::pop()
 
 int realFlexibleEncoder::putArrayLength(int in)
 {
-    m_base->putUVarint(static_cast<uint64_t>(in + 1));
+    base::putUVarint(static_cast<uint64_t>(in + 1));
     return 0;
 }
 
 int realFlexibleEncoder::putBytes(const std::string &in)
 {
-    m_base->putUVarint(static_cast<uint64_t>(in.size() + 1));
-    return m_base->putRawBytes(in);
+    base::putUVarint(static_cast<uint64_t>(in.size() + 1));
+    return base::putRawBytes(in);
 }
 
 int realFlexibleEncoder::putString(const std::string &in)
 {
     putArrayLength(static_cast<int>(in.size()));
-    m_base->putRawBytes(std::string(in.begin(), in.end()));
+    base::putRawBytes(std::string(in.begin(), in.end()));
     return 0;
 }
 
@@ -236,7 +236,7 @@ int realFlexibleEncoder::putNullableString(const std::string &in)
 {
     if (in.empty())
     {
-        m_base->putInt8(0);
+        base::putInt8(0);
         return 0;
     }
     return putString(in);
@@ -254,10 +254,10 @@ int realFlexibleEncoder::putStringArray(const std::vector<std::string> &in)
 
 int realFlexibleEncoder::putInt32Array(const std::vector<int32_t> &in)
 {
-    m_base->putUVarint(static_cast<uint64_t>(in.size()) + 1);
+    base::putUVarint(static_cast<uint64_t>(in.size()) + 1);
     for (int32_t v : in)
     {
-        m_base->putInt32(v);
+        base::putInt32(v);
     }
     return 0;
 }
@@ -266,18 +266,18 @@ int realFlexibleEncoder::putNullableInt32Array(const std::vector<int32_t> &in)
 {
     if (in.empty())
     {
-        m_base->putUVarint(0);
+        base::putUVarint(0);
         return 0;
     }
-    m_base->putUVarint(static_cast<uint64_t>(in.size()) + 1);
+    base::putUVarint(static_cast<uint64_t>(in.size()) + 1);
     for (int32_t v : in)
     {
-        m_base->putInt32(v);
+        base::putInt32(v);
     }
     return 0;
 }
 
 void realFlexibleEncoder::putEmptyTaggedFieldArray()
 {
-    m_base->putUVarint(0);
+    base::putUVarint(0);
 }

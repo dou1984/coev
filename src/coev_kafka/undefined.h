@@ -54,7 +54,7 @@ struct Hash32
 
 namespace fnv
 {
-    std::shared_ptr<Hash32> New32a()
+    inline std::shared_ptr<Hash32> New32a()
     {
         return std::make_shared<Hash32>();
     }
@@ -76,11 +76,11 @@ struct Ticket
 };
 namespace net
 {
-    std::string JoinHostPort(const std::string host, int32_t port)
+    inline std::string JoinHostPort(const std::string host, int32_t port)
     {
         return host + ":" + std::to_string(port);
     }
-    std::pair<std::string, int32_t> SplitHostPort(const std::string &addr)
+    inline std::pair<std::string, int32_t> SplitHostPort(const std::string &addr)
     {
         auto pos = addr.find(":");
         if (pos == std::string::npos)

@@ -5,11 +5,9 @@
 #include "consumer.h"
 #include "consumer_error.h"
 
-
-struct PartitionOffsetManager 
+struct PartitionOffsetManager
 {
     PartitionOffsetManager() = default;
-
     PartitionOffsetManager(std::shared_ptr<OffsetManager> parent, const std::string &topic, int32_t partition,
                            int32_t leaderEpoch, size_t channelBufferSize, int64_t offset, const std::string &metadata);
 

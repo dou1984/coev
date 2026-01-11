@@ -2,11 +2,11 @@
 #include <lz4frame.h>
 #include <stdexcept>
 #include <coev/invalid.h>
-#include "lz4Z.h"
+#include "coev_lz4.h"
 #include "block.h"
-namespace coev::compress::lz4Z
+namespace coev::lz4
 {
-    
+
     int Compress(std::string &compressed, const char *buf, size_t buf_size)
     {
 
@@ -88,5 +88,5 @@ namespace coev::compress::lz4Z
         LZ4F_freeDecompressionContext(ctx);
         return 0;
     }
-  
+
 }

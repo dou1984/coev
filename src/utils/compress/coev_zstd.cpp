@@ -1,10 +1,10 @@
 #include <iostream>
 #include <zstd.h>
 #include <coev/invalid.h>
-#include "zstdZ.h"
+#include "coev_zstd.h"
 #include "block.h"
 
-namespace coev::compress::zstdZ
+namespace coev::zstd
 {
     int Compress(std::string &compressed, const char *buf, size_t buf_size)
     {

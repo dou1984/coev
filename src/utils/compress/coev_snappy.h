@@ -1,7 +1,8 @@
 #pragma once
 #include <string>
+#include <cstdint>
 
-namespace coev::compress::zstdZ
+namespace coev::snappy
 {
 
     int Compress(std::string &compressed, const char *buf, size_t buf_size);

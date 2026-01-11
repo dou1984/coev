@@ -1,9 +1,10 @@
+#include <limits>
+#include <stdexcept>
+#include <coev/coev.h>
 #include "version.h"
 #include "produce_response.h"
 #include "packet_decoder.h"
 #include "packet_encoder.h"
-#include <limits>
-#include <stdexcept>
 
 int ProduceResponseBlock::decode(PDecoder &pd, int16_t version)
 {
@@ -49,7 +50,7 @@ int ProduceResponseBlock::encode(PEncoder &pe, int16_t version)
         }
         else if (m_timestamp != std::chrono::system_clock::time_point{})
         {
-            return -1;
+            return INVALID;
         }
         pe.putInt64(timestamp);
     }
@@ -133,7 +134,7 @@ int ProduceResponse::encode(PEncoder &pe)
 
     if (m_version >= 1)
     {
-         pe.putDurationMs(m_throttle_time);
+        pe.putDurationMs(m_throttle_time);
     }
 
     return 0;

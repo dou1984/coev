@@ -5,6 +5,7 @@
 #include "timestamp.h"
 #include "compress.h"
 #include "real_decoder.h"
+#include "../utils/compress/coev_compress.h"
 #include "undefined.h"
 #include "crc32_field.h"
 #include "crc32.h"
@@ -44,14 +45,49 @@ bool fromString(const std::string &s, CompressionCodec &out)
     return false;
 }
 
-std::string compress(CompressionCodec /*codec*/, int /*level*/, const std::string &data)
+std::string compress(CompressionCodec codec, int level, const std::string &data)
 {
-    return data; // dummy
+    std::string out;
+    switch (codec)
+    {
+    case GZIP:
+        coev::gzip::Compress(out, data.data(), data.size());
+        return out;
+    case Snappy:
+        coev::snappy::Compress(out, data.data(), data.size());
+        return out;
+    case LZ4:
+        coev::lz4::Compress(out, data.data(), data.size());
+        return out;
+    case ZSTD:
+        coev::zstd::Compress(out, data.data(), data.size());
+        return out;
+    case None:
+        data;
+    }
+    return data;
 }
 
-std::string decompress(CompressionCodec /*codec*/, const std::string &data)
+std::string decompress(CompressionCodec codec, const std::string &data)
 {
-    return data; // dummy
+    std::string out;
+    switch (codec)
+    {
+    case GZIP:
+        coev::gzip::Decompress(out, data.data(), data.size());
+        return out;
+    case Snappy:
+        coev::snappy::Decompress(out, data.data(), data.size());
+        return out;
+    case LZ4:
+        coev::lz4::Decompress(out, data.data(), data.size());
+        return out;
+    case ZSTD:
+        coev::zstd::Decompress(out, data.data(), data.size());
+        return out;
+    case None:
+        return data;
+    }
 }
 Message::Message(const std::string &key, const std::string &value, bool logAppendTime, Timestamp msgTimestamp, int8_t version)
     : m_key(key), m_value(value), m_log_append_time(logAppendTime), m_timestamp(msgTimestamp), m_version(version)
@@ -159,7 +195,6 @@ int Message::decode(PDecoder &pd)
         goto pop_and_return;
 
     m_compressed_size = static_cast<int>(m_value.size());
-
     if (!m_value.empty() && m_codec != CompressionCodec::None)
     {
         auto decompressed = decompress(m_codec, m_value);

@@ -5,7 +5,7 @@
 #include <lz4frame.h>
 #include <coev/coev.h>
 
-namespace coev::compress::lz4Z
+namespace coev::lz4
 {
     int Decompress(std::string &decompressed, const char *buf, size_t buf_size);
     int Compress(std::string &compressed, const char *buf, size_t buf_size);

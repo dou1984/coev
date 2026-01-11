@@ -25,10 +25,10 @@ int8_t getHeaderLength(int16_t headerVersion)
     }
 }
 
-Broker::Broker(const std::string &addr) : m_id(-1), m_addr(addr), m_opened(false), m_correlation_id(0), m_client_session_reauthentication_time(0)
+Broker::Broker(const std::string &addr) : m_id(-1), m_addr(addr), m_opened(false), m_correlation_id(0), m_session_reauthentication_time(0)
 {
 }
-Broker::Broker(int id, const std::string &addr) : m_id(id), m_addr(addr), m_opened(false), m_correlation_id(0), m_client_session_reauthentication_time(0)
+Broker::Broker(int id, const std::string &addr) : m_id(id), m_addr(addr), m_opened(false), m_correlation_id(0), m_session_reauthentication_time(0)
 {
 }
 coev::awaitable<int> Broker::Open(std::shared_ptr<Config> conf)
@@ -65,21 +65,13 @@ coev::awaitable<int> Broker::Open(std::shared_ptr<Config> conf)
         }
 
         m_incoming_byte_rate = metrics::GetOrRegisterMeter("incoming-byte-rate", m_metric_registry);
-
         m_request_rate = metrics::GetOrRegisterMeter("request-rate", m_metric_registry);
-
         m_fetch_rate = metrics::GetOrRegisterMeter("consumer-fetch-rate", m_metric_registry);
-
         m_request_size = metrics::GetOrRegisterHistogram("request-size", m_metric_registry);
-
         m_request_latency = metrics::GetOrRegisterHistogram("request-latency-in-ms", m_metric_registry);
-
         m_outgoing_byte_rate = metrics::GetOrRegisterMeter("outgoing-byte-rate", m_metric_registry);
-
         m_response_rate = metrics::GetOrRegisterMeter("response-rate", m_metric_registry);
-
         m_response_size = metrics::GetOrRegisterHistogram("response-size", m_metric_registry);
-
         m_requests_in_flight = metrics::GetOrRegisterCounter("requests-in-flight", m_metric_registry);
 
         if (m_id >= 0)
@@ -113,7 +105,6 @@ coev::awaitable<int> Broker::Open(std::shared_ptr<Config> conf)
             }
             if (apiVersionsResponse)
             {
-
                 m_broker_api_versions.clear();
                 for (auto &key : apiVersionsResponse->m_api_keys)
                 {
@@ -125,7 +116,6 @@ coev::awaitable<int> Broker::Open(std::shared_ptr<Config> conf)
         bool useSaslV0 = m_conf->Net.SASL.Version == 0;
         if (m_conf->Net.SASL.Enable && useSaslV0)
         {
-
             err = co_await AuthenticateViaSASLv0();
             if (err)
             {
@@ -135,7 +125,7 @@ coev::awaitable<int> Broker::Open(std::shared_ptr<Config> conf)
             }
         }
 
-        m_task << SesponseReceiver();
+        m_task << ResponseReceiver();
         if (m_conf->Net.SASL.Enable && !useSaslV0)
         {
             err = co_await AuthenticateViaSASLv1();
@@ -267,7 +257,7 @@ coev::awaitable<int> Broker::AsyncProduce(std::shared_ptr<ProduceRequest> reques
                 return;
             }
 
-            UandleThrottledResponse(response);
+            HandleThrottledResponse(response);
             f(response, ErrNoError);
         };
     }
@@ -278,7 +268,8 @@ coev::awaitable<int> Broker::Produce(std::shared_ptr<ProduceRequest> request, st
 {
     if (request->m_acks == RequiredAcks::NoResponse)
     {
-        co_return co_await SendAndReceive(request, nullptr);
+        response = nullptr;
+        co_return co_await SendAndReceive(request, response);
     }
     else
     {
@@ -531,45 +522,42 @@ coev::awaitable<int> Broker::AlterClientQuotas(std::shared_ptr<AlterClientQuotas
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::ReadFull(std::string &buf, size_t &n)
+coev::awaitable<int> Broker::ReadFull(std::string &buf, size_t n)
 {
     auto deadline = std::chrono::system_clock::now() + m_conf->Net.ReadTimeout;
-
-    co_return 0;
+    return m_conn.ReadFull(buf, n);
 }
 
-coev::awaitable<int> Broker::Write(const std::string &buf, size_t &n)
+coev::awaitable<int> Broker::Write(const std::string &buf, size_t n)
 {
     auto now = std::chrono::system_clock::now();
-    // 设置写入超时逻辑
-    // 写入数据
-    co_return 0;
+    return m_conn.Write(buf, n);
 }
 
 coev::awaitable<int> Broker::Send(std::shared_ptr<protocol_body> req, std::shared_ptr<protocol_body> res, std::shared_ptr<ResponsePromise> &promise)
 {
     if (res)
     {
-        promise = makeResponsePromise(res);
+        promise = MakeResponsePromise(res);
     }
     return SendWithPromise(req, promise);
 }
 
-std::shared_ptr<ResponsePromise> Broker::makeResponsePromise(std::shared_ptr<protocol_body> res)
+std::shared_ptr<ResponsePromise> Broker::MakeResponsePromise(std::shared_ptr<protocol_body> res)
 {
     auto promise = std::make_shared<ResponsePromise>();
     promise->m_response = res;
     return promise;
 }
 
-coev::awaitable<int> Broker::SendWithPromise(std::shared_ptr<protocol_body> rb, std::shared_ptr<ResponsePromise> promise)
+coev::awaitable<int> Broker::SendWithPromise(std::shared_ptr<protocol_body> rb, std::shared_ptr<ResponsePromise> &promise)
 {
     if (!m_conn)
     {
         co_return ErrNotConnected;
     }
     int err = 0;
-    if (m_client_session_reauthentication_time > 0 && CurrentUnixMilli() > m_client_session_reauthentication_time)
+    if (m_session_reauthentication_time > 0 && CurrentUnixMilli() > m_session_reauthentication_time)
     {
         err = co_await AuthenticateViaSASLv1();
         if (err)
@@ -581,7 +569,7 @@ coev::awaitable<int> Broker::SendWithPromise(std::shared_ptr<protocol_body> rb, 
     co_return err;
 }
 
-coev::awaitable<int> Broker::SendInternal(std::shared_ptr<protocol_body> rb, std::shared_ptr<ResponsePromise> promise)
+coev::awaitable<int> Broker::SendInternal(std::shared_ptr<protocol_body> rb, std::shared_ptr<ResponsePromise> &promise)
 {
     restrictApiVersion(rb, m_broker_api_versions);
     if (promise && promise->m_response)
@@ -633,7 +621,7 @@ coev::awaitable<int> Broker::SendInternal(std::shared_ptr<protocol_body> rb, std
     co_return 0;
 }
 
-coev::awaitable<int> HandleResponsePromise(std::shared_ptr<protocol_body> req, std::shared_ptr<protocol_body> res, std::shared_ptr<ResponsePromise> promise, std::shared_ptr<metrics::Registry> m_metric_registry)
+coev::awaitable<int> HandleResponsePromise(std::shared_ptr<protocol_body> req, std::shared_ptr<protocol_body> res, std::shared_ptr<ResponsePromise> &promise, std::shared_ptr<metrics::Registry> m_metric_registry)
 {
     auto packets = co_await promise->m_packets.get();
     if (packets.empty())
@@ -721,7 +709,7 @@ int Broker::encode(PEncoder &pe, int16_t version)
     return 0;
 }
 
-coev::awaitable<int> Broker::SesponseReceiver()
+coev::awaitable<int> Broker::ResponseReceiver()
 {
     int dead;
     while (true)
@@ -894,7 +882,7 @@ coev::awaitable<int> Broker::DefaultAuthSendReceiver(const std::string &authByte
 {
     auto authenticateRequest = CreateSaslAuthenticateRequest(authBytes);
     authenticateResponse = std::make_shared<SaslAuthenticateResponse>();
-    auto prom = makeResponsePromise(authenticateResponse);
+    auto prom = MakeResponsePromise(authenticateResponse);
     auto err = co_await SendInternal(authenticateRequest, prom);
     if (err)
     {
@@ -910,7 +898,7 @@ coev::awaitable<int> Broker::DefaultAuthSendReceiver(const std::string &authByte
         co_return authenticateResponse->m_err;
     }
 
-    computeSaslSessionLifetime(authenticateResponse);
+    ComputeSaslSessionLifetime(authenticateResponse);
     co_return 0;
 };
 coev::awaitable<int> Broker::AuthenticateViaSASLv1()
@@ -922,7 +910,7 @@ coev::awaitable<int> Broker::AuthenticateViaSASLv1()
         handshakeRequest->m_mechanism = m_conf->Net.SASL.Mechanism;
         handshakeRequest->m_version = m_conf->Net.SASL.Version;
         auto handshakeResponse = std::make_shared<SaslHandshakeResponse>();
-        auto prom = makeResponsePromise(handshakeResponse);
+        auto prom = MakeResponsePromise(handshakeResponse);
         int err = co_await SendInternal(handshakeRequest, prom);
         if (err)
         {
@@ -949,7 +937,7 @@ coev::awaitable<int> Broker::AuthenticateViaSASLv1()
             m_kerberos_authenticator->m_new_kerberos_client_func = NewKerberosClient;
         }
         co_return co_await m_kerberos_authenticator->AuthorizeV2(shared_from_this(), [this](auto req, auto res) -> auto
-                                                              { return DefaultAuthSendReceiver(req, res); });
+                                                                 { return DefaultAuthSendReceiver(req, res); });
     }
     else if (mechanism == "OAUTHBEARER")
     {
@@ -1341,7 +1329,7 @@ std::string Broker::mapToString(const std::map<std::string, std::string> &extens
     return result;
 }
 
-void Broker::computeSaslSessionLifetime(std::shared_ptr<SaslAuthenticateResponse> res)
+void Broker::ComputeSaslSessionLifetime(std::shared_ptr<SaslAuthenticateResponse> res)
 {
     if (res->m_session_lifetime_ms > 0)
     {
@@ -1357,11 +1345,11 @@ void Broker::computeSaslSessionLifetime(std::shared_ptr<SaslAuthenticateResponse
         double pctToUse = pctWindowFactorToTakeNetworkLatencyAndClockDriftIntoAccount + dis(gen);
         int64_t sessionLifetimeMsToUse = static_cast<int64_t>(positiveSessionLifetimeMs * pctToUse);
 
-        m_client_session_reauthentication_time = authenticationEndMs + sessionLifetimeMsToUse;
+        m_session_reauthentication_time = authenticationEndMs + sessionLifetimeMsToUse;
     }
     else
     {
-        m_client_session_reauthentication_time = 0;
+        m_session_reauthentication_time = 0;
     }
 }
 
@@ -1431,7 +1419,6 @@ void Broker::UpdateOutgoingCommunicationMetrics(int bytes)
     m_request_size->Update(bytes);
     if (m_broker_request_size)
     {
-
         m_broker_request_size->Update(bytes);
     }
 }
@@ -1456,7 +1443,7 @@ void Broker::UpdateProtocolMetrics(std::shared_ptr<protocol_body> rb)
     _m_broker_protocol_requests_rate->Mark(1);
 }
 
-void Broker::UandleThrottledResponse(std::shared_ptr<protocol_body> resp)
+void Broker::HandleThrottledResponse(std::shared_ptr<protocol_body> resp)
 {
     auto throttledResponse = std::dynamic_pointer_cast<throttle_support>(resp);
     if (!throttledResponse)
@@ -1561,7 +1548,7 @@ std::shared_ptr<tls::Config> ValidServerNameTLS(const std::string &addr, std::sh
     return cfg;
 }
 
-void Broker::safeAsyncClose()
+void Broker::SafeAsyncClose()
 {
     auto b = shared_from_this();
     m_task << [b]() -> coev::awaitable<void>

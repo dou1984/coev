@@ -47,4 +47,4 @@ struct StickyAssignorUserDataV1 : StickyAssignorUserData
     int generation();
 };
 
-std::vector<TopicPartitionAssignment> populateTopicPartitions(const std::map<std::string, std::vector<int32_t>> &topics);
+std::vector<TopicPartitionAssignment> PopulateTopicPartitions(const std::map<std::string, std::vector<int32_t>> &topics);

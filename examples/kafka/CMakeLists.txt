@@ -4,12 +4,12 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 link_directories(${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
-IF(NOT CMAKE_BUILD_TYPE)
-    SET(CMAKE_BUILD_TYPE Debug)
-ENDIF()
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug)
+endif()
 project(co_kafka)
 
 aux_source_directory(./ SRC_DIR)
 
 add_executable(${PROJECT_NAME} ${SRC_DIR})
-target_link_libraries(${PROJECT_NAME} coev_kafka coev_ssl compressZ ssl coev crypto ev pthread)
+target_link_libraries(${PROJECT_NAME} coev_kafka coev_compress coev_ssl ssl coev crypto ev pthread)

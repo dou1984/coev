@@ -1,6 +1,11 @@
 #include "compress.h"
+#include "../utils/compress/coev_compress.h"
 
-// std::vector<int8_t> extractor(std::vector<int8_t> &r)
-// {
-//     return r
-// }
+int Compress(CompressionCodec cc, int level, const std::string &data, std::string &out)
+{
+   
+}
+int Decompress(CompressionCodec cc, const std::string &data, std::string &out)
+{
+   
+}

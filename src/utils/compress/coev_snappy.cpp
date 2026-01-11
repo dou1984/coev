@@ -4,10 +4,10 @@
 #include <snappy.h>
 #include <snappy-c.h>
 #include <coev/invalid.h>
-#include "snappyZ.h"
+#include "coev_snappy.h"
 #include "block.h"
 
-namespace coev::compress::snappyZ
+namespace coev::snappy
 {
 
     int Compress(std::string &compressed, const char *buf, size_t buf_size)
@@ -16,7 +16,7 @@ namespace coev::compress::snappyZ
         {
             return INVALID;
         }
-        return snappy::Compress(buf, buf_size, &compressed);
+        return ::snappy::Compress(buf, buf_size, &compressed);
     }
     int Decompress(std::string &decompressed, const char *buf, size_t buf_size)
     {
@@ -24,7 +24,7 @@ namespace coev::compress::snappyZ
         {
             return INVALID;
         }
-        return snappy::Uncompress(buf, buf_size, &decompressed);
+        return ::snappy::Uncompress(buf, buf_size, &decompressed);
     }
 
 }
