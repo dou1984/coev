@@ -72,7 +72,7 @@ int16_t DescribeUserScramCredentialsRequest::version() const
     return m_version;
 }
 
-int16_t DescribeUserScramCredentialsRequest::headerVersion() const
+int16_t DescribeUserScramCredentialsRequest::header_version() const
 {
     return 2;
 }

@@ -81,7 +81,7 @@ int16_t DescribeLogDirsResponse::version() const
     return m_version;
 }
 
-int16_t DescribeLogDirsResponse::headerVersion() const
+int16_t DescribeLogDirsResponse::header_version() const
 {
     if (m_version >= 2)
     {
@@ -122,7 +122,7 @@ KafkaVersion DescribeLogDirsResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds DescribeLogDirsResponse::throttleTime() const
+std::chrono::milliseconds DescribeLogDirsResponse::throttle_time() const
 {
     return m_throttle_time;
 }

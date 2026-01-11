@@ -71,7 +71,7 @@ int16_t CreatePartitionsResponse::version()const
     return m_version;
 }
 
-int16_t CreatePartitionsResponse::headerVersion()const
+int16_t CreatePartitionsResponse::header_version()const
 {
     return 0;
 }
@@ -94,7 +94,7 @@ KafkaVersion CreatePartitionsResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds CreatePartitionsResponse::throttleTime() const
+std::chrono::milliseconds CreatePartitionsResponse::throttle_time() const
 {
     return m_throttle_time;
 }

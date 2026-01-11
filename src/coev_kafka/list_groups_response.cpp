@@ -136,7 +136,7 @@ int16_t ListGroupsResponse::version() const
     return m_version;
 }
 
-int16_t ListGroupsResponse::headerVersion() const
+int16_t ListGroupsResponse::header_version() const
 {
     return (m_version >= 3) ? 1 : 0;
 }

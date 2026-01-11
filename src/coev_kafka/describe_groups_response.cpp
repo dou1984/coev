@@ -77,7 +77,7 @@ int16_t DescribeGroupsResponse::version() const
     return m_version;
 }
 
-int16_t DescribeGroupsResponse::headerVersion() const
+int16_t DescribeGroupsResponse::header_version() const
 {
     if (m_version >= 5)
     {
@@ -122,7 +122,7 @@ KafkaVersion DescribeGroupsResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds DescribeGroupsResponse::throttleTime() const
+std::chrono::milliseconds DescribeGroupsResponse::throttle_time() const
 {
     return m_throttle_time;
 }

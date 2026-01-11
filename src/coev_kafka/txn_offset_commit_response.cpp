@@ -69,7 +69,7 @@ int16_t TxnOffsetCommitResponse::version() const
     return m_version;
 }
 
-int16_t TxnOffsetCommitResponse::headerVersion() const
+int16_t TxnOffsetCommitResponse::header_version() const
 {
     return 0;
 }
@@ -94,7 +94,7 @@ KafkaVersion TxnOffsetCommitResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds TxnOffsetCommitResponse::throttleTime() const
+std::chrono::milliseconds TxnOffsetCommitResponse::throttle_time() const
 {
     return m_throttle_time;
 }

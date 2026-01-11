@@ -116,7 +116,7 @@ int16_t ElectLeadersRequest::version() const
     return m_version;
 }
 
-int16_t ElectLeadersRequest::headerVersion() const
+int16_t ElectLeadersRequest::header_version() const
 {
     return 2;
 }

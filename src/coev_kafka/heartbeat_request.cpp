@@ -79,7 +79,7 @@ int16_t HeartbeatRequest::version() const
     return m_version;
 }
 
-int16_t HeartbeatRequest::headerVersion() const
+int16_t HeartbeatRequest::header_version() const
 {
     return (m_version >= 4) ? 2 : 1;
 }

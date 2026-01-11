@@ -4,5 +4,5 @@
 
 struct throttle_support
 {
-    virtual std::chrono::milliseconds throttleTime() const = 0;
+    virtual std::chrono::milliseconds throttle_time() const = 0;
 };

@@ -91,7 +91,7 @@ int16_t FindCoordinatorResponse::version() const
     return m_version;
 }
 
-int16_t FindCoordinatorResponse::headerVersion() const
+int16_t FindCoordinatorResponse::header_version() const
 {
     return 0;
 }
@@ -114,7 +114,7 @@ KafkaVersion FindCoordinatorResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds FindCoordinatorResponse::throttleTime() const
+std::chrono::milliseconds FindCoordinatorResponse::throttle_time() const
 {
     return m_throttle_time;
 }

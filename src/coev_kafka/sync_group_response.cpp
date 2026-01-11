@@ -67,7 +67,7 @@ int16_t SyncGroupResponse::version() const
     return m_version;
 }
 
-int16_t SyncGroupResponse::headerVersion() const
+int16_t SyncGroupResponse::header_version() const
 {
     if (m_version >= 4)
     {
@@ -110,7 +110,7 @@ KafkaVersion SyncGroupResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds SyncGroupResponse::throttleTime() const
+std::chrono::milliseconds SyncGroupResponse::throttle_time() const
 {
     return std::chrono::milliseconds(m_throttle_time);
 }

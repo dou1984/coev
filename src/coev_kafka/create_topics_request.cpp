@@ -88,7 +88,7 @@ int16_t CreateTopicsRequest::version() const
     return m_version;
 }
 
-int16_t CreateTopicsRequest::headerVersion() const
+int16_t CreateTopicsRequest::header_version() const
 {
     return m_version >= 5 ? 2 : 1;
 }

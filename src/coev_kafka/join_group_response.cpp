@@ -140,7 +140,7 @@ int16_t JoinGroupResponse::version() const
     return m_version;
 }
 
-int16_t JoinGroupResponse::headerVersion() const
+int16_t JoinGroupResponse::header_version() const
 {
     return (m_version >= 6) ? 1 : 0;
 }
@@ -183,7 +183,7 @@ KafkaVersion JoinGroupResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds JoinGroupResponse::throttleTime() const
+std::chrono::milliseconds JoinGroupResponse::throttle_time() const
 {
     return std::chrono::milliseconds(m_throttle_time);
 }

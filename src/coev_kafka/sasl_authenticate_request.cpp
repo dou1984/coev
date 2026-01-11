@@ -27,7 +27,7 @@ int16_t SaslAuthenticateRequest::version() const
     return m_version;
 }
 
-int16_t SaslAuthenticateRequest::headerVersion() const
+int16_t SaslAuthenticateRequest::header_version() const
 {
     return 1;
 }

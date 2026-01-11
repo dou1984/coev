@@ -51,7 +51,7 @@ int16_t HeartbeatResponse::version() const
     return m_version;
 }
 
-int16_t HeartbeatResponse::headerVersion() const
+int16_t HeartbeatResponse::header_version() const
 {
     // Response header version: 1 for flexible (v4+), otherwise 0
     return (m_version >= 4) ? 1 : 0;
@@ -91,7 +91,7 @@ KafkaVersion HeartbeatResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds HeartbeatResponse::throttleTime() const
+std::chrono::milliseconds HeartbeatResponse::throttle_time() const
 {
     return std::chrono::milliseconds(m_throttle_time);
 }

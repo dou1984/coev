@@ -37,7 +37,7 @@ struct AlterConfigsRequest : protocol_body
 
     int16_t key() const;
     int16_t version() const;
-    int16_t headerVersion() const;
+    int16_t header_version() const;
     bool is_valid_version() const;
     KafkaVersion required_version() const;
 };

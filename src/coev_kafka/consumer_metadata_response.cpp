@@ -87,7 +87,7 @@ int16_t ConsumerMetadataResponse::version() const
     return m_version;
 }
 
-int16_t ConsumerMetadataResponse::headerVersion() const
+int16_t ConsumerMetadataResponse::header_version() const
 {
     return 0;
 }

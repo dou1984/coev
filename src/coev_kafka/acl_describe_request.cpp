@@ -29,7 +29,7 @@ int16_t DescribeAclsRequest::version() const
     return static_cast<int16_t>(m_version);
 }
 
-int16_t DescribeAclsRequest::headerVersion() const
+int16_t DescribeAclsRequest::header_version() const
 {
     return 1;
 }

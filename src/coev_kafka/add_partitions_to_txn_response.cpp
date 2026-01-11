@@ -103,7 +103,7 @@ int16_t AddPartitionsToTxnResponse::version() const
     return m_version;
 }
 
-int16_t AddPartitionsToTxnResponse::headerVersion() const
+int16_t AddPartitionsToTxnResponse::header_version() const
 {
     return 0;
 }
@@ -126,7 +126,7 @@ KafkaVersion AddPartitionsToTxnResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds AddPartitionsToTxnResponse::throttleTime() const
+std::chrono::milliseconds AddPartitionsToTxnResponse::throttle_time() const
 {
     return m_throttle_time;
 }

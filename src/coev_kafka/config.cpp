@@ -4,7 +4,6 @@
 #include <limits>
 #include "config.h"
 #include "version.h"
-#include "compress.h"
 #include "client.h"
 #include "balance_strategy.h"
 #include "undefined.h"
@@ -232,9 +231,6 @@ bool Config::Validate()
         std::cerr << "Consumer.Offsets.Retry.Max must be >= 0" << std::endl;
         return false;
     }
-    // Additional validations would continue here...
-
-    // Validate Consumer Group values
     if (Consumer.Group.Session.Timeout <= std::chrono::milliseconds(2))
     {
         std::cerr << "Consumer.Group.Session.Timeout must be >= 2ms" << std::endl;

@@ -140,7 +140,7 @@ int16_t DeleteRecordsRequest::version() const
     return m_version;
 }
 
-int16_t DeleteRecordsRequest::headerVersion() const
+int16_t DeleteRecordsRequest::header_version() const
 {
     return 1;
 }

@@ -62,7 +62,7 @@ int16_t DeleteAclsResponse::version() const
     return m_version;
 }
 
-int16_t DeleteAclsResponse::headerVersion() const
+int16_t DeleteAclsResponse::header_version() const
 {
     return 0;
 }
@@ -83,7 +83,7 @@ KafkaVersion DeleteAclsResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds DeleteAclsResponse::throttleTime() const
+std::chrono::milliseconds DeleteAclsResponse::throttle_time() const
 {
     return m_throttle_time;
 }

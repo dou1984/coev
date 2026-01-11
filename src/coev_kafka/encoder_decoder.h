@@ -21,7 +21,7 @@ struct IEncoder
 
 struct HEncoder : IEncoder
 {
-    virtual int16_t headerVersion() const = 0;
+    virtual int16_t header_version() const = 0;
 };
 struct VEncoder
 {

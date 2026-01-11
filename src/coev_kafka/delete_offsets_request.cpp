@@ -96,7 +96,7 @@ int16_t DeleteOffsetsRequest::version() const
     return m_version;
 }
 
-int16_t DeleteOffsetsRequest::headerVersion() const
+int16_t DeleteOffsetsRequest::header_version() const
 {
     return 1;
 }

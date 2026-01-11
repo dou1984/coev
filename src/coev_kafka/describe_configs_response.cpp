@@ -66,7 +66,7 @@ int16_t DescribeConfigsResponse::version() const
     return m_version;
 }
 
-int16_t DescribeConfigsResponse::headerVersion() const
+int16_t DescribeConfigsResponse::header_version() const
 {
     return 0;
 }
@@ -91,7 +91,7 @@ KafkaVersion DescribeConfigsResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds DescribeConfigsResponse::throttleTime() const
+std::chrono::milliseconds DescribeConfigsResponse::throttle_time() const
 {
     return m_throttle_time;
 }

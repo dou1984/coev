@@ -36,7 +36,7 @@ int16_t EndTxnResponse::version() const
     return m_version;
 }
 
-int16_t EndTxnResponse::headerVersion() const
+int16_t EndTxnResponse::header_version() const
 {
     return 0;
 }
@@ -59,7 +59,7 @@ KafkaVersion EndTxnResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds EndTxnResponse::throttleTime() const
+std::chrono::milliseconds EndTxnResponse::throttle_time() const
 {
     return m_throttle_time;
 }

@@ -140,7 +140,7 @@ int16_t AlterUserScramCredentialsRequest::version() const
     return m_version;
 }
 
-int16_t AlterUserScramCredentialsRequest::headerVersion() const
+int16_t AlterUserScramCredentialsRequest::header_version() const
 {
     return 2;
 }

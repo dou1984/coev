@@ -56,7 +56,7 @@ int16_t AddOffsetsToTxnRequest::version() const
     return m_version;
 }
 
-int16_t AddOffsetsToTxnRequest::headerVersion() const
+int16_t AddOffsetsToTxnRequest::header_version() const
 {
     return 1;
 }

@@ -102,7 +102,7 @@ int16_t LeaveGroupRequest::version() const
     return m_version;
 }
 
-int16_t LeaveGroupRequest::headerVersion() const
+int16_t LeaveGroupRequest::header_version() const
 {
     return (m_version >= 4) ? 2 : 1;
 }

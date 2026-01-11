@@ -195,7 +195,7 @@ int16_t OffsetResponse::version() const
     return m_version;
 }
 
-int16_t OffsetResponse::headerVersion() const
+int16_t OffsetResponse::header_version() const
 {
     return 0;
 }
@@ -226,7 +226,7 @@ KafkaVersion OffsetResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds OffsetResponse::throttleTime() const
+std::chrono::milliseconds OffsetResponse::throttle_time() const
 {
     return std::chrono::milliseconds(m_throttle_time);
 }

@@ -53,7 +53,7 @@ int16_t FindCoordinatorRequest::version() const
     return m_version;
 }
 
-int16_t FindCoordinatorRequest::headerVersion() const
+int16_t FindCoordinatorRequest::header_version() const
 {
     return 1;
 }

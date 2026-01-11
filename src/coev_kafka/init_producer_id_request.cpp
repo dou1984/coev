@@ -64,7 +64,7 @@ int16_t InitProducerIDRequest::version() const
     return m_version;
 }
 
-int16_t InitProducerIDRequest::headerVersion() const
+int16_t InitProducerIDRequest::header_version() const
 {
     return (m_version >= 2) ? 2 : 1;
 }

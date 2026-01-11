@@ -10,7 +10,7 @@
 #include "packet_encoder.h"
 #include "packet_decoder.h"
 #include "version.h"
-#include "compress.h"
+#include "../utils/compress/coev_compress.h"
 
 struct MessageSet;
 

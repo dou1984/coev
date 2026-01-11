@@ -161,7 +161,7 @@ int16_t IncrementalAlterConfigsRequest::version() const
     return m_version;
 }
 
-int16_t IncrementalAlterConfigsRequest::headerVersion() const
+int16_t IncrementalAlterConfigsRequest::header_version() const
 {
     return (m_version >= 1) ? 2 : 1;
 }

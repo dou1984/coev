@@ -191,7 +191,7 @@ int16_t OffsetRequest::version() const
     return m_version;
 }
 
-int16_t OffsetRequest::headerVersion() const
+int16_t OffsetRequest::header_version() const
 {
     return 1;
 }

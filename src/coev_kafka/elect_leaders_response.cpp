@@ -169,7 +169,7 @@ int16_t ElectLeadersResponse::version() const
     return m_version;
 }
 
-int16_t ElectLeadersResponse::headerVersion() const
+int16_t ElectLeadersResponse::header_version() const
 {
     return 1; // Note: differs from request (which uses header v2)
 }
@@ -204,7 +204,7 @@ KafkaVersion ElectLeadersResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds ElectLeadersResponse::throttleTime() const
+std::chrono::milliseconds ElectLeadersResponse::throttle_time() const
 {
     return m_throttle_time;
 }

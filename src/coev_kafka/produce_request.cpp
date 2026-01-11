@@ -167,7 +167,7 @@ int16_t ProduceRequest::version() const
     return m_version;
 }
 
-int16_t ProduceRequest::headerVersion() const
+int16_t ProduceRequest::header_version() const
 {
     return 1;
 }

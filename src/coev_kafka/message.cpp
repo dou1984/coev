@@ -3,9 +3,7 @@
 #include "message.h"
 #include "message_set.h"
 #include "timestamp.h"
-#include "compress.h"
 #include "real_decoder.h"
-#include "../utils/compress/coev_compress.h"
 #include "undefined.h"
 #include "crc32_field.h"
 #include "crc32.h"
@@ -88,6 +86,7 @@ std::string decompress(CompressionCodec codec, const std::string &data)
     case None:
         return data;
     }
+    return data;
 }
 Message::Message(const std::string &key, const std::string &value, bool logAppendTime, Timestamp msgTimestamp, int8_t version)
     : m_key(key), m_value(value), m_log_append_time(logAppendTime), m_timestamp(msgTimestamp), m_version(version)

@@ -33,7 +33,7 @@ struct LeaveGroupRequest : protocol_body
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
-    int16_t headerVersion() const;
+    int16_t header_version() const;
     bool is_valid_version() const;
     bool isFlexible();
     static bool isFlexibleVersion(int16_t ver);

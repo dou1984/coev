@@ -135,7 +135,7 @@ int16_t AlterPartitionReassignmentsRequest::version() const
     return m_version;
 }
 
-int16_t AlterPartitionReassignmentsRequest::headerVersion() const
+int16_t AlterPartitionReassignmentsRequest::header_version() const
 {
     return 2;
 }
@@ -159,7 +159,7 @@ KafkaVersion AlterPartitionReassignmentsRequest::required_version() const
 {
     return V2_4_0_0;
 }
-std::chrono::milliseconds AlterPartitionReassignmentsRequest::throttleTime() const
+std::chrono::milliseconds AlterPartitionReassignmentsRequest::throttle_time() const
 {
     return m_timeout;
 }

@@ -81,7 +81,7 @@ int16_t IncrementalAlterConfigsResponse::version() const
     return m_version;
 }
 
-int16_t IncrementalAlterConfigsResponse::headerVersion() const
+int16_t IncrementalAlterConfigsResponse::header_version() const
 {
     return (m_version >= 1) ? 1 : 0;
 }
@@ -112,7 +112,7 @@ KafkaVersion IncrementalAlterConfigsResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds IncrementalAlterConfigsResponse::throttleTime() const
+std::chrono::milliseconds IncrementalAlterConfigsResponse::throttle_time() const
 {
     return m_throttle_time;
 }

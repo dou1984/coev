@@ -172,7 +172,7 @@ int16_t ListPartitionReassignmentsResponse::version() const
     return m_version;
 }
 
-int16_t ListPartitionReassignmentsResponse::headerVersion() const
+int16_t ListPartitionReassignmentsResponse::header_version() const
 {
     return 1; // flexible response header starts at version 1
 }
@@ -197,7 +197,7 @@ KafkaVersion ListPartitionReassignmentsResponse::required_version() const
     return V2_4_0_0;
 }
 
-std::chrono::milliseconds ListPartitionReassignmentsResponse::throttleTime() const
+std::chrono::milliseconds ListPartitionReassignmentsResponse::throttle_time() const
 {
     return m_throttle_time;
 }

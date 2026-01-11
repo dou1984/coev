@@ -268,7 +268,7 @@ int16_t FetchRequest::version() const
     return m_version;
 }
 
-int16_t FetchRequest::headerVersion() const
+int16_t FetchRequest::header_version() const
 {
     return 1;
 }

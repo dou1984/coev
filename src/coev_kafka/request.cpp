@@ -103,7 +103,7 @@ int request::encode(PEncoder &pe)
     pe.putInt32(m_correlation_id);
 
     int err = 0;
-    if (m_body->headerVersion() >= 1)
+    if (m_body->header_version() >= 1)
     {
         err = pe.putString(m_client_id);
         if (err != 0)
@@ -112,7 +112,7 @@ int request::encode(PEncoder &pe)
         }
     }
 
-    if (m_body->headerVersion() >= 2)
+    if (m_body->header_version() >= 2)
     {
         pe.putUVarint(0);
     }
@@ -156,7 +156,7 @@ int request::decode(PDecoder &pd)
         return -1;
     }
 
-    if (m_body->headerVersion() >= 2)
+    if (m_body->header_version() >= 2)
     {
         uint64_t tagCount;
         err = pd.getUVariant(tagCount);

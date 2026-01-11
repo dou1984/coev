@@ -177,7 +177,7 @@ int16_t DeleteRecordsResponse::version() const
     return m_version;
 }
 
-int16_t DeleteRecordsResponse::headerVersion() const
+int16_t DeleteRecordsResponse::header_version() const
 {
     return 0; // non-flexible format
 }
@@ -198,7 +198,7 @@ KafkaVersion DeleteRecordsResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds DeleteRecordsResponse::throttleTime() const
+std::chrono::milliseconds DeleteRecordsResponse::throttle_time() const
 {
     return m_throttle_time;
 }

@@ -90,7 +90,7 @@ int16_t DeleteTopicsResponse::version() const
     return m_version;
 }
 
-int16_t DeleteTopicsResponse::headerVersion() const
+int16_t DeleteTopicsResponse::header_version() const
 {
     if (m_version >= 4)
     {
@@ -133,7 +133,7 @@ KafkaVersion DeleteTopicsResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds DeleteTopicsResponse::throttleTime() const
+std::chrono::milliseconds DeleteTopicsResponse::throttle_time() const
 {
     return m_throttle_time;
 }

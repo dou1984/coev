@@ -177,7 +177,7 @@ int16_t OffsetCommitRequest::version() const
     return m_version;
 }
 
-int16_t OffsetCommitRequest::headerVersion() const
+int16_t OffsetCommitRequest::header_version() const
 {
     return 1;
 }

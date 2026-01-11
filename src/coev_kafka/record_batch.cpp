@@ -1,7 +1,7 @@
 #include <limits>
 #include "record_batch.h"
 #include "record.h"
-#include "compress.h"
+#include "message.h"
 #include "crc32_field.h"
 #include "length_field.h"
 #include "timestamp.h"

@@ -160,7 +160,7 @@ int16_t AlterPartitionReassignmentsResponse::version() const
     return m_version;
 }
 
-int16_t AlterPartitionReassignmentsResponse::headerVersion() const
+int16_t AlterPartitionReassignmentsResponse::header_version() const
 {
     return 1;
 }
@@ -185,7 +185,7 @@ KafkaVersion AlterPartitionReassignmentsResponse::required_version() const
     return V2_4_0_0;
 }
 
-std::chrono::milliseconds AlterPartitionReassignmentsResponse::throttleTime() const
+std::chrono::milliseconds AlterPartitionReassignmentsResponse::throttle_time() const
 {
     return std::chrono::milliseconds(m_throttle_time);
 }

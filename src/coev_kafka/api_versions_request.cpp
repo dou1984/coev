@@ -55,7 +55,7 @@ int16_t ApiVersionsRequest::version() const
     return m_version;
 }
 
-int16_t ApiVersionsRequest::headerVersion() const
+int16_t ApiVersionsRequest::header_version() const
 {
     return (m_version >= 3) ? 2 : 1;
 }

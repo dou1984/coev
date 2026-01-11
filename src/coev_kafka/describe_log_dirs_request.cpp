@@ -90,7 +90,7 @@ int16_t DescribeLogDirsRequest::version() const
     return m_version;
 }
 
-int16_t DescribeLogDirsRequest::headerVersion() const
+int16_t DescribeLogDirsRequest::header_version() const
 {
     if (m_version >= 2)
     {

@@ -72,7 +72,7 @@ int16_t ListGroupsRequest::version() const
     return m_version;
 }
 
-int16_t ListGroupsRequest::headerVersion() const
+int16_t ListGroupsRequest::header_version() const
 {
     return (m_version >= 3) ? 2 : 1;
 }

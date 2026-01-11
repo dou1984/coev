@@ -118,7 +118,7 @@ int16_t DescribeConfigsRequest::version() const
     return m_version;
 }
 
-int16_t DescribeConfigsRequest::headerVersion() const
+int16_t DescribeConfigsRequest::header_version() const
 {
     return 1;
 }

@@ -22,7 +22,7 @@ struct DeleteGroupsRequest : protocol_body
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
-    int16_t headerVersion() const;
+    int16_t header_version() const;
     bool isFlexible() const;
     static bool isFlexibleVersion(int16_t version);
     bool is_valid_version() const;

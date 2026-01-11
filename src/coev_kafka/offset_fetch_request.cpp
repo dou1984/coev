@@ -160,7 +160,7 @@ int16_t OffsetFetchRequest::version() const
     return m_version;
 }
 
-int16_t OffsetFetchRequest::headerVersion() const
+int16_t OffsetFetchRequest::header_version() const
 {
     return m_version >= 6 ? 2 : 1;
 }

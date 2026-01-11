@@ -94,7 +94,7 @@
 #include "sasl_handshake_response.h"
 #include "sasl_authenticate_response.h"
 #include "sasl_authenticate_request.h"
-#include "compress.h"
+#include "message.h"
 
 ProduceSet::ProduceSet(std::shared_ptr<AsyncProducer> parent)
     : m_parent(parent)

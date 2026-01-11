@@ -11,10 +11,10 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-#include "compress.h"
 #include "isolation_level.h"
 #include "version.h"
 #include "metrics.h"
+#include "../utils/compress/coev_compress.h"
 
 struct SCRAMClient;
 struct AccessTokenProvider;

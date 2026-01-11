@@ -20,8 +20,8 @@ struct AddOffsetsToTxnResponse : protocol_body, throttle_support
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
-    int16_t headerVersion() const;
+    int16_t header_version() const;
     bool is_valid_version() const;
     KafkaVersion required_version() const;
-    std::chrono::milliseconds throttleTime() const;
+    std::chrono::milliseconds throttle_time() const;
 };

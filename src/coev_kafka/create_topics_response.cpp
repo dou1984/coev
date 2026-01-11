@@ -117,7 +117,7 @@ int16_t CreateTopicsResponse::version() const
     return m_version;
 }
 
-int16_t CreateTopicsResponse::headerVersion() const
+int16_t CreateTopicsResponse::header_version() const
 {
     return m_version >= 5 ? 1 : 0;
 }
@@ -158,7 +158,7 @@ KafkaVersion CreateTopicsResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds CreateTopicsResponse::throttleTime() const
+std::chrono::milliseconds CreateTopicsResponse::throttle_time() const
 {
     return m_throttle_time;
 }

@@ -56,7 +56,7 @@ int16_t CreateAclsRequest::version() const
     return m_version;
 }
 
-int16_t CreateAclsRequest::headerVersion() const
+int16_t CreateAclsRequest::header_version() const
 {
     return 1;
 }

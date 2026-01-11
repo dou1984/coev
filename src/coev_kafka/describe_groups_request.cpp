@@ -54,7 +54,7 @@ int16_t DescribeGroupsRequest::version() const
     return m_version;
 }
 
-int16_t DescribeGroupsRequest::headerVersion() const
+int16_t DescribeGroupsRequest::header_version() const
 {
     if (m_version >= 5)
     {

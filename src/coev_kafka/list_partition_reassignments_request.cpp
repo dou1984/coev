@@ -100,7 +100,7 @@ int16_t ListPartitionReassignmentsRequest::version() const
     return m_version;
 }
 
-int16_t ListPartitionReassignmentsRequest::headerVersion() const
+int16_t ListPartitionReassignmentsRequest::header_version() const
 {
     return 2; // Always uses flexible (v2+) request header
 }

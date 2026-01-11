@@ -68,7 +68,7 @@ int16_t AlterClientQuotasResponse::version() const
     return m_version;
 }
 
-int16_t AlterClientQuotasResponse::headerVersion() const
+int16_t AlterClientQuotasResponse::header_version() const
 {
     return 0;
 }
@@ -83,7 +83,7 @@ KafkaVersion AlterClientQuotasResponse::required_version() const
     return V2_6_0_0;
 }
 
-std::chrono::milliseconds AlterClientQuotasResponse::throttleTime() const
+std::chrono::milliseconds AlterClientQuotasResponse::throttle_time() const
 {
     return m_throttle_time;
 }
@@ -164,7 +164,7 @@ int16_t AlterClientQuotasEntryResponse::version() const
 void AlterClientQuotasEntryResponse::set_version(int16_t version)
 {
 }
-int16_t AlterClientQuotasEntryResponse::headerVersion() const
+int16_t AlterClientQuotasEntryResponse::header_version() const
 {
     return 0;
 }

@@ -9,7 +9,6 @@
 #include "broker.h"
 #include "errors.h"
 #include "sleep_for.h"
-#include "compress.h"
 #include "offset_request.h"
 #include "partition_producer.h"
 

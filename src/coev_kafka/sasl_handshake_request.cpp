@@ -28,7 +28,7 @@ int16_t SaslHandshakeRequest::version() const
     return m_version;
 }
 
-int16_t SaslHandshakeRequest::headerVersion() const
+int16_t SaslHandshakeRequest::header_version() const
 {
     return 1;
 }

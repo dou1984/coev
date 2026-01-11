@@ -13,9 +13,9 @@
 #include "scram_client.h"
 #include "response_header.h"
 
-int8_t getHeaderLength(int16_t headerVersion)
+int8_t getHeaderLength(int16_t header_version)
 {
-    if (headerVersion < 1)
+    if (header_version < 1)
     {
         return 8;
     }
@@ -724,7 +724,7 @@ coev::awaitable<int> Broker::ResponseReceiver()
             continue;
         }
 
-        int8_t headerLength = getHeaderLength(promise->m_response->headerVersion());
+        int8_t headerLength = getHeaderLength(promise->m_response->header_version());
         std::string header;
         header.resize(headerLength);
         size_t bytesReadHeader;
@@ -743,7 +743,7 @@ coev::awaitable<int> Broker::ResponseReceiver()
         }
 
         auto decodedHeader = std::make_shared<responseHeader>();
-        err = versionedDecode(header, std::dynamic_pointer_cast<VDecoder>(decodedHeader), promise->m_response->headerVersion(),
+        err = versionedDecode(header, std::dynamic_pointer_cast<VDecoder>(decodedHeader), promise->m_response->header_version(),
                               m_metric_registry);
         if (err)
         {
@@ -1450,18 +1450,18 @@ void Broker::HandleThrottledResponse(std::shared_ptr<protocol_body> resp)
     {
         return;
     }
-    auto throttleTime = throttledResponse->throttleTime();
-    if (throttleTime.count() == 0)
+    auto throttle_time = throttledResponse->throttle_time();
+    if (throttle_time.count() == 0)
     {
         return;
     }
 
-    SetThrottle(throttleTime);
+    SetThrottle(throttle_time);
 
-    UpdateThrottleMetric(throttleTime);
+    UpdateThrottleMetric(throttle_time);
 }
 
-void Broker::SetThrottle(std::chrono::milliseconds throttleTime)
+void Broker::SetThrottle(std::chrono::milliseconds throttle_time)
 {
     std::lock_guard<std::mutex> lock(m_throttle_timer_lock);
     {
@@ -1478,12 +1478,12 @@ void Broker::WaitIfThrottled()
     }
 }
 
-void Broker::UpdateThrottleMetric(std::chrono::milliseconds throttleTime)
+void Broker::UpdateThrottleMetric(std::chrono::milliseconds throttle_time)
 {
     if (m_broker_throttle_time)
     {
-        int64_t throttleTimeInMs = throttleTime.count();
-        m_broker_throttle_time->Update(throttleTimeInMs);
+        int64_t throttle_timeInMs = throttle_time.count();
+        m_broker_throttle_time->Update(throttle_timeInMs);
     }
 }
 

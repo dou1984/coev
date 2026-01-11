@@ -127,7 +127,7 @@ int16_t DeleteOffsetsResponse::version() const
     return m_version;
 }
 
-int16_t DeleteOffsetsResponse::headerVersion() const
+int16_t DeleteOffsetsResponse::header_version() const
 {
     return 0;
 }
@@ -142,7 +142,7 @@ KafkaVersion DeleteOffsetsResponse::required_version() const
     return V2_4_0_0;
 }
 
-std::chrono::milliseconds DeleteOffsetsResponse::throttleTime() const
+std::chrono::milliseconds DeleteOffsetsResponse::throttle_time() const
 {
     return m_throttle_time;
 }

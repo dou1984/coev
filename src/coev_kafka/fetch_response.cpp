@@ -342,7 +342,7 @@ int16_t FetchResponse::version() const
     return m_version;
 }
 
-int16_t FetchResponse::headerVersion() const
+int16_t FetchResponse::header_version() const
 {
     return 0;
 }
@@ -383,7 +383,7 @@ KafkaVersion FetchResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds FetchResponse::throttleTime() const
+std::chrono::milliseconds FetchResponse::throttle_time() const
 {
     return m_throttle_time;
 }

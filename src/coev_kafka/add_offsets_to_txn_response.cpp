@@ -40,7 +40,7 @@ int16_t AddOffsetsToTxnResponse::version() const
     return m_version;
 }
 
-int16_t AddOffsetsToTxnResponse::headerVersion() const
+int16_t AddOffsetsToTxnResponse::header_version() const
 {
     return 0;
 }
@@ -65,7 +65,7 @@ KafkaVersion AddOffsetsToTxnResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds AddOffsetsToTxnResponse::throttleTime() const
+std::chrono::milliseconds AddOffsetsToTxnResponse::throttle_time() const
 {
     return m_throttle_time;
 }

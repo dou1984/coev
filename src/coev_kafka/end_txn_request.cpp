@@ -49,7 +49,7 @@ int16_t EndTxnRequest::version() const
     return m_version;
 }
 
-int16_t EndTxnRequest::headerVersion() const
+int16_t EndTxnRequest::header_version() const
 {
     return 1;
 }

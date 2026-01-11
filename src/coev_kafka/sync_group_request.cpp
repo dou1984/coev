@@ -128,7 +128,7 @@ int16_t SyncGroupRequest::version() const
     return m_version;
 }
 
-int16_t SyncGroupRequest::headerVersion() const
+int16_t SyncGroupRequest::header_version() const
 {
     return (m_version >= 4) ? 2 : 1;
 }

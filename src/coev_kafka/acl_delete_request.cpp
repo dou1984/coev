@@ -58,7 +58,7 @@ int16_t DeleteAclsRequest::version() const
     return static_cast<int16_t>(m_version);
 }
 
-int16_t DeleteAclsRequest::headerVersion() const
+int16_t DeleteAclsRequest::header_version() const
 {
     return 1;
 }

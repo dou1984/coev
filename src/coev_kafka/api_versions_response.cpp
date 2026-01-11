@@ -138,7 +138,7 @@ int16_t ApiVersionsResponse::version() const
     return m_version;
 }
 
-int16_t ApiVersionsResponse::headerVersion() const
+int16_t ApiVersionsResponse::header_version() const
 {
 
     return 0;
@@ -176,7 +176,7 @@ KafkaVersion ApiVersionsResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds ApiVersionsResponse::throttleTime() const
+std::chrono::milliseconds ApiVersionsResponse::throttle_time() const
 {
     return std::chrono::milliseconds(m_throttle_time);
 }

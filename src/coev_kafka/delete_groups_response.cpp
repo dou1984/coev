@@ -85,7 +85,7 @@ int16_t DeleteGroupsResponse::version() const
     return m_version;
 }
 
-int16_t DeleteGroupsResponse::headerVersion() const
+int16_t DeleteGroupsResponse::header_version() const
 {
     return m_version >= 2 ? 1 : 0;
 }
@@ -120,7 +120,7 @@ KafkaVersion DeleteGroupsResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds DeleteGroupsResponse::throttleTime() const
+std::chrono::milliseconds DeleteGroupsResponse::throttle_time() const
 {
     return m_throttle_time;
 }

@@ -137,7 +137,7 @@ int16_t AlterConfigsRequest::version() const
     return m_version;
 }
 
-int16_t AlterConfigsRequest::headerVersion() const
+int16_t AlterConfigsRequest::header_version() const
 {
     return 1;
 }

@@ -29,11 +29,11 @@ struct SyncGroupResponse : protocol_body
 
     int16_t key() const;
     int16_t version() const;
-    int16_t headerVersion() const;
+    int16_t header_version() const;
     bool is_valid_version() const;
     bool isFlexible();
     bool isFlexibleVersion(int16_t ver);
     KafkaVersion required_version() const;
 
-    std::chrono::milliseconds throttleTime() const;
+    std::chrono::milliseconds throttle_time() const;
 };

@@ -69,10 +69,10 @@ struct FetchResponse : protocol_body
     int encode(PEncoder &pe);
     int16_t key() const;
     int16_t version() const;
-    int16_t headerVersion() const;
+    int16_t header_version() const;
     bool is_valid_version() const;
     KafkaVersion required_version() const;
-    std::chrono::milliseconds throttleTime() const;
+    std::chrono::milliseconds throttle_time() const;
     std::shared_ptr<FetchResponseBlock> GetBlock(const std::string &topic, int32_t partition);
     void AddError(const std::string &topic, int32_t partition, KError err);
     std::shared_ptr<FetchResponseBlock> getOrCreateBlock(const std::string &topic, int32_t partition);

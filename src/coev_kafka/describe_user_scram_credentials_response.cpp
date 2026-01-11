@@ -157,7 +157,7 @@ int16_t DescribeUserScramCredentialsResponse::version() const
     return m_version;
 }
 
-int16_t DescribeUserScramCredentialsResponse::headerVersion() const
+int16_t DescribeUserScramCredentialsResponse::header_version() const
 {
     return 2;
 }
@@ -182,7 +182,7 @@ KafkaVersion DescribeUserScramCredentialsResponse::required_version() const
     return V2_7_0_0;
 }
 
-std::chrono::milliseconds DescribeUserScramCredentialsResponse::throttleTime() const
+std::chrono::milliseconds DescribeUserScramCredentialsResponse::throttle_time() const
 {
     return m_throttle_time;
 }

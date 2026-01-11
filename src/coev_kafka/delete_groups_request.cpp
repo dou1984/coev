@@ -38,7 +38,7 @@ int16_t DeleteGroupsRequest::version() const
     return m_version;
 }
 
-int16_t DeleteGroupsRequest::headerVersion() const
+int16_t DeleteGroupsRequest::header_version() const
 {
     return m_version >= 2 ? 2 : 1;
 }

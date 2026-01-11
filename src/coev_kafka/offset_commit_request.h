@@ -44,7 +44,7 @@ struct OffsetCommitRequest : protocol_body
     int decode(PDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
-    int16_t headerVersion() const;
+    int16_t header_version() const;
     bool is_valid_version() const;
     KafkaVersion required_version() const;
     void AddBlock(const std::string &topic, int32_t partitionID, int64_t offset, int64_t timestamp, const std::string &metadata);

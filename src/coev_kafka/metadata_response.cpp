@@ -338,7 +338,7 @@ int16_t MetadataResponse::version() const
     return m_version;
 }
 
-int16_t MetadataResponse::headerVersion() const
+int16_t MetadataResponse::header_version() const
 {
     if (m_version < 9)
     {
@@ -395,7 +395,7 @@ KafkaVersion MetadataResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds MetadataResponse::throttleTime() const
+std::chrono::milliseconds MetadataResponse::throttle_time() const
 {
     return std::chrono::milliseconds(m_throttle_time);
 }

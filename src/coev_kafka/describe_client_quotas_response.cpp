@@ -235,7 +235,7 @@ int16_t DescribeClientQuotasResponse::version() const
     return m_version;
 }
 
-int16_t DescribeClientQuotasResponse::headerVersion() const
+int16_t DescribeClientQuotasResponse::header_version() const
 {
     if (m_version >= 1)
     {
@@ -272,7 +272,7 @@ KafkaVersion DescribeClientQuotasResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds DescribeClientQuotasResponse::throttleTime() const
+std::chrono::milliseconds DescribeClientQuotasResponse::throttle_time() const
 {
     return m_throttle_time;
 }

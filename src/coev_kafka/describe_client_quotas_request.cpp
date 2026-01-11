@@ -126,7 +126,7 @@ int16_t DescribeClientQuotasRequest::version() const
     return m_version;
 }
 
-int16_t DescribeClientQuotasRequest::headerVersion() const
+int16_t DescribeClientQuotasRequest::header_version() const
 {
     if (m_version >= 1)
     {

@@ -150,7 +150,7 @@ int16_t ProduceResponse::version() const
     return m_version;
 }
 
-int16_t ProduceResponse::headerVersion() const
+int16_t ProduceResponse::header_version() const
 {
     return 0;
 }
@@ -184,7 +184,7 @@ KafkaVersion ProduceResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds ProduceResponse::throttleTime() const
+std::chrono::milliseconds ProduceResponse::throttle_time() const
 {
     return m_throttle_time;
 }

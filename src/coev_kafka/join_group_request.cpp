@@ -175,7 +175,7 @@ int16_t JoinGroupRequest::version() const
     return m_version;
 }
 
-int16_t JoinGroupRequest::headerVersion() const
+int16_t JoinGroupRequest::header_version() const
 {
     return (m_version >= 6) ? 2 : 1;
 }

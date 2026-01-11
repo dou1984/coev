@@ -89,7 +89,7 @@ int16_t AddPartitionsToTxnRequest::version() const
     return m_version;
 }
 
-int16_t AddPartitionsToTxnRequest::headerVersion() const
+int16_t AddPartitionsToTxnRequest::header_version() const
 {
     return 1;
 }

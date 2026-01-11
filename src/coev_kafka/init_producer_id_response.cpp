@@ -49,7 +49,7 @@ int16_t InitProducerIDResponse::version() const
     return m_version;
 }
 
-int16_t InitProducerIDResponse::headerVersion() const
+int16_t InitProducerIDResponse::header_version() const
 {
     return (m_version >= 2) ? 1 : 0;
 }
@@ -86,7 +86,7 @@ KafkaVersion InitProducerIDResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds InitProducerIDResponse::throttleTime() const
+std::chrono::milliseconds InitProducerIDResponse::throttle_time() const
 {
     return m_throttle_time;
 }

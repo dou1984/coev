@@ -74,7 +74,7 @@ int16_t TxnOffsetCommitRequest::version() const
     return m_version;
 }
 
-int16_t TxnOffsetCommitRequest::headerVersion() const
+int16_t TxnOffsetCommitRequest::header_version() const
 {
     return 1;
 }

@@ -96,7 +96,7 @@ int16_t LeaveGroupResponse::version() const
     return m_version;
 }
 
-int16_t LeaveGroupResponse::headerVersion() const
+int16_t LeaveGroupResponse::header_version() const
 {
     return (m_version >= 4) ? 1 : 0;
 }
@@ -135,7 +135,7 @@ KafkaVersion LeaveGroupResponse::required_version() const
     }
 }
 
-std::chrono::milliseconds LeaveGroupResponse::throttleTime() const
+std::chrono::milliseconds LeaveGroupResponse::throttle_time() const
 {
     return std::chrono::milliseconds(m_throttle_time);
 }

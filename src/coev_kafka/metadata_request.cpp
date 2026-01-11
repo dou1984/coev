@@ -200,7 +200,7 @@ int16_t MetadataRequest::version() const
     return m_version;
 }
 
-int16_t MetadataRequest::headerVersion() const
+int16_t MetadataRequest::header_version() const
 {
     if (m_version >= 9)
     {

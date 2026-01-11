@@ -222,9 +222,9 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
     void UpdateOutgoingCommunicationMetrics(int bytes);
     void UpdateProtocolMetrics(std::shared_ptr<protocol_body> rb);
     void HandleThrottledResponse(std::shared_ptr<protocol_body> resp);
-    void SetThrottle(std::chrono::milliseconds throttleTime);
+    void SetThrottle(std::chrono::milliseconds throttle_time);
     void WaitIfThrottled();
-    void UpdateThrottleMetric(std::chrono::milliseconds throttleTime);
+    void UpdateThrottleMetric(std::chrono::milliseconds throttle_time);
     void RegisterMetrics();
     template <class Req, class Resp>
     coev::awaitable<int> SendAndReceive(Req req, Resp &res)
