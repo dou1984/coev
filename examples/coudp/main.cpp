@@ -72,13 +72,13 @@ int main(int argc, char **argv)
 					   auto fd = udp::bindfd("127.0.0.1", 9998);
 					   co_await co_srv(fd);
 				   })
-			.join();
+			.wait();
 	}
 	else if (method == "client")
 	{
 		runnable::instance()
 			.start(co_cli)
-			.join();
+			.wait();
 	}
 	return 0;
 }

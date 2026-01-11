@@ -82,6 +82,6 @@ int main()
 	set_log_level(LOG_LEVEL_CORE);
 	runnable::instance()
 		.start(1, co_router)
-		.join();
+		.wait();
 	return 0;
 }

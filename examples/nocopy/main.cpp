@@ -30,6 +30,6 @@ int main()
 {
     coev::runnable::instance()
         .start(co_nocopy)
-        .join();
+        .wait();
     return 0;
 }

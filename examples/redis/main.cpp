@@ -143,6 +143,6 @@ int main()
 		.start(test_sync)
 		.start(go)
 		.start(test_array)
-		.join();
+		.wait();
 	return 0;
 }

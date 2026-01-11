@@ -28,7 +28,7 @@ namespace coev
 		runnable(runnable &&) = delete;
 		runnable &start(const func &_f);
 		runnable &start(int count, const func &_f);
-		void join();
+		void wait();
 		void endless(const std::function<void()> &_f);
 	};
 }

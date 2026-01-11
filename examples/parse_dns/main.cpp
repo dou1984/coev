@@ -25,7 +25,7 @@ int main()
 
     set_log_level(LOG_LEVEL_CORE);
 
-    runnable::instance().start(co_parse_dns).join();
+    runnable::instance().start(co_parse_dns).wait();
 
     return 0;
 }

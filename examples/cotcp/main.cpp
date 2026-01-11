@@ -129,7 +129,7 @@ int main(int argc, char **argv)
 	{
 		runnable::instance()
 			.start(4, co_test)
-			.join();
+			.wait();
 	}
 	else
 	{

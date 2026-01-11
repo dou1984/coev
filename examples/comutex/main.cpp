@@ -37,7 +37,7 @@ int main()
 	runnable::instance()
 		.start(100, test_go)
 		// .start(4, test_lock)
-		.join();
+		.wait();
 
 	return 0;
 }

@@ -4,20 +4,9 @@
 #include <sstream>
 #include <cstring>
 
-namespace
-{
-    std::string v;
-    std::once_flag vOnceFlag;
-}
-
 std::string version()
 {
-    std::call_once(vOnceFlag, []()
-                   {
-        // C++ does not have built-in build info like Go's debug.ReadBuildInfo.
-        // In practice, this would be set at compile time via a build flag or CMake.
-        // For compatibility with the original logic, we default to "dev".
-        v = "dev"; });
+    static std::string v = "dev";
     return v;
 }
 

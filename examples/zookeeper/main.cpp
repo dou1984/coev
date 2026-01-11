@@ -41,7 +41,7 @@ int main(int argc, char **argv)
 
                 co_return;
             })
-        .join();
+        .wait();
 
     return 0;
 }

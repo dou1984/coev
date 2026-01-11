@@ -135,7 +135,7 @@ int main()
 
 	coev::runnable::instance()
 		.start(go)
-		.join();
+		.wait();
 
 	return 0;
 }

@@ -3,8 +3,6 @@
 #include "find_coordinator_response.h"
 #include "broker.h"
 
-auto NoNode = std::make_shared<Broker>(-1, ":-1");
-
 void FindCoordinatorResponse::set_version(int16_t v)
 {
     m_version = v;
@@ -73,7 +71,7 @@ int FindCoordinatorResponse::encode(PEncoder &pe)
             return err;
     }
 
-    Broker *coord = m_coordinator ? m_coordinator.get() : NoNode.get();
+    Broker *coord = m_coordinator ? m_coordinator.get() : std::addressof(coev::singleton<Broker>::instance());
     int err = coord->encode(pe, 0); // 硬编码使用 Broker 编码版本 0
     if (err != 0)
         return err;

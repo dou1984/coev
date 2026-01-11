@@ -161,6 +161,6 @@ int main()
 		.start(co_three_task4)
 		.start(co_task5)
 		.start(co_task6)
-		.join();
+		.wait();
 	return 0;
 }

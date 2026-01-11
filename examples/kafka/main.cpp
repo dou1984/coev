@@ -73,7 +73,7 @@ int main(int argc, char **argv)
                     }();
                 }
             })
-        .join();
+        .wait();
 
     return 0;
 }

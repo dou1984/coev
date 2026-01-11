@@ -51,6 +51,6 @@ int main()
 		.start(test_timer)
 		.start([]() -> awaitable<void>
 			   { co_await test_iterator(10); })
-		.join();
+		.wait();
 	return 0;
 }

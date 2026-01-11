@@ -74,13 +74,13 @@ int main(int argc, char **argv)
         g_srv_mgr.use_private_key_file("server.pem");
         runnable::instance()
             .start(proc_server)
-            .join();
+            .wait();
     }
     else if (strcmp(argv[1], "client") == 0)
     {
         runnable::instance()
             .start(proc_client)
-            .join();
+            .wait();
     }
 
     return 0;

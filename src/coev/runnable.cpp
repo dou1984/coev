@@ -26,7 +26,7 @@ namespace coev
 		ingore_signal(SIGPIPE);
 	}
 
-	void runnable::join()
+	void runnable::wait()
 	{
 		for (auto &it : m_list)
 		{

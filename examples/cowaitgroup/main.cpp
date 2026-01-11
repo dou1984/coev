@@ -38,7 +38,7 @@ int main()
 	set_log_level(LOG_LEVEL_DEBUG);
 	runnable::instance()
 		.start(test_wait)
-		.join();
+		.wait();
 
 	return 0;
 }

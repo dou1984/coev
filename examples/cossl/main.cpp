@@ -98,13 +98,13 @@ int main(int argc, char **argv)
     {
         runnable::instance()
             .start(test_ssl_context)
-            .join();
+            .wait();
     }
     else if (strcmp(argv[1], "client") == 0)
     {
         runnable::instance()
             .start(test_ssl_client)
-            .join();
+            .wait();
     }
     else
     {

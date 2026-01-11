@@ -102,6 +102,6 @@ int main()
 				co_await g.wait();
 				LOG_DBG("main finish\n");
 			})
-		.join();
+		.wait();
 	return 0;
 }
