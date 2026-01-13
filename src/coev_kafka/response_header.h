@@ -6,11 +6,11 @@
 #include "version.h"
 
 inline const size_t MaxResponseSize = 100 * 1024 * 1024;
-struct responseHeader : VDecoder
+struct responseHeader : versionedDecoder
 {
 
     int32_t m_length = 0;
     int32_t m_correlation_id = 0;
 
-    int decode(PDecoder &pd, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
 };

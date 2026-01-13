@@ -10,14 +10,14 @@
 #include "packet_decoder.h"
 #include "protocol_body.h"
 
-struct AlterConfigsResource : VDecoder, IEncoder
+struct AlterConfigsResource : versionedDecoder, IEncoder
 {
     ConfigResourceType m_type;
     std::string m_name;
     std::map<std::string, std::string> m_config_entries;
 
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
 struct AlterConfigsRequest : protocol_body
@@ -32,8 +32,8 @@ struct AlterConfigsRequest : protocol_body
     }
 
     void set_version(int16_t v);
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
 
     int16_t key() const;
     int16_t version() const;

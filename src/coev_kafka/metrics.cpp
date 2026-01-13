@@ -148,11 +148,11 @@ namespace metrics
     }
     std::shared_ptr<Sample> NewExpDecaySample(int, double)
     {
-        return nullptr;
+        return std::make_shared<Sample>();
     }
-    std::shared_ptr<Histogram> NewHistogram(std::shared_ptr<Sample>)
+    std::shared_ptr<Histogram> NewHistogram(std::shared_ptr<Sample> _sample)
     {
-        return nullptr;
+        return std::make_shared<Histogram>(_sample);
     }
     std::shared_ptr<Registry> NewRegistry()
     {

@@ -4,7 +4,7 @@
 FetchRequestBlock::FetchRequestBlock()
     : m_version(0), m_current_leader_epoch(0), m_fetch_offset(0), m_log_start_offset(0), m_max_bytes(0) {}
 
-int FetchRequestBlock::encode(PEncoder &pe, int16_t version)
+int FetchRequestBlock::encode(packetEncoder &pe, int16_t version)
 {
     if (version >= 9)
     {
@@ -19,7 +19,7 @@ int FetchRequestBlock::encode(PEncoder &pe, int16_t version)
     return 0;
 }
 
-int FetchRequestBlock::decode(PDecoder &pd, int16_t version)
+int FetchRequestBlock::decode(packetDecoder &pd, int16_t version)
 {
     int err = 0;
     if (version >= 9)

@@ -31,6 +31,11 @@ namespace metrics
     };
     struct Histogram : IMetric
     {
+        std::shared_ptr<IMetric> m_sample;
+        Histogram() = default;
+        Histogram(std::shared_ptr<IMetric> sample) : m_sample(sample)
+        {
+        }
         int Mark(int)
         {
             return 0;

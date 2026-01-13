@@ -6,7 +6,7 @@ void AlterClientQuotasResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int AlterClientQuotasResponse::encode(PEncoder &pe)
+int AlterClientQuotasResponse::encode(packetEncoder &pe)
 {
     pe.putDurationMs(m_throttle_time);
 
@@ -25,7 +25,7 @@ int AlterClientQuotasResponse::encode(PEncoder &pe)
     return 0;
 }
 
-int AlterClientQuotasResponse::decode(PDecoder &pd, int16_t version)
+int AlterClientQuotasResponse::decode(packetDecoder &pd, int16_t version)
 {
     if (int16_t err = pd.getDurationMs(m_throttle_time); err != 0)
     {
@@ -88,7 +88,7 @@ std::chrono::milliseconds AlterClientQuotasResponse::throttle_time() const
     return m_throttle_time;
 }
 
-int AlterClientQuotasEntryResponse::encode(PEncoder &pe)
+int AlterClientQuotasEntryResponse::encode(packetEncoder &pe)
 {
     pe.putKError(m_error_code);
 
@@ -112,7 +112,7 @@ int AlterClientQuotasEntryResponse::encode(PEncoder &pe)
     return 0;
 }
 
-int AlterClientQuotasEntryResponse::decode(PDecoder &pd, int16_t version)
+int AlterClientQuotasEntryResponse::decode(packetDecoder &pd, int16_t version)
 {
     int err = ErrNoError;
     if (err = pd.getKError(m_error_code); err != 0)

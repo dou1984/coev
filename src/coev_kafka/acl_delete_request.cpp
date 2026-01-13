@@ -6,7 +6,7 @@ void DeleteAclsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int DeleteAclsRequest::encode(PEncoder &pe)
+int DeleteAclsRequest::encode(packetEncoder &pe)
 {
     if (pe.putArrayLength(static_cast<int32_t>(m_filters.size())) != 0)
     {
@@ -25,7 +25,7 @@ int DeleteAclsRequest::encode(PEncoder &pe)
     return 0;
 }
 
-int DeleteAclsRequest::decode(PDecoder &pd, int16_t version)
+int DeleteAclsRequest::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
     int32_t n;

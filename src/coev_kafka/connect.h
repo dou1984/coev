@@ -28,9 +28,9 @@ struct Connect : io_connect
 
         co_return 0;
     }
-    awaitable<int> Write(const std::string &buf, size_t n)
+    awaitable<int> Write(const std::string &buf)
     {
-        auto r = co_await send(buf.data(), n);
+        auto r = co_await send(buf.data(), buf.size());
         if (r <= 0)
         {
             co_return INVALID;

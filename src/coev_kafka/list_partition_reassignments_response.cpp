@@ -1,7 +1,7 @@
 #include "list_partition_reassignments_response.h"
 #include "api_versions.h"
 
-int PartitionReplicaReassignmentsStatus::encode(PEncoder &pe)
+int PartitionReplicaReassignmentsStatus::encode(packetEncoder &pe)
 {
     int err = pe.putInt32Array(m_replicas);
     if (err != 0)
@@ -19,7 +19,7 @@ int PartitionReplicaReassignmentsStatus::encode(PEncoder &pe)
     return 0;
 }
 
-int PartitionReplicaReassignmentsStatus::decode(PDecoder &pd)
+int PartitionReplicaReassignmentsStatus::decode(packetDecoder &pd)
 {
     int err = pd.getInt32Array(m_replicas);
     if (err != 0)
@@ -59,7 +59,7 @@ void ListPartitionReassignmentsResponse::AddBlock(
     partitions[partition] = std::move(block);
 }
 
-int ListPartitionReassignmentsResponse::encode(PEncoder &pe)
+int ListPartitionReassignmentsResponse::encode(packetEncoder &pe)
 {
     pe.putDurationMs(m_throttle_time);
     pe.putKError(m_err);
@@ -102,7 +102,7 @@ int ListPartitionReassignmentsResponse::encode(PEncoder &pe)
     return 0;
 }
 
-int ListPartitionReassignmentsResponse::decode(PDecoder &pd, int16_t version)
+int ListPartitionReassignmentsResponse::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
 

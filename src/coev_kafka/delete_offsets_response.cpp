@@ -12,7 +12,7 @@ void DeleteOffsetsResponse::AddError(const std::string &topic, int32_t partition
     partitions[partition] = errorCode;
 }
 
-int DeleteOffsetsResponse::encode(PEncoder &pe)
+int DeleteOffsetsResponse::encode(packetEncoder &pe)
 {
     pe.putInt16(static_cast<int16_t>(m_error_code));
     pe.putDurationMs(m_throttle_time);
@@ -49,7 +49,7 @@ int DeleteOffsetsResponse::encode(PEncoder &pe)
     return ErrNoError;
 }
 
-int DeleteOffsetsResponse::decode(PDecoder &pd, int16_t version)
+int DeleteOffsetsResponse::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
 

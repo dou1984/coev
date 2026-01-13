@@ -240,7 +240,7 @@ int prepFlexibleEncoder::putString(const std::string &in)
     int err = putArrayLength(static_cast<int32_t>(in.length()));
     if (err != 0)
         return err;
-    return putRawBytes(std::string(in.begin(), in.end()));
+    return putRawBytes(in);
 }
 
 int prepFlexibleEncoder::putNullableString(const std::string &in)

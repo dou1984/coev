@@ -19,8 +19,8 @@ struct MessageBlock : IEncoder, IDecoder
     {
     }
     std::vector<std::shared_ptr<MessageBlock>> Messages();
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd);
 };
 
 struct MessageSet : IEncoder, IDecoder
@@ -37,7 +37,7 @@ struct MessageSet : IEncoder, IDecoder
     {
         m_messages = o.m_messages;
     }
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd);
     void addMessage(std::shared_ptr<Message> msg);
 };

@@ -2,7 +2,7 @@
 #include <iostream>
 #include "acl_bindings.h"
 
-int Resource::encode(PEncoder &pe, int16_t version)
+int Resource::encode(packetEncoder &pe, int16_t version)
 {
     pe.putInt8(static_cast<int8_t>(m_resource_type));
 
@@ -24,7 +24,7 @@ int Resource::encode(PEncoder &pe, int16_t version)
     return ErrNoError;
 }
 
-int Resource::decode(PDecoder &pd, int16_t version)
+int Resource::decode(packetDecoder &pd, int16_t version)
 {
     int8_t resourceType;
     if (pd.getInt8(resourceType) != ErrNoError)
@@ -51,7 +51,7 @@ int Resource::decode(PDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-int Acl::encode(PEncoder &pe)
+int Acl::encode(packetEncoder &pe)
 {
     if (pe.putString(m_principal) != ErrNoError)
     {
@@ -69,7 +69,7 @@ int Acl::encode(PEncoder &pe)
     return ErrNoError;
 }
 
-int Acl::decode(PDecoder &pd, int16_t version)
+int Acl::decode(packetDecoder &pd, int16_t version)
 {
     if (pd.getString(m_principal) != ErrNoError)
     {
@@ -98,7 +98,7 @@ int Acl::decode(PDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-int ResourceAcls::encode(PEncoder &pe, int16_t version)
+int ResourceAcls::encode(packetEncoder &pe, int16_t version)
 {
     if (m_resource.encode(pe, version) != ErrNoError)
     {
@@ -121,7 +121,7 @@ int ResourceAcls::encode(PEncoder &pe, int16_t version)
     return ErrNoError;
 }
 
-int ResourceAcls::decode(PDecoder &pd, int16_t version)
+int ResourceAcls::decode(packetDecoder &pd, int16_t version)
 {
     if (m_resource.decode(pd, version) != ErrNoError)
     {

@@ -2,7 +2,7 @@
 #include <algorithm>
 #include "length_field.h"
 
-int LengthField::decode(PDecoder &pd)
+int LengthField::decode(packetDecoder &pd)
 {
     int err = pd.getInt32(m_length);
     if (err != 0)

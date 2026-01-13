@@ -12,7 +12,7 @@
 #include "packet_decoder.h"
 #include "protocol_body.h"
 
-struct OffsetRequestBlock : VDecoder, VEncoder
+struct OffsetRequestBlock : versionedDecoder, versionedEncoder
 {
 
     int32_t m_leader_epoch;
@@ -21,8 +21,8 @@ struct OffsetRequestBlock : VDecoder, VEncoder
 
     OffsetRequestBlock();
 
-    int encode(PEncoder &pe, int16_t version);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
 struct OffsetRequest : protocol_body
@@ -39,8 +39,8 @@ struct OffsetRequest : protocol_body
     {
     }
     void set_version(int16_t v);
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

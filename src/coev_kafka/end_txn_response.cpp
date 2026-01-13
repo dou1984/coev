@@ -6,14 +6,14 @@ void EndTxnResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int EndTxnResponse::encode(PEncoder &pe)
+int EndTxnResponse::encode(packetEncoder &pe)
 {
     pe.putDurationMs(m_throttle_time);
     pe.putKError(m_err);
     return true;
 }
 
-int EndTxnResponse::decode(PDecoder &pd, int16_t)
+int EndTxnResponse::decode(packetDecoder &pd, int16_t)
 {
     if (pd.getDurationMs(m_throttle_time) != ErrNoError)
     {

@@ -8,7 +8,7 @@ void TxnOffsetCommitRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int TxnOffsetCommitRequest::encode(PEncoder &pe)
+int TxnOffsetCommitRequest::encode(packetEncoder &pe)
 {
     pe.putString(m_transactional_id);
     pe.putString(m_group_id);
@@ -30,7 +30,7 @@ int TxnOffsetCommitRequest::encode(PEncoder &pe)
     return 0;
 }
 
-int TxnOffsetCommitRequest::decode(PDecoder &pd, int16_t version)
+int TxnOffsetCommitRequest::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
     pd.getString(m_transactional_id);

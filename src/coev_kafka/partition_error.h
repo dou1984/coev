@@ -4,11 +4,11 @@
 #include "packet_decoder.h"
 #include "packet_encoder.h"
 
-struct PartitionError : IEncoder, VDecoder
+struct PartitionError : IEncoder, versionedDecoder
 {
     int32_t m_partition;
     KError m_err;
 
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
 };

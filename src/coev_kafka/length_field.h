@@ -15,7 +15,7 @@ struct LengthField : pushEncoder
     int32_t m_length = 0;
 
     LengthField() = default;
-    int decode(PDecoder &pd);
+    int decode(packetDecoder &pd);
     void save_offset(int in);
     int reserve_length();
 

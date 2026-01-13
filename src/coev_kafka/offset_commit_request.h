@@ -10,7 +10,7 @@
 #include "version.h"
 #include "protocol_body.h"
 
-struct OffsetCommitRequestBlock : VDecoder, VEncoder
+struct OffsetCommitRequestBlock : versionedDecoder, versionedEncoder
 {
     int64_t m_offset;
     int64_t m_timestamp;
@@ -21,8 +21,8 @@ struct OffsetCommitRequestBlock : VDecoder, VEncoder
         : m_offset(_offset), m_timestamp(_timestamp), m_committed_leader_epoch(_epoch), m_metadata(_metadata)
     {
     }
-    int encode(PEncoder &pe, int16_t version);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
 struct OffsetCommitRequest : protocol_body
@@ -40,8 +40,8 @@ struct OffsetCommitRequest : protocol_body
     }
 
     void set_version(int16_t v);
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

@@ -33,7 +33,14 @@ int encode(std::shared_ptr<IEncoder> e, std::string &out, std::shared_ptr<metric
         throw PacketEncodingError{"encoding failed"};
     }
 
-    out.insert(out.end(), realEnc->m_raw.begin(), realEnc->m_raw.end());
+    if (out.empty())
+    {
+        out = std::move(realEnc->m_raw);
+    }
+    else
+    {
+        out.append(realEnc->m_raw);
+    }
     return ErrNoError;
 }
 int decode(const std::string &buf, std::shared_ptr<IDecoder> in, std::shared_ptr<metrics::Registry> metricRegistry)
@@ -60,7 +67,7 @@ int decode(const std::string &buf, std::shared_ptr<IDecoder> in, std::shared_ptr
     return ErrNoError;
 }
 
-int versionedDecode(const std::string &buf, const std::shared_ptr<VDecoder> &in, int16_t version, std::shared_ptr<metrics::Registry> &metricRegistry)
+int versionedDecode(const std::string &buf, const std::shared_ptr<versionedDecoder> &in, int16_t version, std::shared_ptr<metrics::Registry> &metricRegistry)
 {
     if (buf.empty())
     {
@@ -86,38 +93,62 @@ int versionedDecode(const std::string &buf, const std::shared_ptr<VDecoder> &in,
     return ErrNoError;
 }
 
-int prepareFlexibleDecoder(PDecoder *pd, std::shared_ptr<VDecoder> req, int16_t version)
+int prepareFlexibleDecoder(packetDecoder *pd, std::shared_ptr<versionedDecoder> req, int16_t version)
 {
     if (auto fv = std::dynamic_pointer_cast<flexible_version>(req))
     {
         if (fv->is_flexible_version(version))
         {
-            return req->decode(*dynamic_cast<realFlexibleDecoder *>(pd), version);
+            if (auto realDec = dynamic_cast<realDecoder *>(pd))
+            {
+                // Create a flexible decoder wrapper
+                realFlexibleDecoder flexibleDec;
+                // Copy all necessary fields
+                flexibleDec.m_raw = realDec->m_raw;
+                flexibleDec.m_offset = realDec->m_offset;
+                flexibleDec.m_stack = realDec->m_stack;
+                flexibleDec.m_metric_registry = realDec->m_metric_registry;
+                
+                // Call decode on the flexible decoder
+                int err = req->decode(flexibleDec, version);
+                
+                // Copy back the offset and other state
+                realDec->m_offset = flexibleDec.m_offset;
+                realDec->m_stack = flexibleDec.m_stack;
+                
+                return err;
+            }
         }
     }
-
     return req->decode(*pd, version);
 }
 
-int prepareFlexibleEncoder(PEncoder *pe, std::shared_ptr<IEncoder> req)
+int prepareFlexibleEncoder(packetEncoder *pe, std::shared_ptr<IEncoder> req)
 {
     if (auto fv = std::dynamic_pointer_cast<flexible_version>(req))
     {
         if (fv->is_flexible())
         {
-            if (dynamic_cast<prepEncoder *>(pe))
+            if (auto prepEnc = dynamic_cast<prepEncoder *>(pe))
             {
-                return req->encode(*dynamic_cast<prepEncoder *>(pe));
+                // Create a flexible prep encoder wrapper
+                prepFlexibleEncoder flexiblePrepEnc(*prepEnc);
+                // Call encode on the flexible wrapper
+                return req->encode(flexiblePrepEnc);
             }
-            else if (dynamic_cast<realEncoder *>(pe))
+            else if (auto realEnc = dynamic_cast<realEncoder *>(pe))
             {
-                return req->encode(*dynamic_cast<realEncoder *>(pe));
+                // Create a flexible real encoder wrapper
+                realFlexibleEncoder flexibleRealEnc(*realEnc);
+                // Call encode on the flexible wrapper
+                return req->encode(flexibleRealEnc);
             }
         }
     }
+    // Not flexible, call encode on the original encoder
     return req->encode(*pe);
 }
-std::shared_ptr<PDecoder> downgradeFlexibleDecoder(std::shared_ptr<PDecoder> pd)
+std::shared_ptr<packetDecoder> downgradeFlexibleDecoder(std::shared_ptr<packetDecoder> pd)
 {
     if (auto f = std::dynamic_pointer_cast<realFlexibleDecoder>(pd); f)
     {
@@ -127,7 +158,7 @@ std::shared_ptr<PDecoder> downgradeFlexibleDecoder(std::shared_ptr<PDecoder> pd)
 }
 
 inline constexpr int magicOffset = 16;
-int magicValue(PDecoder &pd, int8_t &magic)
+int magicValue(packetDecoder &pd, int8_t &magic)
 {
     return pd.peekInt8(magicOffset, magic);
 }

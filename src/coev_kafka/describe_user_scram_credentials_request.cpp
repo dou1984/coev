@@ -5,7 +5,7 @@ void DescribeUserScramCredentialsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int DescribeUserScramCredentialsRequest::encode(PEncoder &pe)
+int DescribeUserScramCredentialsRequest::encode(packetEncoder &pe)
 {
     if (pe.putArrayLength(static_cast<int32_t>(m_describe_users.size())) != ErrNoError)
     {
@@ -25,7 +25,7 @@ int DescribeUserScramCredentialsRequest::encode(PEncoder &pe)
     return ErrNoError;
 }
 
-int DescribeUserScramCredentialsRequest::decode(PDecoder &pd, int16_t version)
+int DescribeUserScramCredentialsRequest::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
     int32_t n;

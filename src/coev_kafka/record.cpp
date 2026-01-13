@@ -1,6 +1,6 @@
 #include "record.h"
 
-int RecordHeader::encode(PEncoder &pe)
+int RecordHeader::encode(packetEncoder &pe)
 {
     if (pe.putVariantBytes(Key) != 0)
     {
@@ -13,7 +13,7 @@ int RecordHeader::encode(PEncoder &pe)
     return 0;
 }
 
-int RecordHeader::decode(PDecoder &pd)
+int RecordHeader::decode(packetDecoder &pd)
 {
     if (pd.getVariantBytes(Key) != 0)
     {
@@ -26,7 +26,7 @@ int RecordHeader::decode(PDecoder &pd)
     return 0;
 }
 
-int Record::encode(PEncoder &pe)
+int Record::encode(packetEncoder &pe)
 {
     pe.push(std::dynamic_pointer_cast<pushEncoder>(m_length));
     pe.putInt8(m_attributes);
@@ -53,7 +53,7 @@ int Record::encode(PEncoder &pe)
     return pe.pop();
 }
 
-int Record::decode(PDecoder &pd)
+int Record::decode(packetDecoder &pd)
 {
     if (pd.push(std::dynamic_pointer_cast<pushDecoder>(m_length)) != 0)
     {

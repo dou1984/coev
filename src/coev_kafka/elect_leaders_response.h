@@ -17,8 +17,8 @@ struct PartitionResult
     KError m_error_code;
     std::string m_error_message;
 
-    int encode(PEncoder &pe, int16_t version);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
 class ElectLeadersResponse : public protocol_body
@@ -30,8 +30,8 @@ public:
     std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<PartitionResult>>> m_replica_election_results;
 
     void set_version(int16_t v);
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version()const;
     int16_t header_version()const;

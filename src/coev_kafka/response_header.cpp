@@ -24,7 +24,7 @@ int decode(T &pd, int32_t &length, int32_t &correlationID)
     int32_t _;
     return pd.getEmptyTaggedFieldArray(_);
 }
-int responseHeader::decode(PDecoder &pd, int16_t version)
+int responseHeader::decode(packetDecoder &pd, int16_t version)
 {
 
     if (version >= 1)

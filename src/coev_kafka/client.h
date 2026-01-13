@@ -15,7 +15,7 @@
 #include "find_coordinator_response.h"
 #include "offset_request.h"
 #include "coordinator_type.h"
-#include "single_flight_metadata_refresher.h"
+#include "metadata_refresher.h"
 
 struct Broker;
 struct PartitionMetadata;
@@ -81,8 +81,7 @@ struct Client
     std::shared_ptr<Broker> _CachedTransactionCoordinator(const std::string &transactionID);
     std::shared_ptr<Broker> _CachedController();
 
-    fMetadataRefresh m_metadata_refresh;
-
+    metadata_refresher m_refresh_metadata;
     std::atomic<int64_t> m_update_metadata_ms{0};
     std::shared_ptr<Config> m_conf;
     std::vector<std::shared_ptr<Broker>> m_seed_brokers;

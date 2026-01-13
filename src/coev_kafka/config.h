@@ -90,7 +90,7 @@ struct net_config
         std::shared_ptr<GSSAPIConfig> GSSAPI;
     } SASL;
 
-    std::chrono::milliseconds KeepAlive = std::chrono::milliseconds(0);
+    std::chrono::milliseconds KeepAlive = std::chrono::milliseconds(10000);
     sockaddr_in LocalAddr;
     struct proxy_config
     {
@@ -109,7 +109,7 @@ struct metadata_config
     } Retry;
     std::chrono::milliseconds RefreshFrequency = std::chrono::minutes(10);
     bool Full = true;
-    std::chrono::milliseconds Timeout = std::chrono::milliseconds(0);
+    std::chrono::milliseconds Timeout = std::chrono::milliseconds(500);
     bool AllowAutoTopicCreation = true;
     bool SingleLight = true;
 };

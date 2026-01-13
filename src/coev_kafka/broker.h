@@ -109,7 +109,7 @@
 
 struct GSSAPIKerberosAuth;
 
-struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
+struct Broker : versionedEncoder, versionedDecoder, std::enable_shared_from_this<Broker>
 {
 
     Broker() = default;
@@ -168,13 +168,12 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
     coev::awaitable<int> AsyncProduce(std::shared_ptr<ProduceRequest> request, std::function<void(std::shared_ptr<ProduceResponse>, KError)> callback);
 
     std::shared_ptr<Config> m_conf;
+    Connect m_conn;
     std::string m_rack;
     int32_t m_id;
     std::string m_addr;
     int32_t m_correlation_id;
-    Connect m_conn;
-    std::mutex m_lock;
-    std::atomic<bool> m_opened;
+    bool m_opened = false;        
 
     ApiVersionMap m_broker_api_versions;
     std::shared_ptr<GSSAPIKerberosAuth> m_kerberos_authenticator;
@@ -187,7 +186,7 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
 
     std::shared_ptr<ResponsePromise> MakeResponsePromise(std::shared_ptr<protocol_body> res);
     coev::awaitable<int> ReadFull(std::string &buf, size_t n);
-    coev::awaitable<int> Write(const std::string &buf, size_t n);
+    coev::awaitable<int> Write(const std::string &buf);
     coev::awaitable<int> Send(std::shared_ptr<protocol_body> req, std::shared_ptr<protocol_body> res, std::shared_ptr<ResponsePromise> &promise);
     coev::awaitable<int> SendWithPromise(std::shared_ptr<protocol_body> rb, std::shared_ptr<ResponsePromise> &promise);
     coev::awaitable<int> SendInternal(std::shared_ptr<protocol_body> rb, std::shared_ptr<ResponsePromise> &promise);
@@ -207,8 +206,8 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
     coev::awaitable<int> SendOffsetCommit(std::shared_ptr<OffsetCommitRequest> req, std::shared_ptr<OffsetCommitResponse> &resp, std::shared_ptr<ResponsePromise> &promise);
     std::shared_ptr<SaslAuthenticateRequest> CreateSaslAuthenticateRequest(const std::string &msg);
 
-    int decode(PDecoder &pd, int16_t version);
-    int encode(PEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
     void SafeAsyncClose();
 
     int BuildClientFirstMessage(std::shared_ptr<AccessToken> token, std::string &);
@@ -228,7 +227,6 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
     template <class Req, class Resp>
     coev::awaitable<int> SendAndReceive(Req req, Resp &res)
     {
-        std::lock_guard<std::mutex> lock(m_lock);
         std::shared_ptr<ResponsePromise> promise;
         int32_t err = co_await Send(req, res, promise);
         if (err)

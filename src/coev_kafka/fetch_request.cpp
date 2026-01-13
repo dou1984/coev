@@ -17,7 +17,7 @@ void FetchRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int FetchRequest::encode(PEncoder &pe)
+int FetchRequest::encode(packetEncoder &pe)
 {
     pe.putInt32(-1);
     pe.putInt32(m_max_wait_time);
@@ -117,7 +117,7 @@ int FetchRequest::encode(PEncoder &pe)
     return 0;
 }
 
-int FetchRequest::decode(PDecoder &pd, int16_t version)
+int FetchRequest::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
     int err = 0;

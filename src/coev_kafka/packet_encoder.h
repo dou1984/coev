@@ -10,9 +10,9 @@
 #include "errors.h"
 #include "dynamic_push_encoder.h"
 
-struct PEncoder
+struct packetEncoder
 {
-    virtual ~PEncoder() = default;
+    virtual ~packetEncoder() = default;
 
     virtual void putInt8(int8_t in) = 0;
     virtual void putInt16(int16_t in) = 0;

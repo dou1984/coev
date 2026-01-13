@@ -6,7 +6,7 @@ void AddPartitionsToTxnRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int AddPartitionsToTxnRequest::encode(PEncoder &pe)
+int AddPartitionsToTxnRequest::encode(packetEncoder &pe)
 {
     if (pe.putString(m_transactional_id) != 0)
     {
@@ -36,7 +36,7 @@ int AddPartitionsToTxnRequest::encode(PEncoder &pe)
     return 0;
 }
 
-int AddPartitionsToTxnRequest::decode(PDecoder &pd, int16_t version)
+int AddPartitionsToTxnRequest::decode(packetDecoder &pd, int16_t version)
 {
     int err;
     if ((err = pd.getString(m_transactional_id)) != 0)

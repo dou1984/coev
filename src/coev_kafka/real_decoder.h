@@ -12,7 +12,7 @@
 #include "errors.h"
 #include "encoder_decoder.h"
 
-struct realDecoder : PDecoder
+struct realDecoder : packetDecoder
 {
     int getInt8(int8_t &result);
     int getInt16(int16_t &result);
@@ -36,9 +36,9 @@ struct realDecoder : PDecoder
     int getInt64Array(std::vector<int64_t> &result);
     int getStringArray(std::vector<std::string> &result);
     int remaining();
-    int getSubset(int length, std::shared_ptr<PDecoder> &result);
+    int getSubset(int length, std::shared_ptr<packetDecoder> &result);
     int getRawBytes(int length, std::string &result);
-    int peek(int offset, int length, std::shared_ptr<PDecoder> &result);
+    int peek(int offset, int length, std::shared_ptr<packetDecoder> &result);
     int peekInt8(int offset, int8_t &result);
     int push(std::shared_ptr<pushDecoder> in);
     int pop();

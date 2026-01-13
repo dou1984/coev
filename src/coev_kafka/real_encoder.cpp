@@ -26,11 +26,17 @@ int encodeVariant(uint8_t *buf, int64_t x)
 
 void realEncoder::putInt8(int8_t in)
 {
+    if (m_offset + 1 > m_raw.size()) {
+        m_raw.resize(m_offset + 1);
+    }
     m_raw[m_offset++] = static_cast<uint8_t>(in);
 }
 
 void realEncoder::putInt16(int16_t in)
 {
+    if (m_offset + 2 > m_raw.size()) {
+        m_raw.resize(m_offset + 2);
+    }
     m_raw[m_offset] = static_cast<uint8_t>((in >> 8) & 0xFF);
     m_raw[m_offset + 1] = static_cast<uint8_t>(in & 0xFF);
     m_offset += 2;
@@ -38,6 +44,9 @@ void realEncoder::putInt16(int16_t in)
 
 void realEncoder::putInt32(int32_t in)
 {
+    if (m_offset + 4 > m_raw.size()) {
+        m_raw.resize(m_offset + 4);
+    }
     m_raw[m_offset] = static_cast<uint8_t>((in >> 24) & 0xFF);
     m_raw[m_offset + 1] = static_cast<uint8_t>((in >> 16) & 0xFF);
     m_raw[m_offset + 2] = static_cast<uint8_t>((in >> 8) & 0xFF);
@@ -47,6 +56,9 @@ void realEncoder::putInt32(int32_t in)
 
 void realEncoder::putInt64(int64_t in)
 {
+    if (m_offset + 8 > m_raw.size()) {
+        m_raw.resize(m_offset + 8);
+    }
     m_raw[m_offset] = static_cast<uint8_t>((in >> 56) & 0xFF);
     m_raw[m_offset + 1] = static_cast<uint8_t>((in >> 48) & 0xFF);
     m_raw[m_offset + 2] = static_cast<uint8_t>((in >> 40) & 0xFF);
@@ -97,7 +109,12 @@ void realEncoder::putDurationMs(std::chrono::milliseconds ms)
 
 int realEncoder::putRawBytes(const std::string &in)
 {
-    m_raw += in;
+    // Write at current offset, not append
+    if (m_offset + in.size() > m_raw.size())
+    {
+        m_raw.resize(m_offset + in.size());
+    }
+    std::memcpy(&m_raw[m_offset], in.data(), in.size());
     m_offset += in.size();
     return 0;
 }
@@ -128,8 +145,13 @@ int realEncoder::putVariantBytes(const std::string &in)
 
 int realEncoder::putString(const std::string &in)
 {
-    putInt16(static_cast<int16_t>(in.size()));
-    m_raw += in;
+    putInt16(static_cast<int16_t>(in.size()));    
+    // Write at current offset, not append
+    if (m_offset + in.size() > m_raw.size())
+    {
+        m_raw.resize(m_offset + in.size());
+    }
+    std::memcpy(&m_raw[m_offset], in.data(), in.size());
     m_offset += in.size();
     return 0;
 }
@@ -228,7 +250,7 @@ int realFlexibleEncoder::putBytes(const std::string &in)
 int realFlexibleEncoder::putString(const std::string &in)
 {
     putArrayLength(static_cast<int>(in.size()));
-    base::putRawBytes(std::string(in.begin(), in.end()));
+    base::putRawBytes(in);
     return 0;
 }
 
@@ -236,7 +258,8 @@ int realFlexibleEncoder::putNullableString(const std::string &in)
 {
     if (in.empty())
     {
-        base::putInt8(0);
+        // For flexible encoding, null strings are encoded with uvarint(0)
+        base::putUVarint(0);
         return 0;
     }
     return putString(in);

@@ -26,9 +26,9 @@ struct Records
     static std::shared_ptr<Records> NewDefaultRecords(std::shared_ptr<RecordBatch> batch);
 
     int SetTypeFromFields(bool &empty);
-    int SetTypeFromMagic(PDecoder &pd);
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd);
+    int SetTypeFromMagic(packetDecoder &pd);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd);
     int numRecords(int &);
     int isPartial(bool &);
     int isControl(bool &);

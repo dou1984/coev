@@ -22,8 +22,8 @@ struct AlterClientQuotasEntryResponse : protocol_body
     AlterClientQuotasEntryResponse(int16_t v) : m_version(v)
     {
     }
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     void set_version(int16_t version);
@@ -39,8 +39,8 @@ struct AlterClientQuotasResponse : protocol_body, throttle_support
     std::vector<AlterClientQuotasEntryResponse> m_entries;
 
     void set_version(int16_t v);
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

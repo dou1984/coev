@@ -5,7 +5,7 @@ void ConsumerMetadataRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int ConsumerMetadataRequest::encode(PEncoder &pe)
+int ConsumerMetadataRequest::encode(packetEncoder &pe)
 {
     FindCoordinatorRequest tmp;
     tmp.m_coordinator_key = m_consumer_group;
@@ -14,7 +14,7 @@ int ConsumerMetadataRequest::encode(PEncoder &pe)
     return tmp.encode(pe);
 }
 
-int ConsumerMetadataRequest::decode(PDecoder &pd, int16_t version)
+int ConsumerMetadataRequest::decode(packetDecoder &pd, int16_t version)
 {
     FindCoordinatorRequest tmp;
     int err = tmp.decode(pd, version);

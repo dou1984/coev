@@ -11,14 +11,14 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
-struct AclCreationResponse : IEncoder, VDecoder
+struct AclCreationResponse : IEncoder, versionedDecoder
 {
     KError m_err;
     std::string m_err_msg;
 
     AclCreationResponse() = default;
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
 struct CreateAclsResponse : protocol_body
@@ -28,8 +28,8 @@ struct CreateAclsResponse : protocol_body
     std::vector<std::shared_ptr<AclCreationResponse>> m_acl_creation_responses;
 
     void set_version(int16_t v);
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

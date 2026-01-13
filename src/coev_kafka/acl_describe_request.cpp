@@ -7,12 +7,12 @@ void DescribeAclsRequest::set_version(int16_t v)
     m_filter.m_version = m_version;
 }
 
-int DescribeAclsRequest::encode(PEncoder &pe)
+int DescribeAclsRequest::encode(packetEncoder &pe)
 {
     return m_filter.encode(pe);
 }
 
-int DescribeAclsRequest::decode(PDecoder &pd, int16_t version)
+int DescribeAclsRequest::decode(packetDecoder &pd, int16_t version)
 {
     m_version = static_cast<int>(version);
     m_filter.m_version = m_version;

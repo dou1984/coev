@@ -4,7 +4,7 @@
 #include "packet_decoder.h"
 #include "packet_encoder.h"
 
-struct FetchRequestBlock : VDecoder, VEncoder
+struct FetchRequestBlock : versionedDecoder, versionedEncoder
 {
     int16_t m_version;
     int32_t m_current_leader_epoch;
@@ -13,6 +13,6 @@ struct FetchRequestBlock : VDecoder, VEncoder
     int32_t m_max_bytes;
 
     FetchRequestBlock();
-    int encode(PEncoder &pe, int16_t version);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
 };

@@ -10,7 +10,7 @@
 #include "packet_decoder.h"
 #include "protocol_body.h"
 
-struct TopicDetail : IEncoder, VDecoder
+struct TopicDetail : IEncoder, versionedDecoder
 {
     int32_t m_num_partitions;
     int16_t m_replication_factor;
@@ -18,8 +18,8 @@ struct TopicDetail : IEncoder, VDecoder
     std::map<std::string, std::string> m_config_entries;
 
     TopicDetail() = default;
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
 struct CreateTopicsRequest : protocol_body
@@ -40,8 +40,8 @@ struct CreateTopicsRequest : protocol_body
 
     void set_version(int16_t v);
 
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

@@ -5,7 +5,7 @@
 OffsetResponseBlock::OffsetResponseBlock()
     : m_err(static_cast<KError>(0)), m_timestamp(0), m_offset(0), m_leader_epoch(-1) {}
 
-int OffsetResponseBlock::decode(PDecoder &pd, int16_t version)
+int OffsetResponseBlock::decode(packetDecoder &pd, int16_t version)
 {
     int err = pd.getKError(m_err);
     if (err != 0)
@@ -42,7 +42,7 @@ int OffsetResponseBlock::decode(PDecoder &pd, int16_t version)
     return 0;
 }
 
-int OffsetResponseBlock::encode(PEncoder &pe, int16_t version)
+int OffsetResponseBlock::encode(packetEncoder &pe, int16_t version)
 {
     pe.putKError(m_err);
 
@@ -70,7 +70,7 @@ void OffsetResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int OffsetResponse::decode(PDecoder &pd, int16_t version)
+int OffsetResponse::decode(packetDecoder &pd, int16_t version)
 {
     if (version >= 2)
     {
@@ -141,7 +141,7 @@ std::shared_ptr<OffsetResponseBlock> OffsetResponse::GetBlock(const std::string 
     return partitionIt->second;
 }
 
-int OffsetResponse::encode(PEncoder &pe)
+int OffsetResponse::encode(packetEncoder &pe)
 {
     if (m_version >= 2)
     {

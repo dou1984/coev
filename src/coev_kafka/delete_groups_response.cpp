@@ -7,7 +7,7 @@ void DeleteGroupsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int DeleteGroupsResponse::encode(PEncoder &pe)
+int DeleteGroupsResponse::encode(packetEncoder &pe)
 {
     pe.putDurationMs(m_throttle_time);
 
@@ -30,7 +30,7 @@ int DeleteGroupsResponse::encode(PEncoder &pe)
     return ErrNoError;
 }
 
-int DeleteGroupsResponse::decode(PDecoder &pd, int16_t version)
+int DeleteGroupsResponse::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
 

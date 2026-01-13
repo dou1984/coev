@@ -11,7 +11,7 @@ static int variantSize(int64_t value)
     return size;
 }
 
-int VariantLengthField::decode(PDecoder &pd)
+int VariantLengthField::decode(packetDecoder &pd)
 {
     int64_t val;
     int err = pd.getVariant(val);

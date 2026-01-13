@@ -6,7 +6,7 @@ void DescribeGroupsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int DescribeGroupsRequest::encode(PEncoder &pe)
+int DescribeGroupsRequest::encode(packetEncoder &pe)
 {
     if (pe.putStringArray(m_groups) != ErrNoError)
     {
@@ -20,7 +20,7 @@ int DescribeGroupsRequest::encode(PEncoder &pe)
     return ErrNoError;
 }
 
-int DescribeGroupsRequest::decode(PDecoder &pd, int16_t version)
+int DescribeGroupsRequest::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
     if (pd.getStringArray(m_groups) != ErrNoError)

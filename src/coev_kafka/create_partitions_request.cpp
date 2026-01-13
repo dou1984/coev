@@ -5,7 +5,7 @@ void CreatePartitionsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int CreatePartitionsRequest::encode(PEncoder &pe)
+int CreatePartitionsRequest::encode(packetEncoder &pe)
 {
     if (pe.putArrayLength(static_cast<int32_t>(m_topic_partitions.size())) != ErrNoError)
     {
@@ -30,7 +30,7 @@ int CreatePartitionsRequest::encode(PEncoder &pe)
     return ErrNoError;
 }
 
-int CreatePartitionsRequest::decode(PDecoder &pd, int16_t version)
+int CreatePartitionsRequest::decode(packetDecoder &pd, int16_t version)
 {
     int32_t n;
     if (pd.getArrayLength(n) != ErrNoError)

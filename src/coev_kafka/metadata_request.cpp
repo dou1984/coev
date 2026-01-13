@@ -47,7 +47,7 @@ void MetadataRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int MetadataRequest::encode(PEncoder &pe)
+int MetadataRequest::encode(packetEncoder &pe)
 {
     if (m_version < 0 || m_version > 10)
     {
@@ -108,7 +108,7 @@ int MetadataRequest::encode(PEncoder &pe)
     return 0;
 }
 
-int MetadataRequest::decode(PDecoder &pd, int16_t version)
+int MetadataRequest::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
     int32_t size;
@@ -185,9 +185,12 @@ int MetadataRequest::decode(PDecoder &pd, int16_t version)
         m_include_topic_authorized_operations = includeTopicAuthz;
     }
 
-    int err;
-    pd.getEmptyTaggedFieldArray(err);
-    return err;
+    int32_t err;
+    if (int e = pd.getEmptyTaggedFieldArray(err); e != 0)
+    {
+        return e;
+    }
+    return 0;
 }
 
 int16_t MetadataRequest::key() const

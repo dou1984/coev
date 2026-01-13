@@ -24,8 +24,8 @@ struct OffsetResponseBlock
 
     OffsetResponseBlock();
 
-    int decode(PDecoder &pd, int16_t version);
-    int encode(PEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
 };
 
 struct OffsetResponse : protocol_body
@@ -36,9 +36,9 @@ struct OffsetResponse : protocol_body
     std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<OffsetResponseBlock>>> m_blocks;
 
     void set_version(int16_t v);
-    int decode(PDecoder &pd, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
     std::shared_ptr<OffsetResponseBlock> GetBlock(const std::string &topic, int32_t partition);
-    int encode(PEncoder &pe);
+    int encode(packetEncoder &pe);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

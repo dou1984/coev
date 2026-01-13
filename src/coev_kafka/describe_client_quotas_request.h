@@ -18,8 +18,8 @@ struct QuotaFilterComponent
     QuotaMatchType m_match_type;
     std::string m_match;
 
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
 struct DescribeClientQuotasRequest : protocol_body
@@ -32,8 +32,8 @@ struct DescribeClientQuotasRequest : protocol_body
     {
     }
     void set_version(int16_t v);
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

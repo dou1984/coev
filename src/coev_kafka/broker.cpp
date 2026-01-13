@@ -12,6 +12,7 @@
 #include "kerberos_client.h"
 #include "scram_client.h"
 #include "response_header.h"
+#include "sleep_for.h"
 
 int8_t getHeaderLength(int16_t header_version)
 {
@@ -33,130 +34,121 @@ Broker::Broker(int id, const std::string &addr) : m_id(id), m_addr(addr), m_open
 }
 coev::awaitable<int> Broker::Open(std::shared_ptr<Config> conf)
 {
-    bool expected = false;
-    if (!m_opened.compare_exchange_strong(expected, true))
+    if (m_opened)
     {
-        co_return 1;
+        co_return 0;
     }
+    m_opened = true;
     if (!conf)
     {
         conf = std::make_shared<Config>();
     }
-    int32_t err = conf->Validate();
-    if (err)
+
+    if (!conf->Validate())
     {
-        co_return err;
+        co_return INVALID;
     }
-    std::lock_guard<std::mutex> lock(m_lock);
     if (!m_metric_registry)
     {
         m_metric_registry = metrics::NewRegistry();
     }
     m_conf = conf;
-    m_task << [this]() -> coev::awaitable<int>
+
+    auto [host, port] = net::SplitHostPort(m_addr);
+    auto fd = co_await m_conn.connect(host.data(), port);
+    if (fd == INVALID)
     {
-        std::lock_guard<std::mutex> lock(m_lock);
+        co_return ErrNotConnected;
+    }
 
-        auto [host, port] = net::SplitHostPort(m_addr);
-        auto fd = co_await m_conn.connect(host.data(), port);
-        if (fd == INVALID)
-        {
-            co_return ErrNotConnected;
-        }
+    m_incoming_byte_rate = metrics::GetOrRegisterMeter("incoming-byte-rate", m_metric_registry);
+    m_request_rate = metrics::GetOrRegisterMeter("request-rate", m_metric_registry);
+    m_fetch_rate = metrics::GetOrRegisterMeter("consumer-fetch-rate", m_metric_registry);
+    m_request_size = metrics::GetOrRegisterHistogram("request-size", m_metric_registry);
+    m_request_latency = metrics::GetOrRegisterHistogram("request-latency-in-ms", m_metric_registry);
+    m_outgoing_byte_rate = metrics::GetOrRegisterMeter("outgoing-byte-rate", m_metric_registry);
+    m_response_rate = metrics::GetOrRegisterMeter("response-rate", m_metric_registry);
+    m_response_size = metrics::GetOrRegisterHistogram("response-size", m_metric_registry);
+    m_requests_in_flight = metrics::GetOrRegisterCounter("requests-in-flight", m_metric_registry);
 
-        m_incoming_byte_rate = metrics::GetOrRegisterMeter("incoming-byte-rate", m_metric_registry);
-        m_request_rate = metrics::GetOrRegisterMeter("request-rate", m_metric_registry);
-        m_fetch_rate = metrics::GetOrRegisterMeter("consumer-fetch-rate", m_metric_registry);
-        m_request_size = metrics::GetOrRegisterHistogram("request-size", m_metric_registry);
-        m_request_latency = metrics::GetOrRegisterHistogram("request-latency-in-ms", m_metric_registry);
-        m_outgoing_byte_rate = metrics::GetOrRegisterMeter("outgoing-byte-rate", m_metric_registry);
-        m_response_rate = metrics::GetOrRegisterMeter("response-rate", m_metric_registry);
-        m_response_size = metrics::GetOrRegisterHistogram("response-size", m_metric_registry);
-        m_requests_in_flight = metrics::GetOrRegisterCounter("requests-in-flight", m_metric_registry);
-
-        if (m_id >= 0)
+    if (m_id >= 0)
+    {
+        RegisterMetrics();
+    }
+    int err = ErrNoError;
+    if (m_conf->ApiVersionsRequest)
+    {
+        std::shared_ptr<ApiVersionsResponse> apiVersionsResponse;
+        err = co_await SendAndReceiveApiVersions(3, apiVersionsResponse);
+        if (err)
         {
-            RegisterMetrics();
-        }
-        int err = ErrNoError;
-        if (m_conf->ApiVersionsRequest)
-        {
-            std::shared_ptr<ApiVersionsResponse> apiVersionsResponse;
-            err = co_await SendAndReceiveApiVersions(3, apiVersionsResponse);
-            if (err)
-            {
-                int16_t maxVersion = 0;
-                if (apiVersionsResponse)
-                {
-                    for (auto &k : apiVersionsResponse->m_api_keys)
-                    {
-                        if (k.m_api_key == apiKeyApiVersions)
-                        {
-                            maxVersion = k.m_max_version;
-                            break;
-                        }
-                    }
-                }
-                err = co_await SendAndReceiveApiVersions(maxVersion, apiVersionsResponse);
-                if (err)
-                {
-                    co_return err;
-                }
-            }
+            int16_t maxVersion = 0;
             if (apiVersionsResponse)
             {
-                m_broker_api_versions.clear();
-                for (auto &key : apiVersionsResponse->m_api_keys)
+                for (auto &k : apiVersionsResponse->m_api_keys)
                 {
-                    m_broker_api_versions.emplace(key.m_api_key, ApiVersionRange(key.m_min_version, key.m_max_version));
+                    if (k.m_api_key == apiKeyApiVersions)
+                    {
+                        maxVersion = k.m_max_version;
+                        break;
+                    }
                 }
             }
-        }
-
-        bool useSaslV0 = m_conf->Net.SASL.Version == 0;
-        if (m_conf->Net.SASL.Enable && useSaslV0)
-        {
-            err = co_await AuthenticateViaSASLv0();
+            err = co_await SendAndReceiveApiVersions(maxVersion, apiVersionsResponse);
             if (err)
             {
-                m_conn.close();
-                m_opened.store(false);
-                co_return ErrPermitForbidden;
-            }
-        }
-
-        m_task << ResponseReceiver();
-        if (m_conf->Net.SASL.Enable && !useSaslV0)
-        {
-            err = co_await AuthenticateViaSASLv1();
-            if (err)
-            {
-                co_await m_done.get();
-                int32_t closeErr = m_conn.close();
-                m_opened.store(false);
                 co_return err;
             }
         }
-    }();
+        if (apiVersionsResponse)
+        {
+            m_broker_api_versions.clear();
+            for (auto &key : apiVersionsResponse->m_api_keys)
+            {
+                m_broker_api_versions.emplace(key.m_api_key, ApiVersionRange(key.m_min_version, key.m_max_version));
+            }
+        }
+    }
 
+    bool useSaslV0 = m_conf->Net.SASL.Version == 0;
+    if (m_conf->Net.SASL.Enable && useSaslV0)
+    {
+        err = co_await AuthenticateViaSASLv0();
+        if (err)
+        {
+            m_conn.close();
+            m_opened = false;
+            co_return ErrPermitForbidden;
+        }
+    }
+
+    m_task << ResponseReceiver();
+    if (m_conf->Net.SASL.Enable && !useSaslV0)
+    {
+        err = co_await AuthenticateViaSASLv1();
+        if (err)
+        {
+            co_await m_done.get();
+            m_conn.close();
+            m_opened = false;
+            co_return err;
+        }
+    }
     co_return 0;
 }
 
 int Broker::ResponseSize()
 {
-    std::lock_guard<std::mutex> lock(m_lock);
     return m_responses.size();
 }
 
 bool Broker::Connected()
 {
-    std::lock_guard<std::mutex> lock(m_lock);
     return m_conn;
 }
 
 int Broker::TLSConnectionState()
 {
-    std::lock_guard<std::mutex> lock(m_lock);
     tls::ConnectionState state;
     if (!m_conn)
     {
@@ -177,7 +169,6 @@ int Broker::TLSConnectionState()
 
 coev::awaitable<int> Broker::Close()
 {
-    std::lock_guard<std::mutex> lock(m_lock);
     if (!m_conn)
     {
         co_return ErrNotConnected;
@@ -187,7 +178,7 @@ coev::awaitable<int> Broker::Close()
     int32_t err = m_conn.close();
 
     m_metric_registry->UnregisterAll();
-    m_opened.store(false);
+    m_opened = false;
     co_return 0;
 }
 
@@ -234,7 +225,6 @@ coev::awaitable<int> Broker::GetAvailableOffsets(std::shared_ptr<OffsetRequest> 
 
 coev::awaitable<int> Broker::AsyncProduce(std::shared_ptr<ProduceRequest> request, std::function<void(std::shared_ptr<ProduceResponse>, KError)> f)
 {
-    std::lock_guard<std::mutex> lock(m_lock);
     bool needAcks = request->m_acks != NoResponse;
     std::shared_ptr<ResponsePromise> promise;
     if (needAcks)
@@ -250,7 +240,7 @@ coev::awaitable<int> Broker::AsyncProduce(std::shared_ptr<ProduceRequest> reques
                 f({nullptr}, err);
                 return;
             }
-            bool decodeErr = versionedDecode(packets, std::dynamic_pointer_cast<VDecoder>(response), request->version(), m_metric_registry);
+            bool decodeErr = versionedDecode(packets, std::dynamic_pointer_cast<versionedDecoder>(response), request->version(), m_metric_registry);
             if (decodeErr)
             {
                 f({nullptr}, ErrDecodeError);
@@ -524,14 +514,36 @@ coev::awaitable<int> Broker::AlterClientQuotas(std::shared_ptr<AlterClientQuotas
 
 coev::awaitable<int> Broker::ReadFull(std::string &buf, size_t n)
 {
-    auto deadline = std::chrono::system_clock::now() + m_conf->Net.ReadTimeout;
-    return m_conn.ReadFull(buf, n);
+    int err = ErrNoError;
+    co_task task;
+    auto _timeout = task << [this]() -> coev::awaitable<void>
+    {
+        co_await sleep_for(m_conf->Net.ReadTimeout);
+    }();
+    auto _send = task << [this, &err](auto &buf, auto n) -> coev::awaitable<void>
+    {
+        err = co_await m_conn.ReadFull(buf, n);
+        if (err != ErrNoError)
+        {
+            LOG_ERR("ReadFull %d %d %s\n", err, errno, strerror(errno));
+        }
+    }(buf, n);
+    auto _result = co_await task.wait();
+    if (_result == _timeout)
+    {
+        co_return ErrTimedOut;
+    }
+    if (err)
+    {
+        co_return err;
+    }
+    co_return 0;
 }
 
-coev::awaitable<int> Broker::Write(const std::string &buf, size_t n)
+coev::awaitable<int> Broker::Write(const std::string &buf)
 {
     auto now = std::chrono::system_clock::now();
-    return m_conn.Write(buf, n);
+    return m_conn.Write(buf);
 }
 
 coev::awaitable<int> Broker::Send(std::shared_ptr<protocol_body> req, std::shared_ptr<protocol_body> res, std::shared_ptr<ResponsePromise> &promise)
@@ -593,9 +605,8 @@ coev::awaitable<int> Broker::SendInternal(std::shared_ptr<protocol_body> rb, std
 
     AddRequestInFlightMetrics(1);
 
-    size_t bytes;
-    auto err = co_await Write(buf, bytes);
-
+    auto err = co_await Write(buf);
+    auto bytes = buf.size();
     UpdateOutgoingCommunicationMetrics(bytes);
 
     UpdateProtocolMetrics(rb);
@@ -632,7 +643,7 @@ coev::awaitable<int> HandleResponsePromise(std::shared_ptr<protocol_body> req, s
     co_return versionedDecode(packets, res, req->version(), m_metric_registry);
 }
 
-int Broker::decode(PDecoder &pd, int16_t version)
+int Broker::decode(packetDecoder &pd, int16_t version)
 {
     int32_t err = pd.getInt32(m_id);
     if (err)
@@ -678,7 +689,7 @@ int Broker::decode(PDecoder &pd, int16_t version)
     return err;
 }
 
-int Broker::encode(PEncoder &pe, int16_t version)
+int Broker::encode(packetEncoder &pe, int16_t version)
 {
 
     auto [host, port] = net::SplitHostPort(m_addr);
@@ -727,14 +738,12 @@ coev::awaitable<int> Broker::ResponseReceiver()
         int8_t headerLength = getHeaderLength(promise->m_response->header_version());
         std::string header;
         header.resize(headerLength);
-        size_t bytesReadHeader;
+        auto bytesReadHeader = header.size();
         auto err = co_await ReadFull(header, bytesReadHeader);
         auto m_request_latency = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now() - promise->m_request_time);
-
         if (err)
         {
-
             UpdateIncomingCommunicationMetrics(bytesReadHeader, m_request_latency);
             dead = err;
             std::string _;
@@ -743,11 +752,9 @@ coev::awaitable<int> Broker::ResponseReceiver()
         }
 
         auto decodedHeader = std::make_shared<responseHeader>();
-        err = versionedDecode(header, std::dynamic_pointer_cast<VDecoder>(decodedHeader), promise->m_response->header_version(),
-                              m_metric_registry);
+        err = versionedDecode(header, std::dynamic_pointer_cast<versionedDecoder>(decodedHeader), promise->m_response->header_version(), m_metric_registry);
         if (err)
         {
-
             UpdateIncomingCommunicationMetrics(bytesReadHeader, m_request_latency);
             dead = err;
             std::string _;
@@ -757,7 +764,6 @@ coev::awaitable<int> Broker::ResponseReceiver()
 
         if (decodedHeader->m_correlation_id != promise->m_correlation_id)
         {
-
             UpdateIncomingCommunicationMetrics(bytesReadHeader, m_request_latency);
             dead = 1;
             std::string _;
@@ -766,10 +772,9 @@ coev::awaitable<int> Broker::ResponseReceiver()
         }
 
         std::string buf;
-        buf.resize(decodedHeader->m_length - headerLength + 4);
-        size_t bytesReadBody;
+        buf.resize(decodedHeader->m_length - bytesReadHeader + 4);
+        size_t bytesReadBody = buf.size();
         err = co_await ReadFull(buf, bytesReadBody);
-
         UpdateIncomingCommunicationMetrics(bytesReadHeader + bytesReadBody, m_request_latency);
         if (err)
         {
@@ -804,12 +809,13 @@ coev::awaitable<int> Broker::SendAndReceiveApiVersions(int16_t v, std::shared_pt
 
     AddRequestInFlightMetrics(1);
 
-    size_t bytes;
-    auto err = co_await Write(buf, bytes);
+    auto err = co_await Write(buf);
+    auto bytes = buf.size();
 
     UpdateOutgoingCommunicationMetrics(bytes);
     if (err)
     {
+        LOG_ERR("Write failed: %d\n", err);
 
         AddRequestInFlightMetrics(-1);
         co_return err;
@@ -818,11 +824,11 @@ coev::awaitable<int> Broker::SendAndReceiveApiVersions(int16_t v, std::shared_pt
     m_correlation_id++;
     std::string header;
     header.resize(8);
-    size_t headerBytes = 8;
+    size_t headerBytes = header.size();
     err = co_await ReadFull(header, headerBytes);
     if (err)
     {
-
+        LOG_ERR("Read header failed: %d\n", err);
         AddRequestInFlightMetrics(-1);
         co_return err;
     }
@@ -830,7 +836,7 @@ coev::awaitable<int> Broker::SendAndReceiveApiVersions(int16_t v, std::shared_pt
     uint32_t length = (header[0] << 24) | (header[1] << 16) | (header[2] << 8) | header[3];
     std::string payload;
     payload.resize(length - 4);
-    size_t n;
+    size_t n = payload.size();
     err = co_await ReadFull(payload, n);
     if (err)
     {
@@ -988,8 +994,8 @@ coev::awaitable<int> Broker::SendAndReceiveSASLHandshake(const std::string &sasl
     auto requestTime = std::chrono::system_clock::now();
     AddRequestInFlightMetrics(1);
 
-    size_t bytes;
-    auto err = co_await Write(buf, bytes);
+    auto err = co_await Write(buf);
+    auto bytes = buf.size();
     UpdateOutgoingCommunicationMetrics(bytes);
     if (err)
     {
@@ -1001,7 +1007,7 @@ coev::awaitable<int> Broker::SendAndReceiveSASLHandshake(const std::string &sasl
     m_correlation_id++;
     std::string header;
     header.resize(8);
-    size_t headerBytes = 8;
+    size_t headerBytes = header.size();
     err = co_await ReadFull(header, headerBytes);
     if (err)
     {
@@ -1012,7 +1018,7 @@ coev::awaitable<int> Broker::SendAndReceiveSASLHandshake(const std::string &sasl
     uint32_t length = (header[0] << 24) | (header[1] << 16) | (header[2] << 8) | header[3];
     std::string payload;
     payload.resize(length - 4);
-    size_t n = length - 4;
+    size_t n = payload.size();
     err = co_await ReadFull(payload, n);
     if (err)
     {
@@ -1082,10 +1088,9 @@ coev::awaitable<int> Broker::SendAndReceiveSASLPlainAuthV0()
 
     AddRequestInFlightMetrics(1);
 
-    size_t bytesWritten;
-    int32_t err = co_await Write(authBytes, bytesWritten);
-
-    UpdateOutgoingCommunicationMetrics(bytesWritten);
+    int32_t err = co_await Write(authBytes);
+    auto bytes = authBytes.size();
+    UpdateOutgoingCommunicationMetrics(bytes);
     if (err)
     {
 
@@ -1095,7 +1100,7 @@ coev::awaitable<int> Broker::SendAndReceiveSASLPlainAuthV0()
 
     std::string header;
     header.resize(4);
-    size_t n = 4;
+    size_t n = header.size();
     err = co_await ReadFull(header, n);
     auto latency = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - requestTime);
 
@@ -1186,21 +1191,24 @@ coev::awaitable<int> Broker::SendAndReceiveSASLSCRAMv0()
 
         size_t length = msg.length();
         std::string authBytes;
-        authBytes.resize(length + 4);
+        authBytes.resize(4);
         uint32_t len = length;
         authBytes[0] = (len >> 24) & 0xFF;
         authBytes[1] = (len >> 16) & 0xFF;
         authBytes[2] = (len >> 8) & 0xFF;
         authBytes[3] = len & 0xFF;
-        memcpy(&authBytes[4], msg.c_str(), length);
-
-        size_t bytesWritten;
-        err = co_await Write(authBytes, bytesWritten);
-
-        UpdateOutgoingCommunicationMetrics(length + 4);
+        err = co_await Write(authBytes);
+        UpdateOutgoingCommunicationMetrics(authBytes.size());
         if (err)
         {
+            AddRequestInFlightMetrics(-1);
+            co_return err;
+        }
 
+        err = co_await Write(msg);
+        UpdateOutgoingCommunicationMetrics(msg.size());
+        if (err)
+        {
             AddRequestInFlightMetrics(-1);
             co_return err;
         }
@@ -1208,11 +1216,10 @@ coev::awaitable<int> Broker::SendAndReceiveSASLSCRAMv0()
         m_correlation_id++;
         std::string header;
         header.resize(4);
-        size_t headerBytes = 4;
+        size_t headerBytes = header.size();
         err = co_await ReadFull(header, headerBytes);
         if (err)
         {
-
             AddRequestInFlightMetrics(-1);
             co_return err;
         }
@@ -1220,7 +1227,7 @@ coev::awaitable<int> Broker::SendAndReceiveSASLSCRAMv0()
         uint32_t payloadLen = (header[0] << 24) | (header[1] << 16) | (header[2] << 8) | header[3];
         std::string payload;
         payload.resize(payloadLen);
-        size_t n = payloadLen;
+        size_t n = payload.size();
         err = co_await ReadFull(payload, n);
         if (err)
         {

@@ -40,8 +40,8 @@ namespace coev
         } _(this);
 
         m_status = CORO_FINISHED;
-        std::visit(_, m_that);
-        m_that = nullptr;
+        auto _that = X(m_that);
+        std::visit(_, _that);
     }
     void promise::unhandled_exception()
     {

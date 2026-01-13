@@ -6,7 +6,7 @@ void DescribeLogDirsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int DescribeLogDirsRequest::encode(PEncoder &pe)
+int DescribeLogDirsRequest::encode(packetEncoder &pe)
 {
     int32_t length = static_cast<int32_t>(m_describe_topics.size());
     if (length == 0)
@@ -35,7 +35,7 @@ int DescribeLogDirsRequest::encode(PEncoder &pe)
     return ErrNoError;
 }
 
-int DescribeLogDirsRequest::decode(PDecoder &pd, int16_t version)
+int DescribeLogDirsRequest::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
     int32_t n;

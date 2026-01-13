@@ -12,7 +12,7 @@ struct PartitionOffsetManager
                            int32_t leaderEpoch, size_t channelBufferSize, int64_t offset, const std::string &metadata);
 
     std::pair<int64_t, std::string> NextOffset();
-    coev::co_channel<std::shared_ptr<ConsumerError>> &Errors();
+    coev::awaitable<std::shared_ptr<ConsumerError>> Errors();
     void MarkOffset(int64_t offset, const std::string &metadata);
     void ResetOffset(int64_t offset, const std::string &metadata);
     void AsyncClose();

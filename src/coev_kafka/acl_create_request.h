@@ -12,7 +12,7 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
-struct AclCreation : VDecoder, VEncoder
+struct AclCreation : versionedDecoder, versionedEncoder
 {
     Resource m_resource;
     Acl m_acl;
@@ -20,8 +20,8 @@ struct AclCreation : VDecoder, VEncoder
     AclCreation(Resource _resource, Acl _acl) : m_resource(_resource), m_acl(_acl)
     {
     }
-    int encode(PEncoder &pe, int16_t version);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
 struct CreateAclsRequest : protocol_body
@@ -35,8 +35,8 @@ struct CreateAclsRequest : protocol_body
     }
 
     void set_version(int16_t v);
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

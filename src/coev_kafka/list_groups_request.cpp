@@ -7,7 +7,7 @@ void ListGroupsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int ListGroupsRequest::encode(PEncoder &pe)
+int ListGroupsRequest::encode(packetEncoder &pe)
 {
     if (m_version >= 4)
     {
@@ -41,7 +41,7 @@ int ListGroupsRequest::encode(PEncoder &pe)
     return 0;
 }
 
-int ListGroupsRequest::decode(PDecoder &pd, int16_t version)
+int ListGroupsRequest::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
 

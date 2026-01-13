@@ -7,13 +7,13 @@ void SaslHandshakeResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int SaslHandshakeResponse::encode(PEncoder &pe)
+int SaslHandshakeResponse::encode(packetEncoder &pe)
 {
     pe.putKError(m_err);
     return pe.putStringArray(m_enabled_mechanisms);
 }
 
-int SaslHandshakeResponse::decode(PDecoder &pd, int16_t version)
+int SaslHandshakeResponse::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
 

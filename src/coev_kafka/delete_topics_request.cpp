@@ -20,7 +20,7 @@ static int16_t getVersionFromKafkaVersion(KafkaVersion kafkaVersion)
     return 0;
 }
 
-int DeleteTopicsRequest::encode(PEncoder &pe)
+int DeleteTopicsRequest::encode(packetEncoder &pe)
 {
     if (pe.putStringArray(m_topics) != ErrNoError)
     {
@@ -37,7 +37,7 @@ int DeleteTopicsRequest::encode(PEncoder &pe)
     return ErrNoError;
 }
 
-int DeleteTopicsRequest::decode(PDecoder &pd, int16_t version)
+int DeleteTopicsRequest::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
 

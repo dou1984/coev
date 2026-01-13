@@ -13,15 +13,15 @@
 #include "version.h"
 #include "protocol_body.h"
 
-struct OffsetFetchResponseBlock : VEncoder, VDecoder
+struct OffsetFetchResponseBlock : versionedEncoder, versionedDecoder
 {
     int64_t m_offset;
     int32_t m_leader_epoch;
     std::string m_metadata;
     KError m_err;
 
-    int encode(PEncoder &pe, int16_t version);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
 struct OffsetFetchResponse : protocol_body
@@ -35,8 +35,8 @@ struct OffsetFetchResponse : protocol_body
     OffsetFetchResponse();
 
     void set_version(int16_t v);
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

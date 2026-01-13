@@ -5,7 +5,7 @@
 
 const int defaultGeneration = 0;
 
-int StickyAssignorUserDataV0::encode(PEncoder &pe)
+int StickyAssignorUserDataV0::encode(packetEncoder &pe)
 {
     if (int err = pe.putArrayLength(static_cast<int>(m_topics.size())); err != 0)
     {
@@ -26,7 +26,7 @@ int StickyAssignorUserDataV0::encode(PEncoder &pe)
     return 0;
 }
 
-int StickyAssignorUserDataV0::decode(PDecoder &pd)
+int StickyAssignorUserDataV0::decode(packetDecoder &pd)
 {
     int topicLen = 0;
     int err = pd.getArrayLength(topicLen);
@@ -69,7 +69,7 @@ int StickyAssignorUserDataV0::generation()
     return defaultGeneration;
 }
 
-int StickyAssignorUserDataV1::encode(PEncoder &pe)
+int StickyAssignorUserDataV1::encode(packetEncoder &pe)
 {
     if (int err = pe.putArrayLength(static_cast<int>(m_topics.size())); err != 0)
     {
@@ -92,7 +92,7 @@ int StickyAssignorUserDataV1::encode(PEncoder &pe)
     return 0;
 }
 
-int StickyAssignorUserDataV1::decode(PDecoder &pd)
+int StickyAssignorUserDataV1::decode(packetDecoder &pd)
 {
     int topicLen = 0;
     int err = pd.getArrayLength(topicLen);

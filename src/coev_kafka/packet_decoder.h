@@ -12,13 +12,13 @@
 #include "encoder_decoder.h"
 #include "dynamic_push_decoder.h"
 
-struct PDecoder;
+struct packetDecoder;
 using taggedFieldDecoderFunc = std::function<int(PDecoder &)>;
 using taggedFieldDecoders = std::unordered_map<uint64_t, taggedFieldDecoderFunc>;
 
-struct PDecoder
+struct packetDecoder
 {
-    virtual ~PDecoder() = default;
+    virtual ~packetDecoder() = default;
 
     virtual int getInt8(int8_t &val) = 0;
     virtual int getInt16(int16_t &val) = 0;
@@ -44,8 +44,8 @@ struct PDecoder
     virtual int getStringArray(std::vector<std::string> &arr) = 0;
 
     virtual int remaining() = 0;
-    virtual int getSubset(int length, std::shared_ptr<PDecoder> &out) = 0;
-    virtual int peek(int offset, int length, std::shared_ptr<PDecoder> &out) = 0;
+    virtual int getSubset(int length, std::shared_ptr<packetDecoder> &out) = 0;
+    virtual int peek(int offset, int length, std::shared_ptr<packetDecoder> &out) = 0;
     virtual int peekInt8(int offset, int8_t &val) = 0;
 
     virtual int push(std::shared_ptr<pushDecoder> in) = 0;

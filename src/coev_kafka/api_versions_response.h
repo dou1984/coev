@@ -9,15 +9,15 @@
 #include "packet_decoder.h"
 #include "request.h"
 
-struct ApiVersionsResponseKey : VEncoder, VDecoder
+struct ApiVersionsResponseKey : versionedEncoder, versionedDecoder
 {
     int16_t m_version = 0;
     int16_t m_api_key = 0;
     int16_t m_min_version = 0;
     int16_t m_max_version = 0;
 
-    int encode(PEncoder &pe, int16_t version);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
 struct ApiVersionsResponse : protocol_body
@@ -33,8 +33,8 @@ struct ApiVersionsResponse : protocol_body
 
     void set_version(int16_t v);
 
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
 
     int16_t key() const;
     int16_t version() const;
@@ -45,5 +45,5 @@ struct ApiVersionsResponse : protocol_body
     KafkaVersion required_version() const;
     std::chrono::milliseconds throttle_time() const;
 
-    static PDecoder &downgradeFlexibleDecoder(PDecoder &pd);
+    static packetDecoder &downgradeFlexibleDecoder(packetDecoder &pd);
 };

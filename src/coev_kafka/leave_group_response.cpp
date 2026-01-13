@@ -6,7 +6,7 @@ void LeaveGroupResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int LeaveGroupResponse::encode(PEncoder &pe)
+int LeaveGroupResponse::encode(packetEncoder &pe)
 {
     if (m_version >= 1)
     {
@@ -40,7 +40,7 @@ int LeaveGroupResponse::encode(PEncoder &pe)
     return 0;
 }
 
-int LeaveGroupResponse::decode(PDecoder &pd, int16_t version)
+int LeaveGroupResponse::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
 

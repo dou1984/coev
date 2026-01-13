@@ -12,7 +12,7 @@ std::string AlterConfigError::Error() const
     return text;
 }
 
-int AlterConfigsResponse::encode(PEncoder &pe)
+int AlterConfigsResponse::encode(packetEncoder &pe)
 {
     pe.putDurationMs(m_throttle_time);
 
@@ -32,7 +32,7 @@ int AlterConfigsResponse::encode(PEncoder &pe)
     return ErrNoError;
 }
 
-int AlterConfigsResponse::decode(PDecoder &pd, int16_t version)
+int AlterConfigsResponse::decode(packetDecoder &pd, int16_t version)
 {
     if (pd.getDurationMs(m_throttle_time) != ErrNoError)
     {
@@ -58,7 +58,7 @@ int AlterConfigsResponse::decode(PDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-int AlterConfigsResourceResponse::encode(PEncoder &pe)
+int AlterConfigsResourceResponse::encode(packetEncoder &pe)
 {
     pe.putInt16(m_error_code);
     if (pe.putString(m_error_msg) != ErrNoError)
@@ -74,7 +74,7 @@ int AlterConfigsResourceResponse::encode(PEncoder &pe)
     return ErrNoError;
 }
 
-int AlterConfigsResourceResponse::decode(PDecoder &pd, int16_t version)
+int AlterConfigsResourceResponse::decode(packetDecoder &pd, int16_t version)
 {
     int16_t errCode;
     if (pd.getInt16(errCode) != ErrNoError)

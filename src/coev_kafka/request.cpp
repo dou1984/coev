@@ -94,7 +94,7 @@
 #include "sasl_authenticate_response.h"
 #include "sasl_authenticate_request.h"
 
-int request::encode(PEncoder &pe)
+int request::encode(packetEncoder &pe)
 {
     auto lengthField = std::make_shared<LengthField>();
     pe.push(lengthField);
@@ -125,7 +125,7 @@ int request::encode(PEncoder &pe)
     return pe.pop();
 }
 
-int request::decode(PDecoder &pd)
+int request::decode(packetDecoder &pd)
 {
     int16_t key, version;
     int32_t corrID;
@@ -169,9 +169,9 @@ int request::decode(PDecoder &pd)
 
 coev::awaitable<int> decodeRequest(std::shared_ptr<Broker> &broker, std::shared_ptr<request> &req, int &size)
 {
-    size_t bytesRead = 0;
     std::string lengthBytes;
     lengthBytes.reserve(4);
+    auto bytesRead = lengthBytes.size();
     int err = co_await broker->ReadFull(lengthBytes, bytesRead);
     if (err != 0)
     {

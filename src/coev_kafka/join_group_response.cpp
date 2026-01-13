@@ -7,7 +7,7 @@ void JoinGroupResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int JoinGroupResponse::encode(PEncoder &pe)
+int JoinGroupResponse::encode(packetEncoder &pe)
 {
     if (m_version >= 2)
     {
@@ -57,7 +57,7 @@ int JoinGroupResponse::encode(PEncoder &pe)
     return 0;
 }
 
-int JoinGroupResponse::decode(PDecoder &pd, int16_t version)
+int JoinGroupResponse::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
 

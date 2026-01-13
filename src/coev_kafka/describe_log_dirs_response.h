@@ -17,20 +17,20 @@ struct DescribeLogDirsResponsePartition
     int32_t m_partition_id;
     bool m_is_temporary;
 
-    int encode(PEncoder &pe, int16_t version);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
-struct DescribeLogDirsResponseTopic : VDecoder, VEncoder
+struct DescribeLogDirsResponseTopic : versionedDecoder, versionedEncoder
 {
     std::string m_topic;
     std::vector<DescribeLogDirsResponsePartition> m_partitions;
 
-    int encode(PEncoder &pe, int16_t version);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
-struct DescribeLogDirsResponseDirMetadata : VDecoder, VEncoder
+struct DescribeLogDirsResponseDirMetadata : versionedDecoder, versionedEncoder
 {
     KError m_error_code;
     std::string m_path;
@@ -38,8 +38,8 @@ struct DescribeLogDirsResponseDirMetadata : VDecoder, VEncoder
     int64_t m_total_bytes;
     int64_t m_usable_bytes;
 
-    int encode(PEncoder &pe, int16_t version);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
 struct DescribeLogDirsResponse : protocol_body
@@ -51,8 +51,8 @@ struct DescribeLogDirsResponse : protocol_body
     KError m_error_code;
 
     void set_version(int16_t v);
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

@@ -6,7 +6,7 @@ void DescribeConfigsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int DescribeConfigsResponse::encode(PEncoder &pe)
+int DescribeConfigsResponse::encode(packetEncoder &pe)
 {
     pe.putDurationMs(m_throttle_time);
 
@@ -26,7 +26,7 @@ int DescribeConfigsResponse::encode(PEncoder &pe)
     return ErrNoError;
 }
 
-int DescribeConfigsResponse::decode(PDecoder &pd, int16_t version)
+int DescribeConfigsResponse::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
 
@@ -96,7 +96,7 @@ std::chrono::milliseconds DescribeConfigsResponse::throttle_time() const
     return m_throttle_time;
 }
 
-int ResourceResponse::encode(PEncoder &pe, int16_t version) 
+int ResourceResponse::encode(packetEncoder &pe, int16_t version) 
 {
     pe.putInt16(m_error_code);
     if (pe.putString(m_error_msg) != ErrNoError)
@@ -125,7 +125,7 @@ int ResourceResponse::encode(PEncoder &pe, int16_t version)
     return ErrNoError;
 }
 
-int ResourceResponse::decode(PDecoder &pd, int16_t version)
+int ResourceResponse::decode(packetDecoder &pd, int16_t version)
 {
     if (pd.getInt16(m_error_code) != ErrNoError)
         return ErrDecodeError;
@@ -160,7 +160,7 @@ int ResourceResponse::decode(PDecoder &pd, int16_t version)
 
 // --- ConfigEntry ---
 
-int ConfigEntry::encode(PEncoder &pe, int16_t version)
+int ConfigEntry::encode(packetEncoder &pe, int16_t version)
 {
     if (pe.putString(m_name) != ErrNoError)
         return ErrEncodeError;
@@ -194,7 +194,7 @@ int ConfigEntry::encode(PEncoder &pe, int16_t version)
     return ErrNoError;
 }
 
-int ConfigEntry::decode(PDecoder &pd, int16_t version)
+int ConfigEntry::decode(packetDecoder &pd, int16_t version)
 {
     if (version == 0)
     {
@@ -250,7 +250,7 @@ int ConfigEntry::decode(PDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-int ConfigSynonym::encode(PEncoder &pe, int16_t /*version*/)
+int ConfigSynonym::encode(packetEncoder &pe, int16_t /*version*/)
 {
     if (pe.putString(m_config_name) != ErrNoError)
         return ErrEncodeError;
@@ -260,7 +260,7 @@ int ConfigSynonym::encode(PEncoder &pe, int16_t /*version*/)
     return ErrNoError;
 }
 
-int ConfigSynonym::decode(PDecoder &pd, int16_t /*version*/)
+int ConfigSynonym::decode(packetDecoder &pd, int16_t /*version*/)
 {
     if (pd.getString(m_config_name) != ErrNoError)
         return ErrDecodeError;

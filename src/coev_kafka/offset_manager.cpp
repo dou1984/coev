@@ -146,8 +146,8 @@ coev::awaitable<int> OffsetManager::fetchInitialOffset(const std::string &topic,
     {
     case ErrNoError:
         offset = block->m_offset;
-            leaderEpoch = block->m_leader_epoch;
-            metadata = block->m_metadata;
+        leaderEpoch = block->m_leader_epoch;
+        metadata = block->m_metadata;
         co_return 0;
     case ErrNotCoordinatorForConsumer:
         if (retries <= 0)
@@ -232,7 +232,6 @@ coev::awaitable<void> OffsetManager::flushToBroker()
         co_return;
     }
 
-    std::unique_lock<std::mutex> brokerLock(broker->m_lock);
     auto req = constructRequest();
     if (!req)
     {

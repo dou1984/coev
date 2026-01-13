@@ -84,7 +84,7 @@ int crc32_field::run(int curOffset, std::string &buf)
     return 0;
 }
 
-int crc32_field::check(int curOffset, std::string &buf)
+int crc32_field::check(int curOffset, const std::string &buf)
 {
     LOG_CORE("crc32_field::check startOffset: %d, curOffset: %d\n", startOffset, curOffset);
     uint32_t crc_val;

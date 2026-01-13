@@ -14,23 +14,23 @@
 #include "protocol_body.h"
 #include "incremental_alter_configs_operation.h"
 
-struct IncrementalAlterConfigsEntry : IEncoder, VDecoder
+struct IncrementalAlterConfigsEntry : IEncoder, versionedDecoder
 {
     IncrementalAlterConfigsOperation m_operation;
     std::string m_value;
 
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
-struct IncrementalAlterConfigsResource : IEncoder, VDecoder
+struct IncrementalAlterConfigsResource : IEncoder, versionedDecoder
 {
     ConfigResourceType m_type;
     std::string m_name;
     std::map<std::string, IncrementalAlterConfigsEntry> m_config_entries;
 
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
 struct IncrementalAlterConfigsRequest : protocol_body
@@ -44,8 +44,8 @@ struct IncrementalAlterConfigsRequest : protocol_body
     {
     }
     void set_version(int16_t v);
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

@@ -3,7 +3,7 @@
 TopicPartition::TopicPartition(const std::string &t, int32_t p) : m_topic(t), m_partition(p)
 {
 }
-int TopicPartition::encode(PEncoder &pe)
+int TopicPartition::encode(packetEncoder &pe)
 {
     pe.putInt32(m_count);
 
@@ -29,7 +29,7 @@ int TopicPartition::encode(PEncoder &pe)
     return ErrNoError;
 }
 
-int TopicPartition::decode(PDecoder &pd, int16_t version)
+int TopicPartition::decode(packetDecoder &pd, int16_t version)
 {
     if (pd.getInt32(m_count) != ErrNoError)
     {

@@ -23,8 +23,8 @@ struct FindCoordinatorResponse : protocol_body, throttle_support
     std::shared_ptr<Broker> m_coordinator;
 
     void set_version(int16_t v);
-    int decode(PDecoder &pd, int16_t version);
-    int encode(PEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

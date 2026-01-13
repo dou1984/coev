@@ -13,17 +13,17 @@
 #include "config_source.h"
 #include "protocol_body.h"
 
-struct ConfigSynonym : VDecoder, VEncoder
+struct ConfigSynonym : versionedDecoder, versionedEncoder
 {
     std::string m_config_name;
     std::string m_config_value;
     ConfigSource m_source;
 
-    int encode(PEncoder &pe, int16_t version);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
-struct ConfigEntry : VDecoder, VEncoder
+struct ConfigEntry : versionedDecoder, versionedEncoder
 {
     std::string m_name;
     std::string m_value;
@@ -33,11 +33,11 @@ struct ConfigEntry : VDecoder, VEncoder
     ConfigSource m_source;
     std::vector<std::shared_ptr<ConfigSynonym>> m_synonyms;
 
-    int encode(PEncoder &pe, int16_t version);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
-struct ResourceResponse : VDecoder, VEncoder
+struct ResourceResponse : versionedDecoder, versionedEncoder
 {
     int16_t m_error_code;
     std::string m_error_msg;
@@ -45,8 +45,8 @@ struct ResourceResponse : VDecoder, VEncoder
     std::string m_name;
     std::vector<std::shared_ptr<ConfigEntry>> m_configs;
 
-    int encode(PEncoder &pe, int16_t version);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
 struct DescribeConfigsResponse : protocol_body
@@ -57,8 +57,8 @@ struct DescribeConfigsResponse : protocol_body
     std::vector<std::shared_ptr<ResourceResponse>> m_resources;
 
     void set_version(int16_t v);
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

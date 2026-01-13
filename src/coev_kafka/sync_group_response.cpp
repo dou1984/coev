@@ -13,7 +13,7 @@ int SyncGroupResponse::GetMemberAssignment(std::shared_ptr<ConsumerGroupMemberAs
     return ::decode(m_member_assignment, std::dynamic_pointer_cast<IDecoder>(assignment), nullptr);
 }
 
-int SyncGroupResponse::encode(PEncoder &pe)
+int SyncGroupResponse::encode(packetEncoder &pe)
 {
     if (m_version >= 1)
     {
@@ -29,7 +29,7 @@ int SyncGroupResponse::encode(PEncoder &pe)
     return 0;
 }
 
-int SyncGroupResponse::decode(PDecoder &pd, int16_t version)
+int SyncGroupResponse::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
     int err = 0;

@@ -1,13 +1,13 @@
 #include "partition_error.h"
 
-int PartitionError::encode(PEncoder &pe)
+int PartitionError::encode(packetEncoder &pe)
 {
     pe.putInt32(m_partition);
     pe.putKError(m_err);
     return 0;
 }
 
-int PartitionError::decode(PDecoder &pd, int16_t version)
+int PartitionError::decode(packetDecoder &pd, int16_t version)
 {
     int err;
     if ((err = pd.getInt32(m_partition)) != 0)

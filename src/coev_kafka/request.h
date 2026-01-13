@@ -19,8 +19,8 @@ struct request : IEncoder, IDecoder
     std::string m_client_id;
     std::shared_ptr<protocol_body> m_body;
 
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd);
 };
 
 coev::awaitable<int> decodeRequest(std::shared_ptr<Broker> &broker, int &req, request &size);

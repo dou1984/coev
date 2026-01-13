@@ -19,8 +19,8 @@ struct alterPartitionReassignmentsErrorBlock : IEncoder, IDecoder
     alterPartitionReassignmentsErrorBlock(KError err, const std::string &msg) : m_error_code(err), m_error_message(msg)
     {
     }
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd);
 };
 
 struct AlterPartitionReassignmentsResponse : protocol_body
@@ -38,8 +38,8 @@ struct AlterPartitionReassignmentsResponse : protocol_body
     void set_version(int16_t v);
     void AddError(const std::string &topic, int32_t partition, KError kerror, std::string message);
 
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
 
     int16_t key() const;
     int16_t version() const;

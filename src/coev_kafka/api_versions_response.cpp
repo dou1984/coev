@@ -2,7 +2,7 @@
 #include "api_versions_response.h"
 #include "api_versions.h"
 
-int ApiVersionsResponseKey::encode(PEncoder &pe, int16_t version)
+int ApiVersionsResponseKey::encode(packetEncoder &pe, int16_t version)
 {
     pe.putInt16(m_api_key);
     pe.putInt16(m_min_version);
@@ -16,7 +16,7 @@ int ApiVersionsResponseKey::encode(PEncoder &pe, int16_t version)
     return ErrNoError;
 }
 
-int ApiVersionsResponseKey::decode(PDecoder &pd, int16_t version)
+int ApiVersionsResponseKey::decode(packetDecoder &pd, int16_t version)
 {
     if (pd.getInt16(m_api_key) != ErrNoError)
         return ErrEncodeError;
@@ -41,7 +41,7 @@ void ApiVersionsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int ApiVersionsResponse::encode(PEncoder &pe)
+int ApiVersionsResponse::encode(packetEncoder &pe)
 {
     pe.putInt16(m_error_code);
 
@@ -71,14 +71,14 @@ int ApiVersionsResponse::encode(PEncoder &pe)
     return ErrNoError;
 }
 
-PDecoder &ApiVersionsResponse::downgradeFlexibleDecoder(PDecoder &pd)
+packetDecoder &ApiVersionsResponse::downgradeFlexibleDecoder(packetDecoder &pd)
 {
     // auto _ = dynamic_cast<realFlexibleDecoder>(pd);
     // pd.setFlexible(false);
     return pd;
 }
 
-int ApiVersionsResponse::decode(PDecoder &pd, int16_t version)
+int ApiVersionsResponse::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
 

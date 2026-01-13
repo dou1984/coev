@@ -6,7 +6,7 @@
 #include "packet_decoder.h"
 #include "packet_encoder.h"
 
-int ProduceResponseBlock::decode(PDecoder &pd, int16_t version)
+int ProduceResponseBlock::decode(packetDecoder &pd, int16_t version)
 {
     if (int err = pd.getKError(m_err); err != 0)
         return err;
@@ -35,7 +35,7 @@ int ProduceResponseBlock::decode(PDecoder &pd, int16_t version)
     return 0;
 }
 
-int ProduceResponseBlock::encode(PEncoder &pe, int16_t version)
+int ProduceResponseBlock::encode(packetEncoder &pe, int16_t version)
 {
     pe.putKError(m_err);
     pe.putInt64(m_offset);
@@ -68,7 +68,7 @@ void ProduceResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int ProduceResponse::decode(PDecoder &pd, int16_t version)
+int ProduceResponse::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
 
@@ -112,7 +112,7 @@ int ProduceResponse::decode(PDecoder &pd, int16_t version)
     return 0;
 }
 
-int ProduceResponse::encode(PEncoder &pe)
+int ProduceResponse::encode(packetEncoder &pe)
 {
     if (int err = pe.putArrayLength(static_cast<int32_t>(m_blocks.size())); err != 0)
         return err;

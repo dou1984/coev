@@ -8,7 +8,7 @@ void CreateTopicsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int CreateTopicsResponse::encode(PEncoder &pe)
+int CreateTopicsResponse::encode(packetEncoder &pe)
 {
     if (m_version >= 2)
     {
@@ -53,7 +53,7 @@ int CreateTopicsResponse::encode(PEncoder &pe)
     return ErrNoError;
 }
 
-int CreateTopicsResponse::decode(PDecoder &pd, int16_t version)
+int CreateTopicsResponse::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
 
@@ -177,7 +177,7 @@ std::string TopicError::Error() const
     return oss.str();
 }
 
-int TopicError::encode(PEncoder &pe, int16_t version)
+int TopicError::encode(packetEncoder &pe, int16_t version)
 {
     pe.putInt16(m_err);
 
@@ -192,7 +192,7 @@ int TopicError::encode(PEncoder &pe, int16_t version)
     return ErrNoError;
 }
 
-int TopicError::decode(PDecoder &pd, int16_t version)
+int TopicError::decode(packetDecoder &pd, int16_t version)
 {
     int16_t errCode;
     if (pd.getInt16(errCode) != ErrNoError)
@@ -215,7 +215,7 @@ int TopicError::decode(PDecoder &pd, int16_t version)
 
 // === CreatableTopicConfigs ===
 
-int CreatableTopicConfigs::encode(PEncoder &pe, int16_t /*version*/)
+int CreatableTopicConfigs::encode(packetEncoder &pe, int16_t /*version*/)
 {
     if (pe.putNullableString(m_value) != ErrNoError)
     {
@@ -228,7 +228,7 @@ int CreatableTopicConfigs::encode(PEncoder &pe, int16_t /*version*/)
     return ErrNoError;
 }
 
-int CreatableTopicConfigs::decode(PDecoder &pd, int16_t /*version*/)
+int CreatableTopicConfigs::decode(packetDecoder &pd, int16_t /*version*/)
 {
 
     if (pd.getNullableString(m_value) != ErrNoError)
@@ -259,7 +259,7 @@ int CreatableTopicConfigs::decode(PDecoder &pd, int16_t /*version*/)
 
 // === CreatableTopicResult ===
 
-int CreatableTopicResult::encode(PEncoder &pe, int16_t /*version*/)
+int CreatableTopicResult::encode(packetEncoder &pe, int16_t /*version*/)
 {
     pe.putInt32(m_num_partitions);
     pe.putInt16(m_replication_factor);
@@ -295,7 +295,7 @@ int CreatableTopicResult::encode(PEncoder &pe, int16_t /*version*/)
     return ErrNoError;
 }
 
-int CreatableTopicResult::decode(PDecoder &pd, int16_t /*version*/)
+int CreatableTopicResult::decode(packetDecoder &pd, int16_t /*version*/)
 {
     if (pd.getInt32(m_num_partitions) != ErrNoError)
     {
@@ -331,7 +331,7 @@ int CreatableTopicResult::decode(PDecoder &pd, int16_t /*version*/)
     bool hasTag0 = false;
 
     std::unordered_map<uint64_t, taggedFieldDecoderFunc> handler;
-    handler[0] = [&](PDecoder &inner) -> int
+    handler[0] = [&](packetDecoder &inner) -> int
     {
         int16_t err;
         if (inner.getInt16(err) != ErrNoError)

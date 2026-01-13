@@ -11,7 +11,7 @@ void ConsumerMetadataResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int ConsumerMetadataResponse::decode(PDecoder &pd, int16_t version)
+int ConsumerMetadataResponse::decode(packetDecoder &pd, int16_t version)
 {
     auto tmp = std::make_shared<FindCoordinatorResponse>();
 
@@ -52,7 +52,7 @@ int ConsumerMetadataResponse::decode(PDecoder &pd, int16_t version)
     return 0;
 }
 
-int ConsumerMetadataResponse::encode(PEncoder &pe)
+int ConsumerMetadataResponse::encode(packetEncoder &pe)
 {
     if (m_coordinator == nullptr)
     {

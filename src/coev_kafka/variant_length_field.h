@@ -8,7 +8,7 @@ struct VariantLengthField : dynamicPushDecoder, dynamicPushEncoder
     int m_start_offset = 0;
     int64_t m_length = 0;
 
-    int decode(PDecoder &pd);
+    int decode(packetDecoder &pd);
     void saveOffset(int in);
     int reserveLength();
     int adjust_length(int currOffset);

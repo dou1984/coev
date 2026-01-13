@@ -10,21 +10,21 @@
 #include "errors.h"
 #include "protocol_body.h"
 
-struct DeleteRecordsResponsePartition : IEncoder, VEncoder
+struct DeleteRecordsResponsePartition : IEncoder, versionedEncoder
 {
     int64_t m_low_watermark;
     KError m_err;
 
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
-struct DeleteRecordsResponseTopic : VDecoder, IEncoder
+struct DeleteRecordsResponseTopic : versionedDecoder, IEncoder
 {
     std::map<int32_t, std::shared_ptr<DeleteRecordsResponsePartition>> m_partitions;
 
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
 
     ~DeleteRecordsResponseTopic();
 };
@@ -36,8 +36,8 @@ struct DeleteRecordsResponse : protocol_body
     std::map<std::string, std::shared_ptr<DeleteRecordsResponseTopic>> m_topics;
 
     void set_version(int16_t v);
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

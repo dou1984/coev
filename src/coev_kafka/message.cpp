@@ -70,19 +70,28 @@ std::string compress(CompressionCodec codec, int level, const std::string &data)
 std::string decompress(CompressionCodec codec, const std::string &data)
 {
     std::string out;
+    int err;
     switch (codec)
     {
     case GZIP:
-        coev::gzip::Decompress(out, data.data(), data.size());
+        err = coev::gzip::Decompress(out, data.data(), data.size());
+        if (err != 0)
+            return data;
         return out;
     case Snappy:
-        coev::snappy::Decompress(out, data.data(), data.size());
+        err = coev::snappy::Decompress(out, data.data(), data.size());
+        if (err != 0)
+            return data;
         return out;
     case LZ4:
-        coev::lz4::Decompress(out, data.data(), data.size());
+        err = coev::lz4::Decompress(out, data.data(), data.size());
+        if (err != 0)
+            return data;
         return out;
     case ZSTD:
-        coev::zstd::Decompress(out, data.data(), data.size());
+        err = coev::zstd::Decompress(out, data.data(), data.size());
+        if (err != 0)
+            return data;
         return out;
     case None:
         return data;
@@ -93,7 +102,7 @@ Message::Message(const std::string &key, const std::string &value, bool logAppen
     : m_key(key), m_value(value), m_log_append_time(logAppendTime), m_timestamp(msgTimestamp), m_version(version)
 {
 }
-int Message::encode(PEncoder &pe)
+int Message::encode(packetEncoder &pe)
 {
     auto field = acquire_crc32_field(CrcCastagnoli);
     pe.push(std::dynamic_pointer_cast<pushEncoder>(field));
@@ -153,67 +162,78 @@ int Message::encode(PEncoder &pe)
     return pe.pop();
 }
 
-int Message::decode(PDecoder &pd)
+int Message::decode(packetDecoder &pd)
 {
     auto field = acquire_crc32_field(CrcIEEE);
     int err = pd.push(std::dynamic_pointer_cast<pushDecoder>(field));
     if (err != 0)
         return err;
 
-    defer(
-        if (err != 0) {
-            err = pd.pop();
-        });
     err = pd.getInt8(m_version);
     if (err != 0)
+    {
+        pd.pop();
         return err;
+    }
 
     if (m_version > 1)
     {
         err = -2;
+        pd.pop();
         return err;
     }
 
     int8_t attribute;
     err = pd.getInt8(attribute);
     if (err != 0)
+    {
+        pd.pop();
         return err;
+    }
 
     m_codec = static_cast<CompressionCodec>(attribute & CompressionCodecMask);
     m_log_append_time = (attribute & TimestampTypeMask) != 0;
 
     if (m_version == 1)
     {
-
         err = m_timestamp.decode(pd);
         if (err != 0)
+        {
+            pd.pop();
             return err;
+        }
     }
 
     err = pd.getBytes(m_key);
     if (err != 0)
+    {
+        pd.pop();
         return err;
+    }
 
     err = pd.getBytes(m_value);
     if (err != 0)
+    {
+        pd.pop();
         return err;
+    }
 
     m_compressed_size = static_cast<int>(m_value.size());
     if (!m_value.empty() && m_codec != CompressionCodec::None)
     {
         auto decompressed = decompress(m_codec, m_value);
-        if (decompressed.empty())
+        if (decompressed != m_value) // Check if decompression was successful
         {
-            err = -3;
-            return err;
+            m_value = std::move(decompressed);
+            err = decode_set();
+            if (err != 0)
+            {
+                pd.pop();
+                return err;
+            }
         }
-        m_value = std::move(decompressed);
-
-        err = decode_set();
-        if (err != 0)
-            return err;
     }
-    return err;
+    return pd.pop();
 }
 
 int Message::decode_set()

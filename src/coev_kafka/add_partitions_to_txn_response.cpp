@@ -8,7 +8,7 @@ void AddPartitionsToTxnResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int AddPartitionsToTxnResponse::encode(PEncoder &pe)
+int AddPartitionsToTxnResponse::encode(packetEncoder &pe)
 {
     pe.putDurationMs(m_throttle_time);
 
@@ -44,7 +44,7 @@ int AddPartitionsToTxnResponse::encode(PEncoder &pe)
     return 0;
 }
 
-int AddPartitionsToTxnResponse::decode(PDecoder &pd, int16_t version)
+int AddPartitionsToTxnResponse::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
 

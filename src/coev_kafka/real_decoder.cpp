@@ -152,7 +152,7 @@ int realDecoder::getFloat64(double &result)
     return 0;
 }
 
-int realDecoder::getArrayLength(int &result)
+int realDecoder::getArrayLength(int32_t &result)
 {
     if (remaining() < 4)
     {
@@ -221,7 +221,7 @@ int realDecoder::getTaggedFieldArray(const taggedFieldDecoders &decoders)
     return ErrTaggedFieldsInNonFlexibleContext;
 }
 
-int realDecoder::getEmptyTaggedFieldArray(int &result)
+int realDecoder::getEmptyTaggedFieldArray(int32_t &result)
 {
     result = 0;
     return 0;
@@ -314,7 +314,7 @@ int realDecoder::getNullableString(std::string &result)
 
 int realDecoder::getInt32Array(std::vector<int32_t> &result)
 {
-    int n;
+    int32_t n;
     int err = getArrayLength(n);
     if (err != 0)
     {
@@ -331,7 +331,7 @@ int realDecoder::getInt32Array(std::vector<int32_t> &result)
         return ErrInsufficientData;
     }
     result.resize(n);
-    for (int i = 0; i < n; i++)
+    for (int32_t i = 0; i < n; i++)
     {
         result[i] = static_cast<int32_t>((m_raw[m_offset] << 24) | (m_raw[m_offset + 1] << 16) | (m_raw[m_offset + 2] << 8) | m_raw[m_offset + 3]);
         m_offset += 4;
@@ -341,7 +341,7 @@ int realDecoder::getInt32Array(std::vector<int32_t> &result)
 
 int realDecoder::getInt64Array(std::vector<int64_t> &result)
 {
-    int n;
+    int32_t n;
     int err = getArrayLength(n);
     if (err != 0)
     {
@@ -358,7 +358,7 @@ int realDecoder::getInt64Array(std::vector<int64_t> &result)
         return ErrInsufficientData;
     }
     result.resize(n);
-    for (int i = 0; i < n; i++)
+    for (int32_t i = 0; i < n; i++)
     {
         result[i] = static_cast<int64_t>(
             (static_cast<uint64_t>(m_raw[m_offset]) << 56) |
@@ -376,7 +376,7 @@ int realDecoder::getInt64Array(std::vector<int64_t> &result)
 
 int realDecoder::getStringArray(std::vector<std::string> &result)
 {
-    int n;
+    int32_t n;
     int err = getArrayLength(n);
     if (err != 0)
     {
@@ -388,7 +388,7 @@ int realDecoder::getStringArray(std::vector<std::string> &result)
         return 0;
     }
     result.resize(n);
-    for (int i = 0; i < n; i++)
+    for (int32_t i = 0; i < n; i++)
     {
         std::string str;
         err = getString(str);
@@ -406,7 +406,7 @@ int realDecoder::remaining()
     return static_cast<int>(m_raw.size()) - m_offset;
 }
 
-int realDecoder::getSubset(int length, std::shared_ptr<PDecoder> &out)
+int realDecoder::getSubset(int length, std::shared_ptr<packetDecoder> &out)
 {
     std::string buf;
     int err = getRawBytes(length, buf);
@@ -437,7 +437,7 @@ int realDecoder::getRawBytes(int length, std::string &result)
     return 0;
 }
 
-int realDecoder::peek(int offset, int length, std::shared_ptr<PDecoder> &result)
+int realDecoder::peek(int offset, int length, std::shared_ptr<packetDecoder> &result)
 {
     if (remaining() < offset + length)
     {
@@ -501,7 +501,7 @@ std::shared_ptr<metrics::Registry> realDecoder::metricRegistry()
 {
     return m_metric_registry;
 }
-int realFlexibleDecoder::getArrayLength(int &result)
+int realFlexibleDecoder::getArrayLength(int32_t &result)
 {
     uint64_t n;
     int err = getUVariant(n);
@@ -515,11 +515,11 @@ int realFlexibleDecoder::getArrayLength(int &result)
         result = 0;
         return 0;
     }
-    result = static_cast<int>(n - 1);
+    result = static_cast<int32_t>(n - 1);
     return 0;
 }
 
-int realFlexibleDecoder::getEmptyTaggedFieldArray(int &result)
+int realFlexibleDecoder::getEmptyTaggedFieldArray(int32_t &result)
 {
     uint64_t tag_count;
     int err = getUVariant(tag_count);
@@ -706,7 +706,7 @@ int realFlexibleDecoder::getInt32Array(std::vector<int32_t> &result)
 
 int realFlexibleDecoder::getStringArray(std::vector<std::string> &result)
 {
-    int n;
+    int32_t n;
     int err = getArrayLength(n);
     if (err != 0)
     {
@@ -718,7 +718,7 @@ int realFlexibleDecoder::getStringArray(std::vector<std::string> &result)
         return 0;
     }
     result.resize(n);
-    for (int i = 0; i < n; i++)
+    for (int32_t i = 0; i < n; i++)
     {
         std::string str;
         err = getString(str);

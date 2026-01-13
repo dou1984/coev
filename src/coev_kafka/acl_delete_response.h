@@ -13,25 +13,25 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
-struct MatchingAcl : VEncoder, VDecoder
+struct MatchingAcl : versionedEncoder, versionedDecoder
 {
     KError m_err;
     std::string m_err_msg;
     Resource m_resource;
     Acl m_acl;
 
-    int encode(PEncoder &pe, int16_t version);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
-struct FilterResponse : VEncoder, VDecoder
+struct FilterResponse : versionedEncoder, versionedDecoder
 {
     KError m_err;
     std::string m_err_msg;
     std::vector<std::shared_ptr<MatchingAcl>> m_matching_acls;
 
-    int encode(PEncoder &pe, int16_t version);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
 struct DeleteAclsResponse : protocol_body
@@ -41,8 +41,8 @@ struct DeleteAclsResponse : protocol_body
     std::vector<std::shared_ptr<FilterResponse>> m_filter_responses;
 
     void set_version(int16_t v);
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

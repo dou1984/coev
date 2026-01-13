@@ -12,11 +12,10 @@
 #include "sleep_for.h"
 #include "offset_request.h"
 #include "partition_producer.h"
-#include "single_flight_metadata_refresher.h"
 
 coev::awaitable<int> NewClient(const std::vector<std::string> &addrs, std::shared_ptr<Config> conf, std::shared_ptr<Client> &client_)
 {
-    LOG_DBG("NewClient Initializing new client\n");
+    LOG_DBG("Initializing new client\n");
     if (conf == nullptr)
     {
         conf = std::make_shared<Config>();
@@ -40,24 +39,20 @@ coev::awaitable<int> NewClient(const std::vector<std::string> &addrs, std::share
     }
 
     client_ = std::make_shared<Client>(conf);
-    auto refresh = [client_, conf](const std::vector<std::string> &topics) -> coev::awaitable<int>
-    {
-        auto deadline = std::chrono::steady_clock::now();
 
-        if (conf->Metadata.Timeout.count() > 0)
+    client_->m_refresh_metadata.set_refresher(
+        [client_, conf](const std::vector<std::string> &topics) -> coev::awaitable<int>
         {
-            deadline += conf->Metadata.Timeout;
-        }
-        return client_->TryRefreshMetadata(topics, conf->Metadata.Retry.Max, deadline);
-    };
-    if (conf->Metadata.SingleLight)
-    {
-        client_->m_metadata_refresh = NewSingleFlightRefresher(refresh);
-    }
-    else
-    {
-        client_->m_metadata_refresh = refresh;
-    }
+            auto deadline = std::chrono::steady_clock::now();
+
+            if (conf->Metadata.Timeout.count() > 0)
+            {
+                deadline += conf->Metadata.Timeout;
+            }
+            co_return co_await client_->TryRefreshMetadata(topics, conf->Metadata.Retry.Max, deadline);
+        });
+
+    client_->m_seed_brokers = client_->Brokers();
 
     if (conf->Net.ResolveCanonicalBootstrapServers)
     {
@@ -202,7 +197,7 @@ int Client::Close()
 bool Client::Closed()
 {
     std::shared_lock<std::shared_mutex> lk(m_lock);
-    return m_brokers.empty();
+    return m_brokers.empty() && m_seed_brokers.empty();
 }
 
 int Client::Topics(std::vector<std::string> &topics)
@@ -402,8 +397,8 @@ coev::awaitable<int> Client::RefreshMetadata(const std::vector<std::string> &top
             co_return ErrInvalidTopic;
         }
     }
-    auto err = co_await m_metadata_refresh(topics);
-    co_return err;
+    auto _topics = m_refresh_metadata.add_topics(topics);
+    co_return co_await m_refresh_metadata.refresh(topics);
 }
 
 coev::awaitable<int> Client::GetOffset(const std::string &topic, int32_t partitionID, int64_t timestamp, int64_t &offset)
@@ -683,11 +678,19 @@ coev::awaitable<int> Client::LeastLoadedBroker(std::shared_ptr<Broker> &leastLoa
     if (leastLoadedBroker)
     {
         err = co_await leastLoadedBroker->Open(m_conf);
+        if (err != 0)
+        {
+            co_return err;
+        }
         co_return err;
     }
     if (!m_seed_brokers.empty())
     {
         err = co_await m_seed_brokers[0]->Open(m_conf);
+        if (err != 0)
+        {
+            co_return err;
+        }
         leastLoadedBroker = m_seed_brokers[0];
         co_return err;
     }
@@ -881,7 +884,7 @@ coev::awaitable<int> Client::RetryRefreshMetadata(const std::vector<std::string>
         {
             co_return err;
         }
-        attemptsRemaining--;
+        --attemptsRemaining;
         LOG_CORE("retrying after %ldms... (%d attempts remaining)\n", backoff.count(), attemptsRemaining);
         co_return co_await TryRefreshMetadata(topics, attemptsRemaining, deadline);
     }
@@ -893,7 +896,8 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
     int err = ErrNoError;
     std::vector<int> brokerErrors;
     std::shared_ptr<Broker> broker;
-    for (err = co_await LeastLoadedBroker(broker); broker != nullptr && !pastDeadline(deadline, std::chrono::milliseconds(0)); err = co_await LeastLoadedBroker(broker))
+    co_await LeastLoadedBroker(broker);
+    for (; broker && !pastDeadline(deadline, std::chrono::milliseconds(0)); co_await LeastLoadedBroker(broker))
     {
         bool allowAutoTopicCreation = m_conf->Metadata.AllowAutoTopicCreation;
         if (!topics.empty())
@@ -905,11 +909,11 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
             allowAutoTopicCreation = false;
             LOG_DBG("fetching metadata for all topics from broker %s\n", broker->Addr().c_str());
         }
-        auto req = NewMetadataRequest(m_conf->Version, topics);
-        req->m_allow_auto_topic_creation = allowAutoTopicCreation;
+        auto request = NewMetadataRequest(m_conf->Version, topics);
+        request->m_allow_auto_topic_creation = allowAutoTopicCreation;
         m_update_metadata_ms.store(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count());
         std::shared_ptr<MetadataResponse> response;
-        err = co_await broker->GetMetadata(req, response);
+        err = co_await broker->GetMetadata(request, response);
         if (err == 0)
         {
             if (response->Brokers.empty())
@@ -959,16 +963,9 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
         }
     }
 
-    err = co_await LeastLoadedBroker(broker);
-    if (err != 0)
-    {
-        LOG_CORE("not fetching metadata from broker as we would go past the metadata timeout\n");
-        co_return co_await RetryRefreshMetadata(topics, attemptsRemaining, deadline, err);
-    }
     LOG_CORE("no available broker to send metadata request to\n");
     ResurrectDeadBrokers();
-    err = co_await RetryRefreshMetadata(topics, attemptsRemaining, deadline, err);
-    co_return err;
+    co_return co_await RetryRefreshMetadata(topics, attemptsRemaining, deadline, err);
 }
 
 bool Client::UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnownMetaData)

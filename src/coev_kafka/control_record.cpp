@@ -1,11 +1,13 @@
 #include "control_record.h"
 
-int ControlRecord::decode(PDecoder &key, PDecoder &value)
+int ControlRecord::decode(packetDecoder &key, packetDecoder &value)
 {
-    bool success = true;
+    int success = 0;
     int16_t tempVersion;
+    
+    // Decode key first
     success = key.getInt16(tempVersion);
-    if (!success)
+    if (success != 0)
     {
         return ErrDecodeError;
     }
@@ -13,7 +15,7 @@ int ControlRecord::decode(PDecoder &key, PDecoder &value)
 
     int16_t recordType;
     success = key.getInt16(recordType);
-    if (!success)
+    if (success != 0)
     {
         return ErrDecodeError;
     }
@@ -31,18 +33,26 @@ int ControlRecord::decode(PDecoder &key, PDecoder &value)
         break;
     }
 
-    if (m_type != ControlRecordType::ControlRecordUnknown)
+    // Only decode value if it's not an unknown record type and there's data available
+    if (m_type != ControlRecordType::ControlRecordUnknown && value.remaining() > 0)
     {
+        // Value has its own version field, but it should match the key's version
         success = value.getInt16(tempVersion);
-        if (!success)
+        if (success != 0)
         {
             return ErrDecodeError;
         }
-        m_version = tempVersion;
+        
+        // Validate that versions match
+        if (tempVersion != m_version)
+        {
+            return ErrDecodeError;
+        }
 
+        // Decode coordinator epoch
         int32_t tempCoordinatorEpoch;
         success = value.getInt32(tempCoordinatorEpoch);
-        if (!success)
+        if (success != 0)
         {
             return ErrDecodeError;
         }
@@ -52,12 +62,12 @@ int ControlRecord::decode(PDecoder &key, PDecoder &value)
     return ErrNoError;
 }
 
-int ControlRecord::encode(PEncoder &key, PEncoder &value)
+int ControlRecord::encode(packetEncoder &key, packetEncoder &value)
 {
-    value.putInt16(m_version);
-    value.putInt32(m_coordinator_epoch);
+    // Encode key first: version + type
     key.putInt16(m_version);
-
+    
+    // Encode record type
     switch (m_type)
     {
     case ControlRecordType::ControlRecordAbort:
@@ -66,8 +76,21 @@ int ControlRecord::encode(PEncoder &key, PEncoder &value)
     case ControlRecordType::ControlRecordCommit:
         key.putInt16(1);
         break;
+    case ControlRecordType::ControlRecordUnknown:
+        key.putInt16(128); // UNKNOWN = -1
+        break;
     default:
+        key.putInt16(128); // UNKNOWN = -1
         break;
     }
+    
+    // Only encode value if it's not an unknown record type
+    if (m_type != ControlRecordType::ControlRecordUnknown)
+    {
+        // Encode value: version + coordinator epoch
+        value.putInt16(m_version);
+        value.putInt32(m_coordinator_epoch);
+    }
+    
     return ErrNoError;
 }

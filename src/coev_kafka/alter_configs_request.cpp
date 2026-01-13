@@ -7,7 +7,7 @@ void AlterConfigsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int AlterConfigsRequest::encode(PEncoder &pe)
+int AlterConfigsRequest::encode(packetEncoder &pe)
 {
     if (pe.putArrayLength(static_cast<int32_t>(m_resources.size())) != ErrNoError)
     {
@@ -26,7 +26,7 @@ int AlterConfigsRequest::encode(PEncoder &pe)
     return ErrNoError;
 }
 
-int AlterConfigsRequest::decode(PDecoder &pd, int16_t version)
+int AlterConfigsRequest::decode(packetDecoder &pd, int16_t version)
 {
     int32_t resourceCount;
     if (pd.getArrayLength(resourceCount) != ErrNoError)
@@ -54,7 +54,7 @@ int AlterConfigsRequest::decode(PDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-int AlterConfigsResource::encode(PEncoder &pe)
+int AlterConfigsResource::encode(packetEncoder &pe)
 {
     pe.putInt8(static_cast<int8_t>(m_type));
 
@@ -83,7 +83,7 @@ int AlterConfigsResource::encode(PEncoder &pe)
     return ErrNoError;
 }
 
-int AlterConfigsResource::decode(PDecoder &pd, int16_t version)
+int AlterConfigsResource::decode(packetDecoder &pd, int16_t version)
 {
     int8_t t;
     if (pd.getInt8(t) != ErrNoError)

@@ -3,7 +3,7 @@
 #include "api_versions.h"
 #include "offset_commit_request.h"
 
-int OffsetCommitRequestBlock::encode(PEncoder &pe, int16_t version)
+int OffsetCommitRequestBlock::encode(packetEncoder &pe, int16_t version)
 {
     pe.putInt64(m_offset);
 
@@ -21,7 +21,7 @@ int OffsetCommitRequestBlock::encode(PEncoder &pe, int16_t version)
     return pe.putString(m_metadata);
 }
 
-int OffsetCommitRequestBlock::decode(PDecoder &pd, int16_t version)
+int OffsetCommitRequestBlock::decode(packetDecoder &pd, int16_t version)
 {
     auto err = pd.getInt64(m_offset);
     if (err != 0)
@@ -53,7 +53,7 @@ void OffsetCommitRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int OffsetCommitRequest::encode(PEncoder &pe)
+int OffsetCommitRequest::encode(packetEncoder &pe)
 {
     if (m_version < 0 || m_version > 7)
     {
@@ -106,7 +106,7 @@ int OffsetCommitRequest::encode(PEncoder &pe)
     return 0;
 }
 
-int OffsetCommitRequest::decode(PDecoder &pd, int16_t version)
+int OffsetCommitRequest::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
     auto err = pd.getString(m_consumer_group);

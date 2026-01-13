@@ -7,7 +7,7 @@ void DeleteGroupsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int DeleteGroupsRequest::encode(PEncoder &pe)
+int DeleteGroupsRequest::encode(packetEncoder &pe)
 {
     if (pe.putStringArray(m_groups) != ErrNoError)
     {
@@ -17,7 +17,7 @@ int DeleteGroupsRequest::encode(PEncoder &pe)
     return ErrNoError;
 }
 
-int DeleteGroupsRequest::decode(PDecoder &pd, int16_t version)
+int DeleteGroupsRequest::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
     if (pd.getStringArray(m_groups) != ErrNoError)

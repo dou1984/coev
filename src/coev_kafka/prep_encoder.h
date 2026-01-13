@@ -8,7 +8,7 @@
 #include "packet_encoder.h"
 #include "version.h"
 
-struct prepEncoder : PEncoder
+struct prepEncoder : packetEncoder
 {
     prepEncoder();
 

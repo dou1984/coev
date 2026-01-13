@@ -8,7 +8,7 @@ void ListGroupsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int ListGroupsResponse::encode(PEncoder &pe)
+int ListGroupsResponse::encode(packetEncoder &pe)
 {
     if (m_version >= 1)
     {
@@ -57,7 +57,7 @@ int ListGroupsResponse::encode(PEncoder &pe)
     return 0;
 }
 
-int ListGroupsResponse::decode(PDecoder &pd, int16_t version)
+int ListGroupsResponse::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
 

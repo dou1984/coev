@@ -10,7 +10,7 @@ void ProduceRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int ProduceRequest::encode(PEncoder &pe)
+int ProduceRequest::encode(packetEncoder &pe)
 {
     if (m_version >= 3)
     {
@@ -97,7 +97,7 @@ int ProduceRequest::encode(PEncoder &pe)
     return 0;
 }
 
-int ProduceRequest::decode(PDecoder &pd, int16_t version)
+int ProduceRequest::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
 
@@ -143,7 +143,7 @@ int ProduceRequest::decode(PDecoder &pd, int16_t version)
             if (int err = pd.getInt32(size); err != 0)
                 return err;
 
-            std::shared_ptr<PDecoder> subset;
+            std::shared_ptr<packetDecoder> subset;
             if (int err = pd.getSubset(size, subset); err != 0)
                 return err;
 

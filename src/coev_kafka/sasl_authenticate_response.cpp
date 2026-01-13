@@ -8,7 +8,7 @@ void SaslAuthenticateResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int SaslAuthenticateResponse::encode(PEncoder &pe)
+int SaslAuthenticateResponse::encode(packetEncoder &pe)
 {
     pe.putKError(m_err);
 
@@ -28,7 +28,7 @@ int SaslAuthenticateResponse::encode(PEncoder &pe)
     return 0;
 }
 
-int SaslAuthenticateResponse::decode(PDecoder &pd, int16_t version)
+int SaslAuthenticateResponse::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
 

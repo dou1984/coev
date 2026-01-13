@@ -15,7 +15,7 @@
 #include "describe_groups_response.h"
 #include "protocol_body.h"
 
-struct GroupMemberDescription : VEncoder, VDecoder
+struct GroupMemberDescription : versionedEncoder, versionedDecoder
 {
 
     int16_t m_version;
@@ -26,13 +26,13 @@ struct GroupMemberDescription : VEncoder, VDecoder
     std::string m_member_metadata;
     std::string m_member_assignment;
 
-    int encode(PEncoder &pe, int16_t version);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
     std::shared_ptr<ConsumerGroupMemberAssignment> GetMemberAssignment();
     std::shared_ptr<ConsumerGroupMemberMetadata> GetMemberMetadata();
 };
 
-struct GroupDescription : VEncoder, VDecoder
+struct GroupDescription : versionedEncoder, versionedDecoder
 {
     int16_t m_version;
     KError m_error_code;
@@ -44,8 +44,8 @@ struct GroupDescription : VEncoder, VDecoder
     std::map<std::string, std::shared_ptr<GroupMemberDescription>> m_members;
     int32_t m_authorized_operations;
 
-    int encode(PEncoder &pe, int16_t version);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
 struct DescribeGroupsResponse : protocol_body
@@ -55,8 +55,8 @@ struct DescribeGroupsResponse : protocol_body
     std::vector<std::shared_ptr<GroupDescription>> m_groups;
 
     void set_version(int16_t v);
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

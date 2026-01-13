@@ -11,7 +11,7 @@
 #include "version.h"
 #include "metrics.h"
 
-struct realEncoder : PEncoder
+struct realEncoder : packetEncoder
 {
 
     std::string m_raw;

@@ -7,12 +7,12 @@ void SaslHandshakeRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int SaslHandshakeRequest::encode(PEncoder &pe)
+int SaslHandshakeRequest::encode(packetEncoder &pe)
 {
     return pe.putString(m_mechanism);
 }
 
-int SaslHandshakeRequest::decode(PDecoder &pd, int16_t version)
+int SaslHandshakeRequest::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
     return pd.getString(m_mechanism);

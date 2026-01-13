@@ -790,7 +790,7 @@ coev::awaitable<int> NewConsumerGroupSession(std::shared_ptr<Context> context, s
             {
                 while (true)
                 {
-                    auto err = co_await pom->Errors().get();
+                    auto err = co_await pom->Errors();
                     if (err->m_err != ErrNoError)
                         break;
                     auto e = std::make_shared<ConsumerError>(topic, partition, err->m_err);

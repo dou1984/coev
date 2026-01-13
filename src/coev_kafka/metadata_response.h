@@ -15,7 +15,7 @@
 
 struct Broker;
 
-struct PartitionMetadata : VDecoder, VEncoder
+struct PartitionMetadata : versionedDecoder, versionedEncoder
 {
     int16_t m_version;
     KError m_err;
@@ -30,11 +30,11 @@ struct PartitionMetadata : VDecoder, VEncoder
     PartitionMetadata(int16_t v) : m_version(v)
     {
     }
-    int decode(PDecoder &pd, int16_t version);
-    int encode(PEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
 };
 
-struct TopicMetadata : VDecoder, VEncoder
+struct TopicMetadata : versionedDecoder, versionedEncoder
 {
     int16_t m_version;
     KError m_err;
@@ -44,8 +44,8 @@ struct TopicMetadata : VDecoder, VEncoder
     std::vector<std::shared_ptr<PartitionMetadata>> Partitions;
     int32_t TopicAuthorizedOperations;
 
-    int decode(PDecoder &pd, int16_t version);
-    int encode(PEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
 };
 
 struct MetadataResponse : protocol_body
@@ -59,8 +59,8 @@ struct MetadataResponse : protocol_body
     int32_t ClusterAuthorizedOperations;
 
     void set_version(int16_t v);
-    int decode(PDecoder &pd, int16_t version);
-    int encode(PEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

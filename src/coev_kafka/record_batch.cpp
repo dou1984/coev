@@ -13,7 +13,7 @@ RecordBatch::RecordBatch(int8_t v) : m_version(v)
 RecordBatch::RecordBatch(int8_t v, bool, std::chrono::system_clock::time_point &first, std::chrono::system_clock::time_point &max) : m_version(v), m_first_timestamp(first), m_max_timestamp(max)
 {
 }
-int RecordBatch::encode(PEncoder &pe)
+int RecordBatch::encode(packetEncoder &pe)
 {
     if (m_version != 2)
     {
@@ -59,7 +59,7 @@ int RecordBatch::encode(PEncoder &pe)
     return 0;
 }
 
-int RecordBatch::decode(PDecoder &pd)
+int RecordBatch::decode(packetDecoder &pd)
 {
     int err = pd.getInt64(m_first_offset);
     if (err)
@@ -160,7 +160,7 @@ int16_t RecordBatch::ComputeAttributes() const
     return attr;
 }
 
-void RecordBatch::EncodeRecords(PEncoder &pe)
+void RecordBatch::EncodeRecords(packetEncoder &pe)
 {
 
     std::string raw;

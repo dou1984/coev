@@ -27,11 +27,11 @@ struct AbortedTransaction : IEncoder, IDecoder
     int64_t m_first_offset;
 
     AbortedTransaction();
-    int decode(PDecoder &pd);
-    int encode(PEncoder &pe);
+    int decode(packetDecoder &pd);
+    int encode(packetEncoder &pe);
 };
 
-struct FetchResponseBlock : VDecoder, VEncoder
+struct FetchResponseBlock : versionedDecoder, versionedEncoder
 {
     KError m_err;
     int64_t m_high_water_mark_offset;
@@ -45,8 +45,8 @@ struct FetchResponseBlock : VDecoder, VEncoder
     bool m_partial;
 
     FetchResponseBlock();
-    int decode(PDecoder &pd, int16_t version);
-    int encode(PEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
     int numRecords();
     int isPartial(bool &partial);
     std::vector<std::shared_ptr<AbortedTransaction>> getAbortedTransactions();
@@ -65,8 +65,8 @@ struct FetchResponse : protocol_body
 
     FetchResponse();
     void set_version(int16_t v);
-    int decode(PDecoder &pd, int16_t version);
-    int encode(PEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

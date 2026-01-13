@@ -6,7 +6,7 @@ void CreateAclsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int CreateAclsResponse::encode(PEncoder &pe)
+int CreateAclsResponse::encode(packetEncoder &pe)
 {
     pe.putDurationMs(m_throttle_time);
 
@@ -26,7 +26,7 @@ int CreateAclsResponse::encode(PEncoder &pe)
     return 0;
 }
 
-int CreateAclsResponse::decode(PDecoder &pd, int16_t version)
+int CreateAclsResponse::decode(packetDecoder &pd, int16_t version)
 {
     if (pd.getDurationMs(m_throttle_time) != 0)
     {
@@ -88,7 +88,7 @@ std::chrono::milliseconds CreateAclsResponse::throttle_time() const
     return m_throttle_time;
 }
 
-int AclCreationResponse::encode(PEncoder &pe)
+int AclCreationResponse::encode(packetEncoder &pe)
 {
     pe.putKError(m_err);
 
@@ -100,7 +100,7 @@ int AclCreationResponse::encode(PEncoder &pe)
     return 0;
 }
 
-int AclCreationResponse::decode(PDecoder &pd, int16_t version)
+int AclCreationResponse::decode(packetDecoder &pd, int16_t version)
 {
     if (pd.getKError(m_err) != 0)
     {

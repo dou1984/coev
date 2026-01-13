@@ -5,7 +5,7 @@ void DescribeClientQuotasRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int DescribeClientQuotasRequest::encode(PEncoder &pe)
+int DescribeClientQuotasRequest::encode(packetEncoder &pe)
 {
     if (pe.putArrayLength(static_cast<int32_t>(m_components.size())) != ErrNoError)
     {
@@ -24,7 +24,7 @@ int DescribeClientQuotasRequest::encode(PEncoder &pe)
     return ErrNoError;
 }
 
-int DescribeClientQuotasRequest::decode(PDecoder &pd, int16_t version)
+int DescribeClientQuotasRequest::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
 
@@ -59,7 +59,7 @@ int DescribeClientQuotasRequest::decode(PDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-int QuotaFilterComponent::encode(PEncoder &pe)
+int QuotaFilterComponent::encode(packetEncoder &pe)
 {
     if (pe.putString(m_entity_type) != ErrNoError)
     {
@@ -87,7 +87,7 @@ int QuotaFilterComponent::encode(PEncoder &pe)
     return ErrNoError;
 }
 
-int QuotaFilterComponent::decode(PDecoder &pd, int16_t /*version*/)
+int QuotaFilterComponent::decode(packetDecoder &pd, int16_t /*version*/)
 {
     std::string entityType;
     if (pd.getString(entityType) != ErrNoError)

@@ -13,7 +13,7 @@
 #include "version.h"
 #include "consumer_group_members.h"
 
-struct SyncGroupRequestAssignment : VDecoder, VEncoder
+struct SyncGroupRequestAssignment : versionedDecoder, versionedEncoder
 {
     std::string m_member_id;
     std::string m_assignment;
@@ -21,8 +21,8 @@ struct SyncGroupRequestAssignment : VDecoder, VEncoder
     SyncGroupRequestAssignment(const std::string &memberId, const std::string &assignment) : m_member_id(memberId), m_assignment(assignment)
     {
     }
-    int encode(PEncoder &pe, int16_t version);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
 struct SyncGroupRequest : protocol_body
@@ -38,8 +38,8 @@ struct SyncGroupRequest : protocol_body
     {
     }
     void set_version(int16_t v);
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
 
     int16_t key() const;
     int16_t version() const;

@@ -8,20 +8,21 @@
 #include "protocol_body.h"
 
 inline const std::string defaultClientSoftwareName = "coev";
+inline const std::string defaultClientSoftwareVersion = "1.0.0";
 
 struct ApiVersionsRequest : protocol_body
 {
     int16_t m_version = 0;
     std::string m_client_software_name = defaultClientSoftwareName;
-    std::string m_client_software_version;
+    std::string m_client_software_version = defaultClientSoftwareVersion;
     ApiVersionsRequest() = default;
     ApiVersionsRequest(int16_t v) : m_version(v)
     {
     }
     void set_version(int16_t v);
 
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
 
     int16_t key() const;
     int16_t version() const;

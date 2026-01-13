@@ -45,7 +45,7 @@ int Records::SetTypeFromFields(bool &empty)
     return 0;
 }
 
-int Records::encode(PEncoder &pe)
+int Records::encode(packetEncoder &pe)
 {
     if (m_records_type == unknownRecords)
     {
@@ -72,7 +72,7 @@ int Records::encode(PEncoder &pe)
     }
 }
 
-int Records::SetTypeFromMagic(PDecoder &pd)
+int Records::SetTypeFromMagic(packetDecoder &pd)
 {
     int8_t magic;
     int err = magicValue(pd, magic);
@@ -89,7 +89,7 @@ int Records::SetTypeFromMagic(PDecoder &pd)
     return 0;
 }
 
-int Records::decode(PDecoder &pd)
+int Records::decode(packetDecoder &pd)
 {
     if (m_records_type == unknownRecords)
     {

@@ -12,36 +12,36 @@
 #include "config_source.h"
 #include "protocol_body.h"
 
-struct CreatableTopicConfigs : VEncoder, VDecoder
+struct CreatableTopicConfigs : versionedEncoder, versionedDecoder
 {
     std::string m_value;
     bool m_read_only;
     ConfigSource m_config_source;
     bool m_is_sensitive;
 
-    int encode(PEncoder &pe, int16_t version);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
-struct CreatableTopicResult : VEncoder, VDecoder
+struct CreatableTopicResult : versionedEncoder, versionedDecoder
 {
     KError m_topic_config_error_code;
     int32_t m_num_partitions;
     int16_t m_replication_factor;
     std::map<std::string, std::shared_ptr<CreatableTopicConfigs>> m_configs;
 
-    int encode(PEncoder &pe, int16_t version);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
-struct TopicError : VEncoder, VDecoder
+struct TopicError : versionedEncoder, versionedDecoder
 {
     KError m_err;
     std::string m_err_msg;
 
     std::string Error() const;
-    int encode(PEncoder &pe, int16_t version);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
+    int decode(packetDecoder &pd, int16_t version);
 };
 
 struct CreateTopicsResponse : protocol_body
@@ -56,8 +56,8 @@ struct CreateTopicsResponse : protocol_body
     }
 
     void set_version(int16_t v);
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

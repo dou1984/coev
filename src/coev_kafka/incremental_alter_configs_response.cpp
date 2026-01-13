@@ -7,7 +7,7 @@ void IncrementalAlterConfigsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int IncrementalAlterConfigsResponse::encode(PEncoder &pe)
+int IncrementalAlterConfigsResponse::encode(packetEncoder &pe)
 {
 
     pe.putDurationMs(m_throttle_time);
@@ -36,7 +36,7 @@ int IncrementalAlterConfigsResponse::encode(PEncoder &pe)
     return 0;
 }
 
-int IncrementalAlterConfigsResponse::decode(PDecoder &pd, int16_t version)
+int IncrementalAlterConfigsResponse::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
 

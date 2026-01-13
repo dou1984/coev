@@ -8,7 +8,7 @@ AbortedTransaction::AbortedTransaction()
 {
 }
 
-int AbortedTransaction::decode(PDecoder &pd)
+int AbortedTransaction::decode(packetDecoder &pd)
 {
     int err = 0;
     if ((err = pd.getInt64(m_producer_id)) != 0)
@@ -18,7 +18,7 @@ int AbortedTransaction::decode(PDecoder &pd)
     return 0;
 }
 
-int AbortedTransaction::encode(PEncoder &pe)
+int AbortedTransaction::encode(packetEncoder &pe)
 {
     pe.putInt64(m_producer_id);
     pe.putInt64(m_first_offset);
@@ -31,7 +31,7 @@ FetchResponseBlock::FetchResponseBlock()
 {
 }
 
-int FetchResponseBlock::decode(PDecoder &pd, int16_t version)
+int FetchResponseBlock::decode(packetDecoder &pd, int16_t version)
 {
     int err = 0;
 
@@ -83,7 +83,7 @@ int FetchResponseBlock::decode(PDecoder &pd, int16_t version)
         return err;
     }
 
-    std::shared_ptr<PDecoder> recordsDecoder_;
+    std::shared_ptr<packetDecoder> recordsDecoder_;
     if ((err = pd.getSubset(recordsSize, recordsDecoder_)) != 0)
     {
         return err;
@@ -150,7 +150,7 @@ int FetchResponseBlock::decode(PDecoder &pd, int16_t version)
     return 0;
 }
 
-int FetchResponseBlock::encode(PEncoder &pe, int16_t version)
+int FetchResponseBlock::encode(packetEncoder &pe, int16_t version)
 {
     pe.putKError(m_err);
     pe.putInt64(m_high_water_mark_offset);
@@ -241,7 +241,7 @@ void FetchResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int FetchResponse::decode(PDecoder &pd, int16_t version)
+int FetchResponse::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
     int err = 0;
@@ -294,7 +294,7 @@ int FetchResponse::decode(PDecoder &pd, int16_t version)
     return 0;
 }
 
-int FetchResponse::encode(PEncoder &pe)
+int FetchResponse::encode(packetEncoder &pe)
 {
     if (m_version >= 1)
     {

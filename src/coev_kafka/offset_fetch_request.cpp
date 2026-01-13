@@ -51,7 +51,7 @@ void OffsetFetchRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int OffsetFetchRequest::encode(PEncoder &pe)
+int OffsetFetchRequest::encode(packetEncoder &pe)
 {
     if (m_version < 0 || m_version > 7)
     {
@@ -90,7 +90,7 @@ int OffsetFetchRequest::encode(PEncoder &pe)
     return 0;
 }
 
-int OffsetFetchRequest::decode(PDecoder &pd, int16_t version)
+int OffsetFetchRequest::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
     int err = pd.getString(m_consumer_group);

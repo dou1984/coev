@@ -14,8 +14,8 @@ struct TopicPartition
     TopicPartition() = default;
     TopicPartition(const std::string &t, int32_t p);
     bool operator==(const TopicPartition &other) const { return m_topic == other.m_topic && m_partition == other.m_partition; }
-    int encode(PEncoder &pe);
-    int decode(PDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe);
+    int decode(packetDecoder &pd, int16_t version);
     struct Hash
     {
         std::size_t operator()(const TopicPartition &tp) const

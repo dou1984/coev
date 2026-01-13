@@ -7,12 +7,34 @@
 void ApiVersionsRequest::set_version(int16_t v)
 {
     m_version = v;
+    // Ensure client software fields are initialized for version >= 3
+    if (m_version >= 3)
+    {
+        if (m_client_software_name.empty())
+        {
+            m_client_software_name = defaultClientSoftwareName;
+        }
+        if (m_client_software_version.empty())
+        {
+            m_client_software_version = defaultClientSoftwareVersion;
+        }
+    }
 }
 
-int ApiVersionsRequest::encode(PEncoder &pe)
+int ApiVersionsRequest::encode(packetEncoder &pe)
 {
     if (m_version >= 3)
     {
+        // Ensure client software fields are properly initialized before encoding
+        if (m_client_software_name.empty())
+        {
+            m_client_software_name = defaultClientSoftwareName;
+        }
+        if (m_client_software_version.empty())
+        {
+            m_client_software_version = defaultClientSoftwareVersion;
+        }
+        
         if (pe.putString(m_client_software_name) != ErrNoError)
         {
             return ErrEncodeError;
@@ -27,7 +49,7 @@ int ApiVersionsRequest::encode(PEncoder &pe)
     return ErrNoError;
 }
 
-int ApiVersionsRequest::decode(PDecoder &pd, int16_t version)
+int ApiVersionsRequest::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
     if (m_version >= 3)
