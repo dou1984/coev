@@ -12,10 +12,10 @@ awaitable<void> co_parse_dns()
     auto r = co_await parse_dns(url, addr);
     if (r != 0)
     {
-        LOG_ERR("parse_dns error \n");
+        LOG_ERR("parse_dns error ");
         co_return;
     }
-    LOG_INFO("baidu -> %s\n", addr.c_str());
+    LOG_INFO("baidu -> %s", addr.c_str());
 
         co_return;
 }

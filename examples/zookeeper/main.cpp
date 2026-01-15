@@ -36,7 +36,7 @@ int main(int argc, char **argv)
                     co_return;
                 }
 
-                LOG_DBG("%s\n", body.c_str());
+                LOG_DBG("%s", body.c_str());
                 co_await sleep_for(1000);
 
                 co_return;

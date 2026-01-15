@@ -16,7 +16,7 @@ namespace coev
 			return;
 		co_timer *_this = (co_timer *)(w->data);
 		assert(_this != NULL);
-		LOG_CORE("co_timer::cb_timer %p\n", _this);
+		LOG_CORE("co_timer::cb_timer %p", _this);
 		_this->m_waiter.resume();
 		local_resume();
 	}
@@ -29,7 +29,7 @@ namespace coev
 	}
 	co_timer::~co_timer()
 	{
-		LOG_CORE("timer stop \n");
+		LOG_CORE("timer stop ");
 		ev_timer_stop(m_loop, &m_data);
 	}
 	int co_timer::stop()

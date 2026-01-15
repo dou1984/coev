@@ -12,7 +12,7 @@ namespace coev::ssl
     manager::manager(int method)
     {
         int err = SSL_load_error_strings();
-        LOG_CORE("SSL_load_error_strings\n");
+        LOG_CORE("SSL_load_error_strings");
         if (!err)
         {
             throw std::runtime_error("SSL_load_error_strings failed");
@@ -22,7 +22,7 @@ namespace coev::ssl
         {
             throw std::runtime_error("SSL_library_init failed");
         }
-        LOG_CORE("SSL_library_init\n");
+        LOG_CORE("SSL_library_init");
         if (method == TLS_SERVER)
         {
             m_context = SSL_CTX_new(SSLv23_server_method());
@@ -33,7 +33,7 @@ namespace coev::ssl
         }
         if (m_context == nullptr)
         {
-            LOG_ERR("SSL_CTX_new failed %p\n", m_context);
+            LOG_ERR("SSL_CTX_new failed %p", m_context);
             exit(INVALID);
         }
     }
@@ -49,13 +49,13 @@ namespace coev::ssl
     {
         if (m_context == nullptr)
         {
-            LOG_ERR("SSL_CTX_new failed %p\n", m_context);
+            LOG_ERR("SSL_CTX_new failed %p", m_context);
             exit(INVALID);
         }
         int r = 0;
         if ((r = SSL_CTX_use_certificate_file(m_context, cert_file, SSL_FILETYPE_PEM)) <= 0)
         {
-            LOG_ERR("SSL_CTX_use_certificate_chain_file %s failed %ld\n", cert_file, ERR_get_error());
+            LOG_ERR("SSL_CTX_use_certificate_chain_file %s failed %ld", cert_file, ERR_get_error());
             exit(INVALID);
         }
     }
@@ -63,13 +63,13 @@ namespace coev::ssl
     {
         if (m_context == nullptr)
         {
-            LOG_ERR("SSL_CTX_new failed %p\n", m_context);
+            LOG_ERR("SSL_CTX_new failed %p", m_context);
             exit(INVALID);
         }
         int r = 0;
         if ((r = SSL_CTX_use_PrivateKey_file(m_context, key_file, SSL_FILETYPE_PEM)) <= 0)
         {
-            LOG_ERR("SSL_CTX_use_PrivateKey_file %s failed %ld\n", key_file, ERR_get_error());
+            LOG_ERR("SSL_CTX_use_PrivateKey_file %s failed %ld", key_file, ERR_get_error());
             exit(INVALID);
         }
     }
@@ -77,13 +77,13 @@ namespace coev::ssl
     {
         if (m_context == nullptr)
         {
-            LOG_ERR("SSL_CTX_new failed %p\n", m_context);
+            LOG_ERR("SSL_CTX_new failed %p", m_context);
             exit(INVALID);
         }
         int r = 0;
         if ((r = SSL_CTX_check_private_key(m_context)) <= 0)
         {
-            LOG_ERR("SSL_CTX_check_private_key %ld\n", ERR_get_error());
+            LOG_ERR("SSL_CTX_check_private_key %ld", ERR_get_error());
             exit(INVALID);
         }
     }

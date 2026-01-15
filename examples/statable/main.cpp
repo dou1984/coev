@@ -4,15 +4,15 @@ using namespace coev;
 
 statable<int> __test()
 {
-    LOG_DBG("__test 0\n");
+    LOG_DBG("__test 0");
     co_yield 0;
-    LOG_DBG("__test 1\n");
+    LOG_DBG("__test 1");
     co_yield 1;
-    LOG_DBG("__test 2\n");
+    LOG_DBG("__test 2");
     co_yield 2;
-    LOG_DBG("__test 3\n");
+    LOG_DBG("__test 3");
     co_yield 3;
-    LOG_DBG("__test 4\n");
+    LOG_DBG("__test 4");
 }
 awaitable<void> test()
 {

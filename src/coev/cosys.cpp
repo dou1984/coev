@@ -26,7 +26,7 @@ namespace coev
 		__ev_loop()
 		{
 			m_loop = ev_loop_new();
-			LOG_CORE("ev_loop_new %p\n", m_loop);
+			LOG_CORE("ev_loop_new %p", m_loop);
 		}
 		~__ev_loop()
 		{
@@ -35,7 +35,7 @@ namespace coev
 				co_start.destroy();
 				auto _loop = X(m_loop);
 				ev_loop_destroy(_loop);
-				LOG_CORE("ev_loop_destroy %p\n", _loop);
+				LOG_CORE("ev_loop_destroy %p", _loop);
 			}
 		}
 		struct ev_loop *get() const

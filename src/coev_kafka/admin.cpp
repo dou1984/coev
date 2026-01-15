@@ -89,7 +89,7 @@ coev::awaitable<int> ClusterAdmin::RetryOnError(std::function<bool(int)> retryab
         {
             co_return err;
         }
-        LOG_CORE("Admin::request retrying after %dms... (%d attempts remaining)\n",
+        LOG_CORE("Admin::request retrying after %dms... (%d attempts remaining)",
                        static_cast<int>(m_conf->Admin.Retry.Backoff.count()), attemptsRemaining);
         co_await sleep_for(m_conf->Admin.Retry.Backoff);
     }
@@ -1238,7 +1238,7 @@ coev::awaitable<int> ClusterAdmin::DescribeLogDirs(const std::vector<int32_t> &b
         int err = FindBroker(b_id, broker);
         if (err != 0)
         {
-            LOG_CORE("Admin::DescribeClusterResponse Unable to find broker with ID = %d\n", b_id);
+            LOG_CORE("Admin::DescribeClusterResponse Unable to find broker with ID = %d", b_id);
             continue;
         }
         task_ << [this](std::shared_ptr<Broker> broker, std::list<result> &logDirsResults, std::list<int> &errChan) -> coev::awaitable<void>

@@ -25,4 +25,14 @@ namespace coev::guard
 			[this]()
 			{ m_flag = off; });
 	}
+	bool co_mutex::try_lock()
+	{
+		std::lock_guard<std::mutex> lock(m_waiter.lock());
+		if (m_flag == on)
+		{
+			return false;
+		}
+		m_flag = on;
+		return true;
+	}
 }

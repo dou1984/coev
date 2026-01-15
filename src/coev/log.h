@@ -16,6 +16,7 @@
 		std::lock_guard<std::mutex> _(coev::get_log_mutex());         \
 		coev::print_log_str(LEVEL, __FILE__, __FUNCTION__, __LINE__); \
 		PRINT(__VA_ARGS__);                                           \
+		printf("\n");                                                 \
 	}
 
 #define LOG_CORE(...) \
@@ -28,7 +29,7 @@
 	LOG(coev::LOG_LEVEL_ERROR, __VA_ARGS__)
 #define LOG_INFO(...) \
 	LOG(coev::LOG_LEVEL_INFO, __VA_ARGS__)
-#define TRACE() LOG_CORE("\n")
+#define TRACE() LOG_CORE("")
 
 namespace coev
 {

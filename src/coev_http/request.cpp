@@ -23,6 +23,6 @@ namespace coev::http
 	}
 	request::~request()
 	{
-		LOG_CORE("release %p\n", this);
+		LOG_CORE("release %p", this);
 	}
 }

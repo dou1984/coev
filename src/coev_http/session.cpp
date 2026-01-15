@@ -19,7 +19,7 @@ namespace coev::http
 	{
 		auto _this = static_cast<session *>(_);
 		_this->clear();
-		LOG_CORE("header end:%s\n", _this->m_value.data());
+		LOG_CORE("header end:%s", _this->m_value.data());
 		_this->m_header_waiter.resume();
 		return 0;
 	}
@@ -28,7 +28,7 @@ namespace coev::http
 		auto _this = static_cast<session *>(_);
 		_this->m_finish_waiter.resume_next_loop();
 		_this->clear();
-		LOG_CORE("message end\n");
+		LOG_CORE("message end");
 		return 0;
 	}
 	int session::on_url(http_parser *_, const char *at, size_t length)
@@ -36,7 +36,7 @@ namespace coev::http
 		auto _this = static_cast<session *>(_);
 		_this->m_value = std::string_view(at, length);
 		_this->m_url_waiter.resume();
-		LOG_CORE("url:%s\n", _this->m_value.data());
+		LOG_CORE("url:%s", _this->m_value.data());
 		return 0;
 	}
 	int session::on_status(http_parser *_, const char *at, size_t length)
@@ -44,7 +44,7 @@ namespace coev::http
 		auto _this = static_cast<session *>(_);
 		_this->m_value = std::string_view(at, length);
 		_this->m_status_waiter.resume();
-		LOG_CORE("status:%s\n", _this->m_value.data());
+		LOG_CORE("status:%s", _this->m_value.data());
 		return 0;
 	}
 	int session::on_header_field(http_parser *_, const char *at, size_t length)
@@ -59,7 +59,7 @@ namespace coev::http
 		auto _this = static_cast<session *>(_);
 		_this->m_value = std::string_view(at, length);
 		_this->m_header_waiter.resume();
-		LOG_CORE("header:%s:%s\n", _this->m_key.data(), _this->m_value.data());
+		LOG_CORE("header:%s:%s", _this->m_key.data(), _this->m_value.data());
 		return 0;
 	}
 	int session::on_body(http_parser *_, const char *at, size_t length)
@@ -67,7 +67,7 @@ namespace coev::http
 		auto _this = static_cast<session *>(_);
 		_this->m_value = std::string_view(at, length);
 		_this->m_body_waiter.resume();
-		LOG_CORE("message:%s\n", _this->m_value.data());
+		LOG_CORE("message:%s", _this->m_value.data());
 		return 0;
 	}
 	http_parser_settings session::m_settings = {
@@ -107,14 +107,14 @@ namespace coev::http
 		do
 		{
 			auto r = co_await _task.wait();
-			LOG_CORE("co_await result: %ld\n", r);
+			LOG_CORE("co_await result: %ld", r);
 			if (r == _timeout)
 			{
 				co_return INVALID;
 			}
 			if (r == _finished)
 			{
-				LOG_CORE("finished\n")
+				LOG_CORE("finished")
 				co_return 0;
 			}
 		} while (true);

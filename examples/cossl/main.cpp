@@ -13,26 +13,26 @@ awaitable<void> test_ssl_context()
     g_srv_mgr.use_certificate_file("./server.pem");
     g_srv_mgr.use_private_key_file("./server.pem");
 
-    LOG_DBG("server started\n");
+    LOG_DBG("server started");
     while (true)
     {
         addrInfo addr;
         auto fd = co_await pool.get().accept(addr);
-        LOG_DBG("accepted %d from %s:%d\n", fd, addr.ip, addr.port);
+        LOG_DBG("accepted %d from %s:%d", fd, addr.ip, addr.port);
 
         if (fd == INVALID)
         {
-            LOG_ERR("accept failed fd:%d\n", fd);
+            LOG_ERR("accept failed fd:%d", fd);
             continue;
         }
         co_start << [=]() -> awaitable<void>
         {
             context ctx(fd, g_srv_mgr.get());
-            LOG_DBG("close fd:%d\n", fd);
+            LOG_DBG("close fd:%d", fd);
             int err = co_await ctx.do_handshake();
             if (err == INVALID)
             {
-                LOG_ERR("handshake failed fd:%d\n", fd);
+                LOG_ERR("handshake failed fd:%d", fd);
                 co_return;
             }
             while (true)
@@ -41,14 +41,14 @@ awaitable<void> test_ssl_context()
                 int r = co_await ctx.recv(buffer, sizeof(buffer));
                 if (r == INVALID)
                 {
-                    LOG_ERR("recv failed fd:%d\n", fd);
+                    LOG_ERR("recv failed fd:%d", fd);
                     co_return;
                 }
-                LOG_DBG("recv %d bytes from fd:%d %s\n", r, fd, buffer);
+                LOG_DBG("recv %d bytes from fd:%d %s", r, fd, buffer);
                 r = co_await ctx.send("hello world", strlen("hello world") + 1);
                 if (r == INVALID)
                 {
-                    LOG_ERR("send failed fd:%d\n", fd);
+                    LOG_ERR("send failed fd:%d", fd);
                     co_return;
                 }
             }
@@ -62,10 +62,10 @@ awaitable<void> test_ssl_client()
     int fd = co_await cli.connect("0.0.0.0", 9998);
     if (fd == INVALID)
     {
-        LOG_ERR("connect failed fd:%d error:%d\n", fd, errno);
+        LOG_ERR("connect failed fd:%d error:%d", fd, errno);
         exit(INVALID);
     }
-    LOG_DBG("connect success fd:%d\n", fd);
+    LOG_DBG("connect success fd:%d", fd);
     for (int i = 0; i < 10; i++)
     {
         auto buf = "hello world";
@@ -73,17 +73,17 @@ awaitable<void> test_ssl_client()
         int r = co_await cli.send(buf, size);
         if (r == INVALID)
         {
-            LOG_ERR("send failed fd:%d\n", fd);
+            LOG_ERR("send failed fd:%d", fd);
             exit(INVALID);
         }
         char buffer[1024];
         r = co_await cli.recv(buffer, sizeof(buffer));
         if (r == INVALID)
         {
-            LOG_ERR("recv failed fd:%d\n", fd);
+            LOG_ERR("recv failed fd:%d", fd);
             exit(INVALID);
         }
-        LOG_DBG("recv %d bytes from %d %s\n", r, fd, buffer);
+        LOG_DBG("recv %d bytes from %d %s", r, fd, buffer);
     }
 }
 int main(int argc, char **argv)
@@ -91,7 +91,7 @@ int main(int argc, char **argv)
     set_log_level(LOG_LEVEL_DEBUG);
     if (argc < 2)
     {
-        LOG_ERR("usage: %s [server|client]\n", argv[0]);
+        LOG_ERR("usage: %s [server|client]", argv[0]);
         exit(INVALID);
     }
     if (strcmp(argv[1], "server") == 0)
@@ -108,7 +108,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        LOG_ERR("usage: %s [server|client]\n", argv[0]);
+        LOG_ERR("usage: %s [server|client]", argv[0]);
     }
 
     return 0;

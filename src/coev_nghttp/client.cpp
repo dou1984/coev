@@ -27,7 +27,7 @@ namespace coev::nghttp2
         err = co_await ssl::client::connect(info.ip, info.port);
         if (err == INVALID)
         {
-            LOG_ERR("ssl connect failed %s %d %s\n", info.ip, info.port, nghttp2_strerror(err));
+            LOG_ERR("ssl connect failed %s %d %s", info.ip, info.port, nghttp2_strerror(err));
             goto __error_return__;
         }
         assert(m_ssl);
@@ -36,13 +36,13 @@ namespace coev::nghttp2
         err = nghttp2_session_client_new(&m_session, m_callbacks, _this);
         if (err != 0)
         {
-            LOG_ERR("nghttp2_session_client_new failed %s %d %s\n", info.ip, info.port, nghttp2_strerror(err));
+            LOG_ERR("nghttp2_session_client_new failed %s %d %s", info.ip, info.port, nghttp2_strerror(err));
             goto __error_return__;
         }
         err = send_client_settings();
         if (err != 0)
         {
-            LOG_ERR("__cli_settings failed %s %d %s\n", info.ip, info.port, nghttp2_strerror(err));
+            LOG_ERR("__cli_settings failed %s %d %s", info.ip, info.port, nghttp2_strerror(err));
             goto __error_return__;
         }
         co_return m_fd;
@@ -57,13 +57,13 @@ namespace coev::nghttp2
         auto err = nghttp2_submit_settings(m_session, NGHTTP2_FLAG_NONE, iv, sizeof(iv) / sizeof(iv[0]));
         if (err != 0)
         {
-            LOG_ERR("Failed to submit SETTINGS: %s\n", nghttp2_strerror(err));
+            LOG_ERR("Failed to submit SETTINGS: %s", nghttp2_strerror(err));
             return err;
         }
         err = nghttp2_session_send(m_session);
         if (err != 0)
         {
-            LOG_ERR("Failed to send SETTINGS: %s\n", nghttp2_strerror(err));
+            LOG_ERR("Failed to send SETTINGS: %s", nghttp2_strerror(err));
             return err;
         }
         return 0;

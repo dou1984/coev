@@ -125,24 +125,34 @@ int prepareFlexibleDecoder(packetDecoder *pd, std::shared_ptr<versionedDecoder> 
 
 int prepareFlexibleEncoder(packetEncoder *pe, std::shared_ptr<IEncoder> req)
 {
+    bool is_flexible = false;
+    
+    // Check if the request is directly a flexible version
     if (auto fv = std::dynamic_pointer_cast<flexible_version>(req))
     {
-        if (fv->is_flexible())
+        is_flexible = fv->is_flexible();
+    }
+    // Check if the request is a request object with a flexible body
+    else if (auto request_obj = dynamic_cast<request *>(req.get()))
+    {
+        is_flexible = request_obj->is_flexible();
+    }
+    
+    if (is_flexible)
+    {
+        if (auto prepEnc = dynamic_cast<prepEncoder *>(pe))
         {
-            if (auto prepEnc = dynamic_cast<prepEncoder *>(pe))
-            {
-                // Create a flexible prep encoder wrapper
-                prepFlexibleEncoder flexiblePrepEnc(*prepEnc);
-                // Call encode on the flexible wrapper
-                return req->encode(flexiblePrepEnc);
-            }
-            else if (auto realEnc = dynamic_cast<realEncoder *>(pe))
-            {
-                // Create a flexible real encoder wrapper
-                realFlexibleEncoder flexibleRealEnc(*realEnc);
-                // Call encode on the flexible wrapper
-                return req->encode(flexibleRealEnc);
-            }
+            // Create a flexible prep encoder wrapper
+            prepFlexibleEncoder flexiblePrepEnc(*prepEnc);
+            // Call encode on the flexible wrapper
+            return req->encode(flexiblePrepEnc);
+        }
+        else if (auto realEnc = dynamic_cast<realEncoder *>(pe))
+        {
+            // Create a flexible real encoder wrapper
+            realFlexibleEncoder flexibleRealEnc(*realEnc);
+            // Call encode on the flexible wrapper
+            return req->encode(flexibleRealEnc);
         }
     }
     // Not flexible, call encode on the original encoder

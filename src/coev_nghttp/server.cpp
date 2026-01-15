@@ -15,7 +15,7 @@ namespace coev::nghttp2
         err = tcp::server::start(info.ip, info.port);
         if (err == INVALID)
         {
-            LOG_ERR("start server failed\n");
+            LOG_ERR("start server failed");
         }
     }
     int server::route(const std::string &path, const session::router &_route)
@@ -30,18 +30,18 @@ namespace coev::nghttp2
             addrInfo info;
             int fd = co_await accept(info);
 
-            LOG_CORE("recv fd %d from %s:%d\n", fd, info.ip, info.port);
+            LOG_CORE("recv fd %d from %s:%d", fd, info.ip, info.port);
             m_tasks << __dispatch(fd, _manager);
         }
     }
     awaitable<int> server::__dispatch(int fd, SSL_CTX *_manager)
     {
-        LOG_CORE("client start %d\n", fd);
+        LOG_CORE("client start %d", fd);
         session ctx(fd, _manager);
         auto err = co_await ctx.do_handshake();
         if (err == INVALID)
         {
-            LOG_ERR("handshake error %d %s\n", errno, strerror(errno));
+            LOG_ERR("handshake error %d %s", errno, strerror(errno));
             co_return INVALID;
         }
         ctx.send_server_settings();

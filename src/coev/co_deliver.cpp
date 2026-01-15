@@ -30,7 +30,7 @@ namespace coev
 	{
 		__init();
 		__init_local();
-		LOG_CORE("co_deliver::co_deliver %ld\n", gtid());
+		LOG_CORE("co_deliver::co_deliver %ld", gtid());
 	}
 	co_deliver::~co_deliver()
 	{

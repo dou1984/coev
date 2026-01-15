@@ -14,7 +14,7 @@ std::string host = "0.0.0.0";
 int port = 9999;
 awaitable<void> dispatch(addrInfo addr, int fd)
 {
-	LOG_DBG("dispatch start %s %d\n", addr.ip, addr.port);
+	LOG_DBG("dispatch start %s %d", addr.ip, addr.port);
 	io_context io(fd);
 	while (io)
 	{
@@ -25,14 +25,14 @@ awaitable<void> dispatch(addrInfo addr, int fd)
 			io.close();
 			co_return;
 		}
-		LOG_DBG("recv %d %s\n", r, buffer);
+		LOG_DBG("recv %d %s", r, buffer);
 		r = co_await io.send(buffer, r);
 		if (r == INVALID)
 		{
 			io.close();
 			co_return;
 		}
-		LOG_DBG("send %d %s\n", r, buffer);
+		LOG_DBG("send %d %s", r, buffer);
 	}
 }
 awaitable<void> co_server()
@@ -59,17 +59,17 @@ awaitable<int> co_dail(const char *ip, int port)
 	}
 	char sayhi[] = "helloworld";
 	int count = 0;
-	LOG_DBG("co_dail start %s %d\n", sayhi, port);
+	LOG_DBG("co_dail start %s %d", sayhi, port);
 	while (c)
 	{
-		LOG_DBG("co_dail send %d\n", count);
+		LOG_DBG("co_dail send %d", count);
 		int r = co_await c.send(sayhi, strlen(sayhi) + 1);
 		if (r == INVALID)
 		{
 			c.close();
 			co_return 0;
 		}
-		LOG_DBG("send %d %s\n", r, sayhi);
+		LOG_DBG("send %d %s", r, sayhi);
 		char buffer[0x1000];
 		r = co_await c.recv(buffer, sizeof(buffer));
 		if (r == INVALID)
@@ -77,10 +77,10 @@ awaitable<int> co_dail(const char *ip, int port)
 			c.close();
 			co_return 0;
 		}
-		LOG_DBG("recv %d %s\n", r, buffer);
+		LOG_DBG("recv %d %s", r, buffer);
 		if (count++ > 10)
 		{
-			LOG_DBG("co_dail exit %s %d %d\n", ip, port, count);
+			LOG_DBG("co_dail exit %s %d %d", ip, port, count);
 			co_return 0;
 		}
 	}
@@ -133,7 +133,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		LOG_ERR("invalid method\n");
+		LOG_ERR("invalid method");
 	}
 	return 0;
 }

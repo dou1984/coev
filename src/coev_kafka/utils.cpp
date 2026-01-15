@@ -58,7 +58,7 @@ std::function<std::chrono::milliseconds(int, int)> NewExponentialBackoff(
 
     if (backoff > maxBackoff)
     {
-        LOG_CORE("Warning: backoff is greater than maxBackoff, using maxBackoff instead.\n");
+        LOG_CORE("Warning: backoff is greater than maxBackoff, using maxBackoff instead.");
         backoff = maxBackoff;
     }
 

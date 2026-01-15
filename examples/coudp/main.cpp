@@ -17,9 +17,9 @@ awaitable<int> co_srv(int fd)
 		addrInfo addr;
 		char buffer[1000];
 		auto r = co_await io.recvfrom(buffer, sizeof(buffer), addr);
-		LOG_DBG("recvfrom %s:%d %s\n", addr.ip, addr.port, buffer);
+		LOG_DBG("recvfrom %s:%d %s", addr.ip, addr.port, buffer);
 		co_await io.sendto(buffer, r, addr);
-		LOG_DBG("sendto %s:%d %s\n", addr.ip, addr.port, buffer);
+		LOG_DBG("sendto %s:%d %s", addr.ip, addr.port, buffer);
 	}
 	co_return 0;
 }
@@ -34,9 +34,9 @@ awaitable<void> co_cli()
 	{
 		char buffer[1000] = "hello world";
 		co_await io.sendto(buffer, strlen(buffer) + 1, addr);
-		LOG_DBG("send to %s:%d %s\n", addr.ip, addr.port, buffer);
+		LOG_DBG("send to %s:%d %s", addr.ip, addr.port, buffer);
 		co_await io.recvfrom(buffer, sizeof(buffer), addr);
-		LOG_DBG("recv from %s:%d %s\n", addr.ip, addr.port, buffer);
+		LOG_DBG("recv from %s:%d %s", addr.ip, addr.port, buffer);
 	}
 }
 int main(int argc, char **argv)

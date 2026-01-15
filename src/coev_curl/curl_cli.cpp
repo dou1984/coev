@@ -60,7 +60,7 @@ namespace coev
         auto r = curl_multi_add_handle(m_multi, m_curl);
         if (r != CURLM_OK)
         {
-            LOG_ERR("curl_multi_add_handle failed\n");
+            LOG_ERR("curl_multi_add_handle failed");
             curl_easy_cleanup(m_curl);
             clear();
             co_return INVALID;
@@ -91,11 +91,11 @@ namespace coev
             curl_multi_setopt(m_multi, CURLMOPT_SOCKETDATA, this);
             curl_multi_setopt(m_multi, CURLMOPT_TIMERFUNCTION, CurlCli::cb_timer);
             curl_multi_setopt(m_multi, CURLMOPT_TIMERDATA, this);
-            LOG_CORE("init success\n");
+            LOG_CORE("init success");
         }
         else
         {
-            LOG_ERR("curl_multi_init error \n");
+            LOG_ERR("curl_multi_init error ");
         }
 
         m_task << [](auto _this) -> awaitable<void>
@@ -112,7 +112,7 @@ namespace coev
         if (m_multi != nullptr)
         {
             curl_multi_cleanup(m_multi);
-            LOG_CORE("curl client \n");
+            LOG_CORE("curl client ");
         }
     }
 
@@ -127,7 +127,7 @@ namespace coev
                 auto curl = message->easy_handle;
                 const char *done_url = nullptr;
                 curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &done_url);
-                LOG_CORE("%s done\n", done_url);
+                LOG_CORE("%s done", done_url);
 
                 CurlCli::Instance *o = nullptr;
                 curl_easy_getinfo(curl, CURLINFO_PRIVATE, &o);
@@ -188,7 +188,7 @@ namespace coev
     }
     int CurlCli::cb_socket_event(CURL *curl, curl_socket_t fd, int action, void *data, void *socketp)
     {
-        LOG_CORE("cb_socket %d action %d data:%p %p\n", fd, action, data, socketp)
+        LOG_CORE("cb_socket %d action %d data:%p %p", fd, action, data, socketp)
         auto _this = static_cast<CurlCli *>(data);
         switch (action)
         {
@@ -206,14 +206,14 @@ namespace coev
             _this->m_clients.erase(fd);
             break;
         default:
-            LOG_ERR("cb_socket error %d\n", action);
+            LOG_ERR("cb_socket error %d", action);
             break;
         }
         return 0;
     }
     int CurlCli::cb_timer(CURLM *multi, long timeout_ms, void *userp)
     {
-        LOG_CORE("timer %ld \n", timeout_ms)
+        LOG_CORE("timer %ld ", timeout_ms)
         auto _this = static_cast<CurlCli *>(userp);
         if (timeout_ms < 0)
         {

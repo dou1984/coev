@@ -13,7 +13,7 @@
 #include "dynamic_push_decoder.h"
 
 struct packetDecoder;
-using taggedFieldDecoderFunc = std::function<int(PDecoder &)>;
+using taggedFieldDecoderFunc = std::function<int(packetDecoder &)>;
 using taggedFieldDecoders = std::unordered_map<uint64_t, taggedFieldDecoderFunc>;
 
 struct packetDecoder

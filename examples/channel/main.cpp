@@ -15,17 +15,17 @@ co_channel<int> ch;
 std::atomic<int> total = 0;
 awaitable<void> go()
 {
-	LOG_DBG("go\n");
+	LOG_DBG("go");
 	int x = 0;
 	for (int i = 0; i < 1000; i++)
 	{
 		x++;
 		ch.set(x);
 		x = co_await ch.get();
-		LOG_DBG("x=%d\n", x);
+		LOG_DBG("x=%d", x);
 	}
 	total += x;
-	LOG_DBG("total:%d\n", total.load());
+	LOG_DBG("total:%d", total.load());
 }
 int main()
 {

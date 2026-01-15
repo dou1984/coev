@@ -54,7 +54,7 @@ crc32_field::crc32_field(CrcPolynomial polynomial) : startOffset(0), polynomial(
 
 void crc32_field::save_offset(int in)
 {
-    LOG_CORE("crc32_field::save_offset startOffset: %d\n", in);
+    LOG_CORE("crc32_field::save_offset startOffset: %d", in);
     startOffset = in;
 }
 
@@ -65,7 +65,7 @@ int crc32_field::reserve_length()
 
 int crc32_field::run(int curOffset, std::string &buf)
 {
-    LOG_CORE("crc32_field::run startOffset: %d, curOffset: %d\n", startOffset, curOffset);
+    LOG_CORE("crc32_field::run startOffset: %d, curOffset: %d", startOffset, curOffset);
     uint32_t crc_val;
     int err = crc(curOffset, buf, crc_val);
     if (err != ErrNoError)
@@ -73,20 +73,20 @@ int crc32_field::run(int curOffset, std::string &buf)
         LOG_ERR("crc32_field::run: crc calculation failed with error %d", err);
         return err;
     }
-    LOG_CORE("crc32_field::run calculated CRC value: 0x%08x\n", crc_val);
+    LOG_CORE("crc32_field::run calculated CRC value: 0x%08x", crc_val);
     uint32_t network_crc = htonl(crc_val);
     uint8_t *ptr = reinterpret_cast<uint8_t *>(&network_crc);
     buf[startOffset] = ptr[0];
     buf[startOffset + 1] = ptr[1];
     buf[startOffset + 2] = ptr[2];
     buf[startOffset + 3] = ptr[3];
-    LOG_CORE("crc32_field::run CRC value written to buffer\n");
+    LOG_CORE("crc32_field::run CRC value written to buffer");
     return 0;
 }
 
 int crc32_field::check(int curOffset, const std::string &buf)
 {
-    LOG_CORE("crc32_field::check startOffset: %d, curOffset: %d\n", startOffset, curOffset);
+    LOG_CORE("crc32_field::check startOffset: %d, curOffset: %d", startOffset, curOffset);
     uint32_t crc_val;
     int err = crc(curOffset, buf, crc_val);
     if (err != ErrNoError)
@@ -103,33 +103,43 @@ int crc32_field::check(int curOffset, const std::string &buf)
     ptr[3] = buf[startOffset + 3];
     uint32_t expected = ntohl(network_expected);
 
-    LOG_CORE("crc32_field::check calculated CRC: 0x%08x, expected CRC: 0x%08x\n", crc_val, expected);
+    LOG_CORE("crc32_field::check calculated CRC: 0x%08x, expected CRC: 0x%08x", crc_val, expected);
     if (crc_val != expected)
     {
         LOG_ERR("crc32_field::check: CRC mismatch! calculated = 0x%08x, expected = 0x%08x", crc_val, expected);
         return ErrCRCMismatch;
     }
 
-    LOG_CORE("crc32_field::check CRC check passed\n");
+    LOG_CORE("crc32_field::check CRC check passed");
     return ErrNoError;
 }
 
 int crc32_field::crc(int curOffset, const std::string &buf, uint32_t &out_crc)
 {
     uint32_t crc = 0xFFFFFFFF;
-    for (int i = startOffset + 4; i < curOffset; ++i)
-    {
-        uint8_t byte = buf[i];
-        crc ^= static_cast<uint32_t>(byte);
-        for (int j = 0; j < 8; ++j)
+    if (polynomial == CrcCastagnoli) {
+        // Use the precomputed Castagnoli table for faster calculation
+        for (int i = startOffset + 4; i < curOffset; ++i)
         {
-            if (crc & 1)
+            uint8_t byte = buf[i];
+            crc = (crc >> 8) ^ castagnoliTable[(crc & 0xFF) ^ byte];
+        }
+    } else {
+        // Use the standard IEEE polynomial calculation
+        for (int i = startOffset + 4; i < curOffset; ++i)
+        {
+            uint8_t byte = buf[i];
+            crc ^= static_cast<uint32_t>(byte);
+            for (int j = 0; j < 8; ++j)
             {
-                crc = (crc >> 1) ^ 0xEDB88320;
-            }
-            else
-            {
-                crc >>= 1;
+                if (crc & 1)
+                {
+                    crc = (crc >> 1) ^ 0xEDB88320;
+                }
+                else
+                {
+                    crc >>= 1;
+                }
             }
         }
     }

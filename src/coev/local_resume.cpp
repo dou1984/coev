@@ -15,7 +15,7 @@ namespace coev
         bool ok = false;
         while (local<async>::instance().resume_all())
         {
-            LOG_CORE("resume one delay event\n");
+            LOG_CORE("resume one delay event");
             ok = true;
         }
         return ok;

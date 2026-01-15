@@ -115,7 +115,7 @@ struct Broker : versionedEncoder, versionedDecoder, std::enable_shared_from_this
     Broker() = default;
     Broker(const std::string &addr);
     Broker(int id, const std::string &addr);
-
+    ~Broker();
     coev::awaitable<int> Open(std::shared_ptr<Config> conf);
     int ResponseSize();
     bool Connected();
@@ -173,7 +173,7 @@ struct Broker : versionedEncoder, versionedDecoder, std::enable_shared_from_this
     int32_t m_id;
     std::string m_addr;
     int32_t m_correlation_id;
-    bool m_opened = false;        
+    coev::async m_opened;
 
     ApiVersionMap m_broker_api_versions;
     std::shared_ptr<GSSAPIKerberosAuth> m_kerberos_authenticator;
@@ -248,31 +248,31 @@ struct Broker : versionedEncoder, versionedDecoder, std::enable_shared_from_this
         }
         co_return 0;
     }
-    std::shared_ptr<metrics::Meter> RegisterMeter(const std::string &name);
-    std::shared_ptr<metrics::Histogram> RegisterHistogram(const std::string &name);
-    std::shared_ptr<metrics::Counter> RegisterCounter(const std::string &name);
-    std::shared_ptr<metrics::Registry> m_metric_registry;
-    std::shared_ptr<metrics::Meter> m_incoming_byte_rate;
-    std::shared_ptr<metrics::Meter> m_request_rate;
-    std::shared_ptr<metrics::Meter> m_fetch_rate;
-    std::shared_ptr<metrics::Histogram> m_request_size;
-    std::shared_ptr<metrics::Histogram> m_request_latency;
-    std::shared_ptr<metrics::Meter> m_outgoing_byte_rate;
-    std::shared_ptr<metrics::Meter> m_response_rate;
-    std::shared_ptr<metrics::Histogram> m_response_size;
-    std::shared_ptr<metrics::Counter> m_requests_in_flight;
-    std::shared_ptr<metrics::Meter> m_broker_incoming_byte_rate;
-    std::shared_ptr<metrics::Meter> m_broker_request_rate;
-    std::shared_ptr<metrics::Meter> m_broker_fetch_rate;
-    std::shared_ptr<metrics::Histogram> m_broker_request_size;
-    std::shared_ptr<metrics::Histogram> m_broker_request_latency;
-    std::shared_ptr<metrics::Meter> m_broker_outgoing_byte_rate;
-    std::shared_ptr<metrics::Meter> m_broker_response_rate;
-    std::shared_ptr<metrics::Histogram> m_broker_response_size;
-    std::shared_ptr<metrics::Counter> m_broker_requests_in_flight;
-    std::shared_ptr<metrics::Histogram> m_broker_throttle_time;
-    std::map<int16_t, std::shared_ptr<metrics::Meter>> m_protocol_requests_rate;
-    std::map<int16_t, std::shared_ptr<metrics::Meter>> m_broker_protocol_requests_rate;
+    std::shared_ptr<metrics::Registry> m_metric_registry = metrics::NewRegistry();
+    // std::shared_ptr<metrics::Meter> RegisterMeter(const std::string &name);
+    // std::shared_ptr<metrics::Histogram> RegisterHistogram(const std::string &name);
+    // std::shared_ptr<metrics::Counter> RegisterCounter(const std::string &name);
+    // std::shared_ptr<metrics::Meter> m_incoming_byte_rate;
+    // std::shared_ptr<metrics::Meter> m_request_rate;
+    // std::shared_ptr<metrics::Meter> m_fetch_rate;
+    // std::shared_ptr<metrics::Histogram> m_request_size;
+    // std::shared_ptr<metrics::Histogram> m_request_latency;
+    // std::shared_ptr<metrics::Meter> m_outgoing_byte_rate;
+    // std::shared_ptr<metrics::Meter> m_response_rate;
+    // std::shared_ptr<metrics::Histogram> m_response_size;
+    // std::shared_ptr<metrics::Counter> m_requests_in_flight;
+    // std::shared_ptr<metrics::Meter> m_broker_incoming_byte_rate;
+    // std::shared_ptr<metrics::Meter> m_broker_request_rate;
+    // std::shared_ptr<metrics::Meter> m_broker_fetch_rate;
+    // std::shared_ptr<metrics::Histogram> m_broker_request_size;
+    // std::shared_ptr<metrics::Histogram> m_broker_request_latency;
+    // std::shared_ptr<metrics::Meter> m_broker_outgoing_byte_rate;
+    // std::shared_ptr<metrics::Meter> m_broker_response_rate;
+    // std::shared_ptr<metrics::Histogram> m_broker_response_size;
+    // std::shared_ptr<metrics::Counter> m_broker_requests_in_flight;
+    // std::shared_ptr<metrics::Histogram> m_broker_throttle_time;
+    // std::map<int16_t, std::shared_ptr<metrics::Meter>> m_protocol_requests_rate;
+    // std::map<int16_t, std::shared_ptr<metrics::Meter>> m_broker_protocol_requests_rate;
 };
 
 std::shared_ptr<tls::Config> ValidServerNameTLS(const std::string &addr, std::shared_ptr<tls::Config> cfg);

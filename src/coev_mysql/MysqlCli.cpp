@@ -85,11 +85,11 @@ namespace coev
 		auto status = __tryconnect();
 		if (status == NET_ASYNC_ERROR)
 		{
-			LOG_CORE("mysql connect %d error:%d %s\n", status, mysql_errno(m_mysql), mysql_error(m_mysql));
+			LOG_CORE("mysql connect %d error:%d %s", status, mysql_errno(m_mysql), mysql_error(m_mysql));
 			return INVALID;
 		}
 		assert(status == NET_ASYNC_NOT_READY);
-		LOG_CORE("status:%d fd:%d\n", status, fd());
+		LOG_CORE("status:%d fd:%d", status, fd());
 		__connect_insert();
 		return 0;
 	}
@@ -171,7 +171,7 @@ namespace coev
 		}
 		if (__isneterror(status) == INVALID)
 		{
-			LOG_CORE("error %d %d %s\n", status, mysql_errno(m_mysql), mysql_error(m_mysql));
+			LOG_CORE("error %d %d %s", status, mysql_errno(m_mysql), mysql_error(m_mysql));
 			co_return INVALID;
 		}
 		do
@@ -180,12 +180,12 @@ namespace coev
 		} while ((status = mysql_real_query_nonblocking(m_mysql, sql, size)) == NET_ASYNC_NOT_READY);
 		if (__isneterror(status) == INVALID)
 		{
-			LOG_CORE("error %d %d %s\n", status, mysql_errno(m_mysql), mysql_error(m_mysql));
+			LOG_CORE("error %d %d %s", status, mysql_errno(m_mysql), mysql_error(m_mysql));
 			co_return INVALID;
 		}
 		if (__isqueryerror(status) == INVALID)
 		{
-			LOG_CORE("error %d %d %s\n", status, mysql_errno(m_mysql), mysql_error(m_mysql));
+			LOG_CORE("error %d %d %s", status, mysql_errno(m_mysql), mysql_error(m_mysql));
 			co_return INVALID;
 		}
 
@@ -201,7 +201,7 @@ namespace coev
 		if (m_results == nullptr)
 		{
 			auto last_error = mysql_errno(m_mysql);
-			LOG_CORE("last error %d\n", last_error);
+			LOG_CORE("last error %d", last_error);
 			return last_error;
 		}
 		int status = 0;

@@ -89,7 +89,7 @@ namespace coev
 	{
 		if (m_fd != INVALID)
 		{
-			LOG_CORE("fd:%d\n", m_fd);
+			LOG_CORE("fd:%d", m_fd);
 			ev_io_stop(m_loop, &m_read);
 			ev_io_stop(m_loop, &m_write);
 		}
@@ -119,12 +119,12 @@ namespace coev
 			}
 			else if (r == 0)
 			{
-				LOG_CORE("fd:%d closed\n", m_fd);
+				LOG_CORE("fd:%d closed", m_fd);
 				co_return INVALID;
 			}
 			else
 			{
-				LOG_CORE("fd:%d send %d bytes\n", m_fd, r);
+				LOG_CORE("fd:%d send %d bytes", m_fd, r);
 				co_return r;
 			}
 		}
@@ -142,12 +142,12 @@ namespace coev
 			}
 			else if (r == 0)
 			{
-				LOG_CORE("fd:%d closed\n", m_fd);
+				LOG_CORE("fd:%d closed", m_fd);
 				co_return INVALID;
 			}
 			else
 			{
-				LOG_CORE("fd:%d recv %d bytes\n", m_fd, r);
+				LOG_CORE("fd:%d recv %d bytes", m_fd, r);
 				co_return r;
 			}
 		}
@@ -168,7 +168,7 @@ namespace coev
 			}
 			else if (r == 0)
 			{
-				LOG_CORE("fd:%d closed\n", m_fd);
+				LOG_CORE("fd:%d closed", m_fd);
 				co_return INVALID;
 			}
 			parseAddr(addr, info);
@@ -190,7 +190,7 @@ namespace coev
 			}
 			else if (r == 0)
 			{
-				LOG_CORE("sendto return m_fd:%d\n", m_fd);
+				LOG_CORE("sendto return m_fd:%d", m_fd);
 				co_return INVALID;
 			}
 			co_return r;
@@ -199,7 +199,7 @@ namespace coev
 	}
 	int io_context::close()
 	{
-		LOG_CORE("m_fd:%d\n", m_fd);
+		LOG_CORE("m_fd:%d", m_fd);
 		__close();
 		return 0;
 	}

@@ -25,7 +25,7 @@ awaitable<void> test_go()
 		++g_total;
 		g_mutex.unlock();
 	}
-	LOG_DBG("tid:%ld:%ld total:%d \n", tid, gtid(), g_total.load());
+	LOG_DBG("tid:%ld:%ld total:%d ", tid, gtid(), g_total.load());
 	co_await sleep_for(1);
 
 	co_return;

@@ -46,9 +46,9 @@ int main()
 		.start(
 			[]() -> awaitable<void>
 			{
-				LOG_DBG("__call %d\n", g_trigger.x);
+				LOG_DBG("__call %d", g_trigger.x);
 				co_await __call();
-				LOG_DBG("__call %d\n", g_trigger.x);
+				LOG_DBG("__call %d", g_trigger.x);
 			})
 		.wait();
 	return 0;

@@ -7,6 +7,7 @@
 std::string version()
 {
     static std::string v = "dev";
+    // static std::string v = V0_10_0_0.String();
     return v;
 }
 

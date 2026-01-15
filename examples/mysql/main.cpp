@@ -23,7 +23,7 @@ struct t_test_table
 };
 awaitable<void> go()
 {
-	LOG_ERR("begin\n");
+	LOG_ERR("begin");
 	coev::MysqlCli c({
 		.m_url = "127.0.0.1",
 		.m_username = "ashan",
@@ -52,7 +52,7 @@ awaitable<void> go()
 	}
 	oss << ";";
 	auto s = oss.str();
-	LOG_DBG("%s\n", s.c_str());
+	LOG_DBG("%s", s.c_str());
 	r = co_await c.query(s);
 	if (r == INVALID)
 	{
@@ -67,9 +67,9 @@ awaitable<void> go()
 	r = co_await c.query(s);
 	if (r == INVALID)
 	{
-		LOG_ERR("%d\n", r);
+		LOG_ERR("%d", r);
 	}
-	LOG_DBG("query size:%d\n", r);
+	LOG_DBG("query size:%d", r);
 
 	while (true)
 	{
@@ -78,16 +78,16 @@ awaitable<void> go()
 		{
 			break;
 		}
-		LOG_DBG("%d %s %s %s %s %s\n", t.id, t.username.data(), t.password.data(),
+		LOG_DBG("%d %s %s %s %s %s", t.id, t.username.data(), t.password.data(),
 				t.mobile.data(), t.create_time.data(), t.update_time.data());
 	}
 	if (r == INVALID)
 	{
-		LOG_ERR("error %d\n", r);
+		LOG_ERR("error %d", r);
 		throw("error");
 	}
 
-	LOG_DBG("truncate table begin\n");
+	LOG_DBG("truncate table begin");
 	oss.str("");
 	oss << "truncate table t_test_table;";
 	s = oss.str();
@@ -97,7 +97,7 @@ awaitable<void> go()
 		throw("error");
 	}
 	c.results();
-	LOG_INFO("SUCCESS\n");
+	LOG_INFO("SUCCESS");
 }
 awaitable<void> clear()
 {
@@ -125,7 +125,7 @@ awaitable<void> clear()
 	auto err = c.results();
 	if (err == 0)
 	{
-		LOG_DBG("results %d\n", err);
+		LOG_DBG("results %d", err);
 	}
 	co_return;
 }

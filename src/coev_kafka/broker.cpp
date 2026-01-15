@@ -26,24 +26,22 @@ int8_t getHeaderLength(int16_t header_version)
     }
 }
 
-Broker::Broker(const std::string &addr) : m_id(-1), m_addr(addr), m_opened(false), m_correlation_id(0), m_session_reauthentication_time(0)
+Broker::Broker(const std::string &addr) : m_id(-1), m_addr(addr), m_correlation_id(0), m_session_reauthentication_time(0), m_task(), m_responses(), m_done()
 {
 }
-Broker::Broker(int id, const std::string &addr) : m_id(id), m_addr(addr), m_opened(false), m_correlation_id(0), m_session_reauthentication_time(0)
+Broker::Broker(int id, const std::string &addr) : m_id(id), m_addr(addr), m_correlation_id(0), m_session_reauthentication_time(0), m_task(), m_responses(), m_done()
 {
+}
+Broker::~Broker()
+{
+    LOG_CORE("broker %p closed", this);
 }
 coev::awaitable<int> Broker::Open(std::shared_ptr<Config> conf)
 {
-    if (m_opened)
-    {
-        co_return 0;
-    }
-    m_opened = true;
     if (!conf)
     {
         conf = std::make_shared<Config>();
     }
-
     if (!conf->Validate())
     {
         co_return INVALID;
@@ -53,87 +51,91 @@ coev::awaitable<int> Broker::Open(std::shared_ptr<Config> conf)
         m_metric_registry = metrics::NewRegistry();
     }
     m_conf = conf;
-
-    auto [host, port] = net::SplitHostPort(m_addr);
-    auto fd = co_await m_conn.connect(host.data(), port);
-    if (fd == INVALID)
+    m_task << [](auto _this) -> coev::awaitable<void>
     {
-        co_return ErrNotConnected;
-    }
-
-    m_incoming_byte_rate = metrics::GetOrRegisterMeter("incoming-byte-rate", m_metric_registry);
-    m_request_rate = metrics::GetOrRegisterMeter("request-rate", m_metric_registry);
-    m_fetch_rate = metrics::GetOrRegisterMeter("consumer-fetch-rate", m_metric_registry);
-    m_request_size = metrics::GetOrRegisterHistogram("request-size", m_metric_registry);
-    m_request_latency = metrics::GetOrRegisterHistogram("request-latency-in-ms", m_metric_registry);
-    m_outgoing_byte_rate = metrics::GetOrRegisterMeter("outgoing-byte-rate", m_metric_registry);
-    m_response_rate = metrics::GetOrRegisterMeter("response-rate", m_metric_registry);
-    m_response_size = metrics::GetOrRegisterHistogram("response-size", m_metric_registry);
-    m_requests_in_flight = metrics::GetOrRegisterCounter("requests-in-flight", m_metric_registry);
-
-    if (m_id >= 0)
-    {
-        RegisterMetrics();
-    }
-    int err = ErrNoError;
-    if (m_conf->ApiVersionsRequest)
-    {
-        std::shared_ptr<ApiVersionsResponse> apiVersionsResponse;
-        err = co_await SendAndReceiveApiVersions(3, apiVersionsResponse);
-        if (err)
+        defer(while (_this->m_opened.resume_next_loop()));
+        auto [host, port] = net::SplitHostPort(_this->m_addr);
+        LOG_CORE("connect to %s:%d", host.data(), port);
+        auto fd = co_await _this->m_conn.Dial(host.data(), port);
+        if (fd == INVALID)
         {
-            int16_t maxVersion = 0;
-            if (apiVersionsResponse)
-            {
-                for (auto &k : apiVersionsResponse->m_api_keys)
-                {
-                    if (k.m_api_key == apiKeyApiVersions)
-                    {
-                        maxVersion = k.m_max_version;
-                        break;
-                    }
-                }
-            }
-            err = co_await SendAndReceiveApiVersions(maxVersion, apiVersionsResponse);
+            LOG_ERR("connect to %s:%d failed", host.data(), port);
+            co_return;
+        }
+
+        // m_incoming_byte_rate = metrics::GetOrRegisterMeter("incoming-byte-rate", m_metric_registry);
+        // m_request_rate = metrics::GetOrRegisterMeter("request-rate", m_metric_registry);
+        // m_fetch_rate = metrics::GetOrRegisterMeter("consumer-fetch-rate", m_metric_registry);
+        // m_request_size = metrics::GetOrRegisterHistogram("request-size", m_metric_registry);
+        // m_request_latency = metrics::GetOrRegisterHistogram("request-latency-in-ms", m_metric_registry);
+        // m_outgoing_byte_rate = metrics::GetOrRegisterMeter("outgoing-byte-rate", m_metric_registry);
+        // m_response_rate = metrics::GetOrRegisterMeter("response-rate", m_metric_registry);
+        // m_response_size = metrics::GetOrRegisterHistogram("response-size", m_metric_registry);
+        // m_requests_in_flight = metrics::GetOrRegisterCounter("requests-in-flight", m_metric_registry);
+
+        if (_this->m_id >= 0)
+        {
+            _this->RegisterMetrics();
+        }
+        int err = ErrNoError;
+        if (_this->m_conf->ApiVersionsRequest)
+        {
+            std::shared_ptr<ApiVersionsResponse> apiVersionsResponse;
+            err = co_await _this->SendAndReceiveApiVersions(3, apiVersionsResponse);
             if (err)
             {
-                co_return err;
+                // 如果第一次调用失败，尝试使用版本0重新调用
+                err = co_await _this->SendAndReceiveApiVersions(0, apiVersionsResponse);
+                if (err)
+                {
+                    // 如果第二次调用也失败，关闭连接并返回错误
+                    _this->m_conn.Close();
+                    LOG_CORE("connect to %s:%d failed", host.data(), port);
+                    co_return;
+                }
             }
-        }
-        if (apiVersionsResponse)
-        {
-            m_broker_api_versions.clear();
-            for (auto &key : apiVersionsResponse->m_api_keys)
+            if (apiVersionsResponse)
             {
-                m_broker_api_versions.emplace(key.m_api_key, ApiVersionRange(key.m_min_version, key.m_max_version));
+                _this->m_broker_api_versions.clear();
+                for (auto &key : apiVersionsResponse->m_api_keys)
+                {
+                    _this->m_broker_api_versions.emplace(key.m_api_key, ApiVersionRange(key.m_min_version, key.m_max_version));
+                }
+            }
+            else
+            {
+                // 如果apiVersionsResponse为nullptr，关闭连接并返回错误
+                LOG_CORE("connect to %s:%d failed", host.data(), port);
+                _this->m_conn.Close();
+                co_return;
             }
         }
-    }
 
-    bool useSaslV0 = m_conf->Net.SASL.Version == 0;
-    if (m_conf->Net.SASL.Enable && useSaslV0)
-    {
-        err = co_await AuthenticateViaSASLv0();
-        if (err)
+        bool useSaslV0 = _this->m_conf->Net.SASL.Version == 0;
+        if (_this->m_conf->Net.SASL.Enable && useSaslV0)
         {
-            m_conn.close();
-            m_opened = false;
-            co_return ErrPermitForbidden;
+            err = co_await _this->AuthenticateViaSASLv0();
+            if (err)
+            {
+                _this->m_conn.Close();
+                LOG_CORE("connect to %s:%d failed", host.data(), port);
+                co_return;
+            }
         }
-    }
 
-    m_task << ResponseReceiver();
-    if (m_conf->Net.SASL.Enable && !useSaslV0)
-    {
-        err = co_await AuthenticateViaSASLv1();
-        if (err)
+        _this->m_task << _this->ResponseReceiver();
+        if (_this->m_conf->Net.SASL.Enable && !useSaslV0)
         {
-            co_await m_done.get();
-            m_conn.close();
-            m_opened = false;
-            co_return err;
+            err = co_await _this->AuthenticateViaSASLv1();
+            if (err)
+            {
+                co_await _this->m_done.get();
+                _this->m_conn.Close();
+                LOG_CORE("connect to %s:%d failed", host.data(), port)
+                co_return;
+            }
         }
-    }
+    }(shared_from_this());
     co_return 0;
 }
 
@@ -175,10 +177,9 @@ coev::awaitable<int> Broker::Close()
     }
 
     co_await m_done.get();
-    int32_t err = m_conn.close();
+    int32_t err = m_conn.Close();
 
     m_metric_registry->UnregisterAll();
-    m_opened = false;
     co_return 0;
 }
 
@@ -270,14 +271,14 @@ coev::awaitable<int> Broker::Produce(std::shared_ptr<ProduceRequest> request, st
 
 coev::awaitable<int> Broker::Fetch(std::shared_ptr<FetchRequest> request, std::shared_ptr<FetchResponse> &response)
 {
-    if (m_fetch_rate)
-    {
-        m_fetch_rate->Mark(1);
-    }
-    if (m_broker_fetch_rate)
-    {
-        m_broker_fetch_rate->Mark(1);
-    }
+    // if (m_fetch_rate)
+    // {
+    //     m_fetch_rate->Mark(1);
+    // }
+    // if (m_broker_fetch_rate)
+    // {
+    //     m_broker_fetch_rate->Mark(1);
+    // }
     response = std::make_shared<FetchResponse>();
     return SendAndReceive(request, response);
 }
@@ -520,14 +521,14 @@ coev::awaitable<int> Broker::ReadFull(std::string &buf, size_t n)
     {
         co_await sleep_for(m_conf->Net.ReadTimeout);
     }();
-    auto _send = task << [this, &err](auto &buf, auto n) -> coev::awaitable<void>
+    auto _send = task << [this, &err, &buf, n]() -> coev::awaitable<void>
     {
         err = co_await m_conn.ReadFull(buf, n);
         if (err != ErrNoError)
         {
-            LOG_ERR("ReadFull %d %d %s\n", err, errno, strerror(errno));
+            LOG_ERR("ReadFull %d %d %s", err, errno, strerror(errno));
         }
-    }(buf, n);
+    }();
     auto _result = co_await task.wait();
     if (_result == _timeout)
     {
@@ -542,8 +543,17 @@ coev::awaitable<int> Broker::ReadFull(std::string &buf, size_t n)
 
 coev::awaitable<int> Broker::Write(const std::string &buf)
 {
+
     auto now = std::chrono::system_clock::now();
-    return m_conn.Write(buf);
+    if (!m_conn)
+    {
+        co_await m_opened.suspend();
+        if (!m_conn)
+        {
+            co_return ErrNotConnected;
+        }
+    }
+    co_return co_await m_conn.Write(buf);
 }
 
 coev::awaitable<int> Broker::Send(std::shared_ptr<protocol_body> req, std::shared_ptr<protocol_body> res, std::shared_ptr<ResponsePromise> &promise)
@@ -564,10 +574,6 @@ std::shared_ptr<ResponsePromise> Broker::MakeResponsePromise(std::shared_ptr<pro
 
 coev::awaitable<int> Broker::SendWithPromise(std::shared_ptr<protocol_body> rb, std::shared_ptr<ResponsePromise> &promise)
 {
-    if (!m_conn)
-    {
-        co_return ErrNotConnected;
-    }
     int err = 0;
     if (m_session_reauthentication_time > 0 && CurrentUnixMilli() > m_session_reauthentication_time)
     {
@@ -583,6 +589,15 @@ coev::awaitable<int> Broker::SendWithPromise(std::shared_ptr<protocol_body> rb, 
 
 coev::awaitable<int> Broker::SendInternal(std::shared_ptr<protocol_body> rb, std::shared_ptr<ResponsePromise> &promise)
 {
+
+    if (!m_conn)
+    {
+        co_await m_opened.suspend();
+        if (!m_conn)
+        {
+            co_return ErrNotConnected;
+        }
+    }
     restrictApiVersion(rb, m_broker_api_versions);
     if (promise && promise->m_response)
     {
@@ -606,6 +621,11 @@ coev::awaitable<int> Broker::SendInternal(std::shared_ptr<protocol_body> rb, std
     AddRequestInFlightMetrics(1);
 
     auto err = co_await Write(buf);
+    if (err)
+    {
+        LOG_CORE("Write %d %s", errno, strerror(errno));
+        co_return err;
+    }
     auto bytes = buf.size();
     UpdateOutgoingCommunicationMetrics(bytes);
 
@@ -675,15 +695,6 @@ int Broker::decode(packetDecoder &pd, int16_t version)
         }
     }
 
-    auto addr = net::JoinHostPort(host, port);
-    std::string host_;
-    int portstr;
-    std::tie(host_, portstr) = net::SplitHostPort(addr);
-    if (host_.empty())
-    {
-        return 1;
-    }
-
     int32_t emptyArray;
     err = pd.getEmptyTaggedFieldArray(emptyArray);
     return err;
@@ -726,7 +737,6 @@ coev::awaitable<int> Broker::ResponseReceiver()
     while (true)
     {
         auto promise = co_await m_responses.get();
-
         if (dead)
         {
             AddRequestInFlightMetrics(-1);
@@ -796,6 +806,7 @@ coev::awaitable<int> Broker::SendAndReceiveApiVersions(int16_t v, std::shared_pt
     rb->m_version = v;
     rb->m_client_software_name = defaultClientSoftwareName;
     rb->m_client_software_version = version();
+    rb->m_client_software_version = defaultClientSoftwareVersion;
 
     auto req = std::make_shared<request>();
     req->m_correlation_id = m_correlation_id;
@@ -809,13 +820,14 @@ coev::awaitable<int> Broker::SendAndReceiveApiVersions(int16_t v, std::shared_pt
 
     AddRequestInFlightMetrics(1);
 
+    LOG_CORE("SendAndReceiveApiVersions %d", v);
     auto err = co_await Write(buf);
     auto bytes = buf.size();
 
     UpdateOutgoingCommunicationMetrics(bytes);
     if (err)
     {
-        LOG_ERR("Write failed: %d\n", err);
+        LOG_ERR("Write failed: %d", err);
 
         AddRequestInFlightMetrics(-1);
         co_return err;
@@ -828,7 +840,7 @@ coev::awaitable<int> Broker::SendAndReceiveApiVersions(int16_t v, std::shared_pt
     err = co_await ReadFull(header, headerBytes);
     if (err)
     {
-        LOG_ERR("Read header failed: %d\n", err);
+        LOG_ERR("Read header failed: %d", err);
         AddRequestInFlightMetrics(-1);
         co_return err;
     }
@@ -850,8 +862,7 @@ coev::awaitable<int> Broker::SendAndReceiveApiVersions(int16_t v, std::shared_pt
 
     response = std::make_shared<ApiVersionsResponse>();
     response->m_version = rb->version();
-    err = versionedDecode(payload, response, rb->version(),
-                          m_metric_registry);
+    err = versionedDecode(payload, response, rb->version(), m_metric_registry);
     if (err)
     {
         co_return err;
@@ -1365,35 +1376,35 @@ void Broker::UpdateIncomingCommunicationMetrics(int bytes, std::chrono::millisec
 
     UpdateRequestLatencyAndInFlightMetrics(m_request_latencyMS);
 
-    m_response_rate->Mark(1);
-    if (m_broker_response_rate)
-    {
-        m_broker_response_rate->Mark(1);
-    }
+    //     m_response_rate->Mark(1);
+    //     if (m_broker_response_rate)
+    //     {
+    //         m_broker_response_rate->Mark(1);
+    //     }
 
-    m_incoming_byte_rate->Mark(bytes);
-    if (m_broker_incoming_byte_rate)
-    {
-        m_broker_incoming_byte_rate->Mark(bytes);
-    }
+    //     m_incoming_byte_rate->Mark(bytes);
+    //     if (m_broker_incoming_byte_rate)
+    //     {
+    //         m_broker_incoming_byte_rate->Mark(bytes);
+    //     }
 
-    m_response_size->Update(bytes);
-    if (m_broker_response_size)
-    {
+    //     m_response_size->Update(bytes);
+    //     if (m_broker_response_size)
+    //     {
 
-        m_broker_response_size->Update(bytes);
-    }
+    //         m_broker_response_size->Update(bytes);
+    //     }
 }
 
 void Broker::UpdateRequestLatencyAndInFlightMetrics(std::chrono::milliseconds m_request_latencyMS)
 {
     int64_t m_request_latencyInMs = m_request_latencyMS.count();
 
-    m_request_latency->Update(m_request_latencyInMs);
-    if (m_broker_request_latency)
-    {
-        m_broker_request_latency->Update(m_request_latencyInMs);
-    }
+    // m_request_latency->Update(m_request_latencyInMs);
+    // if (m_broker_request_latency)
+    // {
+    //     m_broker_request_latency->Update(m_request_latencyInMs);
+    // }
 
     AddRequestInFlightMetrics(-1);
 }
@@ -1401,53 +1412,51 @@ void Broker::UpdateRequestLatencyAndInFlightMetrics(std::chrono::milliseconds m_
 void Broker::AddRequestInFlightMetrics(int64_t i)
 {
 
-    m_requests_in_flight->Inc(i);
-    if (m_broker_requests_in_flight)
-    {
-
-        m_broker_requests_in_flight->Inc(i);
-    }
+    // m_requests_in_flight->Inc(i);
+    // if (m_broker_requests_in_flight)
+    // {
+    //     m_broker_requests_in_flight->Inc(i);
+    // }
 }
 
 void Broker::UpdateOutgoingCommunicationMetrics(int bytes)
 {
 
-    m_request_rate->Mark(1);
-    if (m_broker_request_rate)
-    {
-        m_broker_request_rate->Mark(1);
-    }
-    m_outgoing_byte_rate->Mark(bytes);
-    if (m_broker_outgoing_byte_rate)
-    {
-        m_broker_outgoing_byte_rate->Mark(bytes);
-    }
-
-    m_request_size->Update(bytes);
-    if (m_broker_request_size)
-    {
-        m_broker_request_size->Update(bytes);
-    }
+    // m_request_rate->Mark(1);
+    // if (m_broker_request_rate)
+    // {
+    //     m_broker_request_rate->Mark(1);
+    // }
+    // m_outgoing_byte_rate->Mark(bytes);
+    // if (m_broker_outgoing_byte_rate)
+    // {
+    //     m_broker_outgoing_byte_rate->Mark(bytes);
+    // }
+    // m_request_size->Update(bytes);
+    // if (m_broker_request_size)
+    // {
+    //     m_broker_request_size->Update(bytes);
+    // }
 }
 
 void Broker::UpdateProtocolMetrics(std::shared_ptr<protocol_body> rb)
 {
-    int16_t key = rb->key();
-    auto &_protocolRequestsRate = m_protocol_requests_rate[key];
-    if (!_protocolRequestsRate)
-    {
-        std::string name = "protocol-requests-rate-" + std::to_string(key);
-        _protocolRequestsRate = metrics::GetOrRegisterMeter(name, m_metric_registry);
-    }
-    _protocolRequestsRate->Mark(1);
+    // int16_t key = rb->key();
+    // auto &_protocolRequestsRate = m_protocol_requests_rate[key];
+    // if (!_protocolRequestsRate)
+    // {
+    //     std::string name = "protocol-requests-rate-" + std::to_string(key);
+    //     _protocolRequestsRate = metrics::GetOrRegisterMeter(name, m_metric_registry);
+    // }
+    // _protocolRequestsRate->Mark(1);
 
-    auto &_m_broker_protocol_requests_rate = m_broker_protocol_requests_rate[key];
-    if (!_m_broker_protocol_requests_rate)
-    {
-        std::string name = "protocol-requests-rate-" + std::to_string(key);
-        _m_broker_protocol_requests_rate = metrics::GetOrRegisterMeter(name, m_metric_registry);
-    }
-    _m_broker_protocol_requests_rate->Mark(1);
+    // auto &_m_broker_protocol_requests_rate = m_broker_protocol_requests_rate[key];
+    // if (!_m_broker_protocol_requests_rate)
+    // {
+    //     std::string name = "protocol-requests-rate-" + std::to_string(key);
+    //     _m_broker_protocol_requests_rate = metrics::GetOrRegisterMeter(name, m_metric_registry);
+    // }
+    // _m_broker_protocol_requests_rate->Mark(1);
 }
 
 void Broker::HandleThrottledResponse(std::shared_ptr<protocol_body> resp)
@@ -1487,47 +1496,47 @@ void Broker::WaitIfThrottled()
 
 void Broker::UpdateThrottleMetric(std::chrono::milliseconds throttle_time)
 {
-    if (m_broker_throttle_time)
-    {
-        int64_t throttle_timeInMs = throttle_time.count();
-        m_broker_throttle_time->Update(throttle_timeInMs);
-    }
+    // if (m_broker_throttle_time)
+    // {
+    //     int64_t throttle_timeInMs = throttle_time.count();
+    //     m_broker_throttle_time->Update(throttle_timeInMs);
+    // }
 }
 
 void Broker::RegisterMetrics()
 {
 
-    m_broker_incoming_byte_rate = RegisterMeter("incoming-byte-rate");
-    m_broker_request_rate = RegisterMeter("request-rate");
-    m_broker_fetch_rate = RegisterMeter("consumer-fetch-rate");
-    m_broker_request_size = RegisterHistogram("request-size");
-    m_broker_request_latency = RegisterHistogram("request-latency-in-ms");
-    m_broker_outgoing_byte_rate = RegisterMeter("outgoing-byte-rate");
-    m_broker_response_rate = RegisterMeter("response-rate");
-    m_broker_response_size = RegisterHistogram("response-size");
-    m_broker_requests_in_flight = RegisterCounter("requests-in-flight");
-    m_broker_throttle_time = RegisterHistogram("throttle-time-in-ms");
+    // m_broker_incoming_byte_rate = RegisterMeter("incoming-byte-rate");
+    // m_broker_request_rate = RegisterMeter("request-rate");
+    // m_broker_fetch_rate = RegisterMeter("consumer-fetch-rate");
+    // m_broker_request_size = RegisterHistogram("request-size");
+    // m_broker_request_latency = RegisterHistogram("request-latency-in-ms");
+    // m_broker_outgoing_byte_rate = RegisterMeter("outgoing-byte-rate");
+    // m_broker_response_rate = RegisterMeter("response-rate");
+    // m_broker_response_size = RegisterHistogram("response-size");
+    // m_broker_requests_in_flight = RegisterCounter("requests-in-flight");
+    // m_broker_throttle_time = RegisterHistogram("throttle-time-in-ms");
 
-    m_broker_protocol_requests_rate.clear();
+    // m_broker_protocol_requests_rate.clear();
 }
 
-std::shared_ptr<metrics::Meter> Broker::RegisterMeter(const std::string &name)
-{
-    std::string nameForBroker = metrics::GetMetricNameForBroker(name, shared_from_this());
-    return metrics::GetOrRegisterMeter(nameForBroker, m_metric_registry);
-}
+// std::shared_ptr<metrics::Meter> Broker::RegisterMeter(const std::string &name)
+// {
+//     std::string nameForBroker = metrics::GetMetricNameForBroker(name, shared_from_this());
+//     return metrics::GetOrRegisterMeter(nameForBroker, m_metric_registry);
+// }
 
-std::shared_ptr<metrics::Histogram> Broker::RegisterHistogram(const std::string &name)
-{
-    std::string nameForBroker = metrics::GetMetricNameForBroker(name, shared_from_this());
-    return metrics::GetOrRegisterHistogram(nameForBroker, m_metric_registry);
-}
+// std::shared_ptr<metrics::Histogram> Broker::RegisterHistogram(const std::string &name)
+// {
+//     std::string nameForBroker = metrics::GetMetricNameForBroker(name, shared_from_this());
+//     return metrics::GetOrRegisterHistogram(nameForBroker, m_metric_registry);
+// }
 
-std::shared_ptr<metrics::Counter> Broker::RegisterCounter(const std::string &name)
-{
-    std::string nameForBroker = metrics::GetMetricNameForBroker(name, shared_from_this());
-    return metrics::GetOrRegisterCounter(nameForBroker, m_metric_registry);
-}
+// std::shared_ptr<metrics::Counter> Broker::RegisterCounter(const std::string &name)
+// {
+//     std::string nameForBroker = metrics::GetMetricNameForBroker(name, shared_from_this());
+//     return metrics::GetOrRegisterCounter(nameForBroker, m_metric_registry);
+// }
 coev::awaitable<int> Broker::SendOffsetCommit(std::shared_ptr<OffsetCommitRequest> req, std::shared_ptr<OffsetCommitResponse> &resp, std::shared_ptr<ResponsePromise> &promise)
 {
     return Send(req, resp, promise);
@@ -1565,7 +1574,7 @@ void Broker::SafeAsyncClose()
             auto err = co_await b->Close();
             if (err != ErrNoError)
             {
-                LOG_CORE("Error closing broker %d: %d\n", b->ID(), err);
+                LOG_CORE("Error closing broker %d: %d", b->ID(), err);
             }
         }
         co_return;

@@ -119,7 +119,7 @@ namespace coev
 			{
 				auto id = it->second;
 				m_promises.erase(it);
-				LOG_CORE("co_task: done gtid:%ld index:%ld\n", _promise->m_tid, id);
+				LOG_CORE("co_task: done gtid:%ld index:%ld", _promise->m_tid, id);
 				return id;
 			}
 			return 0;

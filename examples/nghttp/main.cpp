@@ -9,7 +9,7 @@ char hi[] = R"(helloworld)";
 
 awaitable<int> echo(nghttp2::session &ctx, nghttp2::request &request)
 {
-    LOG_DBG("recv data path %s request %s\n", request.path().c_str(), request.body().c_str());
+    LOG_DBG("recv data path %s request %s", request.path().c_str(), request.body().c_str());
 
     nghttp2::header ngh;
     ngh.push_back(":status", "200");
@@ -18,15 +18,15 @@ awaitable<int> echo(nghttp2::session &ctx, nghttp2::request &request)
     auto err = ctx.reply(request.id(), ngh, data, strlen(data) + 1);
     if (err == INVALID)
     {
-        LOG_ERR("send error %d %s\n", errno, strerror(errno));
+        LOG_ERR("send error %d %s", errno, strerror(errno));
         co_return INVALID;
     }
-    LOG_DBG("send data %s %ld\n", data, strlen(data) + 1);
+    LOG_DBG("send data %s %ld", data, strlen(data) + 1);
     co_return 0;
 };
 awaitable<void> proc_server()
 {
-    LOG_DBG("server start %s\n", "0.0.0.0:8090");
+    LOG_DBG("server start %s", "0.0.0.0:8090");
     nghttp2::server server("0.0.0.0:8090");
 
     server.route("/echo", echo);
@@ -54,7 +54,7 @@ awaitable<void> proc_client()
 
     auto res = co_await cli.query(ngh, hi, sizeof(hi));
 
-    LOG_INFO("status: %s body:%s\n", res.header(":status").c_str(), res.body().c_str());
+    LOG_INFO("status: %s body:%s", res.header(":status").c_str(), res.body().c_str());
 
     co_return;
 }
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
 {
     if (argc < 2)
     {
-        LOG_ERR("usage: %s server|client\n", argv[0]);
+        LOG_ERR("usage: %s server|client", argv[0]);
         return 1;
     }
 

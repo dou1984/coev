@@ -30,7 +30,7 @@ namespace coev::tcp
 		}
 		server *_this = (server *)(w->data);
 		assert(_this != nullptr);
-		LOG_CORE("server::cb_accept %p\n", _this);
+		LOG_CORE("server::cb_accept %p", _this);
 		_this->m_waiter.resume();
 		local_resume();
 	}
@@ -90,7 +90,7 @@ namespace coev::tcp
 	}
 	int server::__insert()
 	{
-		LOG_CORE("ev_io_start:%p %p\n", m_loop, &m_recv);
+		LOG_CORE("ev_io_start:%p %p", m_loop, &m_recv);
 		m_recv.data = this;
 		ev_io_init(&m_recv, server::cb_accept, m_fd, EV_READ);
 		ev_io_start(m_loop, &m_recv);

@@ -70,7 +70,7 @@ namespace coev
         {
             _this->m_clients.erase(_fd);
         }
-        LOG_CORE("handler %d %d:%d\n", _fd, readable, writable);
+        LOG_CORE("handler %d %d:%d", _fd, readable, writable);
     }
 
     void resolver::callback(void *arg, int status, int, struct hostent *host)
@@ -80,7 +80,7 @@ namespace coev
         {
             _this->m_ip.resize(INET6_ADDRSTRLEN);
             inet_ntop(host->h_addrtype, host->h_addr_list[0], _this->m_ip.data(), INET6_ADDRSTRLEN);
-            LOG_CORE("inet_ntop %s\n", _this->m_ip.c_str());
+            LOG_CORE("inet_ntop %s", _this->m_ip.c_str());
             _this->m_done.resume_next_loop();
         }
     }
@@ -94,7 +94,7 @@ namespace coev
         auto _timeout = _task << []() -> awaitable<void>
         { co_await sleep_for(10); }();
         auto _id = co_await _task.wait();
-        LOG_CORE("resolve return %ld\n", _id);
+        LOG_CORE("resolve return %ld", _id);
         co_return _id == _done ? 0 : INVALID;
     }
     std::string &resolver::get_ip()

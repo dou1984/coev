@@ -15,7 +15,7 @@ int Resource::encode(packetEncoder &pe, int16_t version)
     {
         if (m_resource_pattern_type == static_cast<AclResourcePatternType>(-1))
         {
-            LOG_CORE("Resource::encode Cannot encode an unknown resource pattern type, using Literal instead\n");
+            LOG_CORE("Resource::encode Cannot encode an unknown resource pattern type, using Literal instead");
             m_resource_pattern_type = AclResourcePatternTypeUnknown;
         }
         pe.putInt8(static_cast<int8_t>(m_resource_pattern_type));

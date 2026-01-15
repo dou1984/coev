@@ -42,10 +42,10 @@ namespace coev
 		intercept_singal();
 		cosys::start();
 		_cleanup();
-		LOG_CORE("main runnable is stopped by signal\n");
+		LOG_CORE("main runnable is stopped by signal");
 		while (g_exception.deliver(0))
 		{
-			LOG_CORE("deliver exit message\n");
+			LOG_CORE("deliver exit message");
 		}
 		while (g_loop_count != 0)
 		{
@@ -72,9 +72,11 @@ namespace coev
 			{
 				co_start << [=]() -> awaitable<void>
 				{
+					async _;
+					co_await _.suspend_util_next_loop();
 					co_await _f();
 					cosys::stop();
-					LOG_CORE("cosys stop\n")
+					LOG_CORE("cosys stop");
 				}();
 				co_start << []() -> awaitable<void>
 				{
@@ -82,7 +84,7 @@ namespace coev
 						[]()
 						{ return true; }, []() {});
 					cosys::stop();
-					LOG_CORE("cosys stop\n")
+					LOG_CORE("cosys stop");
 				}();
 				++g_loop_count;
 				defer(--g_loop_count);

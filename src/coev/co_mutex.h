@@ -20,6 +20,7 @@ namespace coev::guard
 	public:
 		awaitable<void> lock();
 		bool unlock();
+		bool try_lock();
 	};
 
 }

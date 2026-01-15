@@ -171,7 +171,7 @@ coev::awaitable<int> TransactionManager::Retry(int attemptsRemaining, const std:
             co_return r.Error;
         }
         auto backoff = ComputeBackoff(attemptsRemaining);
-        LOG_CORE("retrying after %lldms %d attempts remaining %d\n", 
+        LOG_CORE("retrying after %lldms %d attempts remaining %d", 
                        static_cast<long long>(backoff.count() / 1000000), attemptsRemaining, static_cast<int>(r.Error));
 
         co_await sleep_for(backoff);
@@ -249,7 +249,7 @@ coev::awaitable<TransactionManager::Result> TransactionManager::PublishOffsetsTo
 
     if (response->m_err == ErrNoError)
     {
-        LOG_DBG("successful add-offset-to-txn with group %s, transactional_id: %s\n", 
+        LOG_DBG("successful add-offset-to-txn with group %s, transactional_id: %s", 
                        groupId.c_str(), m_transactional_id.c_str());
         co_return {false, ErrNoError};
     }
@@ -351,7 +351,7 @@ coev::awaitable<TransactionManager::Result> TransactionManager::PublishOffsetsTo
     outOffsets = failedTxn;
     if (outOffsets.empty())
     {
-        LOG_DBG("successful txn-offset-commit with group %s, transactional_id: %s\n", 
+        LOG_DBG("successful txn-offset-commit with group %s, transactional_id: %s", 
                        groupId.c_str(), m_transactional_id.c_str());
         co_return {false, ErrNoError};
     }

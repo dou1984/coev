@@ -22,19 +22,11 @@ find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 
 if(BUILD_TESTS)
+    # Get all test files
+    file(GLOB TEST_FILES "*_test.cpp")
+    
     # 添加测试程序
-    add_executable(${PROJECT_NAME}_test 
-        metadata_request_test.cpp 
-        metadata_response_test.cpp 
-        control_record_test.cpp
-        message_test.cpp
-        acl_types_test.cpp
-        admin_test.cpp
-        add_offsets_to_txn_request_test.cpp
-        async_producer_test.cpp
-        balance_strategy_test.cpp
-        main_test.cpp
-    )
+    add_executable(${PROJECT_NAME}_test ${TEST_FILES})
     target_link_libraries(${PROJECT_NAME}_test 
         GTest::GTest 
         GTest::Main 

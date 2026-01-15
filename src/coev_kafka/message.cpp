@@ -62,7 +62,7 @@ std::string compress(CompressionCodec codec, int level, const std::string &data)
         coev::zstd::Compress(out, data.data(), data.size());
         return out;
     case None:
-        data;
+        return data;
     }
     return data;
 }

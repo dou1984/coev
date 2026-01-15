@@ -60,7 +60,7 @@ namespace coev
 	}
 	void co_event::resume()
 	{
-		LOG_CORE("co_event resume m_caller:%p\n", m_caller ? m_caller.address() : 0);
+		LOG_CORE("co_event resume m_caller:%p", m_caller ? m_caller.address() : 0);
 		int e0 = CORO_INIT;
 		int e1 = CORO_SUSPEND;
 		if (m_status.compare_exchange_strong(e0, CORO_RESUMED, std::memory_order_acquire, std::memory_order_acquire))

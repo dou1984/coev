@@ -19,13 +19,13 @@ namespace coev::ssl
             m_ssl = SSL_new(_ssl_ctx);
             if (m_ssl == nullptr)
             {
-                LOG_ERR("SSL_new failed %p\n", m_ssl);
+                LOG_ERR("SSL_new failed %p", m_ssl);
                 throw std::runtime_error("SSL_new failed");
             }
             int err = SSL_set_fd(m_ssl, m_fd);
             if (err != 1)
             {
-                LOG_ERR("SSL_set_fd failed %d\n", err);
+                LOG_ERR("SSL_set_fd failed %d", err);
                 __async_finally();
                 throw std::runtime_error("SSL_set_mode failed");
             }
@@ -124,7 +124,7 @@ namespace coev::ssl
             int err = 0;
             while ((err = SSL_do_handshake(m_ssl)) != 1)
             {
-                LOG_CORE("SSL_do_handshake %d\n", err);
+                LOG_CORE("SSL_do_handshake %d", err);
                 err = SSL_get_error(m_ssl, err);
                 if (err == SSL_ERROR_WANT_READ)
                 {
@@ -148,7 +148,7 @@ namespace coev::ssl
                 }
                 else
                 {
-                    LOG_ERR("do_handshake failed %d errno:%d %s\n", err, errno, strerror(errno));
+                    LOG_ERR("do_handshake failed %d errno:%d %s", err, errno, strerror(errno));
                     errno = -err;
                     co_return INVALID;
                 }

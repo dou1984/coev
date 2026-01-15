@@ -50,7 +50,7 @@ namespace coev
 	{
 		if (_reply != nullptr)
 		{
-			LOG_CORE("type:%d elements:%ld\n", _reply->type, _reply->elements);
+			LOG_CORE("type:%d elements:%ld", _reply->type, _reply->elements);
 			assert(m_reply == nullptr);
 			m_reply = _reply;
 			m_waiter.resume();
@@ -109,10 +109,10 @@ namespace coev
 		m_context = redisAsyncConnect(m_ip.c_str(), m_port);
 		if (m_context->c.err != 0)
 		{
-			LOG_ERR("redisAsyncConnect error %s\n", m_context->c.errstr);
+			LOG_ERR("redisAsyncConnect error %s", m_context->c.errstr);
 		}
 		__attach(m_context);
-		LOG_CORE("__attach %d\n", fd());
+		LOG_CORE("__attach %d", fd());
 		__connect_insert();
 		redisAsyncSetConnectCallback(m_context, &RedisCli::__connected);
 		redisAsyncSetDisconnectCallback(m_context, &RedisCli::__disconnected);
@@ -160,11 +160,11 @@ namespace coev
 		auto _this = __get(ac);
 		if (status == REDIS_OK)
 		{
-			LOG_DBG("connected fd:%d\n", _this->fd());
+			LOG_DBG("connected fd:%d", _this->fd());
 		}
 		else
 		{
-			LOG_CORE("connected error fd:%d\n", _this->fd());
+			LOG_CORE("connected error fd:%d", _this->fd());
 			_this->__process_remove();
 			_this->m_waiter.resume();
 		}
@@ -174,11 +174,11 @@ namespace coev
 		auto _this = __get(ac);
 		if (status == REDIS_OK)
 		{
-			LOG_CORE("disconnect fd:%d\n", _this->fd());
+			LOG_CORE("disconnect fd:%d", _this->fd());
 		}
 		else
 		{
-			LOG_CORE("disconnect fd:%d %d %s\n", _this->fd(), ac->err, ac->errstr);
+			LOG_CORE("disconnect fd:%d %d %s", _this->fd(), ac->err, ac->errstr);
 			_this->__process_remove();
 			_this->m_waiter.resume();
 		}
@@ -246,7 +246,7 @@ namespace coev
 
 	awaitable<int> RedisCli::query(const char *message)
 	{
-		LOG_CORE("send %s\n", message);
+		LOG_CORE("send %s", message);
 		redisAsyncCommand(m_context, RedisCli::__callback, this, message);
 		co_await m_waiter.suspend();
 		co_return (m_context) ? 0 : INVALID;

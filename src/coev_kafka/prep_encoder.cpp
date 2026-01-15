@@ -183,7 +183,7 @@ int prepEncoder::putInt64Array(const std::vector<int64_t> &in)
 
 void prepEncoder::putEmptyTaggedFieldArray()
 {
-    // no-op in legacy format
+    // no-op in legacy format    
 }
 
 int prepEncoder::offset() const

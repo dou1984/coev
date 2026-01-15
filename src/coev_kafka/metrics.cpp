@@ -10,7 +10,7 @@ namespace metrics
     struct StandardRegistry : Registry
     {
         void Each(std::function<void(const std::string &, std::shared_ptr<IMetric>)> fn) {}
-        std::shared_ptr<IMetric> Get(const std::string &name) { return nullptr; }
+        std::shared_ptr<IMetric> Get(const std::string &name) { return std::shared_ptr<Meter>(); }
         std::shared_ptr<IMetric> GetOrRegister(const std::string &name, std::shared_ptr<IMetric> metric) { return metric; }
         int Register(const std::string &name, std::shared_ptr<IMetric> metric) { return 0; }
         void RunHealthChecks() {}
@@ -21,14 +21,7 @@ namespace metrics
 
     std::shared_ptr<Histogram> GetOrRegisterHistogram(const std::string &name, std::shared_ptr<Registry> r)
     {
-        std::shared_ptr<Histogram> histogram = std::dynamic_pointer_cast<Histogram>(r->Get(name));
-        if (!histogram)
-        {
-            auto sample = NewExpDecaySample(metricsReservoirSize, metricsAlphaFactor);
-            histogram = NewHistogram(sample);
-            r->GetOrRegister(name, histogram);
-        }
-        return histogram;
+        return std::make_shared<Histogram>(std::make_shared<Sample>());
     }
 
     std::string GetMetricNameForBroker(const std::string &name, std::shared_ptr<Broker> broker)
@@ -47,8 +40,7 @@ namespace metrics
 
     std::shared_ptr<Meter> GetOrRegisterTopicMeter(const std::string &name, const std::string &topic, std::shared_ptr<Registry> r)
     {
-        std::string metricName = GetMetricNameForTopic(name, topic);
-        return std::dynamic_pointer_cast<Meter>(r->GetOrRegister(metricName, nullptr));
+        return std::make_shared<Meter>();
     }
 
     std::shared_ptr<Histogram> GetOrRegisterTopicHistogram(const std::string &name, const std::string &topic, std::shared_ptr<Registry> r)
@@ -127,14 +119,14 @@ namespace metrics
         metrics.clear();
     }
 
-    std::shared_ptr<Registry> NewCleanupRegistry(std::shared_ptr<Registry> parent)
+    std::shared_ptr<Registry> NewCleanupRegistry(std::shared_ptr<Registry> &parent)
     {
         return std::make_shared<CleanupRegistry>(parent);
     }
     std::shared_ptr<Meter> GetOrRegisterMeter(const std::string &name, std::shared_ptr<Registry> r)
     {
+        // auto meter = r ? r->GetOrRegister(name, meter) : DefaultRegistry.GetOrRegister(name, meter);
         auto meter = std::make_shared<Meter>();
-        r ? r->GetOrRegister(name, meter) : DefaultRegistry.GetOrRegister(name, meter);
         return meter;
     }
     std::shared_ptr<Counter> GetOrRegisterCounter(const std::string &name, std::shared_ptr<Registry> r)

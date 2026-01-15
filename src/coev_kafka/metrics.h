@@ -79,11 +79,10 @@ namespace metrics
         virtual void UnregisterAll() = 0;
     };
 
-    std::shared_ptr<Meter> GetOrRegisterMeter(const std::string &name, std::shared_ptr<Registry> r);
-
     std::shared_ptr<Sample> NewExpDecaySample(int, double);
     std::shared_ptr<Histogram> NewHistogram(std::shared_ptr<Sample>);
     std::shared_ptr<Registry> NewRegistry();
+    std::shared_ptr<Meter> GetOrRegisterMeter(const std::string &name, std::shared_ptr<Registry> r);
     std::shared_ptr<Histogram> GetOrRegisterHistogram(const std::string &name, std::shared_ptr<Registry> r);
     std::string GetMetricNameForBroker(const std::string &name, std::shared_ptr<Broker> broker);
     std::string GetMetricNameForTopic(const std::string &name, const std::string &topic);
@@ -108,6 +107,6 @@ namespace metrics
         std::shared_mutex mutex;
     };
 
-    std::shared_ptr<Registry> NewCleanupRegistry(std::shared_ptr<Registry> parent);
+    std::shared_ptr<Registry> NewCleanupRegistry(std::shared_ptr<Registry>& parent);
 
 }

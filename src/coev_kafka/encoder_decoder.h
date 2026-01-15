@@ -44,8 +44,8 @@ struct versionedDecoder
 struct flexible_version
 {
     virtual ~flexible_version() = default;
-    virtual bool is_flexible_version(int16_t version) = 0;
-    virtual bool is_flexible() = 0;
+    virtual bool is_flexible_version(int16_t version) const = 0;
+    virtual bool is_flexible() const = 0;
 };
 
 int encode(std::shared_ptr<IEncoder> e, std::string &out, std::shared_ptr<metrics::Registry> metricRegistry);

@@ -9,7 +9,7 @@ awaitable<void> co_download()
     auto file = fopen(filename, "wb");
     if (!file)
     {
-        LOG_ERR("error opening %s\n", filename);
+        LOG_ERR("error opening %s", filename);
         co_return;
     }
     defer(fclose(file));
@@ -18,7 +18,7 @@ awaitable<void> co_download()
     auto curl = cli.get();
     if (!curl)
     {
-        LOG_ERR("download error \n");
+        LOG_ERR("download error ");
         co_return;
     }
     curl.setopt(CURLOPT_URL, "www.baidu.com");
@@ -26,7 +26,7 @@ awaitable<void> co_download()
     auto r = co_await curl.action();
     if (r == INVALID)
     {
-        LOG_ERR("download error\n");
+        LOG_ERR("download error");
     }
     co_return;
 }
@@ -36,19 +36,19 @@ awaitable<void> co_upload()
     FILE *file = fopen(filename, "rb");
     if (!file)
     {
-        LOG_ERR("error opening %s for upload\n", filename);
+        LOG_ERR("error opening %s for upload", filename);
         co_return;
     }
     defer(fclose(file));
     if (fseek(file, 0, SEEK_END) != 0)
     {
-        LOG_ERR("fseek failed\n");
+        LOG_ERR("fseek failed");
         co_return;
     }
     long size = ftell(file);
     if (size == -1)
     {
-        LOG_ERR("ftell failed\n");
+        LOG_ERR("ftell failed");
         co_return;
     }
     curl_off_t filesize = curl_off_t(size);
@@ -58,7 +58,7 @@ awaitable<void> co_upload()
     auto curl = cli.get();
     if (curl == nullptr)
     {
-        LOG_ERR("upload error \n");
+        LOG_ERR("upload error ");
         co_return;
     }
     curl.setopt(CURLOPT_URL, "0.0.0.0:80");

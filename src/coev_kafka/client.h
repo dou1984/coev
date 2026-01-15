@@ -24,7 +24,7 @@ struct Client
 {
 
     Client(std::shared_ptr<Config> conf);
-    virtual ~Client() = default;
+    virtual ~Client();
 
     std::vector<std::shared_ptr<Broker>> Brokers();
     int Topics(std::vector<std::string> &topics);
@@ -93,7 +93,6 @@ struct Client
     std::map<std::string, int32_t> m_coordinators;
     std::map<std::string, int32_t> m_transaction_coordinators;
     std::map<std::string, std::array<std::vector<int32_t>, MaxPartitionIndex>> m_cached_partitions_results;
-    std::shared_mutex m_lock;
 
     coev::co_task m_task;
     coev::co_channel<bool> m_closer;

@@ -79,7 +79,7 @@ awaitable<void> test_sync()
 	co_await c.query("info server");
 
 	auto s = c.result();
-	LOG_DBG("%s\n", s.c_str());
+	LOG_DBG("%s", s.c_str());
 }
 awaitable<void> test_array()
 {
@@ -99,10 +99,10 @@ awaitable<void> test_array()
 	co_await c.query(s);
 	if (c.error())
 	{
-		LOG_ERR("test_array %s\n", c.result().c_str());
+		LOG_ERR("test_array %s", c.result().c_str());
 		co_return;
 	}
-	LOG_DBG("hset h:test %s\n", c.result().c_str());
+	LOG_DBG("hset h:test %s", c.result().c_str());
 
 	oss.str("");
 	oss << "hgetall h:test";
@@ -111,7 +111,7 @@ awaitable<void> test_array()
 
 	if (c.error())
 	{
-		LOG_ERR("test_array hgeall %s\n", c.result().c_str());
+		LOG_ERR("test_array hgeall %s", c.result().c_str());
 		co_return;
 	}
 	auto arr = c.result_array();
@@ -121,7 +121,7 @@ awaitable<void> test_array()
 	while (arr)
 	{
 		arr = arr.result(key, value);
-		LOG_DBG("%s=%s\n", key.c_str(), value.c_str());
+		LOG_DBG("%s=%s", key.c_str(), value.c_str());
 	}
 
 	oss.str("");
@@ -129,12 +129,12 @@ awaitable<void> test_array()
 	co_await c.query(oss.str());
 	if (c.error())
 	{
-		LOG_DBG("del h:test error %s\n", c.result().c_str());
+		LOG_DBG("del h:test error %s", c.result().c_str());
 		co_return;
 	}
 	s = c.result();
 
-	LOG_DBG("del h:test %s\n", s.c_str());
+	LOG_DBG("del h:test %s", s.c_str());
 	co_return;
 }
 int main()

@@ -31,7 +31,7 @@ struct ProducerMessage : std::enable_shared_from_this<ProducerMessage>
     std::shared_ptr<Encoder> m_key;
     std::shared_ptr<Encoder> m_value;
     std::vector<RecordHeader> m_headers;
-    std::shared_ptr<void> m_metadata;
+    // std::shared_ptr<void*> m_metadata;
 
     int64_t m_offset;
     int32_t m_partition;

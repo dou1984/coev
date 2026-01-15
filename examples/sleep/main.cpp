@@ -15,10 +15,10 @@ awaitable<void> test_sleep()
 	{
 		int t = 2;
 		co_await sleep_for(t);
-		LOG_DBG("sleep_for %d\n", t);
+		LOG_DBG("sleep_for %d", t);
 	}
 	auto r = std::chrono::system_clock::now() - now;
-	LOG_DBG("co_sleep %ld.%09ld\n", r.count() / 1000000000, r.count() % 1000000000);
+	LOG_DBG("co_sleep %ld.%09ld", r.count() / 1000000000, r.count() % 1000000000);
 }
 
 awaitable<void> test_timer()
@@ -28,7 +28,7 @@ awaitable<void> test_timer()
 	for (auto i = 0; i < 10; ++i)
 	{
 		co_await t.suspend();
-		LOG_DBG("co_timer %f\n", 3.0);
+		LOG_DBG("co_timer %f", 3.0);
 	}
 }
 
@@ -38,7 +38,7 @@ awaitable<void> test_iterator(int t)
 	{
 		co_await test_iterator(t - 1);
 		co_await sleep_for(1);
-		LOG_DBG("sleep for 1\n");
+		LOG_DBG("sleep for 1");
 	}
 }
 

@@ -326,7 +326,7 @@ coev::awaitable<void> AsyncProducer::shutdown()
     int err = m_client->Close();
     if (err != 0)
     {
-        LOG_CORE("Error closing client: %s\n", KErrorToString(err));
+        LOG_CORE("Error closing client: %s", KErrorToString(err));
     }
 
     m_metrics_registry->UnregisterAll();

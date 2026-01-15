@@ -21,14 +21,14 @@ namespace coev
             if (r == 0)
             {
                 addr = _resolver.get_ip();
-                LOG_CORE("resolver %s\n", addr.c_str());
+                LOG_CORE("resolver %s", addr.c_str());
                 co_return 0;
             }
             co_return r;
         }
         catch (std::exception &e)
         {
-            LOG_ERR("parse_dns error %s\n", e.what());
+            LOG_ERR("parse_dns error %s", e.what());
         }
         co_return INVALID;
     }
