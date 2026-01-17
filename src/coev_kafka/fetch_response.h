@@ -31,7 +31,7 @@ struct AbortedTransaction : IEncoder, IDecoder
     int encode(packetEncoder &pe);
 };
 
-struct FetchResponseBlock : versionedDecoder, versionedEncoder
+struct FetchResponseBlock : versioned_decoder, versioned_encoder
 {
     KError m_err;
     int64_t m_high_water_mark_offset;

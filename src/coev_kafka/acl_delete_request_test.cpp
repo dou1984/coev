@@ -186,7 +186,7 @@ TEST(DeleteAclsRequestTest, EncodeRequestNulls) {
     filter->m_permission_type = AclPermissionTypeAllow;
     request.m_filters.push_back(filter);
     
-    realEncoder encoder;
+    realEncoder encoder(1024);
     int result = request.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode delete acls request with nulls";
     
@@ -208,7 +208,7 @@ TEST(DeleteAclsRequestTest, EncodeRequest) {
     filter->m_permission_type = AclPermissionTypeAllow;
     request.m_filters.push_back(filter);
     
-    realEncoder encoder;
+    realEncoder encoder(1024);
     int result = request.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode delete acls request";
     
@@ -239,7 +239,7 @@ TEST(DeleteAclsRequestTest, EncodeRequestArray) {
     filter2->m_permission_type = AclPermissionTypeDeny;
     request.m_filters.push_back(filter2);
     
-    realEncoder encoder;
+    realEncoder encoder(1024);
     int result = request.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode delete acls request array";
     
@@ -259,7 +259,7 @@ TEST(DeleteAclsRequestTest, EncodeRequestNullsv1) {
     filter->m_permission_type = AclPermissionTypeAllow;
     request.m_filters.push_back(filter);
     
-    realEncoder encoder;
+    realEncoder encoder(1024);
     int result = request.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode delete acls request nulls (version 1)";
     
@@ -282,7 +282,7 @@ TEST(DeleteAclsRequestTest, EncodeRequestv1) {
     filter->m_permission_type = AclPermissionTypeAllow;
     request.m_filters.push_back(filter);
     
-    realEncoder encoder;
+    realEncoder encoder(1024);
     int result = request.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode delete acls request (version 1)";
     
@@ -343,13 +343,13 @@ TEST(DeleteAclsRequestTest, RoundTripEncodingDecoding) {
         originalRequest.m_filters.push_back(filter2);
         
         // Encode the request
-        realEncoder encoder;
+        realEncoder encoder(1024);
         int result = originalRequest.encode(encoder);
         ASSERT_EQ(result, 0) << "Failed to encode request for round-trip test, version: " << version;
         
         // Decode the encoded request
         realDecoder decoder;
-        decoder.m_raw = encoder.m_raw;
+        decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
         decoder.m_offset = 0;
         
         DeleteAclsRequest decodedRequest;

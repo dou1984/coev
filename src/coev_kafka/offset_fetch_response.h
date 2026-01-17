@@ -13,7 +13,7 @@
 #include "version.h"
 #include "protocol_body.h"
 
-struct OffsetFetchResponseBlock : versionedEncoder, versionedDecoder
+struct OffsetFetchResponseBlock : versioned_encoder, versioned_decoder
 {
     int64_t m_offset;
     int32_t m_leader_epoch;
@@ -24,7 +24,7 @@ struct OffsetFetchResponseBlock : versionedEncoder, versionedDecoder
     int decode(packetDecoder &pd, int16_t version);
 };
 
-struct OffsetFetchResponse : protocol_body
+struct OffsetFetchResponse : protocol_body , flexible_version
 {
 
     int16_t m_version;
@@ -42,7 +42,7 @@ struct OffsetFetchResponse : protocol_body
     int16_t header_version() const;
     bool is_valid_version() const;
     bool is_flexible() const;
-    static bool is_flexible_version(int16_t version);
+    bool is_flexible_version(int16_t version) const;
     KafkaVersion required_version() const;
     std::chrono::milliseconds throttle_time() const;
     std::shared_ptr<OffsetFetchResponseBlock> GetBlock(const std::string &topic, int32_t partition) const;

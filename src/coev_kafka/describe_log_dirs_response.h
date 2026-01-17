@@ -21,7 +21,7 @@ struct DescribeLogDirsResponsePartition
     int decode(packetDecoder &pd, int16_t version);
 };
 
-struct DescribeLogDirsResponseTopic : versionedDecoder, versionedEncoder
+struct DescribeLogDirsResponseTopic : versioned_decoder, versioned_encoder
 {
     std::string m_topic;
     std::vector<DescribeLogDirsResponsePartition> m_partitions;
@@ -30,7 +30,7 @@ struct DescribeLogDirsResponseTopic : versionedDecoder, versionedEncoder
     int decode(packetDecoder &pd, int16_t version);
 };
 
-struct DescribeLogDirsResponseDirMetadata : versionedDecoder, versionedEncoder
+struct DescribeLogDirsResponseDirMetadata : versioned_decoder, versioned_encoder
 {
     KError m_error_code;
     std::string m_path;
@@ -42,7 +42,7 @@ struct DescribeLogDirsResponseDirMetadata : versionedDecoder, versionedEncoder
     int decode(packetDecoder &pd, int16_t version);
 };
 
-struct DescribeLogDirsResponse : protocol_body
+struct DescribeLogDirsResponse : protocol_body , flexible_version
 {
 
     std::chrono::milliseconds m_throttle_time;
@@ -58,7 +58,7 @@ struct DescribeLogDirsResponse : protocol_body
     int16_t header_version() const;
     bool is_valid_version() const;
     bool is_flexible() const;
-    static bool is_flexible_version(int16_t version);
+      bool is_flexible_version(int16_t version)const;
     KafkaVersion required_version() const;
     std::chrono::milliseconds throttle_time() const;
 };

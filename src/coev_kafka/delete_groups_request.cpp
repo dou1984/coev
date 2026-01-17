@@ -48,7 +48,7 @@ bool DeleteGroupsRequest::is_flexible() const
     return is_flexible_version(m_version);
 }
 
-bool DeleteGroupsRequest::is_flexible_version(int16_t version)
+bool DeleteGroupsRequest::is_flexible_version(int16_t version) const
 {
     return version >= 2;
 }

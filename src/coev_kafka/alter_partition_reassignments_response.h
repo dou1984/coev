@@ -23,7 +23,7 @@ struct alterPartitionReassignmentsErrorBlock : IEncoder, IDecoder
     int decode(packetDecoder &pd);
 };
 
-struct AlterPartitionReassignmentsResponse : protocol_body
+struct AlterPartitionReassignmentsResponse : protocol_body, flexible_version
 {
     int16_t m_version = 0;
     std::chrono::milliseconds m_throttle_time;
@@ -36,7 +36,7 @@ struct AlterPartitionReassignmentsResponse : protocol_body
     {
     }
     void set_version(int16_t v);
-    void AddError(const std::string &topic, int32_t partition, KError kerror, std::string message);
+    void add_error(const std::string &topic, int32_t partition, KError kerror, std::string message);
 
     int encode(packetEncoder &pe);
     int decode(packetDecoder &pd, int16_t version);

@@ -16,7 +16,7 @@ namespace coev
 	}
 	co_event async::suspend_util_next_loop()
 	{
-		return co_event(&local<coev::async>::instance());
+		return co_event(&local_async::instance());
 	}
 	bool async::resume()
 	{
@@ -32,7 +32,7 @@ namespace coev
 		if (auto c = static_cast<co_event *>(pop_front()); c != nullptr)
 		{
 			LOG_CORE("resume one event later");
-			local<coev::async>::instance().push_back(c);
+			local_async::instance().push_back(c);
 			return true;
 		}
 		return false;

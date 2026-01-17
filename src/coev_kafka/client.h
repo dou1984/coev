@@ -46,15 +46,14 @@ struct Client
     coev::awaitable<int> RefreshCoordinator(const std::string &consumerGroup);
     coev::awaitable<int> TransactionCoordinator(const std::string &transactionID, std::shared_ptr<Broker> &coordinator);
     coev::awaitable<int> RefreshTransactionCoordinator(const std::string &transactionID);
-    coev::awaitable<int> InitProducerID(std::shared_ptr<InitProducerIDResponse> &response);
+    coev::awaitable<int> InitProducerID(InitProducerIDResponse &response);
     coev::awaitable<int> LeastLoadedBroker(std::shared_ptr<Broker> &);
     coev::awaitable<int> MetadataRefresh(const std::vector<std::string> &);
-    coev::awaitable<int> SingleFlightRefresher(const std::vector<std::string> &);
     coev::awaitable<int> BackgroundMetadataUpdater();
     coev::awaitable<int> RefreshMetadata();
     coev::awaitable<int> RetryRefreshMetadata(const std::vector<std::string> &topics, int attemptsRemaining, std::chrono::steady_clock::time_point deadline, int err);
     coev::awaitable<int> TryRefreshMetadata(const std::vector<std::string> &topics, int attemptsRemaining, std::chrono::steady_clock::time_point deadline);
-    coev::awaitable<int> FindCoordinator(const std::string &coordinatorKey, CoordinatorType coordinatorType, int attemptsRemaining, std::shared_ptr<FindCoordinatorResponse> &response);
+    coev::awaitable<int> FindCoordinator(const std::string &coordinatorKey, CoordinatorType coordinatorType, int attemptsRemaining, FindCoordinatorResponse &response);
     coev::awaitable<int> ResolveCanonicalNames(const std::vector<std::string> &addrs, std::vector<std::string> &);
 
     int Close();
@@ -71,7 +70,7 @@ struct Client
     std::chrono::milliseconds ComputeBackoff(int attemptsRemaining);
 
     coev::awaitable<int> _GetPartitions(const std::string &topic, int64_t pt, std::vector<int32_t> &partitions);
-    coev::awaitable<int> _GetReplicas(const std::string &topic, int32_t partitionID, std::shared_ptr<PartitionMetadata> &out);
+    coev::awaitable<int> _GetReplicas(const std::string &topic, int32_t partitionID, PartitionMetadata &out);
     coev::awaitable<int> _GetOffset(const std::string &topic, int32_t partitionID, int64_t timestamp, int64_t &offset);
     std::shared_ptr<PartitionMetadata> _CachedMetadata(const std::string &topic, int32_t partitionID);
     std::vector<int32_t> _CachedPartitions(const std::string &topic, int64_t partitionSet);

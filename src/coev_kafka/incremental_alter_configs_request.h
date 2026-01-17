@@ -14,7 +14,7 @@
 #include "protocol_body.h"
 #include "incremental_alter_configs_operation.h"
 
-struct IncrementalAlterConfigsEntry : IEncoder, versionedDecoder
+struct IncrementalAlterConfigsEntry : IEncoder, versioned_decoder
 {
     IncrementalAlterConfigsOperation m_operation;
     std::string m_value;
@@ -23,7 +23,7 @@ struct IncrementalAlterConfigsEntry : IEncoder, versionedDecoder
     int decode(packetDecoder &pd, int16_t version);
 };
 
-struct IncrementalAlterConfigsResource : IEncoder, versionedDecoder
+struct IncrementalAlterConfigsResource : IEncoder, versioned_decoder
 {
     ConfigResourceType m_type;
     std::string m_name;
@@ -33,7 +33,7 @@ struct IncrementalAlterConfigsResource : IEncoder, versionedDecoder
     int decode(packetDecoder &pd, int16_t version);
 };
 
-struct IncrementalAlterConfigsRequest : protocol_body
+struct IncrementalAlterConfigsRequest : protocol_body , flexible_version
 {
 
     int16_t m_version = 0;
@@ -50,7 +50,7 @@ struct IncrementalAlterConfigsRequest : protocol_body
     int16_t version() const;
     int16_t header_version() const;
     bool is_valid_version() const;
-    bool is_flexible();
-    static bool is_flexible_version(int16_t ver);
+    bool is_flexible() const;
+    bool is_flexible_version(int16_t ver) const;
     KafkaVersion required_version() const;
 };

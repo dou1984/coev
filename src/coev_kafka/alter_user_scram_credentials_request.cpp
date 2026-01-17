@@ -147,7 +147,7 @@ int16_t AlterUserScramCredentialsRequest::header_version() const
 
 bool AlterUserScramCredentialsRequest::is_valid_version() const
 {
-    return m_version == 0;
+    return m_version >= 0 && m_version <= 1;
 }
 
 bool AlterUserScramCredentialsRequest::is_flexible() const

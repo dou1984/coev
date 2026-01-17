@@ -135,15 +135,15 @@ int16_t SyncGroupRequest::header_version() const
 
 bool SyncGroupRequest::is_valid_version() const
 {
-    return m_version >= 0 && m_version <= 4;
+    return m_version >= 0 && m_version <= 5;
 }
 
-bool SyncGroupRequest::is_flexible()
+bool SyncGroupRequest::is_flexible() const
 {
     return is_flexible_version(m_version);
 }
 
-bool SyncGroupRequest::is_flexible_version(int16_t ver)
+bool SyncGroupRequest::is_flexible_version(int16_t ver) const
 {
     return ver >= 4;
 }
@@ -176,7 +176,7 @@ void SyncGroupRequest::AddGroupAssignment(const std::string &memberId,
 int SyncGroupRequest::AddGroupAssignmentMember(const std::string &memberId, std::shared_ptr<ConsumerGroupMemberAssignment> memberAssignment)
 {
     std::string bin;
-    int err = ::encode(memberAssignment, bin, nullptr);
+    int err = ::encode(*memberAssignment, bin);
     if (err)
         return err;
     AddGroupAssignment(memberId, bin);

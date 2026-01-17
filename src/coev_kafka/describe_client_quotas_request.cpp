@@ -145,7 +145,7 @@ bool DescribeClientQuotasRequest::is_flexible() const
     return is_flexible_version(m_version);
 }
 
-bool DescribeClientQuotasRequest::is_flexible_version(int16_t version)
+bool DescribeClientQuotasRequest::is_flexible_version(int16_t version) const
 {
     return version >= 1;
 }

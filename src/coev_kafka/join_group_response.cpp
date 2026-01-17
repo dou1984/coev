@@ -150,12 +150,12 @@ bool JoinGroupResponse::is_valid_version() const
     return m_version >= 0 && m_version <= 6;
 }
 
-bool JoinGroupResponse::is_flexible()
+bool JoinGroupResponse::is_flexible() const
 {
     return is_flexible_version(m_version);
 }
 
-bool JoinGroupResponse::is_flexible_version(int16_t ver)
+bool JoinGroupResponse::is_flexible_version(int16_t ver) const
 {
     return ver >= 6;
 }
@@ -194,11 +194,10 @@ int JoinGroupResponse::GetMembers(std::map<std::string, ConsumerGroupMemberMetad
 
     for (auto &member : m_members)
     {
-        auto meta = std::make_shared<ConsumerGroupMemberMetadata>();
-        int err = ::decode(member.m_metadata, std::dynamic_pointer_cast<IDecoder>(meta), nullptr);
+        auto& meta =members_[member.m_member_id];
+        int err = ::decode(member.m_metadata, meta);
         if (err != 0)
             return err;
-        // members_[member.MemberId] = meta;
     }
     return 0;
 }

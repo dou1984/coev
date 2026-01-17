@@ -38,7 +38,6 @@ struct prepEncoder : packetEncoder
     int offset() const;
     void push(std::shared_ptr<pushEncoder> in);
     int pop();
-    std::shared_ptr<metrics::Registry> metricRegistry();
 
     std::vector<std::shared_ptr<pushEncoder>> m_stack;
     int m_length = 0;

@@ -9,7 +9,7 @@
 #include "errors.h"
 #include "protocol_body.h"
 
-struct DescribeGroupsRequest : protocol_body
+struct DescribeGroupsRequest : protocol_body, flexible_version
 {
     int16_t m_version;
     std::vector<std::string> m_groups;
@@ -26,7 +26,7 @@ struct DescribeGroupsRequest : protocol_body
     int16_t header_version() const;
     bool is_valid_version() const;
     bool is_flexible() const;
-    static bool is_flexible_version(int16_t version);
+    bool is_flexible_version(int16_t version) const;
     KafkaVersion required_version() const;
     void AddGroup(const std::string &group);
 };

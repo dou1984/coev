@@ -96,7 +96,7 @@ int16_t FindCoordinatorResponse::header_version() const
 
 bool FindCoordinatorResponse::is_valid_version() const
 {
-    return m_version >= 0 && m_version <= 2;
+    return m_version >= 0 && m_version <= 3;
 }
 
 KafkaVersion FindCoordinatorResponse::required_version() const

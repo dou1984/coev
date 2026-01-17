@@ -15,7 +15,7 @@
 #include "describe_groups_response.h"
 #include "protocol_body.h"
 
-struct GroupMemberDescription : versionedEncoder, versionedDecoder
+struct GroupMemberDescription : versioned_encoder, versioned_decoder
 {
 
     int16_t m_version;
@@ -32,7 +32,7 @@ struct GroupMemberDescription : versionedEncoder, versionedDecoder
     std::shared_ptr<ConsumerGroupMemberMetadata> GetMemberMetadata();
 };
 
-struct GroupDescription : versionedEncoder, versionedDecoder
+struct GroupDescription : versioned_encoder, versioned_decoder
 {
     int16_t m_version;
     KError m_error_code;
@@ -48,7 +48,7 @@ struct GroupDescription : versionedEncoder, versionedDecoder
     int decode(packetDecoder &pd, int16_t version);
 };
 
-struct DescribeGroupsResponse : protocol_body
+struct DescribeGroupsResponse : protocol_body , flexible_version
 {
     int16_t m_version;
     std::chrono::milliseconds m_throttle_time;
@@ -62,7 +62,7 @@ struct DescribeGroupsResponse : protocol_body
     int16_t header_version() const;
     bool is_valid_version() const;
     bool is_flexible() const;
-    static bool is_flexible_version(int16_t version);
+      bool is_flexible_version(int16_t version)const;
     KafkaVersion required_version() const;
     std::chrono::milliseconds throttle_time() const;
 };

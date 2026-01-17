@@ -134,7 +134,7 @@ int16_t DeleteOffsetsResponse::header_version() const
 
 bool DeleteOffsetsResponse::is_valid_version() const
 {
-    return m_version == 0;
+    return m_version >= 0 && m_version <= 2;
 }
 
 KafkaVersion DeleteOffsetsResponse::required_version() const

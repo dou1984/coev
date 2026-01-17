@@ -10,7 +10,7 @@ void SyncGroupResponse::set_version(int16_t v)
 int SyncGroupResponse::GetMemberAssignment(std::shared_ptr<ConsumerGroupMemberAssignment> &assignment)
 {
     assignment = std::make_shared<ConsumerGroupMemberAssignment>();
-    return ::decode(m_member_assignment, std::dynamic_pointer_cast<IDecoder>(assignment), nullptr);
+    return ::decode(m_member_assignment, *assignment);
 }
 
 int SyncGroupResponse::encode(packetEncoder &pe)
@@ -78,15 +78,15 @@ int16_t SyncGroupResponse::header_version() const
 
 bool SyncGroupResponse::is_valid_version() const
 {
-    return m_version >= 0 && m_version <= 4;
+    return m_version >= 0 && m_version <= 5;
 }
 
-bool SyncGroupResponse::is_flexible()
+bool SyncGroupResponse::is_flexible() const
 {
     return is_flexible_version(m_version);
 }
 
-bool SyncGroupResponse::is_flexible_version(int16_t ver)
+bool SyncGroupResponse::is_flexible_version(int16_t ver) const
 {
     return ver >= 4;
 }

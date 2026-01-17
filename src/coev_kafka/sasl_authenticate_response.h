@@ -30,4 +30,4 @@ struct SaslAuthenticateResponse : protocol_body
     KafkaVersion required_version()const;
 };
 
-using AuthSendReceiver = std::function<coev::awaitable<int>(const std::string &, std::shared_ptr<SaslAuthenticateResponse> &)>;
+using AuthSendReceiver = std::function<coev::awaitable<int>(const std::string &, SaslAuthenticateResponse &)>;

@@ -112,12 +112,12 @@ bool LeaveGroupRequest::is_valid_version() const
     return m_version >= 0 && m_version <= 4;
 }
 
-bool LeaveGroupRequest::is_flexible()
+bool LeaveGroupRequest::is_flexible() const
 {
     return is_flexible_version(m_version);
 }
 
-bool LeaveGroupRequest::is_flexible_version(int16_t ver)
+bool LeaveGroupRequest::is_flexible_version(int16_t ver) const
 {
     return ver >= 4;
 }

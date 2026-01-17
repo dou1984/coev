@@ -246,7 +246,13 @@ coev::awaitable<int> BrokerConsumer::fetchNewMessages(std::shared_ptr<FetchRespo
         co_return 0;
     }
 
-    co_return co_await m_broker->Fetch(request, response);
+    FetchResponse local_response;
+    int err = co_await m_broker->Fetch(*request, local_response);
+    if (err == 0)
+    {
+        response = std::make_shared<FetchResponse>(local_response);
+    }
+    co_return err;
 }
 
 std::shared_ptr<BrokerConsumer> NewBrokerConsumer(std::shared_ptr<Consumer> c, std::shared_ptr<Broker> m_broker)

@@ -125,7 +125,7 @@ int16_t DescribeConfigsRequest::header_version() const
 
 bool DescribeConfigsRequest::is_valid_version() const
 {
-    return m_version >= 0 && m_version <= 2;
+    return m_version >= 0 && m_version <= 4;
 }
 
 KafkaVersion DescribeConfigsRequest::required_version() const

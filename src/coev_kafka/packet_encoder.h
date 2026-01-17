@@ -6,7 +6,6 @@
 #include <memory>
 #include <chrono>
 
-#include "metrics.h"
 #include "errors.h"
 #include "dynamic_push_encoder.h"
 
@@ -39,7 +38,8 @@ struct packetEncoder
 
     virtual int offset() const = 0;
     virtual void push(std::shared_ptr<pushEncoder> in) = 0;
+
     virtual int pop() = 0;
 
-    virtual std::shared_ptr<metrics::Registry> metricRegistry() = 0;
 };
+

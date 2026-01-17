@@ -6,7 +6,7 @@
 #include "version.h"
 
 inline const size_t MaxResponseSize = 100 * 1024 * 1024;
-struct responseHeader : versionedDecoder
+struct responseHeader : versioned_decoder
 {
 
     int32_t m_length = 0;

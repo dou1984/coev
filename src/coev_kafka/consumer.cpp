@@ -6,7 +6,6 @@
 #include <queue>
 #include "errors.h"
 #include "sleep_for.h"
-#include "metrics.h"
 #include "response_header.h"
 #include "interceptors.h"
 #include "client.h"
@@ -16,7 +15,6 @@
 
 coev::awaitable<int> Consumer::Close()
 {
-    m_metric_registry->UnregisterAll();
     co_return m_client->Close();
 }
 
@@ -227,7 +225,6 @@ int NewConsumer(const std::shared_ptr<Client> &client, std::shared_ptr<Consumer>
     auto consumer = std::make_shared<Consumer>();
     consumer->m_client = client;
     consumer->m_conf = client->GetConfig();
-    consumer->m_metric_registry = metrics::NewCleanupRegistry(consumer->m_conf->MetricRegistry);
     consumer_ = consumer;
     return 0;
 }

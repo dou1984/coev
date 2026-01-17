@@ -104,7 +104,7 @@ bool DeleteTopicsResponse::is_flexible() const
     return is_flexible_version(m_version);
 }
 
-bool DeleteTopicsResponse::is_flexible_version(int16_t version)
+bool DeleteTopicsResponse::is_flexible_version(int16_t version) const
 {
     return version >= 4;
 }

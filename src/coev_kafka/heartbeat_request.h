@@ -10,7 +10,7 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
-struct HeartbeatRequest : protocol_body
+struct HeartbeatRequest : protocol_body, flexible_version
 {
 
     int16_t m_version = 0;
@@ -29,7 +29,7 @@ struct HeartbeatRequest : protocol_body
     int16_t version() const;
     int16_t header_version() const;
     bool is_valid_version() const;
-    bool is_flexible();
-    static bool is_flexible_version(int16_t ver);
+    bool is_flexible() const;
+    bool is_flexible_version(int16_t ver) const;
     KafkaVersion required_version() const;
 };

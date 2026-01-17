@@ -8,7 +8,6 @@
 #include <functional>
 #include <unordered_map>
 #include "errors.h"
-#include "metrics.h"
 #include "encoder_decoder.h"
 #include "dynamic_push_decoder.h"
 
@@ -49,7 +48,8 @@ struct packetDecoder
     virtual int peekInt8(int offset, int8_t &val) = 0;
 
     virtual int push(std::shared_ptr<pushDecoder> in) = 0;
+
     virtual int pop() = 0;
 
-    virtual std::shared_ptr<metrics::Registry> metricRegistry() = 0;
 };
+

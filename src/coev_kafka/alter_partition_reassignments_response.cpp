@@ -32,7 +32,7 @@ void AlterPartitionReassignmentsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-void AlterPartitionReassignmentsResponse::AddError(const std::string &topic, int32_t partition, KError kerror, std::string message)
+void AlterPartitionReassignmentsResponse::add_error(const std::string &topic, int32_t partition, KError kerror, std::string message)
 {
     m_errors[topic][partition] = std::make_shared<alterPartitionReassignmentsErrorBlock>(kerror, message);
 }

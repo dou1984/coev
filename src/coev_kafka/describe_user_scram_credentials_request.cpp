@@ -79,7 +79,7 @@ int16_t DescribeUserScramCredentialsRequest::header_version() const
 
 bool DescribeUserScramCredentialsRequest::is_valid_version() const
 {
-    return m_version == 0;
+    return m_version >= 0 && m_version <= 1;
 }
 
 bool DescribeUserScramCredentialsRequest::is_flexible() const
@@ -87,7 +87,7 @@ bool DescribeUserScramCredentialsRequest::is_flexible() const
     return is_flexible_version(m_version);
 }
 
-bool DescribeUserScramCredentialsRequest::is_flexible_version(int16_t version)
+bool DescribeUserScramCredentialsRequest::is_flexible_version(int16_t version) const
 {
     return version >= 0;
 }

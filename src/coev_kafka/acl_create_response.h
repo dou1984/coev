@@ -11,7 +11,7 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
-struct AclCreationResponse : IEncoder, versionedDecoder
+struct AclCreationResponse : IEncoder, versioned_decoder
 {
     KError m_err;
     std::string m_err_msg;

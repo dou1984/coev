@@ -40,7 +40,4 @@ struct ProduceRequest : protocol_body
     void AddSet(const std::string &topic, int32_t partition, std::shared_ptr<MessageSet> set);
     void AddBatch(const std::string &topic, int32_t partition, std::shared_ptr<RecordBatch> batch);
 
-    static int64_t UpdateMsgSetMetrics(const std::shared_ptr<MessageSet> msgSet, std::shared_ptr<metrics::Histogram> compressionRatioMetric, std::shared_ptr<metrics::Histogram> topicCompressionRatioMetric);
-
-    static int64_t UpdateBatchMetrics(const std::shared_ptr<RecordBatch> recordBatch, std::shared_ptr<metrics::Histogram> compressionRatioMetric, std::shared_ptr<metrics::Histogram> topicCompressionRatioMetric);
 };

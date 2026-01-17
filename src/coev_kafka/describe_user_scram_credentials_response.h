@@ -27,7 +27,7 @@ struct DescribeUserScramCredentialsResult
     std::vector<std::shared_ptr<UserScramCredentialsResponseInfo>> m_credential_infos;
 };
 
-struct DescribeUserScramCredentialsResponse : protocol_body
+struct DescribeUserScramCredentialsResponse : protocol_body , flexible_version
 {
     int16_t m_version = 0;
     std::chrono::milliseconds m_throttle_time;
@@ -43,7 +43,7 @@ struct DescribeUserScramCredentialsResponse : protocol_body
     int16_t header_version() const;
     bool is_valid_version() const;
     bool is_flexible() const;
-    static bool is_flexible_version(int16_t version);
+      bool is_flexible_version(int16_t version)const;
     KafkaVersion required_version() const;
     std::chrono::milliseconds throttle_time() const;
 };

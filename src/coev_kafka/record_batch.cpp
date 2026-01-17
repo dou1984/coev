@@ -134,7 +134,7 @@ int RecordBatch::decode(packetDecoder &pd)
     try
     {
         auto record = std::make_shared<Record>();
-        int l = ::decode(decompressed, std::dynamic_pointer_cast<IDecoder>(record), nullptr);
+        int l = ::decode(decompressed, *record);
         m_records.push_back(record);
     }
     catch (const std::runtime_error &e)
@@ -166,7 +166,7 @@ void RecordBatch::EncodeRecords(packetEncoder &pe)
     std::string raw;
     for (auto &record : m_records)
     {
-        ::encode(record, raw, pe.metricRegistry());
+        ::encode(*record, raw);
     }
 
     m_records_len = raw.size();

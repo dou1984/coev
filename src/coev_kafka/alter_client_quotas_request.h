@@ -11,7 +11,7 @@
 
 struct ClientQuotasOp;
 
-struct AlterClientQuotasEntry : IEncoder, versionedDecoder
+struct AlterClientQuotasEntry : IEncoder, versioned_decoder
 {
     std::vector<QuotaEntityComponent> m_entity;
     std::vector<ClientQuotasOp> m_ops;
@@ -20,7 +20,7 @@ struct AlterClientQuotasEntry : IEncoder, versionedDecoder
     int decode(packetDecoder &pd, int16_t version);
 };
 
-struct ClientQuotasOp : IEncoder, versionedDecoder
+struct ClientQuotasOp : IEncoder, versioned_decoder
 {
     std::string m_key;
     double m_value;

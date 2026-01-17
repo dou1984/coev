@@ -14,7 +14,7 @@ struct DescribeUserScramCredentialsRequestUser
     std::string m_name;
 };
 
-struct DescribeUserScramCredentialsRequest : protocol_body
+struct DescribeUserScramCredentialsRequest : protocol_body , flexible_version
 {
     int16_t m_version;
     std::vector<DescribeUserScramCredentialsRequestUser> m_describe_users;
@@ -30,6 +30,6 @@ struct DescribeUserScramCredentialsRequest : protocol_body
     int16_t header_version() const;
     bool is_valid_version() const;
     bool is_flexible() const;
-    static bool is_flexible_version(int16_t version);
+      bool is_flexible_version(int16_t version)const;
     KafkaVersion required_version() const;
 };

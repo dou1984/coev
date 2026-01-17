@@ -91,12 +91,12 @@ bool IncrementalAlterConfigsResponse::is_valid_version() const
     return m_version >= 0 && m_version <= 1;
 }
 
-bool IncrementalAlterConfigsResponse::is_flexible()
+bool IncrementalAlterConfigsResponse::is_flexible() const
 {
     return is_flexible_version(m_version);
 }
 
-bool IncrementalAlterConfigsResponse::is_flexible_version(int16_t ver)
+bool IncrementalAlterConfigsResponse::is_flexible_version(int16_t ver) const
 {
     return ver >= 1;
 }

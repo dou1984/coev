@@ -179,15 +179,15 @@ int16_t ListPartitionReassignmentsResponse::header_version() const
 
 bool ListPartitionReassignmentsResponse::is_valid_version() const
 {
-    return m_version == 0;
+    return m_version >= 0 && m_version <= 1;
 }
 
-bool ListPartitionReassignmentsResponse::is_flexible()
+bool ListPartitionReassignmentsResponse::is_flexible() const
 {
     return is_flexible_version(m_version);
 }
 
-bool ListPartitionReassignmentsResponse::is_flexible_version(int16_t /*ver*/)
+bool ListPartitionReassignmentsResponse::is_flexible_version(int16_t /*ver*/) const
 {
     return true; // version 0 uses flexible format
 }

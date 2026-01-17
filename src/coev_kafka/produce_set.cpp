@@ -282,7 +282,7 @@ std::shared_ptr<ProduceRequest> ProduceSet::BuildRequest()
                 }
 
                 std::string payload;
-                ::encode(set->m_records_to_send->m_msg_set, payload, m_parent->m_metrics_registry);
+                ::encode(*(set->m_records_to_send->m_msg_set), payload);
 
                 auto compMsg = std::make_shared<Message>();
                 compMsg->m_codec = m_parent->m_conf->Producer.Compression;

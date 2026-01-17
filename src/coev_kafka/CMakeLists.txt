@@ -25,6 +25,11 @@ if(BUILD_TESTS)
     # Get all test files
     file(GLOB TEST_FILES "*_test.cpp")
     
+    # Exclude duplicate test files
+    list(FILTER TEST_FILES EXCLUDE REGEX ".*fetch_test\.cpp$")
+    list(FILTER TEST_FILES EXCLUDE REGEX ".*metadata_protocol_test\.cpp$")
+    list(FILTER TEST_FILES EXCLUDE REGEX ".*offset_fetch_test\.cpp$")
+    
     # 添加测试程序
     add_executable(${PROJECT_NAME}_test ${TEST_FILES})
     target_link_libraries(${PROJECT_NAME}_test 

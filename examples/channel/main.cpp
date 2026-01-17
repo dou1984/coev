@@ -13,9 +13,9 @@ using namespace coev;
 co_channel<int> ch;
 
 std::atomic<int> total = 0;
-awaitable<void> go()
+awaitable<void> task_01()
 {
-	LOG_DBG("go");
+	LOG_DBG("task_01");
 	int x = 0;
 	for (int i = 0; i < 1000; i++)
 	{
@@ -27,9 +27,27 @@ awaitable<void> go()
 	total += x;
 	LOG_DBG("total:%d", total.load());
 }
+
+awaitable<void> task_02()
+{
+	LOG_DBG("task_02");
+	int x = 0;
+	for (int i = 0; i < 1000; i++)
+	{
+		x++;
+		ch = x;
+		x = co_await ch;
+		LOG_DBG("x=%d", x);
+	}
+	total += x;
+	LOG_DBG("total:%d", total.load());
+}
 int main()
 {
 	set_log_level(LOG_LEVEL_CORE);
-	runnable::instance().start(2, go).wait();
+	runnable::instance()
+		.start(2, task_01)
+		.start(2, task_02)
+		.wait();
 	return 0;
 }

@@ -72,7 +72,7 @@ TEST(DeleteAclsResponseTest, EncodeResponse) {
     matchingAcl->m_acl.m_permission_type = AclPermissionTypeAllow;
     filterResp->m_matching_acls.push_back(matchingAcl);
     
-    realEncoder encoder;
+    realEncoder encoder(1024);
     int result = response.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode delete acls response";
     
@@ -140,7 +140,7 @@ TEST(DeleteAclsResponseTest, RoundTripEncodingDecoding) {
     originalResponse.m_filter_responses.push_back(filterResp2);
     
     // Encode the response
-    realEncoder encoder;
+    realEncoder encoder(1024);
     int result = originalResponse.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode response for round-trip test";
     

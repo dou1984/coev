@@ -13,7 +13,7 @@
 #include "version.h"
 #include "consumer_group_members.h"
 
-struct SyncGroupRequestAssignment : versionedDecoder, versionedEncoder
+struct SyncGroupRequestAssignment : versioned_decoder, versioned_encoder
 {
     std::string m_member_id;
     std::string m_assignment;
@@ -25,7 +25,7 @@ struct SyncGroupRequestAssignment : versionedDecoder, versionedEncoder
     int decode(packetDecoder &pd, int16_t version);
 };
 
-struct SyncGroupRequest : protocol_body
+struct SyncGroupRequest : protocol_body , flexible_version
 {
     int16_t m_version = 0;
     std::string m_group_id;
@@ -45,8 +45,8 @@ struct SyncGroupRequest : protocol_body
     int16_t version() const;
     int16_t header_version() const;
     bool is_valid_version() const;
-    bool is_flexible();
-    bool is_flexible_version(int16_t ver);
+    bool is_flexible() const;
+    bool is_flexible_version(int16_t ver) const;
     KafkaVersion required_version() const;
 
     void AddGroupAssignment(const std::string &memberId, const std::string &memberAssignment);

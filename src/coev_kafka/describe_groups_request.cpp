@@ -73,7 +73,7 @@ bool DescribeGroupsRequest::is_flexible() const
     return is_flexible_version(m_version);
 }
 
-bool DescribeGroupsRequest::is_flexible_version(int16_t version)
+bool DescribeGroupsRequest::is_flexible_version(int16_t version) const
 {
     return version >= 5;
 }

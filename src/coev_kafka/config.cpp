@@ -69,7 +69,6 @@ Config::Config()
     ChannelBufferSize = 256;
     ApiVersionsRequest = true;
     Version = DefaultVersion;
-    MetricRegistry = metrics::NewRegistry();
 }
 
 std::shared_ptr<Config> Config::Clone() const

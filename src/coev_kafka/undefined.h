@@ -85,5 +85,7 @@ struct Context
     {
         ch = true;
     }
+
+    coev::co_task m_task;
     coev::co_channel<bool> ch;
 };

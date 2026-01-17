@@ -116,7 +116,7 @@ int request::encode(packetEncoder &pe)
     {
         pe.putUVarint(0);
     }
-    err = prepareFlexibleEncoder(&pe, m_body);
+    err = prepareFlexibleEncoder(&pe, *m_body);
     if (err != 0)
     {
         return err;
@@ -164,44 +164,37 @@ int request::decode(packetDecoder &pd)
             return err;
     }
 
-    return prepareFlexibleDecoder(&pd, m_body, version);
+    return prepareFlexibleDecoder(&pd, *m_body, version);
 }
 
-coev::awaitable<int> decodeRequest(std::shared_ptr<Broker> &broker, std::shared_ptr<request> &req, int &size)
+coev::awaitable<int> decodeRequest(std::shared_ptr<Broker> &broker, request &req, int &size)
 {
     std::string lengthBytes;
-    lengthBytes.reserve(4);
-    auto bytesRead = lengthBytes.size();
+    auto bytesRead = 4;
     int err = co_await broker->ReadFull(lengthBytes, bytesRead);
     if (err != 0)
     {
-        req = nullptr;
         size = bytesRead;
         co_return err;
     }
-    bytesRead += 4;
     size_t length = (static_cast<uint32_t>(lengthBytes[0]) << 24) | (static_cast<uint32_t>(lengthBytes[1]) << 16) |
                     (static_cast<uint32_t>(lengthBytes[2]) << 8) | static_cast<uint32_t>(lengthBytes[3]);
     if (length <= 4 || length > MaxRequestSize)
     {
-        req = nullptr;
         size = bytesRead;
         co_return -1;
     }
 
     std::string encodedReq;
-    encodedReq.reserve(length);
     err = co_await broker->ReadFull(encodedReq, length);
     if (err != 0)
     {
-        req = nullptr;
         size = bytesRead + length;
         co_return -1;
     }
     bytesRead += length;
 
-    auto de = std::dynamic_pointer_cast<IDecoder>(req);
-    err = ::decode(encodedReq, de, nullptr);
+    err = ::decode(encodedReq, req);
     if (err != 0)
     {
         size = bytesRead;

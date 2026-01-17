@@ -4,7 +4,7 @@
 #include "packet_decoder.h"
 #include "packet_encoder.h"
 
-struct FetchRequestBlock : versionedDecoder, versionedEncoder
+struct FetchRequestBlock : versioned_decoder, versioned_encoder
 {
     int16_t m_version;
     int32_t m_current_leader_epoch;

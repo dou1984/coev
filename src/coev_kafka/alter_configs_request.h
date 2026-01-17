@@ -10,7 +10,7 @@
 #include "packet_decoder.h"
 #include "protocol_body.h"
 
-struct AlterConfigsResource : versionedDecoder, IEncoder
+struct AlterConfigsResource : versioned_decoder, IEncoder
 {
     ConfigResourceType m_type;
     std::string m_name;

@@ -30,7 +30,6 @@
 #include "leave_group_request.h"
 #include "metadata_request.h"
 #include "errors.h"
-#include "metrics.h"
 
 static bool isRetriableControllerError(int err)
 {
@@ -146,14 +145,14 @@ coev::awaitable<int> ClusterAdmin::CreateTopic(const std::string &topic, const s
             {
                 co_return err;
             }
-            std::shared_ptr<CreateTopicsResponse> rsp;
-            err = co_await b->CreateTopics(request, rsp);
+            CreateTopicsResponse rsp;
+            err = co_await b->CreateTopics(*request, rsp);
             if (err != 0)
             {
                 co_return err;
             }
-            auto it = rsp->m_topic_errors.find(topic);
-            if (it == rsp->m_topic_errors.end())
+            auto it = rsp.m_topic_errors.find(topic);
+            if (it == rsp.m_topic_errors.end())
             {
                 co_return ErrIncompleteResponse;
             }
@@ -173,10 +172,9 @@ coev::awaitable<int> ClusterAdmin::CreateTopic(const std::string &topic, const s
 coev::awaitable<int> ClusterAdmin::DescribeTopics(const std::vector<std::string> &topics,
                                                   std::vector<std::shared_ptr<TopicMetadata>> &out_metadata)
 {
-    std::shared_ptr<MetadataResponse> response;
     int err = co_await RetryOnError(
         isRetriableControllerError,
-        [this, &topics, &response]() -> coev::awaitable<int>
+        [this, &topics, &out_metadata]() -> coev::awaitable<int>
         {
             std::shared_ptr<Broker> controller;
             int err = co_await GetController(controller);
@@ -185,28 +183,28 @@ coev::awaitable<int> ClusterAdmin::DescribeTopics(const std::vector<std::string>
                 co_return err;
             }
             auto request = NewMetadataRequest(m_conf->Version, topics);
-            err = co_await controller->GetMetadata(request, response);
+            MetadataResponse response;
+            err = co_await controller->GetMetadata(*request, response);
             if (isRetriableControllerError(err))
             {
                 std::shared_ptr<Broker> dummy;
                 co_await RefreshController(dummy);
             }
-            co_return err;
+            if (err != 0)
+            {
+                co_return err;
+            }
+            out_metadata = std::move(response.Topics);
+            co_return 0;
         });
-    if (err != 0)
-    {
-        co_return err;
-    }
-    out_metadata = std::move(response->Topics);
-    co_return 0;
+    co_return err;
 }
 
 coev::awaitable<int> ClusterAdmin::DescribeCluster(std::vector<std::shared_ptr<Broker>> &out_brokers, int32_t &out_controllerID)
 {
-    std::shared_ptr<MetadataResponse> response;
     int err = co_await RetryOnError(
         isRetriableControllerError,
-        [this, &response]() -> coev::awaitable<int>
+        [this, &out_brokers, &out_controllerID]() -> coev::awaitable<int>
         {
             std::shared_ptr<Broker> controller;
             int err = co_await GetController(controller);
@@ -215,23 +213,27 @@ coev::awaitable<int> ClusterAdmin::DescribeCluster(std::vector<std::shared_ptr<B
                 co_return err;
             }
             auto request = NewMetadataRequest(m_conf->Version, std::vector<std::string>{});
-            err = co_await controller->GetMetadata(request, response);
+            MetadataResponse response;
+            err = co_await controller->GetMetadata(*request, response);
             if (isRetriableControllerError(err))
             {
                 std::shared_ptr<Broker> dummy;
                 RefreshController(dummy);
             }
-            co_return err;
+            if (err != 0)
+            {
+                co_return err;
+            }
+            out_brokers = std::move(response.Brokers);
+            out_controllerID = response.ControllerID;
+            co_return 0;
         });
     if (err != 0)
     {
         out_brokers.clear();
         out_controllerID = 0;
-        co_return err;
     }
-    out_brokers = std::move(response->Brokers);
-    out_controllerID = std::move(response->ControllerID);
-    co_return 0;
+    co_return err;
 }
 
 coev::awaitable<int> ClusterAdmin::ListTopics(std::map<std::string, TopicDetail> &topicsDetailsMap)
@@ -244,15 +246,15 @@ coev::awaitable<int> ClusterAdmin::ListTopics(std::map<std::string, TopicDetail>
     }
     err = co_await b->Open(m_conf);
     auto metadataReq = NewMetadataRequest(m_conf->Version, std::vector<std::string>{});
-    std::shared_ptr<MetadataResponse> metadataResp;
-    err = co_await b->GetMetadata(metadataReq, metadataResp);
+    MetadataResponse metadataResp;
+    err = co_await b->GetMetadata(*metadataReq, metadataResp);
     if (err != 0)
     {
         co_return err;
     }
 
     std::vector<std::shared_ptr<ConfigResource>> describeConfigsResources;
-    for (auto &topic : metadataResp->Topics)
+    for (auto &topic : metadataResp.Topics)
     {
         TopicDetail topicDetails;
         topicDetails.m_num_partitions = static_cast<int32_t>(topic->Partitions.size());
@@ -283,14 +285,14 @@ coev::awaitable<int> ClusterAdmin::ListTopics(std::map<std::string, TopicDetail>
         describeConfigsReq->m_version = 2;
     }
 
-    std::shared_ptr<DescribeConfigsResponse> describeConfigsResp;
-    err = co_await b->DescribeConfigs(describeConfigsReq, describeConfigsResp);
+    DescribeConfigsResponse describeConfigsResp;
+    err = co_await b->DescribeConfigs(*describeConfigsReq, describeConfigsResp);
     if (err != 0)
     {
         co_return err;
     }
 
-    for (auto &resource : describeConfigsResp->m_resources)
+    for (auto &resource : describeConfigsResp.m_resources)
     {
         auto it = topicsDetailsMap.find(resource->m_name);
         if (it == topicsDetailsMap.end())
@@ -345,14 +347,14 @@ coev::awaitable<int> ClusterAdmin::DeleteTopic(const std::string &topic)
             {
                 co_return err;
             }
-            std::shared_ptr<DeleteTopicsResponse> rsp;
-            err = co_await b->DeleteTopics(request, rsp);
+            DeleteTopicsResponse rsp;
+            err = co_await b->DeleteTopics(*request, rsp);
             if (err != 0)
             {
                 co_return err;
             }
-            auto it = rsp->m_topic_error_codes.find(topic);
-            if (it == rsp->m_topic_error_codes.end())
+            auto it = rsp.m_topic_error_codes.find(topic);
+            if (it == rsp.m_topic_error_codes.end())
             {
                 co_return ErrIncompleteResponse;
             }
@@ -400,14 +402,14 @@ coev::awaitable<int> ClusterAdmin::CreatePartitions(const std::string &topic, in
             {
                 co_return err;
             }
-            std::shared_ptr<CreatePartitionsResponse> rsp;
-            err = co_await b->CreatePartitions(request, rsp);
+            CreatePartitionsResponse rsp;
+            err = co_await b->CreatePartitions(*request, rsp);
             if (err != 0)
             {
                 co_return err;
             }
-            auto it = rsp->m_topic_partition_errors.find(topic);
-            if (it == rsp->m_topic_partition_errors.end())
+            auto it = rsp.m_topic_partition_errors.find(topic);
+            if (it == rsp.m_topic_partition_errors.end())
             {
                 co_return ErrIncompleteResponse;
             }
@@ -449,8 +451,8 @@ coev::awaitable<int> ClusterAdmin::AlterPartitionReassignments(const std::string
             {
                 co_return err;
             }
-            std::shared_ptr<AlterPartitionReassignmentsResponse> response;
-            err = co_await b->AlterPartitionReassignments(request, response);
+            AlterPartitionReassignmentsResponse response;
+            err = co_await b->AlterPartitionReassignments(*request, response);
             std::vector<int> errs;
             if (err != 0)
             {
@@ -458,11 +460,11 @@ coev::awaitable<int> ClusterAdmin::AlterPartitionReassignments(const std::string
             }
             else
             {
-                if (response->m_error_code > 0)
+                if (response.m_error_code > 0)
                 {
-                    errs.push_back(response->m_error_code);
+                    errs.push_back(response.m_error_code);
                 }
-                for (auto &topicErrors : response->m_errors)
+                for (auto &topicErrors : response.m_errors)
                 {
                     for (auto &partitionError : topicErrors.second)
                     {
@@ -496,10 +498,9 @@ coev::awaitable<int> ClusterAdmin::ListPartitionReassignments(
     request->m_version = 0;
     request->AddBlock(topic, partitions);
 
-    std::shared_ptr<ListPartitionReassignmentsResponse> response;
     int err = co_await RetryOnError(
         isRetriableControllerError,
-        [this, &request, &response]() -> coev::awaitable<int>
+        [this, &request, &out_topicStatus]() -> coev::awaitable<int>
         {
             std::shared_ptr<Broker> b;
             int err = co_await GetController(b);
@@ -512,7 +513,8 @@ coev::awaitable<int> ClusterAdmin::ListPartitionReassignments(
             {
                 co_return err;
             }
-            err = co_await b->ListPartitionReassignments(request, response);
+            ListPartitionReassignmentsResponse response;
+            err = co_await b->ListPartitionReassignments(*request, response);
             if (isRetriableControllerError(err))
             {
                 std::shared_ptr<Broker> dummy;
@@ -522,19 +524,18 @@ coev::awaitable<int> ClusterAdmin::ListPartitionReassignments(
                     co_return err;
                 }
             }
+            if (err == 0)
+            {
+                out_topicStatus = response.m_topic_status;
+            }
             co_return err;
         });
 
-    if (err == 0 && response != nullptr)
-    {
-        out_topicStatus = response->m_topic_status;
-        co_return 0;
-    }
-    else
+    if (err != 0)
     {
         out_topicStatus.clear();
-        co_return err;
     }
+    co_return err;
 }
 
 coev::awaitable<int> ClusterAdmin::DeleteRecords(const std::string &topic, const std::map<int32_t, int64_t> &partitionOffsets)
@@ -580,16 +581,16 @@ coev::awaitable<int> ClusterAdmin::DeleteRecords(const std::string &topic, const
             request->m_version = 1;
         }
 
-        std::shared_ptr<DeleteRecordsResponse> rsp;
-        int err = co_await broker->DeleteRecords(request, rsp);
+        DeleteRecordsResponse rsp;
+        int err = co_await broker->DeleteRecords(*request, rsp);
         if (err != 0)
         {
             errs.emplace_back(err);
             continue;
         }
 
-        auto it = rsp->m_topics.find(topic);
-        if (it == rsp->m_topics.end())
+        auto it = rsp.m_topics.find(topic);
+        if (it == rsp.m_topics.end())
         {
             errs.emplace_back(ErrIncompleteResponse);
             continue;
@@ -653,15 +654,15 @@ coev::awaitable<int> ClusterAdmin::DescribeConfig(const ConfigResource &resource
         co_return err;
     }
 
-    std::shared_ptr<DescribeConfigsResponse> rsp;
-    err = co_await b->DescribeConfigs(request, rsp);
+    DescribeConfigsResponse rsp;
+    err = co_await b->DescribeConfigs(*request, rsp);
     if (err != 0)
     {
         co_return err;
     }
 
     out_entries.clear();
-    for (auto &rspResource : rsp->m_resources)
+    for (auto &rspResource : rsp.m_resources)
     {
         if (rspResource->m_name == resource.m_name)
         {
@@ -727,14 +728,14 @@ coev::awaitable<int> ClusterAdmin::AlterConfig(ConfigResourceType resourceType, 
         co_return err;
     }
 
-    std::shared_ptr<AlterConfigsResponse> rsp;
-    err = co_await b->AlterConfigs(request, rsp);
+    AlterConfigsResponse rsp;
+    err = co_await b->AlterConfigs(*request, rsp);
     if (err != 0)
     {
         co_return err;
     }
 
-    for (auto &rspResource : rsp->m_resources)
+    for (auto &rspResource : rsp.m_resources)
     {
         if (rspResource->m_name == name)
         {
@@ -789,14 +790,14 @@ coev::awaitable<int> ClusterAdmin::IncrementalAlterConfig(ConfigResourceType res
     }
     err = co_await b->Open(m_client->GetConfig());
 
-    std::shared_ptr<IncrementalAlterConfigsResponse> response;
-    err = co_await b->IncrementalAlterConfigs(request, response);
+    IncrementalAlterConfigsResponse response;
+    err = co_await b->IncrementalAlterConfigs(*request, response);
     if (err != 0)
     {
         co_return err;
     }
 
-    for (auto &rspResource : response->m_resources)
+    for (auto &rspResource : response.m_resources)
     {
         if (rspResource->m_name == name)
         {
@@ -831,8 +832,8 @@ coev::awaitable<int> ClusterAdmin::CreateACL(const Resource &resource, const Acl
     {
         co_return err;
     }
-    std::shared_ptr<CreateAclsResponse> rsp;
-    co_return co_await b->CreateAcls(request, rsp);
+    CreateAclsResponse rsp;
+    co_return co_await b->CreateAcls(*request, rsp);
 }
 
 coev::awaitable<int> ClusterAdmin::CreateACLs(const std::vector<std::shared_ptr<ResourceAcls>> &resourceACLs)
@@ -859,8 +860,8 @@ coev::awaitable<int> ClusterAdmin::CreateACLs(const std::vector<std::shared_ptr<
     {
         co_return err;
     }
-    std::shared_ptr<CreateAclsResponse> response;
-    co_return co_await b->CreateAcls(request, response);
+    CreateAclsResponse response;
+    co_return co_await b->CreateAcls(*request, response);
 }
 
 coev::awaitable<int> ClusterAdmin::ListAcls(const AclFilter &filter, std::vector<std::shared_ptr<ResourceAcls>> &out_results)
@@ -878,15 +879,15 @@ coev::awaitable<int> ClusterAdmin::ListAcls(const AclFilter &filter, std::vector
     {
         co_return err;
     }
-    std::shared_ptr<DescribeAclsResponse> response;
-    err = co_await b->DescribeAcls(request, response);
+    DescribeAclsResponse response;
+    err = co_await b->DescribeAcls(*request, response);
     if (err != 0)
     {
         co_return err;
     }
 
     out_results.clear();
-    for (auto &rAcl : response->m_resource_acls)
+    for (auto &rAcl : response.m_resource_acls)
     {
         out_results.push_back(rAcl);
     }
@@ -911,15 +912,15 @@ coev::awaitable<int> ClusterAdmin::DeleteACL(const AclFilter &filter, bool valid
     {
         co_return err;
     }
-    std::shared_ptr<DeleteAclsResponse> rsp;
-    err = co_await b->DeleteAcls(request, rsp);
+    DeleteAclsResponse rsp;
+    err = co_await b->DeleteAcls(*request, rsp);
     if (err != 0)
     {
         co_return err;
     }
 
     out_matchingAcls.clear();
-    for (auto &fr : rsp->m_filter_responses)
+    for (auto &fr : rsp.m_filter_responses)
     {
         for (auto &mACL : fr->m_matching_acls)
         {
@@ -945,7 +946,7 @@ coev::awaitable<int> ClusterAdmin::ElectLeaders(ElectionType electionType, const
         request->m_version = 1;
     }
 
-    std::shared_ptr<ElectLeadersResponse> res;
+    ElectLeadersResponse res;
     int err = co_await RetryOnError(
         isRetriableControllerError,
         [this, &request, &res]() -> coev::awaitable<int>
@@ -961,19 +962,19 @@ coev::awaitable<int> ClusterAdmin::ElectLeaders(ElectionType electionType, const
             {
                 co_return err;
             }
-            err = co_await b->ElectLeaders(request, res);
+            err = co_await b->ElectLeaders(*request, res);
             if (err != 0)
             {
                 co_return err;
             }
-            if (res->m_error_code != ErrNoError)
+            if (res.m_error_code != ErrNoError)
             {
-                if (isRetriableControllerError(res->m_error_code))
+                if (isRetriableControllerError(res.m_error_code))
                 {
                     std::shared_ptr<Broker> dummy;
                     RefreshController(dummy);
                 }
-                co_return res->m_error_code;
+                co_return res.m_error_code;
             }
             co_return 0;
         });
@@ -983,7 +984,7 @@ coev::awaitable<int> ClusterAdmin::ElectLeaders(ElectionType electionType, const
         out_results.clear();
         co_return err;
     }
-    out_results = res->m_replica_election_results;
+    out_results = res.m_replica_election_results;
     co_return 0;
 }
 
@@ -1026,13 +1027,13 @@ coev::awaitable<int> ClusterAdmin::DescribeConsumerGroups(const std::vector<std:
             describeReq->m_version = 1;
         }
 
-        std::shared_ptr<DescribeGroupsResponse> response;
-        int err = co_await broker->DescribeGroups(describeReq, response);
+        DescribeGroupsResponse response;
+        int err = co_await broker->DescribeGroups(*describeReq, response);
         if (err != 0)
         {
             co_return err;
         }
-        out_result.insert(out_result.end(), response->m_groups.begin(), response->m_groups.end());
+        out_result.insert(out_result.end(), response.m_groups.begin(), response.m_groups.end());
     }
     co_return 0;
 }
@@ -1069,14 +1070,14 @@ coev::awaitable<int> ClusterAdmin::ListConsumerGroups(std::map<std::string, std:
             {
                 request->m_version = 1;
             }
-            std::shared_ptr<ListGroupsResponse> response;
-            int err = co_await b->ListGroups(request, response);
+            ListGroupsResponse response;
+            int err = co_await b->ListGroups(*request, response);
             if (err != 0)
             {
                 errChan.push_back(err);
                 co_return err;
             }
-            out_groups.insert(response->m_groups.begin(), response->m_groups.end());
+            out_groups.insert(response.m_groups.begin(), response.m_groups.end());
             co_return 0;
         }();
     }
@@ -1100,7 +1101,8 @@ coev::awaitable<int> ClusterAdmin::ListConsumerGroupOffsets(const std::string &g
         if (err != 0) {
             co_return err;
         }
-        err =co_await coordinator->FetchOffset(request, out);
+        OffsetFetchResponse local_out;
+        err =co_await coordinator->FetchOffset(*request, local_out);
         if (err != 0) {
             if (isRetriableGroupCoordinatorError(err)) 
             {
@@ -1108,14 +1110,16 @@ coev::awaitable<int> ClusterAdmin::ListConsumerGroupOffsets(const std::string &g
             }
             co_return err;
         }
-        if (out->m_err != ErrNoError)
+        if (local_out.m_err != ErrNoError)
          {
-            if (isRetriableGroupCoordinatorError(out->m_err))
+            if (isRetriableGroupCoordinatorError(local_out.m_err))
              {
                 m_client->RefreshCoordinator(group);
             }
-            co_return out->m_err;
+            co_return local_out.m_err;
         }
+        // Convert local_out to shared_ptr
+        out = std::make_shared<OffsetFetchResponse>(local_out);
         co_return 0; });
 }
 
@@ -1135,8 +1139,8 @@ coev::awaitable<int> ClusterAdmin::DeleteConsumerGroupOffset(const std::string &
             {
                 co_return err;
             }
-            std::shared_ptr<DeleteOffsetsResponse> response;
-            err = co_await coordinator->DeleteOffsets(request, response);
+            DeleteOffsetsResponse response;
+            err = co_await coordinator->DeleteOffsets(*request, response);
             if (err != 0)
             {
                 if (isRetriableGroupCoordinatorError(err))
@@ -1145,16 +1149,16 @@ coev::awaitable<int> ClusterAdmin::DeleteConsumerGroupOffset(const std::string &
                 }
                 co_return err;
             }
-            if (response->m_error_code != ErrNoError)
+            if (response.m_error_code != ErrNoError)
             {
-                if (isRetriableGroupCoordinatorError(response->m_error_code))
+                if (isRetriableGroupCoordinatorError(response.m_error_code))
                 {
                     m_client->RefreshCoordinator(group);
                 }
-                co_return response->m_error_code;
+                co_return response.m_error_code;
             }
-            auto topicIt = response->m_errors.find(topic);
-            if (topicIt != response->m_errors.end())
+            auto topicIt = response.m_errors.find(topic);
+            if (topicIt != response.m_errors.end())
             {
                 auto partIt = topicIt->second.find(partition);
                 if (partIt != topicIt->second.end() && partIt->second != ErrNoError)
@@ -1189,8 +1193,8 @@ coev::awaitable<int> ClusterAdmin::DeleteConsumerGroup(const std::string &group)
             {
                 co_return err;
             }
-            std::shared_ptr<DeleteGroupsResponse> response;
-            err = co_await coordinator->DeleteGroups(request, response);
+            DeleteGroupsResponse response;
+            err = co_await coordinator->DeleteGroups(*request, response);
             if (err != 0)
             {
                 if (isRetriableGroupCoordinatorError(err))
@@ -1199,8 +1203,8 @@ coev::awaitable<int> ClusterAdmin::DeleteConsumerGroup(const std::string &group)
                 }
                 co_return err;
             }
-            auto it = response->m_group_error_codes.find(group);
-            if (it == response->m_group_error_codes.end())
+            auto it = response.m_group_error_codes.find(group);
+            if (it == response.m_group_error_codes.end())
             {
                 co_return ErrIncompleteResponse;
             }
@@ -1267,19 +1271,19 @@ coev::awaitable<int> ClusterAdmin::DescribeLogDirs(const std::vector<int32_t> &b
                 request->m_version = 1;
             }
 
-            std::shared_ptr<DescribeLogDirsResponse> response;
-            err = co_await broker->DescribeLogDirs(request, response);
+            DescribeLogDirsResponse response;
+            err = co_await broker->DescribeLogDirs(*request, response);
             if (err != 0)
             {
                 errChan.push_back(err);
                 co_return;
             }
-            if (response->m_error_code != ErrNoError)
+            if (response.m_error_code != ErrNoError)
             {
-                errChan.push_back(response->m_error_code);
+                errChan.push_back(response.m_error_code);
                 co_return;
             }
-            logDirsResults.emplace_back(broker->ID(), std::move(response->m_log_dirs));
+            logDirsResults.emplace_back(broker->ID(), std::move(response.m_log_dirs));
         }(broker, logDirsResults, errChan);
     }
     co_await task_.wait_all();
@@ -1309,13 +1313,13 @@ coev::awaitable<int> ClusterAdmin::DescribeUserScramCredentials(const std::vecto
     {
         co_return err;
     }
-    std::shared_ptr<DescribeUserScramCredentialsResponse> rsp;
-    err = co_await b->DescribeUserScramCredentials(req, rsp);
+    DescribeUserScramCredentialsResponse rsp;
+    err = co_await b->DescribeUserScramCredentials(*req, rsp);
     if (err != 0)
     {
         co_return err;
     }
-    out_results = std::move(rsp->m_results);
+    out_results = std::move(rsp.m_results);
     co_return 0;
 }
 
@@ -1335,7 +1339,7 @@ coev::awaitable<int> ClusterAdmin::AlterUserScramCredentials(const std::vector<A
     req->m_deletions = d;
     req->m_upsertions = u;
 
-    std::shared_ptr<AlterUserScramCredentialsResponse> rsp;
+    AlterUserScramCredentialsResponse rsp;
     int err = co_await RetryOnError(
         isRetriableControllerError,
         [this, &req, &rsp]() -> coev::awaitable<int>
@@ -1346,7 +1350,7 @@ coev::awaitable<int> ClusterAdmin::AlterUserScramCredentials(const std::vector<A
             {
                 co_return err;
             }
-            err = co_await b->AlterUserScramCredentials(req, rsp);
+            err = co_await b->AlterUserScramCredentials(*req, rsp);
             co_return err;
         });
 
@@ -1355,7 +1359,7 @@ coev::awaitable<int> ClusterAdmin::AlterUserScramCredentials(const std::vector<A
         out_results.clear();
         co_return err;
     }
-    out_results = std::move(rsp->m_results);
+    out_results = std::move(rsp.m_results);
     co_return 0;
 }
 
@@ -1368,21 +1372,21 @@ coev::awaitable<int> ClusterAdmin::DescribeClientQuotas(const std::vector<QuotaF
     {
         co_return err;
     }
-    std::shared_ptr<DescribeClientQuotasResponse> rsp;
-    err = co_await b->DescribeClientQuotas(request, rsp);
+    DescribeClientQuotasResponse rsp;
+    err = co_await b->DescribeClientQuotas(*request, rsp);
     if (err != 0)
     {
         co_return err;
     }
-    if (!rsp->m_error_msg.empty())
+    if (!rsp.m_error_msg.empty())
     {
         co_return ErrDescribeClientQuotas;
     }
-    if (rsp->m_error_code != ErrNoError)
+    if (rsp.m_error_code != ErrNoError)
     {
-        co_return rsp->m_error_code;
+        co_return rsp.m_error_code;
     }
-    out = std::move(rsp->m_entries);
+    out = std::move(rsp.m_entries);
     co_return 0;
 }
 
@@ -1402,14 +1406,14 @@ coev::awaitable<int> ClusterAdmin::AlterClientQuotas(const std::vector<QuotaEnti
     {
         co_return err;
     }
-    std::shared_ptr<AlterClientQuotasResponse> rsp;
-    err = co_await b->AlterClientQuotas(request, rsp);
+    AlterClientQuotasResponse rsp;
+    err = co_await b->AlterClientQuotas(*request, rsp);
     if (err != 0)
     {
         co_return err;
     }
 
-    for (auto &entry : rsp->m_entries)
+    for (auto &entry : rsp.m_entries)
     {
         if (!entry.m_error_msg.empty())
         {
@@ -1450,7 +1454,8 @@ coev::awaitable<int> ClusterAdmin::RemoveMemberFromConsumerGroup(const std::stri
             {
                 co_return err;
             }
-            err = co_await coordinator->LeaveGroup(request, out_response);
+            LeaveGroupResponse local_out;
+            err = co_await coordinator->LeaveGroup(*request, local_out);
             if (err != 0)
             {
                 if (isRetriableGroupCoordinatorError(err))
@@ -1459,14 +1464,16 @@ coev::awaitable<int> ClusterAdmin::RemoveMemberFromConsumerGroup(const std::stri
                 }
                 co_return err;
             }
-            if (out_response->m_err != ErrNoError)
+            if (local_out.m_err != ErrNoError)
             {
-                if (isRetriableGroupCoordinatorError(out_response->m_err))
+                if (isRetriableGroupCoordinatorError(local_out.m_err))
                 {
                     m_client->RefreshCoordinator(groupId);
                 }
-                co_return out_response->m_err;
+                co_return local_out.m_err;
             }
+            // Convert local_out to shared_ptr
+            out_response = std::make_shared<LeaveGroupResponse>(local_out);
             co_return 0;
         });
 }

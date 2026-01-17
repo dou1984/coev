@@ -43,12 +43,9 @@ struct realDecoder : packetDecoder
     int push(std::shared_ptr<pushDecoder> in);
     int pop();
 
-    std::shared_ptr<metrics::Registry> metricRegistry();
-
     int m_offset = 0;
     std::string m_raw;
     std::vector<std::shared_ptr<pushDecoder>> m_stack;
-    std::shared_ptr<metrics::Registry> m_metric_registry;
 };
 
 struct realFlexibleDecoder : realDecoder

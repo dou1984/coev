@@ -39,4 +39,5 @@ namespace coev
             std::mutex m_mutex;
         };
     }
+    using local_async = local<async>;
 }

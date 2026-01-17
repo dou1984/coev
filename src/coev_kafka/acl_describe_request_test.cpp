@@ -71,7 +71,7 @@ TEST(DescribeAclsRequestTest, EncodeRequest) {
     request.m_filter.m_operation = AclOperationCreate;
     request.m_filter.m_permission_type = AclPermissionTypeAllow;
     
-    realEncoder encoder;
+    realEncoder encoder(1024);
     int result = request.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode ACL describe request";
     
@@ -91,7 +91,7 @@ TEST(DescribeAclsRequestTest, EncodeRequestv1) {
     request.m_filter.m_operation = AclOperationCreate;
     request.m_filter.m_permission_type = AclPermissionTypeAllow;
     
-    realEncoder encoder;
+    realEncoder encoder(1024);
     int result = request.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode ACL describe request v1";
     
@@ -135,7 +135,7 @@ TEST(DescribeAclsRequestTest, RoundTripEncodingDecoding) {
     originalRequest.m_filter.m_permission_type = AclPermissionTypeDeny;
     
     // Encode the request
-    realEncoder encoder;
+    realEncoder encoder(1024);
     int result = originalRequest.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode request for round-trip test";
     
@@ -167,7 +167,7 @@ TEST(DescribeAclsRequestTest, RoundTripEncodingDecoding) {
     originalRequestV1.m_filter.m_operation = AclOperationRead;
     originalRequestV1.m_filter.m_permission_type = AclPermissionTypeAllow;
     
-    realEncoder encoderV1;
+    realEncoder encoderV1(1024);
     result = originalRequestV1.encode(encoderV1);
     ASSERT_EQ(result, 0) << "Failed to encode V1 request for round-trip test";
     

@@ -13,7 +13,7 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
-struct OffsetFetchRequest : protocol_body
+struct OffsetFetchRequest : protocol_body , flexible_version
 {
     int16_t m_version;
     std::string m_consumer_group;
@@ -34,7 +34,7 @@ struct OffsetFetchRequest : protocol_body
     int16_t header_version() const;
     bool is_valid_version() const;
     bool is_flexible() const;
-    static bool is_flexible_version(int16_t version);
+    bool is_flexible_version(int16_t version) const;
     KafkaVersion required_version() const;
     void ZeroPartitions();
     void AddPartition(const std::string &topic, int32_t partitionID);

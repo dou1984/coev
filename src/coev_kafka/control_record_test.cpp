@@ -5,6 +5,7 @@
 #include "control_record.h"
 #include "real_encoder.h"
 #include "real_decoder.h"
+#include "prep_encoder.h"
 
 // Test data from Sarama's control_record_test.go
 const unsigned char abortTxCtrlRecKeyData[] = {0x00, 0x00, 0x00, 0x00}; // version 0, TX_ABORT = 0
@@ -122,9 +123,19 @@ TEST(ControlRecordTest, VersionHandling) {
     // Test that version is properly set and encoded/decoded
     ControlRecord record(1, 20, ControlRecordCommit);
     
+    // First pass: calculate required size
+    prepEncoder keyPrepEnc;
+    prepEncoder valuePrepEnc;
+    int prepResult = record.encode(keyPrepEnc, valuePrepEnc);
+    ASSERT_EQ(prepResult, 0) << "Failed to prepare control record with version 1";
+    
+    // Resize buffers to required size
     realEncoder keyEncoder;
     realEncoder valueEncoder;
+    keyEncoder.m_raw.resize(keyPrepEnc.offset());
+    valueEncoder.m_raw.resize(valuePrepEnc.offset());
     
+    // Second pass: actual encoding
     int encodeResult = record.encode(keyEncoder, valueEncoder);
     ASSERT_EQ(encodeResult, 0) << "Failed to encode control record with version 1";
     

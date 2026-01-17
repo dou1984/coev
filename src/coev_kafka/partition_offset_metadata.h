@@ -3,7 +3,7 @@
 #include "packet_decoder.h"
 #include "packet_encoder.h"
 
-struct PartitionOffsetMetadata : versionedDecoder, versionedEncoder
+struct PartitionOffsetMetadata : versioned_decoder, versioned_encoder
 {
     int32_t m_partition;
     int64_t m_offset;

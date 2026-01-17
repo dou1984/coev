@@ -9,7 +9,6 @@
 #include "client.h"
 #include "config.h"
 #include "broker.h"
-#include "metrics.h"
 #include "undefined.h"
 #include "produce_set.h"
 #include "transaction_manager.h"
@@ -59,10 +58,7 @@ struct AsyncProducer : std::enable_shared_from_this<AsyncProducer>
 
     std::map<std::shared_ptr<Broker>, std::shared_ptr<BrokerProducer>> m_brokers;
     std::map<std::shared_ptr<BrokerProducer>, int> m_broker_refs;
-    std::mutex m_broker_lock;
     std::mutex m_tx_lock;
-
-    std::shared_ptr<metrics::Registry> m_metrics_registry;
 
     coev::co_channel<std::shared_ptr<ProducerError>> m_errors;
     coev::co_channel<std::shared_ptr<ProducerMessage>> m_input;

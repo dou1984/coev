@@ -16,7 +16,6 @@
 #include <utils/hash/fnv.h>
 #include "isolation_level.h"
 #include "version.h"
-#include "metrics.h"
 
 struct SCRAMClient;
 struct AccessTokenProvider;
@@ -268,7 +267,6 @@ struct Config
     int ChannelBufferSize = 256;
     bool ApiVersionsRequest = true;
     KafkaVersion Version;
-    std::shared_ptr<metrics::Registry> MetricRegistry;
 
     Config();
     bool Validate();

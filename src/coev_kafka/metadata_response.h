@@ -15,7 +15,7 @@
 
 struct Broker;
 
-struct PartitionMetadata : versionedDecoder, versionedEncoder
+struct PartitionMetadata : versioned_decoder, versioned_encoder
 {
     int16_t m_version;
     KError m_err;
@@ -34,7 +34,7 @@ struct PartitionMetadata : versionedDecoder, versionedEncoder
     int encode(packetEncoder &pe, int16_t version);
 };
 
-struct TopicMetadata : versionedDecoder, versionedEncoder
+struct TopicMetadata : versioned_decoder, versioned_encoder
 {
     int16_t m_version;
     KError m_err;
@@ -48,7 +48,7 @@ struct TopicMetadata : versionedDecoder, versionedEncoder
     int encode(packetEncoder &pe, int16_t version);
 };
 
-struct MetadataResponse : protocol_body
+struct MetadataResponse : protocol_body , flexible_version
 {
     int16_t m_version;
     std::chrono::milliseconds m_throttle_time;

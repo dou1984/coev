@@ -17,7 +17,7 @@ struct AlterUserScramCredentialsResult
     std::string m_error_message;
 };
 
-struct AlterUserScramCredentialsResponse : protocol_body
+struct AlterUserScramCredentialsResponse : protocol_body , flexible_version
 {
     int16_t m_version = 0;
     std::chrono::milliseconds m_throttle_time;

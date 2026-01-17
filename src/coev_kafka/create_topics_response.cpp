@@ -127,14 +127,14 @@ bool CreateTopicsResponse::is_flexible() const
     return is_flexible_version(m_version);
 }
 
-bool CreateTopicsResponse::is_flexible_version(int16_t version)
+bool CreateTopicsResponse::is_flexible_version(int16_t version) const
 {
     return version >= 5;
 }
 
 bool CreateTopicsResponse::is_valid_version() const
 {
-    return m_version >= 0 && m_version <= 5;
+    return m_version >= 0 && m_version <= 6;
 }
 
 KafkaVersion CreateTopicsResponse::required_version() const

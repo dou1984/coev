@@ -13,23 +13,23 @@ struct Broker;
 
 inline constexpr const int32_t MaxRequestSize = 100 * 1024 * 1024;
 
-struct request : versionedEncoder, IEncoder, IDecoder
+struct request : versioned_encoder, IEncoder, IDecoder
 {
     int32_t m_correlation_id = 0;
     std::string m_client_id;
     std::shared_ptr<protocol_body> m_body;
     int encode(packetEncoder &pe);
-    int encode(packetEncoder &pe, int16_t version) override {
-        // This method is inherited from versionedEncoder but not used directly
-        // in the request struct. We delegate to the regular encode method.
+    int encode(packetEncoder &pe, int16_t version)
+    {
         return encode(pe);
     }
     int decode(packetDecoder &pd);
-    
-    // Check if the request body is a flexible version
-    bool is_flexible() const {
-        if (m_body) {
-            if (auto fv = std::dynamic_pointer_cast<flexible_version>(m_body)) {
+    bool is_flexible() const
+    {
+        if (m_body)
+        {
+            if (auto fv = dynamic_cast<flexible_version *>(m_body.get()))
+            {
                 return fv->is_flexible();
             }
         }

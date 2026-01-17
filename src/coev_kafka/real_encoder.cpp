@@ -1,4 +1,5 @@
 #include "real_encoder.h"
+#include <cassert>
 #include <stdexcept>
 #include <cstring>
 #include <cmath>
@@ -26,17 +27,14 @@ int encodeVariant(uint8_t *buf, int64_t x)
 
 void realEncoder::putInt8(int8_t in)
 {
-    if (m_offset + 1 > m_raw.size()) {
-        m_raw.resize(m_offset + 1);
-    }
+    assert(m_offset + 1 <= m_raw.size());
     m_raw[m_offset++] = static_cast<uint8_t>(in);
 }
 
 void realEncoder::putInt16(int16_t in)
 {
-    if (m_offset + 2 > m_raw.size()) {
-        m_raw.resize(m_offset + 2);
-    }
+
+    assert(m_offset + 2 <= m_raw.size());
     m_raw[m_offset] = static_cast<uint8_t>((in >> 8) & 0xFF);
     m_raw[m_offset + 1] = static_cast<uint8_t>(in & 0xFF);
     m_offset += 2;
@@ -44,9 +42,7 @@ void realEncoder::putInt16(int16_t in)
 
 void realEncoder::putInt32(int32_t in)
 {
-    if (m_offset + 4 > m_raw.size()) {
-        m_raw.resize(m_offset + 4);
-    }
+    assert(m_offset + 4 <= m_raw.size());
     m_raw[m_offset] = static_cast<uint8_t>((in >> 24) & 0xFF);
     m_raw[m_offset + 1] = static_cast<uint8_t>((in >> 16) & 0xFF);
     m_raw[m_offset + 2] = static_cast<uint8_t>((in >> 8) & 0xFF);
@@ -56,9 +52,7 @@ void realEncoder::putInt32(int32_t in)
 
 void realEncoder::putInt64(int64_t in)
 {
-    if (m_offset + 8 > m_raw.size()) {
-        m_raw.resize(m_offset + 8);
-    }
+    assert(m_offset + 8 <= m_raw.size());
     m_raw[m_offset] = static_cast<uint8_t>((in >> 56) & 0xFF);
     m_raw[m_offset + 1] = static_cast<uint8_t>((in >> 48) & 0xFF);
     m_raw[m_offset + 2] = static_cast<uint8_t>((in >> 40) & 0xFF);
@@ -72,11 +66,13 @@ void realEncoder::putInt64(int64_t in)
 
 void realEncoder::putVariant(int64_t in)
 {
+    assert(m_offset + 10 <= m_raw.size());
     m_offset += encodeVariant((uint8_t *)m_raw.data() + m_offset, in);
 }
 
 void realEncoder::putUVarint(uint64_t in)
 {
+    assert(m_offset + 10 <= m_raw.size());
     m_offset += encodeUVariant((uint8_t *)m_raw.data() + m_offset, in);
 }
 
@@ -109,11 +105,7 @@ void realEncoder::putDurationMs(std::chrono::milliseconds ms)
 
 int realEncoder::putRawBytes(const std::string &in)
 {
-    // Write at current offset, not append
-    if (m_offset + in.size() > m_raw.size())
-    {
-        m_raw.resize(m_offset + in.size());
-    }
+    assert(m_offset + in.size() <= m_raw.size());
     std::memcpy(&m_raw[m_offset], in.data(), in.size());
     m_offset += in.size();
     return 0;
@@ -145,12 +137,8 @@ int realEncoder::putVariantBytes(const std::string &in)
 
 int realEncoder::putString(const std::string &in)
 {
-    putInt16(static_cast<int16_t>(in.size()));    
-    // Write at current offset, not append
-    if (m_offset + in.size() > m_raw.size())
-    {
-        m_raw.resize(m_offset + in.size());
-    }
+    putInt16(static_cast<int16_t>(in.size()));
+    assert(m_offset + in.size() <= m_raw.size());
     std::memcpy(&m_raw[m_offset], in.data(), in.size());
     m_offset += in.size();
     return 0;
@@ -221,7 +209,9 @@ void realEncoder::putEmptyTaggedFieldArray()
 void realEncoder::push(std::shared_ptr<pushEncoder> in)
 {
     in->save_offset(m_offset);
-    m_offset += in->reserve_length();
+    int reserve = in->reserve_length();
+    assert(m_offset + reserve <= m_raw.size());
+    m_offset += reserve;
     m_stack.push_back(in);
 }
 
@@ -258,7 +248,6 @@ int realFlexibleEncoder::putNullableString(const std::string &in)
 {
     if (in.empty())
     {
-        // For flexible encoding, null strings are encoded with uvarint(0)
         base::putUVarint(0);
         return 0;
     }

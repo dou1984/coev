@@ -5,10 +5,11 @@
 #include "message.h"
 #include "real_encoder.h"
 #include "real_decoder.h"
+#include "prep_encoder.h"
 
 // Test data from Sarama's message_test.go
 const unsigned char emptyMessage[] = {
-    167, 236, 104, 3, // CRC
+    39, 146, 9, 38, // CRC (Castagnoli) - 0x27920926 in big-endian
     0x00,                   // magic version byte
     0x00,                   // attribute flags
     0xFF, 0xFF, 0xFF, 0xFF, // key
@@ -17,7 +18,7 @@ const unsigned char emptyMessage[] = {
 const std::string emptyMessageStr(reinterpret_cast<const char*>(emptyMessage), sizeof(emptyMessage));
 
 const unsigned char emptyV1Message[] = {
-    204, 47, 121, 217, // CRC
+    2, 3, 54, 66, // CRC (Castagnoli)
     0x01,                                           // magic version byte
     0x00,                                           // attribute flags
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // timestamp
@@ -184,6 +185,15 @@ TEST(MessageTest, DecodingCompressedMessages) {
         
         // Encode the message
         realEncoder encoder;
+        // First pass: calculate required size
+        prepEncoder prepEnc;
+        int prepResult = original.encode(prepEnc);
+        ASSERT_EQ(prepResult, 0) << "Failed to prepare message with codec " << toString(codec);
+        
+        // Resize buffer to required size
+        encoder.m_raw.resize(prepEnc.offset());
+        
+        // Second pass: actual encoding
         int encodeResult = original.encode(encoder);
         ASSERT_EQ(encodeResult, 0) << "Failed to encode message with codec " << toString(codec);
         
@@ -225,6 +235,15 @@ TEST(MessageTest, DecodingEmptyCompressedMessages) {
         
         // Encode the message
         realEncoder encoder;
+        // First pass: calculate required size
+        prepEncoder prepEnc;
+        int prepResult = original.encode(prepEnc);
+        ASSERT_EQ(prepResult, 0) << "Failed to prepare empty message with codec " << toString(codec);
+        
+        // Resize buffer to required size
+        encoder.m_raw.resize(prepEnc.offset());
+        
+        // Second pass: actual encoding
         int encodeResult = original.encode(encoder);
         ASSERT_EQ(encodeResult, 0) << "Failed to encode empty message with codec " << toString(codec);
         
@@ -252,6 +271,15 @@ TEST(MessageTest, EncodingEmptyMessage) {
     original.m_codec = CompressionCodec::None;
     
     realEncoder encoder;
+    // First pass: calculate required size
+    prepEncoder prepEnc;
+    int prepResult = original.encode(prepEnc);
+    ASSERT_EQ(prepResult, 0) << "Failed to prepare empty message";
+    
+    // Resize buffer to required size
+    encoder.m_raw.resize(prepEnc.offset());
+    
+    // Second pass: actual encoding
     int encodeResult = original.encode(encoder);
     ASSERT_EQ(encodeResult, 0) << "Failed to encode empty message";
     
@@ -279,6 +307,15 @@ TEST(MessageTest, EncodingEmptyGzipMessage) {
     original.m_value = "";
     
     realEncoder encoder;
+    // First pass: calculate required size
+    prepEncoder prepEnc;
+    int prepResult = original.encode(prepEnc);
+    ASSERT_EQ(prepResult, 0) << "Failed to prepare empty gzip message";
+    
+    // Resize buffer to required size
+    encoder.m_raw.resize(prepEnc.offset());
+    
+    // Second pass: actual encoding
     int encodeResult = original.encode(encoder);
     ASSERT_EQ(encodeResult, 0) << "Failed to encode empty gzip message";
     
@@ -307,6 +344,15 @@ TEST(MessageTest, EncodingEmptyLZ4Message) {
     original.m_timestamp = Timestamp(std::chrono::system_clock::from_time_t(1479847795));
     
     realEncoder encoder;
+    // First pass: calculate required size
+    prepEncoder prepEnc;
+    int prepResult = original.encode(prepEnc);
+    ASSERT_EQ(prepResult, 0) << "Failed to prepare empty lz4 message";
+    
+    // Resize buffer to required size
+    encoder.m_raw.resize(prepEnc.offset());
+    
+    // Second pass: actual encoding
     int encodeResult = original.encode(encoder);
     ASSERT_EQ(encodeResult, 0) << "Failed to encode empty lz4 message";
     
@@ -335,6 +381,15 @@ TEST(MessageTest, EncodingEmptyZSTDMessage) {
     original.m_timestamp = Timestamp(std::chrono::system_clock::from_time_t(1479847795));
     
     realEncoder encoder;
+    // First pass: calculate required size
+    prepEncoder prepEnc;
+    int prepResult = original.encode(prepEnc);
+    ASSERT_EQ(prepResult, 0) << "Failed to prepare empty zstd message";
+    
+    // Resize buffer to required size
+    encoder.m_raw.resize(prepEnc.offset());
+    
+    // Second pass: actual encoding
     int encodeResult = original.encode(encoder);
     ASSERT_EQ(encodeResult, 0) << "Failed to encode empty zstd message";
     
@@ -362,6 +417,15 @@ TEST(MessageTest, VersionHandling) {
     original.m_value = "test version message";
     
     realEncoder encoder;
+    // First pass: calculate required size
+    prepEncoder prepEnc;
+    int prepResult = original.encode(prepEnc);
+    ASSERT_EQ(prepResult, 0) << "Failed to prepare version 1 message";
+    
+    // Resize buffer to required size
+    encoder.m_raw.resize(prepEnc.offset());
+    
+    // Second pass: actual encoding
     int encodeResult = original.encode(encoder);
     ASSERT_EQ(encodeResult, 0) << "Failed to encode version 1 message";
     

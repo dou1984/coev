@@ -45,3 +45,8 @@ bool ConsumerMetadataRequest::is_valid_version() const
 {
     return m_version >= 0 && m_version <= 2;
 }
+
+KafkaVersion ConsumerMetadataRequest::required_version() const
+{
+    return V0_9_0_0;
+}

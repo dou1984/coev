@@ -50,6 +50,10 @@ namespace coev
 				{ d = __pop_front(); });
 			co_return d;
 		}
+		awaitable<TYPE> operator co_await()
+		{
+			return get();
+		}
 		bool try_get(TYPE &d)
 		{
 			std::lock_guard<std::mutex> _(m_waiter.lock());

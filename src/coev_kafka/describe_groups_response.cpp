@@ -96,7 +96,7 @@ bool DescribeGroupsResponse::is_flexible() const
     return is_flexible_version(m_version);
 }
 
-bool DescribeGroupsResponse::is_flexible_version(int16_t version)
+bool DescribeGroupsResponse::is_flexible_version(int16_t version) const
 {
     return version >= 5;
 }
@@ -275,7 +275,7 @@ std::shared_ptr<ConsumerGroupMemberAssignment> GroupMemberDescription::GetMember
         return nullptr;
     }
     auto assignment = std::make_shared<ConsumerGroupMemberAssignment>();
-    ::decode(m_member_assignment, std::dynamic_pointer_cast<IDecoder>(assignment), nullptr);
+    ::decode(m_member_assignment, *assignment);
     return assignment;
 }
 
@@ -286,6 +286,6 @@ std::shared_ptr<ConsumerGroupMemberMetadata> GroupMemberDescription::GetMemberMe
         return nullptr;
     }
     auto metadata = std::make_shared<ConsumerGroupMemberMetadata>();
-    ::decode(m_member_metadata, std::dynamic_pointer_cast<IDecoder>(metadata), nullptr);
+    ::decode(m_member_metadata, *metadata);
     return metadata;
 }

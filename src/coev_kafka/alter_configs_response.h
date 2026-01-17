@@ -15,7 +15,7 @@ struct AlterConfigError
     std::string Error() const;
 };
 
-struct AlterConfigsResourceResponse : versionedDecoder, IEncoder
+struct AlterConfigsResourceResponse : versioned_decoder, IEncoder
 {
     int16_t m_error_code = 0;
     std::string m_error_msg;

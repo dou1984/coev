@@ -60,7 +60,6 @@ struct Consumer : IConsumer, std::enable_shared_from_this<Consumer>
     std::map<std::string, std::map<int32_t, std::shared_ptr<PartitionConsumer>>> m_children;
     std::map<std::shared_ptr<Broker>, std::shared_ptr<BrokerConsumer>> m_broker_consumers;
     std::shared_ptr<Client> m_client;
-    std::shared_ptr<metrics::Registry> m_metric_registry;
     std::mutex m_lock;
     coev::co_task m_task;
 };

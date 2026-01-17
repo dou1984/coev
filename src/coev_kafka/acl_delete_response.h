@@ -13,7 +13,7 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
-struct MatchingAcl : versionedEncoder, versionedDecoder
+struct MatchingAcl : versioned_encoder, versioned_decoder
 {
     KError m_err;
     std::string m_err_msg;
@@ -24,7 +24,7 @@ struct MatchingAcl : versionedEncoder, versionedDecoder
     int decode(packetDecoder &pd, int16_t version);
 };
 
-struct FilterResponse : versionedEncoder, versionedDecoder
+struct FilterResponse : versioned_encoder, versioned_decoder
 {
     KError m_err;
     std::string m_err_msg;

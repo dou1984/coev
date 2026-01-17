@@ -72,8 +72,6 @@ namespace coev
 			{
 				co_start << [=]() -> awaitable<void>
 				{
-					async _;
-					co_await _.suspend_util_next_loop();
 					co_await _f();
 					cosys::stop();
 					LOG_CORE("cosys stop");

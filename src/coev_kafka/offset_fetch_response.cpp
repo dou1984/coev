@@ -195,7 +195,7 @@ bool OffsetFetchResponse::is_flexible() const
     return is_flexible_version(m_version);
 }
 
-bool OffsetFetchResponse::is_flexible_version(int16_t version)
+bool OffsetFetchResponse::is_flexible_version(int16_t version) const
 {
     return version >= 6;
 }

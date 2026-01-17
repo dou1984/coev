@@ -349,7 +349,7 @@ int16_t FetchResponse::header_version() const
 
 bool FetchResponse::is_valid_version() const
 {
-    return m_version >= 0 && m_version <= 11;
+    return m_version >= 0 && m_version <= 15;
 }
 
 KafkaVersion FetchResponse::required_version() const

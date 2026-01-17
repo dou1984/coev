@@ -107,15 +107,15 @@ int16_t ListPartitionReassignmentsRequest::header_version() const
 
 bool ListPartitionReassignmentsRequest::is_valid_version() const
 {
-    return m_version == 0;
+    return m_version >= 0 && m_version <= 1;
 }
 
-bool ListPartitionReassignmentsRequest::is_flexible()
+bool ListPartitionReassignmentsRequest::is_flexible() const
 {
     return is_flexible_version(m_version);
 }
 
-bool ListPartitionReassignmentsRequest::is_flexible_version(int16_t /*ver*/)
+bool ListPartitionReassignmentsRequest::is_flexible_version(int16_t /*ver*/) const
 {
     return true; // Version 0 is flexible (uses tagged fields)
 }

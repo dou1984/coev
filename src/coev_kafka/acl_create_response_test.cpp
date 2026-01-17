@@ -74,7 +74,7 @@ TEST(CreateAclsResponseTest, EncodeWithError) {
     aclResp->m_err_msg = "error";
     response.m_acl_creation_responses.push_back(aclResp);
     
-    realEncoder encoder;
+    realEncoder encoder(1024);
     int result = response.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode create acls response with error";
     
@@ -99,7 +99,7 @@ TEST(CreateAclsResponseTest, EncodeResponseArray) {
     aclResp2->m_err = KError::ErrNoError;
     response.m_acl_creation_responses.push_back(aclResp2);
     
-    realEncoder encoder;
+    realEncoder encoder(1024);
     int result = response.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode create acls response array";
     
@@ -155,7 +155,7 @@ TEST(CreateAclsResponseTest, RoundTripEncodingDecoding) {
     originalResponse.m_acl_creation_responses.push_back(aclResp3);
     
     // Encode the response
-    realEncoder encoder;
+    realEncoder encoder(1024);
     int result = originalResponse.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode response for round-trip test";
     

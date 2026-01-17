@@ -82,12 +82,12 @@ bool ListGroupsRequest::is_valid_version() const
     return m_version >= 0 && m_version <= 5;
 }
 
-bool ListGroupsRequest::is_flexible()
+bool ListGroupsRequest::is_flexible() const
 {
     return is_flexible_version(m_version);
 }
 
-bool ListGroupsRequest::is_flexible_version(int16_t ver)
+bool ListGroupsRequest::is_flexible_version(int16_t ver) const
 {
     return ver >= 3;
 }

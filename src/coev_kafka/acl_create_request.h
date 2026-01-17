@@ -12,7 +12,7 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
-struct AclCreation : versionedDecoder, versionedEncoder
+struct AclCreation : versioned_decoder, versioned_encoder
 {
     Resource m_resource;
     Acl m_acl;

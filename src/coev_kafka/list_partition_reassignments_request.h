@@ -11,7 +11,7 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
-struct ListPartitionReassignmentsRequest : protocol_body
+struct ListPartitionReassignmentsRequest : protocol_body , flexible_version
 {
     std::chrono::milliseconds m_timeout;
     std::unordered_map<std::string, std::vector<int32_t>> m_blocks;
@@ -27,8 +27,8 @@ struct ListPartitionReassignmentsRequest : protocol_body
     int16_t version() const;
     int16_t header_version() const;
     bool is_valid_version() const;
-    bool is_flexible();
-    static bool is_flexible_version(int16_t ver);
+    bool is_flexible() const;
+    bool is_flexible_version(int16_t ver) const;
     KafkaVersion required_version() const;
 
     void AddBlock(const std::string &topic, const std::vector<int32_t> &partitionIDs);

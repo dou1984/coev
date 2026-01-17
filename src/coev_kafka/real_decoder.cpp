@@ -454,7 +454,7 @@ int realDecoder::peek(int offset, int length, std::shared_ptr<packetDecoder> &re
 int realDecoder::peekInt8(int offset, int8_t &result)
 {
     const int byte_len = 1;
-    if (remaining() < offset + byte_len)
+    if (m_offset + offset >= m_raw.size())
     {
         result = -1;
         return ErrInsufficientData;
@@ -497,10 +497,6 @@ int realDecoder::pop()
     return in->check(m_offset, m_raw);
 }
 
-std::shared_ptr<metrics::Registry> realDecoder::metricRegistry()
-{
-    return m_metric_registry;
-}
 int realFlexibleDecoder::getArrayLength(int32_t &result)
 {
     uint64_t n;

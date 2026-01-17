@@ -27,19 +27,23 @@ TEST(AddOffsetsToTxnRequestTest, BasicEncodingDecoding) {
     request.m_group_id = "groupid";
     
     // Test encoding
-    realEncoder encoder;
+    realEncoder encoder(1024);
     int encodeResult = request.encode(encoder);
     ASSERT_EQ(encodeResult, 0) << "Failed to encode request";
     
     const auto& encoded = encoder.m_raw;
     ASSERT_FALSE(encoded.empty()) << "Encoded data is empty";
     
+    // Compare only the actual encoded data, not the entire buffer
+    std::string actualEncoded(encoded.data(), encoder.m_offset);
+    ASSERT_FALSE(actualEncoded.empty()) << "Actual encoded data is empty";
+    
     // Verify encoded data matches expected values
-    EXPECT_EQ(encoded, addOffsetsToTxnRequestStr) << "Encoded data mismatch";
+    EXPECT_EQ(actualEncoded, addOffsetsToTxnRequestStr) << "Encoded data mismatch";
     
     // Test decoding
     realDecoder decoder;
-    decoder.m_raw = encoded;
+    decoder.m_raw = actualEncoded;
     decoder.m_offset = 0;
     
     AddOffsetsToTxnRequest decoded;
@@ -99,7 +103,7 @@ TEST(AddOffsetsToTxnRequestTest, EncodingDifferentVersions) {
     for (int16_t version = 0; version <= 2; ++version) {
         request.set_version(version);
         
-        realEncoder encoder;
+        realEncoder encoder(1024);
         int encodeResult = request.encode(encoder);
         ASSERT_EQ(encodeResult, 0) << "Failed to encode request with version " << version;
         

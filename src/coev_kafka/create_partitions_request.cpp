@@ -84,7 +84,7 @@ int16_t CreatePartitionsRequest::header_version() const
 
 bool CreatePartitionsRequest::is_valid_version() const
 {
-    return m_version >= 0 && m_version <= 1;
+    return m_version >= 0 && m_version <= 3;
 }
 
 KafkaVersion CreatePartitionsRequest::required_version() const

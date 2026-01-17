@@ -9,11 +9,10 @@
 #include "packet_encoder.h"
 #include "packet_decoder.h"
 #include "errors.h"
-#include "metrics.h"
 #include "protocol_body.h"
 #include "version.h"
 
-struct TopicPartitionError : IEncoder, versionedDecoder
+struct TopicPartitionError : IEncoder, versioned_decoder
 {
     KError m_err;
     std::string m_err_msg;

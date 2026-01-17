@@ -7,7 +7,6 @@
 #include "producer_message.h"
 #include "consumer.h"
 #include "client.h"
-#include "metrics.h"
 #include "sleep_for.h"
 #include "undefined.h"
 #include "interceptors.h"
@@ -22,7 +21,6 @@ const int minFunctionalRetryBufferBytes = 32 * 1024 * 1024;
 AsyncProducer::AsyncProducer(std::shared_ptr<Client> client, std::shared_ptr<TransactionManager> txnmgr)
     : m_client(client), m_conf(client->GetConfig()), m_txnmgr(txnmgr), m_in_flight(0)
 {
-    m_metrics_registry = std::make_shared<metrics::CleanupRegistry>(client->GetConfig()->MetricRegistry);
 }
 
 void AsyncProducer::AsyncClose()
@@ -329,7 +327,7 @@ coev::awaitable<void> AsyncProducer::shutdown()
         LOG_CORE("Error closing client: %s", KErrorToString(err));
     }
 
-    m_metrics_registry->UnregisterAll();
+
 }
 
 coev::awaitable<void> AsyncProducer::bumpIdempotentProducerEpoch()
@@ -466,7 +464,6 @@ coev::awaitable<void> AsyncProducer::retryBatch(const std::string &topic, int32_
 
 std::shared_ptr<BrokerProducer> AsyncProducer::getBrokerProducer(std::shared_ptr<Broker> &broker)
 {
-    std::lock_guard<std::mutex> lock(m_broker_lock);
     auto bp = m_brokers[broker];
     if (!bp)
     {
@@ -481,7 +478,6 @@ std::shared_ptr<BrokerProducer> AsyncProducer::getBrokerProducer(std::shared_ptr
 
 void AsyncProducer::unrefBrokerProducer(std::shared_ptr<Broker> broker, std::shared_ptr<BrokerProducer> bp)
 {
-    std::lock_guard<std::mutex> lock(m_broker_lock);
     m_broker_refs[bp]--;
     if (m_broker_refs[bp] == 0)
     {
@@ -496,8 +492,6 @@ void AsyncProducer::unrefBrokerProducer(std::shared_ptr<Broker> broker, std::sha
 
 coev::awaitable<void> AsyncProducer::abandonBrokerConnection(std::shared_ptr<Broker> broker)
 {
-    std::lock_guard<std::mutex> lock(m_broker_lock);
-
     auto &bc = m_brokers[broker];
     auto ok = co_await bc->m_abandoned.get();
     if (ok)

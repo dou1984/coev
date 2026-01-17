@@ -11,7 +11,6 @@
 #include "config.h"
 #include "access_token.h"
 #include "error.h"
-#include "metrics.h"
 
 // Start with basic tests
 TEST(BrokerTest, BasicConstruction)
@@ -79,13 +78,13 @@ TEST(BrokerTest, ConnectedState)
     // Test broker connected state
     auto broker = std::make_shared<Broker>("localhost:9092");
 
-    // The Connected() method might always return true in the current implementation
-    EXPECT_TRUE(broker->Connected());
+    // A newly constructed broker should not be connected
+    EXPECT_FALSE(broker->Connected());
 
     // ResponseSize() returns 0 in the current implementation
     EXPECT_EQ(broker->ResponseSize(), 0);
 
-    // Test TLS connection state (always returns 0 for now)
+    // Test TLS connection state (returns 0 when not connected)
     EXPECT_EQ(broker->TLSConnectionState(), 0);
 }
 

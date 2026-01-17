@@ -8,7 +8,7 @@
 #include "packet_encoder.h"
 #include "packet_decoder.h"
 
-struct Resource : versionedDecoder, versionedEncoder
+struct Resource : versioned_decoder, versioned_encoder
 {
     AclResourceType m_resource_type;
     std::string m_resource_name;
@@ -18,7 +18,7 @@ struct Resource : versionedDecoder, versionedEncoder
     int decode(packetDecoder &pd, int16_t version);
 };
 
-struct Acl : versionedDecoder, IEncoder
+struct Acl : versioned_decoder, IEncoder
 {
     std::string m_principal;
     std::string m_host;
@@ -29,7 +29,7 @@ struct Acl : versionedDecoder, IEncoder
     int decode(packetDecoder &pd, int16_t version);
 };
 
-struct ResourceAcls : versionedDecoder, versionedEncoder
+struct ResourceAcls : versioned_decoder, versioned_encoder
 {
 
     Resource m_resource;

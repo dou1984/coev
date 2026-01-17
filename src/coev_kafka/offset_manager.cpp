@@ -124,8 +124,8 @@ coev::awaitable<int> OffsetManager::fetchInitialOffset(const std::string &topic,
     std::map<std::string, std::vector<int32_t>> partitions;
     partitions[topic] = {partition};
     auto req = OffsetFetchRequest::NewOffsetFetchRequest(m_conf->Version, m_group, partitions);
-    std::shared_ptr<OffsetFetchResponse> resp;
-    err = co_await broker->FetchOffset(req, resp);
+    OffsetFetchResponse resp;
+    err = co_await broker->FetchOffset(*req, resp);
     if (err != 0)
     {
         if (retries <= 0)
@@ -136,7 +136,7 @@ coev::awaitable<int> OffsetManager::fetchInitialOffset(const std::string &topic,
         co_return co_await fetchInitialOffset(topic, partition, retries - 1, offset, leaderEpoch, metadata);
     }
 
-    auto block = resp->GetBlock(topic, partition);
+    auto block = resp.GetBlock(topic, partition);
     if (!block)
     {
         co_return ErrIncompleteResponse;
@@ -237,9 +237,9 @@ coev::awaitable<void> OffsetManager::flushToBroker()
     {
         co_return;
     }
-    std::shared_ptr<OffsetCommitResponse> resp;
-    std::shared_ptr<ResponsePromise> rp;
-    err = co_await broker->SendOffsetCommit(req, resp, rp);
+    OffsetCommitResponse resp;
+    ResponsePromise<OffsetCommitResponse> rp;
+    err = co_await broker->SendOffsetCommit(*req, resp, rp);
     if (err)
     {
         handleError(err);
@@ -248,7 +248,7 @@ coev::awaitable<void> OffsetManager::flushToBroker()
         co_return;
     }
 
-    err = co_await HandleResponsePromise(req, resp, rp, nullptr);
+    err = co_await HandleResponsePromise(*req, resp, rp);
     if (err)
     {
         handleError(err);
@@ -257,8 +257,7 @@ coev::awaitable<void> OffsetManager::flushToBroker()
         co_return;
     }
 
-    broker->HandleThrottledResponse(resp);
-    handleResponse(broker, req, resp);
+    handleResponse(broker, req, std::make_shared<OffsetCommitResponse>(resp));
 }
 
 std::shared_ptr<OffsetCommitRequest> OffsetManager::constructRequest()

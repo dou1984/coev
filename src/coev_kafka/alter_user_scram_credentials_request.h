@@ -25,7 +25,7 @@ struct AlterUserScramCredentialsUpsert
     std::string m_password;
 };
 
-struct AlterUserScramCredentialsRequest : protocol_body
+struct AlterUserScramCredentialsRequest : protocol_body, flexible_version
 {
     int16_t m_version = 0;
     std::vector<AlterUserScramCredentialsDelete> m_deletions;

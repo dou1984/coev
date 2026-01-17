@@ -6,8 +6,11 @@
 
 std::string version()
 {
+#ifdef COEV_VERSION
+    static std::string v = COEV_VERSION;
+#else
     static std::string v = "dev";
-    // static std::string v = V0_10_0_0.String();
+#endif
     return v;
 }
 

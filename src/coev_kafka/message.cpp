@@ -140,7 +140,7 @@ int Message::encode(packetEncoder &pe)
         payload = std::move(m_compressed_cache);
         m_compressed_cache.clear();
     }
-    else if (!m_value.empty())
+    else if (!m_value.empty() || m_codec != CompressionCodec::None)
     {
         payload = compress(m_codec, m_compression_level, m_value);
         if (payload.empty() && !m_value.empty())
@@ -164,7 +164,7 @@ int Message::encode(packetEncoder &pe)
 
 int Message::decode(packetDecoder &pd)
 {
-    auto field = acquire_crc32_field(CrcIEEE);
+    auto field = acquire_crc32_field(CrcCastagnoli);
     int err = pd.push(std::dynamic_pointer_cast<pushDecoder>(field));
     if (err != 0)
         return err;
@@ -238,6 +238,12 @@ int Message::decode(packetDecoder &pd)
 
 int Message::decode_set()
 {
+    if (m_value.empty())
+    {
+        m_set = std::make_shared<MessageSet>();
+        return 0;
+    }
+    
     realDecoder innerDecoder;
     innerDecoder.m_raw.assign(m_value.begin(), m_value.end());
     m_set = std::make_shared<MessageSet>();

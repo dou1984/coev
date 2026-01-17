@@ -147,7 +147,7 @@ int16_t DeleteRecordsRequest::header_version() const
 
 bool DeleteRecordsRequest::is_valid_version() const
 {
-    return m_version >= 0 && m_version <= 1;
+    return m_version >= 0 && m_version <= 2;
 }
 
 KafkaVersion DeleteRecordsRequest::required_version() const

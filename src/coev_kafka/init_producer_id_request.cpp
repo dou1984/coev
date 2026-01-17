@@ -74,12 +74,12 @@ bool InitProducerIDRequest::is_valid_version() const
     return m_version >= 0 && m_version <= 4;
 }
 
-bool InitProducerIDRequest::is_flexible()
+bool InitProducerIDRequest::is_flexible() const
 {
     return is_flexible_version(m_version);
 }
 
-bool InitProducerIDRequest::is_flexible_version(int16_t ver)
+bool InitProducerIDRequest::is_flexible_version(int16_t ver) const
 {
     return ver >= 2;
 }

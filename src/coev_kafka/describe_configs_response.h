@@ -13,7 +13,7 @@
 #include "config_source.h"
 #include "protocol_body.h"
 
-struct ConfigSynonym : versionedDecoder, versionedEncoder
+struct ConfigSynonym : versioned_decoder, versioned_encoder
 {
     std::string m_config_name;
     std::string m_config_value;
@@ -23,7 +23,7 @@ struct ConfigSynonym : versionedDecoder, versionedEncoder
     int decode(packetDecoder &pd, int16_t version);
 };
 
-struct ConfigEntry : versionedDecoder, versionedEncoder
+struct ConfigEntry : versioned_decoder, versioned_encoder
 {
     std::string m_name;
     std::string m_value;
@@ -37,7 +37,7 @@ struct ConfigEntry : versionedDecoder, versionedEncoder
     int decode(packetDecoder &pd, int16_t version);
 };
 
-struct ResourceResponse : versionedDecoder, versionedEncoder
+struct ResourceResponse : versioned_decoder, versioned_encoder
 {
     int16_t m_error_code;
     std::string m_error_msg;

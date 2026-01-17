@@ -213,16 +213,12 @@ int prepEncoder::pop()
     return 0;
 }
 
-std::shared_ptr<metrics::Registry> prepEncoder::metricRegistry()
-{
-    return nullptr;
-}
-
 prepFlexibleEncoder::prepFlexibleEncoder(const prepEncoder &in)
 {
     m_length = in.offset();
     m_stack = in.m_stack;
 }
+
 int prepFlexibleEncoder::putArrayLength(int32_t in)
 {
     putUVarint(static_cast<uint64_t>(in + 1));

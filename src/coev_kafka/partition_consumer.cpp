@@ -1,8 +1,10 @@
+#include <unordered_set>
 #include "sleep_for.h"
 #include "consumer.h"
 #include "partition_consumer.h"
 #include "broker_consumer.h"
 #include "interceptors.h"
+
 void PartitionConsumer::SendError(KError err)
 {
     auto cErr = std::make_shared<ConsumerError>();
@@ -321,11 +323,6 @@ int PartitionConsumer::ParseRecords(std::shared_ptr<RecordBatch> batch, std::vec
 
 int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, std::vector<std::shared_ptr<ConsumerMessage>> &messages)
 {
-    std::shared_ptr<metrics::Histogram> consumerBatchSizeMetric;
-    if (m_consumer && m_consumer->m_metric_registry)
-    {
-        consumerBatchSizeMetric = metrics::GetOrRegisterHistogram("consumer-batch-size", m_consumer->m_metric_registry);
-    }
 
     if (response->m_throttle_time.count() != 0 && response->m_blocks.empty())
     {
@@ -347,10 +344,6 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
 
     auto nRecs = block->numRecords();
 
-    if (consumerBatchSizeMetric)
-    {
-        consumerBatchSizeMetric->Update(static_cast<int64_t>(nRecs));
-    }
 
     if (block->m_preferred_read_replica != invalidPreferredReplicaID)
     {

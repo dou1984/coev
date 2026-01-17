@@ -10,7 +10,7 @@
 #include "errors.h"
 #include "protocol_body.h"
 
-struct DeleteRecordsResponsePartition : IEncoder, versionedEncoder
+struct DeleteRecordsResponsePartition : IEncoder, versioned_encoder
 {
     int64_t m_low_watermark;
     KError m_err;
@@ -19,7 +19,7 @@ struct DeleteRecordsResponsePartition : IEncoder, versionedEncoder
     int decode(packetDecoder &pd, int16_t version);
 };
 
-struct DeleteRecordsResponseTopic : versionedDecoder, IEncoder
+struct DeleteRecordsResponseTopic : versioned_decoder, IEncoder
 {
     std::map<int32_t, std::shared_ptr<DeleteRecordsResponsePartition>> m_partitions;
 

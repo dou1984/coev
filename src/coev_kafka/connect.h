@@ -18,6 +18,5 @@ public:
     awaitable<int> Dial(const char *addr, int port);
     int Close();
     operator bool() const;
-    // Initialize the event loop pointer
-    void InitLoop();
+   
 };
