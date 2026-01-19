@@ -7,148 +7,177 @@
 #include "client.h"
 #include "config.h"
 
-TEST(ClusterAdminTest, CreateAndClose) {
+TEST(ClusterAdminTest, CreateAndClose)
+{
     // This is a basic test structure - in practice, you'd need to mock the client and config
     // For now, we'll just test the compilation and basic structure
     EXPECT_TRUE(true) << "Admin test framework is working";
 }
 
-TEST(ClusterAdminTest, CreateTopic) {
+TEST(ClusterAdminTest, CreateTopic)
+{
     // Test CreateTopic method structure
     EXPECT_TRUE(true) << "CreateTopic test structure is working";
 }
 
-TEST(ClusterAdminTest, ListTopics) {
+TEST(ClusterAdminTest, ListTopics)
+{
     // Test ListTopics method structure
     EXPECT_TRUE(true) << "ListTopics test structure is working";
 }
 
-TEST(ClusterAdminTest, DescribeTopics) {
+TEST(ClusterAdminTest, DescribeTopics)
+{
     // Test DescribeTopics method structure
     EXPECT_TRUE(true) << "DescribeTopics test structure is working";
 }
 
-TEST(ClusterAdminTest, DeleteTopic) {
+TEST(ClusterAdminTest, DeleteTopic)
+{
     // Test DeleteTopic method structure
     EXPECT_TRUE(true) << "DeleteTopic test structure is working";
 }
 
-TEST(ClusterAdminTest, CreatePartitions) {
+TEST(ClusterAdminTest, CreatePartitions)
+{
     // Test CreatePartitions method structure
     EXPECT_TRUE(true) << "CreatePartitions test structure is working";
 }
 
-TEST(ClusterAdminTest, AlterPartitionReassignments) {
+TEST(ClusterAdminTest, AlterPartitionReassignments)
+{
     // Test AlterPartitionReassignments method structure
     EXPECT_TRUE(true) << "AlterPartitionReassignments test structure is working";
 }
 
-TEST(ClusterAdminTest, ListPartitionReassignments) {
+TEST(ClusterAdminTest, ListPartitionReassignments)
+{
     // Test ListPartitionReassignments method structure
     EXPECT_TRUE(true) << "ListPartitionReassignments test structure is working";
 }
 
-TEST(ClusterAdminTest, DeleteRecords) {
+TEST(ClusterAdminTest, DeleteRecords)
+{
     // Test DeleteRecords method structure
     EXPECT_TRUE(true) << "DeleteRecords test structure is working";
 }
 
-TEST(ClusterAdminTest, DescribeConfig) {
+TEST(ClusterAdminTest, DescribeConfig)
+{
     // Test DescribeConfig method structure
     EXPECT_TRUE(true) << "DescribeConfig test structure is working";
 }
 
-TEST(ClusterAdminTest, AlterConfig) {
+TEST(ClusterAdminTest, AlterConfig)
+{
     // Test AlterConfig method structure
     EXPECT_TRUE(true) << "AlterConfig test structure is working";
 }
 
-TEST(ClusterAdminTest, IncrementalAlterConfig) {
+TEST(ClusterAdminTest, IncrementalAlterConfig)
+{
     // Test IncrementalAlterConfig method structure
     EXPECT_TRUE(true) << "IncrementalAlterConfig test structure is working";
 }
 
-TEST(ClusterAdminTest, CreateACL) {
+TEST(ClusterAdminTest, CreateACL)
+{
     // Test CreateACL method structure
     EXPECT_TRUE(true) << "CreateACL test structure is working";
 }
 
-TEST(ClusterAdminTest, ListAcls) {
+TEST(ClusterAdminTest, ListAcls)
+{
     // Test ListAcls method structure
     EXPECT_TRUE(true) << "ListAcls test structure is working";
 }
 
-TEST(ClusterAdminTest, DeleteACL) {
+TEST(ClusterAdminTest, DeleteACL)
+{
     // Test DeleteACL method structure
     EXPECT_TRUE(true) << "DeleteACL test structure is working";
 }
 
-TEST(ClusterAdminTest, ElectLeaders) {
+TEST(ClusterAdminTest, ElectLeaders)
+{
     // Test ElectLeaders method structure
     EXPECT_TRUE(true) << "ElectLeaders test structure is working";
 }
 
-TEST(ClusterAdminTest, ListConsumerGroups) {
+TEST(ClusterAdminTest, ListConsumerGroups)
+{
     // Test ListConsumerGroups method structure
     EXPECT_TRUE(true) << "ListConsumerGroups test structure is working";
 }
 
-TEST(ClusterAdminTest, DescribeConsumerGroups) {
+TEST(ClusterAdminTest, DescribeConsumerGroups)
+{
     // Test DescribeConsumerGroups method structure
     EXPECT_TRUE(true) << "DescribeConsumerGroups test structure is working";
 }
 
-TEST(ClusterAdminTest, ListConsumerGroupOffsets) {
+TEST(ClusterAdminTest, ListConsumerGroupOffsets)
+{
     // Test ListConsumerGroupOffsets method structure
     EXPECT_TRUE(true) << "ListConsumerGroupOffsets test structure is working";
 }
 
-TEST(ClusterAdminTest, DeleteConsumerGroupOffset) {
+TEST(ClusterAdminTest, DeleteConsumerGroupOffset)
+{
     // Test DeleteConsumerGroupOffset method structure
     EXPECT_TRUE(true) << "DeleteConsumerGroupOffset test structure is working";
 }
 
-TEST(ClusterAdminTest, DeleteConsumerGroup) {
+TEST(ClusterAdminTest, DeleteConsumerGroup)
+{
     // Test DeleteConsumerGroup method structure
     EXPECT_TRUE(true) << "DeleteConsumerGroup test structure is working";
 }
 
-TEST(ClusterAdminTest, DescribeCluster) {
+TEST(ClusterAdminTest, DescribeCluster)
+{
     // Test DescribeCluster method structure
     EXPECT_TRUE(true) << "DescribeCluster test structure is working";
 }
 
-TEST(ClusterAdminTest, DescribeLogDirs) {
+TEST(ClusterAdminTest, DescribeLogDirs)
+{
     // Test DescribeLogDirs method structure
     EXPECT_TRUE(true) << "DescribeLogDirs test structure is working";
 }
 
-TEST(ClusterAdminTest, DescribeUserScramCredentials) {
+TEST(ClusterAdminTest, DescribeUserScramCredentials)
+{
     // Test DescribeUserScramCredentials method structure
     EXPECT_TRUE(true) << "DescribeUserScramCredentials test structure is working";
 }
 
-TEST(ClusterAdminTest, DeleteUserScramCredentials) {
+TEST(ClusterAdminTest, DeleteUserScramCredentials)
+{
     // Test DeleteUserScramCredentials method structure
     EXPECT_TRUE(true) << "DeleteUserScramCredentials test structure is working";
 }
 
-TEST(ClusterAdminTest, UpsertUserScramCredentials) {
+TEST(ClusterAdminTest, UpsertUserScramCredentials)
+{
     // Test UpsertUserScramCredentials method structure
     EXPECT_TRUE(true) << "UpsertUserScramCredentials test structure is working";
 }
 
-TEST(ClusterAdminTest, DescribeClientQuotas) {
+TEST(ClusterAdminTest, DescribeClientQuotas)
+{
     // Test DescribeClientQuotas method structure
     EXPECT_TRUE(true) << "DescribeClientQuotas test structure is working";
 }
 
-TEST(ClusterAdminTest, AlterClientQuotas) {
+TEST(ClusterAdminTest, AlterClientQuotas)
+{
     // Test AlterClientQuotas method structure
     EXPECT_TRUE(true) << "AlterClientQuotas test structure is working";
 }
 
-TEST(ClusterAdminTest, RemoveMemberFromConsumerGroup) {
+TEST(ClusterAdminTest, RemoveMemberFromConsumerGroup)
+{
     // Test RemoveMemberFromConsumerGroup method structure
     EXPECT_TRUE(true) << "RemoveMemberFromConsumerGroup test structure is working";
 }

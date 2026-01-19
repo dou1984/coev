@@ -57,7 +57,8 @@ struct balanceStrategy : BalanceStrategy
         for (auto &[topic, memberIDs] : mbt)
         {
             auto it = topics.find(topic);
-            if (it == topics.end()) {
+            if (it == topics.end())
+            {
                 continue; // Skip topics that don't exist in the topics map
             }
             auto uniqueMembers = uniq(memberIDs);
@@ -261,10 +262,11 @@ int getBalanceScore(const std::map<std::string, std::vector<TopicPartitionAssign
 bool isBalanced(const std::map<std::string, std::vector<TopicPartitionAssignment>> &currentAssignment,
                 const std::map<std::string, std::vector<TopicPartitionAssignment>> &allSubscriptions)
 {
-    if (currentAssignment.empty()) {
+    if (currentAssignment.empty())
+    {
         return true; // An empty assignment is trivially balanced
     }
-    
+
     std::vector<std::string> sortedCurrentSubscriptions;
     for (auto &it : currentAssignment)
     {
@@ -337,31 +339,34 @@ bool canConsumerParticipateInReassignment(
 {
     // Check if memberID exists in currentAssignment
     auto currentIt = currentAssignment.find(memberID);
-    if (currentIt == currentAssignment.end()) {
+    if (currentIt == currentAssignment.end())
+    {
         // If no current assignment, can participate if they have potential partitions
         auto potentialIt = consumer2AllPotentialPartitions.find(memberID);
-        if (potentialIt == consumer2AllPotentialPartitions.end()) {
+        if (potentialIt == consumer2AllPotentialPartitions.end())
+        {
             return false;
         }
         return !potentialIt->second.empty();
     }
-    
+
     auto potentialIt = consumer2AllPotentialPartitions.find(memberID);
-    if (potentialIt == consumer2AllPotentialPartitions.end()) {
+    if (potentialIt == consumer2AllPotentialPartitions.end())
+    {
         return false;
     }
-    
+
     const auto &currentPartitions = currentIt->second;
     int currentAssignmentSize = static_cast<int>(currentPartitions.size());
     int maxAssignmentSize = static_cast<int>(potentialIt->second.size());
-    
+
     if (currentAssignmentSize > maxAssignmentSize)
     {
         // Log: over-assigned
     }
     if (currentAssignmentSize < maxAssignmentSize)
         return true;
-    
+
     for (auto &partition : currentPartitions)
     {
         auto partitionIt = partition2AllPotentialConsumers.find(partition);
@@ -390,7 +395,8 @@ std::vector<std::string> assignPartition(
     {
         bool include = false;
         auto it = consumer2AllPotentialPartitions.find(memberID);
-        if (it != consumer2AllPotentialPartitions.end()) {
+        if (it != consumer2AllPotentialPartitions.end())
+        {
             for (auto &p : it->second)
             {
                 if (p == partition)
@@ -813,17 +819,15 @@ bool partitionMovements::isSticky()
 
 // stickyBalanceStrategy implementations
 
-int stickyBalanceStrategy::Plan(
-    const std::map<std::string, ConsumerGroupMemberMetadata> &members,
-    const std::map<std::string, std::vector<int32_t>> &topics,
-    BalanceStrategyPlan &plan)
+int stickyBalanceStrategy::Plan(const std::map<std::string, ConsumerGroupMemberMetadata> &members, const std::map<std::string, std::vector<int32_t>> &topics, BalanceStrategyPlan &plan)
 {
     // Handle edge case: no topics to assign
-    if (topics.empty()) {
+    if (topics.empty())
+    {
         plan.clear();
         return 0;
     }
-    
+
     movements = partitionMovements{};
     std::map<std::string, std::vector<TopicPartitionAssignment>> currentAssignment;
     std::map<TopicPartitionAssignment, consumerGenerationPair> prevAssignment;
@@ -970,7 +974,8 @@ void stickyBalanceStrategy::balance(
     std::map<TopicPartitionAssignment, std::string> &currentPartitionConsumer)
 {
     bool initializing = sortedCurrentSubscriptions.empty();
-    if (!initializing) {
+    if (!initializing)
+    {
         auto it = currentAssignment.find(sortedCurrentSubscriptions[0]);
         initializing = it != currentAssignment.end() && it->second.empty();
     }
@@ -1155,8 +1160,9 @@ int roundRobinBalancer::Plan(
     {
         return -1; // error code - no members to assign to
     }
-    
-    if (topics.empty()) {
+
+    if (topics.empty())
+    {
         plan.clear();
         return 0; // no topics to assign, return empty plan
     }
@@ -1200,11 +1206,13 @@ int roundRobinBalancer::Plan(
             i++;
             m = members[i % n];
             attempts++;
-            if (attempts >= n) {
+            if (attempts >= n)
+            {
                 break; // No member is subscribed to this topic, skip it
             }
         }
-        if (m.hasTopic(tp.topic)) {
+        if (m.hasTopic(tp.topic))
+        {
             AddToPlan(plan, m.memberID, tp.topic, {tp.partition});
         }
         i++;

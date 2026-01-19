@@ -4,6 +4,33 @@
 #include <memory>
 #include <cstdint>
 
+enum EType : uint8_t
+{
+    FIXED,
+    FLEXIBLE,
+};
+
+struct packetType
+{
+    std::vector<EType> m_type;
+    bool isFixed()
+    {
+        return m_type.empty() || m_type.back() == FIXED;
+    }
+    bool isFlexible()
+    {
+        return m_type.size() > 0 || m_type.back() == FLEXIBLE;
+    }
+    void pushFlexible()
+    {
+        m_type.push_back(FLEXIBLE);
+    }
+    void popFlexible()
+    {
+        m_type.pop_back();
+    }
+};
+
 struct packetDecoder;
 struct packetEncoder;
 
@@ -12,6 +39,12 @@ struct PacketEncodingError
     std::string m_message;
 };
 
+struct flexible_version
+{
+    virtual ~flexible_version() = default;
+    virtual bool is_flexible_version(int16_t version) const = 0;
+    virtual bool is_flexible() const = 0;
+};
 struct IEncoder
 {
     virtual ~IEncoder() = default;
@@ -40,18 +73,11 @@ struct versioned_decoder
     virtual int decode(packetDecoder &pd, int16_t version) = 0;
 };
 
-struct flexible_version
-{
-    virtual ~flexible_version() = default;
-    virtual bool is_flexible_version(int16_t version) const = 0;
-    virtual bool is_flexible() const = 0;
-};
-
 int encode(IEncoder &e, std::string &out);
 int decode(const std::string &buf, IDecoder &in);
 int versionedDecode(const std::string &buf, versioned_decoder &in, int16_t version);
 int magicValue(packetDecoder &pd, int8_t &magic);
 
-int prepareFlexibleDecoder(packetDecoder *pd, versioned_decoder &req, int16_t version);
-int prepareFlexibleEncoder(packetEncoder *pe, IEncoder &req);
+int prepareFlexibleDecoder(packetDecoder &pd, versioned_decoder &req, int16_t version);
+int prepareFlexibleEncoder(packetEncoder &pe, IEncoder &req);
 std::shared_ptr<packetDecoder> downgradeFlexibleDecoder(std::shared_ptr<packetDecoder> pd);

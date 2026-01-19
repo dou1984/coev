@@ -26,12 +26,11 @@ int decode(T &pd, int32_t &length, int32_t &correlationID)
 }
 int responseHeader::decode(packetDecoder &pd, int16_t version)
 {
-
     if (version >= 1)
     {
-        if (auto decoder = dynamic_cast<realFlexibleDecoder *>(&pd))
+        if (pd.isFlexible())
         {
-            return ::decode(*decoder, m_length, m_correlation_id);
+            return ::decode(pd, m_length, m_correlation_id);
         }
         else
         {

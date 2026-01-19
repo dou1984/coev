@@ -12,7 +12,7 @@
 #include "consumer_group_members.h"
 #include "protocol_body.h"
 
-struct SyncGroupResponse : protocol_body , flexible_version
+struct SyncGroupResponse : protocol_body, flexible_version
 {
 
     int16_t m_version = 0;

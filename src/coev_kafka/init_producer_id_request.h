@@ -11,7 +11,7 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
-struct InitProducerIDRequest : protocol_body , flexible_version
+struct InitProducerIDRequest : protocol_body, flexible_version
 {
 
     int16_t m_version = 0;

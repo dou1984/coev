@@ -344,7 +344,6 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
 
     auto nRecs = block->numRecords();
 
-
     if (block->m_preferred_read_replica != invalidPreferredReplicaID)
     {
         m_preferred_read_replica = block->m_preferred_read_replica;

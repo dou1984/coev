@@ -11,7 +11,7 @@
 #include "version.h"
 #include "protocol_body.h"
 
-struct ListGroupsRequest : protocol_body , flexible_version
+struct ListGroupsRequest : protocol_body, flexible_version
 {
 
     int16_t m_version = 0;

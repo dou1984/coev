@@ -27,7 +27,7 @@ struct GroupProtocol : IDecoder, IEncoder
     int encode(packetEncoder &pe);
 };
 
-struct JoinGroupRequest : protocol_body , flexible_version
+struct JoinGroupRequest : protocol_body, flexible_version
 {
 
     int16_t m_version = 0;

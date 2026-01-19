@@ -42,18 +42,3 @@ struct prepEncoder : packetEncoder
     std::vector<std::shared_ptr<pushEncoder>> m_stack;
     int m_length = 0;
 };
-
-struct prepFlexibleEncoder : prepEncoder
-{
-    prepFlexibleEncoder(const prepEncoder &in);
-    
-
-    int putArrayLength(int32_t in);
-    int putBytes(const std::string &in);
-    int putString(const std::string &in);
-    int putNullableString(const std::string &in);
-    int putStringArray(const std::vector<std::string> &in);
-    int putInt32Array(const std::vector<int32_t> &in);
-    int putNullableInt32Array(const std::vector<int32_t> &in);
-    void putEmptyTaggedFieldArray();
-};

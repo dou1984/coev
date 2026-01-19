@@ -24,7 +24,7 @@ struct OffsetFetchResponseBlock : versioned_encoder, versioned_decoder
     int decode(packetDecoder &pd, int16_t version);
 };
 
-struct OffsetFetchResponse : protocol_body , flexible_version
+struct OffsetFetchResponse : protocol_body, flexible_version
 {
 
     int16_t m_version;

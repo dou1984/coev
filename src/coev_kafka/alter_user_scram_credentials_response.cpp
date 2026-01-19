@@ -8,7 +8,7 @@ void AlterUserScramCredentialsResponse::set_version(int16_t v)
 
 int AlterUserScramCredentialsResponse::encode(packetEncoder &pe)
 {
-     pe.putDurationMs(m_throttle_time);
+    pe.putDurationMs(m_throttle_time);
 
     if (pe.putArrayLength(static_cast<int32_t>(m_results.size())) != ErrNoError)
     {

@@ -62,16 +62,17 @@ int CreatePartitionsResponse::decode(packetDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-int16_t CreatePartitionsResponse::key()const{
+int16_t CreatePartitionsResponse::key() const
+{
     return 37; // apiKeyCreatePartitions
 }
 
-int16_t CreatePartitionsResponse::version()const
+int16_t CreatePartitionsResponse::version() const
 {
     return m_version;
 }
 
-int16_t CreatePartitionsResponse::header_version()const
+int16_t CreatePartitionsResponse::header_version() const
 {
     return 0;
 }

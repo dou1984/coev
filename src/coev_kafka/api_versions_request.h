@@ -6,11 +6,9 @@
 #include "packet_encoder.h"
 #include "packet_decoder.h"
 #include "protocol_body.h"
+#include "config.h"
 
-inline const std::string defaultClientSoftwareName = "coev";
-inline const std::string defaultClientSoftwareVersion = "1.0.0";
-
-struct ApiVersionsRequest : protocol_body , flexible_version
+struct ApiVersionsRequest : protocol_body, flexible_version
 {
     int16_t m_version = 0;
     std::string m_client_software_name = defaultClientSoftwareName;

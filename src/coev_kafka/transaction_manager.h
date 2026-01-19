@@ -65,19 +65,19 @@ struct TransactionManager
     bool IsTransitionValid(ProducerTxnStatusFlag target) const;
     int TransitionTo(ProducerTxnStatusFlag target, int err);
 
-    mutable std::shared_mutex  m_status_lock;
+    mutable std::shared_mutex m_status_lock;
     ProducerTxnStatusFlag m_status = ProducerTxnFlagUninitialized;
     mutable std::mutex m_mutex;
-    int64_t m_producer_id= noProducerID;
+    int64_t m_producer_id = noProducerID;
     int16_t m_producer_epoch = noProducerEpoch;
-    std::map<std::string, int32_t> m_sequence_numbers;   
+    std::map<std::string, int32_t> m_sequence_numbers;
     std::string m_transactional_id;
     std::chrono::milliseconds m_transaction_timeout;
-    std::shared_ptr<Client> m_client; 
+    std::shared_ptr<Client> m_client;
     bool m_coordinator_supports_bumping_epoch = false;
     bool m_epoch_bump_required = false;
     int m_last_error = 0;
-    mutable std::mutex m_partition_in_txn_lock; 
+    mutable std::mutex m_partition_in_txn_lock;
     TopicPartitionSet m_pending_partitions_in_current_txn;
     TopicPartitionSet m_partitions_in_current_txn;
     std::map<std::string, TopicPartitionOffsets> m_offsets_in_current_txn;

@@ -326,8 +326,6 @@ coev::awaitable<void> AsyncProducer::shutdown()
     {
         LOG_CORE("Error closing client: %s", KErrorToString(err));
     }
-
-
 }
 
 coev::awaitable<void> AsyncProducer::bumpIdempotentProducerEpoch()

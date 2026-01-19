@@ -12,7 +12,7 @@
 #include "protocol_body.h"
 #include "alter_configs_response.h"
 
-struct IncrementalAlterConfigsResponse : protocol_body , flexible_version
+struct IncrementalAlterConfigsResponse : protocol_body, flexible_version
 {
     int16_t m_version = 0;
     std::chrono::milliseconds m_throttle_time;

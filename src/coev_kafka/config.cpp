@@ -65,7 +65,7 @@ Config::Config()
     Consumer.Group.Rebalance.Retry.Backoff = std::chrono::milliseconds(2000);
     Consumer.Group.ResetInvalidOffsets = true;
 
-    ClientID = "coev";
+    ClientID = defaultClientSoftwareName;
     ChannelBufferSize = 256;
     ApiVersionsRequest = true;
     Version = DefaultVersion;

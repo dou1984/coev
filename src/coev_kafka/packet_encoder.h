@@ -5,11 +5,11 @@
 #include <vector>
 #include <memory>
 #include <chrono>
-
 #include "errors.h"
+#include "encoder_decoder.h"
 #include "dynamic_push_encoder.h"
 
-struct packetEncoder
+struct packetEncoder : packetType
 {
     virtual ~packetEncoder() = default;
 
@@ -40,6 +40,4 @@ struct packetEncoder
     virtual void push(std::shared_ptr<pushEncoder> in) = 0;
 
     virtual int pop() = 0;
-
 };
-

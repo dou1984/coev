@@ -108,10 +108,10 @@ int AlterPartitionReassignmentsRequest::decode(packetDecoder &pd, int16_t versio
                 }
 
                 auto block = std::make_shared<AlterPartitionReassignmentsBlock>();
-            if (block->decode(pd) != ErrNoError)
-            {
-                return ErrDecodeError;
-            }
+                if (block->decode(pd) != ErrNoError)
+                {
+                    return ErrDecodeError;
+                }
                 partitionMap[partition] = block;
             }
             int32_t _;

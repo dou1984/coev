@@ -133,6 +133,12 @@ int main(int argc, char **argv)
 
                     co_await task.wait();
                 })
+            .start(
+                []() -> coev::awaitable<void>
+                {
+                    co_await sleep_for(20);
+                    exit(0);
+                })
             .wait();
     }
 

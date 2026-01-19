@@ -1,4 +1,3 @@
-// offset_commit_response.h
 #pragma once
 
 #include <string>
@@ -14,7 +13,7 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
-struct OffsetCommitResponse :  protocol_body
+struct OffsetCommitResponse : protocol_body
 {
 
     int16_t m_version;

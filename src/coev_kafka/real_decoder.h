@@ -21,7 +21,7 @@ struct realDecoder : packetDecoder
     int getVariant(int64_t &result);
     int getUVariant(uint64_t &result);
     int getFloat64(double &result);
-    int getArrayLength(int &result);
+    int getArrayLength(int32_t &result);
     int getBool(bool &result);
     int getKError(KError &result);
     int getDurationMs(std::chrono::milliseconds &duration);
@@ -46,18 +46,4 @@ struct realDecoder : packetDecoder
     int m_offset = 0;
     std::string m_raw;
     std::vector<std::shared_ptr<pushDecoder>> m_stack;
-};
-
-struct realFlexibleDecoder : realDecoder
-{
-
-    int getArrayLength(int &result);
-    int getEmptyTaggedFieldArray(int &result);
-    int getTaggedFieldArray(const taggedFieldDecoders &decoders);
-    int getBytes(std::string &result);
-    int getStringLength(int &result);
-    int getString(std::string &result);
-    int getNullableString(std::string &result);
-    int getInt32Array(std::vector<int32_t> &result);
-    int getStringArray(std::vector<std::string> &result);
 };

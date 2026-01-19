@@ -33,7 +33,7 @@ struct IncrementalAlterConfigsResource : IEncoder, versioned_decoder
     int decode(packetDecoder &pd, int16_t version);
 };
 
-struct IncrementalAlterConfigsRequest : protocol_body , flexible_version
+struct IncrementalAlterConfigsRequest : protocol_body, flexible_version
 {
 
     int16_t m_version = 0;

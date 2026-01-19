@@ -9,31 +9,31 @@
 
 int encode(IEncoder &e, std::string &out)
 {
-    auto prepEnc = std::make_shared<prepEncoder>();
-    if (prepareFlexibleEncoder(prepEnc.get(), e) != ErrNoError)
+    prepEncoder enc;
+    if (prepareFlexibleEncoder(enc, e) != ErrNoError)
     {
         throw PacketEncodingError{"encoding failed"};
     }
 
-    if (prepEnc->m_length < 0 || prepEnc->m_length > static_cast<int>(MaxRequestSize))
+    if (enc.m_length < 0 || enc.m_length > static_cast<int>(MaxRequestSize))
     {
-        throw PacketEncodingError{"invalid request size (" + std::to_string(prepEnc->m_length) + ")"};
+        throw PacketEncodingError{"invalid request size (" + std::to_string(enc.m_length) + ")"};
     }
 
-    auto realEnc = std::make_shared<realEncoder>();
-    realEnc->m_raw.resize(prepEnc->m_length);
-    if (prepareFlexibleEncoder(realEnc.get(), e) != ErrNoError)
+    realEncoder real_enc;
+    real_enc.m_raw.resize(enc.m_length);
+    if (prepareFlexibleEncoder(real_enc, e) != ErrNoError)
     {
         throw PacketEncodingError{"encoding failed"};
     }
 
     if (out.empty())
     {
-        out = std::move(realEnc->m_raw);
+        out = std::move(real_enc.m_raw);
     }
     else
     {
-        out.append(realEnc->m_raw);
+        out.append(real_enc.m_raw);
     }
     return ErrNoError;
 }
@@ -67,16 +67,16 @@ int versionedDecode(const std::string &buf, versioned_decoder &in, int16_t versi
         return ErrNoError;
     }
 
-    auto baseHelper = std::make_shared<realDecoder>();
-    baseHelper->m_raw = buf;
+    realDecoder baseHelper;
+    baseHelper.m_raw = buf;
 
-    auto err = prepareFlexibleDecoder(baseHelper.get(), in, version);
+    auto err = prepareFlexibleDecoder(baseHelper, in, version);
     if (err != ErrNoError)
     {
         return err;
     }
 
-    int remaining = baseHelper->remaining();
+    int remaining = baseHelper.remaining();
     if (remaining != 0)
     {
         throw PacketDecodingError{"invalid length len=" + std::to_string(buf.size()) + " remaining=" + std::to_string(remaining)};
@@ -85,71 +85,40 @@ int versionedDecode(const std::string &buf, versioned_decoder &in, int16_t versi
     return ErrNoError;
 }
 
-int prepareFlexibleDecoder(packetDecoder *pd, versioned_decoder &req, int16_t version)
+int prepareFlexibleDecoder(packetDecoder &pd, versioned_decoder &req, int16_t version)
 {
-    if (auto fv = dynamic_cast<flexible_version *>(&req))
+    auto f = dynamic_cast<flexible_version *>(&req);
+    if (f != nullptr)
     {
-        if (fv->is_flexible_version(version))
+        if (f->is_flexible_version(version))
         {
-            if (auto realDec = dynamic_cast<realDecoder *>(pd))
-            {
-                realFlexibleDecoder flexibleDec;
-                flexibleDec.m_raw = realDec->m_raw;
-                flexibleDec.m_offset = realDec->m_offset;
-                flexibleDec.m_stack = realDec->m_stack;
-
-                int err = req.decode(flexibleDec, version);
-
-                realDec->m_offset = flexibleDec.m_offset;
-                realDec->m_stack = flexibleDec.m_stack;
-
-                return err;
-            }
+            pd.pushFlexible();
+            defer(pd.popFlexible());
+            return req.decode(pd, version);
         }
     }
-    return req.decode(*pd, version);
+    return req.decode(pd, version);
 }
 
-int prepareFlexibleEncoder(packetEncoder *pe, IEncoder &req)
+int prepareFlexibleEncoder(packetEncoder &pe, IEncoder &req)
 {
-    bool is_flexible = false;
-
-    // Check if the request is directly a flexible version
-    if (auto fv = dynamic_cast<flexible_version *>(&req))
+    auto f = dynamic_cast<flexible_version *>(&req);
+    if (f != nullptr)
     {
-        is_flexible = fv->is_flexible();
-    }
-    // Check if the request is a request object with a flexible body
-    else if (auto request_obj = dynamic_cast<request *>(&req))
-    {
-        is_flexible = request_obj->is_flexible();
-    }
-
-    if (is_flexible)
-    {
-        if (auto prepEnc = dynamic_cast<prepEncoder *>(pe))
+        if (f->is_flexible())
         {
-            // Create a flexible prep encoder wrapper
-            prepFlexibleEncoder flexiblePrepEnc(*prepEnc);
-            // Call encode on the flexible wrapper
-            return req.encode(flexiblePrepEnc);
-        }
-        else if (auto realEnc = dynamic_cast<realEncoder *>(pe))
-        {
-            // Create a flexible real encoder wrapper
-            realFlexibleEncoder flexibleRealEnc(*realEnc);
-            // Call encode on the flexible wrapper
-            return req.encode(flexibleRealEnc);
+            pe.pushFlexible();
+            defer(pe.popFlexible());
+            return req.encode(pe);
         }
     }
-    // Not flexible, call encode on the original encoder
-    return req.encode(*pe);
+    return req.encode(pe);
 }
 std::shared_ptr<packetDecoder> downgradeFlexibleDecoder(std::shared_ptr<packetDecoder> pd)
 {
-    if (auto f = std::dynamic_pointer_cast<realFlexibleDecoder>(pd); f)
+    if (pd->isFlexible())
     {
-        return f;
+        pd->pushFlexible();
     }
     return pd;
 }

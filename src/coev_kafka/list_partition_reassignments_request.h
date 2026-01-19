@@ -11,7 +11,7 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
-struct ListPartitionReassignmentsRequest : protocol_body , flexible_version
+struct ListPartitionReassignmentsRequest : protocol_body, flexible_version
 {
     std::chrono::milliseconds m_timeout;
     std::unordered_map<std::string, std::vector<int32_t>> m_blocks;

@@ -194,7 +194,7 @@ coev::awaitable<int> BrokerConsumer::fetchNewMessages(std::shared_ptr<FetchRespo
     {
         request->m_version = 1;
     }
-    if (m_consumer->m_conf->Version.IsAtLeast(V0_10_0_0))   
+    if (m_consumer->m_conf->Version.IsAtLeast(V0_10_0_0))
     {
         request->m_version = 2;
     }
@@ -246,11 +246,11 @@ coev::awaitable<int> BrokerConsumer::fetchNewMessages(std::shared_ptr<FetchRespo
         co_return 0;
     }
 
-    FetchResponse local_response;
+    ResponsePromise<FetchResponse> local_response;
     int err = co_await m_broker->Fetch(*request, local_response);
     if (err == 0)
     {
-        response = std::make_shared<FetchResponse>(local_response);
+        response = std::make_shared<FetchResponse>(local_response.m_response);
     }
     co_return err;
 }

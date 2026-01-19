@@ -3,7 +3,7 @@
 #include <regex>
 #include <sstream>
 #include <cstring>
-
+#include "config.h"
 std::string version()
 {
 #ifdef COEV_VERSION
@@ -11,7 +11,7 @@ std::string version()
 #else
     static std::string v = "dev";
 #endif
-    return v;
+    return defaultClientSoftwareVersion;
 }
 
 bool KafkaVersion::IsAtLeast(const KafkaVersion &other) const

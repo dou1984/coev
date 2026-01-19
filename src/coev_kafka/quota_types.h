@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <string>
 
 using QuotaEntityType = std::string;
@@ -15,4 +14,3 @@ enum QuotaMatchType : int8_t
 const QuotaEntityType QuotaEntityUser = "user";
 const QuotaEntityType QuotaEntityClientID = "client-id";
 const QuotaEntityType QuotaEntityIP = "ip";
-

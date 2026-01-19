@@ -27,7 +27,6 @@ if(BUILD_TESTS)
     
     # Exclude duplicate test files
     list(FILTER TEST_FILES EXCLUDE REGEX ".*fetch_test\.cpp$")
-    list(FILTER TEST_FILES EXCLUDE REGEX ".*metadata_protocol_test\.cpp$")
     list(FILTER TEST_FILES EXCLUDE REGEX ".*offset_fetch_test\.cpp$")
     
     # 添加测试程序

@@ -2,8 +2,6 @@
 #include "api_versions_request.h"
 #include "api_versions.h"
 
-
-
 void ApiVersionsRequest::set_version(int16_t v)
 {
     m_version = v;
@@ -34,7 +32,7 @@ int ApiVersionsRequest::encode(packetEncoder &pe)
         {
             m_client_software_version = defaultClientSoftwareVersion;
         }
-        
+
         if (pe.putString(m_client_software_name) != ErrNoError)
         {
             return ErrEncodeError;

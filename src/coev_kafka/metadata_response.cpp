@@ -217,7 +217,7 @@ int MetadataResponse::decode(packetDecoder &pd, int16_t version)
         return err;
     }
 
-    Brokers.resize(brokerArrayLen);
+    m_brokers.resize(brokerArrayLen);
     for (int32_t i = 0; i < brokerArrayLen; ++i)
     {
         auto broker = std::make_shared<Broker>();
@@ -225,12 +225,12 @@ int MetadataResponse::decode(packetDecoder &pd, int16_t version)
         {
             return err;
         }
-        Brokers[i] = broker;
+        m_brokers[i] = broker;
     }
 
     if (m_version >= 2)
     {
-        if (int err = pd.getNullableString(ClusterID); err != 0)
+        if (int err = pd.getNullableString(m_cluster_id); err != 0)
         {
             return err;
         }
@@ -238,7 +238,7 @@ int MetadataResponse::decode(packetDecoder &pd, int16_t version)
 
     if (m_version >= 1)
     {
-        if (int err = pd.getInt32(ControllerID); err != 0)
+        if (int err = pd.getInt32(m_controller_id); err != 0)
         {
             return err;
         }
@@ -250,7 +250,7 @@ int MetadataResponse::decode(packetDecoder &pd, int16_t version)
         return err;
     }
 
-    Topics.resize(topicArrayLen);
+    m_topics.resize(topicArrayLen);
     for (int32_t i = 0; i < topicArrayLen; ++i)
     {
         auto topic = std::make_shared<TopicMetadata>();
@@ -258,12 +258,12 @@ int MetadataResponse::decode(packetDecoder &pd, int16_t version)
         {
             return err;
         }
-        Topics[i] = topic;
+        m_topics[i] = topic;
     }
 
     if (m_version >= 8)
     {
-        if (int err = pd.getInt32(ClusterAuthorizedOperations); err != 0)
+        if (int err = pd.getInt32(m_cluster_authorized_operations); err != 0)
         {
             return err;
         }
@@ -281,12 +281,12 @@ int MetadataResponse::encode(packetEncoder &pe)
         pe.putDurationMs(m_throttle_time);
     }
     int err = ErrNoError;
-    if (err = pe.putArrayLength(static_cast<int32_t>(Brokers.size())); err != 0)
+    if (err = pe.putArrayLength(static_cast<int32_t>(m_brokers.size())); err != 0)
     {
         return err;
     }
 
-    for (auto &broker : Brokers)
+    for (auto &broker : m_brokers)
     {
         if (int err = broker->encode(pe, m_version); err != 0)
         {
@@ -296,7 +296,7 @@ int MetadataResponse::encode(packetEncoder &pe)
 
     if (m_version >= 2)
     {
-        if (int err = pe.putNullableString(ClusterID); err != 0)
+        if (int err = pe.putNullableString(m_cluster_id); err != 0)
         {
             return err;
         }
@@ -304,14 +304,14 @@ int MetadataResponse::encode(packetEncoder &pe)
 
     if (m_version >= 1)
     {
-        pe.putInt32(ControllerID);
+        pe.putInt32(m_controller_id);
     }
 
-    if (err = pe.putArrayLength(static_cast<int32_t>(Topics.size())); err != 0)
+    if (err = pe.putArrayLength(static_cast<int32_t>(m_topics.size())); err != 0)
     {
         return err;
     }
-    for (auto &block : Topics)
+    for (auto &block : m_topics)
     {
         if (int err = block->encode(pe, m_version); err != 0)
         {
@@ -321,7 +321,7 @@ int MetadataResponse::encode(packetEncoder &pe)
 
     if (m_version >= 8)
     {
-        pe.putInt32(ClusterAuthorizedOperations);
+        pe.putInt32(m_cluster_authorized_operations);
     }
 
     pe.putEmptyTaggedFieldArray();
@@ -405,12 +405,12 @@ void MetadataResponse::AddBroker(const std::string &addr, int32_t id)
     auto broker = std::make_shared<Broker>();
     broker->m_id = id;
     broker->m_addr = addr;
-    Brokers.push_back(broker);
+    m_brokers.push_back(broker);
 }
 
 std::shared_ptr<TopicMetadata> MetadataResponse::AddTopic(const std::string &topic, int16_t err)
 {
-    for (auto &tm : Topics)
+    for (auto &tm : m_topics)
     {
         if (tm->Name == topic)
         {
@@ -422,7 +422,7 @@ std::shared_ptr<TopicMetadata> MetadataResponse::AddTopic(const std::string &top
     auto tmatch = std::make_shared<TopicMetadata>();
     tmatch->Name = topic;
     tmatch->m_err = (KError)err;
-    Topics.push_back(tmatch);
+    m_topics.push_back(tmatch);
     return tmatch;
 }
 

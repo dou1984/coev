@@ -13,29 +13,19 @@ struct Broker;
 
 inline constexpr const int32_t MaxRequestSize = 100 * 1024 * 1024;
 
-struct request : versioned_encoder, IEncoder, IDecoder
+struct Request : versioned_encoder, IEncoder, IDecoder
 {
     int32_t m_correlation_id = 0;
     std::string m_client_id;
-    std::shared_ptr<protocol_body> m_body;
+    const protocol_body *m_body = nullptr;
     int encode(packetEncoder &pe);
     int encode(packetEncoder &pe, int16_t version)
     {
         return encode(pe);
     }
     int decode(packetDecoder &pd);
-    bool is_flexible() const
-    {
-        if (m_body)
-        {
-            if (auto fv = dynamic_cast<flexible_version *>(m_body.get()))
-            {
-                return fv->is_flexible();
-            }
-        }
-        return false;
-    }
+    bool is_flexible() const;
 };
 
-coev::awaitable<int> decodeRequest(std::shared_ptr<Broker> &broker, int &req, request &size);
+coev::awaitable<int> decodeRequest(std::shared_ptr<Broker> &broker, int &req, Request &size);
 std::shared_ptr<protocol_body> allocateBody(int16_t key, int16_t version);

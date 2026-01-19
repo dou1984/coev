@@ -17,7 +17,7 @@ struct GroupData
     std::string m_group_type;
 };
 
-struct ListGroupsResponse : protocol_body , flexible_version
+struct ListGroupsResponse : protocol_body, flexible_version
 {
 
     int16_t m_version = 0;
@@ -30,10 +30,10 @@ struct ListGroupsResponse : protocol_body , flexible_version
     int encode(packetEncoder &pe);
     int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
-    int16_t version()const;
-    int16_t header_version()const;
-    bool is_valid_version()const;
+    int16_t version() const;
+    int16_t header_version() const;
+    bool is_valid_version() const;
     bool is_flexible() const;
     bool is_flexible_version(int16_t ver) const;
-    KafkaVersion required_version()const;
+    KafkaVersion required_version() const;
 };

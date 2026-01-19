@@ -26,12 +26,12 @@ int8_t getHeaderLength(int16_t header_version)
     }
 }
 
-Broker::Broker(const std::string &addr)
-    : m_id(-1), m_addr(addr), m_correlation_id(0),
-      m_session_reauthentication_time(0), m_task() {}
-Broker::Broker(int id, const std::string &addr)
-    : m_id(id), m_addr(addr), m_correlation_id(0),
-      m_session_reauthentication_time(0), m_task() {}
+Broker::Broker(const std::string &addr) : m_id(-1), m_addr(addr), m_correlation_id(0), m_session_reauthentication_time(0), m_task()
+{
+}
+Broker::Broker(int id, const std::string &addr) : m_id(id), m_addr(addr), m_correlation_id(0), m_session_reauthentication_time(0), m_task()
+{
+}
 Broker::~Broker() { LOG_CORE("broker %p closed", this); }
 coev::awaitable<int> Broker::Open(std::shared_ptr<Config> conf)
 {
@@ -44,86 +44,102 @@ coev::awaitable<int> Broker::Open(std::shared_ptr<Config> conf)
         co_return INVALID;
     }
     m_conf = conf;
-    m_task << [](auto _this) -> coev::awaitable<void>
+    auto err = co_await _Open();
+    while (m_opened.resume())
     {
-        defer(while (_this->m_opened.resume_next_loop()));
-        auto [host, port] = net::SplitHostPort(_this->m_addr);
-        LOG_CORE("connect to %s:%d", host.data(), port);
-        auto fd = co_await _this->m_conn.Dial(host.data(), port);
-        if (fd == INVALID)
-        {
-            LOG_ERR("connect to %s:%d failed", host.data(), port);
-            co_return;
-        }
+    }
 
-        if (_this->m_id >= 0)
+    co_return err;
+}
+coev::awaitable<int> Broker::_Open()
+{
+    if (m_conn.IsOpened())
+    {
+        LOG_CORE("conn is opened");
+        co_return INVALID;
+    }
+
+    if (m_conn.IsOpening())
+    {
+        LOG_CORE("conn is not opened");
+        co_await m_opened.suspend();
+        co_return 0;
+    }
+
+    auto [host, port] = net::SplitHostPort(m_addr);
+    LOG_CORE("connect to %s:%d", host.data(), port);
+    auto fd = co_await m_conn.Dial(host.data(), port);
+    if (fd == INVALID)
+    {
+        LOG_CORE("connect to %s:%d failed", host.data(), port);
+        co_return INVALID;
+    }
+
+    if (m_id >= 0)
+    {
+    }
+    LOG_CORE("connected %s:%d", host.data(), port);
+    int err = ErrNoError;
+    if (m_conf->ApiVersionsRequest)
+    {
+        ResponsePromise<ApiVersionsResponse> apiVersionsResponse;
+        err = co_await SendAndReceiveApiVersions(3, apiVersionsResponse);
+        if (err)
         {
-        }
-        int err = ErrNoError;
-        if (_this->m_conf->ApiVersionsRequest)
-        {
-            ApiVersionsResponse apiVersionsResponse;
-            err = co_await _this->SendAndReceiveApiVersions(3, apiVersionsResponse);
+            // 如果第一次调用失败，尝试使用版本0重新调用
+            err = co_await SendAndReceiveApiVersions(0, apiVersionsResponse);
             if (err)
             {
-                // 如果第一次调用失败，尝试使用版本0重新调用
-                err = co_await _this->SendAndReceiveApiVersions(0, apiVersionsResponse);
-                if (err)
-                {
-                    // 如果第二次调用也失败，关闭连接并返回错误
-                    _this->m_conn.Close();
-                    LOG_CORE("connect to %s:%d failed", host.data(), port);
-                    co_return;
-                }
-            }
-            // Always process the response
-            _this->m_broker_api_versions.clear();
-            for (auto &key : apiVersionsResponse.m_api_keys)
-            {
-                _this->m_broker_api_versions.emplace(
-                    key.m_api_key,
-                    ApiVersionRange(key.m_min_version, key.m_max_version));
-            }
-        }
-
-        bool useSaslV0 = _this->m_conf->Net.SASL.Version == 0;
-        if (_this->m_conf->Net.SASL.Enable && useSaslV0)
-        {
-            err = co_await _this->AuthenticateViaSASLv0();
-            if (err)
-            {
-                _this->m_conn.Close();
+                // 如果第二次调用也失败，关闭连接并返回错误
+                m_conn.Close();
                 LOG_CORE("connect to %s:%d failed", host.data(), port);
-                co_return;
+                co_return INVALID;
             }
         }
-
-        // // ResponseReceiver is called directly in SendInternal for each request
-        if (_this->m_conf->Net.SASL.Enable && !useSaslV0)
+        m_broker_api_versions.clear();
+        for (auto &key : apiVersionsResponse.m_response.m_api_keys)
         {
-            err = co_await _this->AuthenticateViaSASLv1();
-            if (err)
-            {
-                co_await _this->m_done.get();
-                _this->m_conn.Close();
-                LOG_CORE("connect to %s:%d failed", host.data(), port)
-                co_return;
-            }
+            m_broker_api_versions.emplace(key.m_api_key, ApiVersionRange(key.m_min_version, key.m_max_version));
         }
-    }(shared_from_this());
+    }
+
+    bool useSaslV0 = m_conf->Net.SASL.Version == 0;
+    if (m_conf->Net.SASL.Enable && useSaslV0)
+    {
+        err = co_await AuthenticateViaSASLv0();
+        if (err)
+        {
+            m_conn.Close();
+            LOG_CORE("connect to %s:%d failed", host.data(), port);
+            co_return INVALID;
+        }
+    }
+
+    if (m_conf->Net.SASL.Enable && !useSaslV0)
+    {
+        err = co_await AuthenticateViaSASLv1();
+        if (err)
+        {
+            co_await m_done.get();
+            m_conn.Close();
+            LOG_CORE("connect to %s:%d failed", host.data(), port)
+            co_return INVALID;
+        }
+    }
+
     co_return 0;
 }
 
-int Broker::ResponseSize() { return 0; }
-
-bool Broker::Connected() { return m_conn; }
+bool Broker::Connected()
+{
+    return m_conn.IsOpened();
+}
 
 int Broker::TLSConnectionState()
 {
-    tls::ConnectionState state;
-    if (!m_conn)
+    if (!m_conn.IsOpened())
     {
-        return state;
+        return 0;
     }
 
     // if (auto bconn = (buf::Conn *)(conn))
@@ -135,19 +151,18 @@ int Broker::TLSConnectionState()
     //     return tc->ConnectionState();
     // }
 
-    return state;
+    return 0;
 }
 
 coev::awaitable<int> Broker::Close()
 {
-    if (!m_conn)
+    if (!m_conn.IsOpened())
     {
         co_return ErrNotConnected;
     }
 
     co_await m_done.get();
     int32_t err = m_conn.Close();
-
     co_return 0;
 }
 
@@ -157,71 +172,40 @@ std::string Broker::Addr() { return m_addr; }
 
 std::string Broker::Rack() { return m_rack; }
 
-coev::awaitable<int> Broker::GetMetadata(const MetadataRequest &request,
-                                         MetadataResponse &response)
+coev::awaitable<int> Broker::GetMetadata(const MetadataRequest &request, ResponsePromise<MetadataResponse> &response)
+{
+    return SendAndReceive(request, response);
+}
+coev::awaitable<int> Broker::GetConsumerMetadata(const ConsumerMetadataRequest &request, ResponsePromise<ConsumerMetadataResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int>
-Broker::GetConsumerMetadata(const ConsumerMetadataRequest &request,
-                            ConsumerMetadataResponse &response)
+coev::awaitable<int> Broker::FindCoordinator(const FindCoordinatorRequest &request, ResponsePromise<FindCoordinatorResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int>
-Broker::FindCoordinator(const FindCoordinatorRequest &request,
-                        FindCoordinatorResponse &response)
+coev::awaitable<int> Broker::GetAvailableOffsets(const OffsetRequest &request, ResponsePromise<OffsetResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::GetAvailableOffsets(const OffsetRequest &request,
-                                                 OffsetResponse &response)
-{
-    return SendAndReceive(request, response);
-}
-
-coev::awaitable<int> Broker::AsyncProduce(const ProduceRequest &request, std::function<void(ProduceResponse &, KError)> f)
+coev::awaitable<int> Broker::AsyncProduce(const ProduceRequest &request, ResponsePromise<ProduceResponse> &response)
 {
     bool needAcks = request.m_acks != NoResponse;
-    ResponsePromise<ProduceResponse> promise;
-    ProduceRequest non_const_request = request;
     if (needAcks)
     {
-        promise.m_handler = [f, non_const_request, this](std::string &packets, KError err)
-        {
-            if (err)
-            {
-                ProduceResponse emptyResponse;
-                f(emptyResponse, err);
-                return;
-            }
-            ProduceResponse response;
-            bool decodeErr = versionedDecode(packets, response, non_const_request.version());
-            if (decodeErr)
-            {
-                // Create a temporary response for error case
-                ProduceResponse emptyResponse;
-                f(emptyResponse, ErrDecodeError);
-                return;
-            }
-
-            f(response, ErrNoError);
-        };
     }
-    return SendWithPromise(non_const_request, promise);
+    auto err = co_await Send(request, response);
+    co_return err;
 }
 
-coev::awaitable<int> Broker::Produce(const ProduceRequest &request, ProduceResponse &response)
+coev::awaitable<int> Broker::Produce(const ProduceRequest &request, ResponsePromise<ProduceResponse> &response)
 {
     if (request.m_acks == RequiredAcks::NoResponse)
     {
-        // For NoResponse, we don't need to handle the response
-        ResponsePromise<ProduceResponse> promise;
-        ProduceRequest non_const_request = request;
-        int32_t err = co_await Send(non_const_request, response, promise);
+        int32_t err = co_await Send(request, response);
         co_return err;
     }
     else
@@ -230,128 +214,97 @@ coev::awaitable<int> Broker::Produce(const ProduceRequest &request, ProduceRespo
     }
 }
 
-coev::awaitable<int> Broker::Fetch(const FetchRequest &request,
-                                   FetchResponse &response)
-{
-    // if (m_fetch_rate)
-    // {
-    //     m_fetch_rate->Mark(1);
-    // }
-    // if (m_broker_fetch_rate)
-    // {
-    //     m_broker_fetch_rate->Mark(1);
-    // }
-    return SendAndReceive(request, response);
-}
-
-coev::awaitable<int> Broker::CommitOffset(const OffsetCommitRequest &request,
-                                          OffsetCommitResponse &response)
+coev::awaitable<int> Broker::Fetch(const FetchRequest &request, ResponsePromise<FetchResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::FetchOffset(const OffsetFetchRequest &request,
-                                         OffsetFetchResponse &response)
+coev::awaitable<int> Broker::CommitOffset(const OffsetCommitRequest &request, ResponsePromise<OffsetCommitResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::JoinGroup(const JoinGroupRequest &request,
-                                       JoinGroupResponse &response)
+coev::awaitable<int> Broker::FetchOffset(const OffsetFetchRequest &request, ResponsePromise<OffsetFetchResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::SyncGroup(const SyncGroupRequest &request,
-                                       SyncGroupResponse &response)
+coev::awaitable<int> Broker::JoinGroup(const JoinGroupRequest &request, ResponsePromise<JoinGroupResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::LeaveGroup(const LeaveGroupRequest &request,
-                                        LeaveGroupResponse &response)
+coev::awaitable<int> Broker::SyncGroup(const SyncGroupRequest &request, ResponsePromise<SyncGroupResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::Heartbeat(const HeartbeatRequest &request,
-                                       HeartbeatResponse &response)
+coev::awaitable<int> Broker::LeaveGroup(const LeaveGroupRequest &request, ResponsePromise<LeaveGroupResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::ListGroups(const ListGroupsRequest &request,
-                                        ListGroupsResponse &response)
+coev::awaitable<int> Broker::Heartbeat(const HeartbeatRequest &request, ResponsePromise<HeartbeatResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int>
-Broker::DescribeGroups(const DescribeGroupsRequest &request,
-                       DescribeGroupsResponse &response)
+coev::awaitable<int> Broker::ListGroups(const ListGroupsRequest &request, ResponsePromise<ListGroupsResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::ApiVersions(const ApiVersionsRequest &request,
-                                         ApiVersionsResponse &response)
+coev::awaitable<int> Broker::DescribeGroups(const DescribeGroupsRequest &request, ResponsePromise<DescribeGroupsResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::CreateTopics(const CreateTopicsRequest &request,
-                                          CreateTopicsResponse &response)
+coev::awaitable<int> Broker::ApiVersions(const ApiVersionsRequest &request, ResponsePromise<ApiVersionsResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::DeleteTopics(const DeleteTopicsRequest &request,
-                                          DeleteTopicsResponse &response)
+coev::awaitable<int> Broker::CreateTopics(const CreateTopicsRequest &request, ResponsePromise<CreateTopicsResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int>
-Broker::CreatePartitions(const CreatePartitionsRequest &request,
-                         CreatePartitionsResponse &response)
+coev::awaitable<int> Broker::DeleteTopics(const DeleteTopicsRequest &request, ResponsePromise<DeleteTopicsResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::AlterPartitionReassignments(
-    const AlterPartitionReassignmentsRequest &request,
-    AlterPartitionReassignmentsResponse &response)
+coev::awaitable<int> Broker::CreatePartitions(const CreatePartitionsRequest &request, ResponsePromise<CreatePartitionsResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::ListPartitionReassignments(
-    const ListPartitionReassignmentsRequest &request,
-    ListPartitionReassignmentsResponse &response)
+coev::awaitable<int> Broker::AlterPartitionReassignments(const AlterPartitionReassignmentsRequest &request, ResponsePromise<AlterPartitionReassignmentsResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::ElectLeaders(const ElectLeadersRequest &request,
-                                          ElectLeadersResponse &response)
+coev::awaitable<int> Broker::ListPartitionReassignments(const ListPartitionReassignmentsRequest &request, ResponsePromise<ListPartitionReassignmentsResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::DeleteRecords(const DeleteRecordsRequest &request,
-                                           DeleteRecordsResponse &response)
+coev::awaitable<int> Broker::ElectLeaders(const ElectLeadersRequest &request, ResponsePromise<ElectLeadersResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::DescribeAcls(const DescribeAclsRequest &request,
-                                          DescribeAclsResponse &response)
+coev::awaitable<int> Broker::DeleteRecords(const DeleteRecordsRequest &request, ResponsePromise<DeleteRecordsResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::CreateAcls(const CreateAclsRequest &request,
-                                        CreateAclsResponse &response)
+coev::awaitable<int> Broker::DescribeAcls(const DescribeAclsRequest &request, ResponsePromise<DescribeAclsResponse> &response)
+{
+    return SendAndReceive(request, response);
+}
+
+coev::awaitable<int> Broker::CreateAcls(const CreateAclsRequest &request, ResponsePromise<CreateAclsResponse> &response)
 {
     int32_t err = co_await SendAndReceive(request, response);
     if (err)
@@ -359,7 +312,7 @@ coev::awaitable<int> Broker::CreateAcls(const CreateAclsRequest &request,
         co_return err;
     }
     std::vector<int> errs;
-    for (auto &res : response.m_acl_creation_responses)
+    for (auto &res : response.m_response.m_acl_creation_responses)
     {
         if (res->m_err != ErrNoError)
         {
@@ -373,115 +326,100 @@ coev::awaitable<int> Broker::CreateAcls(const CreateAclsRequest &request,
     co_return 0;
 }
 
-coev::awaitable<int> Broker::DeleteAcls(const DeleteAclsRequest &request,
-                                        DeleteAclsResponse &response)
+coev::awaitable<int> Broker::DeleteAcls(const DeleteAclsRequest &request, ResponsePromise<DeleteAclsResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int>
-Broker::InitProducerID(const InitProducerIDRequest &request,
-                       InitProducerIDResponse &response)
+coev::awaitable<int> Broker::InitProducerID(const InitProducerIDRequest &request, ResponsePromise<InitProducerIDResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int>
-Broker::AddPartitionsToTxn(const AddPartitionsToTxnRequest &request,
-                           AddPartitionsToTxnResponse &response)
+coev::awaitable<int> Broker::AddPartitionsToTxn(const AddPartitionsToTxnRequest &request, ResponsePromise<AddPartitionsToTxnResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int>
-Broker::AddOffsetsToTxn(const AddOffsetsToTxnRequest &request,
-                        AddOffsetsToTxnResponse &response)
+coev::awaitable<int> Broker::AddOffsetsToTxn(const AddOffsetsToTxnRequest &request, ResponsePromise<AddOffsetsToTxnResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::EndTxn(const EndTxnRequest &request,
-                                    EndTxnResponse &response)
+coev::awaitable<int> Broker::EndTxn(const EndTxnRequest &request, ResponsePromise<EndTxnResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int>
-Broker::TxnOffsetCommit(const TxnOffsetCommitRequest &request,
-                        TxnOffsetCommitResponse &response)
+coev::awaitable<int> Broker::TxnOffsetCommit(const TxnOffsetCommitRequest &request, ResponsePromise<TxnOffsetCommitResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int>
-Broker::DescribeConfigs(const DescribeConfigsRequest &request,
-                        DescribeConfigsResponse &response)
+coev::awaitable<int> Broker::DescribeConfigs(const DescribeConfigsRequest &request, ResponsePromise<DescribeConfigsResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::AlterConfigs(const AlterConfigsRequest &request,
-                                          AlterConfigsResponse &response)
+coev::awaitable<int> Broker::AlterConfigs(const AlterConfigsRequest &request, ResponsePromise<AlterConfigsResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int>
-Broker::IncrementalAlterConfigs(const IncrementalAlterConfigsRequest &request,
-                                IncrementalAlterConfigsResponse &response)
+coev::awaitable<int> Broker::IncrementalAlterConfigs(const IncrementalAlterConfigsRequest &request, ResponsePromise<IncrementalAlterConfigsResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::DeleteGroups(const DeleteGroupsRequest &request,
-                                          DeleteGroupsResponse &response)
+coev::awaitable<int> Broker::DeleteGroups(const DeleteGroupsRequest &request, ResponsePromise<DeleteGroupsResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::DeleteOffsets(const DeleteOffsetsRequest &request,
-                                           DeleteOffsetsResponse &response)
+coev::awaitable<int> Broker::DeleteOffsets(const DeleteOffsetsRequest &request, ResponsePromise<DeleteOffsetsResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int>
-Broker::DescribeLogDirs(const DescribeLogDirsRequest &request,
-                        DescribeLogDirsResponse &response)
+coev::awaitable<int> Broker::DescribeLogDirs(const DescribeLogDirsRequest &request, ResponsePromise<DescribeLogDirsResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::DescribeUserScramCredentials(
-    const DescribeUserScramCredentialsRequest &req,
-    DescribeUserScramCredentialsResponse &res)
+coev::awaitable<int> Broker::DescribeUserScramCredentials(const DescribeUserScramCredentialsRequest &req, ResponsePromise<DescribeUserScramCredentialsResponse> &res)
 {
     return SendAndReceive(req, res);
 }
 
-coev::awaitable<int>
-Broker::AlterUserScramCredentials(const AlterUserScramCredentialsRequest &req,
-                                  AlterUserScramCredentialsResponse &res)
+coev::awaitable<int> Broker::AlterUserScramCredentials(const AlterUserScramCredentialsRequest &req, ResponsePromise<AlterUserScramCredentialsResponse> &res)
 {
     return SendAndReceive(req, res);
 }
 
-coev::awaitable<int>
-Broker::DescribeClientQuotas(const DescribeClientQuotasRequest &request,
-                             DescribeClientQuotasResponse &response)
+coev::awaitable<int> Broker::DescribeClientQuotas(const DescribeClientQuotasRequest &request, ResponsePromise<DescribeClientQuotasResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int>
-Broker::AlterClientQuotas(const AlterClientQuotasRequest &request,
-                          AlterClientQuotasResponse &response)
+coev::awaitable<int> Broker::AlterClientQuotas(const AlterClientQuotasRequest &request, ResponsePromise<AlterClientQuotasResponse> &response)
 {
     return SendAndReceive(request, response);
 }
 
 coev::awaitable<int> Broker::ReadFull(std::string &buf, size_t n)
 {
+    if (m_conn.IsClosed())
+    {
+        co_return INVALID;
+    }
+    if (m_conn.IsOpening())
+    {
+        co_await m_opened.suspend();
+        if (m_conn.IsClosed())
+        {
+            co_return INVALID;
+        }
+    }
     if (buf.size() < n)
     {
         buf.resize(n);
@@ -492,8 +430,7 @@ coev::awaitable<int> Broker::ReadFull(std::string &buf, size_t n)
     {
         co_await sleep_for(_this->m_conf->Net.ReadTimeout);
     }(shared_from_this());
-    auto _send = task << [](auto _this, auto &buf, auto n,
-                            int &err) -> coev::awaitable<void>
+    auto _send = task << [](auto _this, auto &buf, auto n, int &err) -> coev::awaitable<void>
     {
         err = co_await _this->m_conn.ReadFull(buf, n);
         if (err != ErrNoError)
@@ -517,10 +454,14 @@ coev::awaitable<int> Broker::Write(const std::string &buf)
 {
 
     auto now = std::chrono::system_clock::now();
-    if (!m_conn)
+    if (m_conn.IsClosed())
+    {
+        co_return INVALID;
+    }
+    if (m_conn.IsOpening())
     {
         co_await m_opened.suspend();
-        if (!m_conn)
+        if (m_conn.IsClosed())
         {
             co_return ErrNotConnected;
         }
@@ -621,21 +562,16 @@ coev::awaitable<int> Broker::AuthenticateViaSASLv1()
         SaslHandshakeRequest handshakeRequest;
         handshakeRequest.m_mechanism = m_conf->Net.SASL.Mechanism;
         handshakeRequest.m_version = m_conf->Net.SASL.Version;
-        SaslHandshakeResponse handshakeResponse;
-        ResponsePromise<SaslHandshakeResponse> prom;
-        int err = co_await SendInternal(handshakeRequest, prom);
+        ResponsePromise<SaslHandshakeResponse> promise;
+        int err = co_await SendInternal(handshakeRequest, promise);
         if (err)
         {
             co_return err;
         }
-        err = co_await HandleResponsePromise(handshakeRequest, handshakeResponse, prom);
-        if (err)
+
+        if (promise.m_response.m_err != 0)
         {
-            co_return err;
-        }
-        if (handshakeResponse.m_err != 0)
-        {
-            co_return handshakeResponse.m_err;
+            co_return promise.m_response.m_err;
         }
     }
 
@@ -649,31 +585,54 @@ coev::awaitable<int> Broker::AuthenticateViaSASLv1()
             m_kerberos_authenticator->m_new_kerberos_client_func = NewKerberosClient;
         }
         co_return co_await m_kerberos_authenticator->AuthorizeV2(
-            shared_from_this(), [this](auto req, auto res) -> auto
-            { return DefaultAuthSendReceiver(req, res); });
+            shared_from_this(), [this](auto req, auto res) -> coev::awaitable<int>
+            { 
+                ResponsePromise<SaslAuthenticateResponse> promise;
+                auto err = co_await DefaultAuthSendReceiver(req, promise);
+                if (!err) {
+                    res = promise.m_response;
+                }
+                co_return err; });
     }
     else if (mechanism == "OAUTHBEARER")
     {
         auto provider = m_conf->Net.SASL.TokenProvider_;
         co_return co_await SendAndReceiveSASLOAuth(
-            provider, [this](auto req, auto res) -> auto
-            { return DefaultAuthSendReceiver(req, res); });
+            provider, [this](auto req, auto res) -> coev::awaitable<int>
+            { 
+                ResponsePromise<SaslAuthenticateResponse> promise;
+                auto err = co_await DefaultAuthSendReceiver(req, promise);
+                if (!err) {
+                    res = promise.m_response;
+                }
+                co_return err; });
     }
     else if (mechanism == "SCRAM-SHA-256" || mechanism == "SCRAM-SHA-512")
     {
         co_return co_await SendAndReceiveSASLSCRAMv1(
             m_conf->Net.SASL.ScramClientGeneratorFunc(),
-            [this](auto req, auto res) -> auto
+            [this](auto req, auto res) -> coev::awaitable<int>
             {
-                return DefaultAuthSendReceiver(req, res);
+                ResponsePromise<SaslAuthenticateResponse> promise;
+                auto err = co_await DefaultAuthSendReceiver(req, promise);
+                if (!err)
+                {
+                    res = promise.m_response;
+                }
+                co_return err;
             });
     }
     else
     {
-
-        co_return co_await SendAndReceiveSASLPlainAuthV1([this](auto req,
-                                                                auto res) -> auto
-                                                         { return DefaultAuthSendReceiver(req, res); });
+        co_return co_await SendAndReceiveSASLPlainAuthV1(
+            [this](auto req, auto res) -> coev::awaitable<int>
+            { 
+                                                             ResponsePromise<SaslAuthenticateResponse> promise;
+                                                             auto err = co_await DefaultAuthSendReceiver(req, promise);
+                                                             if (!err) {
+                                                                 res = promise.m_response;
+                                                             }
+                                                             co_return err; });
     }
 }
 
@@ -689,18 +648,16 @@ coev::awaitable<int> Broker::SendAndReceiveKerberos()
     co_return co_await m_kerberos_authenticator->Authorize(shared_from_this());
 }
 
-coev::awaitable<int>
-Broker::SendAndReceiveSASLHandshake(const std::string &saslType,
-                                    int16_t version)
+coev::awaitable<int> Broker::SendAndReceiveSASLHandshake(const std::string &saslType, int16_t version)
 {
     SaslHandshakeRequest rb;
     rb.m_mechanism = saslType;
     rb.m_version = version;
 
-    request req;
+    Request req;
     req.m_correlation_id = m_correlation_id;
     req.m_client_id = m_conf->ClientID;
-    req.m_body = std::make_shared<SaslHandshakeRequest>(rb);
+    req.m_body = &rb;
 
     std::string buf;
     ::encode(req, buf);
@@ -721,8 +678,7 @@ Broker::SendAndReceiveSASLHandshake(const std::string &saslType,
         co_return err;
     }
 
-    uint32_t length =
-        (header[0] << 24) | (header[1] << 16) | (header[2] << 8) | header[3];
+    uint32_t length = (header[0] << 24) | (header[1] << 16) | (header[2] << 8) | header[3];
     std::string payload;
     size_t n = length - 4;
     err = co_await ReadFull(payload, n);
@@ -770,16 +726,13 @@ coev::awaitable<int> Broker::SendAndReceiveSASLPlainAuthV0()
     authBytes[3] = len & 0xFF;
 
     size_t offset = 4;
-    memcpy(&authBytes[offset], m_conf->Net.SASL.AuthIdentity.c_str(),
-           m_conf->Net.SASL.AuthIdentity.length());
+    memcpy(&authBytes[offset], m_conf->Net.SASL.AuthIdentity.c_str(), m_conf->Net.SASL.AuthIdentity.length());
     offset += m_conf->Net.SASL.AuthIdentity.length();
     authBytes[offset++] = 0;
-    memcpy(&authBytes[offset], m_conf->Net.SASL.User.c_str(),
-           m_conf->Net.SASL.User.length());
+    memcpy(&authBytes[offset], m_conf->Net.SASL.User.c_str(), m_conf->Net.SASL.User.length());
     offset += m_conf->Net.SASL.User.length();
     authBytes[offset++] = 0;
-    memcpy(&authBytes[offset], m_conf->Net.SASL.Password.c_str(),
-           m_conf->Net.SASL.Password.length());
+    memcpy(&authBytes[offset], m_conf->Net.SASL.Password.c_str(), m_conf->Net.SASL.Password.length());
 
     auto requestTime = std::chrono::system_clock::now();
 
@@ -814,9 +767,7 @@ Broker::SendAndReceiveSASLPlainAuthV1(AuthSendReceiver authSendReceiver)
 int64_t Broker::CurrentUnixMilli()
 {
     auto now = std::chrono::system_clock::now();
-    return std::chrono::duration_cast<std::chrono::milliseconds>(
-               now.time_since_epoch())
-        .count();
+    return std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
 }
 
 coev::awaitable<int>
@@ -858,16 +809,14 @@ Broker::SendAndReceiveSASLOAuth(std::shared_ptr<AccessTokenProvider> provider,
 
 coev::awaitable<int> Broker::SendAndReceiveSASLSCRAMv0()
 {
-    int32_t err =
-        co_await SendAndReceiveSASLHandshake(m_conf->Net.SASL.Mechanism, 0);
+    int32_t err = co_await SendAndReceiveSASLHandshake(m_conf->Net.SASL.Mechanism, 0);
     if (err)
     {
         co_return err;
     }
 
     auto scramClient = m_conf->Net.SASL.ScramClientGeneratorFunc();
-    err = scramClient->Begin(m_conf->Net.SASL.User, m_conf->Net.SASL.Password,
-                             m_conf->Net.SASL.ScramAuthzID);
+    err = scramClient->Begin(m_conf->Net.SASL.User, m_conf->Net.SASL.Password, m_conf->Net.SASL.ScramAuthzID);
     if (err)
     {
         co_return 1;
@@ -913,8 +862,7 @@ coev::awaitable<int> Broker::SendAndReceiveSASLSCRAMv0()
             co_return err;
         }
 
-        uint32_t payloadLen =
-            (header[0] << 24) | (header[1] << 16) | (header[2] << 8) | header[3];
+        uint32_t payloadLen = (header[0] << 24) | (header[1] << 16) | (header[2] << 8) | header[3];
         std::string payload;
         size_t n = payloadLen;
         err = co_await ReadFull(payload, n);
@@ -932,12 +880,9 @@ coev::awaitable<int> Broker::SendAndReceiveSASLSCRAMv0()
     co_return 0;
 }
 
-coev::awaitable<int>
-Broker::SendAndReceiveSASLSCRAMv1(std::shared_ptr<SCRAMClient> scramClient,
-                                  AuthSendReceiver authSendReceiver)
+coev::awaitable<int> Broker::SendAndReceiveSASLSCRAMv1(std::shared_ptr<SCRAMClient> scramClient, AuthSendReceiver authSendReceiver)
 {
-    int err = scramClient->Begin(m_conf->Net.SASL.User, m_conf->Net.SASL.Password,
-                                 m_conf->Net.SASL.ScramAuthzID);
+    int err = scramClient->Begin(m_conf->Net.SASL.User, m_conf->Net.SASL.Password, m_conf->Net.SASL.ScramAuthzID);
     if (err)
     {
         co_return err;
@@ -953,15 +898,13 @@ Broker::SendAndReceiveSASLSCRAMv1(std::shared_ptr<SCRAMClient> scramClient,
     while (!scramClient->Done())
     {
         SaslAuthenticateResponse res;
-        err = co_await authSendReceiver(std::string(msg.begin(), msg.end()), res);
+        err = co_await authSendReceiver(msg, res);
         if (err)
         {
             co_return err;
         }
 
-        err = scramClient->Step(
-            std::string(res.m_sasl_auth_bytes.begin(), res.m_sasl_auth_bytes.end()),
-            msg);
+        err = scramClient->Step(res.m_sasl_auth_bytes, msg);
         if (err)
         {
             co_return err;
@@ -969,21 +912,30 @@ Broker::SendAndReceiveSASLSCRAMv1(std::shared_ptr<SCRAMClient> scramClient,
     }
     co_return 0;
 }
-
-SaslAuthenticateRequest
-Broker::CreateSaslAuthenticateRequest(const std::string &msg)
+coev::awaitable<int> Broker::SendAndReceiveApiVersions(int16_t v, ResponsePromise<ApiVersionsResponse> &promise)
 {
-    SaslAuthenticateRequest authenticateRequest;
-    authenticateRequest.m_sasl_auth_bytes = msg;
-    if (m_conf->Version.IsAtLeast(V2_2_0_0))
+    int err = 0;
+    ApiVersionsRequest request;
+    request.m_version = v;
+    err = co_await Send(request, promise);
+    if (err)
     {
-        authenticateRequest.m_version = 1;
+        co_return err;
     }
-    return authenticateRequest;
+    co_return 0;
 }
 
-int Broker::BuildClientFirstMessage(std::shared_ptr<AccessToken> token,
-                                    std::string &message)
+int Broker::CreateSaslAuthenticateRequest(const std::string &msg, SaslAuthenticateRequest &request)
+{
+    request.m_sasl_auth_bytes = msg;
+    if (m_conf->Version.IsAtLeast(V2_2_0_0))
+    {
+        request.m_version = 1;
+    }
+    return 0;
+}
+
+int Broker::BuildClientFirstMessage(std::shared_ptr<AccessToken> token, std::string &message)
 {
     if (!token)
     {
@@ -1007,9 +959,7 @@ int Broker::BuildClientFirstMessage(std::shared_ptr<AccessToken> token,
     return 0;
 }
 
-std::string
-Broker::MapToString(const std::map<std::string, std::string> &extensions,
-                    const std::string &keyValSep, const std::string &elemSep)
+std::string Broker::MapToString(const std::map<std::string, std::string> &extensions, const std::string &keyValSep, const std::string &elemSep)
 {
     std::vector<std::string> buf;
     for (auto &[k, v] : extensions)
@@ -1029,31 +979,23 @@ Broker::MapToString(const std::map<std::string, std::string> &extensions,
     return result;
 }
 
-void Broker::ComputeSaslSessionLifetime(
-    std::shared_ptr<SaslAuthenticateResponse> res)
+void Broker::ComputeSaslSessionLifetime(std::shared_ptr<SaslAuthenticateResponse> res)
 {
     if (res->m_session_lifetime_ms > 0)
     {
         int64_t positiveSessionLifetimeMs = res->m_session_lifetime_ms;
         int64_t authenticationEndMs = CurrentUnixMilli();
         double pctWindowFactorToTakeNetworkLatencyAndClockDriftIntoAccount = 0.85;
-        double
-            pctWindowJitterToAvoidReauthenticationStormAcrossManyChannelsSimultaneously =
-                0.10;
+        double pctWindowJitterToAvoidReauthenticationStormAcrossManyChannelsSimultaneously = 0.10;
 
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_real_distribution<> dis(
-            0.0,
-            pctWindowJitterToAvoidReauthenticationStormAcrossManyChannelsSimultaneously);
+        std::uniform_real_distribution<> dis(0.0, pctWindowJitterToAvoidReauthenticationStormAcrossManyChannelsSimultaneously);
 
-        double pctToUse =
-            pctWindowFactorToTakeNetworkLatencyAndClockDriftIntoAccount + dis(gen);
-        int64_t sessionLifetimeMsToUse =
-            static_cast<int64_t>(positiveSessionLifetimeMs * pctToUse);
+        double pctToUse = pctWindowFactorToTakeNetworkLatencyAndClockDriftIntoAccount + dis(gen);
+        int64_t sessionLifetimeMsToUse = static_cast<int64_t>(positiveSessionLifetimeMs * pctToUse);
 
-        m_session_reauthentication_time =
-            authenticationEndMs + sessionLifetimeMsToUse;
+        m_session_reauthentication_time = authenticationEndMs + sessionLifetimeMsToUse;
     }
     else
     {

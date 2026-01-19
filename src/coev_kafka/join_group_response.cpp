@@ -194,7 +194,7 @@ int JoinGroupResponse::GetMembers(std::map<std::string, ConsumerGroupMemberMetad
 
     for (auto &member : m_members)
     {
-        auto& meta =members_[member.m_member_id];
+        auto &meta = members_[member.m_member_id];
         int err = ::decode(member.m_metadata, meta);
         if (err != 0)
             return err;

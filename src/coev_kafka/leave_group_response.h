@@ -20,7 +20,7 @@ struct MemberResponse
     KError m_err;
 };
 
-struct LeaveGroupResponse : protocol_body , flexible_version
+struct LeaveGroupResponse : protocol_body, flexible_version
 {
 
     int16_t m_version = 0;

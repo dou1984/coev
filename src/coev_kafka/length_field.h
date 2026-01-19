@@ -23,7 +23,5 @@ struct LengthField : pushEncoder
     int check(int curOffset, const std::string &buf);
 };
 
-
-
 std::shared_ptr<LengthField> acquireLengthField();
 void releaseLengthField(std::shared_ptr<LengthField> ptr);

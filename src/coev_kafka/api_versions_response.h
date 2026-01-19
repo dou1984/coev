@@ -20,7 +20,7 @@ struct ApiVersionsResponseKey : versioned_encoder, versioned_decoder
     int decode(packetDecoder &pd, int16_t version);
 };
 
-struct ApiVersionsResponse : protocol_body , flexible_version
+struct ApiVersionsResponse : protocol_body, flexible_version
 {
     int16_t m_version = 0;
     int16_t m_error_code = 0;

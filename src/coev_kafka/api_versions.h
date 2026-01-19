@@ -68,7 +68,7 @@ inline constexpr int16_t apiKeyDescribeUserScramCredentials = 50;
 inline constexpr int16_t apiKeyAlterUserScramCredentials = 51;
 
 template <class T>
-void restrictApiVersion(T &pb, const ApiVersionMap &brokerVersions)
+void restrictApiVersion(const T &pb, const ApiVersionMap &brokerVersions)
 {
 
     int16_t key = pb.key();
@@ -80,6 +80,8 @@ void restrictApiVersion(T &pb, const ApiVersionMap &brokerVersions)
         const ApiVersionRange &range = it->second;
 
         int16_t selected = std::min(clientMax, std::max(range.m_min_version, std::min(clientMax, range.m_max_version)));
-        pb.set_version(selected);
+
+        auto _pb = const_cast<protocol_body *>(static_cast<const protocol_body *>(&pb));
+        _pb->set_version(selected);
     }
 }

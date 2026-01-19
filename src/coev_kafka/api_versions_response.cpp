@@ -35,7 +35,6 @@ int ApiVersionsResponseKey::decode(packetDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-
 void ApiVersionsResponse::set_version(int16_t v)
 {
     m_version = v;
@@ -73,8 +72,10 @@ int ApiVersionsResponse::encode(packetEncoder &pe)
 
 packetDecoder &ApiVersionsResponse::downgradeFlexibleDecoder(packetDecoder &pd)
 {
-    // auto _ = dynamic_cast<realFlexibleDecoder>(pd);
-    // pd.setFlexible(false);
+    if (pd.isFlexible())
+    {
+        pd.pushFlexible();
+    }
     return pd;
 }
 

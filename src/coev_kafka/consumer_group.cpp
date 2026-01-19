@@ -364,11 +364,13 @@ coev::awaitable<int> ConsumerGroup::JoinGroup(std::shared_ptr<Broker> coordinato
         }
     }
 
-    err = co_await coordinator->JoinGroup(*request, response);
+    ResponsePromise<JoinGroupResponse> promise;
+    err = co_await coordinator->JoinGroup(*request, promise);
     if (err != 0)
     {
         co_return err;
     }
+    response = promise.m_response;
     co_return 0;
 }
 
@@ -448,11 +450,13 @@ coev::awaitable<int> ConsumerGroup::SyncGroup(std::shared_ptr<Broker> coordinato
         }
     }
 
-    err = co_await coordinator->SyncGroup(*req, response);
+    ResponsePromise<SyncGroupResponse> sync_promise;
+    err = co_await coordinator->SyncGroup(*req, sync_promise);
     if (err != 0)
     {
         co_return err;
     }
+    response = sync_promise.m_response;
     co_return 0;
 }
 
@@ -482,7 +486,13 @@ coev::awaitable<int> ConsumerGroup::Heartbeat(std::shared_ptr<Broker> coordinato
         }
     }
 
-    co_return co_await coordinator->Heartbeat(*req, *response);
+    ResponsePromise<HeartbeatResponse> promise;
+    int err = co_await coordinator->Heartbeat(*req, promise);
+    if (err == 0)
+    {
+        response = std::make_shared<HeartbeatResponse>(promise.m_response);
+    }
+    co_return err;
 }
 
 coev::awaitable<int> ConsumerGroup::Balance(std::shared_ptr<BalanceStrategy> strategy,
@@ -565,8 +575,8 @@ coev::awaitable<int> ConsumerGroup::Leave()
         req->m_members.push_back(MemberIdentity{m_member_id, m_group_instance_id});
     }
 
-    LeaveGroupResponse resp;
-    err = co_await m_coordinator->LeaveGroup(*req, resp);
+    ResponsePromise<LeaveGroupResponse> promise;
+    err = co_await m_coordinator->LeaveGroup(*req, promise);
     if (err != ErrNoError)
     {
         co_await m_coordinator->Close();
@@ -575,14 +585,14 @@ coev::awaitable<int> ConsumerGroup::Leave()
 
     m_member_id = "";
 
-    switch (resp.m_err)
+    switch (promise.m_response.m_err)
     {
     case ErrRebalanceInProgress:
     case ErrUnknownMemberId:
     case ErrNoError:
         co_return ErrNoError;
     default:
-        co_return resp.m_err;
+        co_return promise.m_response.m_err;
     }
 }
 

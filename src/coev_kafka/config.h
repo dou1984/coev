@@ -39,6 +39,8 @@ inline constexpr int64_t OffsetOldest = -2;
 inline constexpr int64_t AllPartitions = 0;
 inline constexpr int64_t WritablePartitions_ = 1;
 inline constexpr int64_t MaxPartitionIndex = 2;
+inline constexpr const char *defaultClientSoftwareName = "sarama";
+inline constexpr const char *defaultClientSoftwareVersion = "dev";
 
 using SASLMechanism = std::string;
 using PartitionerConstructor = std::function<std::shared_ptr<Partitioner>(const std::string &topic)>;
@@ -106,7 +108,7 @@ struct metadata_config
         std::chrono::milliseconds Backoff = std::chrono::milliseconds(1000);
         std::function<std::chrono::milliseconds(int, int)> BackoffFunc;
     } Retry;
-    std::chrono::milliseconds RefreshFrequency = std::chrono::minutes(100);
+    std::chrono::milliseconds RefreshFrequency = std::chrono::minutes(10);
     bool Full = true;
     std::chrono::milliseconds Timeout = std::chrono::milliseconds(2000);
     bool AllowAutoTopicCreation = true;
@@ -262,7 +264,7 @@ struct Config
     metadata_config Metadata;
     producer_config Producer;
     consumer_config Consumer;
-    std::string ClientID = "coev";
+    std::string ClientID = defaultClientSoftwareName;
     std::string RackId;
     int ChannelBufferSize = 256;
     bool ApiVersionsRequest = true;

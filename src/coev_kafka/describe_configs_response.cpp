@@ -96,7 +96,7 @@ std::chrono::milliseconds DescribeConfigsResponse::throttle_time() const
     return m_throttle_time;
 }
 
-int ResourceResponse::encode(packetEncoder &pe, int16_t version) 
+int ResourceResponse::encode(packetEncoder &pe, int16_t version)
 {
     pe.putInt16(m_error_code);
     if (pe.putString(m_error_msg) != ErrNoError)
@@ -241,9 +241,9 @@ int ConfigEntry::decode(packetDecoder &pd, int16_t version)
         {
             m_synonyms[i] = std::make_shared<ConfigSynonym>();
             if (m_synonyms[i]->decode(pd, version) != ErrNoError)
-        {
-            return ErrDecodeError;
-        }
+            {
+                return ErrDecodeError;
+            }
         }
     }
 

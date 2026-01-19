@@ -94,10 +94,11 @@
 #include "sasl_authenticate_response.h"
 #include "sasl_authenticate_request.h"
 
-int request::encode(packetEncoder &pe)
+int Request::encode(packetEncoder &pe)
 {
     auto lengthField = std::make_shared<LengthField>();
     pe.push(lengthField);
+
     pe.putInt16(m_body->key());
     pe.putInt16(m_body->version());
     pe.putInt32(m_correlation_id);
@@ -116,19 +117,41 @@ int request::encode(packetEncoder &pe)
     {
         pe.putUVarint(0);
     }
-    err = prepareFlexibleEncoder(&pe, *m_body);
-    if (err != 0)
+
+    bool is_flexible = false;
+    auto f = dynamic_cast<const flexible_version *>(m_body);
+    if (f != nullptr)
     {
-        return err;
+        is_flexible = f->is_flexible_version(m_body->version());
     }
 
-    return pe.pop();
+    if (is_flexible)
+    {
+        pe.pushFlexible();
+        defer(pe.popFlexible());
+
+        err = const_cast<protocol_body *>(m_body)->encode(pe);
+        if (err != 0)
+        {
+            return err;
+        }
+        return pe.pop();
+    }
+    else
+    {
+        err = const_cast<protocol_body *>(m_body)->encode(pe);
+        if (err != 0)
+        {
+            return err;
+        }
+        return pe.pop();
+    }
 }
 
-int request::decode(packetDecoder &pd)
+int Request::decode(packetDecoder &pd)
 {
     int16_t key, version;
-    int32_t corrID;
+
     std::string clientID;
     int err;
 
@@ -140,17 +163,19 @@ int request::decode(packetDecoder &pd)
     if (err != 0)
         return err;
 
-    err = pd.getInt32(corrID);
+    int32_t correlationID = 0;
+    err = pd.getInt32(correlationID);
     if (err != 0)
         return err;
-    m_correlation_id = corrID;
+    m_correlation_id = correlationID;
 
     err = pd.getString(clientID);
     if (err != 0)
         return err;
-    this->m_client_id = clientID;
+    m_client_id = clientID;
 
-    m_body = allocateBody(key, version);
+    auto body = allocateBody(key, version);
+    m_body = body.get();
     if (!m_body)
     {
         return -1;
@@ -164,10 +189,23 @@ int request::decode(packetDecoder &pd)
             return err;
     }
 
-    return prepareFlexibleDecoder(&pd, *m_body, version);
+    return prepareFlexibleDecoder(pd, *const_cast<protocol_body *>(m_body), version);
 }
 
-coev::awaitable<int> decodeRequest(std::shared_ptr<Broker> &broker, request &req, int &size)
+bool Request::is_flexible() const
+{
+
+    if (m_body)
+    {
+        auto f = dynamic_cast<const flexible_version *>(m_body);
+        if (f != nullptr)
+        {
+            return f->is_flexible();
+        }
+    }
+    return false;
+}
+coev::awaitable<int> decodeRequest(std::shared_ptr<Broker> &broker, Request &req, int &size)
 {
     std::string lengthBytes;
     auto bytesRead = 4;

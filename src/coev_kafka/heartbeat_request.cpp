@@ -94,12 +94,12 @@ bool HeartbeatRequest::is_flexible() const
     return is_flexible_version(m_version);
 }
 
-bool HeartbeatRequest::is_flexible_version(int16_t ver) const
+bool HeartbeatRequest::is_flexible_version(int16_t ver)  const
 {
     return ver >= 4;
 }
 
-KafkaVersion HeartbeatRequest::required_version() const
+KafkaVersion HeartbeatRequest::required_version()  const
 {
     switch (m_version)
     {

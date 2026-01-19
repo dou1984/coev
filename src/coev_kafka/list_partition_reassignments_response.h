@@ -24,7 +24,7 @@ struct PartitionReplicaReassignmentsStatus
     int decode(packetDecoder &pd);
 };
 
-struct ListPartitionReassignmentsResponse : protocol_body , flexible_version
+struct ListPartitionReassignmentsResponse : protocol_body, flexible_version
 {
 
     int16_t m_version = 0;

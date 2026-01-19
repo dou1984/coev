@@ -6,8 +6,6 @@ namespace tls
     struct Config
     {
         std::string ServerName;
-
-        
     };
     enum ConnectionState
     {

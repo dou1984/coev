@@ -4,7 +4,7 @@ int ControlRecord::decode(packetDecoder &key, packetDecoder &value)
 {
     int success = 0;
     int16_t tempVersion;
-    
+
     // Decode key first
     success = key.getInt16(tempVersion);
     if (success != 0)
@@ -42,7 +42,7 @@ int ControlRecord::decode(packetDecoder &key, packetDecoder &value)
         {
             return ErrDecodeError;
         }
-        
+
         // Validate that versions match
         if (tempVersion != m_version)
         {
@@ -66,7 +66,7 @@ int ControlRecord::encode(packetEncoder &key, packetEncoder &value)
 {
     // Encode key first: version + type
     key.putInt16(m_version);
-    
+
     // Encode record type
     switch (m_type)
     {
@@ -83,7 +83,7 @@ int ControlRecord::encode(packetEncoder &key, packetEncoder &value)
         key.putInt16(128); // UNKNOWN = -1
         break;
     }
-    
+
     // Only encode value if it's not an unknown record type
     if (m_type != ControlRecordType::ControlRecordUnknown)
     {
@@ -91,6 +91,6 @@ int ControlRecord::encode(packetEncoder &key, packetEncoder &value)
         value.putInt16(m_version);
         value.putInt32(m_coordinator_epoch);
     }
-    
+
     return ErrNoError;
 }

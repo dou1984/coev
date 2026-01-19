@@ -25,7 +25,7 @@ struct SyncGroupRequestAssignment : versioned_decoder, versioned_encoder
     int decode(packetDecoder &pd, int16_t version);
 };
 
-struct SyncGroupRequest : protocol_body , flexible_version
+struct SyncGroupRequest : protocol_body, flexible_version
 {
     int16_t m_version = 0;
     std::string m_group_id;

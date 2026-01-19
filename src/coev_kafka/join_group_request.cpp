@@ -226,7 +226,7 @@ void JoinGroupRequest::AddGroupProtocol(const std::string &name, const std::stri
     m_ordered_group_protocols.push_back(protocol);
 }
 
-int JoinGroupRequest::AddGroupProtocolMetadata(const std::string &name, const std::shared_ptr< ConsumerGroupMemberMetadata >&metadata)
+int JoinGroupRequest::AddGroupProtocolMetadata(const std::string &name, const std::shared_ptr<ConsumerGroupMemberMetadata> &metadata)
 {
     return -1;
 }

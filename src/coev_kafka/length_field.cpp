@@ -40,8 +40,6 @@ int LengthField::check(int curOffset, const std::string & /*buf*/)
     return 0;
 }
 
-
-
 std::mutex g_lengthFieldPoolMutex;
 std::stack<std::shared_ptr<LengthField>> g_lengthFieldPool;
 

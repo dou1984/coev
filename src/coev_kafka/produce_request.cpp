@@ -22,9 +22,7 @@ int ProduceRequest::encode(packetEncoder &pe)
     pe.putInt16(static_cast<int16_t>(m_acks));
     pe.putDurationMs(m_timeout);
 
-
     int64_t totalRecordCount = 0;
-
 
     if (int err = pe.putArrayLength(static_cast<int32_t>(m_records.size())); err != 0)
     {
@@ -52,7 +50,6 @@ int ProduceRequest::encode(packetEncoder &pe)
             if (int err = pe.pop(); err != 0)
                 return err;
         }
-
     }
 
     return 0;

@@ -110,7 +110,7 @@ KafkaVersion DeleteTopicsRequest::required_version() const
     case 0:
         return V0_10_1_0;
     default:
-        return V2_2_0_0; 
+        return V2_2_0_0;
     }
 }
 

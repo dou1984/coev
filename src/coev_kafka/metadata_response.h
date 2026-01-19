@@ -48,15 +48,15 @@ struct TopicMetadata : versioned_decoder, versioned_encoder
     int encode(packetEncoder &pe, int16_t version);
 };
 
-struct MetadataResponse : protocol_body , flexible_version
+struct MetadataResponse : protocol_body, flexible_version
 {
     int16_t m_version;
     std::chrono::milliseconds m_throttle_time;
-    std::vector<std::shared_ptr<Broker>> Brokers;
-    std::string ClusterID;
-    int32_t ControllerID;
-    std::vector<std::shared_ptr<TopicMetadata>> Topics;
-    int32_t ClusterAuthorizedOperations;
+    std::vector<std::shared_ptr<Broker>> m_brokers;
+    std::vector<std::shared_ptr<TopicMetadata>> m_topics;
+    std::string m_cluster_id;
+    int32_t m_controller_id;
+    int32_t m_cluster_authorized_operations;
 
     void set_version(int16_t v);
     int decode(packetDecoder &pd, int16_t version);

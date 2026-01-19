@@ -15,7 +15,6 @@ std::vector<int32_t> dupInt32Slice(const std::vector<int32_t> &input)
     return input;
 }
 
-
 int StringEncoder::Encode(std::string &out)
 {
     out.assign(data_.begin(), data_.end());

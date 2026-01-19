@@ -47,7 +47,7 @@ std::shared_ptr<PartitionOffsetManager> OffsetManager::ManagePartition(const std
     auto pom = std::make_shared<PartitionOffsetManager>(shared_from_this(), topic, partition, 0, m_conf->ChannelBufferSize, 0, "");
 
     {
-        std::shared_lock<std::shared_mutex> lock(m_poms_lock);
+
         if (m_poms.count(topic) && m_poms.at(topic).count(partition))
         {
             throw std::runtime_error("That topic/partition is already being managed");
@@ -55,7 +55,6 @@ std::shared_ptr<PartitionOffsetManager> OffsetManager::ManagePartition(const std
     }
 
     {
-        std::unique_lock<std::shared_mutex> lock(m_poms_lock);
         if (!m_poms.count(topic))
         {
             m_poms[topic] = {};
@@ -124,7 +123,7 @@ coev::awaitable<int> OffsetManager::fetchInitialOffset(const std::string &topic,
     std::map<std::string, std::vector<int32_t>> partitions;
     partitions[topic] = {partition};
     auto req = OffsetFetchRequest::NewOffsetFetchRequest(m_conf->Version, m_group, partitions);
-    OffsetFetchResponse resp;
+    ResponsePromise<OffsetFetchResponse> resp;
     err = co_await broker->FetchOffset(*req, resp);
     if (err != 0)
     {
@@ -136,7 +135,7 @@ coev::awaitable<int> OffsetManager::fetchInitialOffset(const std::string &topic,
         co_return co_await fetchInitialOffset(topic, partition, retries - 1, offset, leaderEpoch, metadata);
     }
 
-    auto block = resp.GetBlock(topic, partition);
+    auto block = resp.m_response.GetBlock(topic, partition);
     if (!block)
     {
         co_return ErrIncompleteResponse;
@@ -232,14 +231,14 @@ coev::awaitable<void> OffsetManager::flushToBroker()
         co_return;
     }
 
-    auto req = constructRequest();
-    if (!req)
+    OffsetCommitRequest req;
+    auto req_err = constructRequest(req);
+    if (req_err != ErrNoError)
     {
         co_return;
     }
-    OffsetCommitResponse resp;
     ResponsePromise<OffsetCommitResponse> rp;
-    err = co_await broker->SendOffsetCommit(*req, resp, rp);
+    err = co_await broker->Send(req, rp);
     if (err)
     {
         handleError(err);
@@ -248,7 +247,7 @@ coev::awaitable<void> OffsetManager::flushToBroker()
         co_return;
     }
 
-    err = co_await HandleResponsePromise(*req, resp, rp);
+    err = rp.decode(req.version());
     if (err)
     {
         handleError(err);
@@ -257,48 +256,47 @@ coev::awaitable<void> OffsetManager::flushToBroker()
         co_return;
     }
 
-    handleResponse(broker, req, std::make_shared<OffsetCommitResponse>(resp));
+    handleResponse(broker, req, rp.m_response);
 }
 
-std::shared_ptr<OffsetCommitRequest> OffsetManager::constructRequest()
+int OffsetManager::constructRequest(OffsetCommitRequest &req)
 {
-    auto r = std::make_unique<OffsetCommitRequest>();
-    r->m_version = 1;
-    r->m_consumer_group = m_group;
-    r->m_consumer_id = m_member_id;
-    r->m_consumer_group_generation = m_generation;
+    req.m_version = 1;
+    req.m_consumer_group = m_group;
+    req.m_consumer_id = m_member_id;
+    req.m_consumer_group_generation = m_generation;
 
     if (m_conf->Version.IsAtLeast(V0_9_0_0))
-        r->m_version = 2;
+        req.m_version = 2;
     if (m_conf->Version.IsAtLeast(V0_11_0_0))
-        r->m_version = 3;
+        req.m_version = 3;
     if (m_conf->Version.IsAtLeast(V2_0_0_0))
-        r->m_version = 4;
+        req.m_version = 4;
     if (m_conf->Version.IsAtLeast(V2_1_0_0))
-        r->m_version = 6;
+        req.m_version = 6;
     if (m_conf->Version.IsAtLeast(V2_3_0_0))
     {
-        r->m_version = 7;
-        r->m_group_instance_id = m_group_instance_id;
+        req.m_version = 7;
+        req.m_group_instance_id = m_group_instance_id;
     }
 
     int64_t commitTimestamp = 0;
-    if (r->m_version == 1)
+    if (req.m_version == 1)
     {
         commitTimestamp = ReceiveTime;
     }
 
-    if (r->m_version >= 2 && r->m_version < 5)
+    if (req.m_version >= 2 && req.m_version < 5)
     {
-        r->m_retention_time = -1;
+        req.m_retention_time = -1;
         if (m_conf->Consumer.Offsets.Retention > std::chrono::milliseconds(0))
         {
-            r->m_retention_time = std::chrono::duration_cast<std::chrono::milliseconds>(m_conf->Consumer.Offsets.Retention).count();
+            req.m_retention_time = std::chrono::duration_cast<std::chrono::milliseconds>(m_conf->Consumer.Offsets.Retention).count();
         }
     }
 
     {
-        std::shared_lock<std::shared_mutex> lock(m_poms_lock);
+
         for (auto &topicManagers : m_poms)
         {
             for (auto &pom : topicManagers.second)
@@ -306,48 +304,48 @@ std::shared_ptr<OffsetCommitRequest> OffsetManager::constructRequest()
                 std::unique_lock<std::mutex> pomLock(pom.second->m_lock);
                 if (pom.second->m_dirty)
                 {
-                    r->AddBlockWithLeaderEpoch(pom.second->m_topic, pom.second->m_partition, pom.second->m_offset, pom.second->m_leaderEpoch, commitTimestamp, pom.second->m_metadata);
+                    req.AddBlockWithLeaderEpoch(pom.second->m_topic, pom.second->m_partition, pom.second->m_offset, pom.second->m_leaderEpoch, commitTimestamp, pom.second->m_metadata);
                 }
             }
         }
     }
 
-    if (!r->blocks.empty())
+    if (!req.blocks.empty())
     {
-        return r;
+        return INVALID;
     }
 
-    return nullptr;
+    return ErrNoError;
 }
 
-void OffsetManager::handleResponse(std::shared_ptr<Broker> broker, std::shared_ptr<OffsetCommitRequest> req, std::shared_ptr<OffsetCommitResponse> resp)
+void OffsetManager::handleResponse(std::shared_ptr<Broker> broker, const OffsetCommitRequest &req, OffsetCommitResponse &resp)
 {
-    std::shared_lock<std::shared_mutex> lock(m_poms_lock);
+
     for (auto &topicManagers : m_poms)
     {
         for (auto &pom : topicManagers.second)
         {
-            if (!req->blocks.count(pom.second->m_topic) || !req->blocks.at(pom.second->m_topic).count(pom.second->m_partition))
+            if (!req.blocks.count(pom.second->m_topic) || !req.blocks.at(pom.second->m_topic).count(pom.second->m_partition))
             {
                 continue;
             }
 
-            if (!resp->m_errors.count(pom.second->m_topic))
+            if (!resp.m_errors.count(pom.second->m_topic))
             {
                 pom.second->HandleError(ErrIncompleteResponse);
                 continue;
             }
-            if (!resp->m_errors.at(pom.second->m_topic).count(pom.second->m_partition))
+            if (!resp.m_errors.at(pom.second->m_topic).count(pom.second->m_partition))
             {
                 pom.second->HandleError(ErrIncompleteResponse);
                 continue;
             }
 
-            auto err = resp->m_errors.at(pom.second->m_topic).at(pom.second->m_partition);
+            auto err = resp.m_errors.at(pom.second->m_topic).at(pom.second->m_partition);
 
             if (err == ErrNoError)
             {
-                auto block = req->blocks.at(pom.second->m_topic).at(pom.second->m_partition);
+                auto block = req.blocks.at(pom.second->m_topic).at(pom.second->m_partition);
                 pom.second->UpdateCommitted(block->m_offset, block->m_metadata);
             }
             else if (err == ErrNotLeaderForPartition || err == ErrLeaderNotAvailable ||
@@ -383,7 +381,7 @@ void OffsetManager::handleResponse(std::shared_ptr<Broker> broker, std::shared_p
 
 void OffsetManager::handleError(KError err)
 {
-    std::shared_lock<std::shared_mutex> lock(m_poms_lock);
+
     for (auto &topicManagers : m_poms)
     {
         for (auto &pom : topicManagers.second)
@@ -395,7 +393,7 @@ void OffsetManager::handleError(KError err)
 
 void OffsetManager::asyncClosePOMs()
 {
-    std::shared_lock<std::shared_mutex> lock(m_poms_lock);
+
     for (auto &topicManagers : m_poms)
     {
         for (auto &pom : topicManagers.second)
@@ -407,7 +405,6 @@ void OffsetManager::asyncClosePOMs()
 
 int OffsetManager::releasePOMs(bool force)
 {
-    std::unique_lock<std::shared_mutex> lock(m_poms_lock);
     int remaining = 0;
 
     for (auto it = m_poms.begin(); it != m_poms.end();)
@@ -446,7 +443,7 @@ int OffsetManager::releasePOMs(bool force)
 
 std::shared_ptr<PartitionOffsetManager> OffsetManager::findPOM(const std::string &topic, int32_t partition)
 {
-    std::shared_lock<std::shared_mutex> lock(m_poms_lock);
+
     if (m_poms.count(topic) && m_poms.at(topic).count(partition))
     {
         return m_poms.at(topic).at(partition);

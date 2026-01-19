@@ -99,7 +99,7 @@ bool FindCoordinatorResponse::is_valid_version() const
     return m_version >= 0 && m_version <= 3;
 }
 
-KafkaVersion FindCoordinatorResponse::required_version() const
+KafkaVersion FindCoordinatorResponse::required_version()  const
 {
     switch (m_version)
     {

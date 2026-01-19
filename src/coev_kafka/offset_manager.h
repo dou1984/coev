@@ -40,9 +40,9 @@ struct OffsetManager : IOffsetManager, std::enable_shared_from_this<OffsetManage
     coev::awaitable<int> coordinator(std::shared_ptr<Broker> &);
     coev::awaitable<void> mainLoop();
     coev::awaitable<void> flushToBroker();
-    std::shared_ptr<OffsetCommitRequest> constructRequest();
+    int constructRequest(OffsetCommitRequest &req);
     void releaseCoordinator(std::shared_ptr<Broker> &b);
-    void handleResponse(std::shared_ptr<Broker> broker, std::shared_ptr<OffsetCommitRequest> req, std::shared_ptr<OffsetCommitResponse> resp);
+    void handleResponse(std::shared_ptr<Broker> broker, const OffsetCommitRequest &req, OffsetCommitResponse &resp);
     void handleError(KError err);
     void handleError(int err) { handleError((KError)err); }
     void asyncClosePOMs();
@@ -62,7 +62,6 @@ struct OffsetManager : IOffsetManager, std::enable_shared_from_this<OffsetManage
     std::shared_mutex m_broker_lock;
     std::shared_ptr<Broker> m_broker;
 
-    std::shared_mutex m_poms_lock;
     std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<PartitionOffsetManager>>> m_poms;
 
     std::atomic<bool> m_closing = false;

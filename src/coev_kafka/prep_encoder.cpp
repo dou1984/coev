@@ -60,14 +60,22 @@ void prepEncoder::putFloat64(double /*in*/)
 
 int prepEncoder::putArrayLength(int32_t in)
 {
-    if (in > std::numeric_limits<int32_t>::max())
+    if (isFixed())
     {
-        return -1; // PacketEncodingError equivalent
+        if (in > std::numeric_limits<int32_t>::max())
+        {
+            return -1; // PacketEncodingError equivalent
+        }
+        m_length += 4;
+        return 0;
     }
-    m_length += 4;
+    else if (isFlexible())
+    {
+        putUVarint(static_cast<uint64_t>(in + 1));
+        return 0;
+    }
     return 0;
 }
-
 void prepEncoder::putBool(bool /*in*/)
 {
     m_length++;
@@ -83,14 +91,23 @@ void prepEncoder::putDurationMs(std::chrono::milliseconds /*in*/)
 
 int prepEncoder::putBytes(const std::string &in)
 {
-    m_length += 4;
-    if (in.empty())
-        return 0;
-    if (in.size() > static_cast<size_t>(std::numeric_limits<int32_t>::max()))
+    if (isFixed())
     {
-        return -1;
+        m_length += 4;
+        if (in.empty())
+            return 0;
+        if (in.size() > static_cast<size_t>(std::numeric_limits<int32_t>::max()))
+        {
+            return -1;
+        }
+        return putRawBytes(in);
     }
-    return putRawBytes(in);
+    else if (isFlexible())
+    {
+        putUVarint(in.size() + 1);
+        return putRawBytes(in);
+    }
+    return 0;
 }
 
 int prepEncoder::putVariantBytes(const std::string &in)
@@ -116,59 +133,101 @@ int prepEncoder::putRawBytes(const std::string &in)
 
 int prepEncoder::putString(const std::string &in)
 {
-    if (in.length() > static_cast<size_t>(std::numeric_limits<int16_t>::max()))
+    if (isFixed())
     {
-        return -1;
+        if (in.length() > static_cast<size_t>(std::numeric_limits<int16_t>::max()))
+        {
+            return -1;
+        }
+        m_length += 2;
+        m_length += static_cast<int>(in.length());
+        return 0;
     }
-    m_length += 2;
-    m_length += static_cast<int>(in.length());
+    else if (isFlexible())
+    {
+        int err = putArrayLength(static_cast<int32_t>(in.length()));
+        if (err != 0)
+            return err;
+        return putRawBytes(in);
+    }
     return 0;
 }
 
 int prepEncoder::putNullableString(const std::string &in)
 {
-    if (in.empty())
+    if (isFixed())
     {
-        m_length += 2; // null string encoded as -1 (int16)
-        return 0;
+        if (in.empty())
+        {
+            m_length += 2; // null string encoded as -1 (int16)
+            return 0;
+        }
+        return putString(in);
     }
-    return putString(in);
-}
-
-int prepEncoder::putStringArray(const std::vector<std::string> &in)
-{
-    int err = putArrayLength(static_cast<int32_t>(in.size()));
-    if (err != 0)
-        return err;
-    for (auto &str : in)
+    else if (isFlexible())
     {
-        err = putString(str);
-        if (err != 0)
-            return err;
+        if (in == "")
+        {
+            putUVarint(0);
+            return 0;
+        }
+        return putString(in);
     }
     return 0;
 }
 
-int prepEncoder::putInt32Array(const std::vector<int32_t> &in)
+int prepEncoder::putStringArray(const std::vector<std::string> &in)
 {
-    int err = putArrayLength(static_cast<int32_t>(in.size()));
-    if (err != 0)
-        return err;
-    m_length += 4 * static_cast<int>(in.size());
+    if (isFixed())
+    {
+        int err = putArrayLength(static_cast<int32_t>(in.size()));
+        if (err != 0)
+            return err;
+        for (auto &str : in)
+        {
+            err = putString(str);
+            if (err != 0)
+                return err;
+        }
+        return 0;
+    }
+    else if (isFlexible())
+    {
+        int err = putArrayLength(static_cast<int32_t>(in.size()));
+        if (err != 0)
+            return err;
+        m_length += 4 * static_cast<int>(in.size());
+        return 0;
+    }
     return 0;
 }
 
 int prepEncoder::putNullableInt32Array(const std::vector<int32_t> &in)
 {
-    if (in.empty())
+    if (isFixed())
     {
-        m_length += 4; // null array = -1 (int32)
+        if (in.empty())
+        {
+            m_length += 4; // null array = -1 (int32)
+            return 0;
+        }
+        int err = putArrayLength(static_cast<int32_t>(in.size()));
+        if (err != 0)
+            return err;
+        m_length += 4 * static_cast<int>(in.size());
         return 0;
     }
-    int err = putArrayLength(static_cast<int32_t>(in.size()));
-    if (err != 0)
-        return err;
-    m_length += 4 * static_cast<int>(in.size());
+    else if (isFlexible())
+    {
+        if (in.empty())
+        {
+            putUVarint(0);
+            return 0;
+        }
+        putUVarint(static_cast<uint64_t>(in.size()) + 1);
+        m_length += 4 * static_cast<int>(in.size());
+        return 0;
+    }
     return 0;
 }
 
@@ -183,7 +242,13 @@ int prepEncoder::putInt64Array(const std::vector<int64_t> &in)
 
 void prepEncoder::putEmptyTaggedFieldArray()
 {
-    // no-op in legacy format    
+    if (isFixed())
+    {
+    }
+    else if (isFlexible())
+    {
+        putUVarint(0);
+    }
 }
 
 int prepEncoder::offset() const
@@ -213,78 +278,18 @@ int prepEncoder::pop()
     return 0;
 }
 
-prepFlexibleEncoder::prepFlexibleEncoder(const prepEncoder &in)
+int prepEncoder::putInt32Array(const std::vector<int32_t> &in)
 {
-    m_length = in.offset();
-    m_stack = in.m_stack;
-}
-
-int prepFlexibleEncoder::putArrayLength(int32_t in)
-{
-    putUVarint(static_cast<uint64_t>(in + 1));
-    return 0;
-}
-
-int prepFlexibleEncoder::putBytes(const std::string &in)
-{
-    putUVarint(in.size() + 1);
-    return putRawBytes(in);
-}
-
-int prepFlexibleEncoder::putString(const std::string &in)
-{
-    int err = putArrayLength(static_cast<int32_t>(in.length()));
-    if (err != 0)
-        return err;
-    return putRawBytes(in);
-}
-
-int prepFlexibleEncoder::putNullableString(const std::string &in)
-{
-    if (in == "")
+    if (isFixed())
     {
-        putUVarint(0);
+    }
+    else if (isFlexible())
+    {
+        if (in.empty())
+            return -1; // non-null required
+        putUVarint(static_cast<uint64_t>(in.size()) + 1);
+        m_length += 4 * static_cast<int>(in.size());
         return 0;
     }
-    return putString(in);
-}
-
-int prepFlexibleEncoder::putStringArray(const std::vector<std::string> &in)
-{
-    int err = putArrayLength(static_cast<int32_t>(in.size()));
-    if (err != 0)
-        return err;
-    for (auto &str : in)
-    {
-        err = putString(str);
-        if (err != 0)
-            return err;
-    }
     return 0;
-}
-
-int prepFlexibleEncoder::putInt32Array(const std::vector<int32_t> &in)
-{
-    if (in.empty())
-        return -1; // non-null required
-    putUVarint(static_cast<uint64_t>(in.size()) + 1);
-    m_length += 4 * static_cast<int>(in.size());
-    return 0;
-}
-
-int prepFlexibleEncoder::putNullableInt32Array(const std::vector<int32_t> &in)
-{
-    if (in.empty())
-    {
-        putUVarint(0);
-        return 0;
-    }
-    putUVarint(static_cast<uint64_t>(in.size()) + 1);
-    m_length += 4 * static_cast<int>(in.size());
-    return 0;
-}
-
-void prepFlexibleEncoder::putEmptyTaggedFieldArray()
-{
-    putUVarint(0);
 }

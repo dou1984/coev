@@ -32,7 +32,6 @@ int VerifyProducerConfig(std::shared_ptr<Config> config)
     return ErrNoError;
 }
 
-
 SyncProducer::SyncProducer(std::shared_ptr<AsyncProducer> p) : producer(p)
 {
 

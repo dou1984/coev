@@ -117,14 +117,17 @@ int crc32_field::check(int curOffset, const std::string &buf)
 int crc32_field::crc(int curOffset, const std::string &buf, uint32_t &out_crc)
 {
     uint32_t crc = 0xFFFFFFFF;
-    if (polynomial == CrcCastagnoli) {
+    if (polynomial == CrcCastagnoli)
+    {
         // Use the precomputed Castagnoli table for faster calculation
         for (int i = startOffset + 4; i < curOffset; ++i)
         {
             uint8_t byte = buf[i];
             crc = (crc >> 8) ^ castagnoliTable[(crc & 0xFF) ^ byte];
         }
-    } else {
+    }
+    else
+    {
         // Use the standard IEEE polynomial calculation
         for (int i = startOffset + 4; i < curOffset; ++i)
         {

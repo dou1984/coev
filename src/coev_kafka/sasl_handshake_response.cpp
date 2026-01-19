@@ -26,11 +26,12 @@ int SaslHandshakeResponse::decode(packetDecoder &pd, int16_t version)
     return pd.getStringArray(m_enabled_mechanisms);
 }
 
-int16_t SaslHandshakeResponse::key()const{
+int16_t SaslHandshakeResponse::key() const
+{
     return apiKeySaslHandshake;
 }
 
-int16_t SaslHandshakeResponse::version()const
+int16_t SaslHandshakeResponse::version() const
 {
     return m_version;
 }
@@ -40,12 +41,12 @@ int16_t SaslHandshakeResponse::header_version() const
     return 0;
 }
 
-bool SaslHandshakeResponse::is_valid_version()const
+bool SaslHandshakeResponse::is_valid_version() const
 {
     return m_version >= 0 && m_version <= 1;
 }
 
-KafkaVersion SaslHandshakeResponse::required_version()const
+KafkaVersion SaslHandshakeResponse::required_version() const
 {
     switch (m_version)
     {

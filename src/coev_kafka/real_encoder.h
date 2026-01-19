@@ -4,11 +4,10 @@
 #include <vector>
 #include <string>
 #include <memory>
-
-#include "packet_encoder.h"
-
 #include "errors.h"
 #include "version.h"
+#include "encoder_decoder.h"
+#include "packet_encoder.h"
 
 struct realEncoder : packetEncoder
 {
@@ -48,25 +47,4 @@ struct realEncoder : packetEncoder
     int pop();
 };
 
-struct realFlexibleEncoder : realEncoder
-{
-    using base = realEncoder;
-    realFlexibleEncoder(const realEncoder &re)
-    {
-        *this = re;
-    }
-    realFlexibleEncoder(std::shared_ptr<realEncoder> re)
-    {
-        *this = *re;
-    }
-
-    int putArrayLength(int in);
-    int putBytes(const std::string &in);
-    int putString(const std::string &in);
-    int putNullableString(const std::string &in);
-    int putStringArray(const std::vector<std::string> &in);
-    int putInt32Array(const std::vector<int32_t> &in);
-    int putNullableInt32Array(const std::vector<int32_t> &in);
-    void putEmptyTaggedFieldArray();
-};
 int encodeVariant(uint8_t *buf, int64_t x);

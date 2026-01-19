@@ -1,5 +1,13 @@
 #include "connect.h"
-
+enum OpenState
+{
+    CLOSED,
+    OPENING,
+    OPENED,
+};
+Connect::Connect() : m_state(CLOSED)
+{
+}
 awaitable<int> Connect::ReadFull(std::string &buf, size_t n)
 {
     assert(buf.size() == n);
@@ -8,7 +16,7 @@ awaitable<int> Connect::ReadFull(std::string &buf, size_t n)
     {
         auto r = co_await recv(buf.data() + (n - res), res);
         if (r == INVALID)
-        {           
+        {
             LOG_ERR("ReadFull failed %d %s", errno, strerror(errno));
             co_return ErrIOEOF;
         }
@@ -21,11 +29,11 @@ awaitable<int> Connect::ReadFull(std::string &buf, size_t n)
     }
     co_return ErrNoError;
 }
-static const char * LOG_HEX = "0123456789abcdef";
+static const char *LOG_HEX = "0123456789abcdef";
 static std::string to_hex(const std::string &data)
 {
     std::string res;
-    res.reserve(data.size() * 2);  
+    res.reserve(data.size() * 2);
     for (unsigned char c : data)
     {
         res += LOG_HEX[c >> 4];
@@ -42,7 +50,7 @@ awaitable<int> Connect::Write(const std::string &buf)
         LOG_CORE("%.*s", (int)hex.size(), hex.data());
         auto r = co_await send(buf.data() + (buf.size() - res), res);
         if (r == INVALID)
-        {            
+        {
             LOG_ERR("Write failed %d %s", errno, strerror(errno));
             co_return ErrIOEOF;
         }
@@ -56,27 +64,33 @@ awaitable<int> Connect::Write(const std::string &buf)
     co_return ErrNoError;
 }
 awaitable<int> Connect::Dial(const char *addr, int port)
-{   
+{
+    m_state = OPENING;
     auto _fd = co_await base::connect(addr, port);
     if (_fd == INVALID)
     {
-        LOG_ERR("Dial failed %d %s", errno, strerror(errno));
-        co_return ErrIOEOF;
+        m_state = CLOSED;
+        LOG_CORE("Dial failed %d %s", errno, strerror(errno));
+        co_return INVALID;
     }
-    LOG_CORE("Dial %s:%d", addr, port);
-    m_opened = true;
+    LOG_CORE("Dial  success %s:%d", addr, port);
+    m_state = OPENED;
     co_return _fd;
 }
 int Connect::Close()
 {
-    if (m_opened)
-    {
-        m_opened = false;
-    }
+    m_state = CLOSED;
     return close();
 }
-Connect::operator bool() const
+bool Connect::IsClosed() const
 {
-    return base::__valid() && m_opened;
+    return m_state == CLOSED;
 }
-
+bool Connect::IsOpening() const
+{
+    return m_state == OPENING;
+}
+bool Connect::IsOpened() const
+{
+    return m_state == OPENED;
+}

@@ -13,7 +13,7 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
-struct OffsetFetchRequest : protocol_body , flexible_version
+struct OffsetFetchRequest : protocol_body, flexible_version
 {
     int16_t m_version;
     std::string m_consumer_group;

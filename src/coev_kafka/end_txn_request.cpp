@@ -59,7 +59,7 @@ bool EndTxnRequest::is_valid_version() const
     return m_version >= 0 && m_version <= 2;
 }
 
-KafkaVersion EndTxnRequest::required_version() const
+KafkaVersion EndTxnRequest::required_version()  const
 {
     switch (m_version)
     {
