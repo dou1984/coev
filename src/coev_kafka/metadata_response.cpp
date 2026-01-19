@@ -46,7 +46,7 @@ int PartitionMetadata::decode(packetDecoder &pd, int16_t version)
         }
     }
 
-    int err;
+    int32_t err;
     pd.getEmptyTaggedFieldArray(err);
     return err;
 }

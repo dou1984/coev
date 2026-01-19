@@ -238,7 +238,7 @@ coev::awaitable<void> OffsetManager::flushToBroker()
         co_return;
     }
     ResponsePromise<OffsetCommitResponse> rp;
-    err = co_await broker->Send(req, rp);
+    err = co_await broker->SendAndReceive(req, rp);
     if (err)
     {
         handleError(err);

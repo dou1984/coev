@@ -197,7 +197,7 @@ coev::awaitable<int> Broker::AsyncProduce(const ProduceRequest &request, Respons
     if (needAcks)
     {
     }
-    auto err = co_await Send(request, response);
+    auto err = co_await SendAndReceive(request, response);
     co_return err;
 }
 
@@ -205,7 +205,7 @@ coev::awaitable<int> Broker::Produce(const ProduceRequest &request, ResponseProm
 {
     if (request.m_acks == RequiredAcks::NoResponse)
     {
-        int32_t err = co_await Send(request, response);
+        int32_t err = co_await SendAndReceive(request, response);
         co_return err;
     }
     else
@@ -917,7 +917,7 @@ coev::awaitable<int> Broker::SendAndReceiveApiVersions(int16_t v, ResponsePromis
     int err = 0;
     ApiVersionsRequest request;
     request.m_version = v;
-    err = co_await Send(request, promise);
+    err = co_await SendAndReceive(request, promise);
     if (err)
     {
         co_return err;

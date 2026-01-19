@@ -213,7 +213,7 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
     void ComputeSaslSessionLifetime(std::shared_ptr<SaslAuthenticateResponse> res);
 
     template <class Req, class Resp>
-    coev::awaitable<int> Send(const Req &request, ResponsePromise<Resp> &promise)
+    coev::awaitable<int> SendAndReceive(const Req &request, ResponsePromise<Resp> &promise)
     {
         int err = 0;
         if (m_session_reauthentication_time > 0 && CurrentUnixMilli() > m_session_reauthentication_time)
@@ -225,12 +225,6 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
             }
         }
         co_return co_await SendInternal(request, promise);
-    }
-
-    template <class Req, class Resp>
-    coev::awaitable<int> SendAndReceive(const Req &req, ResponsePromise<Resp> &promise)
-    {
-        co_return co_await Send(req, promise);
     }
 
     template <class Req, class Resp>
@@ -308,7 +302,7 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
         {
             co_return err;
         }
-        err = co_await Send(authenticateRequest, promise);
+        err = co_await SendAndReceive(authenticateRequest, promise);
         if (err)
         {
             co_return err;
