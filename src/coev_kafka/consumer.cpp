@@ -196,7 +196,7 @@ coev::awaitable<int> Consumer::ConsumePartition(const std::string &topic, int32_
 
     child->m_leader_epoch = epoch;
     child->m_broker = RefBrokerConsumer(leader);
-    child->m_broker->m_input.set(child);
+    child->m_broker->m_input = child;
 
     co_return 0;
 }

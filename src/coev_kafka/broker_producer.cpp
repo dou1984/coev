@@ -182,7 +182,7 @@ coev::awaitable<void> BrokerProducer::HandleSuccess(std::shared_ptr<ProduceSet> 
 {
     std::vector<std::string> retry_topics;
     sent->each_partition(
-        [this, response](const std::string &topic, int32_t partition, auto pSet) -> coev::awaitable<void>
+        [this, response, &retry_topics](const std::string &topic, int32_t partition, auto pSet) -> coev::awaitable<void>
         {
             if (!response)
             {

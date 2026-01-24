@@ -34,8 +34,8 @@ awaitable<int> Connect::ReadFull(std::string &buf, size_t n)
         }
         res -= r;
     }
-    auto hex = to_hex(buf);
-    LOG_CORE("%.*s", (int)hex.size(), hex.data());
+    // auto hex = to_hex(buf);
+    // LOG_CORE("%.*s", (int)hex.size(), hex.data());
     co_return ErrNoError;
 }
 
@@ -44,8 +44,8 @@ awaitable<int> Connect::Write(const std::string &buf)
     auto res = buf.size();
     while (*this && res > 0)
     {
-        auto hex = to_hex(buf);
-        LOG_CORE("%.*s", (int)hex.size(), hex.data());
+        // auto hex = to_hex(buf);
+        // LOG_CORE("%.*s", (int)hex.size(), hex.data());
         auto r = co_await send(buf.data() + (buf.size() - res), res);
         if (r == INVALID)
         {

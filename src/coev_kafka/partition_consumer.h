@@ -44,7 +44,6 @@ struct PartitionConsumer : std::enable_shared_from_this<PartitionConsumer>
     coev::awaitable<int> ChooseStartingOffset(int64_t offset);
     coev::awaitable<int> Interceptors(std::shared_ptr<ConsumerMessage> &msg);
     coev::awaitable<int> Close();
-    auto Messages() { return m_messages.get(); }
 
     int64_t HighWaterMarkOffset();
 

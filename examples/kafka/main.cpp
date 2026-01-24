@@ -73,7 +73,7 @@ int main(int argc, char **argv)
                             }
                             while (true)
                             {
-                                auto msg = co_await partition_consumer->Messages();
+                                auto msg = co_await partition_consumer->m_messages;
                                 if (msg)
                                 {
                                     LOG_DBG("%s %s", msg->key().c_str(), msg->value().c_str());

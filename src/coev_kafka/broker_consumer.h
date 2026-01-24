@@ -12,7 +12,7 @@ struct BrokerConsumer : IConsumer, std::enable_shared_from_this<BrokerConsumer>
 
     std::unordered_map<std::shared_ptr<PartitionConsumer>, bool> m_subscriptions;
     coev::co_channel<std::shared_ptr<PartitionConsumer>> m_input;
-    coev::co_channel<std::vector<std::shared_ptr<PartitionConsumer>>> m_new_subscriptions;
+    std::vector<std::shared_ptr<PartitionConsumer>> m_new_subscriptions;
     coev::co_task m_task;
 
     coev::co_waitgroup m_acks;
@@ -33,7 +33,7 @@ struct BrokerConsumer : IConsumer, std::enable_shared_from_this<BrokerConsumer>
     coev::awaitable<void> SubscriptionManager();
     coev::awaitable<void> SubscriptionConsumer();
 
-    void UpdateSubscriptions(const std::vector<std::shared_ptr<PartitionConsumer>> &newSubscriptions);
+    void UpdateSubscriptions();
     coev::awaitable<void> HandleResponses();
     coev::awaitable<void> Abort(int err);
     coev::awaitable<int> FetchNewMessages(std::shared_ptr<FetchResponse> &response);

@@ -113,6 +113,7 @@ std::deque<std::shared_ptr<Broker>> Client::Brokers()
     {
         _brokers.push_back(kv.second);
     }
+    LOG_CORE("Client::Brokers returning %zu brokers", _brokers.size());
     return _brokers;
 }
 
@@ -125,6 +126,7 @@ coev::awaitable<int> Client::GetBroker(int32_t brokerID, std::shared_ptr<Broker>
     }
     broker = it->second;
     auto err = co_await broker->Open(m_conf);
+    LOG_CORE("Client::GetBroker returning brokerID %d", brokerID);
     co_return err;
 }
 
@@ -585,6 +587,7 @@ void Client::RandomizeSeedBrokers(const std::vector<std::string> &addrs)
 
 void Client::UpdateBroker(const std::vector<std::shared_ptr<Broker>> &_brokers_list)
 {
+    LOG_CORE("Client::UpdateBroker called with %zu brokers", _brokers_list.size());
     std::map<int32_t, std::shared_ptr<Broker>> currentBroker;
     for (auto &broker : _brokers_list)
     {
@@ -615,6 +618,7 @@ void Client::UpdateBroker(const std::vector<std::shared_ptr<Broker>> &_brokers_l
             ++it;
         }
     }
+    LOG_CORE("Client::UpdateBroker finished, current brokers count: %zu", m_brokers.size());
 }
 
 void Client::RegisterBroker(std::shared_ptr<Broker> broker)
@@ -667,9 +671,11 @@ void Client::ResurrectDeadBrokers()
 
 coev::awaitable<int> Client::LeastLoadedBroker(std::shared_ptr<Broker> &leastLoadedBroker)
 {
+    LOG_CORE("Client::LeastLoadedBroker called, current brokers count: %zu", m_brokers.size());
     if (!m_brokers.empty())
     {
         leastLoadedBroker = m_brokers.rbegin()->second;
+        LOG_CORE("Client::LeastLoadedBroker selected broker #%d from existing brokers", leastLoadedBroker->ID());
     }
 
     int err = 0;
@@ -685,18 +691,22 @@ coev::awaitable<int> Client::LeastLoadedBroker(std::shared_ptr<Broker> &leastLoa
     if (!m_seed_brokers.empty())
     {
         std::shared_ptr<Broker> seedBroker = m_seed_brokers[0];
+        LOG_CORE("Client::LeastLoadedBroker trying seed broker %s", seedBroker->Addr().c_str());
         err = co_await seedBroker->Open(m_conf);
         if (err != 0)
         {
+            LOG_CORE("Client::LeastLoadedBroker seed broker %s is down, error: %d", seedBroker->Addr().c_str(), err);
             if (!m_seed_brokers.empty() && m_seed_brokers[0] == seedBroker)
             {
                 m_seed_brokers.erase(m_seed_brokers.begin());
                 m_dead_seeds.push_back(seedBroker);
+                LOG_CORE("Client::LeastLoadedBroker moved seed broker %s to dead seeds", seedBroker->Addr().c_str());
             }
             co_return err;
         }
 
         leastLoadedBroker = seedBroker;
+        LOG_CORE("Client::LeastLoadedBroker successfully used seed broker %s", seedBroker->Addr().c_str());
         co_return 0;
     }
 
@@ -754,24 +764,24 @@ coev::awaitable<int> Client::_CachedLeader(const std::string &topic, int32_t par
     broker_ = nullptr;
     leaderEpoch = -1;
 
-    auto topicIt = m_metadata.find(topic);
-    if (topicIt != m_metadata.end())
+    auto topic_it = m_metadata.find(topic);
+    if (topic_it != m_metadata.end())
     {
-        auto partIt = topicIt->second.find(partitionID);
-        if (partIt != topicIt->second.end())
+        auto part_it = topic_it->second.find(partitionID);
+        if (part_it != topic_it->second.end())
         {
-            auto m_metadata = partIt->second;
+            auto m_metadata = part_it->second;
             if (m_metadata->m_err == ErrLeaderNotAvailable)
             {
                 co_return ErrLeaderNotAvailable;
             }
-            auto brokerIt = m_brokers.find(m_metadata->m_leader);
-            if (brokerIt == m_brokers.end())
+            auto broker_it = m_brokers.find(m_metadata->m_leader);
+            if (broker_it == m_brokers.end())
             {
                 co_return ErrLeaderNotAvailable;
             }
-            auto err = co_await brokerIt->second->Open(m_conf);
-            broker_ = brokerIt->second;
+            auto err = co_await broker_it->second->Open(m_conf);
+            broker_ = broker_it->second;
             leaderEpoch = m_metadata->m_leader_epoch;
             co_return err;
         }

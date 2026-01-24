@@ -39,7 +39,7 @@ coev::awaitable<int> PartitionConsumer::Dispatcher()
 {
     while (true)
     {
-        bool dummy = co_await m_trigger.get();
+        bool dummy = co_await m_trigger;
 
         bool dying_received = false;
         if (m_dying.try_get(dummy))
@@ -64,7 +64,7 @@ coev::awaitable<int> PartitionConsumer::Dispatcher()
         if (err)
         {
             SendError(err);
-            m_trigger.set(true);
+            m_trigger = true;
         }
     }
 
@@ -113,15 +113,19 @@ coev::awaitable<int> PartitionConsumer::Dispatch()
     std::vector<std::string> topics = {m_topic};
     int err = co_await m_consumer->m_client->RefreshMetadata(topics);
     if (err)
+    {
         co_return err;
+    }
 
     std::shared_ptr<Broker> broker;
     err = co_await PreferredBroker(broker, m_leader_epoch);
     if (err)
+    {
         co_return err;
+    }
 
     auto brokerConsumer = m_consumer->RefBrokerConsumer(broker);
-    brokerConsumer->m_input.set(shared_from_this());
+    brokerConsumer->m_input = shared_from_this();
 
     co_return ErrNoError;
 }
@@ -131,13 +135,17 @@ coev::awaitable<int> PartitionConsumer::ChooseStartingOffset(int64_t offset)
     int64_t newestOffset;
     auto err = co_await m_consumer->m_client->GetOffset(m_topic, m_partition, OffsetNewest, newestOffset);
     if (err)
+    {
         co_return err;
+    }
     m_high_water_mark_offset.store(newestOffset);
 
     int64_t oldestOffset;
     err = co_await m_consumer->m_client->GetOffset(m_topic, m_partition, OffsetOldest, oldestOffset);
     if (err)
+    {
         co_return err;
+    }
 
     if (offset == OffsetNewest)
     {
@@ -222,7 +230,7 @@ coev::awaitable<void> PartitionConsumer::ResponseFeeder()
                         if (m_dying.try_get(died) && died)
                             break;
                     }
-                    m_broker->m_input.set(shared_from_this());
+                    m_broker->m_input = shared_from_this();
                     break;
                 }
                 else
