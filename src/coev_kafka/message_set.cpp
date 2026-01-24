@@ -121,7 +121,7 @@ int MessageSet::decode(packetDecoder &pd)
     return 0;
 }
 
-void MessageSet::addMessage(std::shared_ptr<Message> msg)
+void MessageSet::add_message(std::shared_ptr<Message> msg)
 {
     auto block = std::make_shared<MessageBlock>();
     block->m_msg = std::move(msg);

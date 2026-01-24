@@ -31,5 +31,5 @@ struct ListPartitionReassignmentsRequest : protocol_body, flexible_version
     bool is_flexible_version(int16_t ver) const;
     KafkaVersion required_version() const;
 
-    void AddBlock(const std::string &topic, const std::vector<int32_t> &partitionIDs);
+    void add_block(const std::string &topic, const std::vector<int32_t> &partitionIDs);
 };

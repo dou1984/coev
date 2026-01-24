@@ -141,7 +141,6 @@ int16_t ApiVersionsResponse::version() const
 
 int16_t ApiVersionsResponse::header_version() const
 {
-
     return 0;
 }
 

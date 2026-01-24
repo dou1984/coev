@@ -1,5 +1,13 @@
 #include "consumer_metadata_request.h"
 #include "find_coordinator_request.h"
+
+ConsumerMetadataRequest::ConsumerMetadataRequest() : m_version(0)
+{
+}
+ConsumerMetadataRequest::ConsumerMetadataRequest(int16_t v, const std::string &group) : m_version(v), m_consumer_group(group)
+{
+}
+
 void ConsumerMetadataRequest::set_version(int16_t v)
 {
     m_version = v;

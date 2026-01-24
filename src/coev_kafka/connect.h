@@ -4,7 +4,13 @@
 #include "errors.h"
 
 using namespace coev;
-
+enum OpenState
+{
+    CLOSED,
+    OPENING,
+    OPENED,
+    POSTOPENED,
+};
 class Connect : protected io_connect
 {
 
@@ -21,4 +27,5 @@ public:
     bool IsClosed() const;
     bool IsOpening() const;
     bool IsOpened() const;
+    int State() const;
 };

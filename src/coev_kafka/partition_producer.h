@@ -8,21 +8,24 @@
 struct PartitionProducer
 {
     PartitionProducer(std::shared_ptr<AsyncProducer> parent, const std::string &topic, int32_t partition);
-    coev::awaitable<int> Dispatch();
+    ~PartitionProducer();
 
-    coev::awaitable<void> Backoff(int retries);
-    coev::awaitable<int> UpdateLeaderIfBrokerProducerIsNil(std::shared_ptr<ProducerMessage> msg);
-    coev::awaitable<void> FlushRetryBuffers();
-    coev::awaitable<int> UpdateLeader();
+    coev::awaitable<int> init();
+    coev::awaitable<int> dispatch(std::shared_ptr<ProducerMessage> &msg);
 
-    void NewHighWatermark(int hwm);
+    coev::awaitable<void> backoff(int retries);
+    coev::awaitable<int> update_leader_if_broker_producer_is_nil(std::shared_ptr<ProducerMessage> msg);
+    coev::awaitable<void> flush_retry_buffers();
+    coev::awaitable<int> update_leader();
+
+    void new_high_watermark(int hwm);
+
     std::shared_ptr<AsyncProducer> m_parent;
     std::string m_topic;
     int32_t m_partition;
-    coev::co_channel<std::shared_ptr<ProducerMessage>> m_input;
+    // coev::co_channel<std::shared_ptr<ProducerMessage>> m_input;
 
     std::shared_ptr<Broker> m_leader;
-    std::shared_ptr<Breaker> m_breaker;
     std::shared_ptr<BrokerProducer> m_broker_producer;
 
     int m_high_watermark;

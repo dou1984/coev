@@ -39,5 +39,5 @@ struct MessageSet : IEncoder, IDecoder
     }
     int encode(packetEncoder &pe);
     int decode(packetDecoder &pd);
-    void addMessage(std::shared_ptr<Message> msg);
+    void add_message(std::shared_ptr<Message> msg);
 };

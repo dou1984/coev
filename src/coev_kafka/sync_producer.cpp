@@ -32,7 +32,7 @@ int VerifyProducerConfig(std::shared_ptr<Config> config)
     return ErrNoError;
 }
 
-SyncProducer::SyncProducer(std::shared_ptr<AsyncProducer> p) : producer(p)
+SyncProducer::SyncProducer(std::shared_ptr<AsyncProducer> p) : m_producer(p)
 {
 
     task << handleSuccesses();
@@ -50,7 +50,7 @@ SyncProducer::~SyncProducer()
 coev::awaitable<int> SyncProducer::SendMessage(std::shared_ptr<ProducerMessage> msg, int32_t &partition, int64_t &offset)
 {
 
-    producer->m_input.set(msg);
+    co_await m_producer->dispatcher(msg);
     std::shared_ptr<ProducerError> pErr;
     auto err = co_await getExpectation(pErr);
     if (err != 0)
@@ -73,7 +73,8 @@ coev::awaitable<int> SyncProducer::SendMessages(const std::vector<std::shared_pt
     std::vector<std::shared_ptr<ProducerError>> expectations(msgs.size());
     for (size_t i = 0; i < msgs.size(); ++i)
     {
-        producer->m_input.set(msgs[i]);
+        std::shared_ptr<ProducerMessage> msg = msgs[i];
+        co_await m_producer->dispatcher(msg);
         co_await getExpectation(expectations[i]);
     }
     for (size_t i = 0; i < expectations.size(); ++i)
@@ -88,7 +89,7 @@ coev::awaitable<void> SyncProducer::handleSuccesses()
 {
     while (!closed)
     {
-        auto msg = co_await producer->m_successes.get();
+        auto msg = co_await m_producer->m_successes.get();
         if (msg)
         {
             // putExpectation(msg);
@@ -100,7 +101,7 @@ coev::awaitable<void> SyncProducer::handleErrors()
 {
     while (!closed)
     {
-        auto err = co_await producer->m_errors.get();
+        auto err = co_await m_producer->m_errors.get();
         if (err && err->m_err != 0)
         {
         }
@@ -113,44 +114,44 @@ int SyncProducer::Close()
     {
         return 0;
     }
-    producer->AsyncClose();
+    m_producer->async_close();
 
     return 0;
 }
 
 ProducerTxnStatusFlag SyncProducer::TxnStatus()
 {
-    return producer->TxnStatus();
+    return m_producer->txn_status();
 }
 
 bool SyncProducer::IsTransactional()
 {
-    return producer->IsTransactional();
+    return m_producer->is_transactional();
 }
 
 int SyncProducer::BeginTxn()
 {
-    return producer->BeginTxn();
+    return m_producer->begin_txn();
 }
 
 coev::awaitable<int> SyncProducer::CommitTxn()
 {
-    return producer->CommitTxn();
+    return m_producer->commit_txn();
 }
 
 coev::awaitable<int> SyncProducer::AbortTxn()
 {
-    return producer->AbortTxn();
+    return m_producer->abort_txn();
 }
 
 int SyncProducer::AddOffsetsToTxn(const std::map<std::string, std::vector<std::shared_ptr<PartitionOffsetMetadata>>> &offsets, const std::string &group_id)
 {
-    return producer->AddOffsetsToTxn(offsets, group_id);
+    return m_producer->add_offsets_to_txn(offsets, group_id);
 }
 
 int SyncProducer::AddMessageToTxn(std::shared_ptr<ConsumerMessage> msg, const std::string &metadata, const std::string &group_id)
 {
-    return producer->AddMessageToTxn(msg, metadata, group_id);
+    return m_producer->add_message_to_txn(msg, metadata, group_id);
 }
 
 coev::awaitable<int> NewSyncProducer(const std::vector<std::string> &addrs, std::shared_ptr<Config> &config, std::shared_ptr<ISyncProducer> &producer)

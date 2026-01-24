@@ -1,18 +1,21 @@
-#include "broker.h"
-#include "access_token.h"
-#include "kerberos_client.h"
-#include "response_header.h"
-#include "scram_client.h"
-#include "sleep_for.h"
-#include "undefined.h"
+
 #include <chrono>
-#include <coev/coev.h>
 #include <cstring>
 #include <functional>
 #include <memory>
 #include <random>
 #include <string>
 #include <vector>
+#include <regex>
+#include <coev/coev.h>
+#include <coev_dns/parse_dns.h>
+#include "undefined.h"
+#include "broker.h"
+#include "access_token.h"
+#include "kerberos_client.h"
+#include "response_header.h"
+#include "scram_client.h"
+#include "sleep_for.h"
 
 int8_t getHeaderLength(int16_t header_version)
 {
@@ -32,7 +35,10 @@ Broker::Broker(const std::string &addr) : m_id(-1), m_addr(addr), m_correlation_
 Broker::Broker(int id, const std::string &addr) : m_id(id), m_addr(addr), m_correlation_id(0), m_session_reauthentication_time(0), m_task()
 {
 }
-Broker::~Broker() { LOG_CORE("broker %p closed", this); }
+Broker::~Broker()
+{
+    LOG_CORE("broker %p closed", this);
+}
 coev::awaitable<int> Broker::Open(std::shared_ptr<Config> conf)
 {
     if (!conf)
@@ -48,25 +54,66 @@ coev::awaitable<int> Broker::Open(std::shared_ptr<Config> conf)
     while (m_opened.resume())
     {
     }
-
     co_return err;
+}
+coev::awaitable<int> Broker::_PreOpen()
+{
+    while (m_conn.IsOpening())
+    {
+        LOG_CORE("conn is not opened");
+        co_await m_opened.suspend();
+        if (m_conn.IsOpened())
+        {
+            co_return m_conn.State();
+        }
+        else if (m_conn.IsClosed())
+        {
+            co_return m_conn.State();
+        }
+    }
+    co_return m_conn.State();
 }
 coev::awaitable<int> Broker::_Open()
 {
     if (m_conn.IsOpened())
     {
         LOG_CORE("conn is opened");
-        co_return INVALID;
-    }
-
-    if (m_conn.IsOpening())
-    {
-        LOG_CORE("conn is not opened");
-        co_await m_opened.suspend();
         co_return 0;
     }
-
+    co_await _PreOpen();
+    if (m_addr.empty())
+    {
+        LOG_CORE("addr is empty");
+        co_return INVALID;
+    }
     auto [host, port] = net::SplitHostPort(m_addr);
+    
+    // Special case for localhost to ensure compatibility
+    if (host == "localhost")
+    {
+        host = "127.0.0.1";
+    }
+    else
+    {
+        
+        static std::regex ipv4_re("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$");        
+        static std::regex ipv6_re("^(\\[)?([0-9a-fA-F:]+)(\\])?$|:");
+        if (!(std::regex_match(host, ipv4_re) || std::regex_match(host, ipv6_re)))
+        {
+            auto tmp = host;
+            auto err = co_await coev::parse_dns(tmp, host);
+            if (err)
+            {
+                LOG_CORE("parse_dns failed");
+                co_return INVALID;
+            }
+        }        
+        else if (host.size() >= 2 && host[0] == '[' && host.back() == ']')
+        {
+            host = host.substr(1, host.size() - 2);
+        }
+    }
+
     LOG_CORE("connect to %s:%d", host.data(), port);
     auto fd = co_await m_conn.Dial(host.data(), port);
     if (fd == INVALID)
@@ -75,9 +122,6 @@ coev::awaitable<int> Broker::_Open()
         co_return INVALID;
     }
 
-    if (m_id >= 0)
-    {
-    }
     LOG_CORE("connected %s:%d", host.data(), port);
     int err = ErrNoError;
     if (m_conf->ApiVersionsRequest)
@@ -191,14 +235,38 @@ coev::awaitable<int> Broker::GetAvailableOffsets(const OffsetRequest &request, R
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::AsyncProduce(const ProduceRequest &request, ResponsePromise<ProduceResponse> &response)
+coev::awaitable<int> Broker::AsyncProduce(const ProduceRequest &request, std::function<void(ResponsePromise<ProduceResponse> &)> _f)
 {
     bool needAcks = request.m_acks != NoResponse;
     if (needAcks)
     {
+        m_task << [](auto _this, auto &request, auto _f) -> coev::awaitable<void>
+        {
+            ResponsePromise<ProduceResponse> response;
+            auto err = co_await _this->SendAndReceive(request, response);
+            if (err != ErrNoError)
+            {
+                LOG_CORE("SendAndReceive failed");
+            }
+            if (_f)
+            {
+                _f(response);
+            }
+        }(shared_from_this(), request, _f);
     }
-    auto err = co_await SendAndReceive(request, response);
-    co_return err;
+    else
+    {
+        m_task << [](auto _this, auto &request, auto _f) -> coev::awaitable<void>
+        {
+            ResponsePromise<ProduceResponse> response;
+            auto err = co_await _this->SendAndReceive(request, response);
+            if (err != ErrNoError)
+            {
+                LOG_CORE("SendAndReceive failed");
+            }
+        }(shared_from_this(), request, _f);
+    }
+    co_return 0;
 }
 
 coev::awaitable<int> Broker::Produce(const ProduceRequest &request, ResponsePromise<ProduceResponse> &response)
@@ -435,7 +503,7 @@ coev::awaitable<int> Broker::ReadFull(std::string &buf, size_t n)
         err = co_await _this->m_conn.ReadFull(buf, n);
         if (err != ErrNoError)
         {
-            LOG_ERR("ReadFull %d %d %s", err, errno, strerror(errno));
+            LOG_CORE("ReadFull %d %d %s", err, errno, strerror(errno));
         }
     }(shared_from_this(), buf, n, err);
     auto _result = co_await task.wait();
@@ -491,19 +559,28 @@ int Broker::decode(packetDecoder &pd, int16_t version)
         return err;
     }
 
+    m_addr = host + ":" + std::to_string(port);
+
     if (version >= 1)
     {
-        std::string rack_;
-        err = pd.getNullableString(rack_);
+        err = pd.getNullableString(m_rack);
         if (err)
         {
             return err;
         }
     }
 
-    int32_t emptyArray;
-    err = pd.getEmptyTaggedFieldArray(emptyArray);
-    return err;
+    if (version >= 5)
+    {
+        int32_t emptyArray;
+        err = pd.getEmptyTaggedFieldArray(emptyArray);
+        if (err)
+        {
+            return err;
+        }
+    }
+
+    return 0;
 }
 
 int Broker::encode(packetEncoder &pe, int16_t version)

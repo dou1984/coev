@@ -13,7 +13,6 @@ namespace coev
     class dns_cli final : io_context
     {
         ares_channel m_channel;
-        co_task m_task;
 
     public:
         dns_cli(ares_socket_t _fd, ares_channel _channel);

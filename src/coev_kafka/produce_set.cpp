@@ -104,7 +104,7 @@ ProduceSet::ProduceSet(std::shared_ptr<AsyncProducer> parent)
     m_producer_epoch = epoch;
 }
 
-int ProduceSet::Add(std::shared_ptr<ProducerMessage> msg)
+int ProduceSet::add(std::shared_ptr<ProducerMessage> msg)
 {
     std::string key, val;
     if (msg->m_key != nullptr)
@@ -126,7 +126,7 @@ int ProduceSet::Add(std::shared_ptr<ProducerMessage> msg)
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(timestamp.time_since_epoch()).count();
     timestamp = std::chrono::system_clock::from_time_t(ms / 1000) + std::chrono::milliseconds(ms % 1000);
 
-    auto &partitions = m_msgs[msg->m_topic];
+    auto &partitions = m_messages[msg->m_topic];
 
     int size = 0;
     auto setIt = partitions.find(msg->m_partition);
@@ -206,7 +206,7 @@ int ProduceSet::Add(std::shared_ptr<ProducerMessage> msg)
             msgToSend->m_timestamp.set_time(timestamp);
             msgToSend->m_version = 1;
         }
-        set->m_records_to_send->m_msg_set->addMessage(msgToSend);
+        set->m_records_to_send->m_msg_set->add_message(msgToSend);
         size = ProducerMessageOverhead + key.size() + val.size();
     }
 
@@ -217,7 +217,7 @@ int ProduceSet::Add(std::shared_ptr<ProducerMessage> msg)
     return 0;
 }
 
-std::shared_ptr<ProduceRequest> ProduceSet::BuildRequest()
+std::shared_ptr<ProduceRequest> ProduceSet::build_request()
 {
     auto req = std::make_shared<ProduceRequest>();
     req->m_acks = m_parent->m_conf->Producer.Acks;
@@ -234,12 +234,12 @@ std::shared_ptr<ProduceRequest> ProduceSet::BuildRequest()
     if (m_parent->m_conf->Version.IsAtLeast(V2_1_0_0))
         req->m_version = 7;
 
-    if (m_parent->m_conf->Version.IsAtLeast(V0_11_0_0) && m_parent->IsTransactional())
+    if (m_parent->m_conf->Version.IsAtLeast(V0_11_0_0) && m_parent->is_transactional())
     {
         req->m_transactional_id = m_parent->m_conf->Producer.Transaction.ID;
     }
 
-    for (auto &it : m_msgs)
+    for (auto &it : m_messages)
     {
         auto &topic = it.first;
         auto &partitionSets = it.second;
@@ -262,7 +262,7 @@ std::shared_ptr<ProduceRequest> ProduceSet::BuildRequest()
                     }
                     rb->m_max_timestamp = rb->m_first_timestamp + maxTimestampDelta;
                 }
-                rb->m_is_transactional = m_parent->IsTransactional();
+                rb->m_is_transactional = m_parent->is_transactional();
                 req->AddBatch(topic, partition, rb);
                 continue;
             }
@@ -307,13 +307,13 @@ std::shared_ptr<ProduceRequest> ProduceSet::BuildRequest()
     return req;
 }
 
-void ProduceSet::EachPartition(std::function<void(const std::string &, int32_t, std::shared_ptr<PartitionSet>)> cb)
+void ProduceSet::each_partition(std::function<void(const std::string &, int32_t, std::shared_ptr<PartitionSet>)> cb)
 {
-    for (auto &it : m_msgs)
+    for (auto &it : m_messages)
     {
         auto &topic = it.first;
-        auto &partitionSet = it.second;
-        for (auto &pit : partitionSet)
+        auto &partition_set = it.second;
+        for (auto &pit : partition_set)
         {
             auto &partition = pit.first;
             auto &set = pit.second;
@@ -322,10 +322,10 @@ void ProduceSet::EachPartition(std::function<void(const std::string &, int32_t, 
     }
 }
 
-std::vector<std::shared_ptr<ProducerMessage>> ProduceSet::DropPartition(const std::string &topic, int32_t partition)
+std::vector<std::shared_ptr<ProducerMessage>> ProduceSet::drop_partition(const std::string &topic, int32_t partition)
 {
-    auto topicIt = m_msgs.find(topic);
-    if (topicIt == m_msgs.end())
+    auto topicIt = m_messages.find(topic);
+    if (topicIt == m_messages.end())
         return {};
     auto &partitionMap = topicIt->second;
     auto partIt = partitionMap.find(partition);
@@ -339,23 +339,23 @@ std::vector<std::shared_ptr<ProducerMessage>> ProduceSet::DropPartition(const st
     return set->m_msgs;
 }
 
-bool ProduceSet::WouldOverflow(std::shared_ptr<ProducerMessage> msg)
+bool ProduceSet::would_overflow(std::shared_ptr<ProducerMessage> msg)
 {
     int version = m_parent->m_conf->Version.IsAtLeast(V0_11_0_0) ? 2 : 1;
 
-    if (m_buffer_bytes + msg->ByteSize(version) >= MaxRequestSize - 10 * 1024)
+    if (m_buffer_bytes + msg->byteSize(version) >= MaxRequestSize - 10 * 1024)
     {
         return true;
     }
 
-    auto topicIt = m_msgs.find(msg->m_topic);
-    if (topicIt != m_msgs.end())
+    auto topicIt = m_messages.find(msg->m_topic);
+    if (topicIt != m_messages.end())
     {
         auto &partitions = topicIt->second;
         auto partIt = partitions.find(msg->m_partition);
         if (partIt != partitions.end())
         {
-            if (partIt->second->m_buffer_bytes + msg->ByteSize(version) >= m_parent->m_conf->Producer.MaxMessageBytes)
+            if (partIt->second->m_buffer_bytes + msg->byteSize(version) >= m_parent->m_conf->Producer.MaxMessageBytes)
             {
                 return true;
             }
@@ -370,9 +370,9 @@ bool ProduceSet::WouldOverflow(std::shared_ptr<ProducerMessage> msg)
     return false;
 }
 
-bool ProduceSet::ReadyToFlush()
+bool ProduceSet::ready_to_flush()
 {
-    if (Empty())
+    if (empty())
         return false;
     if (m_parent->m_conf->Producer.Flush.Frequency == std::chrono::milliseconds(0) &&
         m_parent->m_conf->Producer.Flush.Bytes == 0 &&
@@ -391,7 +391,7 @@ bool ProduceSet::ReadyToFlush()
     return false;
 }
 
-bool ProduceSet::Empty() const
+bool ProduceSet::empty() const
 {
     return m_buffer_count == 0;
 }

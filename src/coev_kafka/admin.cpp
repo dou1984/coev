@@ -495,7 +495,7 @@ coev::awaitable<int> ClusterAdmin::ListPartitionReassignments(
     auto request = std::make_shared<ListPartitionReassignmentsRequest>();
     request->m_timeout = std::chrono::milliseconds(60000);
     request->m_version = 0;
-    request->AddBlock(topic, partitions);
+    request->add_block(topic, partitions);
 
     int err = co_await RetryOnError(
         isRetriableControllerError,

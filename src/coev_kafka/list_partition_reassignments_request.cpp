@@ -125,7 +125,7 @@ KafkaVersion ListPartitionReassignmentsRequest::required_version() const
     return V2_4_0_0;
 }
 
-void ListPartitionReassignmentsRequest::AddBlock(const std::string &topic, const std::vector<int32_t> &partitionIDs)
+void ListPartitionReassignmentsRequest::add_block(const std::string &topic, const std::vector<int32_t> &partitionIDs)
 {
     m_blocks[topic] = partitionIDs; // overwrite if exists, matching Go semantics
 }

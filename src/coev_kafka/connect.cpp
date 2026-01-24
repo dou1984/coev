@@ -1,10 +1,17 @@
 #include "connect.h"
-enum OpenState
+
+static const char *LOG_HEX = "0123456789abcdef";
+static std::string to_hex(const std::string &data)
 {
-    CLOSED,
-    OPENING,
-    OPENED,
-};
+    std::string res;
+    res.reserve(data.size() * 2);
+    for (unsigned char c : data)
+    {
+        res += LOG_HEX[c >> 4];
+        res += LOG_HEX[c & 0xf];
+    }
+    return res;
+}
 Connect::Connect() : m_state(CLOSED)
 {
 }
@@ -27,20 +34,11 @@ awaitable<int> Connect::ReadFull(std::string &buf, size_t n)
         }
         res -= r;
     }
+    auto hex = to_hex(buf);
+    LOG_CORE("%.*s", (int)hex.size(), hex.data());
     co_return ErrNoError;
 }
-static const char *LOG_HEX = "0123456789abcdef";
-static std::string to_hex(const std::string &data)
-{
-    std::string res;
-    res.reserve(data.size() * 2);
-    for (unsigned char c : data)
-    {
-        res += LOG_HEX[c >> 4];
-        res += LOG_HEX[c & 0xf];
-    }
-    return res;
-}
+
 awaitable<int> Connect::Write(const std::string &buf)
 {
     auto res = buf.size();
@@ -66,6 +64,7 @@ awaitable<int> Connect::Write(const std::string &buf)
 awaitable<int> Connect::Dial(const char *addr, int port)
 {
     m_state = OPENING;
+
     auto _fd = co_await base::connect(addr, port);
     if (_fd == INVALID)
     {
@@ -73,7 +72,7 @@ awaitable<int> Connect::Dial(const char *addr, int port)
         LOG_CORE("Dial failed %d %s", errno, strerror(errno));
         co_return INVALID;
     }
-    LOG_CORE("Dial  success %s:%d", addr, port);
+    LOG_CORE("Dial success %s:%d", addr, port);
     m_state = OPENED;
     co_return _fd;
 }
@@ -93,4 +92,8 @@ bool Connect::IsOpening() const
 bool Connect::IsOpened() const
 {
     return m_state == OPENED;
+}
+int Connect::State() const
+{
+    return m_state;
 }

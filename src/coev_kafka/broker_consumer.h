@@ -30,12 +30,12 @@ struct BrokerConsumer : IConsumer, std::enable_shared_from_this<BrokerConsumer>
     void PauseAll();
     void ResumeAll();
 
-    coev::awaitable<void> subscriptionManager();
-    coev::awaitable<void> subscriptionConsumer();
+    coev::awaitable<void> SubscriptionManager();
+    coev::awaitable<void> SubscriptionConsumer();
 
-    void updateSubscriptions(const std::vector<std::shared_ptr<PartitionConsumer>> &newSubscriptions);
-    coev::awaitable<void> handleResponses();
-    coev::awaitable<void> abort(int err);
-    coev::awaitable<int> fetchNewMessages(std::shared_ptr<FetchResponse> &response);
+    void UpdateSubscriptions(const std::vector<std::shared_ptr<PartitionConsumer>> &newSubscriptions);
+    coev::awaitable<void> HandleResponses();
+    coev::awaitable<void> Abort(int err);
+    coev::awaitable<int> FetchNewMessages(std::shared_ptr<FetchResponse> &response);
 };
 std::shared_ptr<BrokerConsumer> NewBrokerConsumer(std::shared_ptr<Consumer> c, std::shared_ptr<Broker> broker);

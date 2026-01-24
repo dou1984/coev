@@ -13,7 +13,7 @@ ProducerMessage::ProducerMessage()
 {
 }
 
-int ProducerMessage::ByteSize(int version) const
+int ProducerMessage::byteSize(int version) const
 {
     int size = 0;
 
@@ -42,7 +42,7 @@ int ProducerMessage::ByteSize(int version) const
     return size;
 }
 
-void ProducerMessage::Clear()
+void ProducerMessage::clear()
 {
     m_flags = static_cast<FlagSet>(0);
     m_retries = 0;

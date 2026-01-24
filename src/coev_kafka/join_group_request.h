@@ -53,6 +53,6 @@ struct JoinGroupRequest : protocol_body, flexible_version
     bool is_flexible() const;
     bool is_flexible_version(int16_t ver) const;
     KafkaVersion required_version() const;
-    void AddGroupProtocol(const std::string &name, const std::string &metadata);
-    int AddGroupProtocolMetadata(const std::string &name, const std::shared_ptr<ConsumerGroupMemberMetadata> &metadata);
+    void add_group_protocol(const std::string &name, const std::string &metadata);
+    int add_group_protocol_metadata(const std::string &name, const std::shared_ptr<ConsumerGroupMemberMetadata> &metadata);
 };

@@ -169,12 +169,12 @@ void ProduceRequest::AddMessage(const std::string &topic, int32_t partition, std
     if (m_records[topic][partition] == nullptr)
     {
         auto msgSet = std::make_shared<MessageSet>();
-        msgSet->addMessage(msg);
+        msgSet->add_message(msg);
         m_records[topic][partition] = Records::NewLegacyRecords(msgSet);
     }
     else
     {
-        m_records[topic][partition]->m_msg_set->addMessage(msg);
+        m_records[topic][partition]->m_msg_set->add_message(msg);
     }
 }
 

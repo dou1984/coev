@@ -192,7 +192,7 @@ int FetchResponseBlock::encode(packetEncoder &pe, int16_t version)
     return pe.pop();
 }
 
-int FetchResponseBlock::numRecords()
+int FetchResponseBlock::num_records()
 {
     int sum = 0;
     for (auto &records : m_records_set)
@@ -206,7 +206,7 @@ int FetchResponseBlock::numRecords()
     return sum;
 }
 
-int FetchResponseBlock::isPartial(bool &partial)
+int FetchResponseBlock::is_partial(bool &partial)
 {
     if (m_partial)
     {
@@ -221,7 +221,7 @@ int FetchResponseBlock::isPartial(bool &partial)
     return false;
 }
 
-std::vector<std::shared_ptr<AbortedTransaction>> FetchResponseBlock::getAbortedTransactions()
+std::vector<std::shared_ptr<AbortedTransaction>> FetchResponseBlock::get_aborted_transactions()
 {
     std::sort(m_aborted_transactions.begin(), m_aborted_transactions.end(),
               [](const std::shared_ptr<AbortedTransaction> &a, const std::shared_ptr<AbortedTransaction> &b)
@@ -388,7 +388,7 @@ std::chrono::milliseconds FetchResponse::throttle_time() const
     return m_throttle_time;
 }
 
-std::shared_ptr<FetchResponseBlock> FetchResponse::GetBlock(const std::string &topic, int32_t partition)
+std::shared_ptr<FetchResponseBlock> FetchResponse::get_block(const std::string &topic, int32_t partition)
 {
     auto topicIt = m_blocks.find(topic);
     if (topicIt == m_blocks.end())
@@ -399,13 +399,13 @@ std::shared_ptr<FetchResponseBlock> FetchResponse::GetBlock(const std::string &t
     return partIt->second;
 }
 
-void FetchResponse::AddError(const std::string &topic, int32_t partition, KError err)
+void FetchResponse::add_error(const std::string &topic, int32_t partition, KError err)
 {
-    auto frb = getOrCreateBlock(topic, partition);
+    auto frb = get_or_create_block(topic, partition);
     frb->m_err = err;
 }
 
-std::shared_ptr<FetchResponseBlock> FetchResponse::getOrCreateBlock(const std::string &topic, int32_t partition)
+std::shared_ptr<FetchResponseBlock> FetchResponse::get_or_create_block(const std::string &topic, int32_t partition)
 {
     auto &partitions = m_blocks[topic];
     auto it = partitions.find(partition);
@@ -428,10 +428,10 @@ static std::pair<std::string, std::string> encodeKV(Encoder *key, Encoder *value
     return {kb, vb};
 }
 
-void FetchResponse::AddMessageWithTimestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value,
+void FetchResponse::add_message_with_timestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value,
                                             int64_t offset, std::chrono::system_clock::time_point timestamp, int8_t version)
 {
-    auto frb = getOrCreateBlock(topic, partition);
+    auto frb = get_or_create_block(topic, partition);
     auto kv = encodeKV(key, value);
     auto msgTimestamp = LogAppendTime ? Timestamp : timestamp;
     auto msg = std::make_shared<Message>(kv.first, kv.second, LogAppendTime, msgTimestamp, version);
@@ -446,10 +446,10 @@ void FetchResponse::AddMessageWithTimestamp(const std::string &topic, int32_t pa
     set->m_messages.emplace_back(msgBlock);
 }
 
-void FetchResponse::AddRecordWithTimestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value,
+void FetchResponse::add_record_with_timestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value,
                                            int64_t offset, std::chrono::system_clock::time_point timestamp)
 {
-    auto frb = getOrCreateBlock(topic, partition);
+    auto frb = get_or_create_block(topic, partition);
     auto kv = encodeKV(key, value);
 
     if (frb->m_records_set.empty())
@@ -468,7 +468,7 @@ void FetchResponse::AddRecordBatchWithTimestamp(const std::string &topic, int32_
                                                 int64_t offset, int64_t producerID, bool isTransactional,
                                                 std::chrono::system_clock::time_point timestamp)
 {
-    auto frb = getOrCreateBlock(topic, partition);
+    auto frb = get_or_create_block(topic, partition);
     auto kv = encodeKV(key, value);
 
     auto batch = std::make_shared<RecordBatch>();
@@ -493,7 +493,7 @@ void FetchResponse::AddControlRecordWithTimestamp(const std::string &topic, int3
                                                   int64_t producerID, ControlRecordType recordType,
                                                   std::chrono::system_clock::time_point timestamp)
 {
-    auto frb = getOrCreateBlock(topic, partition);
+    auto frb = get_or_create_block(topic, partition);
 
     auto batch = std::make_shared<RecordBatch>();
     batch->m_version = 2;
@@ -521,33 +521,33 @@ void FetchResponse::AddControlRecordWithTimestamp(const std::string &topic, int3
     frb->m_records_set.push_back(records);
 }
 
-void FetchResponse::AddMessage(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset)
+void FetchResponse::add_message(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset)
 {
-    AddMessageWithTimestamp(topic, partition, key, value, offset, std::chrono::system_clock::time_point{}, 0);
+    add_message_with_timestamp(topic, partition, key, value, offset, std::chrono::system_clock::time_point{}, 0);
 }
 
-void FetchResponse::AddRecord(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset)
+void FetchResponse::add_record(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset)
 {
-    AddRecordWithTimestamp(topic, partition, key, value, offset, std::chrono::system_clock::time_point{});
+    add_record_with_timestamp(topic, partition, key, value, offset, std::chrono::system_clock::time_point{});
 }
 
-void FetchResponse::AddRecordBatch(const std::string &topic, int32_t partition, Encoder *key, Encoder *value,
+void FetchResponse::add_record_batch(const std::string &topic, int32_t partition, Encoder *key, Encoder *value,
                                    int64_t offset, int64_t producerID, bool isTransactional)
 {
     AddRecordBatchWithTimestamp(topic, partition, key, value, offset, producerID, isTransactional,
                                 std::chrono::system_clock::time_point{});
 }
 
-void FetchResponse::AddControlRecord(const std::string &topic, int32_t partition, int64_t offset,
+void FetchResponse::add_control_record(const std::string &topic, int32_t partition, int64_t offset,
                                      int64_t producerID, ControlRecordType recordType)
 {
     AddControlRecordWithTimestamp(topic, partition, offset, producerID, recordType,
                                   std::chrono::system_clock::time_point{});
 }
 
-void FetchResponse::SetLastOffsetDelta(const std::string &topic, int32_t partition, int32_t offset)
+void FetchResponse::set_last_offset_delta(const std::string &topic, int32_t partition, int32_t offset)
 {
-    auto frb = getOrCreateBlock(topic, partition);
+    auto frb = get_or_create_block(topic, partition);
     if (frb->m_records_set.empty())
     {
         auto batch = std::make_shared<RecordBatch>(2);
@@ -557,8 +557,8 @@ void FetchResponse::SetLastOffsetDelta(const std::string &topic, int32_t partiti
     frb->m_records_set[0]->m_record_batch->m_last_offset_delta = offset;
 }
 
-void FetchResponse::SetLastStableOffset(const std::string &topic, int32_t partition, int64_t offset)
+void FetchResponse::set_last_stable_offset(const std::string &topic, int32_t partition, int64_t offset)
 {
-    auto frb = getOrCreateBlock(topic, partition);
+    auto frb = get_or_create_block(topic, partition);
     frb->m_last_stable_offset = offset;
 }

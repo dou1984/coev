@@ -20,9 +20,7 @@ struct ConsumerMetadataResponse : protocol_body
     std::string m_coordinator_host;
     int32_t m_coordinator_port;
     ConsumerMetadataResponse() = default;
-    ConsumerMetadataResponse(int16_t v) : m_version(v)
-    {
-    }
+    ConsumerMetadataResponse(int16_t v);
     void set_version(int16_t v);
     int16_t key() const;
     int16_t version() const;

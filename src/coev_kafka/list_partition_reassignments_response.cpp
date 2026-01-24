@@ -43,9 +43,8 @@ void ListPartitionReassignmentsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-void ListPartitionReassignmentsResponse::AddBlock(
-    const std::string &topic,
-    int32_t partition,
+void ListPartitionReassignmentsResponse::add_block(
+    const std::string &topic, int32_t partition,
     const std::vector<int32_t> &replicas,
     const std::vector<int32_t> &addingReplicas,
     const std::vector<int32_t> &removingReplicas)

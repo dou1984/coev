@@ -39,7 +39,7 @@ struct PartitionConsumer : std::enable_shared_from_this<PartitionConsumer>
     std::chrono::duration<double> ComputeBackoff();
 
     coev::awaitable<int> Dispatcher();
-    coev::awaitable<int> preferredBroker(std::shared_ptr<Broker> &broker, int32_t &epoch);
+    coev::awaitable<int> PreferredBroker(std::shared_ptr<Broker> &broker, int32_t &epoch);
     coev::awaitable<int> Dispatch();
     coev::awaitable<int> ChooseStartingOffset(int64_t offset);
     coev::awaitable<int> Interceptors(std::shared_ptr<ConsumerMessage> &msg);

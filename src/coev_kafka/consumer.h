@@ -5,7 +5,6 @@
 #include <string>
 #include <map>
 #include <atomic>
-#include <mutex>
 #include <chrono>
 #include <cstdint>
 #include "config.h"
@@ -42,25 +41,24 @@ struct Consumer : IConsumer, std::enable_shared_from_this<Consumer>
     int Topics(std::vector<std::string> &out);
     coev::awaitable<int> Partitions(const std::string &topic, std::vector<int32_t> &out);
     coev::awaitable<int> Close();
-    std::map<std::string, std::map<int32_t, int64_t>> HighWaterMarks();
     coev::awaitable<int> ConsumePartition(const std::string &topic, int32_t partition, int64_t offset, std::shared_ptr<PartitionConsumer> &child);
 
+    std::map<std::string, std::map<int32_t, int64_t>> HighWaterMarks();
     void Pause(const std::map<std::string, std::vector<int32_t>> &topicPartitions);
     void Resume(const std::map<std::string, std::vector<int32_t>> &topicPartitions);
     void PauseAll();
     void ResumeAll();
 
-    int addChild(const std::shared_ptr<PartitionConsumer> &child);
-    void removeChild(const std::shared_ptr<PartitionConsumer> &child);
-    std::shared_ptr<BrokerConsumer> refBrokerConsumer(std::shared_ptr<Broker> broker);
-    void unrefBrokerConsumer(std::shared_ptr<BrokerConsumer> brokerWorker);
-    void abandonBrokerConsumer(std::shared_ptr<BrokerConsumer> brokerWorker);
+    int AddChild(const std::shared_ptr<PartitionConsumer> &child);
+    void RemoveChild(const std::shared_ptr<PartitionConsumer> &child);
+    std::shared_ptr<BrokerConsumer> RefBrokerConsumer(std::shared_ptr<Broker> broker);
+    void UnrefBrokerConsumer(std::shared_ptr<BrokerConsumer> brokerWorker);
+    void AbandonBrokerConsumer(std::shared_ptr<BrokerConsumer> brokerWorker);
 
     std::shared_ptr<Config> m_conf;
     std::map<std::string, std::map<int32_t, std::shared_ptr<PartitionConsumer>>> m_children;
-    std::map<std::shared_ptr<Broker>, std::shared_ptr<BrokerConsumer>> m_broker_consumers;
+    std::map<int32_t, std::shared_ptr<BrokerConsumer>> m_broker_consumers;
     std::shared_ptr<Client> m_client;
-    std::mutex m_lock;
     coev::co_task m_task;
 };
 

@@ -32,7 +32,7 @@ struct ISyncProducer
 struct SyncProducer : ISyncProducer
 {
 
-    std::shared_ptr<AsyncProducer> producer;
+    std::shared_ptr<AsyncProducer> m_producer;
     std::atomic<bool> closed{false};
     coev::co_task task;
 

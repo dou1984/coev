@@ -46,5 +46,5 @@ struct JoinGroupResponse : protocol_body, flexible_version
     bool is_flexible_version(int16_t ver) const;
     KafkaVersion required_version() const;
     std::chrono::milliseconds throttle_time() const;
-    int GetMembers(std::map<std::string, ConsumerGroupMemberMetadata> &members);
+    int get_members(std::map<std::string, ConsumerGroupMemberMetadata> &members);
 };

@@ -11,6 +11,7 @@ std::string method;
 std::string host;
 int port;
 std::string topic;
+std::string data;
 
 int main(int argc, char **argv)
 {
@@ -25,6 +26,10 @@ int main(int argc, char **argv)
     host = argv[2];
     port = std::stoi(argv[3]);
     topic = argv[4];
+    if (argc == 6)
+    {
+        data = argv[5];
+    }
 
     if (method == "pull")
     {
@@ -34,7 +39,7 @@ int main(int argc, char **argv)
                 {
                     std::shared_ptr<Config> conf = std::make_shared<Config>();
 
-                    std::shared_ptr<Consumer> consumer = std::make_shared<Consumer>();
+                    std::shared_ptr<Consumer> consumer;
 
                     std::vector<std::string> addrs = {host + ":" + std::to_string(port)};
 
@@ -42,41 +47,39 @@ int main(int argc, char **argv)
 
                     if (err)
                     {
-                        std::cout << "NewConsumer error: " << err << std::endl;
+                        LOG_ERR("NewConsumer error: %d", err);
                         co_return;
                     }
 
                     std::vector<int32_t> partitions;
-
                     err = co_await consumer->Partitions(topic, partitions);
                     if (err)
                     {
-                        std::cout << "Partitions error: " << err << std::endl;
+                        LOG_ERR("Partitions error: %d", err);
                         co_return;
                     }
 
                     co_task task;
                     for (auto partition : partitions)
                     {
-                        task << [consumer, partition]() -> awaitable<void>
+                        task << [](auto consumer, auto partition) -> awaitable<void>
                         {
                             std::shared_ptr<PartitionConsumer> partition_consumer;
                             auto err = co_await consumer->ConsumePartition(topic, partition, OffsetNewest, partition_consumer);
                             if (err)
                             {
-                                std::cout << "ConsumePartition error: " << err << std::endl;
+                                LOG_ERR("ConsumePartition error: %d", err);
                                 co_return;
                             }
                             while (true)
                             {
                                 auto msg = co_await partition_consumer->Messages();
-
                                 if (msg)
                                 {
-                                    LOG_DBG("%s %s ", msg->Key().c_str(), msg->Value().c_str());
+                                    LOG_DBG("%s %s", msg->key().c_str(), msg->value().c_str());
                                 }
                             }
-                        }();
+                        }(consumer, partition);
                     }
                     co_await task.wait_all();
                     LOG_DBG("all task done");
@@ -108,14 +111,14 @@ int main(int argc, char **argv)
                         std::cout << "NewAsyncProducer error: " << err << std::endl;
                         co_return;
                     }
-                    defer(producer->AsyncClose());
+                    defer(producer->async_close());
 
                     auto msg = std::make_shared<ProducerMessage>();
                     msg->m_topic = topic;
                     msg->m_key = std::make_shared<StringEncoder>("key");
                     msg->m_value = std::make_shared<ByteEncoder>("hello world");
 
-                    producer->m_input = msg;
+                    co_await producer->dispatcher(msg);
 
                     int64_t offset = 0;
                     co_task task;
@@ -123,22 +126,19 @@ int main(int argc, char **argv)
                     {
                         auto suc_msg = co_await producer->m_successes.get();
                         offset = suc_msg->m_offset;
+
+                        LOG_DBG("produced message at offset %ld", offset);
                     }();
                     auto fail = task << [&]() -> awaitable<void>
                     {
                         auto fail_msg = co_await producer->m_errors.get();
-                        LOG_CORE("fail: %d", fail_msg->m_err);
+                        LOG_ERR("fail: %d", fail_msg->m_err);
                         err = fail_msg->m_err;
                     }();
 
                     co_await task.wait();
                 })
-            .start(
-                []() -> coev::awaitable<void>
-                {
-                    co_await sleep_for(20);
-                    exit(0);
-                })
+
             .wait();
     }
 

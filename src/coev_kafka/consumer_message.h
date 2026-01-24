@@ -7,8 +7,9 @@
 struct ConsumerMessage
 {
     ConsumerMessage() = default;
-    auto &Key() { return m_key; }
-    auto &Value() { return m_value; }
+
+    const std::string &key();
+    const std::string &value();
 
     std::vector<std::shared_ptr<RecordHeader>> m_headers;
     std::chrono::system_clock::time_point m_timestamp;

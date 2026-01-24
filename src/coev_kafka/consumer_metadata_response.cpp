@@ -6,6 +6,9 @@
 #include <sstream>
 #include <stdexcept>
 
+ConsumerMetadataResponse::ConsumerMetadataResponse(int16_t v) : m_version(v)
+{
+}
 void ConsumerMetadataResponse::set_version(int16_t v)
 {
     m_version = v;

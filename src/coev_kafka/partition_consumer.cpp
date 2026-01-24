@@ -56,7 +56,7 @@ coev::awaitable<int> PartitionConsumer::Dispatcher()
 
         if (m_broker != nullptr)
         {
-            m_consumer->unrefBrokerConsumer(m_broker);
+            m_consumer->UnrefBrokerConsumer(m_broker);
             m_broker = nullptr;
         }
 
@@ -70,13 +70,13 @@ coev::awaitable<int> PartitionConsumer::Dispatcher()
 
     if (m_broker != nullptr)
     {
-        m_consumer->unrefBrokerConsumer(m_broker);
+        m_consumer->UnrefBrokerConsumer(m_broker);
     }
-    m_consumer->removeChild(shared_from_this());
+    m_consumer->RemoveChild(shared_from_this());
     co_return 0;
 }
 
-coev::awaitable<int> PartitionConsumer::preferredBroker(std::shared_ptr<Broker> &broker, int32_t &epoch)
+coev::awaitable<int> PartitionConsumer::PreferredBroker(std::shared_ptr<Broker> &broker, int32_t &epoch)
 {
 
     int err = 0;
@@ -116,11 +116,11 @@ coev::awaitable<int> PartitionConsumer::Dispatch()
         co_return err;
 
     std::shared_ptr<Broker> broker;
-    err = co_await preferredBroker(broker, m_leader_epoch);
+    err = co_await PreferredBroker(broker, m_leader_epoch);
     if (err)
         co_return err;
 
-    auto brokerConsumer = m_consumer->refBrokerConsumer(broker);
+    auto brokerConsumer = m_consumer->RefBrokerConsumer(broker);
     brokerConsumer->m_input.set(shared_from_this());
 
     co_return ErrNoError;
@@ -331,7 +331,7 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
         return ErrThrottled;
     }
 
-    auto block = response->GetBlock(m_topic, m_partition);
+    auto block = response->get_block(m_topic, m_partition);
     if (!block)
     {
         return ErrIncompleteResponse;
@@ -342,7 +342,7 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
         return block->m_err;
     }
 
-    auto nRecs = block->numRecords();
+    auto nRecs = block->num_records();
 
     if (block->m_preferred_read_replica != invalidPreferredReplicaID)
     {
@@ -353,7 +353,7 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
     {
         std::shared_ptr<ConsumerMessage> partialTrailingMessage;
         bool isPartial;
-        auto err = block->isPartial(isPartial);
+        auto err = block->is_partial(isPartial);
         if (!isPartial)
         {
             return err;
@@ -392,7 +392,7 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
     m_high_water_mark_offset.store(block->m_high_water_mark_offset);
 
     std::unordered_set<int64_t> abortedProducerIDs;
-    auto abortedTransactions = block->getAbortedTransactions();
+    auto abortedTransactions = block->get_aborted_transactions();
 
     for (auto &records : block->m_records_set)
     {
@@ -466,7 +466,7 @@ coev::awaitable<int> PartitionConsumer::Interceptors(std::shared_ptr<ConsumerMes
 {
     for (auto &interceptor : m_conf->Consumer.Interceptors)
     {
-        auto err = co_await safelyApplyInterceptor(msg, interceptor);
+        auto err = co_await SafelyApplyInterceptor(msg, interceptor);
         if (err)
             co_return err;
     }

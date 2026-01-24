@@ -188,7 +188,7 @@ std::chrono::milliseconds JoinGroupResponse::throttle_time() const
     return std::chrono::milliseconds(m_throttle_time);
 }
 
-int JoinGroupResponse::GetMembers(std::map<std::string, ConsumerGroupMemberMetadata> &members_)
+int JoinGroupResponse::get_members(std::map<std::string, ConsumerGroupMemberMetadata> &members_)
 {
     members_.clear();
 

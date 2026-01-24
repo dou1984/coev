@@ -47,9 +47,9 @@ struct FetchResponseBlock : versioned_decoder, versioned_encoder
     FetchResponseBlock();
     int decode(packetDecoder &pd, int16_t version);
     int encode(packetEncoder &pe, int16_t version);
-    int numRecords();
-    int isPartial(bool &partial);
-    std::vector<std::shared_ptr<AbortedTransaction>> getAbortedTransactions();
+    int num_records();
+    int is_partial(bool &partial);
+    std::vector<std::shared_ptr<AbortedTransaction>> get_aborted_transactions();
 };
 
 struct FetchResponse : protocol_body
@@ -73,23 +73,24 @@ struct FetchResponse : protocol_body
     bool is_valid_version() const;
     KafkaVersion required_version() const;
     std::chrono::milliseconds throttle_time() const;
-    std::shared_ptr<FetchResponseBlock> GetBlock(const std::string &topic, int32_t partition);
-    void AddError(const std::string &topic, int32_t partition, KError err);
-    std::shared_ptr<FetchResponseBlock> getOrCreateBlock(const std::string &topic, int32_t partition);
 
-    void AddMessageWithTimestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset,
+    std::shared_ptr<FetchResponseBlock> get_block(const std::string &topic, int32_t partition);
+    void add_error(const std::string &topic, int32_t partition, KError err);
+    std::shared_ptr<FetchResponseBlock> get_or_create_block(const std::string &topic, int32_t partition);
+
+    void add_message_with_timestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset,
                                  std::chrono::system_clock::time_point timestamp, int8_t version);
-    void AddRecordWithTimestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset,
+    void add_record_with_timestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset,
                                 std::chrono::system_clock::time_point timestamp);
     void AddRecordBatchWithTimestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset,
                                      int64_t producerID, bool isTransactional, std::chrono::system_clock::time_point timestamp);
     void AddControlRecordWithTimestamp(const std::string &topic, int32_t partition, int64_t offset, int64_t producerID,
                                        ControlRecordType recordType, std::chrono::system_clock::time_point timestamp);
-    void AddMessage(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset);
-    void AddRecord(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset);
-    void AddRecordBatch(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset,
+    void add_message(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset);
+    void add_record(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset);
+    void add_record_batch(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset,
                         int64_t producerID, bool isTransactional);
-    void AddControlRecord(const std::string &topic, int32_t partition, int64_t offset, int64_t producerID, ControlRecordType recordType);
-    void SetLastOffsetDelta(const std::string &topic, int32_t partition, int32_t offset);
-    void SetLastStableOffset(const std::string &topic, int32_t partition, int64_t offset);
+    void add_control_record(const std::string &topic, int32_t partition, int64_t offset, int64_t producerID, ControlRecordType recordType);
+    void set_last_offset_delta(const std::string &topic, int32_t partition, int32_t offset);
+    void set_last_stable_offset(const std::string &topic, int32_t partition, int64_t offset);
 };

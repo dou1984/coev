@@ -15,9 +15,8 @@ struct ConsumerMetadataRequest : protocol_body
     int16_t m_version;
     std::string m_consumer_group;
 
-    ConsumerMetadataRequest() : m_version(0) {}
-    ConsumerMetadataRequest(int16_t v, const std::string &group)
-        : m_version(v), m_consumer_group(group) {}
+    ConsumerMetadataRequest();
+    ConsumerMetadataRequest(int16_t v, const std::string &group);
 
     void set_version(int16_t v);
     int encode(packetEncoder &pe);

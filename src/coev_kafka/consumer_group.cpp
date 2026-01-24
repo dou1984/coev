@@ -219,7 +219,7 @@ coev::awaitable<int> ConsumerGroup::NewSession(std::shared_ptr<Context> &ctx, co
 
     if (response.m_leader_id == response.m_member_id)
     {
-        err = response.GetMembers(members);
+        err = response.get_members(members);
         if (err != 0)
         {
             co_return err;
@@ -346,7 +346,7 @@ coev::awaitable<int> ConsumerGroup::JoinGroup(std::shared_ptr<Broker> coordinato
     auto strategy = m_config->Consumer.Group.Rebalance.Strategy;
     if (strategy != nullptr)
     {
-        err = request->AddGroupProtocolMetadata(strategy->Name(), meta);
+        err = request->add_group_protocol_metadata(strategy->Name(), meta);
         if (err != 0)
         {
             co_return err;
@@ -356,7 +356,7 @@ coev::awaitable<int> ConsumerGroup::JoinGroup(std::shared_ptr<Broker> coordinato
     {
         for (const auto &s : m_config->Consumer.Group.Rebalance.GroupStrategies)
         {
-            err = request->AddGroupProtocolMetadata(s->Name(), meta);
+            err = request->add_group_protocol_metadata(s->Name(), meta);
             if (err != 0)
             {
                 co_return err;

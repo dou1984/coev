@@ -44,6 +44,6 @@ struct ProducerMessage : std::enable_shared_from_this<ProducerMessage>
     bool m_has_sequence;
 
     ProducerMessage();
-    int ByteSize(int version) const;
-    void Clear();
+    int byteSize(int version) const;
+    void clear();
 };

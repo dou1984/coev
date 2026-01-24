@@ -11,7 +11,6 @@
 
 struct Partitioner
 {
-
     virtual ~Partitioner() = default;
     virtual int Partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result) = 0;
     virtual bool RequiresConsistency() = 0;

@@ -30,7 +30,7 @@ coev::awaitable<int> Consumer::Partitions(const std::string &topic, std::vector<
 
 std::map<std::string, std::map<int32_t, int64_t>> Consumer::HighWaterMarks()
 {
-    std::lock_guard<std::mutex> lock(m_lock);
+
     std::map<std::string, std::map<int32_t, int64_t>> hwms;
     for (auto &topic_pair : m_children)
     {
@@ -50,7 +50,6 @@ std::map<std::string, std::map<int32_t, int64_t>> Consumer::HighWaterMarks()
 
 void Consumer::Pause(const std::map<std::string, std::vector<int32_t>> &topicPartitions)
 {
-    std::lock_guard<std::mutex> lock(m_lock);
     for (auto &tp : topicPartitions)
     {
         auto &topic = tp.first;
@@ -73,7 +72,6 @@ void Consumer::Pause(const std::map<std::string, std::vector<int32_t>> &topicPar
 
 void Consumer::Resume(const std::map<std::string, std::vector<int32_t>> &topicPartitions)
 {
-    std::lock_guard<std::mutex> lock(m_lock);
     for (auto &tp : topicPartitions)
     {
         auto &topic = tp.first;
@@ -96,7 +94,6 @@ void Consumer::Resume(const std::map<std::string, std::vector<int32_t>> &topicPa
 
 void Consumer::PauseAll()
 {
-    std::lock_guard<std::mutex> lock(m_lock);
     for (auto &topic_pair : m_children)
     {
         for (auto &pc_pair : topic_pair.second)
@@ -108,7 +105,6 @@ void Consumer::PauseAll()
 
 void Consumer::ResumeAll()
 {
-    std::lock_guard<std::mutex> lock(m_lock);
     for (auto &topic_pair : m_children)
     {
         for (auto &pc_pair : topic_pair.second)
@@ -118,9 +114,8 @@ void Consumer::ResumeAll()
     }
 }
 
-int Consumer::addChild(const std::shared_ptr<PartitionConsumer> &child)
+int Consumer::AddChild(const std::shared_ptr<PartitionConsumer> &child)
 {
-    std::lock_guard<std::mutex> lock(m_lock);
     auto &topicChildren = m_children[child->m_topic];
     if (topicChildren.find(child->m_partition) != topicChildren.end())
     {
@@ -130,9 +125,8 @@ int Consumer::addChild(const std::shared_ptr<PartitionConsumer> &child)
     return 0;
 }
 
-void Consumer::removeChild(const std::shared_ptr<PartitionConsumer> &child)
+void Consumer::RemoveChild(const std::shared_ptr<PartitionConsumer> &child)
 {
-    std::lock_guard<std::mutex> lock(m_lock);
     auto it = m_children.find(child->m_topic);
     if (it != m_children.end())
     {
@@ -140,27 +134,25 @@ void Consumer::removeChild(const std::shared_ptr<PartitionConsumer> &child)
     }
 }
 
-std::shared_ptr<BrokerConsumer> Consumer::refBrokerConsumer(std::shared_ptr<Broker> broker)
+std::shared_ptr<BrokerConsumer> Consumer::RefBrokerConsumer(std::shared_ptr<Broker> broker)
 {
-    std::lock_guard<std::mutex> lock(m_lock);
-    auto it = m_broker_consumers.find(broker);
+    auto it = m_broker_consumers.find(broker->ID());
     if (it == m_broker_consumers.end())
     {
         auto bc = NewBrokerConsumer(shared_from_this(), broker);
-        m_broker_consumers[broker] = bc;
-        it = m_broker_consumers.find(broker);
+        m_broker_consumers[broker->ID()] = bc;
+        it = m_broker_consumers.find(broker->ID());
     }
     it->second->m_refs++;
     return it->second;
 }
 
-void Consumer::unrefBrokerConsumer(std::shared_ptr<BrokerConsumer> brokerWorker)
+void Consumer::UnrefBrokerConsumer(std::shared_ptr<BrokerConsumer> brokerWorker)
 {
-    std::lock_guard<std::mutex> lock(m_lock);
     brokerWorker->m_refs--;
     if (brokerWorker->m_refs == 0)
     {
-        auto it = m_broker_consumers.find(brokerWorker->m_broker);
+        auto it = m_broker_consumers.find(brokerWorker->m_broker->ID());
         if (it != m_broker_consumers.end() && it->second.get() == brokerWorker.get())
         {
             m_broker_consumers.erase(it);
@@ -193,7 +185,7 @@ coev::awaitable<int> Consumer::ConsumePartition(const std::string &topic, int32_
         co_return err;
     }
 
-    err = addChild(child);
+    err = AddChild(child);
     if (err != 0)
     {
         co_return err;
@@ -203,29 +195,27 @@ coev::awaitable<int> Consumer::ConsumePartition(const std::string &topic, int32_
     m_task << child->ResponseFeeder();
 
     child->m_leader_epoch = epoch;
-    child->m_broker = refBrokerConsumer(leader);
+    child->m_broker = RefBrokerConsumer(leader);
     child->m_broker->m_input.set(child);
 
     co_return 0;
 }
 
-void Consumer::abandonBrokerConsumer(std::shared_ptr<BrokerConsumer> brokerWorker)
+void Consumer::AbandonBrokerConsumer(std::shared_ptr<BrokerConsumer> brokerWorker)
 {
-    std::lock_guard<std::mutex> lock(m_lock);
-    m_broker_consumers.erase(brokerWorker->m_broker);
+    m_broker_consumers.erase(brokerWorker->m_broker->ID());
 }
 
-int NewConsumer(const std::shared_ptr<Client> &client, std::shared_ptr<Consumer> &consumer_)
+int NewConsumer(const std::shared_ptr<Client> &client, std::shared_ptr<Consumer> &consumer)
 {
     if (client->Closed())
     {
         return ErrClosedClient;
     }
 
-    auto consumer = std::make_shared<Consumer>();
+    consumer = std::make_shared<Consumer>();
     consumer->m_client = client;
     consumer->m_conf = client->GetConfig();
-    consumer_ = consumer;
     return 0;
 }
 int NewConsumerFromClient(const std::shared_ptr<Client> &client, std::shared_ptr<Consumer> &consumer)

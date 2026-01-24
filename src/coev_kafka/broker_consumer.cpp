@@ -5,7 +5,7 @@
 
 auto partitionConsumersBatchTimeout = std::chrono::milliseconds(100);
 
-coev::awaitable<void> BrokerConsumer::subscriptionManager()
+coev::awaitable<void> BrokerConsumer::SubscriptionManager()
 {
     while (true)
     {
@@ -33,17 +33,17 @@ coev::awaitable<void> BrokerConsumer::subscriptionManager()
             }
         }
 
-        m_new_subscriptions.set(std::move(partitionConsumers));
+        m_new_subscriptions = std::move(partitionConsumers);
     }
 }
 
-coev::awaitable<void> BrokerConsumer::subscriptionConsumer()
+coev::awaitable<void> BrokerConsumer::SubscriptionConsumer()
 {
 
     while (true)
     {
         std::vector<std::shared_ptr<PartitionConsumer>> sub = co_await m_new_subscriptions.get();
-        updateSubscriptions(sub);
+        UpdateSubscriptions(sub);
 
         if (m_subscriptions.empty())
         {
@@ -52,10 +52,10 @@ coev::awaitable<void> BrokerConsumer::subscriptionConsumer()
         }
 
         std::shared_ptr<FetchResponse> response;
-        int err = co_await fetchNewMessages(response);
+        int err = co_await FetchNewMessages(response);
         if (err != 0)
         {
-            abort(err);
+            Abort(err);
             co_return;
         }
 
@@ -80,10 +80,10 @@ coev::awaitable<void> BrokerConsumer::subscriptionConsumer()
             child.first->m_feeder.set(response);
         }
 
-        co_await handleResponses();
+        co_await HandleResponses();
     }
 }
-void BrokerConsumer::updateSubscriptions(const std::vector<std::shared_ptr<PartitionConsumer>> &m_new_subscriptions)
+void BrokerConsumer::UpdateSubscriptions(const std::vector<std::shared_ptr<PartitionConsumer>> &m_new_subscriptions)
 {
     for (auto &child : m_new_subscriptions)
     {
@@ -106,7 +106,7 @@ void BrokerConsumer::updateSubscriptions(const std::vector<std::shared_ptr<Parti
     }
 }
 
-coev::awaitable<void> BrokerConsumer::handleResponses()
+coev::awaitable<void> BrokerConsumer::HandleResponses()
 {
     for (auto it = m_subscriptions.begin(); it != m_subscriptions.end();)
     {
@@ -118,7 +118,7 @@ coev::awaitable<void> BrokerConsumer::handleResponses()
         {
             std::shared_ptr<Broker> preferredBroker;
             int _;
-            auto err_code = co_await child->preferredBroker(preferredBroker, _);
+            auto err_code = co_await child->PreferredBroker(preferredBroker, _);
             if (err_code == 0 && m_broker->ID() != preferredBroker->ID())
             {
                 child->m_trigger.set(true);
@@ -157,9 +157,9 @@ coev::awaitable<void> BrokerConsumer::handleResponses()
     }
 }
 
-coev::awaitable<void> BrokerConsumer::abort(int err)
+coev::awaitable<void> BrokerConsumer::Abort(int err)
 {
-    m_consumer->abandonBrokerConsumer(shared_from_this());
+    m_consumer->AbandonBrokerConsumer(shared_from_this());
     m_broker->Close();
 
     for (auto &child : m_subscriptions)
@@ -184,7 +184,7 @@ coev::awaitable<void> BrokerConsumer::abort(int err)
     }
 }
 
-coev::awaitable<int> BrokerConsumer::fetchNewMessages(std::shared_ptr<FetchResponse> &response)
+coev::awaitable<int> BrokerConsumer::FetchNewMessages(std::shared_ptr<FetchResponse> &response)
 {
     auto request = std::make_shared<FetchRequest>();
     request->m_min_bytes = m_consumer->m_conf->Consumer.Fetch.Min;
@@ -262,8 +262,8 @@ std::shared_ptr<BrokerConsumer> NewBrokerConsumer(std::shared_ptr<Consumer> c, s
     bc->m_broker = m_broker;
     bc->m_refs = 0;
 
-    bc->m_task << bc->subscriptionManager();
-    bc->m_task << bc->subscriptionConsumer();
+    bc->m_task << bc->SubscriptionManager();
+    bc->m_task << bc->SubscriptionConsumer();
 
     return bc;
 }

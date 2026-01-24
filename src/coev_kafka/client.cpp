@@ -89,7 +89,7 @@ coev::awaitable<int> NewClient(const std::vector<std::string> &addrs, std::share
     }
 
     client_->m_task << client_->BackgroundMetadataUpdater();
-    LOG_DBG("NewClient Successfully initialized new client");
+    // LOG_DBG("NewClient Successfully initialized new client");
 
     co_return ErrNoError;
 }
@@ -106,9 +106,9 @@ std::shared_ptr<Config> Client::GetConfig()
     return m_conf;
 }
 
-std::vector<std::shared_ptr<Broker>> Client::Brokers()
+std::deque<std::shared_ptr<Broker>> Client::Brokers()
 {
-    std::vector<std::shared_ptr<Broker>> _brokers;
+    std::deque<std::shared_ptr<Broker>> _brokers;
     for (auto &kv : m_brokers)
     {
         _brokers.push_back(kv.second);
@@ -133,30 +133,30 @@ coev::awaitable<int> Client::InitProducerID(InitProducerIDResponse &response)
     std::vector<int> brokerErrors;
     std::shared_ptr<Broker> broker;
     int err;
-    for (err = co_await LeastLoadedBroker(broker); broker != nullptr; err = co_await LeastLoadedBroker(broker))
+    for (err = co_await LeastLoadedBroker(broker); err == 0 && broker; err = co_await LeastLoadedBroker(broker))
     {
-        auto request = std::make_shared<InitProducerIDRequest>();
+        InitProducerIDRequest request;
         if (m_conf->Version.IsAtLeast(V2_7_0_0))
         {
-            request->m_version = 4;
+            request.m_version = 4;
         }
         else if (m_conf->Version.IsAtLeast(V2_5_0_0))
         {
-            request->m_version = 3;
+            request.m_version = 3;
         }
         else if (m_conf->Version.IsAtLeast(V2_4_0_0))
         {
-            request->m_version = 2;
+            request.m_version = 2;
         }
         else if (m_conf->Version.IsAtLeast(V2_0_0_0))
         {
-            request->m_version = 1;
+            request.m_version = 1;
         }
         ResponsePromise<InitProducerIDResponse> promise;
-        err = co_await broker->InitProducerID(*request, promise);
+        err = co_await broker->InitProducerID(request, promise);
         if (err == 0)
         {
-            response = promise.m_response;
+            response = std::move(promise.m_response);
             co_return 0;
         }
         else
@@ -188,8 +188,7 @@ int Client::Close()
     {
         b->SafeAsyncClose();
     }
-    // 不要在非协程上下文调用m_closed.get()，这会导致段错误
-    // m_closed.get();
+
     m_brokers.clear();
     m_dead_seeds.clear();
     m_metadata.clear();
@@ -668,21 +667,21 @@ void Client::ResurrectDeadBrokers()
 
 coev::awaitable<int> Client::LeastLoadedBroker(std::shared_ptr<Broker> &leastLoadedBroker)
 {
-
-    for (auto &kv : m_brokers)
+    if (!m_brokers.empty())
     {
-        leastLoadedBroker = kv.second;
+        leastLoadedBroker = m_brokers.rbegin()->second;
     }
+
     int err = 0;
     if (leastLoadedBroker)
     {
-        err = co_await leastLoadedBroker->Open(m_conf);
-        if (err != 0)
+        auto err = co_await leastLoadedBroker->Open(m_conf);
+        if (err == 0)
         {
-            co_return err;
+            co_return 0;
         }
-        co_return err;
     }
+
     if (!m_seed_brokers.empty())
     {
         std::shared_ptr<Broker> seedBroker = m_seed_brokers[0];
@@ -697,16 +696,10 @@ coev::awaitable<int> Client::LeastLoadedBroker(std::shared_ptr<Broker> &leastLoa
             co_return err;
         }
 
-        if (!m_seed_brokers.empty() && m_seed_brokers[0] == seedBroker)
-        {
-            leastLoadedBroker = seedBroker;
-        }
-        else
-        {
-            err = ErrBrokerNotAvailable;
-        }
-        co_return err;
+        leastLoadedBroker = seedBroker;
+        co_return 0;
     }
+
     co_return ErrBrokerNotAvailable;
 }
 
@@ -929,8 +922,7 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
         err = co_await broker->GetMetadata(*request, promise);
         if (err == 0)
         {
-            auto &response = promise.m_response;
-            if (response.m_brokers.empty())
+            if (promise.m_response.m_brokers.empty())
             {
                 LOG_CORE("receiving empty brokers from the metadata response when requesting the broker #%d at %s", broker->ID(), broker->Addr().c_str());
                 broker->Close();
@@ -940,18 +932,17 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
             bool allKnownMetaData = topics.empty();
             bool shouldRetry;
 
-            auto responsePtr = std::make_shared<MetadataResponse>(response);
-            shouldRetry = UpdateMetadata(responsePtr, allKnownMetaData);
+            shouldRetry = UpdateMetadata(promise.m_response, allKnownMetaData);
             if (shouldRetry)
             {
                 LOG_CORE("found some partitions to be leaderless");
                 err = co_await RetryRefreshMetadata(topics, attemptsRemaining, deadline, ErrLeaderNotAvailable);
-                co_return err;
             }
-            co_return 0;
+            co_return err;
         }
         else if (err == ErrEncodeError || err == ErrDecodeError)
         {
+            LOG_CORE("failed to encode/decode metadata request");
             co_return err;
         }
         else if (IsKError(err))
@@ -984,15 +975,15 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
     co_return co_await RetryRefreshMetadata(topics, attemptsRemaining, deadline, err);
 }
 
-bool Client::UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnownMetaData)
+bool Client::UpdateMetadata(MetadataResponse &data, bool allKnownMetaData)
 {
     if (Closed())
     {
         return false;
     }
 
-    UpdateBroker(data->m_brokers);
-    m_controller_id = data->m_controller_id;
+    UpdateBroker(data.m_brokers);
+    m_controller_id = data.m_controller_id;
     if (allKnownMetaData)
     {
         m_metadata.clear();
@@ -1001,7 +992,7 @@ bool Client::UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnow
     }
     bool retry = false;
     int err = 0;
-    for (auto &topic : data->m_topics)
+    for (auto &topic : data.m_topics)
     {
         if (m_metadata_topics.find(topic->Name) == m_metadata_topics.end())
         {
@@ -1029,7 +1020,7 @@ bool Client::UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnow
             err = topic->m_err;
             continue;
         }
-        std::map<int32_t, std::shared_ptr<PartitionMetadata>> partitions;
+        auto &partitions = m_metadata[topic->Name];
         for (auto &partition : topic->Partitions)
         {
             partitions[partition->m_id] = partition;
@@ -1038,11 +1029,10 @@ bool Client::UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnow
                 retry = true;
             }
         }
-        m_metadata[topic->Name] = partitions;
-        std::array<std::vector<int32_t>, MaxPartitionIndex> partitionCache;
+
+        auto &partitionCache = m_cached_partitions_results[topic->Name];
         partitionCache[AllPartitions] = _SetPartitionCache(topic->Name, AllPartitions);
         partitionCache[WritablePartitions_] = _SetPartitionCache(topic->Name, WritablePartitions_);
-        m_cached_partitions_results[topic->Name] = partitionCache;
     }
     return retry;
 }

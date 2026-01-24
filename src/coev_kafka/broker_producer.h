@@ -14,15 +14,15 @@
 struct BrokerProducer
 {
     BrokerProducer(std::shared_ptr<AsyncProducer> parent, std::shared_ptr<Broker> broker);
-    coev::awaitable<void> run();
+    coev::awaitable<void> Run();
 
-    coev::awaitable<void> shutdown();
-    KError needsRetry(std::shared_ptr<ProducerMessage> msg);
-    int waitForSpace(std::shared_ptr<ProducerMessage> msg, bool force_rollover);
-    void rollOver();
-    void handleResponse(std::shared_ptr<BrokerProducerResponse> response);
-    coev::awaitable<void> handleSuccess(std::shared_ptr<ProduceSet> sent, std::shared_ptr<ProduceResponse> response);
-    void handleError(std::shared_ptr<ProduceSet> sent, KError err);
+    coev::awaitable<void> Shutdown();
+    KError NeedsRetry(std::shared_ptr<ProducerMessage> msg);
+    int WaitForSpace(std::shared_ptr<ProducerMessage> msg, bool force_rollover);
+    void RollOver();
+    void HandleResponse(std::shared_ptr<BrokerProducerResponse> response);
+    coev::awaitable<void> HandleSuccess(std::shared_ptr<ProduceSet> sent, std::shared_ptr<ProduceResponse> response);
+    void HandleError(std::shared_ptr<ProduceSet> sent, KError err);
 
     std::shared_ptr<AsyncProducer> m_parent;
     std::shared_ptr<Broker> m_broker;

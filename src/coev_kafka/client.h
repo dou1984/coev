@@ -22,12 +22,11 @@ struct PartitionMetadata;
 
 struct Client
 {
-
     Client(std::shared_ptr<Config> conf);
     virtual ~Client();
-
-    std::vector<std::shared_ptr<Broker>> Brokers();
+    
     int Topics(std::vector<std::string> &topics);
+    std::deque<std::shared_ptr<Broker>> Brokers();
     std::shared_ptr<Config> GetConfig();
     coev::awaitable<int> Controller(std::shared_ptr<Broker> &broker);
     coev::awaitable<int> RefreshController(std::shared_ptr<Broker> &broker);
@@ -60,7 +59,7 @@ struct Client
     bool Closed();
     bool PartitionNotReadable(const std::string &topic, int32_t partition);
     int MetadataTopics(std::vector<std::string> &topics);
-    bool UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnownMetaData);
+    bool UpdateMetadata(MetadataResponse &data, bool allKnownMetaData);
     void RandomizeSeedBrokers(const std::vector<std::string> &addrs);
     void UpdateBroker(const std::vector<std::shared_ptr<Broker>> &brokers);
     void RegisterBroker(std::shared_ptr<Broker> broker);
@@ -83,9 +82,9 @@ struct Client
     metadata_refresher m_refresh_metadata;
     std::atomic<int64_t> m_update_metadata_ms{0};
     std::shared_ptr<Config> m_conf;
-    std::vector<std::shared_ptr<Broker>> m_seed_brokers;
-    std::vector<std::shared_ptr<Broker>> m_dead_seeds;
-    int32_t m_controller_id = -1;
+    std::deque<std::shared_ptr<Broker>> m_seed_brokers;
+    std::deque<std::shared_ptr<Broker>> m_dead_seeds;
+    int32_t m_controller_id = INVALID;
     std::map<int32_t, std::shared_ptr<Broker>> m_brokers;
     std::map<std::string, std::map<int32_t, std::shared_ptr<PartitionMetadata>>> m_metadata;
     std::map<std::string, bool> m_metadata_topics;

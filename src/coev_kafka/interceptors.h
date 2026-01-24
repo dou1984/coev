@@ -18,5 +18,5 @@ struct ConsumerInterceptor
     virtual coev::awaitable<int> OnConsume(std::shared_ptr<ConsumerMessage> msg) = 0;
 };
 
-coev::awaitable<int> safelyApplyInterceptor(std::shared_ptr<ProducerMessage> &msg, std::shared_ptr<ProducerInterceptor> &interceptor);
-coev::awaitable<int> safelyApplyInterceptor(std::shared_ptr<ConsumerMessage> &msg, std::shared_ptr<ConsumerInterceptor> &interceptor);
+coev::awaitable<int> SafelyApplyInterceptor(std::shared_ptr<ProducerMessage> &msg, std::shared_ptr<ProducerInterceptor> &interceptor);
+coev::awaitable<int> SafelyApplyInterceptor(std::shared_ptr<ConsumerMessage> &msg, std::shared_ptr<ConsumerInterceptor> &interceptor);

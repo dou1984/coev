@@ -28,12 +28,16 @@ int responseHeader::decode(packetDecoder &pd, int16_t version)
 {
     if (version >= 1)
     {
-        if (pd.isFlexible())
+        auto decoder = static_cast<realDecoder *>(&pd);
+        if (decoder != nullptr)
         {
-            return ::decode(pd, m_length, m_correlation_id);
+            decoder->pushFlexible();
+            defer(decoder->popFlexible());
+            return ::decode(*decoder, m_length, m_correlation_id);
         }
         else
         {
+            LOG_CORE("[responseHeader] decoder is nullptr");
             return -1;
         }
     }
