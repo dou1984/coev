@@ -9,41 +9,36 @@ TopicProducer::TopicProducer(std::shared_ptr<AsyncProducer> parent, const std::s
 {
     assert(m_topic != "");
     m_partitioner = m_parent->m_conf->Producer.Partitioner(topic);
+    m_task << dispatch();
 }
 TopicProducer::~TopicProducer()
 {
     m_parent->m_topic_producer.erase(m_topic);
 }
-coev::awaitable<int> TopicProducer::dispatch(std::shared_ptr<ProducerMessage> &msg)
+coev::awaitable<void> TopicProducer::dispatch()
 {
-    if (msg->m_retries == 0)
+    while (true)
     {
-        auto err = co_await partition_message(msg);
-        if (err != 0)
+        std::shared_ptr<ProducerMessage> msg;
+        co_await m_input.get(msg);
+        if (msg->m_retries == 0)
         {
-            m_parent->return_error(msg, err);
-            co_return INVALID;
+            auto err = co_await partition_message(msg);
+            if (err != 0)
+            {
+                m_parent->return_error(msg, err);
+                continue;
+            }
         }
-    }
 
-    auto it = m_handlers.find(msg->m_partition);
-    if (it != m_handlers.end())
-    {
-        co_await it->second->dispatch(msg);
-    }
-    else
-    {
-        auto pp = std::make_shared<PartitionProducer>(m_parent, msg->m_topic, msg->m_partition);
-        auto err = co_await pp->init();
-        if (err != ErrNoError)
+        auto it = m_handlers.find(msg->m_partition);
+        if (it == m_handlers.end())
         {
-            co_return INVALID;
+            m_handlers[msg->m_partition] = std::make_shared<PartitionProducer>(m_parent, msg->m_topic, msg->m_partition);
+            it = m_handlers.find(msg->m_partition);
         }
-        m_handlers[msg->m_partition] = pp;
-        co_await pp->dispatch(msg);
+        it->second->m_input.set(msg);
     }
-
-    co_return 0;
 }
 
 coev::awaitable<int> TopicProducer::partition_message(std::shared_ptr<ProducerMessage> msg)

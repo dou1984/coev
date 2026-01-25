@@ -168,13 +168,7 @@ int realDecoder::getArrayLength(int32_t &result)
         }
         result = static_cast<int32_t>((m_raw[m_offset] << 24) | (m_raw[m_offset + 1] << 16) | (m_raw[m_offset + 2] << 8) | m_raw[m_offset + 3]);
         m_offset += 4;
-        if (result > remaining())
-        {
-            m_offset = m_raw.size();
-            result = -1;
-            return ErrInsufficientData;
-        }
-        else if (result > MaxResponseSize)
+        if (result > MaxResponseSize)
         {
             result = -1;
             return ErrInvalidArrayLength;
@@ -190,12 +184,15 @@ int realDecoder::getArrayLength(int32_t &result)
             result = 0;
             return err;
         }
+        // According to Kafka flexible protocol, arrays are encoded with size+1
         if (n == 0)
         {
             result = 0;
-            return 0;
         }
-        result = static_cast<int32_t>(n - 1);
+        else
+        {
+            result = static_cast<int32_t>(n - 1);
+        }
         return 0;
     }
     return 0;
@@ -468,11 +465,6 @@ int realDecoder::getString(std::string &result)
             result = "";
             return err;
         }
-        if (length < 0)
-        {
-            result = "";
-            return ErrInvalidStringLength;
-        }
         result.assign(reinterpret_cast<const char *>(m_raw.data() + m_offset), length);
         m_offset += length;
         return 0;
@@ -499,12 +491,7 @@ int realDecoder::getNullableString(std::string &result)
     {
         int length;
         int err = getStringLength(length);
-        if (err != 0)
-        {
-            result = "";
-            return err;
-        }
-        if (length < 0)
+        if (err != 0 || length == -1)
         {
             result = "";
             return err;

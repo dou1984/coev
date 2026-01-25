@@ -6,18 +6,7 @@
 #include "producer_error.h"
 
 static std::mutex poolMutex;
-static coev::co_channel<std::shared_ptr<ProducerError>> expectationsPool;
-
-static coev::awaitable<int> getExpectation(std::shared_ptr<ProducerError> &err)
-{
-    err = co_await expectationsPool.get();
-    co_return 0;
-}
-
-static void putExpectation(std::shared_ptr<ProducerError> &p)
-{
-    expectationsPool = p;
-}
+static coev::co_channel<std::shared_ptr<ProducerMessage>> expectationsPool;
 
 int VerifyProducerConfig(std::shared_ptr<Config> config)
 {
@@ -34,9 +23,8 @@ int VerifyProducerConfig(std::shared_ptr<Config> config)
 
 SyncProducer::SyncProducer(std::shared_ptr<AsyncProducer> p) : m_producer(p)
 {
-
-    task << handleSuccesses();
-    task << handleErrors();
+    m_task << handleSuccesses();
+    m_task << handleErrors();
 }
 
 SyncProducer::~SyncProducer()
@@ -49,63 +37,59 @@ SyncProducer::~SyncProducer()
 
 coev::awaitable<int> SyncProducer::SendMessage(std::shared_ptr<ProducerMessage> msg, int32_t &partition, int64_t &offset)
 {
-
-    co_await m_producer->dispatcher(msg);
-    std::shared_ptr<ProducerError> pErr;
-    auto err = co_await getExpectation(pErr);
-    if (err != 0)
-    {
-        co_return err;
-    }
-    if (pErr != nullptr && pErr->m_err != 0)
-    {
-        partition = -1;
-        offset = -1;
-        co_return pErr->m_err;
-    }
-    partition = msg->m_partition;
-    offset = msg->m_offset;
+    // m_producer->m_input.set(msg);
+    // auto err = co_await expectationsPool.get();
+    // if (err != nullptr && err->m_err != 0)
+    // {
+    //     partition = -1;
+    //     offset = -1;
+    //     co_return err->m_err;
+    // }
+    // partition = msg->m_partition;
+    // offset = msg->m_offset;
     co_return 0;
 }
 
 coev::awaitable<int> SyncProducer::SendMessages(const std::vector<std::shared_ptr<ProducerMessage>> &msgs)
 {
-    std::vector<std::shared_ptr<ProducerError>> expectations(msgs.size());
-    for (size_t i = 0; i < msgs.size(); ++i)
-    {
-        std::shared_ptr<ProducerMessage> msg = msgs[i];
-        co_await m_producer->dispatcher(msg);
-        co_await getExpectation(expectations[i]);
-    }
-    for (size_t i = 0; i < expectations.size(); ++i)
-    {
-        putExpectation(expectations[i]);
-    }
+    // std::vector<std::shared_ptr<ProducerError>> expectations(msgs.size());
+    // for (size_t i = 0; i < msgs.size(); ++i)
+    // {
+    //     m_producer->m_input.set(msgs[i]);
+    //     expectations[i] = co_await expectationsPool.get();
+    // }
+    // for (size_t i = 0; i < expectations.size(); ++i)
+    // {
+    //     expectationsPool.set(expectations[i]);
+    // }
 
     co_return 0;
 }
 
 coev::awaitable<void> SyncProducer::handleSuccesses()
 {
-    while (!closed)
-    {
-        auto msg = co_await m_producer->m_successes.get();
-        if (msg)
-        {
-            // putExpectation(msg);
-        }
-    }
+    // while (!closed)
+    // {
+    //     auto msg = co_await m_producer->m_successes.get();
+    //     if (msg)
+    //     {
+    //         expectationsPool.set(msg);
+    //     }
+    // }
+    co_return;
 }
 
 coev::awaitable<void> SyncProducer::handleErrors()
 {
     while (!closed)
     {
-        auto err = co_await m_producer->m_errors.get();
+        std::shared_ptr<ProducerError> err;
+        co_await m_producer->m_errors.get(err);
         if (err && err->m_err != 0)
         {
         }
     }
+    co_return;
 }
 
 int SyncProducer::Close()

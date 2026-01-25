@@ -24,7 +24,7 @@ int decode(T &pd, int32_t &length, int32_t &correlationID)
     int32_t _;
     return pd.getEmptyTaggedFieldArray(_);
 }
-int responseHeader::decode(packetDecoder &pd, int16_t version)
+int ResponseHeader::decode(packetDecoder &pd, int16_t version)
 {
     if (version >= 1)
     {
@@ -37,7 +37,7 @@ int responseHeader::decode(packetDecoder &pd, int16_t version)
         }
         else
         {
-            LOG_CORE("[responseHeader] decoder is nullptr");
+            LOG_CORE("[ResponseHeader] decoder is nullptr");
             return -1;
         }
     }

@@ -46,9 +46,6 @@ struct none
 {
 };
 
-// struct Breaker
-// {
-// };
 struct Ticket
 {
 };
@@ -83,9 +80,8 @@ struct Context
     }
     void done()
     {
-        ch = true;
+        ch.set(true);
     }
-
     coev::co_task m_task;
     coev::co_channel<bool> ch;
 };

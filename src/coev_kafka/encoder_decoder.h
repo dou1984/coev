@@ -19,7 +19,7 @@ struct packetType
     }
     bool isFlexible()
     {
-        return m_type.size() > 0 || m_type.back() == FLEXIBLE;
+        return m_type.size() > 0 && m_type.back() == FLEXIBLE;
     }
     void pushFlexible()
     {

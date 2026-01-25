@@ -232,7 +232,7 @@ std::vector<std::shared_ptr<AbortedTransaction>> FetchResponseBlock::get_aborted
 }
 
 FetchResponse::FetchResponse()
-    : m_version(0), ErrorCode(0), SessionID(0), LogAppendTime(false)
+    : m_version(0), m_error_code(0), m_session_id(0), m_log_append_time(false)
 {
 }
 
@@ -254,9 +254,9 @@ int FetchResponse::decode(packetDecoder &pd, int16_t version)
 
     if (m_version >= 7)
     {
-        if ((err = pd.getInt16(ErrorCode)) != 0)
+        if ((err = pd.getInt16(m_error_code)) != 0)
             return err;
-        if ((err = pd.getInt32(SessionID)) != 0)
+        if ((err = pd.getInt32(m_session_id)) != 0)
             return err;
     }
 
@@ -303,8 +303,8 @@ int FetchResponse::encode(packetEncoder &pe)
 
     if (m_version >= 7)
     {
-        pe.putInt16(ErrorCode);
-        pe.putInt32(SessionID);
+        pe.putInt16(m_error_code);
+        pe.putInt32(m_session_id);
     }
 
     int err = pe.putArrayLength(static_cast<int32_t>(m_blocks.size()));
@@ -433,8 +433,8 @@ void FetchResponse::add_message_with_timestamp(const std::string &topic, int32_t
 {
     auto frb = get_or_create_block(topic, partition);
     auto kv = encodeKV(key, value);
-    auto msgTimestamp = LogAppendTime ? Timestamp : timestamp;
-    auto msg = std::make_shared<Message>(kv.first, kv.second, LogAppendTime, msgTimestamp, version);
+    auto msgTimestamp = m_log_append_time ? m_timestamp : timestamp;
+    auto msg = std::make_shared<Message>(kv.first, kv.second, m_log_append_time, msgTimestamp, version);
     auto msgBlock = std::make_shared<MessageBlock>(msg, offset);
 
     if (frb->m_records_set.empty())
@@ -454,7 +454,7 @@ void FetchResponse::add_record_with_timestamp(const std::string &topic, int32_t 
 
     if (frb->m_records_set.empty())
     {
-        auto batch = std::make_shared<RecordBatch>(2, LogAppendTime, timestamp, Timestamp);
+        auto batch = std::make_shared<RecordBatch>(2, m_log_append_time, timestamp, m_timestamp);
         auto records = Records::NewDefaultRecords(batch);
         frb->m_records_set.push_back(records);
     }
@@ -473,9 +473,9 @@ void FetchResponse::AddRecordBatchWithTimestamp(const std::string &topic, int32_
 
     auto batch = std::make_shared<RecordBatch>();
     batch->m_version = 2;
-    batch->m_log_append_time = LogAppendTime;
+    batch->m_log_append_time = m_log_append_time;
     batch->m_first_timestamp = timestamp;
-    batch->m_max_timestamp = Timestamp;
+    batch->m_max_timestamp = m_timestamp;
     batch->m_first_offset = offset;
     batch->m_last_offset_delta = 0;
     batch->m_producer_id = producerID;
@@ -497,9 +497,9 @@ void FetchResponse::AddControlRecordWithTimestamp(const std::string &topic, int3
 
     auto batch = std::make_shared<RecordBatch>();
     batch->m_version = 2;
-    batch->m_log_append_time = LogAppendTime;
+    batch->m_log_append_time = m_log_append_time;
     batch->m_first_timestamp = timestamp;
-    batch->m_max_timestamp = Timestamp;
+    batch->m_max_timestamp = m_timestamp;
     batch->m_first_offset = offset;
     batch->m_last_offset_delta = 0;
     batch->m_producer_id = producerID;

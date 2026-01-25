@@ -220,12 +220,12 @@ int MetadataResponse::decode(packetDecoder &pd, int16_t version)
     m_brokers.resize(brokerArrayLen);
     for (int32_t i = 0; i < brokerArrayLen; ++i)
     {
-        auto broker = std::make_shared<Broker>();
-        if (int err = broker->decode(pd, version); err != 0)
+        auto _broker = std::make_shared<Broker>();
+        if (int err = _broker->decode(pd, version); err != 0)
         {
             return err;
         }
-        m_brokers[i] = broker;
+        m_brokers[i] = _broker;
     }
 
     if (m_version >= 2)
@@ -247,18 +247,23 @@ int MetadataResponse::decode(packetDecoder &pd, int16_t version)
     int32_t topicArrayLen;
     if (int err = pd.getArrayLength(topicArrayLen); err != 0)
     {
+        LOG_CORE("Failed to get topic array length: %d", err);
         return err;
     }
+    LOG_CORE("Topic array length: %d", topicArrayLen);
 
     m_topics.resize(topicArrayLen);
     for (int32_t i = 0; i < topicArrayLen; ++i)
     {
+        LOG_CORE("Creating TopicMetadata %d of %d", i + 1, topicArrayLen);
         auto topic = std::make_shared<TopicMetadata>();
         if (int err = topic->decode(pd, version); err != 0)
         {
+            LOG_CORE("Failed to decode TopicMetadata %d: %d", i + 1, err);
             return err;
         }
         m_topics[i] = topic;
+        LOG_CORE("Added TopicMetadata %d to m_topics", i + 1);
     }
 
     if (m_version >= 8)
@@ -400,7 +405,7 @@ std::chrono::milliseconds MetadataResponse::throttle_time() const
     return std::chrono::milliseconds(m_throttle_time);
 }
 
-void MetadataResponse::AddBroker(const std::string &addr, int32_t id)
+void MetadataResponse::add_broker(const std::string &addr, int32_t id)
 {
     auto broker = std::make_shared<Broker>();
     broker->m_id = id;
@@ -408,7 +413,7 @@ void MetadataResponse::AddBroker(const std::string &addr, int32_t id)
     m_brokers.push_back(broker);
 }
 
-std::shared_ptr<TopicMetadata> MetadataResponse::AddTopic(const std::string &topic, int16_t err)
+std::shared_ptr<TopicMetadata> MetadataResponse::add_topic(const std::string &topic, int16_t err)
 {
     for (auto &tm : m_topics)
     {
@@ -426,11 +431,11 @@ std::shared_ptr<TopicMetadata> MetadataResponse::AddTopic(const std::string &top
     return tmatch;
 }
 
-int MetadataResponse::AddTopicPartition(const std::string &topic, int32_t partition, int32_t brokerID, const std::vector<int32_t> &replicas,
-                                        const std::vector<int32_t> &isr, const std::vector<int32_t> &offline,
-                                        int err)
+int MetadataResponse::add_topic_partition(const std::string &topic, int32_t partition, int32_t brokerID, const std::vector<int32_t> &replicas,
+                                          const std::vector<int32_t> &isr, const std::vector<int32_t> &offline,
+                                          int err)
 {
-    auto tmatch = AddTopic(topic, 0);
+    auto tmatch = add_topic(topic, 0);
     for (auto &pm : tmatch->Partitions)
     {
         if (pm->m_id == partition)

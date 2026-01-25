@@ -3,91 +3,86 @@
 #include "response_header.h"
 #include "sleep_for.h"
 
-auto partitionConsumersBatchTimeout = std::chrono::milliseconds(100);
+auto PartitionConsumersBatchTimeout = std::chrono::milliseconds(100);
 
+BrokerConsumer::BrokerConsumer()
+{
+    m_task << SubscriptionManager();
+    m_task << SubscriptionConsumer();
+}
 coev::awaitable<void> BrokerConsumer::SubscriptionManager()
 {
     LOG_CORE("BrokerConsumer::SubscriptionManager starting");
     while (true)
     {
-        std::vector<std::shared_ptr<PartitionConsumer>> partitionConsumers;
-        auto pc = co_await m_input;
-        if (!pc)
+        std::shared_ptr<PartitionConsumer> pc;
+        co_await m_input.get(pc);
+        if (pc == nullptr)
         {
-            LOG_CORE("BrokerConsumer::SubscriptionManager received null input, exiting");
-            co_return;
+            co_await sleep_for(std::chrono::milliseconds(10));
         }
         LOG_CORE("BrokerConsumer::SubscriptionManager received PartitionConsumer for topic %s, partition %d", pc->m_topic.c_str(), pc->m_partition);
-        partitionConsumers.emplace_back(pc);
+        std::vector<std::shared_ptr<PartitionConsumer>> partition_consumers;
+        partition_consumers.emplace_back(pc);
 
-        auto timerEnd = std::chrono::steady_clock::now() + partitionConsumersBatchTimeout;
-        while (std::chrono::steady_clock::now() < timerEnd)
+        auto timer_end = std::chrono::steady_clock::now() + PartitionConsumersBatchTimeout;
+        while (std::chrono::steady_clock::now() < timer_end)
         {
-
-            if (pc = co_await m_input)
+            if (m_input.try_get(pc))
             {
-                if (pc)
-                {
-                    partitionConsumers.emplace_back(pc);
-                }
+                partition_consumers.emplace_back(pc);
             }
             else
             {
-                co_await sleep_for(std::chrono::milliseconds(1));
+                co_await sleep_for(std::chrono::milliseconds(10));
             }
         }
 
-        m_new_subscriptions = std::move(partitionConsumers);
-        co_await SubscriptionConsumer();
+        m_new_subscriptions = std::move(partition_consumers);
     }
 }
 
 coev::awaitable<void> BrokerConsumer::SubscriptionConsumer()
 {
-    LOG_CORE("BrokerConsumer::SubscriptionConsumer starting");
-    UpdateSubscriptions();
-    LOG_CORE("BrokerConsumer::SubscriptionConsumer has %zu active subscriptions", m_subscriptions.size());
-    if (m_subscriptions.empty())
+    while (true)
     {
-        LOG_CORE("BrokerConsumer::SubscriptionConsumer no active subscriptions, sleeping");
-        co_await sleep_for(partitionConsumersBatchTimeout);
-        co_return;
-    }
-
-    std::shared_ptr<FetchResponse> response;
-    LOG_CORE("BrokerConsumer::SubscriptionConsumer calling FetchNewMessages");
-    int err = co_await FetchNewMessages(response);
-    if (err != 0)
-    {
-        LOG_CORE("BrokerConsumer::SubscriptionConsumer FetchNewMessages failed with error %d, aborting", err);
-        co_await Abort(err);
-        co_return;
-    }
-
-    if (!response)
-    {
-        LOG_CORE("BrokerConsumer::SubscriptionConsumer received null response, sleeping");
-        co_await sleep_for(partitionConsumersBatchTimeout);
-        co_return;
-    }
-    LOG_CORE("BrokerConsumer::SubscriptionConsumer received FetchResponse");
-
-    for (auto &child : m_subscriptions)
-    {
-        auto it1 = response->m_blocks.find(child.first->m_topic);
-        if (it1 == response->m_blocks.end())
+        UpdateSubscriptions();
+        LOG_CORE("BrokerConsumer::SubscriptionConsumer has %zu active subscriptions", m_subscriptions.size());
+        if (m_subscriptions.empty())
         {
+            LOG_CORE("BrokerConsumer::SubscriptionConsumer no active subscriptions, sleeping");
+            co_await sleep_for(PartitionConsumersBatchTimeout);
             continue;
         }
-        auto it2 = it1->second.find(child.first->m_partition);
-        if (it2 == it1->second.end())
+        auto response = std::make_shared<FetchResponse>();
+        int err = co_await FetchNewMessages(response);
+        if (err != 0)
         {
-            continue;
+            LOG_CORE("BrokerConsumer::SubscriptionConsumer FetchNewMessages failed with error %d, aborting", err);
+            co_await Abort(err);
+            co_return;
         }
-        child.first->m_feeder.set(response);
-    }
 
-    co_await HandleResponses();
+        m_acks.add(m_subscriptions.size());
+        for (auto &child : m_subscriptions)
+        {
+            auto it1 = response->m_blocks.find(child.first->m_topic);
+            if (it1 == response->m_blocks.end())
+            {
+                m_acks.done();
+                continue;
+            }
+            auto it2 = it1->second.find(child.first->m_partition);
+            if (it2 == it1->second.end())
+            {
+                m_acks.done();
+                continue;
+            }
+            child.first->m_feeder.set(response);
+        }
+        co_await m_acks.wait();
+        co_await HandleResponses();
+    }
 }
 
 void BrokerConsumer::UpdateSubscriptions()
@@ -103,8 +98,7 @@ void BrokerConsumer::UpdateSubscriptions()
         auto child = it->first;
         if (child->m_dying.try_get(found))
         {
-
-            child->m_trigger = true;
+            child->m_trigger.set(true);
             it = m_subscriptions.erase(it);
         }
         else
@@ -116,7 +110,7 @@ void BrokerConsumer::UpdateSubscriptions()
 
 coev::awaitable<void> BrokerConsumer::HandleResponses()
 {
-    LOG_CORE("BrokerConsumer::HandleResponses starting with %zu subscriptions", m_subscriptions.size());
+    LOG_CORE("starting with %zu subscriptions", m_subscriptions.size());
     for (auto it = m_subscriptions.begin(); it != m_subscriptions.end();)
     {
         auto child = it->first;
@@ -125,14 +119,14 @@ coev::awaitable<void> BrokerConsumer::HandleResponses()
 
         if (!result)
         {
-            LOG_CORE("BrokerConsumer::HandleResponses no result for partition consumer %s:%d, checking preferred broker", child->m_topic.c_str(), child->m_partition);
+            LOG_CORE("no result for partition consumer %s:%d, checking preferred broker", child->m_topic.c_str(), child->m_partition);
             std::shared_ptr<Broker> preferredBroker;
             int _;
             auto err_code = co_await child->PreferredBroker(preferredBroker, _);
             if (err_code == 0 && m_broker->ID() != preferredBroker->ID())
             {
-                LOG_CORE("BrokerConsumer::HandleResponses preferred broker changed for %s:%d, removing subscription", child->m_topic.c_str(), child->m_partition);
-                child->m_trigger = true;
+                LOG_CORE("preferred broker changed for %s:%d, removing subscription", child->m_topic.c_str(), child->m_partition);
+                child->m_trigger.set(true);
                 it = m_subscriptions.erase(it);
                 continue;
             }
@@ -140,34 +134,34 @@ coev::awaitable<void> BrokerConsumer::HandleResponses()
             continue;
         }
 
-        LOG_CORE("BrokerConsumer::HandleResponses received result %d for partition consumer %s:%d", result, child->m_topic.c_str(), child->m_partition);
+        LOG_CORE("received result %d for partition consumer %s:%d", result, child->m_topic.c_str(), child->m_partition);
         child->m_preferred_read_replica = invalidPreferredReplicaID;
 
         if (result == ErrTimedOut)
         {
-            LOG_CORE("BrokerConsumer::HandleResponses received timeout for %s:%d, removing subscription", child->m_topic.c_str(), child->m_partition);
+            LOG_CORE("received timeout for %s:%d, removing subscription", child->m_topic.c_str(), child->m_partition);
             it = m_subscriptions.erase(it);
         }
         else if (result == ErrOffsetOutOfRange)
         {
-            LOG_CORE("BrokerConsumer::HandleResponses received OffsetOutOfRange for %s:%d, sending error and removing subscription", child->m_topic.c_str(), child->m_partition);
+            LOG_CORE("received OffsetOutOfRange for %s:%d, sending error and removing subscription", child->m_topic.c_str(), child->m_partition);
             child->SendError(result);
-            child->m_trigger = true;
+            child->m_trigger.set(true);
             it = m_subscriptions.erase(it);
         }
         else if (result == ErrUnknownTopicOrPartition || result == ErrNotLeaderForPartition ||
                  result == ErrLeaderNotAvailable || result == ErrReplicaNotAvailable ||
                  result == ErrFencedLeaderEpoch || result == ErrUnknownLeaderEpoch)
         {
-            LOG_CORE("BrokerConsumer::HandleResponses received broker error %d for %s:%d, removing subscription", result, child->m_topic.c_str(), child->m_partition);
-            child->m_trigger = true;
+            LOG_CORE("received broker error %d for %s:%d, removing subscription", result, child->m_topic.c_str(), child->m_partition);
+            child->m_trigger.set(true);
             it = m_subscriptions.erase(it);
         }
         else
         {
-            LOG_CORE("BrokerConsumer::HandleResponses received other error %d for %s:%d, sending error and removing subscription", result, child->m_topic.c_str(), child->m_partition);
+            LOG_CORE("received other error %d for %s:%d, sending error and removing subscription", result, child->m_topic.c_str(), child->m_partition);
             child->SendError(result);
-            child->m_trigger = true;
+            child->m_trigger.set(true);
             it = m_subscriptions.erase(it);
         }
     }
@@ -177,20 +171,19 @@ coev::awaitable<void> BrokerConsumer::Abort(int err)
 {
     LOG_CORE("BrokerConsumer::Abort called with error %d, abandoning broker consumer", err);
     m_consumer->AbandonBrokerConsumer(shared_from_this());
-    LOG_CORE("BrokerConsumer::Abort closing broker connection");
-    m_broker->Close();
+    co_await m_broker->Close();
 
     LOG_CORE("BrokerConsumer::Abort notifying %zu active subscriptions of error", m_subscriptions.size());
     for (auto &child : m_subscriptions)
     {
         child.first->SendError(err);
-        child.first->m_trigger = true;
+        child.first->m_trigger.set(true);
     }
 
     if (m_new_subscriptions.empty())
     {
         LOG_CORE("BrokerConsumer::Abort no new subscriptions, sleeping");
-        co_await sleep_for(partitionConsumersBatchTimeout);
+        co_await sleep_for(PartitionConsumersBatchTimeout);
     }
     else
     {
@@ -288,9 +281,6 @@ std::shared_ptr<BrokerConsumer> NewBrokerConsumer(std::shared_ptr<Consumer> c, s
     bc->m_consumer = c;
     bc->m_broker = m_broker;
     bc->m_refs = 0;
-
-    bc->m_task << bc->SubscriptionManager();
-    bc->m_task << bc->SubscriptionConsumer();
 
     return bc;
 }

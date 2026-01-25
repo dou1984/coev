@@ -19,7 +19,7 @@ awaitable<int> Connect::ReadFull(std::string &buf, size_t n)
 {
     assert(buf.size() == n);
     auto res = n;
-    while (*this && res > 0)
+    while (__valid() && res > 0)
     {
         auto r = co_await recv(buf.data() + (n - res), res);
         if (r == INVALID)
@@ -34,18 +34,18 @@ awaitable<int> Connect::ReadFull(std::string &buf, size_t n)
         }
         res -= r;
     }
-    // auto hex = to_hex(buf);
-    // LOG_CORE("%.*s", (int)hex.size(), hex.data());
+    auto hex = to_hex(buf);
+    LOG_CORE("ReadFull received: %.*s", (int)hex.size(), hex.data());
     co_return ErrNoError;
 }
 
 awaitable<int> Connect::Write(const std::string &buf)
 {
     auto res = buf.size();
-    while (*this && res > 0)
+    while (__valid() && res > 0)
     {
-        // auto hex = to_hex(buf);
-        // LOG_CORE("%.*s", (int)hex.size(), hex.data());
+        auto hex = to_hex(buf);
+        LOG_CORE("Write sending: %.*s", (int)hex.size(), hex.data());
         auto r = co_await send(buf.data() + (buf.size() - res), res);
         if (r == INVALID)
         {
@@ -64,7 +64,6 @@ awaitable<int> Connect::Write(const std::string &buf)
 awaitable<int> Connect::Dial(const char *addr, int port)
 {
     m_state = OPENING;
-
     auto _fd = co_await base::connect(addr, port);
     if (_fd == INVALID)
     {

@@ -170,11 +170,11 @@ coev::awaitable<int> ClusterAdmin::CreateTopic(const std::string &topic, const s
 }
 
 coev::awaitable<int> ClusterAdmin::DescribeTopics(const std::vector<std::string> &topics,
-                                                  std::vector<std::shared_ptr<TopicMetadata>> &out_metadata)
+                                                  std::vector<std::shared_ptr<TopicMetadata>> &out)
 {
     int err = co_await RetryOnError(
         isRetriableControllerError,
-        [this, &topics, &out_metadata]() -> coev::awaitable<int>
+        [this, &topics, &out]() -> coev::awaitable<int>
         {
             std::shared_ptr<Broker> controller;
             int err = co_await GetController(controller);
@@ -194,7 +194,7 @@ coev::awaitable<int> ClusterAdmin::DescribeTopics(const std::vector<std::string>
             {
                 co_return err;
             }
-            out_metadata = std::move(response.m_response.m_topics);
+            out = std::move(response.m_response.m_topics);
             co_return 0;
         });
     co_return err;
@@ -1247,7 +1247,7 @@ coev::awaitable<int> ClusterAdmin::DescribeLogDirs(const std::vector<int32_t> &b
             LOG_CORE("Admin::DescribeClusterResponse Unable to find broker with ID = %d", b_id);
             continue;
         }
-        task_ << [this](std::shared_ptr<Broker> broker, std::list<result> &logDirsResults, std::list<int> &errChan) -> coev::awaitable<void>
+        task_ << [this](auto broker, auto &logDirsResults, auto &errChan) -> coev::awaitable<void>
         {
             auto err = co_await broker->Open(m_conf);
             if (err != 0)

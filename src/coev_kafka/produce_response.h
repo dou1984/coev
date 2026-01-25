@@ -27,7 +27,6 @@ struct ProduceResponseBlock
 
 struct ProduceResponse : protocol_body
 {
-
     std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<ProduceResponseBlock>>> m_blocks;
     int16_t m_version = 0;
     std::chrono::milliseconds m_throttle_time;

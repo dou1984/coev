@@ -172,7 +172,7 @@ int ProduceSet::add(std::shared_ptr<ProducerMessage> msg)
         }
     }
 
-    set->m_msgs.push_back(msg);
+    set->m_messages.push_back(msg);
 
     if (m_parent->m_conf->Version.IsAtLeast(V0_11_0_0))
     {
@@ -307,7 +307,7 @@ std::shared_ptr<ProduceRequest> ProduceSet::build_request()
     return req;
 }
 
-void ProduceSet::each_partition(std::function<void(const std::string &, int32_t, std::shared_ptr<PartitionSet>)> cb)
+void ProduceSet::each_partition(const std::function<void(const std::string &, int32_t, std::shared_ptr<PartitionSet>)> &_f)
 {
     for (auto &it : m_messages)
     {
@@ -317,33 +317,33 @@ void ProduceSet::each_partition(std::function<void(const std::string &, int32_t,
         {
             auto &partition = pit.first;
             auto &set = pit.second;
-            cb(topic, partition, set);
+            _f(topic, partition, set);
         }
     }
 }
 
 std::vector<std::shared_ptr<ProducerMessage>> ProduceSet::drop_partition(const std::string &topic, int32_t partition)
 {
-    auto topicIt = m_messages.find(topic);
-    if (topicIt == m_messages.end())
+    auto tit = m_messages.find(topic);
+    if (tit == m_messages.end())
         return {};
-    auto &partitionMap = topicIt->second;
-    auto partIt = partitionMap.find(partition);
-    if (partIt == partitionMap.end())
+    auto &partition_map = tit->second;
+    auto pit = partition_map.find(partition);
+    if (pit == partition_map.end())
         return {};
 
-    auto set = partIt->second;
-    m_buffer_bytes -= set->m_buffer_bytes;
-    m_buffer_count -= static_cast<int>(set->m_msgs.size());
-    partitionMap.erase(partIt);
-    return set->m_msgs;
+    auto _set = pit->second;
+    m_buffer_bytes -= _set->m_buffer_bytes;
+    m_buffer_count -= static_cast<int>(_set->m_messages.size());
+    partition_map.erase(pit);
+    return std::move(_set->m_messages);
 }
 
 bool ProduceSet::would_overflow(std::shared_ptr<ProducerMessage> msg)
 {
     int version = m_parent->m_conf->Version.IsAtLeast(V0_11_0_0) ? 2 : 1;
 
-    if (m_buffer_bytes + msg->byteSize(version) >= MaxRequestSize - 10 * 1024)
+    if (m_buffer_bytes + msg->byte_size(version) >= MaxRequestSize - 10 * 1024)
     {
         return true;
     }
@@ -355,7 +355,7 @@ bool ProduceSet::would_overflow(std::shared_ptr<ProducerMessage> msg)
         auto partIt = partitions.find(msg->m_partition);
         if (partIt != partitions.end())
         {
-            if (partIt->second->m_buffer_bytes + msg->byteSize(version) >= m_parent->m_conf->Producer.MaxMessageBytes)
+            if (partIt->second->m_buffer_bytes + msg->byte_size(version) >= m_parent->m_conf->Producer.MaxMessageBytes)
             {
                 return true;
             }
@@ -373,7 +373,9 @@ bool ProduceSet::would_overflow(std::shared_ptr<ProducerMessage> msg)
 bool ProduceSet::ready_to_flush()
 {
     if (empty())
+    {
         return false;
+    }
     if (m_parent->m_conf->Producer.Flush.Frequency == std::chrono::milliseconds(0) &&
         m_parent->m_conf->Producer.Flush.Bytes == 0 &&
         m_parent->m_conf->Producer.Flush.Messages == 0)

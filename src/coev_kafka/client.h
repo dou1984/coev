@@ -24,7 +24,7 @@ struct Client
 {
     Client(std::shared_ptr<Config> conf);
     virtual ~Client();
-    
+
     int Topics(std::vector<std::string> &topics);
     std::deque<std::shared_ptr<Broker>> Brokers();
     std::shared_ptr<Config> GetConfig();
@@ -82,9 +82,9 @@ struct Client
     metadata_refresher m_refresh_metadata;
     std::atomic<int64_t> m_update_metadata_ms{0};
     std::shared_ptr<Config> m_conf;
+    int32_t m_controller_id = INVALID;
     std::deque<std::shared_ptr<Broker>> m_seed_brokers;
     std::deque<std::shared_ptr<Broker>> m_dead_seeds;
-    int32_t m_controller_id = INVALID;
     std::map<int32_t, std::shared_ptr<Broker>> m_brokers;
     std::map<std::string, std::map<int32_t, std::shared_ptr<PartitionMetadata>>> m_metadata;
     std::map<std::string, bool> m_metadata_topics;
@@ -93,8 +93,6 @@ struct Client
     std::map<std::string, std::array<std::vector<int32_t>, MaxPartitionIndex>> m_cached_partitions_results;
 
     coev::co_task m_task;
-    coev::co_channel<bool> m_closer;
-    coev::co_channel<bool> m_closed;
 };
 
 coev::awaitable<int> NewClient(const std::vector<std::string> &addrs, std::shared_ptr<Config> conf, std::shared_ptr<Client> &);

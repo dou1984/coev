@@ -70,9 +70,9 @@ struct MetadataResponse : protocol_body, flexible_version
     KafkaVersion required_version() const;
     std::chrono::milliseconds throttle_time() const;
 
-    void AddBroker(const std::string &addr, int32_t id);
-    std::shared_ptr<TopicMetadata> AddTopic(const std::string &topic, int16_t err);
-    int AddTopicPartition(
+    void add_broker(const std::string &addr, int32_t id);
+    std::shared_ptr<TopicMetadata> add_topic(const std::string &topic, int16_t err);
+    int add_topic_partition(
         const std::string &topic, int32_t partition, int32_t brokerID, const std::vector<int32_t> &replicas, const std::vector<int32_t> &isr,
         const std::vector<int32_t> &offline, int err);
 };

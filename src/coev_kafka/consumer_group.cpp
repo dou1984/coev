@@ -32,7 +32,8 @@ ConsumerGroup::ConsumerGroup(std::shared_ptr<Client> client, std::shared_ptr<ICo
 
 coev::awaitable<int> ConsumerGroup::Consume(std::shared_ptr<Context> &ctx, const std::vector<std::string> &topics, std::shared_ptr<ConsumerGroupHandler> handler)
 {
-    bool isClosed = co_await m_closed.get();
+    bool isClosed;
+    co_await m_closed.get(isClosed);
     if (isClosed)
     {
         co_return ErrorGroupClosed;
@@ -65,7 +66,8 @@ coev::co_channel<std::shared_ptr<ConsumerError>> &ConsumerGroup::Errors()
 
 coev::awaitable<int> ConsumerGroup::Close()
 {
-    auto isClosed = co_await m_closed.get();
+    bool isClosed;
+    co_await m_closed.get(isClosed);
     if (isClosed)
     {
         co_return 0;
@@ -113,12 +115,14 @@ coev::awaitable<int> ConsumerGroup::RetryNewSession(std::shared_ptr<Context> &ct
     co_task _task;
     auto __get = _task << [](auto ctx) -> coev::awaitable<void>
     {
-        co_await ctx->ch.get();
+        bool dummy;
+        co_await ctx->ch.get(dummy);
         co_return;
     }(ctx);
     auto __close = _task << [](auto _this) -> coev::awaitable<void>
     {
-        co_await _this->m_closed.get();
+        bool dummy;
+        co_await _this->m_closed.get(dummy);
         co_return;
     }(shared_from_this());
     auto __config = _task << [](auto _this) -> coev::awaitable<void>
@@ -669,9 +673,16 @@ coev::awaitable<void> ConsumerGroup::LoopCheckPartitionNumbers(
         }();
         m_task << [&session]() -> coev::awaitable<void>
         {
-            co_await session->m_context->get().get();
+            bool dummy;
+            co_await session->m_context->get().get(dummy);
+            co_return;
         }();
-        m_task << m_closed.get();
+        m_task << [this]() -> coev::awaitable<void>
+        {
+            bool dummy;
+            co_await m_closed.get(dummy);
+            co_return;
+        }();
 
         co_await m_task.wait();
     }
@@ -754,8 +765,9 @@ coev::awaitable<int> NewConsumerGroupSession(std::shared_ptr<Context> context, s
             {
                 while (true)
                 {
-                    auto err = co_await pom->Errors();
-                    if (err->m_err != ErrNoError)
+                    std::shared_ptr<ConsumerError> err;
+                    co_await pom->Errors(err);
+                    if (!err || err->m_err != ErrNoError)
                         break;
                     auto e = std::make_shared<ConsumerError>(topic, partition, err->m_err);
                     session_ptr->m_parent->HandleError(e, topic, partition);

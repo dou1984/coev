@@ -20,6 +20,11 @@ namespace coev
 		++m_count;
 		return 0;
 	}
+	int co_waitgroup::add(int n)
+	{
+		m_count += n;
+		return 0;
+	}
 	void co_waitgroup::done()
 	{
 		if (--m_count > 0)

@@ -108,8 +108,8 @@ struct metadata_config
         std::chrono::milliseconds Backoff = std::chrono::milliseconds(1000);
         std::function<std::chrono::milliseconds(int, int)> BackoffFunc;
     } Retry;
-    std::chrono::milliseconds RefreshFrequency = std::chrono::minutes(10);
     bool Full = true;
+    std::chrono::milliseconds RefreshFrequency = std::chrono::minutes(10);
     std::chrono::milliseconds Timeout = std::chrono::milliseconds(2000);
     bool AllowAutoTopicCreation = true;
     bool SingleLight = true;

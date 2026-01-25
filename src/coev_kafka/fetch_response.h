@@ -55,13 +55,12 @@ struct FetchResponseBlock : versioned_decoder, versioned_encoder
 struct FetchResponse : protocol_body
 {
     int16_t m_version;
+    int16_t m_error_code;
+    int32_t m_session_id;
     std::chrono::milliseconds m_throttle_time;
-    int16_t ErrorCode;
-    int32_t SessionID;
     std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<FetchResponseBlock>>> m_blocks;
-
-    bool LogAppendTime;
-    std::chrono::system_clock::time_point Timestamp;
+    std::chrono::system_clock::time_point m_timestamp;
+    bool m_log_append_time;
 
     FetchResponse();
     void set_version(int16_t v);
@@ -79,9 +78,9 @@ struct FetchResponse : protocol_body
     std::shared_ptr<FetchResponseBlock> get_or_create_block(const std::string &topic, int32_t partition);
 
     void add_message_with_timestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset,
-                                 std::chrono::system_clock::time_point timestamp, int8_t version);
+                                    std::chrono::system_clock::time_point timestamp, int8_t version);
     void add_record_with_timestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset,
-                                std::chrono::system_clock::time_point timestamp);
+                                   std::chrono::system_clock::time_point timestamp);
     void AddRecordBatchWithTimestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset,
                                      int64_t producerID, bool isTransactional, std::chrono::system_clock::time_point timestamp);
     void AddControlRecordWithTimestamp(const std::string &topic, int32_t partition, int64_t offset, int64_t producerID,
@@ -89,7 +88,7 @@ struct FetchResponse : protocol_body
     void add_message(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset);
     void add_record(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset);
     void add_record_batch(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset,
-                        int64_t producerID, bool isTransactional);
+                          int64_t producerID, bool isTransactional);
     void add_control_record(const std::string &topic, int32_t partition, int64_t offset, int64_t producerID, ControlRecordType recordType);
     void set_last_offset_delta(const std::string &topic, int32_t partition, int32_t offset);
     void set_last_stable_offset(const std::string &topic, int32_t partition, int64_t offset);

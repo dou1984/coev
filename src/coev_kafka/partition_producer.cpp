@@ -5,6 +5,7 @@
 PartitionProducer::PartitionProducer(std::shared_ptr<AsyncProducer> parent, const std::string &topic, int32_t partition)
     : m_parent(parent), m_topic(topic), m_partition(partition), m_high_watermark(0), m_retry_state(parent->m_conf->Producer.Retry.Max + 1)
 {
+    m_task << dispatch();
 }
 PartitionProducer::~PartitionProducer()
 {
@@ -19,88 +20,110 @@ coev::awaitable<int> PartitionProducer::init()
     }
     if (m_leader)
     {
-        auto broker_producer_ = m_parent->get_broker_producer(m_leader);
-        m_parent->m_in_flight++;
-        auto syn_msg = std::make_shared<ProducerMessage>();
-        syn_msg->m_topic = m_topic;
-        syn_msg->m_partition = m_partition;
-        syn_msg->m_flags = FlagSet::Syn;
-        broker_producer_->m_input.set(syn_msg);
+        assert(m_broker_producer == nullptr);
+        m_broker_producer = m_parent->get_broker_producer(m_leader);
+        m_parent->m_in_flight.add();
+        auto msg = std::make_shared<ProducerMessage>();
+        msg->m_topic = m_topic;
+        msg->m_partition = m_partition;
+        msg->m_flags = FlagSet::Syn;
+        m_broker_producer->m_input.set(msg);
     }
     co_return 0;
 }
-coev::awaitable<int> PartitionProducer::dispatch(std::shared_ptr<ProducerMessage> &msg)
+coev::awaitable<int> PartitionProducer::dispatch()
 {
-
-    if (m_broker_producer)
-    {
-        bool _;
-        if (m_broker_producer->m_abandoned.try_get(_))
-        {
-            m_parent->unref_broker_producer(m_leader, m_broker_producer);
-            m_broker_producer.reset();
-            co_await sleep_for(m_parent->m_conf->Producer.Retry.Backoff);
-        }
-    }
-
-    if (msg->m_retries > m_high_watermark)
-    {
-        int err = co_await update_leader_if_broker_producer_is_nil(msg);
-        if (err != 0)
-        {
-            co_return err;
-        }
-        new_high_watermark(msg->m_retries);
-        co_await backoff(msg->m_retries);
-    }
-    else if (m_high_watermark > 0)
-    {
-        if (msg->m_retries < m_high_watermark)
-        {
-            if (msg->m_flags & FlagSet::Fin)
-            {
-                m_retry_state[msg->m_retries].m_expect_chaser = false;
-                m_parent->m_in_flight--;
-            }
-            else
-            {
-                m_retry_state[msg->m_retries].m_buf.push_back(msg);
-            }
-            co_return 0;
-        }
-        else if (msg->m_flags & FlagSet::Fin)
-        {
-            m_retry_state[m_high_watermark].m_expect_chaser = false;
-            co_await flush_retry_buffers();
-            m_parent->m_in_flight--;
-            co_return 0;
-        }
-    }
-
-    int err = co_await update_leader_if_broker_producer_is_nil(msg);
+    auto err = co_await m_parent->m_client->Leader(m_topic, m_partition, m_leader);
     if (err != 0)
     {
         co_return err;
     }
 
-    if (m_parent->m_conf->Producer.Idempotent && msg->m_retries == 0 && msg->m_flags == 0)
+    if (m_leader)
     {
-        m_parent->m_txnmgr->GetAndIncrementSequenceNumber(msg->m_topic, msg->m_partition, msg->m_sequence_number, msg->m_producer_epoch);
-        msg->m_has_sequence = true;
+        assert(m_broker_producer == nullptr);
+        m_broker_producer = m_parent->get_broker_producer(m_leader);
+        m_parent->m_in_flight.add();
+        auto msg = std::make_shared<ProducerMessage>();
+        msg->m_topic = m_topic;
+        msg->m_partition = m_partition;
+        msg->m_flags = FlagSet::Syn;
+        m_broker_producer->m_input.set(msg);
     }
 
-    if (m_parent->is_transactional())
+    while (true)
     {
-        m_parent->m_txnmgr->MaybeAddPartitionToCurrentTxn(m_topic, m_partition);
-    }
+        std::shared_ptr<ProducerMessage> msg;
+        co_await m_input.get(msg);
+        if (m_broker_producer)
+        {
+            bool _;
+            if (m_broker_producer->m_abandoned.try_get(_))
+            {
+                m_parent->unref_broker_producer(m_leader, m_broker_producer);
+                m_broker_producer.reset();
+                co_await sleep_for(m_parent->m_conf->Producer.Retry.Backoff);
+            }
+        }
 
-    m_broker_producer->m_input.set(msg);
+        if (msg->m_retries > m_high_watermark)
+        {
+            int err = co_await update_leader_if_broker_producer_is_nil(msg);
+            if (err != 0)
+            {
+                continue;
+            }
+            new_high_watermark(msg->m_retries);
+            co_await backoff(msg->m_retries);
+        }
+        else if (m_high_watermark > 0)
+        {
+            if (msg->m_retries < m_high_watermark)
+            {
+                if (msg->m_flags & FlagSet::Fin)
+                {
+                    m_retry_state[msg->m_retries].m_expect_chaser = false;
+                    m_parent->m_in_flight.done();
+                }
+                else
+                {
+                    m_retry_state[msg->m_retries].m_buf.push_back(msg);
+                }
+                continue;
+            }
+            else if (msg->m_flags & FlagSet::Fin)
+            {
+                m_retry_state[m_high_watermark].m_expect_chaser = false;
+                co_await flush_retry_buffers();
+                m_parent->m_in_flight.done();
+                continue;
+            }
+        }
 
-    if (m_broker_producer)
-    {
-        m_parent->unref_broker_producer(m_leader, m_broker_producer);
+        int err = co_await update_leader_if_broker_producer_is_nil(msg);
+        if (err != 0)
+        {
+            continue;
+        }
+
+        if (m_parent->m_conf->Producer.Idempotent && msg->m_retries == 0 && msg->m_flags == 0)
+        {
+            m_parent->m_txnmgr->GetAndIncrementSequenceNumber(msg->m_topic, msg->m_partition, msg->m_sequence_number, msg->m_producer_epoch);
+            msg->m_has_sequence = true;
+        }
+
+        if (m_parent->is_transactional())
+        {
+            m_parent->m_txnmgr->MaybeAddPartitionToCurrentTxn(m_topic, m_partition);
+        }
+
+        m_broker_producer->m_input.set(msg);
+
+        if (m_broker_producer)
+        {
+            m_parent->unref_broker_producer(m_leader, m_broker_producer);
+        }
     }
-    co_return 0;
 }
 
 coev::awaitable<void> PartitionProducer::backoff(int retries)
@@ -131,14 +154,14 @@ void PartitionProducer::new_high_watermark(int hwm)
 {
     m_high_watermark = hwm;
     m_retry_state[m_high_watermark].m_expect_chaser = true;
-    m_parent->m_in_flight++;
+    m_parent->m_in_flight.add();
 
-    auto fin_msg = std::make_shared<ProducerMessage>();
-    fin_msg->m_topic = m_topic;
-    fin_msg->m_partition = m_partition;
-    fin_msg->m_flags = FlagSet::Fin;
-    fin_msg->m_retries = m_high_watermark - 1;
-    m_broker_producer->m_input.set(fin_msg);
+    auto msg = std::make_shared<ProducerMessage>();
+    msg->m_topic = m_topic;
+    msg->m_partition = m_partition;
+    msg->m_flags = FlagSet::Fin;
+    msg->m_retries = m_high_watermark - 1;
+    m_broker_producer->m_input.set(msg);
 
     m_parent->unref_broker_producer(m_leader, m_broker_producer);
     m_broker_producer.reset();
@@ -199,7 +222,7 @@ coev::awaitable<int> PartitionProducer::update_leader()
     }
 
     m_broker_producer = m_parent->get_broker_producer(m_leader);
-    m_parent->m_in_flight++;
+    m_parent->m_in_flight.add();
 
     auto syn_msg = std::make_shared<ProducerMessage>();
     syn_msg->m_topic = m_topic;

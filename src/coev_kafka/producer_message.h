@@ -31,7 +31,6 @@ struct ProducerMessage : std::enable_shared_from_this<ProducerMessage>
     std::shared_ptr<Encoder> m_key;
     std::shared_ptr<Encoder> m_value;
     std::vector<RecordHeader> m_headers;
-    // std::shared_ptr<void*> m_metadata;
 
     int64_t m_offset;
     int32_t m_partition;
@@ -42,8 +41,10 @@ struct ProducerMessage : std::enable_shared_from_this<ProducerMessage>
     int32_t m_sequence_number;
     int16_t m_producer_epoch;
     bool m_has_sequence;
+    KError m_err = ErrNoError;
 
     ProducerMessage();
-    int byteSize(int version) const;
+    ~ProducerMessage();
+    int byte_size(int version) const;
     void clear();
 };

@@ -23,11 +23,11 @@ int64_t ConsumerGroupClaim::HighWaterMarkOffset()
 
 coev::awaitable<int> ConsumerGroupClaim::Messages(std::shared_ptr<ConsumerMessage> &msg)
 {
-    msg = co_await m_messages.get();
+    co_await m_messages.get(msg);
     co_return 0;
 }
 coev::awaitable<int> ConsumerGroupClaim::waitClosed(std::shared_ptr<ConsumerError> &err)
 {
-    err = co_await m_errors.get();
+    co_await m_errors.get(err);
     co_return 0;
 }

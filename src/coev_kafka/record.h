@@ -20,7 +20,7 @@ struct Record : IEncoder, IDecoder
     int64_t m_offset_delta;
     std::string m_key;
     std::string m_value;
-    std::shared_ptr<VariantLengthField> m_length;
+    std::shared_ptr<VariantLengthField> m_length = std::make_shared<VariantLengthField>();
 
     Record() = default;
 

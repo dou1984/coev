@@ -21,7 +21,7 @@ int main(int argc, char **argv)
         std::cout << "Usage: " << argv[0] << "(pull|push) host port topic" << std::endl;
         return -1;
     }
-    set_log_level(LOG_LEVEL_CORE);
+    set_log_level(LOG_LEVEL_DEBUG);
     method = argv[1];
     host = argv[2];
     port = std::stoi(argv[3]);
@@ -38,13 +38,10 @@ int main(int argc, char **argv)
                 []() -> awaitable<void>
                 {
                     std::shared_ptr<Config> conf = std::make_shared<Config>();
-
                     std::shared_ptr<Consumer> consumer;
-
                     std::vector<std::string> addrs = {host + ":" + std::to_string(port)};
 
                     auto err = co_await NewConsumer(addrs, conf, consumer);
-
                     if (err)
                     {
                         LOG_ERR("NewConsumer error: %d", err);
@@ -73,10 +70,11 @@ int main(int argc, char **argv)
                             }
                             while (true)
                             {
-                                auto msg = co_await partition_consumer->m_messages;
+                                std::shared_ptr<ConsumerMessage> msg;
+                                co_await partition_consumer->Messages().get(msg);
                                 if (msg)
                                 {
-                                    LOG_DBG("%s %s", msg->key().c_str(), msg->value().c_str());
+                                    LOG_DBG("Messages %s %s", msg->key().c_str(), msg->value().c_str());
                                 }
                             }
                         }(consumer, partition);
@@ -93,7 +91,6 @@ int main(int argc, char **argv)
                 []() -> awaitable<void>
                 {
                     std::shared_ptr<Config> conf = std::make_shared<Config>();
-
                     conf->Producer.Acks = WaitForAll;
                     conf->Producer.Partitioner = NewRandomPartitioner;
                     conf->Producer.Return.Successes = true;
@@ -103,9 +100,7 @@ int main(int argc, char **argv)
                     std::vector<std::string> addrs = {host + ":" + std::to_string(port)};
 
                     std::shared_ptr<AsyncProducer> producer;
-
                     auto err = co_await NewAsyncProducer(addrs, conf, producer);
-
                     if (err)
                     {
                         std::cout << "NewAsyncProducer error: " << err << std::endl;
@@ -118,27 +113,26 @@ int main(int argc, char **argv)
                     msg->m_key = std::make_shared<StringEncoder>("key");
                     msg->m_value = std::make_shared<ByteEncoder>("hello world");
 
-                    co_await producer->dispatcher(msg);
-
-                    int64_t offset = 0;
-                    co_task task;
-                    auto succ = task << [&]() -> awaitable<void>
-                    {
-                        auto suc_msg = co_await producer->m_successes.get();
-                        offset = suc_msg->m_offset;
-
-                        LOG_DBG("produced message at offset %ld", offset);
-                    }();
-                    auto fail = task << [&]() -> awaitable<void>
-                    {
-                        auto fail_msg = co_await producer->m_errors.get();
-                        LOG_ERR("fail: %d", fail_msg->m_err);
-                        err = fail_msg->m_err;
-                    }();
-
-                    co_await task.wait();
+                    producer->m_input.set(msg);
+                    co_await wait_for_any(
+                        [](auto _producer) -> coev::awaitable<void>
+                        {
+                            std::shared_ptr<ProducerMessage> succ_msg;
+                            co_await _producer->m_successes.get(succ_msg);
+                            auto offset = succ_msg->m_offset;
+                            LOG_DBG("produced message at offset %ld", offset);
+                        }(producer),
+                        [](auto _producer) -> coev::awaitable<void>
+                        {
+                            std::shared_ptr<ProducerError> fail_msg;
+                            co_await _producer->m_errors.get(fail_msg);
+                            if (fail_msg->m_err == ErrNoError)
+                            {
+                                LOG_ERR("fail: %d", fail_msg->m_err);
+                                auto err = fail_msg->m_err;
+                            }
+                        }(producer));
                 })
-
             .wait();
     }
 

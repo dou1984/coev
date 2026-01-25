@@ -21,21 +21,21 @@ int VariantLengthField::decode(packetDecoder &pd)
     return 0;
 }
 
-void VariantLengthField::saveOffset(int in)
+void VariantLengthField::save_offset(int in)
 {
     m_start_offset = in;
 }
 
-int VariantLengthField::reserveLength()
+int VariantLengthField::reserve_length()
 {
     return variantSize(m_length);
 }
 
 int VariantLengthField::adjust_length(int currOffset)
 {
-    int oldSize = reserveLength();
+    int oldSize = reserve_length();
     m_length = static_cast<int64_t>(currOffset - m_start_offset - oldSize);
-    int newSize = reserveLength();
+    int newSize = reserve_length();
     return newSize - oldSize;
 }
 
@@ -47,7 +47,7 @@ int VariantLengthField::run(int curOffset, std::string &buf)
 
 int VariantLengthField::check(int curOffset, const std::string & /*buf*/)
 {
-    if (static_cast<int64_t>(curOffset - m_start_offset - reserveLength()) != m_length)
+    if (static_cast<int64_t>(curOffset - m_start_offset - reserve_length()) != m_length)
     {
         return -1;
     }

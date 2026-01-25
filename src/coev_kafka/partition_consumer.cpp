@@ -39,7 +39,8 @@ coev::awaitable<int> PartitionConsumer::Dispatcher()
 {
     while (true)
     {
-        bool dummy = co_await m_trigger;
+        bool dummy;
+        co_await m_trigger.get(dummy);
 
         bool dying_received = false;
         if (m_dying.try_get(dummy))
@@ -64,7 +65,7 @@ coev::awaitable<int> PartitionConsumer::Dispatcher()
         if (err)
         {
             SendError(err);
-            m_trigger = true;
+            m_trigger.set(true);
         }
     }
 
@@ -125,8 +126,7 @@ coev::awaitable<int> PartitionConsumer::Dispatch()
     }
 
     auto brokerConsumer = m_consumer->RefBrokerConsumer(broker);
-    brokerConsumer->m_input = shared_from_this();
-
+    brokerConsumer->m_input.set(shared_from_this());
     co_return ErrNoError;
 }
 
@@ -178,11 +178,15 @@ coev::awaitable<int> PartitionConsumer::Close()
 
     std::vector<std::shared_ptr<ConsumerError>> consumerErrors;
     std::shared_ptr<ConsumerError> err;
-    while ((err = co_await m_errors.get()))
+    while (true)
     {
+        co_await m_errors.get(err);
+        if (!err)
+        {
+            break;
+        }
         consumerErrors.push_back(err);
     }
-
     co_return 0;
 }
 
@@ -193,24 +197,24 @@ int64_t PartitionConsumer::HighWaterMarkOffset()
 
 coev::awaitable<void> PartitionConsumer::ResponseFeeder()
 {
-    std::vector<std::shared_ptr<ConsumerMessage>> msgs;
-    auto expiryTime = m_conf->Consumer.MaxProcessingTime;
-    auto lastExpiry = std::chrono::steady_clock::now();
-    bool firstAttempt = true;
-
     while (true)
     {
-        std::shared_ptr<FetchResponse> response = co_await m_feeder.get();
-        m_response_result = (KError)ParseResponse(response, msgs);
+        std::shared_ptr<FetchResponse> response;
+        co_await m_feeder.get(response);
 
+        std::vector<std::shared_ptr<ConsumerMessage>> messages;
+        auto expiryTime = m_conf->Consumer.MaxProcessingTime;
+        auto lastExpiry = std::chrono::steady_clock::now();
+        bool firstAttempt = true;
+
+        m_response_result = (KError)ParseResponse(response, messages);
         if (m_response_result != ErrNoError)
         {
             m_retries.store(0);
         }
-
-        for (size_t i = 0; i < msgs.size(); ++i)
+        for (size_t i = 0; i < messages.size(); ++i)
         {
-            auto msg = msgs[i];
+            auto msg = messages[i];
             Interceptors(msg);
 
             bool sent = false;
@@ -221,17 +225,19 @@ coev::awaitable<void> PartitionConsumer::ResponseFeeder()
                 if (!firstAttempt)
                 {
                     m_response_result = ErrTimedOut;
-                    m_broker->m_acks.done();
-                    for (size_t j = i; j < msgs.size(); ++j)
+
+                    for (size_t j = i; j < messages.size(); ++j)
                     {
-                        Interceptors(msgs[j]);
-                        m_messages.set(msgs[j]);
+                        Interceptors(messages[j]);
+                        m_messages.set(messages[j]);
 
                         if (m_dying.try_get(died) && died)
-                            break;
+                        {
+                            continue;
+                        }
                     }
-                    m_broker->m_input = shared_from_this();
-                    break;
+                    m_broker->m_input.set(shared_from_this());
+                    continue;
                 }
                 else
                 {
@@ -243,40 +249,38 @@ coev::awaitable<void> PartitionConsumer::ResponseFeeder()
 
             if (m_dying.try_get(died) && died)
             {
-                m_broker->m_acks.done();
-                break;
+                co_return;
             }
 
             m_messages.set(msg);
             firstAttempt = true;
         }
-
-        m_broker->m_acks.done();
     }
-    co_return;
 }
 
 int PartitionConsumer::ParseMessages(std::shared_ptr<MessageSet> msgSet, std::vector<std::shared_ptr<ConsumerMessage>> &messages)
 {
 
-    for (auto &msgBlock : msgSet->m_messages)
+    for (auto &block : msgSet->m_messages)
     {
-        auto blockMsgs = msgBlock->Messages();
-        for (auto &msg : blockMsgs)
+        auto msgs = block->Messages();
+        for (auto &msg : msgs)
         {
             int64_t offset = msg->m_offset;
             auto timestamp = msg->m_msg->m_timestamp;
             if (msg->m_msg->m_version >= 1)
             {
-                int64_t baseOffset = msgBlock->m_offset - blockMsgs[blockMsgs.size() - 1]->m_offset;
+                int64_t baseOffset = block->m_offset - msgs[msgs.size() - 1]->m_offset;
                 offset += baseOffset;
                 if (msg->m_msg->m_log_append_time)
                 {
-                    timestamp = msgBlock->m_msg->m_timestamp;
+                    timestamp = block->m_msg->m_timestamp;
                 }
             }
             if (offset < m_offset)
+            {
                 continue;
+            }
             auto cm = std::make_shared<ConsumerMessage>();
             cm->m_topic = m_topic;
             cm->m_partition = m_partition;
@@ -284,7 +288,7 @@ int PartitionConsumer::ParseMessages(std::shared_ptr<MessageSet> msgSet, std::ve
             cm->m_value = msg->m_msg->m_value;
             cm->m_offset = offset;
             cm->m_timestamp = timestamp.get_time();
-            cm->m_block_timestamp = msgBlock->m_msg->m_timestamp.get_time();
+            cm->m_block_timestamp = block->m_msg->m_timestamp.get_time();
             messages.push_back(cm);
             m_offset = offset + 1;
         }

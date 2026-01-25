@@ -34,7 +34,7 @@ struct SyncProducer : ISyncProducer
 
     std::shared_ptr<AsyncProducer> m_producer;
     std::atomic<bool> closed{false};
-    coev::co_task task;
+    coev::co_task m_task;
 
     coev::awaitable<void> handleSuccesses();
     coev::awaitable<void> handleErrors();

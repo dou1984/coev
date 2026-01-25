@@ -190,13 +190,12 @@ coev::awaitable<int> Consumer::ConsumePartition(const std::string &topic, int32_
     {
         co_return err;
     }
-
     m_task << child->Dispatcher();
     m_task << child->ResponseFeeder();
 
     child->m_leader_epoch = epoch;
     child->m_broker = RefBrokerConsumer(leader);
-    child->m_broker->m_input = child;
+    child->m_broker->m_input.set(child);
 
     co_return 0;
 }

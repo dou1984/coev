@@ -8,11 +8,9 @@
 #include <mutex>
 #include <string>
 #include <functional>
-
 #include "client.h"
 #include "config.h"
 #include "connect.h"
-
 #include "access_token.h"
 #include "acl_create_request.h"
 #include "acl_create_response.h"
@@ -124,9 +122,6 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
 
     bool Connected();
     int TLSConnectionState();
-    int32_t ID();
-    std::string Addr();
-    std::string Rack();
 
     coev::awaitable<int> Open(std::shared_ptr<Config> conf);
     coev::awaitable<int> Close();
@@ -172,11 +167,20 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
     coev::awaitable<int> AlterClientQuotas(const AlterClientQuotasRequest &request, ResponsePromise<AlterClientQuotasResponse> &response);
     coev::awaitable<int> AsyncProduce(const ProduceRequest &request, std::function<void(ResponsePromise<ProduceResponse> &)> _f);
 
-    Connect m_conn;
-    std::shared_ptr<Config> m_conf;
+    int decode(packetDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version);
+
+    std::string Addr();
+    std::string Rack();
+    int32_t ID();
+
+    int32_t m_id;
     std::string m_rack;
     std::string m_addr;
-    int32_t m_id;
+
+    std::unique_ptr<Connect> m_conn;
+    std::shared_ptr<Config> m_conf;
+
     int32_t m_correlation_id;
     coev::async m_opened;
 
@@ -184,7 +188,6 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
     std::shared_ptr<GSSAPIKerberosAuth> m_kerberos_authenticator;
     int64_t m_session_reauthentication_time;
 
-    std::mutex m_throttle_timer_lock;
     coev::co_task m_task;
     coev::co_channel<bool> m_done;
 
@@ -202,13 +205,9 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
     coev::awaitable<int> SendAndReceiveSASLSCRAMv1(std::shared_ptr<SCRAMClient> scramClient, AuthSendReceiver authSendReceiver);
     coev::awaitable<int> SendAndReceiveApiVersions(int16_t v, ResponsePromise<ApiVersionsResponse> &promise);
     coev::awaitable<int> _Open();
-    coev::awaitable<int> _PreOpen();
+
     int CreateSaslAuthenticateRequest(const std::string &msg, SaslAuthenticateRequest &);
-
-    int decode(packetDecoder &pd, int16_t version);
-    int encode(packetEncoder &pe, int16_t version);
     void SafeAsyncClose();
-
     int BuildClientFirstMessage(std::shared_ptr<AccessToken> token, std::string &);
     std::string MapToString(const std::map<std::string, std::string> &extensions, const std::string &keyValSep, const std::string &elemSep);
     int64_t CurrentUnixMilli();
@@ -255,7 +254,7 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
     }
 
     template <class Req, class Resp>
-    coev::awaitable<int> ResponseReceiver(Req &request, ResponsePromise<Resp> &promise, int &err)
+    coev::awaitable<int> ResponseReceiver(const Req &request, ResponsePromise<Resp> &promise, int &err)
     {
         std::string header;
         auto bytesReadHeader = getHeaderLength(promise.m_response.header_version());
@@ -265,21 +264,22 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
         {
             co_return INVALID;
         }
-        responseHeader decodedHeader;
-        err = versionedDecode(header, decodedHeader, promise.m_response.header_version());
+        ResponseHeader decoded_header;
+        err = versionedDecode(header, decoded_header, promise.m_response.header_version());
         if (err)
         {
             co_return INVALID;
         }
-        LOG_CORE("correlation id %d:%d length: %d ", decodedHeader.m_correlation_id, promise.m_correlation_id, decodedHeader.m_length);
-        if (decodedHeader.m_correlation_id != promise.m_correlation_id)
+        LOG_CORE("correlation id %d:%d length: %d ", decoded_header.m_correlation_id, promise.m_correlation_id, decoded_header.m_length);
+        if (decoded_header.m_correlation_id != promise.m_correlation_id)
         {
             err = 1;
-            LOG_CORE("correlation id %d != %d", decodedHeader.m_correlation_id, promise.m_correlation_id);
+            LOG_CORE("correlation id %d != %d", decoded_header.m_correlation_id, promise.m_correlation_id);
             co_return INVALID;
         }
 
-        size_t bytesReadBody = decodedHeader.m_length - bytesReadHeader + 4;
+        size_t bytesReadBody = decoded_header.m_length - bytesReadHeader + 4;
+        LOG_CORE("Reading body: %ld bytes", bytesReadBody);
         err = co_await ReadFull(promise.m_packets, bytesReadBody);
         if (err)
         {
@@ -291,7 +291,15 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
             LOG_CORE("promise packets %ld != %ld", promise.m_packets.size(), bytesReadBody);
             co_return INVALID;
         }
-        co_return promise.decode(request.version());
+        LOG_CORE("Decoding response with version: %d", request.version());
+        err = promise.decode(request.version());
+        if (err)
+        {
+            LOG_CORE("Decode failed with error: %d", err);
+            co_return err;
+        }
+        LOG_CORE("Decode successful");
+        co_return ErrNoError;
     }
 
     template <class Resp>

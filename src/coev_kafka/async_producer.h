@@ -33,7 +33,7 @@ struct AsyncProducer : std::enable_shared_from_this<AsyncProducer>
     int add_offsets_to_txn(const std::map<std::string, std::vector<std::shared_ptr<PartitionOffsetMetadata>>> &offsets, const std::string &group_id);
     int add_message_to_txn(std::shared_ptr<ConsumerMessage> msg, const std::string &metadata, const std::string &group_id);
 
-    coev::awaitable<int> dispatcher(std::shared_ptr<ProducerMessage> &msg);
+    coev::awaitable<void> dispatcher();
     coev::awaitable<void> retry_handler();
     coev::awaitable<void> shutdown();
     coev::awaitable<void> bump_idempotent_producer_epoch();
@@ -54,17 +54,18 @@ struct AsyncProducer : std::enable_shared_from_this<AsyncProducer>
     std::shared_ptr<Client> m_client;
     std::shared_ptr<Config> m_conf;
     std::shared_ptr<TransactionManager> m_txnmgr;
-    std::atomic<int> m_in_flight;
+    coev::co_waitgroup m_in_flight;
 
-    std::map<std::shared_ptr<Broker>, std::shared_ptr<BrokerProducer>> m_brokers;
+    std::map<int32_t, std::shared_ptr<BrokerProducer>> m_brokers;
     std::map<std::shared_ptr<BrokerProducer>, int> m_broker_refs;
 
+    coev::co_channel<std::shared_ptr<ProducerMessage>> m_input;
+    coev::co_channel<std::shared_ptr<ProducerMessage>> m_retries;
     coev::co_channel<std::shared_ptr<ProducerError>> m_errors;
     coev::co_channel<std::shared_ptr<ProducerMessage>> m_successes;
-    coev::co_channel<std::shared_ptr<ProducerMessage>> m_retries;
 
-    coev::co_task m_task;
     std::map<std::string, std::shared_ptr<TopicProducer>> m_topic_producer;
+    coev::co_task m_task;
 };
 
 struct PartitionRetryState

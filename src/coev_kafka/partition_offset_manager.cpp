@@ -16,9 +16,10 @@ std::pair<int64_t, std::string> PartitionOffsetManager::NextOffset()
     }
     return std::make_pair(m_parent->m_conf->Consumer.Offsets.Initial, "");
 }
-coev::awaitable<std::shared_ptr<ConsumerError>> PartitionOffsetManager::Errors()
+coev::awaitable<void> PartitionOffsetManager::Errors(std::shared_ptr<ConsumerError> &err)
 {
-    return m_errors.get();
+    co_await m_errors.get(err);
+    co_return;
 }
 void PartitionOffsetManager::MarkOffset(int64_t offset, const std::string &metadata)
 {

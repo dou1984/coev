@@ -81,7 +81,7 @@ coev::awaitable<int> NewClient(const std::vector<std::string> &addrs, std::share
             }
             else
             {
-                client_->m_closed.set(true);
+                // client_->m_closed.set(true);
                 client_->Close();
                 co_return err;
             }
@@ -89,7 +89,6 @@ coev::awaitable<int> NewClient(const std::vector<std::string> &addrs, std::share
     }
 
     client_->m_task << client_->BackgroundMetadataUpdater();
-    // LOG_DBG("NewClient Successfully initialized new client");
 
     co_return ErrNoError;
 }
@@ -179,7 +178,7 @@ int Client::Close()
         LOG_CORE("Client::Close called on already closed client");
         return ErrClosedClient;
     }
-    m_closer.set(true);
+    // m_closer.resume();
 
     LOG_CORE("Client::Close Closing Client");
     for (auto &kv : m_brokers)
@@ -588,10 +587,10 @@ void Client::RandomizeSeedBrokers(const std::vector<std::string> &addrs)
 void Client::UpdateBroker(const std::vector<std::shared_ptr<Broker>> &_brokers_list)
 {
     LOG_CORE("Client::UpdateBroker called with %zu brokers", _brokers_list.size());
-    std::map<int32_t, std::shared_ptr<Broker>> currentBroker;
+    std::map<int32_t, std::shared_ptr<Broker>> current_broker;
     for (auto &broker : _brokers_list)
     {
-        currentBroker[broker->ID()] = broker;
+        current_broker[broker->ID()] = broker;
         auto it = m_brokers.find(broker->ID());
         if (it == m_brokers.end())
         {
@@ -607,7 +606,7 @@ void Client::UpdateBroker(const std::vector<std::shared_ptr<Broker>> &_brokers_l
     }
     for (auto it = m_brokers.begin(); it != m_brokers.end();)
     {
-        if (currentBroker.find(it->first) == currentBroker.end())
+        if (current_broker.find(it->first) == current_broker.end())
         {
             it->second->SafeAsyncClose();
             LOG_CORE("Client::UpdateBrokers remove invalid broker: #%d with %s", it->second->ID(), it->second->Addr().c_str());
@@ -624,7 +623,6 @@ void Client::UpdateBroker(const std::vector<std::shared_ptr<Broker>> &_brokers_l
 void Client::RegisterBroker(std::shared_ptr<Broker> broker)
 {
 
-    // 直接检查关闭条件，避免死锁
     if (m_brokers.empty() && m_seed_brokers.empty())
     {
         LOG_CORE("Client::RegisterBroker cannot register broker: #%d at %s, client already closed", broker->ID(), broker->Addr().c_str());
@@ -690,23 +688,23 @@ coev::awaitable<int> Client::LeastLoadedBroker(std::shared_ptr<Broker> &leastLoa
 
     if (!m_seed_brokers.empty())
     {
-        std::shared_ptr<Broker> seedBroker = m_seed_brokers[0];
-        LOG_CORE("Client::LeastLoadedBroker trying seed broker %s", seedBroker->Addr().c_str());
-        err = co_await seedBroker->Open(m_conf);
+        std::shared_ptr<Broker> seed_broker = m_seed_brokers[0];
+        LOG_CORE("Client::LeastLoadedBroker trying seed broker %s", seed_broker->Addr().c_str());
+        err = co_await seed_broker->Open(m_conf);
         if (err != 0)
         {
-            LOG_CORE("Client::LeastLoadedBroker seed broker %s is down, error: %d", seedBroker->Addr().c_str(), err);
-            if (!m_seed_brokers.empty() && m_seed_brokers[0] == seedBroker)
+            LOG_CORE("Client::LeastLoadedBroker seed broker %s is down, error: %d", seed_broker->Addr().c_str(), err);
+            if (!m_seed_brokers.empty() && m_seed_brokers[0] == seed_broker)
             {
                 m_seed_brokers.erase(m_seed_brokers.begin());
-                m_dead_seeds.push_back(seedBroker);
-                LOG_CORE("Client::LeastLoadedBroker moved seed broker %s to dead seeds", seedBroker->Addr().c_str());
+                m_dead_seeds.push_back(seed_broker);
+                LOG_CORE("Client::LeastLoadedBroker moved seed broker %s to dead seeds", seed_broker->Addr().c_str());
             }
             co_return err;
         }
 
-        leastLoadedBroker = seedBroker;
-        LOG_CORE("Client::LeastLoadedBroker successfully used seed broker %s", seedBroker->Addr().c_str());
+        leastLoadedBroker = seed_broker;
+        LOG_CORE("Client::LeastLoadedBroker successfully used seed broker %s", seed_broker->Addr().c_str());
         co_return 0;
     }
 
@@ -741,13 +739,13 @@ std::vector<int32_t> Client::_CachedPartitions(const std::string &topic, int64_t
 
 std::vector<int32_t> Client::_SetPartitionCache(const std::string &topic, int64_t partitionId)
 {
-    auto topicIt = m_metadata.find(topic);
-    if (topicIt == m_metadata.end())
+    auto it = m_metadata.find(topic);
+    if (it == m_metadata.end())
     {
         return {};
     }
     std::vector<int32_t> ret;
-    for (auto &kv : topicIt->second)
+    for (auto &kv : it->second)
     {
         if (partitionId == WritablePartitions_ && kv.second->m_err == ErrLeaderNotAvailable)
         {
@@ -761,28 +759,30 @@ std::vector<int32_t> Client::_SetPartitionCache(const std::string &topic, int64_
 
 coev::awaitable<int> Client::_CachedLeader(const std::string &topic, int32_t partitionID, std::shared_ptr<Broker> &broker_, int32_t &leaderEpoch)
 {
-    broker_ = nullptr;
     leaderEpoch = -1;
-
-    auto topic_it = m_metadata.find(topic);
-    if (topic_it != m_metadata.end())
+    auto tit = m_metadata.find(topic);
+    if (tit != m_metadata.end())
     {
-        auto part_it = topic_it->second.find(partitionID);
-        if (part_it != topic_it->second.end())
+        auto pit = tit->second.find(partitionID);
+        if (pit != tit->second.end())
         {
-            auto m_metadata = part_it->second;
-            if (m_metadata->m_err == ErrLeaderNotAvailable)
+            auto _metadata = pit->second;
+            if (_metadata->m_err == ErrLeaderNotAvailable)
             {
                 co_return ErrLeaderNotAvailable;
             }
-            auto broker_it = m_brokers.find(m_metadata->m_leader);
-            if (broker_it == m_brokers.end())
+            auto bit = m_brokers.find(_metadata->m_leader);
+            if (bit == m_brokers.end())
             {
                 co_return ErrLeaderNotAvailable;
             }
-            auto err = co_await broker_it->second->Open(m_conf);
-            broker_ = broker_it->second;
-            leaderEpoch = m_metadata->m_leader_epoch;
+            auto err = co_await bit->second->Open(m_conf);
+            if (err != 0)
+            {
+                co_return ErrLeaderNotAvailable;
+            }
+            broker_ = bit->second;
+            leaderEpoch = _metadata->m_leader_epoch;
             co_return err;
         }
     }
@@ -831,27 +831,18 @@ coev::awaitable<int> Client::_GetOffset(const std::string &topic, int32_t partit
 
 coev::awaitable<int> Client::BackgroundMetadataUpdater()
 {
-    m_closed.set(false);
     if (m_conf->Metadata.RefreshFrequency == std::chrono::milliseconds::zero())
     {
-        m_closed.set(true);
         co_return 0;
     }
-    co_await wait_for_any(
-        [this]() -> coev::awaitable<void>
-        { co_await m_closer.get(); }(),
-        [this]() -> coev::awaitable<void>
+    while (true)
+    {
+        co_await sleep_for(m_conf->Metadata.RefreshFrequency);
+        if (int err = co_await RefreshMetadata(); err != 0)
         {
-            while (true)
-            {
-                co_await sleep_for(m_conf->Metadata.RefreshFrequency);
-                if (int err = co_await RefreshMetadata(); err != 0)
-                {
-                    LOG_CORE("background metadata update: %d", err);
-                }
-            }
-        }());
-    m_closed.set(true);
+            LOG_CORE("background metadata update: %d", err);
+        }
+    }
     co_return 0;
 }
 
@@ -874,7 +865,7 @@ coev::awaitable<int> Client::RefreshMetadata()
     co_return err;
 }
 
-bool pastDeadline(std::chrono::steady_clock::time_point deadline, std::chrono::milliseconds backoff)
+bool PastDeadline(std::chrono::steady_clock::time_point deadline, std::chrono::milliseconds backoff)
 {
     return (deadline.time_since_epoch().count() != 0 && std::chrono::steady_clock::now() + backoff > deadline);
 };
@@ -884,7 +875,7 @@ coev::awaitable<int> Client::RetryRefreshMetadata(const std::vector<std::string>
     if (attemptsRemaining > 0)
     {
         auto backoff = ComputeBackoff(attemptsRemaining);
-        if (pastDeadline(deadline, backoff))
+        if (PastDeadline(deadline, backoff))
         {
             LOG_CORE("skipping last retries as we would go past the metadata timeout");
             co_return err;
@@ -913,20 +904,20 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
     std::vector<int> brokerErrors;
     std::shared_ptr<Broker> broker;
     co_await LeastLoadedBroker(broker);
-    for (; broker && !pastDeadline(deadline, std::chrono::milliseconds(0)); co_await LeastLoadedBroker(broker))
+    for (; broker && !PastDeadline(deadline, std::chrono::milliseconds(0)); co_await LeastLoadedBroker(broker))
     {
-        bool allowAutoTopicCreation = m_conf->Metadata.AllowAutoTopicCreation;
+        bool allow_auto_topic_creation = m_conf->Metadata.AllowAutoTopicCreation;
         if (!topics.empty())
         {
             LOG_CORE("fetching metadata for %zu topics from broker %s", topics.size(), broker->Addr().c_str());
         }
         else
         {
-            allowAutoTopicCreation = false;
+            allow_auto_topic_creation = false;
             LOG_CORE("fetching metadata for all topics from broker %s", broker->Addr().c_str());
         }
         auto request = NewMetadataRequest(m_conf->Version, topics);
-        request->m_allow_auto_topic_creation = allowAutoTopicCreation;
+        request->m_allow_auto_topic_creation = allow_auto_topic_creation;
         m_update_metadata_ms.store(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count());
         ResponsePromise<MetadataResponse> promise;
         err = co_await broker->GetMetadata(*request, promise);
@@ -940,9 +931,7 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
                 continue;
             }
             bool allKnownMetaData = topics.empty();
-            bool shouldRetry;
-
-            shouldRetry = UpdateMetadata(promise.m_response, allKnownMetaData);
+            bool shouldRetry = UpdateMetadata(promise.m_response, allKnownMetaData);
             if (shouldRetry)
             {
                 LOG_CORE("found some partitions to be leaderless");

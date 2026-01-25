@@ -18,6 +18,7 @@ namespace coev
 
 	public:
 		int add();
+		int add(int n);
 		void done();
 		awaitable<void> wait();
 	};

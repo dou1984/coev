@@ -29,16 +29,110 @@ int8_t getHeaderLength(int16_t header_version)
     }
 }
 
-Broker::Broker(const std::string &addr) : m_id(-1), m_addr(addr), m_correlation_id(0), m_session_reauthentication_time(0), m_task()
+Broker::Broker(const std::string &addr) : m_id(-1), m_addr(addr), m_rack(""), m_correlation_id(0), m_session_reauthentication_time(0), m_task()
 {
 }
-Broker::Broker(int id, const std::string &addr) : m_id(id), m_addr(addr), m_correlation_id(0), m_session_reauthentication_time(0), m_task()
+Broker::Broker(int id, const std::string &addr) : m_id(id), m_addr(addr), m_rack(""), m_correlation_id(0), m_session_reauthentication_time(0), m_task()
 {
 }
 Broker::~Broker()
 {
     LOG_CORE("broker %p closed", this);
 }
+int32_t Broker::ID()
+{
+    return m_id;
+}
+std::string Broker::Addr()
+{
+    return m_addr;
+}
+std::string Broker::Rack()
+{
+    return m_rack;
+}
+int Broker::decode(packetDecoder &pd, int16_t version)
+{
+    int32_t err = pd.getInt32(m_id);
+    if (err)
+    {
+        return err;
+    }
+
+    std::string host;
+    err = pd.getString(host);
+    if (err)
+    {
+        return err;
+    }
+
+    int32_t port;
+    err = pd.getInt32(port);
+    if (err)
+    {
+        return err;
+    }
+
+    if (host == "localhost")
+    {
+        host = "127.0.0.1";
+        // host = "0.0.0.0"
+    }
+    m_addr = host + ":" + std::to_string(port);
+
+    if (version >= 1)
+    {
+        err = pd.getNullableString(m_rack);
+        if (err)
+        {
+            return err;
+        }
+    }
+
+    if (version >= 5)
+    {
+        int32_t emptyArray;
+        err = pd.getEmptyTaggedFieldArray(emptyArray);
+        if (err)
+        {
+            return err;
+        }
+    }
+
+    return 0;
+}
+
+int Broker::encode(packetEncoder &pe, int16_t version)
+{
+
+    auto [host, port] = net::SplitHostPort(m_addr);
+    if (host.empty())
+    {
+        return 1;
+    }
+
+    pe.putInt32(m_id);
+
+    int32_t err = pe.putString(host);
+    if (err)
+    {
+        return err;
+    }
+
+    pe.putInt32(port);
+    if (version >= 1)
+    {
+        err = pe.putNullableString(m_rack);
+        if (err)
+        {
+            return err;
+        }
+    }
+
+    pe.putEmptyTaggedFieldArray();
+    return 0;
+}
+
 coev::awaitable<int> Broker::Open(std::shared_ptr<Config> conf)
 {
     if (!conf)
@@ -56,65 +150,51 @@ coev::awaitable<int> Broker::Open(std::shared_ptr<Config> conf)
     }
     co_return err;
 }
-coev::awaitable<int> Broker::_PreOpen()
-{
-    while (m_conn.IsOpening())
-    {
-        LOG_CORE("conn is not opened");
-        co_await m_opened.suspend();
-        if (m_conn.IsOpened())
-        {
-            co_return m_conn.State();
-        }
-        else if (m_conn.IsClosed())
-        {
-            co_return m_conn.State();
-        }
-    }
-    co_return m_conn.State();
-}
+
 coev::awaitable<int> Broker::_Open()
 {
-    if (m_conn.IsOpened())
+    if (m_conn == nullptr)
+    {
+        m_conn = std::make_unique<Connect>();
+    }
+    if (m_conn->IsOpened())
     {
         LOG_CORE("conn is opened");
         co_return 0;
     }
-    co_await _PreOpen();
+    if (m_conn->IsOpening())
+    {
+        co_await m_opened.suspend();
+        if (m_conn->IsClosed())
+        {
+            co_return INVALID;
+        }
+    }
     if (m_addr.empty())
     {
         LOG_CORE("addr is empty");
         co_return INVALID;
     }
     auto [host, port] = net::SplitHostPort(m_addr);
-
-    if (host == "localhost")
+    static std::regex ipv4_re("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$");
+    static std::regex ipv6_re("^(\\[)?([0-9a-fA-F:]+)(\\])?$|:");
+    if (!(std::regex_match(host, ipv4_re) || std::regex_match(host, ipv6_re)))
     {
-        host = "127.0.0.1";
+        auto tmp = host;
+        auto err = co_await coev::parse_dns(tmp, host);
+        if (err)
+        {
+            LOG_CORE("parse_dns failed");
+            co_return INVALID;
+        }
     }
-    else
+    else if (host.size() >= 2 && host[0] == '[' && host.back() == ']')
     {
-
-        static std::regex ipv4_re("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$");
-        static std::regex ipv6_re("^(\\[)?([0-9a-fA-F:]+)(\\])?$|:");
-        if (!(std::regex_match(host, ipv4_re) || std::regex_match(host, ipv6_re)))
-        {
-            auto tmp = host;
-            auto err = co_await coev::parse_dns(tmp, host);
-            if (err)
-            {
-                LOG_CORE("parse_dns failed");
-                co_return INVALID;
-            }
-        }
-        else if (host.size() >= 2 && host[0] == '[' && host.back() == ']')
-        {
-            host = host.substr(1, host.size() - 2);
-        }
+        host = host.substr(1, host.size() - 2);
     }
 
     LOG_CORE("connect to %s:%d", host.data(), port);
-    auto fd = co_await m_conn.Dial(host.data(), port);
+    auto fd = co_await m_conn->Dial(host.data(), port);
     if (fd == INVALID)
     {
         LOG_CORE("connect to %s:%d failed", host.data(), port);
@@ -125,18 +205,22 @@ coev::awaitable<int> Broker::_Open()
     int err = ErrNoError;
     if (m_conf->ApiVersionsRequest)
     {
+        LOG_CORE("Sending ApiVersionsRequest with version 3");
         ResponsePromise<ApiVersionsResponse> apiVersionsResponse;
         err = co_await SendAndReceiveApiVersions(3, apiVersionsResponse);
         if (err)
         {
+            LOG_CORE("SendAndReceiveApiVersions version 3 failed with error: %d, trying version 0", err);
             err = co_await SendAndReceiveApiVersions(0, apiVersionsResponse);
             if (err)
             {
-                m_conn.Close();
-                LOG_CORE("connect to %s:%d failed", host.data(), port);
+                LOG_CORE("SendAndReceiveApiVersions version 0 also failed with error: %d", err);
+                m_conn->Close();
+                LOG_CORE("connect to %s:%d failed due to ApiVersionsRequest failure", host.data(), port);
                 co_return INVALID;
             }
         }
+        LOG_CORE("ApiVersionsRequest succeeded, received %ld api keys", apiVersionsResponse.m_response.m_api_keys.size());
         m_broker_api_versions.clear();
         for (auto &key : apiVersionsResponse.m_response.m_api_keys)
         {
@@ -150,7 +234,7 @@ coev::awaitable<int> Broker::_Open()
         err = co_await AuthenticateViaSASLv0();
         if (err)
         {
-            m_conn.Close();
+            m_conn->Close();
             LOG_CORE("connect to %s:%d failed", host.data(), port);
             co_return INVALID;
         }
@@ -161,8 +245,7 @@ coev::awaitable<int> Broker::_Open()
         err = co_await AuthenticateViaSASLv1();
         if (err)
         {
-            co_await m_done.get();
-            m_conn.Close();
+            m_conn->Close();
             LOG_CORE("connect to %s:%d failed", host.data(), port)
             co_return INVALID;
         }
@@ -173,12 +256,12 @@ coev::awaitable<int> Broker::_Open()
 
 bool Broker::Connected()
 {
-    return m_conn.IsOpened();
+    return m_conn->IsOpened();
 }
 
 int Broker::TLSConnectionState()
 {
-    if (!m_conn.IsOpened())
+    if (!m_conn->IsOpened())
     {
         return 0;
     }
@@ -197,29 +280,13 @@ int Broker::TLSConnectionState()
 
 coev::awaitable<int> Broker::Close()
 {
-    if (!m_conn.IsOpened())
+    if (!m_conn->IsOpened())
     {
         co_return ErrNotConnected;
     }
 
-    co_await m_done.get();
-    int32_t err = m_conn.Close();
+    int32_t err = m_conn->Close();
     co_return 0;
-}
-
-int32_t Broker::ID()
-{
-    return m_id;
-}
-
-std::string Broker::Addr()
-{
-    return m_addr;
-}
-
-std::string Broker::Rack()
-{
-    return m_rack;
 }
 
 coev::awaitable<int> Broker::GetMetadata(const MetadataRequest &request, ResponsePromise<MetadataResponse> &response)
@@ -255,7 +322,7 @@ coev::awaitable<int> Broker::AsyncProduce(const ProduceRequest &request, std::fu
     bool needAcks = request.m_acks != NoResponse;
     if (needAcks)
     {
-        m_task << [](auto _this, auto &request, auto _f) -> coev::awaitable<void>
+        m_task << [](auto _this, auto request, auto _f) -> coev::awaitable<void>
         {
             LOG_CORE("Sending ProduceRequest, version: %d, correlation_id: %d, acks: %d", request.version(), _this->m_correlation_id, request.m_acks);
             ResponsePromise<ProduceResponse> response;
@@ -273,17 +340,15 @@ coev::awaitable<int> Broker::AsyncProduce(const ProduceRequest &request, std::fu
     }
     else
     {
-        m_task << [](auto _this, auto &request, auto _f) -> coev::awaitable<void>
+
+        LOG_CORE("Sending ProduceRequest, version: %d, correlation_id: %d, acks: %d", request.version(), m_correlation_id, request.m_acks);
+        ResponsePromise<ProduceResponse> response;
+        defer(LOG_CORE("Received ProduceResponse, correlation_id: %d", response.m_correlation_id));
+        auto err = co_await SendAndReceive(request, response);
+        if (err != ErrNoError)
         {
-            LOG_CORE("Sending ProduceRequest, version: %d, correlation_id: %d, acks: %d", request.version(), _this->m_correlation_id, request.m_acks);
-            ResponsePromise<ProduceResponse> response;
-            defer(LOG_CORE("Received ProduceResponse, correlation_id: %d", response.m_correlation_id));
-            auto err = co_await _this->SendAndReceive(request, response);
-            if (err != ErrNoError)
-            {
-                LOG_CORE("SendAndReceive failed");
-            }
-        }(shared_from_this(), request, _f);
+            LOG_CORE("SendAndReceive failed");
+        }
     }
     co_return 0;
 }
@@ -569,14 +634,18 @@ coev::awaitable<int> Broker::AlterClientQuotas(const AlterClientQuotasRequest &r
 
 coev::awaitable<int> Broker::ReadFull(std::string &buf, size_t n)
 {
-    if (m_conn.IsClosed())
+    if (m_conn == nullptr)
     {
         co_return INVALID;
     }
-    if (m_conn.IsOpening())
+    if (m_conn->IsClosed())
+    {
+        co_return INVALID;
+    }
+    if (m_conn->IsOpening())
     {
         co_await m_opened.suspend();
-        if (m_conn.IsClosed())
+        if (m_conn->IsClosed())
         {
             co_return INVALID;
         }
@@ -585,126 +654,35 @@ coev::awaitable<int> Broker::ReadFull(std::string &buf, size_t n)
     {
         buf.resize(n);
     }
-    int err = ErrNoError;
-    co_task task;
-    auto _timeout = task << [](auto _this) -> coev::awaitable<void>
+    int err = co_await m_conn->ReadFull(buf, n);
+    if (err != ErrNoError)
     {
-        co_await sleep_for(_this->m_conf->Net.ReadTimeout);
-    }(shared_from_this());
-    auto _send = task << [](auto _this, auto &buf, auto n, int &err) -> coev::awaitable<void>
-    {
-        err = co_await _this->m_conn.ReadFull(buf, n);
-        if (err != ErrNoError)
-        {
-            LOG_CORE("ReadFull %d %d %s", err, errno, strerror(errno));
-        }
-    }(shared_from_this(), buf, n, err);
-    auto _result = co_await task.wait();
-    if (_result == _timeout)
-    {
-        co_return ErrTimedOut;
-    }
-    if (err)
-    {
-        co_return err;
+        LOG_CORE("ReadFull %d %d %s", err, errno, strerror(errno));
+        co_return INVALID;
     }
     co_return 0;
 }
 
 coev::awaitable<int> Broker::Write(const std::string &buf)
 {
-
-    auto now = std::chrono::system_clock::now();
-    if (m_conn.IsClosed())
+    if (m_conn == nullptr)
     {
         co_return INVALID;
     }
-    if (m_conn.IsOpening())
+    auto now = std::chrono::system_clock::now();
+    if (m_conn->IsClosed())
+    {
+        co_return INVALID;
+    }
+    if (m_conn->IsOpening())
     {
         co_await m_opened.suspend();
-        if (m_conn.IsClosed())
+        if (m_conn->IsClosed())
         {
             co_return ErrNotConnected;
         }
     }
-    co_return co_await m_conn.Write(buf);
-}
-
-int Broker::decode(packetDecoder &pd, int16_t version)
-{
-    int32_t err = pd.getInt32(m_id);
-    if (err)
-    {
-        return err;
-    }
-
-    std::string host;
-    err = pd.getString(host);
-    if (err)
-    {
-        return err;
-    }
-
-    int32_t port;
-    err = pd.getInt32(port);
-    if (err)
-    {
-        return err;
-    }
-
-    m_addr = host + ":" + std::to_string(port);
-
-    if (version >= 1)
-    {
-        err = pd.getNullableString(m_rack);
-        if (err)
-        {
-            return err;
-        }
-    }
-
-    if (version >= 5)
-    {
-        int32_t emptyArray;
-        err = pd.getEmptyTaggedFieldArray(emptyArray);
-        if (err)
-        {
-            return err;
-        }
-    }
-
-    return 0;
-}
-
-int Broker::encode(packetEncoder &pe, int16_t version)
-{
-
-    auto [host, port] = net::SplitHostPort(m_addr);
-    if (host.empty())
-    {
-        return 1;
-    }
-
-    pe.putInt32(m_id);
-
-    int32_t err = pe.putString(host);
-    if (err)
-    {
-        return err;
-    }
-
-    pe.putInt32(port);
-    if (version >= 1)
-    {
-        err = pe.putNullableString(m_rack);
-        if (err)
-        {
-            return err;
-        }
-    }
-
-    pe.putEmptyTaggedFieldArray();
-    return 0;
+    co_return co_await m_conn->Write(buf);
 }
 
 coev::awaitable<int> Broker::AuthenticateViaSASLv0()
@@ -718,10 +696,7 @@ coev::awaitable<int> Broker::AuthenticateViaSASLv0()
     {
         return SendAndReceiveKerberos();
     }
-    else
-    {
-        return SendAndReceiveSASLPlainAuthV0();
-    }
+    return SendAndReceiveSASLPlainAuthV0();
 }
 
 coev::awaitable<int> Broker::AuthenticateViaSASLv1()
@@ -755,27 +730,33 @@ coev::awaitable<int> Broker::AuthenticateViaSASLv1()
             m_kerberos_authenticator->m_new_kerberos_client_func = NewKerberosClient;
         }
         co_return co_await m_kerberos_authenticator->AuthorizeV2(
-            shared_from_this(), [this](auto req, auto res) -> coev::awaitable<int>
-            { 
+            shared_from_this(),
+            [this](auto req, auto res) -> coev::awaitable<int>
+            {
                 ResponsePromise<SaslAuthenticateResponse> promise;
                 auto err = co_await DefaultAuthSendReceiver(req, promise);
-                if (!err) {
+                if (!err)
+                {
                     res = promise.m_response;
                 }
-                co_return err; });
+                co_return err;
+            });
     }
     else if (mechanism == "OAUTHBEARER")
     {
         auto provider = m_conf->Net.SASL.TokenProvider_;
         co_return co_await SendAndReceiveSASLOAuth(
-            provider, [this](auto req, auto res) -> coev::awaitable<int>
-            { 
+            provider,
+            [this](auto req, auto res) -> coev::awaitable<int>
+            {
                 ResponsePromise<SaslAuthenticateResponse> promise;
                 auto err = co_await DefaultAuthSendReceiver(req, promise);
-                if (!err) {
+                if (!err)
+                {
                     res = promise.m_response;
                 }
-                co_return err; });
+                co_return err;
+            });
     }
     else if (mechanism == "SCRAM-SHA-256" || mechanism == "SCRAM-SHA-512")
     {
@@ -792,18 +773,17 @@ coev::awaitable<int> Broker::AuthenticateViaSASLv1()
                 co_return err;
             });
     }
-    else
-    {
-        co_return co_await SendAndReceiveSASLPlainAuthV1(
-            [this](auto req, auto res) -> coev::awaitable<int>
-            { 
-                                                             ResponsePromise<SaslAuthenticateResponse> promise;
-                                                             auto err = co_await DefaultAuthSendReceiver(req, promise);
-                                                             if (!err) {
-                                                                 res = promise.m_response;
-                                                             }
-                                                             co_return err; });
-    }
+    co_return co_await SendAndReceiveSASLPlainAuthV1(
+        [this](auto req, auto res) -> coev::awaitable<int>
+        {
+            ResponsePromise<SaslAuthenticateResponse> promise;
+            auto err = co_await DefaultAuthSendReceiver(req, promise);
+            if (!err)
+            {
+                res = promise.m_response;
+            }
+            co_return err;
+        });
 }
 
 coev::awaitable<int> Broker::SendAndReceiveKerberos()
@@ -854,7 +834,6 @@ coev::awaitable<int> Broker::SendAndReceiveSASLHandshake(const std::string &sasl
     err = co_await ReadFull(payload, n);
     if (err)
     {
-
         co_return err;
     }
 
@@ -876,8 +855,7 @@ coev::awaitable<int> Broker::SendAndReceiveSASLPlainAuthV0()
 {
     if (m_conf->Net.SASL.Handshake)
     {
-        int32_t handshakeErr =
-            co_await SendAndReceiveSASLHandshake("PLAIN", m_conf->Net.SASL.Version);
+        int32_t handshakeErr = co_await SendAndReceiveSASLHandshake("PLAIN", m_conf->Net.SASL.Version);
         if (handshakeErr)
         {
             co_return handshakeErr;
@@ -905,7 +883,6 @@ coev::awaitable<int> Broker::SendAndReceiveSASLPlainAuthV0()
     memcpy(&authBytes[offset], m_conf->Net.SASL.Password.c_str(), m_conf->Net.SASL.Password.length());
 
     auto requestTime = std::chrono::system_clock::now();
-
     int32_t err = co_await Write(authBytes);
     if (err)
     {
@@ -1185,7 +1162,6 @@ void Broker::SafeAsyncClose()
                 LOG_CORE("Error closing broker %d: %d", b->ID(), err);
             }
         }
-        co_return;
     }(shared_from_this());
 }
 std::shared_ptr<tls::Config> ValidServerNameTLS(const std::string &addr, std::shared_ptr<tls::Config> cfg)

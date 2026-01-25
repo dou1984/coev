@@ -28,31 +28,13 @@ namespace coev
 				[this, d]()
 				{ m_data.push_back(d); });
 		}
-		void operator=(TYPE &&d)
+		awaitable<void> get(TYPE &d)
 		{
-			m_waiter.resume(
-				[this, d = std::move(d)]()
-				{ m_data.emplace_back(std::move(d)); });
-		}
-		void operator=(const TYPE &d)
-		{
-			m_waiter.resume(
-				[this, d]()
-				{ m_data.push_back(d); });
-		}
-		awaitable<TYPE> get()
-		{
-			TYPE d;
 			co_await m_waiter.suspend(
 				[this]()
 				{ return __invalid(); },
-				[&]()
+				[this, &d]()
 				{ d = __pop_front(); });
-			co_return d;
-		}
-		awaitable<TYPE> operator co_await()
-		{
-			return get();
 		}
 		bool try_get(TYPE &d)
 		{

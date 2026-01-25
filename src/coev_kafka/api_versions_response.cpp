@@ -19,17 +19,17 @@ int ApiVersionsResponseKey::encode(packetEncoder &pe, int16_t version)
 int ApiVersionsResponseKey::decode(packetDecoder &pd, int16_t version)
 {
     if (pd.getInt16(m_api_key) != ErrNoError)
-        return ErrEncodeError;
+        return ErrDecodeError;
     if (pd.getInt16(m_min_version) != ErrNoError)
-        return ErrEncodeError;
+        return ErrDecodeError;
     if (pd.getInt16(m_max_version) != ErrNoError)
-        return ErrEncodeError;
+        return ErrDecodeError;
 
     if (version >= 3)
     {
         int32_t _;
         if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
-            return ErrEncodeError;
+            return ErrDecodeError;
     }
 
     return ErrNoError;
@@ -74,7 +74,7 @@ packetDecoder &ApiVersionsResponse::downgradeFlexibleDecoder(packetDecoder &pd)
 {
     if (pd.isFlexible())
     {
-        pd.pushFlexible();
+        pd.popFlexible();
     }
     return pd;
 }
@@ -91,7 +91,7 @@ int ApiVersionsResponse::decode(packetDecoder &pd, int16_t version)
     if (m_error_code == ErrUnsupportedVersion)
     {
         m_version = 0;
-        pd = downgradeFlexibleDecoder(pd);
+        downgradeFlexibleDecoder(pd);
     }
 
     int32_t numApiKeys;

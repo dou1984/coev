@@ -12,8 +12,10 @@ ProducerMessage::ProducerMessage()
       m_has_sequence(false)
 {
 }
-
-int ProducerMessage::byteSize(int version) const
+ProducerMessage::~ProducerMessage()
+{
+}
+int ProducerMessage::byte_size(int version) const
 {
     int size = 0;
 

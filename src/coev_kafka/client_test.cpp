@@ -248,7 +248,7 @@ TEST(ClientTest, UpdateMetadata)
     // We'll verify the behavior rather than the exact return value
     auto emptyMetadata = std::make_shared<MetadataResponse>();
     // Add broker to metadata to ensure UpdateBroker doesn't clear m_brokers
-    emptyMetadata->AddBroker("localhost:9092", 1);
+    emptyMetadata->add_broker("localhost:9092", 1);
     bool result = client.UpdateMetadata(*emptyMetadata, false);
     // EXPECT_TRUE(result); // Commenting out - UpdateMetadata might still return false due to complex closed state logic
 
@@ -257,10 +257,10 @@ TEST(ClientTest, UpdateMetadata)
     metadata->set_version(1);
 
     // Add a broker using AddBroker method
-    metadata->AddBroker("localhost:9092", 1);
+    metadata->add_broker("localhost:9092", 1);
 
     // Add a topic using AddTopic method
-    metadata->AddTopic("test_topic", KError::ErrNoError);
+    metadata->add_topic("test_topic", KError::ErrNoError);
 
     result = client.UpdateMetadata(*metadata, false);
     // EXPECT_TRUE(result); // Commenting out - UpdateMetadata might still return false due to complex closed state logic
@@ -462,13 +462,13 @@ TEST(ClientTest, UpdateMetadataWithTopics)
     metadata->set_version(1);
 
     // Add brokers
-    metadata->AddBroker("localhost:9092", 1);
-    metadata->AddBroker("localhost:9093", 2);
+    metadata->add_broker("localhost:9092", 1);
+    metadata->add_broker("localhost:9093", 2);
 
     // Add topic with partitions
-    metadata->AddTopic("my_topic", KError::ErrNoError);
-    metadata->AddTopicPartition("my_topic", 0, 2, {1, 2}, {2}, {}, KError::ErrNoError);
-    metadata->AddTopicPartition("my_topic", 1, -1, {1, 2}, {}, {}, KError::ErrLeaderNotAvailable);
+    metadata->add_topic("my_topic", KError::ErrNoError);
+    metadata->add_topic_partition("my_topic", 0, 2, {1, 2}, {2}, {}, KError::ErrNoError);
+    metadata->add_topic_partition("my_topic", 1, -1, {1, 2}, {}, {}, KError::ErrLeaderNotAvailable);
 
     // Update metadata
     bool result = client.UpdateMetadata(*metadata, false);
@@ -582,13 +582,13 @@ TEST(ClientTest, MetadataUpdateWithEmptyResponse)
 
     // Update with empty metadata - it should not crash
     auto emptyMetadata = std::make_shared<MetadataResponse>();
-    emptyMetadata->AddBroker("localhost:9092", 1);
+    emptyMetadata->add_broker("localhost:9092", 1);
     client.UpdateMetadata(*emptyMetadata, false);
 
     // Add another broker and test update again - it should not crash
     auto metadata = std::make_shared<MetadataResponse>();
-    metadata->AddBroker("localhost:9092", 1);
-    metadata->AddBroker("localhost:9093", 2);
+    metadata->add_broker("localhost:9092", 1);
+    metadata->add_broker("localhost:9093", 2);
 
     client.UpdateMetadata(*metadata, false);
 
