@@ -5,7 +5,7 @@
 #include "packet_decoder.h"
 #include "version.h"
 
-inline const size_t MaxResponseSize = 100 * 1024 * 1024;
+inline const int32_t MaxResponseSize = 100 * 1024 * 1024;
 struct ResponseHeader : versioned_decoder
 {
 

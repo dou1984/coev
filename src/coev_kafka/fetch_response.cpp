@@ -83,22 +83,22 @@ int FetchResponseBlock::decode(packetDecoder &pd, int16_t version)
         return err;
     }
 
-    std::shared_ptr<packetDecoder> recordsDecoder_;
-    if ((err = pd.getSubset(recordsSize, recordsDecoder_)) != 0)
+    std::shared_ptr<packetDecoder> records_decoder;
+    if ((err = pd.getSubset(recordsSize, records_decoder)) != 0)
     {
         return err;
     }
 
     m_records_set.clear();
-    while (recordsDecoder_->remaining() > 0)
+    while (records_decoder->remaining() > 0)
     {
         auto records = std::make_shared<Records>();
-        int decodeErr = records->decode(*recordsDecoder_);
-        bool isInsufficientData = (decodeErr == ErrInsufficientData);
+        int decode_err = records->decode(*records_decoder);
+        bool isInsufficientData = (decode_err == ErrInsufficientData);
 
-        if (decodeErr != 0 && !isInsufficientData)
+        if (decode_err != 0 && !isInsufficientData)
         {
-            return decodeErr;
+            return decode_err;
         }
 
         if (isInsufficientData && m_records_set.empty())
@@ -129,10 +129,6 @@ int FetchResponseBlock::decode(packetDecoder &pd, int16_t version)
         if (n > 0 || (partial && m_records_set.empty()))
         {
             m_records_set.push_back(records);
-            if (!m_records)
-            {
-                m_records = records;
-            }
         }
 
         bool overflow = false;
@@ -352,7 +348,7 @@ bool FetchResponse::is_valid_version() const
     return m_version >= 0 && m_version <= 15;
 }
 
-KafkaVersion FetchResponse::required_version()  const
+KafkaVersion FetchResponse::required_version() const
 {
     switch (m_version)
     {
@@ -429,7 +425,7 @@ static std::pair<std::string, std::string> encodeKV(Encoder *key, Encoder *value
 }
 
 void FetchResponse::add_message_with_timestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value,
-                                            int64_t offset, std::chrono::system_clock::time_point timestamp, int8_t version)
+                                               int64_t offset, std::chrono::system_clock::time_point timestamp, int8_t version)
 {
     auto frb = get_or_create_block(topic, partition);
     auto kv = encodeKV(key, value);
@@ -447,7 +443,7 @@ void FetchResponse::add_message_with_timestamp(const std::string &topic, int32_t
 }
 
 void FetchResponse::add_record_with_timestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value,
-                                           int64_t offset, std::chrono::system_clock::time_point timestamp)
+                                              int64_t offset, std::chrono::system_clock::time_point timestamp)
 {
     auto frb = get_or_create_block(topic, partition);
     auto kv = encodeKV(key, value);
@@ -532,14 +528,14 @@ void FetchResponse::add_record(const std::string &topic, int32_t partition, Enco
 }
 
 void FetchResponse::add_record_batch(const std::string &topic, int32_t partition, Encoder *key, Encoder *value,
-                                   int64_t offset, int64_t producerID, bool isTransactional)
+                                     int64_t offset, int64_t producerID, bool isTransactional)
 {
     AddRecordBatchWithTimestamp(topic, partition, key, value, offset, producerID, isTransactional,
                                 std::chrono::system_clock::time_point{});
 }
 
 void FetchResponse::add_control_record(const std::string &topic, int32_t partition, int64_t offset,
-                                     int64_t producerID, ControlRecordType recordType)
+                                       int64_t producerID, ControlRecordType recordType)
 {
     AddControlRecordWithTimestamp(topic, partition, offset, producerID, recordType,
                                   std::chrono::system_clock::time_point{});

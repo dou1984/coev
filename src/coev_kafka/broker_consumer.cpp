@@ -63,24 +63,20 @@ coev::awaitable<void> BrokerConsumer::SubscriptionConsumer()
             co_return;
         }
 
-        m_acks.add(m_subscriptions.size());
         for (auto &child : m_subscriptions)
         {
             auto it1 = response->m_blocks.find(child.first->m_topic);
             if (it1 == response->m_blocks.end())
             {
-                m_acks.done();
                 continue;
             }
             auto it2 = it1->second.find(child.first->m_partition);
             if (it2 == it1->second.end())
             {
-                m_acks.done();
                 continue;
             }
             child.first->m_feeder.set(response);
         }
-        co_await m_acks.wait();
         co_await HandleResponses();
     }
 }

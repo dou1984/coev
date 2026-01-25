@@ -40,7 +40,6 @@ struct FetchResponseBlock : versioned_decoder, versioned_encoder
     std::vector<std::shared_ptr<AbortedTransaction>> m_aborted_transactions;
     int32_t m_preferred_read_replica;
     std::vector<std::shared_ptr<Records>> m_records_set;
-    std::shared_ptr<Records> m_records;
     int64_t m_records_next_offset;
     bool m_partial;
 
