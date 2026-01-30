@@ -33,6 +33,7 @@ struct OffsetCommitRequest : protocol_body
     std::string m_group_instance_id;
     int64_t m_retention_time;
     int16_t m_version;
+    std::unordered_map<std::string, std::map<int32_t, OffsetCommitRequestBlock>> m_blocks;
 
     OffsetCommitRequest();
     OffsetCommitRequest(int16_t v) : m_version(v)
@@ -47,9 +48,7 @@ struct OffsetCommitRequest : protocol_body
     int16_t header_version() const;
     bool is_valid_version() const;
     KafkaVersion required_version() const;
-    void AddBlock(const std::string &topic, int32_t partitionID, int64_t offset, int64_t timestamp, const std::string &metadata);
-    void AddBlockWithLeaderEpoch(const std::string &topic, int32_t partitionID, int64_t offset, int32_t leaderEpoch, int64_t timestamp, const std::string &metadata);
-    std::pair<int64_t, std::string> Offset(const std::string &topic, int32_t partitionID) const;
-
-    std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<OffsetCommitRequestBlock>>> blocks;
+    void add_block(const std::string &topic, int32_t partitionID, int64_t offset, int64_t timestamp, const std::string &metadata);
+    void add_block_with_leader_epoch(const std::string &topic, int32_t partitionID, int64_t offset, int32_t leaderEpoch, int64_t timestamp, const std::string &metadata);
+    std::pair<int64_t, std::string> offset(const std::string &topic, int32_t partitionID) const;
 };

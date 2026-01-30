@@ -24,7 +24,7 @@ int ProducerMessage::byte_size(int version) const
         size = MaximumRecordOverhead;
         for (auto &h : m_headers)
         {
-            size += static_cast<int>(h.Key.size()) + static_cast<int>(h.Value.size()) + 2 * 5;
+            size += static_cast<int>(h.m_key.size()) + static_cast<int>(h.m_value.size()) + 2 * 5;
         }
     }
     else

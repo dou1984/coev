@@ -9,12 +9,12 @@
 #include "protocol_body.h"
 #include "errors.h"
 
-template <class Resp>
+template <class Res>
 struct ResponsePromise
 {
     std::chrono::time_point<std::chrono::system_clock> m_request_time;
     int32_t m_correlation_id = 0;
-    Resp m_response;
+    Res m_response;
     std::string m_packets;
 
     int decode(int16_t version)

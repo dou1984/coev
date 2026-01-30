@@ -25,6 +25,7 @@ struct MetadataRequest : protocol_body, flexible_version
     MetadataRequest(int16_t v) : m_version(v)
     {
     }
+    MetadataRequest(KafkaVersion version, const std::vector<std::string> &topics);
     void set_version(int16_t v);
 
     int encode(packetEncoder &pe);
@@ -37,5 +38,3 @@ struct MetadataRequest : protocol_body, flexible_version
     bool is_flexible_version(int16_t version) const;
     KafkaVersion required_version() const;
 };
-
-std::shared_ptr<MetadataRequest> NewMetadataRequest(KafkaVersion version, const std::vector<std::string> &topics);

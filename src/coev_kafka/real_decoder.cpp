@@ -710,11 +710,12 @@ int realDecoder::peekInt8(int offset, int8_t &result)
     return 0;
 }
 
-int realDecoder::push(std::shared_ptr<pushDecoder> in)
+int realDecoder::push(pushDecoder &_in)
 {
+    auto in = &_in;
     in->save_offset(m_offset);
     int reserve = 0;
-    auto dpd = std::dynamic_pointer_cast<dynamicPushDecoder>(in);
+    auto dpd = dynamic_cast<dynamicPushDecoder *>(in);
     if (dpd != nullptr)
     {
         int err = dpd->decode(*this);

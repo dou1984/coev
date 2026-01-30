@@ -37,7 +37,7 @@ struct packetEncoder : packetType
     virtual void putEmptyTaggedFieldArray() = 0;
 
     virtual int offset() const = 0;
-    virtual void push(std::shared_ptr<pushEncoder> in) = 0;
+    virtual void push(pushEncoder &in) = 0;
 
     virtual int pop() = 0;
 };

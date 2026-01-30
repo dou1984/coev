@@ -257,45 +257,43 @@ KafkaVersion MetadataRequest::required_version() const
     }
 }
 
-std::shared_ptr<MetadataRequest> NewMetadataRequest(KafkaVersion version, const std::vector<std::string> &topics)
+MetadataRequest::MetadataRequest(KafkaVersion version, const std::vector<std::string> &topics)
 {
-    auto m = std::make_shared<MetadataRequest>();
-    m->m_topics = topics;
+    m_topics = topics;
     if (version.IsAtLeast(V2_8_0_0))
     {
-        m->m_version = 10;
+        m_version = 10;
     }
     else if (version.IsAtLeast(V2_4_0_0))
     {
-        m->m_version = 9;
+        m_version = 9;
     }
     else if (version.IsAtLeast(V2_4_0_0))
     {
-        m->m_version = 8;
+        m_version = 8;
     }
     else if (version.IsAtLeast(V2_1_0_0))
     {
-        m->m_version = 7;
+        m_version = 7;
     }
     else if (version.IsAtLeast(V2_0_0_0))
     {
-        m->m_version = 6;
+        m_version = 6;
     }
     else if (version.IsAtLeast(V1_0_0_0))
     {
-        m->m_version = 5;
+        m_version = 5;
     }
     else if (version.IsAtLeast(V0_11_0_0))
     {
-        m->m_version = 4;
+        m_version = 4;
     }
     else if (version.IsAtLeast(V0_10_1_0))
     {
-        m->m_version = 2;
+        m_version = 2;
     }
     else if (version.IsAtLeast(V0_10_0_0))
     {
-        m->m_version = 1;
+        m_version = 1;
     }
-    return m;
 }

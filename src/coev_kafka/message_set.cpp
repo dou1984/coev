@@ -1,17 +1,25 @@
 #include <algorithm>
 #include <utility>
 #include <coev/coev.h>
+#include "message.h"
 #include "message_set.h"
 #include "errors.h"
 #include "length_field.h"
 
+MessageSet::MessageSet(std::shared_ptr<MessageBlock> msg)
+{
+    m_messages.push_back(msg);
+}
+MessageSet::MessageSet(const MessageSet &o) : m_partial_trailing_message(o.m_partial_trailing_message), m_overflow_message(o.m_overflow_message)
+{
+    m_messages = o.m_messages;
+}
 std::vector<std::shared_ptr<MessageBlock>> MessageBlock::Messages()
 {
-    if (m_msg && m_msg->m_set)
+    if (m_msg)
     {
-        return std::move(m_msg->m_set->m_messages);
+        return std::move(m_msg->m_message_set.m_messages);
     }
-    auto self = std::make_shared<MessageBlock>(*this);
 
     std::vector<std::shared_ptr<MessageBlock>> single;
     auto clone = std::make_shared<MessageBlock>();
@@ -24,7 +32,8 @@ std::vector<std::shared_ptr<MessageBlock>> MessageBlock::Messages()
 int MessageBlock::encode(packetEncoder &pe)
 {
     pe.putInt64(m_offset);
-    pe.push(std::make_shared<LengthField>());
+    LengthField length_field;
+    pe.push(length_field);
     int err = m_msg->encode(pe);
     if (err != 0)
     {
@@ -38,32 +47,37 @@ int MessageBlock::decode(packetDecoder &pd)
 {
     int err = pd.getInt64(m_offset);
     if (err != 0)
-        return err;
-
-    auto lengthField = acquireLengthField();
-    defer(releaseLengthField(lengthField));
-    if ((err = pd.push(std::dynamic_pointer_cast<pushDecoder>(lengthField))) != 0)
     {
         return err;
     }
-
+    LengthField length_field;
+    if ((err = pd.push(length_field)) != 0)
+    {
+        return err;
+    }
     m_msg = std::make_shared<Message>();
     err = m_msg->decode(pd);
-
-    int popErr = pd.pop();
+    if (err != 0)
+    {
+        return err;
+    }
+    err = pd.pop();
     if (err == 0)
-        err = popErr;
-
+    {
+        return err;
+    }
     return err;
 }
 
 int MessageSet::encode(packetEncoder &pe)
 {
-    for (auto &msgBlock : m_messages)
+    for (auto &message_block : m_messages)
     {
-        int err = msgBlock->encode(pe);
+        int err = message_block->encode(pe);
         if (err != 0)
+        {
             return err;
+        }
     }
     return 0;
 }
@@ -97,11 +111,10 @@ int MessageSet::decode(packetDecoder &pd)
         err = msb->decode(pd);
         if (err == 0)
         {
-            m_messages.push_back(std::move(msb));
+            m_messages.emplace_back(msb);
         }
         else if (err == ErrInsufficientData)
         {
-            // Server may send partial trailing message
             if (msb->m_offset == -1)
             {
                 m_overflow_message = true;
@@ -126,4 +139,11 @@ void MessageSet::add_message(std::shared_ptr<Message> msg)
     auto block = std::make_shared<MessageBlock>();
     block->m_msg = std::move(msg);
     m_messages.emplace_back(std::move(block));
+}
+
+void MessageSet::clear()
+{
+    m_partial_trailing_message = false;
+    m_overflow_message = false;
+    m_messages.clear();
 }

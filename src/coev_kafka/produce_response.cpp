@@ -35,7 +35,7 @@ int ProduceResponseBlock::decode(packetDecoder &pd, int16_t version)
     return 0;
 }
 
-int ProduceResponseBlock::encode(packetEncoder &pe, int16_t version)
+int ProduceResponseBlock::encode(packetEncoder &pe, int16_t version) const
 {
     pe.putKError(m_err);
     pe.putInt64(m_offset);
@@ -72,41 +72,48 @@ int ProduceResponse::decode(packetDecoder &pd, int16_t version)
 {
     m_version = version;
 
-    int32_t numTopics;
-    if (int err = pd.getArrayLength(numTopics); err != 0)
+    int32_t num_topics;
+    if (int err = pd.getArrayLength(num_topics); err != 0)
+    {
         return err;
+    }
 
     m_blocks.clear();
-    m_blocks.reserve(numTopics);
-    for (int i = 0; i < numTopics; ++i)
+    m_blocks.reserve(num_topics);
+    for (int i = 0; i < num_topics; ++i)
     {
         std::string name;
         if (int err = pd.getString(name); err != 0)
+        {
             return err;
+        }
 
-        int32_t numBlocks;
-        if (int err = pd.getArrayLength(numBlocks); err != 0)
+        int32_t num_blocks;
+        if (int err = pd.getArrayLength(num_blocks); err != 0)
+        {
             return err;
-
-        auto &partitionMap = m_blocks[name];
-        partitionMap.reserve(numBlocks);
-        for (int j = 0; j < numBlocks; ++j)
+        }
+        auto &partition_map = m_blocks[name];
+        for (int j = 0; j < num_blocks; ++j)
         {
             int32_t id;
             if (int err = pd.getInt32(id); err != 0)
+            {
                 return err;
-
-            auto block = std::make_shared<ProduceResponseBlock>();
-            if (int err = block->decode(pd, version); err != 0)
+            }
+            if (int err = partition_map[id].decode(pd, version); err != 0)
+            {
                 return err;
-            partitionMap[id] = block;
+            }
         }
     }
 
     if (m_version >= 1)
     {
         if (int err = pd.getDurationMs(m_throttle_time); err != 0)
+        {
             return err;
+        }
     }
 
     return 0;
@@ -115,23 +122,29 @@ int ProduceResponse::decode(packetDecoder &pd, int16_t version)
 int ProduceResponse::encode(packetEncoder &pe)
 {
     if (int err = pe.putArrayLength(static_cast<int32_t>(m_blocks.size())); err != 0)
-        return err;
-
-    for (auto &[topic, partitions] : m_blocks)
     {
-        if (int err = pe.putString(topic); err != 0)
-            return err;
-        if (int err = pe.putArrayLength(static_cast<int32_t>(partitions.size())); err != 0)
-            return err;
-
-        for (auto &[id, prb] : partitions)
-        {
-            pe.putInt32(id);
-            if (int err = prb->encode(pe, m_version); err != 0)
-                return err;
-        }
+        return err;
     }
 
+    for (const auto &[topic, partitions] : m_blocks)
+    {
+        if (int err = pe.putString(topic); err != 0)
+        {
+            return err;
+        }
+        if (int err = pe.putArrayLength(static_cast<int32_t>(partitions.size())); err != 0)
+        {
+            return err;
+        }
+        for (const auto &[id, partition] : partitions)
+        {
+            pe.putInt32(id);
+            if (int err = partition.encode(pe, m_version); err != 0)
+            {
+                return err;
+            }
+        }
+    }
     if (m_version >= 1)
     {
         pe.putDurationMs(m_throttle_time);
@@ -189,25 +202,27 @@ std::chrono::milliseconds ProduceResponse::throttle_time() const
     return m_throttle_time;
 }
 
-std::shared_ptr<ProduceResponseBlock> ProduceResponse::GetBlock(const std::string &topic, int32_t partition) const
+ProduceResponseBlock &ProduceResponse::get_block(const std::string &topic, int32_t partition)
 {
-    auto topicIt = m_blocks.find(topic);
-    if (topicIt == m_blocks.end())
-        return nullptr;
-    auto partIt = topicIt->second.find(partition);
-    if (partIt == topicIt->second.end())
-        return nullptr;
-    return partIt->second;
+    auto tit = m_blocks.find(topic);
+    if (tit != m_blocks.end())
+    {
+        auto pit = tit->second.find(partition);
+        if (pit != tit->second.end())
+        {
+            return pit->second;
+        }
+    }
+    static ProduceResponseBlock _;
+    return _;
 }
 
-void ProduceResponse::AddTopicPartition(const std::string &topic, int32_t partition, KError err)
+void ProduceResponse::add_topic_partition(const std::string &topic, int32_t partition, KError err)
 {
-    auto &byTopic = m_blocks[topic];
-    auto block = std::make_shared<ProduceResponseBlock>();
-    block->m_err = err;
+    auto &block = m_blocks[topic][partition];
+    block.m_err = err;
     if (m_version >= 2)
     {
-        block->m_timestamp = std::chrono::system_clock::now();
+        block.m_timestamp = std::chrono::system_clock::now();
     }
-    byTopic[partition] = block;
 }

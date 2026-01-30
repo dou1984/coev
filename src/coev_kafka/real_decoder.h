@@ -40,10 +40,10 @@ struct realDecoder : packetDecoder
     int getRawBytes(int length, std::string &result);
     int peek(int offset, int length, std::shared_ptr<packetDecoder> &result);
     int peekInt8(int offset, int8_t &result);
-    int push(std::shared_ptr<pushDecoder> in);
+    int push(pushDecoder &in);
     int pop();
 
     int m_offset = 0;
     std::string m_raw;
-    std::vector<std::shared_ptr<pushDecoder>> m_stack;
+    std::vector<pushDecoder *> m_stack;
 };

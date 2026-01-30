@@ -8,42 +8,44 @@ OffsetFetchRequest::OffsetFetchRequest()
 {
 }
 
-std::shared_ptr<OffsetFetchRequest> OffsetFetchRequest::NewOffsetFetchRequest(const KafkaVersion &version, const std::string &group, const std::map<std::string, std::vector<int32_t>> &partitions)
+OffsetFetchRequest::OffsetFetchRequest(const KafkaVersion &version, const std::string &group, const std::map<std::string, std::vector<int32_t>> &partitions)
+    : m_require_stable(false)
 {
-    auto request = std::make_shared<OffsetFetchRequest>();
-    request->m_consumer_group = group;
-    request->m_partitions = partitions;
+    m_consumer_group = group;
+    m_partitions = partitions;
 
     if (version.IsAtLeast(V2_5_0_0))
     {
-        request->m_version = 7;
+        m_version = 7;
     }
     else if (version.IsAtLeast(V2_4_0_0))
     {
-        request->m_version = 6;
+        m_version = 6;
     }
     else if (version.IsAtLeast(V2_1_0_0))
     {
-        request->m_version = 5;
+        m_version = 5;
     }
     else if (version.IsAtLeast(V2_0_0_0))
     {
-        request->m_version = 4;
+        m_version = 4;
     }
     else if (version.IsAtLeast(V0_11_0_0))
     {
-        request->m_version = 3;
+        m_version = 3;
     }
     else if (version.IsAtLeast(V0_10_2_0))
     {
-        request->m_version = 2;
+        m_version = 2;
     }
     else if (version.IsAtLeast(V0_8_2_0))
     {
-        request->m_version = 1;
+        m_version = 1;
     }
-
-    return request;
+    else
+    {
+        m_version = 0;
+    }
 }
 
 void OffsetFetchRequest::set_version(int16_t v)

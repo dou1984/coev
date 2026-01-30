@@ -53,10 +53,8 @@ int ElectLeadersResponse::encode(packetEncoder &pe)
         return ErrEncodeError;
     }
 
-    for (auto &topicEntry : m_replica_election_results)
+    for (auto &[topic, partitions] : m_replica_election_results)
     {
-        auto &topic = topicEntry.first;
-        auto &partitions = topicEntry.second;
 
         if (pe.putString(topic) != ErrNoError)
         {
@@ -68,10 +66,10 @@ int ElectLeadersResponse::encode(packetEncoder &pe)
             return ErrEncodeError;
         }
 
-        for (auto &partEntry : partitions)
+        for (auto &[id, partition] : partitions)
         {
-            pe.putInt32(partEntry.first); // partition ID
-            if (partEntry.second->encode(pe, m_version) != ErrNoError)
+            pe.putInt32(id); // partition ID
+            if (partition.encode(pe, m_version) != ErrNoError)
             {
                 return ErrEncodeError;
             }
@@ -100,16 +98,16 @@ int ElectLeadersResponse::decode(packetDecoder &pd, int16_t version)
         }
     }
 
-    int32_t numTopics;
-    if (pd.getArrayLength(numTopics) != ErrNoError)
+    int32_t num_topics;
+    if (pd.getArrayLength(num_topics) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     m_replica_election_results.clear();
-    m_replica_election_results.reserve(numTopics);
+    m_replica_election_results.reserve(num_topics);
 
-    for (int32_t i = 0; i < numTopics; ++i)
+    for (int32_t i = 0; i < num_topics; ++i)
     {
         std::string topic;
         if (pd.getString(topic) != ErrNoError)
@@ -117,16 +115,14 @@ int ElectLeadersResponse::decode(packetDecoder &pd, int16_t version)
             return ErrDecodeError;
         }
 
-        int32_t numPartitions;
-        if (pd.getArrayLength(numPartitions) != ErrNoError)
+        int32_t num_partitions;
+        if (pd.getArrayLength(num_partitions) != ErrNoError)
         {
             return ErrDecodeError;
         }
 
-        auto &partitionMap = m_replica_election_results[topic];
-        partitionMap.reserve(numPartitions);
-
-        for (int32_t j = 0; j < numPartitions; ++j)
+        auto &partitions = m_replica_election_results[topic];
+        for (int32_t j = 0; j < num_partitions; ++j)
         {
             int32_t partition;
             if (pd.getInt32(partition) != ErrNoError)
@@ -134,13 +130,10 @@ int ElectLeadersResponse::decode(packetDecoder &pd, int16_t version)
                 return ErrDecodeError;
             }
 
-            auto result = std::make_unique<PartitionResult>();
-            if (result->decode(pd, m_version) != ErrNoError)
+            if (partitions[partition].decode(pd, m_version) != ErrNoError)
             {
                 return ErrDecodeError;
             }
-
-            partitionMap[partition] = std::move(result);
         }
 
         int32_t dummy;
@@ -184,12 +177,12 @@ bool ElectLeadersResponse::is_flexible() const
     return is_flexible_version(m_version);
 }
 
-bool ElectLeadersResponse::is_flexible_version(int16_t version)  const
+bool ElectLeadersResponse::is_flexible_version(int16_t version) const
 {
     return version >= 2;
 }
 
-KafkaVersion ElectLeadersResponse::required_version()  const
+KafkaVersion ElectLeadersResponse::required_version() const
 {
     switch (m_version)
     {

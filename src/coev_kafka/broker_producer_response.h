@@ -7,7 +7,7 @@
 
 struct BrokerProducerResponse
 {
-    std::shared_ptr<ProduceSet> set;
-    std::shared_ptr<ProduceResponse> res;
+    std::shared_ptr<ProduceSet> m_pset;
+    std::shared_ptr<ProduceResponse> m_res;
     KError m_err;
 };

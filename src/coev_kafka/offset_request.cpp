@@ -78,11 +78,8 @@ int OffsetRequest::encode(packetEncoder &pe)
         return err;
     }
 
-    for (auto &topic_pair : m_blocks)
+    for (auto &[topic, partitions] : m_blocks)
     {
-        const std::string &topic = topic_pair.first;
-        auto &partitions = topic_pair.second;
-
         err = pe.putString(topic);
         if (err != 0)
         {
@@ -95,13 +92,11 @@ int OffsetRequest::encode(packetEncoder &pe)
             return err;
         }
 
-        for (auto &partition_pair : partitions)
+        for (auto &[partition, block] : partitions)
         {
-            int32_t partition = partition_pair.first;
-            auto &block = partition_pair.second;
 
             pe.putInt32(partition);
-            if ((err = block->encode(pe, m_version)) != 0)
+            if ((err = block.encode(pe, m_version)) != 0)
             {
                 return err;
             }
@@ -122,7 +117,7 @@ int OffsetRequest::decode(packetDecoder &pd, int16_t version)
     }
     if (replicaID_val >= 0)
     {
-        SetReplicaID(replicaID_val);
+        set_replica_id(replicaID_val);
     }
 
     if (m_version >= 2)
@@ -135,18 +130,18 @@ int OffsetRequest::decode(packetDecoder &pd, int16_t version)
         m_level = tmp ? ReadCommitted : ReadUncommitted;
     }
 
-    int32_t blockCount;
-    if ((err = pd.getArrayLength(blockCount)) != 0)
+    int32_t block_count;
+    if ((err = pd.getArrayLength(block_count)) != 0)
     {
         return err;
     }
-    if (blockCount == 0)
+    if (block_count == 0)
     {
         return 0;
     }
 
     m_blocks.clear();
-    for (int i = 0; i < blockCount; ++i)
+    for (int i = 0; i < block_count; ++i)
     {
         std::string topic;
         if ((err = pd.getString(topic)) != 0)
@@ -154,14 +149,14 @@ int OffsetRequest::decode(packetDecoder &pd, int16_t version)
             return err;
         }
 
-        int32_t partitionCount;
-        if ((err = pd.getArrayLength(partitionCount)) != 0)
+        int32_t partition_count;
+        if ((err = pd.getArrayLength(partition_count)) != 0)
         {
             return err;
         }
 
-        auto &partitionMap = m_blocks[topic];
-        for (int j = 0; j < partitionCount; ++j)
+        auto &partition_map = m_blocks[topic];
+        for (int j = 0; j < partition_count; ++j)
         {
             int32_t partition;
             if ((err = pd.getInt32(partition)) != 0)
@@ -169,12 +164,11 @@ int OffsetRequest::decode(packetDecoder &pd, int16_t version)
                 return err;
             }
 
-            auto block = std::make_shared<OffsetRequestBlock>();
-            if ((err = block->decode(pd, version)) != 0)
+            auto &block = partition_map[partition];
+            if ((err = block.decode(pd, version)) != 0)
             {
                 return err;
             }
-            partitionMap[partition] = block;
         }
     }
 
@@ -222,13 +216,13 @@ KafkaVersion OffsetRequest::required_version() const
     }
 }
 
-void OffsetRequest::SetReplicaID(int32_t id)
+void OffsetRequest::set_replica_id(int32_t id)
 {
     m_replica_id = id;
     m_is_replica_id_set = true;
 }
 
-int32_t OffsetRequest::ReplicaID()
+int32_t OffsetRequest::replica_id()
 {
     if (m_is_replica_id_set)
     {
@@ -237,50 +231,41 @@ int32_t OffsetRequest::ReplicaID()
     return -1;
 }
 
-void OffsetRequest::AddBlock(const std::string &topic, int32_t partitionID, int64_t timestamp, int32_t maxOffsets)
+void OffsetRequest::add_block(const std::string &topic, int32_t partition_id, int64_t timestamp, int32_t max_offsets)
 {
-    if (m_blocks.find(topic) == m_blocks.end())
-    {
-        m_blocks[topic] = std::unordered_map<int32_t, std::shared_ptr<OffsetRequestBlock>>();
-    }
-
-    auto block = std::make_shared<OffsetRequestBlock>();
-    block->m_leader_epoch = -1;
-    block->m_timestamp = timestamp;
+    auto &block = m_blocks[topic][partition_id];
+    block.m_leader_epoch = -1;
+    block.m_timestamp = timestamp;
     if (m_version == 0)
     {
-        block->m_max_num_offsets = maxOffsets;
+        block.m_max_num_offsets = max_offsets;
     }
-
-    m_blocks[topic][partitionID] = block;
 }
 
-std::shared_ptr<OffsetRequest> NewOffsetRequest(const KafkaVersion &version)
+OffsetRequest::OffsetRequest(const KafkaVersion &version)
 {
-    auto request = std::make_shared<OffsetRequest>();
     if (version.IsAtLeast(V2_2_0_0))
     {
-        request->m_version = 5;
+        m_version = 5;
     }
     else if (version.IsAtLeast(V2_1_0_0))
     {
-        request->m_version = 4;
+        m_version = 4;
     }
     else if (version.IsAtLeast(V2_0_0_0))
     {
-        request->m_version = 3;
+        m_version = 3;
     }
     else if (version.IsAtLeast(V0_11_0_0))
     {
-        request->m_version = 2;
+        m_version = 2;
     }
     else if (version.IsAtLeast(V0_10_1_0))
     {
-        request->m_version = 1;
+        m_version = 1;
     }
     else
     {
-        request->m_version = 0;
+        m_version = 0;
     }
-    return request;
 }

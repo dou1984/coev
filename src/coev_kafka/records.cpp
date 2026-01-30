@@ -4,42 +4,37 @@
 #include <vector>
 #include "errors.h"
 
-Records::Records() : m_records_type(unknownRecords)
+Records::Records() : m_records_type(UnknownRecords)
 {
 }
-
-std::shared_ptr<Records> Records::NewLegacyRecords(std::shared_ptr<MessageSet> msgSet)
+Records::Records(std::shared_ptr<MessageSet> message_set)
 {
-    auto r = std::make_shared<Records>();
-    r->m_records_type = legacyRecords;
-    r->m_msg_set = std::move(msgSet);
-    return r;
+
+    m_records_type = LegacyRecords;
+    m_message_set = message_set;
+}
+Records::Records(std::shared_ptr<RecordBatch> batch)
+{
+    m_records_type = DefaultRecords;
+    m_record_batch = batch;
 }
 
-std::shared_ptr<Records> Records::NewDefaultRecords(std::shared_ptr<RecordBatch> batch)
-{
-    auto r = std::make_shared<Records>();
-    r->m_records_type = defaultRecords;
-    r->m_record_batch = std::move(batch);
-    return r;
-}
-
-int Records::SetTypeFromFields(bool &empty)
+int Records::set_type_from_fields(bool &empty)
 {
     empty = false;
-    if (m_msg_set == nullptr && m_record_batch == nullptr)
+    if (m_message_set == nullptr && m_record_batch == nullptr)
     {
         empty = true;
         return 0;
     }
-    if (m_msg_set != nullptr && m_record_batch != nullptr)
+    if (m_message_set != nullptr && m_record_batch != nullptr)
     {
         return -1;
     }
-    m_records_type = defaultRecords;
-    if (m_msg_set != nullptr)
+    m_records_type = DefaultRecords;
+    if (m_message_set != nullptr)
     {
-        m_records_type = legacyRecords;
+        m_records_type = LegacyRecords;
     }
 
     return 0;
@@ -47,32 +42,36 @@ int Records::SetTypeFromFields(bool &empty)
 
 int Records::encode(packetEncoder &pe)
 {
-    if (m_records_type == unknownRecords)
+    if (m_records_type == UnknownRecords)
     {
         bool empty;
-        int err = SetTypeFromFields(empty);
+        int err = set_type_from_fields(empty);
         if (err != 0 || empty)
         {
             return err;
         }
     }
 
-    switch (m_records_type)
+    if (m_records_type == LegacyRecords)
     {
-    case legacyRecords:
-        if (m_msg_set == nullptr)
+        if (m_message_set == nullptr)
+        {
             return 0;
-        return m_msg_set->encode(pe);
-    case defaultRecords:
-        if (m_record_batch == nullptr)
-            return 0;
-        return m_record_batch->encode(pe);
-    default:
-        return -1; // unknown type
+        }
+        return m_message_set->encode(pe);
     }
+    else if (m_records_type == DefaultRecords)
+    {
+        if (m_record_batch == nullptr)
+        {
+            return 0;
+        }
+        return m_record_batch->encode(pe);
+    }
+    return -1;
 }
 
-int Records::SetTypeFromMagic(packetDecoder &pd)
+int Records::set_type_from_magic(packetDecoder &pd)
 {
     int8_t magic;
     int err = magicValue(pd, magic);
@@ -81,79 +80,79 @@ int Records::SetTypeFromMagic(packetDecoder &pd)
         return err;
     }
 
-    m_records_type = defaultRecords;
+    m_records_type = DefaultRecords;
     if (magic < 2)
     {
-        m_records_type = legacyRecords;
+        m_records_type = LegacyRecords;
     }
     return 0;
 }
 
 int Records::decode(packetDecoder &pd)
 {
-    if (m_records_type == unknownRecords)
+    if (m_records_type == UnknownRecords)
     {
-        int err = SetTypeFromMagic(pd);
+        int err = set_type_from_magic(pd);
         if (err != 0)
         {
             return err;
         }
     }
-
-    switch (m_records_type)
+    if (m_records_type == LegacyRecords)
     {
-    case legacyRecords:
-    {
-        m_msg_set = std::make_shared<MessageSet>();
-        return m_msg_set->decode(pd);
+        m_message_set = std::make_shared<MessageSet>();
+        return m_message_set->decode(pd);
     }
-    case defaultRecords:
+    if (m_records_type == DefaultRecords)
     {
         m_record_batch = std::make_shared<RecordBatch>();
         return m_record_batch->decode(pd);
     }
-    default:
-        return -1;
-    }
+
+    return -1;
 }
 
-int Records::numRecords(int &numRecords)
+int Records::num_records(int &numRecords) const
 {
     numRecords = 0;
-    if (m_records_type == unknownRecords)
+    if (m_records_type == UnknownRecords)
     {
         bool empty;
-        int err = SetTypeFromFields(empty);
+        int err = const_cast<Records *>(this)->set_type_from_fields(empty);
         if (err != 0 || empty)
         {
             return err;
         }
     }
-
-    switch (m_records_type)
+    if (m_records_type == LegacyRecords)
     {
-    case legacyRecords:
-        if (m_msg_set == nullptr)
+
+        if (m_message_set == nullptr)
+        {
             return 0;
-        numRecords = static_cast<int>(m_msg_set->m_messages.size());
+        }
+        numRecords = static_cast<int>(m_message_set->m_messages.size());
         return 0;
-    case defaultRecords:
+    }
+    if (m_records_type == DefaultRecords)
+    {
         if (m_record_batch == nullptr)
+        {
             return 0;
+        }
         numRecords = m_record_batch->m_records.size();
         return 0;
-    default:
-        return -1;
     }
+    return -1;
 }
 
-int Records::isPartial(bool &partial)
+int Records::is_partial(bool &partial) const
 {
     partial = false;
-    if (m_records_type == unknownRecords)
+    if (m_records_type == UnknownRecords)
     {
         bool empty;
-        int err = SetTypeFromFields(empty);
+        int err = const_cast<Records *>(this)->set_type_from_fields(empty);
         if (err != 0 || empty)
         {
             return err;
@@ -162,14 +161,14 @@ int Records::isPartial(bool &partial)
 
     switch (m_records_type)
     {
-    case unknownRecords:
+    case UnknownRecords:
         return 0;
-    case legacyRecords:
-        if (m_msg_set == nullptr)
+    case LegacyRecords:
+        if (m_message_set == nullptr)
             return 0;
-        partial = m_msg_set->m_partial_trailing_message;
+        partial = m_message_set->m_partial_trailing_message;
         return 0;
-    case defaultRecords:
+    case DefaultRecords:
         if (m_record_batch == nullptr)
             return 0;
         partial = m_record_batch->m_partial_trailing_record;
@@ -179,13 +178,13 @@ int Records::isPartial(bool &partial)
     }
 }
 
-int Records::isControl(bool &out)
+int Records::is_control(bool &out) const
 {
     out = false;
-    if (m_records_type == unknownRecords)
+    if (m_records_type == UnknownRecords)
     {
         bool empty;
-        int err = SetTypeFromFields(empty);
+        int err = const_cast<Records *>(this)->set_type_from_fields(empty);
         if (err != 0 || empty)
         {
             return err;
@@ -194,9 +193,9 @@ int Records::isControl(bool &out)
 
     switch (m_records_type)
     {
-    case legacyRecords:
+    case LegacyRecords:
         return 0;
-    case defaultRecords:
+    case DefaultRecords:
         if (m_record_batch == nullptr)
             return 0;
         out = m_record_batch->m_control;
@@ -206,13 +205,13 @@ int Records::isControl(bool &out)
     }
 }
 
-int Records::isOverflow(bool &out)
+int Records::is_overflow(bool &out)
 {
     out = false;
-    if (m_records_type == unknownRecords)
+    if (m_records_type == UnknownRecords)
     {
         bool empty;
-        int err = SetTypeFromFields(empty);
+        int err = set_type_from_fields(empty);
         if (err != 0 || empty)
         {
             return err;
@@ -220,29 +219,29 @@ int Records::isOverflow(bool &out)
     }
     switch (m_records_type)
     {
-    case unknownRecords:
+    case UnknownRecords:
         return 0;
-    case legacyRecords:
-        if (m_msg_set == nullptr)
+    case LegacyRecords:
+        if (m_message_set == nullptr)
             return 0;
-        out = m_msg_set->m_overflow_message;
+        out = m_message_set->m_overflow_message;
         return 0;
-    case defaultRecords:
+    case DefaultRecords:
         return 0;
     default:
         return -1;
     }
 }
 
-int Records::nextOffset(int64_t &offset)
+int Records::next_offset(int64_t &offset)
 {
     offset = 0;
     switch (m_records_type)
     {
-    case unknownRecords:
-    case legacyRecords:
+    case UnknownRecords:
+    case LegacyRecords:
         return 0;
-    case defaultRecords:
+    case DefaultRecords:
         if (m_record_batch == nullptr)
             return 0;
         offset = m_record_batch->LastOffset() + 1;
@@ -253,7 +252,7 @@ int Records::nextOffset(int64_t &offset)
     }
 }
 
-int Records::getControlRecord(ControlRecord &out)
+int Records::get_control_record(ControlRecord &out) const
 {
     if (m_record_batch == nullptr || m_record_batch->m_records.empty())
     {

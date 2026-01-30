@@ -136,22 +136,22 @@ coev::awaitable<int> Client::InitProducerID(InitProducerIDResponse &response)
     int err;
     for (err = co_await LeastLoadedBroker(broker); err == 0 && broker; err = co_await LeastLoadedBroker(broker))
     {
-        InitProducerIDRequest request;
+        auto request = std::make_shared<InitProducerIDRequest>();
         if (m_conf->Version.IsAtLeast(V2_7_0_0))
         {
-            request.m_version = 4;
+            request->m_version = 4;
         }
         else if (m_conf->Version.IsAtLeast(V2_5_0_0))
         {
-            request.m_version = 3;
+            request->m_version = 3;
         }
         else if (m_conf->Version.IsAtLeast(V2_4_0_0))
         {
-            request.m_version = 2;
+            request->m_version = 2;
         }
         else if (m_conf->Version.IsAtLeast(V2_0_0_0))
         {
-            request.m_version = 1;
+            request->m_version = 1;
         }
         ResponsePromise<InitProducerIDResponse> promise;
         err = co_await broker->InitProducerID(request, promise);
@@ -798,10 +798,10 @@ coev::awaitable<int> Client::_GetOffset(const std::string &topic, int32_t partit
         offset = -1;
         co_return err;
     }
-    auto request = NewOffsetRequest(m_conf->Version);
-    request->AddBlock(topic, partitionID, timestamp, 1);
+    auto request = std::make_shared<OffsetRequest>(m_conf->Version);
+    request->add_block(topic, partitionID, timestamp, 1);
     ResponsePromise<OffsetResponse> promise;
-    err = co_await broker->GetAvailableOffsets(*request, promise);
+    err = co_await broker->GetAvailableOffsets(request, promise);
     if (err != 0)
     {
         co_await broker->Close();
@@ -916,11 +916,11 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
             allow_auto_topic_creation = false;
             LOG_CORE("fetching metadata for all topics from broker %s", broker->Addr().c_str());
         }
-        auto request = NewMetadataRequest(m_conf->Version, topics);
+        auto request = std::make_shared<MetadataRequest>(m_conf->Version, topics);
         request->m_allow_auto_topic_creation = allow_auto_topic_creation;
         m_update_metadata_ms.store(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count());
         ResponsePromise<MetadataResponse> promise;
-        err = co_await broker->GetMetadata(*request, promise);
+        err = co_await broker->GetMetadata(request, promise);
         if (err == 0)
         {
             if (promise.m_response.m_brokers.empty())
@@ -1121,7 +1121,7 @@ coev::awaitable<int> Client::FindCoordinator(const std::string &coordinatorKey, 
             request->m_version = 2;
         }
         ResponsePromise<FindCoordinatorResponse> promise;
-        err = co_await broker->FindCoordinator(*request, promise);
+        err = co_await broker->FindCoordinator(request, promise);
         if (err != 0)
         {
             LOG_CORE("request to broker %s failed: %d", broker->Addr().c_str(), err);

@@ -23,7 +23,7 @@ struct OffsetCommitResponse : protocol_body
     OffsetCommitResponse();
 
     void set_version(int16_t v);
-    void AddError(const std::string &topic, int32_t partition, KError kerror);
+    void add_error(const std::string &topic, int32_t partition, KError kerror);
     int encode(packetEncoder &pe);
     int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;

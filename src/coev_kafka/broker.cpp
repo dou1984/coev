@@ -289,216 +289,180 @@ coev::awaitable<int> Broker::Close()
     co_return 0;
 }
 
-coev::awaitable<int> Broker::GetMetadata(const MetadataRequest &request, ResponsePromise<MetadataResponse> &response)
+coev::awaitable<int> Broker::GetMetadata(std::shared_ptr<MetadataRequest> request, ResponsePromise<MetadataResponse> &response)
 {
     auto correlation_id = m_correlation_id;
-    LOG_CORE("Sending MetadataRequest, version: %d, correlation_id: %d", request.version(), correlation_id);
+    LOG_CORE("Sending MetadataRequest, version: %d, correlation_id: %d", request->version(), correlation_id);
     defer(LOG_CORE("Received MetadataResponse, correlation_id: %d", correlation_id));
     return SendAndReceive(request, response);
 }
-coev::awaitable<int> Broker::GetConsumerMetadata(const ConsumerMetadataRequest &request, ResponsePromise<ConsumerMetadataResponse> &response)
+coev::awaitable<int> Broker::GetConsumerMetadata(std::shared_ptr<ConsumerMetadataRequest> request, ResponsePromise<ConsumerMetadataResponse> &response)
 {
-    LOG_CORE("Sending ConsumerMetadataRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending ConsumerMetadataRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received ConsumerMetadataResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::FindCoordinator(const FindCoordinatorRequest &request, ResponsePromise<FindCoordinatorResponse> &response)
+coev::awaitable<int> Broker::FindCoordinator(std::shared_ptr<FindCoordinatorRequest> request, ResponsePromise<FindCoordinatorResponse> &response)
 {
-    LOG_CORE("Sending FindCoordinatorRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending FindCoordinatorRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received FindCoordinatorResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::GetAvailableOffsets(const OffsetRequest &request, ResponsePromise<OffsetResponse> &response)
+coev::awaitable<int> Broker::GetAvailableOffsets(std::shared_ptr<OffsetRequest> request, ResponsePromise<OffsetResponse> &response)
 {
-    LOG_CORE("Sending OffsetRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending OffsetRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received OffsetResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::AsyncProduce(const ProduceRequest &request, std::function<void(ResponsePromise<ProduceResponse> &)> _f)
+coev::awaitable<int> Broker::Produce(std::shared_ptr<ProduceRequest> request, ResponsePromise<ProduceResponse> &response)
 {
-    bool needAcks = request.m_acks != NoResponse;
-    if (needAcks)
+    if (request->m_acks == RequiredAcks::NoResponse)
     {
-        m_task << [](auto _this, auto request, auto _f) -> coev::awaitable<void>
-        {
-            LOG_CORE("Sending ProduceRequest, version: %d, correlation_id: %d, acks: %d", request.version(), _this->m_correlation_id, request.m_acks);
-            ResponsePromise<ProduceResponse> response;
-            defer(LOG_CORE("Received ProduceResponse, correlation_id: %d", response.m_correlation_id));
-            auto err = co_await _this->SendAndReceive(request, response);
-            if (err != ErrNoError)
-            {
-                LOG_CORE("SendAndReceive failed");
-            }
-            if (_f)
-            {
-                _f(response);
-            }
-        }(shared_from_this(), request, _f);
-    }
-    else
-    {
-
-        LOG_CORE("Sending ProduceRequest, version: %d, correlation_id: %d, acks: %d", request.version(), m_correlation_id, request.m_acks);
-        ResponsePromise<ProduceResponse> response;
-        defer(LOG_CORE("Received ProduceResponse, correlation_id: %d", response.m_correlation_id));
-        auto err = co_await SendAndReceive(request, response);
-        if (err != ErrNoError)
-        {
-            LOG_CORE("SendAndReceive failed");
-        }
-    }
-    co_return 0;
-}
-
-coev::awaitable<int> Broker::Produce(const ProduceRequest &request, ResponsePromise<ProduceResponse> &response)
-{
-    if (request.m_acks == RequiredAcks::NoResponse)
-    {
-        LOG_CORE("Sending ProduceRequest, version: %d, correlation_id: %d, acks: %d", request.version(), m_correlation_id, request.m_acks);
+        LOG_CORE("Sending ProduceRequest, version: %d, correlation_id: %d, acks: %d", request->version(), m_correlation_id, request->m_acks);
         defer(LOG_CORE("Received ProduceResponse, correlation_id: %d", response.m_correlation_id));
         int32_t err = co_await SendAndReceive(request, response);
         co_return err;
     }
     else
     {
-        LOG_CORE("Sending ProduceRequest, version: %d, correlation_id: %d, acks: %d", request.version(), m_correlation_id, request.m_acks);
+        LOG_CORE("Sending ProduceRequest, version: %d, correlation_id: %d, acks: %d", request->version(), m_correlation_id, request->m_acks);
         defer(LOG_CORE("Received ProduceResponse, correlation_id: %d", response.m_correlation_id));
         co_return co_await SendAndReceive(request, response);
     }
 }
 
-coev::awaitable<int> Broker::Fetch(const FetchRequest &request, ResponsePromise<FetchResponse> &response)
+coev::awaitable<int> Broker::Fetch(std::shared_ptr<FetchRequest> request, ResponsePromise<FetchResponse> &response)
 {
-    LOG_CORE("Sending FetchRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending FetchRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received FetchResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::CommitOffset(const OffsetCommitRequest &request, ResponsePromise<OffsetCommitResponse> &response)
+coev::awaitable<int> Broker::CommitOffset(std::shared_ptr<OffsetCommitRequest> request, ResponsePromise<OffsetCommitResponse> &response)
 {
-    LOG_CORE("Sending OffsetCommitRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending OffsetCommitRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received OffsetCommitResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::FetchOffset(const OffsetFetchRequest &request, ResponsePromise<OffsetFetchResponse> &response)
+coev::awaitable<int> Broker::FetchOffset(std::shared_ptr<OffsetFetchRequest> request, ResponsePromise<OffsetFetchResponse> &response)
 {
-    LOG_CORE("Sending OffsetFetchRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending OffsetFetchRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received OffsetFetchResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::JoinGroup(const JoinGroupRequest &request, ResponsePromise<JoinGroupResponse> &response)
+coev::awaitable<int> Broker::JoinGroup(std::shared_ptr<JoinGroupRequest> request, ResponsePromise<JoinGroupResponse> &response)
 {
-    LOG_CORE("Sending JoinGroupRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending JoinGroupRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received JoinGroupResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::SyncGroup(const SyncGroupRequest &request, ResponsePromise<SyncGroupResponse> &response)
+coev::awaitable<int> Broker::SyncGroup(std::shared_ptr<SyncGroupRequest> request, ResponsePromise<SyncGroupResponse> &response)
 {
-    LOG_CORE("Sending SyncGroupRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending SyncGroupRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received SyncGroupResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::LeaveGroup(const LeaveGroupRequest &request, ResponsePromise<LeaveGroupResponse> &response)
+coev::awaitable<int> Broker::LeaveGroup(std::shared_ptr<LeaveGroupRequest> request, ResponsePromise<LeaveGroupResponse> &response)
 {
-    LOG_CORE("Sending LeaveGroupRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending LeaveGroupRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received LeaveGroupResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::Heartbeat(const HeartbeatRequest &request, ResponsePromise<HeartbeatResponse> &response)
+coev::awaitable<int> Broker::Heartbeat(std::shared_ptr<HeartbeatRequest> request, ResponsePromise<HeartbeatResponse> &response)
 {
-    LOG_CORE("Sending HeartbeatRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending HeartbeatRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received HeartbeatResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::ListGroups(const ListGroupsRequest &request, ResponsePromise<ListGroupsResponse> &response)
+coev::awaitable<int> Broker::ListGroups(std::shared_ptr<ListGroupsRequest> request, ResponsePromise<ListGroupsResponse> &response)
 {
-    LOG_CORE("Sending ListGroupsRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending ListGroupsRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received ListGroupsResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::DescribeGroups(const DescribeGroupsRequest &request, ResponsePromise<DescribeGroupsResponse> &response)
+coev::awaitable<int> Broker::DescribeGroups(std::shared_ptr<DescribeGroupsRequest> request, ResponsePromise<DescribeGroupsResponse> &response)
 {
-    LOG_CORE("Sending DescribeGroupsRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending DescribeGroupsRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received DescribeGroupsResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::ApiVersions(const ApiVersionsRequest &request, ResponsePromise<ApiVersionsResponse> &response)
+coev::awaitable<int> Broker::ApiVersions(std::shared_ptr<ApiVersionsRequest> request, ResponsePromise<ApiVersionsResponse> &response)
 {
-    LOG_CORE("Sending ApiVersionsRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending ApiVersionsRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received ApiVersionsResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::CreateTopics(const CreateTopicsRequest &request, ResponsePromise<CreateTopicsResponse> &response)
+coev::awaitable<int> Broker::CreateTopics(std::shared_ptr<CreateTopicsRequest> request, ResponsePromise<CreateTopicsResponse> &response)
 {
-    LOG_CORE("Sending CreateTopicsRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending CreateTopicsRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received CreateTopicsResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::DeleteTopics(const DeleteTopicsRequest &request, ResponsePromise<DeleteTopicsResponse> &response)
+coev::awaitable<int> Broker::DeleteTopics(std::shared_ptr<DeleteTopicsRequest> request, ResponsePromise<DeleteTopicsResponse> &response)
 {
-    LOG_CORE("Sending DeleteTopicsRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending DeleteTopicsRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received DeleteTopicsResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::CreatePartitions(const CreatePartitionsRequest &request, ResponsePromise<CreatePartitionsResponse> &response)
+coev::awaitable<int> Broker::CreatePartitions(std::shared_ptr<CreatePartitionsRequest> request, ResponsePromise<CreatePartitionsResponse> &response)
 {
-    LOG_CORE("Sending CreatePartitionsRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending CreatePartitionsRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received CreatePartitionsResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::AlterPartitionReassignments(const AlterPartitionReassignmentsRequest &request, ResponsePromise<AlterPartitionReassignmentsResponse> &response)
+coev::awaitable<int> Broker::AlterPartitionReassignments(std::shared_ptr<AlterPartitionReassignmentsRequest> request, ResponsePromise<AlterPartitionReassignmentsResponse> &response)
 {
-    LOG_CORE("Sending AlterPartitionReassignmentsRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending AlterPartitionReassignmentsRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received AlterPartitionReassignmentsResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::ListPartitionReassignments(const ListPartitionReassignmentsRequest &request, ResponsePromise<ListPartitionReassignmentsResponse> &response)
+coev::awaitable<int> Broker::ListPartitionReassignments(std::shared_ptr<ListPartitionReassignmentsRequest> request, ResponsePromise<ListPartitionReassignmentsResponse> &response)
 {
-    LOG_CORE("Sending ListPartitionReassignmentsRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending ListPartitionReassignmentsRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received ListPartitionReassignmentsResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::ElectLeaders(const ElectLeadersRequest &request, ResponsePromise<ElectLeadersResponse> &response)
+coev::awaitable<int> Broker::ElectLeaders(std::shared_ptr<ElectLeadersRequest> request, ResponsePromise<ElectLeadersResponse> &response)
 {
-    LOG_CORE("Sending ElectLeadersRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending ElectLeadersRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received ElectLeadersResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::DeleteRecords(const DeleteRecordsRequest &request, ResponsePromise<DeleteRecordsResponse> &response)
+coev::awaitable<int> Broker::DeleteRecords(std::shared_ptr<DeleteRecordsRequest> request, ResponsePromise<DeleteRecordsResponse> &response)
 {
-    LOG_CORE("Sending DeleteRecordsRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending DeleteRecordsRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received DeleteRecordsResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::DescribeAcls(const DescribeAclsRequest &request, ResponsePromise<DescribeAclsResponse> &response)
+coev::awaitable<int> Broker::DescribeAcls(std::shared_ptr<DescribeAclsRequest> request, ResponsePromise<DescribeAclsResponse> &response)
 {
-    LOG_CORE("Sending DescribeAclsRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending DescribeAclsRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received DescribeAclsResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::CreateAcls(const CreateAclsRequest &request, ResponsePromise<CreateAclsResponse> &response)
+coev::awaitable<int> Broker::CreateAcls(std::shared_ptr<CreateAclsRequest> request, ResponsePromise<CreateAclsResponse> &response)
 {
-    LOG_CORE("Sending CreateAclsRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending CreateAclsRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received CreateAclsResponse, correlation_id: %d", response.m_correlation_id));
     int32_t err = co_await SendAndReceive(request, response);
     if (err)
@@ -520,114 +484,114 @@ coev::awaitable<int> Broker::CreateAcls(const CreateAclsRequest &request, Respon
     co_return 0;
 }
 
-coev::awaitable<int> Broker::DeleteAcls(const DeleteAclsRequest &request, ResponsePromise<DeleteAclsResponse> &response)
+coev::awaitable<int> Broker::DeleteAcls(std::shared_ptr<DeleteAclsRequest> request, ResponsePromise<DeleteAclsResponse> &response)
 {
-    LOG_CORE("Sending DeleteAclsRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending DeleteAclsRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received DeleteAclsResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::InitProducerID(const InitProducerIDRequest &request, ResponsePromise<InitProducerIDResponse> &response)
+coev::awaitable<int> Broker::InitProducerID(std::shared_ptr<InitProducerIDRequest> request, ResponsePromise<InitProducerIDResponse> &response)
 {
-    LOG_CORE("Sending InitProducerIDRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending InitProducerIDRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received InitProducerIDResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::AddPartitionsToTxn(const AddPartitionsToTxnRequest &request, ResponsePromise<AddPartitionsToTxnResponse> &response)
+coev::awaitable<int> Broker::AddPartitionsToTxn(std::shared_ptr<AddPartitionsToTxnRequest> request, ResponsePromise<AddPartitionsToTxnResponse> &response)
 {
-    LOG_CORE("Sending AddPartitionsToTxnRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending AddPartitionsToTxnRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received AddPartitionsToTxnResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::AddOffsetsToTxn(const AddOffsetsToTxnRequest &request, ResponsePromise<AddOffsetsToTxnResponse> &response)
+coev::awaitable<int> Broker::AddOffsetsToTxn(std::shared_ptr<AddOffsetsToTxnRequest> request, ResponsePromise<AddOffsetsToTxnResponse> &response)
 {
-    LOG_CORE("Sending AddOffsetsToTxnRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending AddOffsetsToTxnRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received AddOffsetsToTxnResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::EndTxn(const EndTxnRequest &request, ResponsePromise<EndTxnResponse> &response)
+coev::awaitable<int> Broker::EndTxn(std::shared_ptr<EndTxnRequest> request, ResponsePromise<EndTxnResponse> &response)
 {
-    LOG_CORE("Sending EndTxnRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending EndTxnRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received EndTxnResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::TxnOffsetCommit(const TxnOffsetCommitRequest &request, ResponsePromise<TxnOffsetCommitResponse> &response)
+coev::awaitable<int> Broker::TxnOffsetCommit(std::shared_ptr<TxnOffsetCommitRequest> request, ResponsePromise<TxnOffsetCommitResponse> &response)
 {
-    LOG_CORE("Sending TxnOffsetCommitRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending TxnOffsetCommitRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received TxnOffsetCommitResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::DescribeConfigs(const DescribeConfigsRequest &request, ResponsePromise<DescribeConfigsResponse> &response)
+coev::awaitable<int> Broker::DescribeConfigs(std::shared_ptr<DescribeConfigsRequest> request, ResponsePromise<DescribeConfigsResponse> &response)
 {
-    LOG_CORE("Sending DescribeConfigsRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending DescribeConfigsRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received DescribeConfigsResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::AlterConfigs(const AlterConfigsRequest &request, ResponsePromise<AlterConfigsResponse> &response)
+coev::awaitable<int> Broker::AlterConfigs(std::shared_ptr<AlterConfigsRequest> request, ResponsePromise<AlterConfigsResponse> &response)
 {
-    LOG_CORE("Sending AlterConfigsRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending AlterConfigsRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received AlterConfigsResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::IncrementalAlterConfigs(const IncrementalAlterConfigsRequest &request, ResponsePromise<IncrementalAlterConfigsResponse> &response)
+coev::awaitable<int> Broker::IncrementalAlterConfigs(std::shared_ptr<IncrementalAlterConfigsRequest> request, ResponsePromise<IncrementalAlterConfigsResponse> &response)
 {
-    LOG_CORE("Sending IncrementalAlterConfigsRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending IncrementalAlterConfigsRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received IncrementalAlterConfigsResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::DeleteGroups(const DeleteGroupsRequest &request, ResponsePromise<DeleteGroupsResponse> &response)
+coev::awaitable<int> Broker::DeleteGroups(std::shared_ptr<DeleteGroupsRequest> request, ResponsePromise<DeleteGroupsResponse> &response)
 {
-    LOG_CORE("Sending DeleteGroupsRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending DeleteGroupsRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received DeleteGroupsResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::DeleteOffsets(const DeleteOffsetsRequest &request, ResponsePromise<DeleteOffsetsResponse> &response)
+coev::awaitable<int> Broker::DeleteOffsets(std::shared_ptr<DeleteOffsetsRequest> request, ResponsePromise<DeleteOffsetsResponse> &response)
 {
-    LOG_CORE("Sending DeleteOffsetsRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending DeleteOffsetsRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received DeleteOffsetsResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::DescribeLogDirs(const DescribeLogDirsRequest &request, ResponsePromise<DescribeLogDirsResponse> &response)
+coev::awaitable<int> Broker::DescribeLogDirs(std::shared_ptr<DescribeLogDirsRequest> request, ResponsePromise<DescribeLogDirsResponse> &response)
 {
-    LOG_CORE("Sending DescribeLogDirsRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending DescribeLogDirsRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received DescribeLogDirsResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::DescribeUserScramCredentials(const DescribeUserScramCredentialsRequest &req, ResponsePromise<DescribeUserScramCredentialsResponse> &res)
+coev::awaitable<int> Broker::DescribeUserScramCredentials(std::shared_ptr<DescribeUserScramCredentialsRequest> req, ResponsePromise<DescribeUserScramCredentialsResponse> &res)
 {
-    LOG_CORE("Sending DescribeUserScramCredentialsRequest, version: %d, correlation_id: %d", req.version(), m_correlation_id);
+    LOG_CORE("Sending DescribeUserScramCredentialsRequest, version: %d, correlation_id: %d", req->version(), m_correlation_id);
     defer(LOG_CORE("Received DescribeUserScramCredentialsResponse, correlation_id: %d", res.m_correlation_id));
     return SendAndReceive(req, res);
 }
 
-coev::awaitable<int> Broker::AlterUserScramCredentials(const AlterUserScramCredentialsRequest &req, ResponsePromise<AlterUserScramCredentialsResponse> &res)
+coev::awaitable<int> Broker::AlterUserScramCredentials(std::shared_ptr<AlterUserScramCredentialsRequest> req, ResponsePromise<AlterUserScramCredentialsResponse> &res)
 {
-    LOG_CORE("Sending AlterUserScramCredentialsRequest, version: %d, correlation_id: %d", req.version(), m_correlation_id);
+    LOG_CORE("Sending AlterUserScramCredentialsRequest, version: %d, correlation_id: %d", req->version(), m_correlation_id);
     defer(LOG_CORE("Received AlterUserScramCredentialsResponse, correlation_id: %d", res.m_correlation_id));
     return SendAndReceive(req, res);
 }
 
-coev::awaitable<int> Broker::DescribeClientQuotas(const DescribeClientQuotasRequest &request, ResponsePromise<DescribeClientQuotasResponse> &response)
+coev::awaitable<int> Broker::DescribeClientQuotas(std::shared_ptr<DescribeClientQuotasRequest> request, ResponsePromise<DescribeClientQuotasResponse> &response)
 {
-    LOG_CORE("Sending DescribeClientQuotasRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending DescribeClientQuotasRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received DescribeClientQuotasResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 
-coev::awaitable<int> Broker::AlterClientQuotas(const AlterClientQuotasRequest &request, ResponsePromise<AlterClientQuotasResponse> &response)
+coev::awaitable<int> Broker::AlterClientQuotas(std::shared_ptr<AlterClientQuotasRequest> request, ResponsePromise<AlterClientQuotasResponse> &response)
 {
-    LOG_CORE("Sending AlterClientQuotasRequest, version: %d, correlation_id: %d", request.version(), m_correlation_id);
+    LOG_CORE("Sending AlterClientQuotasRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
     defer(LOG_CORE("Received AlterClientQuotasResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
@@ -704,9 +668,9 @@ coev::awaitable<int> Broker::AuthenticateViaSASLv1()
 
     if (m_conf->Net.SASL.Handshake)
     {
-        SaslHandshakeRequest handshakeRequest;
-        handshakeRequest.m_mechanism = m_conf->Net.SASL.Mechanism;
-        handshakeRequest.m_version = m_conf->Net.SASL.Version;
+        auto handshakeRequest = std::make_shared<SaslHandshakeRequest>();
+        handshakeRequest->m_mechanism = m_conf->Net.SASL.Mechanism;
+        handshakeRequest->m_version = m_conf->Net.SASL.Version;
         ResponsePromise<SaslHandshakeResponse> promise;
         int err = co_await SendInternal(handshakeRequest, promise);
         if (err)
@@ -807,7 +771,7 @@ coev::awaitable<int> Broker::SendAndReceiveSASLHandshake(const std::string &sasl
     Request req;
     req.m_correlation_id = m_correlation_id;
     req.m_client_id = m_conf->ClientID;
-    req.m_body = &rb;
+    req.m_body = static_cast<protocol_body *>(&rb);
 
     std::string buf;
     ::encode(req, buf);
@@ -1062,8 +1026,8 @@ coev::awaitable<int> Broker::SendAndReceiveSASLSCRAMv1(std::shared_ptr<SCRAMClie
 coev::awaitable<int> Broker::SendAndReceiveApiVersions(int16_t v, ResponsePromise<ApiVersionsResponse> &promise)
 {
     int err = 0;
-    ApiVersionsRequest request;
-    request.m_version = v;
+    auto request = std::make_shared<ApiVersionsRequest>();
+    request->m_version = v;
     err = co_await SendAndReceive(request, promise);
     if (err)
     {

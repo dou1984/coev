@@ -258,7 +258,7 @@ coev::awaitable<int> BrokerConsumer::FetchNewMessages(std::shared_ptr<FetchRespo
 
     LOG_CORE("BrokerConsumer::FetchNewMessages sending FetchRequest with %zu blocks", request.m_blocks.size());
     ResponsePromise<FetchResponse> local_response;
-    int err = co_await m_broker->Fetch(request, local_response);
+    int err = co_await m_broker->Fetch(std::make_shared<FetchRequest>(request), local_response);
     if (err == 0)
     {
         LOG_CORE("BrokerConsumer::FetchNewMessages received successful response, creating shared_ptr");

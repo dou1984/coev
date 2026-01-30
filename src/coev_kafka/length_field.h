@@ -9,7 +9,7 @@
 #include "packet_decoder.h"
 #include "encoder_decoder.h"
 
-struct LengthField : pushEncoder
+struct LengthField : pushEncoder, pushDecoder
 {
     int m_start_offset = 0;
     int32_t m_length = 0;
@@ -19,9 +19,6 @@ struct LengthField : pushEncoder
     void save_offset(int in);
     int reserve_length();
 
-    int run(int curOffset, std::string &buf);
-    int check(int curOffset, const std::string &buf);
+    int run(int cur_offset, std::string &buf);
+    int check(int cur_offset, const std::string &buf);
 };
-
-std::shared_ptr<LengthField> acquireLengthField();
-void releaseLengthField(std::shared_ptr<LengthField> ptr);

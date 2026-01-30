@@ -28,19 +28,7 @@
 struct PartitionConsumer;
 struct ConsumerGroupSession;
 
-struct IConsumerGroup
-{
-    virtual ~IConsumerGroup() = default;
-    virtual coev::awaitable<int> Consume(std::shared_ptr<Context> &ctx, const std::vector<std::string> &topics, std::shared_ptr<ConsumerGroupHandler> handler) = 0;
-    virtual coev::awaitable<int> Close() = 0;
-    virtual coev::co_channel<std::shared_ptr<ConsumerError>> &Errors() = 0;
-    virtual void Pause(const std::map<std::string, std::vector<int32_t>> &partitions) = 0;
-    virtual void Resume(const std::map<std::string, std::vector<int32_t>> &partitions) = 0;
-    virtual void PauseAll() = 0;
-    virtual void ResumeAll() = 0;
-};
-
-struct ConsumerGroup : IConsumerGroup, std::enable_shared_from_this<ConsumerGroup>
+struct ConsumerGroup : std::enable_shared_from_this<ConsumerGroup>
 {
     std::shared_ptr<Client> m_client;
     std::shared_ptr<Config> m_config;
@@ -49,9 +37,6 @@ struct ConsumerGroup : IConsumerGroup, std::enable_shared_from_this<ConsumerGrou
     std::string m_group_instance_id;
     std::string m_member_id;
     coev::co_channel<std::shared_ptr<ConsumerError>> m_errors;
-
-    mutable std::mutex m_lock;
-    mutable std::shared_mutex m_errors_lock;
     coev::co_channel<bool> m_closed;
     std::string m_user_data;
 
@@ -91,6 +76,5 @@ struct ConsumerGroup : IConsumerGroup, std::enable_shared_from_this<ConsumerGrou
     void HandleError(std::shared_ptr<ConsumerError> err, const std::string &topic, int32_t partition);
 };
 
-std::shared_ptr<IConsumerGroup> NewConsumerGroup(const std::vector<std::string> &addrs, const std::string &groupID, std::shared_ptr<Config> config);
-std::shared_ptr<IConsumerGroup> NewConsumerGroupFromClient(const std::string &groupID, std::shared_ptr<Client> client);
+coev::awaitable<int> NewConsumerGroup(const std::vector<std::string> &addrs, const std::string &group_id, std::shared_ptr<Config> config, std::shared_ptr<ConsumerGroup> &consumer_group);
 coev::awaitable<int> NewConsumerGroupSession(std::shared_ptr<Context> &context, std::shared_ptr<ConsumerGroup> parent, std::map<std::string, std::vector<int32_t>> &claims, const std::string &memberID, int32_t generationID, std::shared_ptr<ConsumerGroupHandler> &handler, std::shared_ptr<ConsumerGroupSession> &session);

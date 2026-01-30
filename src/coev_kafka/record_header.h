@@ -6,9 +6,11 @@
 
 struct RecordHeader : IEncoder, IDecoder
 {
-    std::string Key;
-    std::string Value;
+    std::string m_key;
+    std::string m_value;
 
+    RecordHeader() = default;
+    RecordHeader(const std::string &k, const std::string &v);
     int encode(packetEncoder &pe);
     int decode(packetDecoder &pd);
 };

@@ -316,6 +316,8 @@ const char *KErrorToString(KError err)
         return "kafka: SyncProducerSuccess";
     case ErrStrategyNotFound:
         return "kafka: unable to find selected strategy";
+    case ErrCorrelationID:
+        return "kafka: mismatch CorrelationID";
     default:
         LOG_ERR("Unknown error %d", err);
         return "Unknown error";

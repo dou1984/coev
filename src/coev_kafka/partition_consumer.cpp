@@ -203,9 +203,9 @@ coev::awaitable<void> PartitionConsumer::ResponseFeeder()
         co_await m_feeder.get(response);
 
         std::vector<std::shared_ptr<ConsumerMessage>> messages;
-        auto expiryTime = m_conf->Consumer.MaxProcessingTime;
-        auto lastExpiry = std::chrono::steady_clock::now();
-        bool firstAttempt = true;
+        auto expiry_time = m_conf->Consumer.MaxProcessingTime;
+        auto last_expiry = std::chrono::steady_clock::now();
+        bool first_attempt = true;
 
         m_response_result = (KError)ParseResponse(response, messages);
         if (m_response_result != ErrNoError)
@@ -220,9 +220,9 @@ coev::awaitable<void> PartitionConsumer::ResponseFeeder()
             bool sent = false;
             bool died = false;
             auto now = std::chrono::steady_clock::now();
-            if (now - lastExpiry >= expiryTime)
+            if (now - last_expiry >= expiry_time)
             {
-                if (!firstAttempt)
+                if (!first_attempt)
                 {
                     m_response_result = ErrTimedOut;
 
@@ -241,7 +241,7 @@ coev::awaitable<void> PartitionConsumer::ResponseFeeder()
                 }
                 else
                 {
-                    firstAttempt = false;
+                    first_attempt = false;
                     --i;
                     continue;
                 }
@@ -253,7 +253,7 @@ coev::awaitable<void> PartitionConsumer::ResponseFeeder()
             }
 
             m_messages.set(msg);
-            firstAttempt = true;
+            first_attempt = true;
         }
     }
 }
@@ -304,7 +304,6 @@ int PartitionConsumer::ParseRecords(std::shared_ptr<RecordBatch> batch, std::vec
 {
 
     messages.reserve(batch->m_records.size());
-
     for (auto &rec : batch->m_records)
     {
         int64_t offset = batch->m_first_offset + rec->m_offset_delta;
@@ -323,6 +322,7 @@ int PartitionConsumer::ParseRecords(std::shared_ptr<RecordBatch> batch, std::vec
         cm->m_offset = offset;
         cm->m_timestamp = timestamp;
         cm->m_headers = rec->m_headers;
+
         messages.push_back(cm);
         m_offset = offset + 1;
     }
@@ -343,29 +343,25 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
         return ErrThrottled;
     }
 
-    auto block = response->get_block(m_topic, m_partition);
-    if (!block)
+    auto &block = response->get_block(m_topic, m_partition);
+
+    if (!errorsIs(block.m_err, ErrNoError))
     {
-        return ErrIncompleteResponse;
+        return block.m_err;
     }
 
-    if (!errorsIs(block->m_err, ErrNoError))
-    {
-        return block->m_err;
-    }
+    auto nRecs = block.num_records();
 
-    auto nRecs = block->num_records();
-
-    if (block->m_preferred_read_replica != invalidPreferredReplicaID)
+    if (block.m_preferred_read_replica != invalidPreferredReplicaID)
     {
-        m_preferred_read_replica = block->m_preferred_read_replica;
+        m_preferred_read_replica = block.m_preferred_read_replica;
     }
 
     if (nRecs == 0)
     {
         std::shared_ptr<ConsumerMessage> partialTrailingMessage;
         bool isPartial;
-        auto err = block->is_partial(isPartial);
+        auto err = block.is_partial(isPartial);
         if (!isPartial)
         {
             return err;
@@ -391,47 +387,49 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
                 }
             }
         }
-        else if (block->m_records_next_offset <= block->m_high_water_mark_offset)
+        else if (block.m_records_next_offset <= block.m_high_water_mark_offset)
         {
             LOG_DBG("received batch with zero records but high watermark was not reached, topic %s, partition %d, next offset %ld, broker %d",
-                    m_topic.c_str(), m_partition, block->m_records_next_offset, m_broker->m_broker->ID());
-            m_offset = block->m_records_next_offset;
+                    m_topic.c_str(), m_partition, block.m_records_next_offset, m_broker->m_broker->ID());
+            m_offset = block.m_records_next_offset;
         }
         return 0;
     }
 
     m_fetch_size = m_conf->Consumer.Fetch.DefaultVal;
-    m_high_water_mark_offset.store(block->m_high_water_mark_offset);
+    m_high_water_mark_offset.store(block.m_high_water_mark_offset);
 
-    std::unordered_set<int64_t> abortedProducerIDs;
-    auto abortedTransactions = block->get_aborted_transactions();
+    std::unordered_set<int64_t> aborted_producer_ids;
+    auto &aborted_transactions = block.get_aborted_transactions();
 
-    for (auto &records : block->m_records_set)
+    for (auto &records : block.m_records_set)
     {
-        if (records->m_records_type == legacyRecords)
+        if (records.m_records_type == LegacyRecords)
         {
-            std::vector<std::shared_ptr<ConsumerMessage>> msgSetMsgs;
-            auto err = ParseMessages(records->m_msg_set, msgSetMsgs);
+            std::vector<std::shared_ptr<ConsumerMessage>> msg_set;
+            auto err = ParseMessages(records.m_message_set, msg_set);
             if (err)
                 return err;
-            messages.insert(messages.end(), msgSetMsgs.begin(), msgSetMsgs.end());
+            messages.insert(messages.end(), msg_set.begin(), msg_set.end());
         }
-        else if (records->m_records_type == defaultRecords)
+        else if (records.m_records_type == DefaultRecords)
         {
-            for (auto it = abortedTransactions.begin(); it != abortedTransactions.end();)
+            for (auto it = aborted_transactions.begin(); it != aborted_transactions.end();)
             {
-                if ((*it)->m_first_offset > records->m_record_batch->LastOffset())
+                if (it->m_first_offset > records.m_record_batch->LastOffset())
+                {
                     break;
-                abortedProducerIDs.insert((*it)->m_producer_id);
-                it = abortedTransactions.erase(it);
+                }
+                aborted_producer_ids.insert(it->m_producer_id);
+                it = aborted_transactions.erase(it);
             }
-            std::vector<std::shared_ptr<ConsumerMessage>> batchMsgs;
-            auto err = ParseRecords(records->m_record_batch, batchMsgs);
+            std::vector<std::shared_ptr<ConsumerMessage>> batch_msgs;
+            auto err = ParseRecords(records.m_record_batch, batch_msgs);
             if (err)
                 return err;
 
             bool isControl;
-            auto controlErr = records->isControl(isControl);
+            auto controlErr = records.is_control(isControl);
             if (controlErr)
             {
                 if (m_conf->Consumer.IsolationLevel_ == ReadCommitted)
@@ -444,26 +442,26 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
             if (isControl)
             {
                 ControlRecord control;
-                auto err = records->getControlRecord(control);
+                auto err = records.get_control_record(control);
                 if (err)
                     return err;
 
                 if (control.m_type == ControlRecordType::ControlRecordAbort)
                 {
-                    abortedProducerIDs.erase(records->m_record_batch->m_producer_id);
+                    aborted_producer_ids.erase(records.m_record_batch->m_producer_id);
                 }
                 continue;
             }
 
             if (m_conf->Consumer.IsolationLevel_ == ReadCommitted)
             {
-                if (records->m_record_batch->m_is_transactional && abortedProducerIDs.count(records->m_record_batch->m_producer_id))
+                if (records.m_record_batch->m_is_transactional && aborted_producer_ids.count(records.m_record_batch->m_producer_id))
                 {
                     continue;
                 }
             }
 
-            messages.insert(messages.end(), batchMsgs.begin(), batchMsgs.end());
+            messages.insert(messages.end(), batch_msgs.begin(), batch_msgs.end());
         }
         else
         {

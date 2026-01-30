@@ -1,4 +1,5 @@
 #include "broker_producer.h"
+#include "broker_producer_response.h"
 
 BrokerProducer::BrokerProducer(std::shared_ptr<AsyncProducer> parent, std::shared_ptr<Broker> broker)
     : m_parent(parent), m_broker(broker), m_timer(m_parent->m_conf->Producer.Flush.Frequency.count() / 1000, 0), m_timer_fired(false)
@@ -94,33 +95,31 @@ coev::awaitable<void> BrokerProducer::bridge()
 {
     while (true)
     {
-        std::shared_ptr<ProduceSet> set;
-        co_await m_output.get(set);
-        if (!set)
+        std::shared_ptr<ProduceSet> pset;
+        co_await m_output.get(pset);
+        if (!pset)
         {
             co_return;
         }
 
-        auto request = set->build_request();
-        if (!request)
+        auto request = pset->build_request();
+        if (request == nullptr)
         {
             auto response = std::make_shared<BrokerProducerResponse>();
-            response->set = set;
+            response->m_pset = pset;
             response->m_err = ErrInvalidRequest;
             m_responses.set(response);
             continue;
         }
 
         int16_t version = request->version();
-        co_await m_broker->AsyncProduce(*request,
-                                        [this, set](ResponsePromise<ProduceResponse> &response)
+        co_await m_broker->AsyncProduce(request, [this](ResponsePromise<ProduceResponse> &response, int err, auto pset)
                                         {
                                             auto broker_response = std::make_shared<BrokerProducerResponse>();
-                                            broker_response->set = set;
+                                            broker_response->m_pset = pset;
                                             broker_response->m_err = ErrNoError;
-                                            broker_response->res = std::make_shared<ProduceResponse>(response.m_response);
-                                            m_responses.set(broker_response);
-                                        });
+                                            broker_response->m_res = std::make_shared<ProduceResponse>(response.m_response);
+                                            m_responses.set(broker_response); }, pset);
     }
 }
 coev::awaitable<void> BrokerProducer::shutdown()
@@ -196,11 +195,11 @@ void BrokerProducer::handle_response(std::shared_ptr<BrokerProducerResponse> res
 {
     if (response->m_err)
     {
-        handle_error(response->set, response->m_err);
+        handle_error(response->m_pset, response->m_err);
     }
     else
     {
-        handle_success(response->set, response->res);
+        handle_success(response->m_pset, response->m_res);
     }
 
     if (m_buffer->empty())
@@ -213,45 +212,39 @@ coev::awaitable<void> BrokerProducer::handle_success(std::shared_ptr<ProduceSet>
 {
     std::vector<std::string> retry_topics;
     sent->each_partition(
-        [this, response, &retry_topics](const std::string &topic, int32_t partition, auto pSet) -> coev::awaitable<void>
+        [this](const std::string &topic, int32_t partition, auto &pset, auto response, auto &retry_topics)
         {
             if (!response)
             {
-                m_parent->return_successes(pSet->m_messages);
-                co_return;
+                m_parent->return_successes(pset->m_messages);
+                return;
             }
 
-            auto block = response->GetBlock(topic, partition);
-            if (!block)
-            {
-                m_parent->return_errors(pSet->m_messages, ErrIncompleteResponse);
-                co_return;
-            }
-
-            switch (block->m_err)
+            auto &block = response->get_block(topic, partition);
+            switch (block.m_err)
             {
             case ErrNoError:
-                if (m_parent->m_conf->Version.IsAtLeast(V0_10_0_0) && block->m_timestamp != std::chrono::system_clock::time_point{})
+                if (m_parent->m_conf->Version.IsAtLeast(V0_10_0_0) && block.m_timestamp != std::chrono::system_clock::time_point{})
                 {
-                    for (auto &msg : pSet->m_messages)
+                    for (auto &msg : pset->m_messages)
                     {
-                        msg->m_timestamp = block->m_timestamp;
+                        msg->m_timestamp = block.m_timestamp;
                     }
                 }
-                for (size_t i = 0; i < pSet->m_messages.size(); ++i)
+                for (size_t i = 0; i < pset->m_messages.size(); ++i)
                 {
-                    pSet->m_messages[i]->m_offset = block->m_offset + i;
+                    pset->m_messages[i]->m_offset = block.m_offset + i;
                 }
-                m_parent->return_successes(pSet->m_messages);
+                m_parent->return_successes(pset->m_messages);
                 break;
             case ErrDuplicateSequenceNumber:
-                m_parent->return_successes(pSet->m_messages);
+                m_parent->return_successes(pset->m_messages);
                 break;
             default:
                 if (m_parent->m_conf->Producer.Retry.Max <= 0)
                 {
                     m_parent->abandon_broker_connection(m_broker);
-                    m_parent->return_errors(pSet->m_messages, block->m_err);
+                    m_parent->return_errors(pset->m_messages, block.m_err);
                 }
                 else
                 {
@@ -259,7 +252,9 @@ coev::awaitable<void> BrokerProducer::handle_success(std::shared_ptr<ProduceSet>
                 }
                 break;
             }
-        });
+        },
+        response,
+        retry_topics);
 
     if (!retry_topics.empty())
     {
@@ -272,15 +267,10 @@ coev::awaitable<void> BrokerProducer::handle_success(std::shared_ptr<ProduceSet>
         }
 
         sent->each_partition(
-            [this, response](const std::string &topic, int32_t partition, auto pSet)
+            [this](const std::string &topic, int32_t partition, auto &pset, auto response)
             {
-                auto block = response->GetBlock(topic, partition);
-                if (!block)
-                {
-                    return;
-                }
-
-                switch (block->m_err)
+                auto &block = response->get_block(topic, partition);
+                switch (block.m_err)
                 {
                 case ErrInvalidMessage:
                 case ErrUnknownTopicOrPartition:
@@ -291,22 +281,22 @@ coev::awaitable<void> BrokerProducer::handle_success(std::shared_ptr<ProduceSet>
                 case ErrNotEnoughReplicasAfterAppend:
                 case ErrKafkaStorageError:
                 {
-                    m_current_retries[topic] = std::map<int32_t, KError>();
-                    m_current_retries[topic][partition] = block->m_err;
+                    m_current_retries[topic][partition] = block.m_err;
                     if (m_parent->m_conf->Producer.Idempotent)
                     {
-                        co_start << m_parent->retry_batch(topic, partition, pSet, block->m_err);
+                        m_task << m_parent->retry_batch(topic, partition, pset, block.m_err);
                     }
                     else
                     {
-                        m_parent->retry_messages(pSet->m_messages, block->m_err);
+                        m_parent->retry_messages(pset->m_messages, block.m_err);
                     }
                     auto dropped = m_buffer->drop_partition(topic, partition);
-                    m_parent->retry_messages(dropped, block->m_err);
+                    m_parent->retry_messages(dropped, block.m_err);
                 }
                 break;
                 }
-            });
+            },
+            response);
     }
 }
 
@@ -315,8 +305,10 @@ void BrokerProducer::handle_error(std::shared_ptr<ProduceSet> _sent, KError err)
     auto target = KErrorToString(err);
     if (err != ErrNoError)
     {
-        _sent->each_partition([&](const std::string &topic, int32_t partition, std::shared_ptr<PartitionSet> pSet)
-                              { m_parent->return_errors(pSet->m_messages, err); });
+        _sent->each_partition(
+            [this](const std::string &topic, int32_t partition, auto &pset, auto err)
+            { m_parent->return_errors(pset->m_messages, err); },
+            err);
     }
     else
     {
@@ -324,11 +316,15 @@ void BrokerProducer::handle_error(std::shared_ptr<ProduceSet> _sent, KError err)
         m_broker->Close();
         m_closing = err;
 
-        _sent->each_partition([&](const std::string &topic, int32_t partition, std::shared_ptr<PartitionSet> pSet)
-                              { m_parent->retry_messages(pSet->m_messages, err); });
+        _sent->each_partition(
+            [this](const std::string &topic, int32_t partition, auto &pset, auto err)
+            { m_parent->retry_messages(pset->m_messages, err); },
+            err);
 
-        m_buffer->each_partition([&](const std::string &topic, int32_t partition, std::shared_ptr<PartitionSet> pSet)
-                                 { m_parent->retry_messages(pSet->m_messages, err); });
+        m_buffer->each_partition(
+            [this](const std::string &topic, int32_t partition, auto &pset, auto err)
+            { m_parent->retry_messages(pset->m_messages, err); },
+            err);
 
         rollover();
     }

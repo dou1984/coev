@@ -41,7 +41,7 @@ struct RecordBatch
     {
         return m_first_offset + static_cast<int64_t>(m_last_offset_delta);
     }
-    void AddRecord(std::shared_ptr<Record> r)
+    void add_record(std::shared_ptr<Record> r)
     {
         m_records.emplace_back(std::move(r));
     }
@@ -49,6 +49,6 @@ struct RecordBatch
     int encode(packetEncoder &pe);
     int decode(packetDecoder &pd);
 
-    int16_t ComputeAttributes() const;
-    void EncodeRecords(packetEncoder &pe);
+    int16_t compute_attributes() const;
+    void encode_records(packetEncoder &pe);
 };

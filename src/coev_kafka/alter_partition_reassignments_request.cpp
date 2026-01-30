@@ -164,7 +164,7 @@ std::chrono::milliseconds AlterPartitionReassignmentsRequest::throttle_time() co
     return m_timeout;
 }
 
-void AlterPartitionReassignmentsRequest::AddBlock(const std::string &topic, int32_t partitionID, const std::vector<int32_t> &replicas)
+void AlterPartitionReassignmentsRequest::add_block(const std::string &topic, int32_t partitionID, const std::vector<int32_t> &replicas)
 {
     m_blocks[topic][partitionID] = std::make_shared<AlterPartitionReassignmentsBlock>(replicas);
 }

@@ -37,18 +37,18 @@ struct FetchResponseBlock : versioned_decoder, versioned_encoder
     int64_t m_high_water_mark_offset;
     int64_t m_last_stable_offset;
     int64_t m_log_start_offset;
-    std::vector<std::shared_ptr<AbortedTransaction>> m_aborted_transactions;
     int32_t m_preferred_read_replica;
-    std::vector<std::shared_ptr<Records>> m_records_set;
+    std::vector<AbortedTransaction> m_aborted_transactions;
+    std::vector<Records> m_records_set;
     int64_t m_records_next_offset;
     bool m_partial;
 
     FetchResponseBlock();
     int decode(packetDecoder &pd, int16_t version);
     int encode(packetEncoder &pe, int16_t version);
-    int num_records();
-    int is_partial(bool &partial);
-    std::vector<std::shared_ptr<AbortedTransaction>> get_aborted_transactions();
+    int num_records() const;
+    int is_partial(bool &partial) const;
+    std::vector<AbortedTransaction> &get_aborted_transactions();
 };
 
 struct FetchResponse : protocol_body
@@ -57,7 +57,7 @@ struct FetchResponse : protocol_body
     int16_t m_error_code;
     int32_t m_session_id;
     std::chrono::milliseconds m_throttle_time;
-    std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<FetchResponseBlock>>> m_blocks;
+    std::unordered_map<std::string, std::map<int32_t, FetchResponseBlock>> m_blocks;
     std::chrono::system_clock::time_point m_timestamp;
     bool m_log_append_time;
 
@@ -72,9 +72,10 @@ struct FetchResponse : protocol_body
     KafkaVersion required_version() const;
     std::chrono::milliseconds throttle_time() const;
 
-    std::shared_ptr<FetchResponseBlock> get_block(const std::string &topic, int32_t partition);
     void add_error(const std::string &topic, int32_t partition, KError err);
-    std::shared_ptr<FetchResponseBlock> get_or_create_block(const std::string &topic, int32_t partition);
+    const FetchResponseBlock &get_block(const std::string &topic, int32_t partition) const;
+    FetchResponseBlock &get_block(const std::string &topic, int32_t partition);
+    FetchResponseBlock &get_or_create_block(const std::string &topic, int32_t partition);
 
     void add_message_with_timestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset,
                                     std::chrono::system_clock::time_point timestamp, int8_t version);

@@ -45,9 +45,8 @@ struct packetDecoder : packetType
     virtual int remaining() = 0;
     virtual int getSubset(int length, std::shared_ptr<packetDecoder> &out) = 0;
     virtual int peek(int offset, int length, std::shared_ptr<packetDecoder> &out) = 0;
-    virtual int peekInt8(int offset, int8_t &val) = 0;
-
-    virtual int push(std::shared_ptr<pushDecoder> in) = 0;
+    virtual int peekInt8(int offset, int8_t &val) = 0;    
+    virtual int push(pushDecoder &in) = 0;
 
     virtual int pop() = 0;
 };

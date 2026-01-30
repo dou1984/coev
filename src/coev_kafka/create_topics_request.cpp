@@ -242,26 +242,26 @@ int TopicDetail::decode(packetDecoder &pd, int16_t version)
     return pd.getEmptyTaggedFieldArray(_);
 }
 
-std::shared_ptr<CreateTopicsRequest> NewCreateTopicsRequest(const KafkaVersion &Version_, std::map<std::string, std::shared_ptr<TopicDetail>> topicDetails, int64_t timeoutMs, bool validateOnly)
+std::shared_ptr<CreateTopicsRequest> NewCreateTopicsRequest(const KafkaVersion &_version, std::map<std::string, std::shared_ptr<TopicDetail>> topicDetails, int64_t timeoutMs, bool validateOnly)
 {
     auto r = std::make_shared<CreateTopicsRequest>();
     r->m_topic_details = topicDetails;
     r->m_timeout = std::chrono::milliseconds(timeoutMs);
     r->m_validate_only = validateOnly;
 
-    if (Version_ >= V2_4_0_0)
+    if (_version >= V2_4_0_0)
     {
         r->m_version = 5;
     }
-    else if (Version_ >= V2_0_0_0)
+    else if (_version >= V2_0_0_0)
     {
         r->m_version = 3;
     }
-    else if (Version_ >= V0_11_0_0)
+    else if (_version >= V0_11_0_0)
     {
         r->m_version = 2;
     }
-    else if (Version_ >= V0_10_2_0)
+    else if (_version >= V0_10_2_0)
     {
         r->m_version = 1;
     }

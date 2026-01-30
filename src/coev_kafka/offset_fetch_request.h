@@ -23,8 +23,7 @@ struct OffsetFetchRequest : protocol_body, flexible_version
     OffsetFetchRequest(int16_t v) : m_version(v)
     {
     }
-
-    static std::shared_ptr<OffsetFetchRequest> NewOffsetFetchRequest(const KafkaVersion &version, const std::string &group, const std::map<std::string, std::vector<int32_t>> &partitions);
+    OffsetFetchRequest(const KafkaVersion &version, const std::string &group, const std::map<std::string, std::vector<int32_t>> &partitions);
 
     void set_version(int16_t v);
     int encode(packetEncoder &pe);

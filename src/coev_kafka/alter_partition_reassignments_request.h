@@ -42,5 +42,5 @@ struct AlterPartitionReassignmentsRequest : protocol_body, throttle_support, fle
     KafkaVersion required_version() const;
     std::chrono::milliseconds throttle_time() const;
 
-    void AddBlock(const std::string &topic, int32_t partitionID, const std::vector<int32_t> &replicas);
+    void add_block(const std::string &topic, int32_t partitionID, const std::vector<int32_t> &replicas);
 };

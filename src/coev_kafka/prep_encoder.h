@@ -36,9 +36,9 @@ struct prepEncoder : packetEncoder
     void putEmptyTaggedFieldArray();
 
     int offset() const;
-    void push(std::shared_ptr<pushEncoder> in);
+    void push(pushEncoder &in);
     int pop();
 
-    std::vector<std::shared_ptr<pushEncoder>> m_stack;
+    std::vector<pushEncoder *> m_stack;
     int m_length = 0;
 };

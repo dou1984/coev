@@ -96,8 +96,9 @@
 
 int Request::encode(packetEncoder &pe)
 {
-    auto lengthField = std::make_shared<LengthField>();
-    pe.push(lengthField);
+
+    LengthField length_field;
+    pe.push(length_field);
 
     pe.putInt16(m_body->key());
     pe.putInt16(m_body->version());

@@ -11,7 +11,7 @@ struct ConsumerMessage
     const std::string &key();
     const std::string &value();
 
-    std::vector<std::shared_ptr<RecordHeader>> m_headers;
+    std::vector<RecordHeader> m_headers;
     std::chrono::system_clock::time_point m_timestamp;
     std::chrono::system_clock::time_point m_block_timestamp;
 

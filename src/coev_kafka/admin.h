@@ -25,8 +25,11 @@ struct ClusterAdmin
 {
 
     static std::shared_ptr<ClusterAdmin> Create(std::shared_ptr<Client> client, std::shared_ptr<Config> conf);
+
+    ClusterAdmin(std::shared_ptr<Client> client, std::shared_ptr<Config> conf);
     virtual ~ClusterAdmin() = default;
     int Close();
+
     coev::awaitable<int> GetController(std::shared_ptr<Broker> &out_broker);
     coev::awaitable<int> GetCoordinator(const std::string &group, std::shared_ptr<Broker> &out_broker);
     coev::awaitable<int> CreateTopic(const std::string &topic, const std::shared_ptr<TopicDetail> &detail, bool validateOnly);
@@ -44,7 +47,7 @@ struct ClusterAdmin
     coev::awaitable<int> CreateACLs(const std::vector<std::shared_ptr<ResourceAcls>> &resourceACLs);
     coev::awaitable<int> ListAcls(const AclFilter &filter, std::vector<std::shared_ptr<ResourceAcls>> &out_results);
     coev::awaitable<int> DeleteACL(const AclFilter &filter, bool validateOnly, std::vector<std::shared_ptr<MatchingAcl>> &out_results);
-    coev::awaitable<int> ElectLeaders(ElectionType electionType, const std::unordered_map<std::string, std::vector<int32_t>> &partitions, std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<PartitionResult>>> &out_results);
+    coev::awaitable<int> ElectLeaders(ElectionType electionType, const std::unordered_map<std::string, std::vector<int32_t>> &partitions, std::unordered_map<std::string, std::map<int32_t, PartitionResult>> &out_results);
     coev::awaitable<int> ListConsumerGroups(std::map<std::string, std::string> &out_groups);
     coev::awaitable<int> DescribeConsumerGroups(const std::vector<std::string> &groups, std::vector<std::shared_ptr<GroupDescription>> &out_result);
     coev::awaitable<int> ListConsumerGroupOffsets(const std::string &group, const std::map<std::string, std::vector<int32_t>> &topicPartitions, std::shared_ptr<OffsetFetchResponse> &out_results);
@@ -59,14 +62,42 @@ struct ClusterAdmin
     coev::awaitable<int> DescribeClientQuotas(const std::vector<QuotaFilterComponent> &components, bool strict, std::vector<DescribeClientQuotasEntry> &out);
     coev::awaitable<int> AlterClientQuotas(const std::vector<QuotaEntityComponent> &entity, const ClientQuotasOp &op, bool validateOnly);
     coev::awaitable<int> RemoveMemberFromConsumerGroup(const std::string &groupId, const std::vector<std::string> &groupInstanceIds, std::shared_ptr<LeaveGroupResponse> &out);
-
-    ClusterAdmin(std::shared_ptr<Client> client, std::shared_ptr<Config> conf);
-
-    coev::awaitable<int> RetryOnError(std::function<bool(int)> retryable, std::function<coev::awaitable<int>()> fn);
     coev::awaitable<int> RefreshController(std::shared_ptr<Broker> &out);
+
     int FindBroker(int32_t id, std::shared_ptr<Broker> &out);
     int FindAnyBroker(std::shared_ptr<Broker> &out);
 
+    coev::awaitable<int> _CreateTopic(const std::string &topic, std::shared_ptr<CreateTopicsRequest> request);
+    coev::awaitable<int> _DescribeTopics(const std::vector<std::string> &topics, std::vector<std::shared_ptr<TopicMetadata>> &out);
+    coev::awaitable<int> _DeleteTopic(const std::string &topic, std::shared_ptr<DeleteTopicsRequest> request);
+    coev::awaitable<int> _AlterPartitionReassignments(std::shared_ptr<AlterPartitionReassignmentsRequest> request);
+    coev::awaitable<int> _CreatePartitions(const std::string &topic, std::shared_ptr<CreatePartitionsRequest> request);
+    coev::awaitable<int> _ListPartitionReassignments(std::shared_ptr<ListPartitionReassignmentsRequest> request, std::map<std::string, std::map<int32_t, std::shared_ptr<PartitionReplicaReassignmentsStatus>>> &out_topicStatus);
+    coev::awaitable<int> _DescribeCluster(std::vector<std::shared_ptr<Broker>> &out_brokers, int32_t &out_controller_id);
+    coev::awaitable<int> _ListConsumerGroupOffsets(const std::string &group, std::shared_ptr<OffsetFetchRequest> request, std::shared_ptr<OffsetFetchResponse> &out);
+    coev::awaitable<int> _DeleteConsumerGroupOffset(std::shared_ptr<DeleteOffsetsRequest> request, const std::string &group, const std::string &topic, int32_t partition);
+    coev::awaitable<int> _DeleteConsumerGroup(std::shared_ptr<DeleteGroupsRequest> request, const std::string &group);
+    coev::awaitable<int> _AlterUserScramCredentials(std::shared_ptr<AlterUserScramCredentialsRequest> req, ResponsePromise<AlterUserScramCredentialsResponse> &rsp);
+    coev::awaitable<int> _ElectLeaders(std::shared_ptr<ElectLeadersRequest> request, ResponsePromise<ElectLeadersResponse> &res);
+    coev::awaitable<int> _RemoveMemberFromConsumerGroup(std::shared_ptr<LeaveGroupRequest> request, std::shared_ptr<LeaveGroupResponse> &response, const std::string &groupId);
+
     std::shared_ptr<Client> m_client;
     std::shared_ptr<Config> m_conf;
+
+    template <class Func, class... Args>
+    coev::awaitable<int> RetryOnError(std::function<bool(int)> retryable, const Func &func, Args &&...args)
+    {
+        int attempts = m_conf->Admin.Retry.Max + 1;
+        while (true)
+        {
+            int err = co_await (this->*func)(std::forward<Args>(args)...);
+            attempts--;
+            if (err == 0 || attempts <= 0 || !retryable(err))
+            {
+                co_return err;
+            }
+            LOG_CORE("%d attempts remaining, retrying after %dms...", attempts, static_cast<int>(m_conf->Admin.Retry.Backoff.count()));
+            co_await sleep_for(m_conf->Admin.Retry.Backoff);
+        }
+    }
 };

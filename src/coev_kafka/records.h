@@ -11,28 +11,29 @@
 #include "real_decoder.h"
 #include "version.h"
 
-const int unknownRecords = 0;
-const int legacyRecords = 1;
-const int defaultRecords = 2;
+const int UnknownRecords = 0;
+const int LegacyRecords = 1;
+const int DefaultRecords = 2;
 
-struct Records
+struct Records : std::enable_shared_from_this<Records>
 {
-    int m_records_type = unknownRecords;
-    std::shared_ptr<MessageSet> m_msg_set;
+    int m_records_type = UnknownRecords;
+    std::shared_ptr<MessageSet> m_message_set;
     std::shared_ptr<RecordBatch> m_record_batch;
 
     Records();
-    static std::shared_ptr<Records> NewLegacyRecords(std::shared_ptr<MessageSet> msgSet);
-    static std::shared_ptr<Records> NewDefaultRecords(std::shared_ptr<RecordBatch> batch);
+    Records(std::shared_ptr<MessageSet> msgSet);
+    Records(std::shared_ptr<RecordBatch> batch);
 
-    int SetTypeFromFields(bool &empty);
-    int SetTypeFromMagic(packetDecoder &pd);
+
+    int set_type_from_fields(bool &empty);
+    int set_type_from_magic(packetDecoder &pd);
     int encode(packetEncoder &pe);
     int decode(packetDecoder &pd);
-    int numRecords(int &);
-    int isPartial(bool &);
-    int isControl(bool &);
-    int isOverflow(bool &);
-    int nextOffset(int64_t &offset);
-    int getControlRecord(ControlRecord &);
+    int num_records(int &) const;
+    int is_partial(bool &) const;
+    int is_control(bool &) const;
+    int is_overflow(bool &);
+    int next_offset(int64_t &offset);
+    int get_control_record(ControlRecord &) const;
 };

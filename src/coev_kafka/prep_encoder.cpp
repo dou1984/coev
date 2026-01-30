@@ -256,8 +256,9 @@ int prepEncoder::offset() const
     return m_length;
 }
 
-void prepEncoder::push(std::shared_ptr<pushEncoder> in)
+void prepEncoder::push(pushEncoder &_in)
 {
+    auto in = &_in;
     in->save_offset(m_length);
     m_length += in->reserve_length();
     m_stack.push_back(in);
@@ -271,7 +272,8 @@ int prepEncoder::pop()
     auto in = m_stack.back();
     m_stack.pop_back();
 
-    if (auto dpe = std::dynamic_pointer_cast<dynamicPushEncoder>(in))
+    auto dpe = dynamic_cast<dynamicPushEncoder *>(in);
+    if (dpe != nullptr)
     {
         m_length += dpe->adjust_length(m_length);
     }

@@ -90,8 +90,8 @@ int OffsetCommitRequest::encode(packetEncoder &pe)
         pe.putNullableString(m_group_instance_id);
     }
 
-    pe.putArrayLength(static_cast<int32_t>(blocks.size()));
-    for (auto &topicEntry : blocks)
+    pe.putArrayLength(static_cast<int32_t>(m_blocks.size()));
+    for (auto &topicEntry : m_blocks)
     {
         auto &topic = topicEntry.first;
         auto &partitions = topicEntry.second;
@@ -100,7 +100,7 @@ int OffsetCommitRequest::encode(packetEncoder &pe)
         for (auto &partitionEntry : partitions)
         {
             pe.putInt32(partitionEntry.first);
-            partitionEntry.second->encode(pe, m_version);
+            partitionEntry.second.encode(pe, m_version);
         }
     }
     return 0;
@@ -136,7 +136,7 @@ int OffsetCommitRequest::decode(packetDecoder &pd, int16_t version)
         return err;
     }
 
-    blocks.clear();
+    m_blocks.clear();
     for (int i = 0; i < topicCount; ++i)
     {
         std::string topic;
@@ -151,7 +151,7 @@ int OffsetCommitRequest::decode(packetDecoder &pd, int16_t version)
         {
             return err;
         }
-        auto &partitionMap = blocks[topic];
+        auto &partitionMap = m_blocks[topic];
         for (int j = 0; j < partitionCount; ++j)
         {
             int32_t partition;
@@ -160,9 +160,7 @@ int OffsetCommitRequest::decode(packetDecoder &pd, int16_t version)
             {
                 return err;
             }
-            auto block = std::make_shared<OffsetCommitRequestBlock>();
-            block->decode(pd, m_version);
-            partitionMap[partition] = block;
+            partitionMap[partition].decode(pd, m_version);
         }
     }
     return 0;
@@ -210,33 +208,29 @@ KafkaVersion OffsetCommitRequest::required_version() const
     }
 }
 
-void OffsetCommitRequest::AddBlock(const std::string &topic, int32_t partitionID, int64_t offset, int64_t timestamp, const std::string &metadata)
+void OffsetCommitRequest::add_block(const std::string &topic, int32_t partitionID, int64_t offset, int64_t timestamp, const std::string &metadata)
 {
-    AddBlockWithLeaderEpoch(topic, partitionID, offset, 0, timestamp, metadata);
+    add_block_with_leader_epoch(topic, partitionID, offset, 0, timestamp, metadata);
 }
 
-void OffsetCommitRequest::AddBlockWithLeaderEpoch(const std::string &topic, int32_t partitionID, int64_t offset, int32_t leaderEpoch, int64_t timestamp, const std::string &metadata)
+void OffsetCommitRequest::add_block_with_leader_epoch(const std::string &topic, int32_t partitionID, int64_t offset, int32_t leaderEpoch, int64_t timestamp, const std::string &metadata)
 {
-    if (blocks.find(topic) == blocks.end())
-    {
-        blocks[topic] = std::unordered_map<int32_t, std::shared_ptr<OffsetCommitRequestBlock>>();
-    }
-    blocks[topic][partitionID] = std::make_shared<OffsetCommitRequestBlock>(offset, timestamp, leaderEpoch, metadata);
+    m_blocks[topic].emplace(partitionID, OffsetCommitRequestBlock(offset, timestamp, leaderEpoch, metadata));
 }
 
-std::pair<int64_t, std::string> OffsetCommitRequest::Offset(const std::string &topic, int32_t partitionID) const
+std::pair<int64_t, std::string> OffsetCommitRequest::offset(const std::string &topic, int32_t partitionID) const
 {
-    auto topicIt = blocks.find(topic);
-    if (topicIt == blocks.end())
+    auto tit = m_blocks.find(topic);
+    if (tit == m_blocks.end())
     {
         throw std::runtime_error("no such offset");
     }
-    auto &partitions = topicIt->second;
-    auto partIt = partitions.find(partitionID);
-    if (partIt == partitions.end())
+    auto &partitions = tit->second;
+    auto pit = partitions.find(partitionID);
+    if (pit == partitions.end())
     {
         throw std::runtime_error("no such offset");
     }
-    auto &block = partIt->second;
-    return std::make_pair(block->m_offset, block->m_metadata);
+    auto &block = pit->second;
+    return std::make_pair(block.m_offset, block.m_metadata);
 }

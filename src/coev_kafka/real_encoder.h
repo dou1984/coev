@@ -14,7 +14,7 @@ struct realEncoder : packetEncoder
 
     std::string m_raw;
     size_t m_offset = 0;
-    std::vector<std::shared_ptr<pushEncoder>> m_stack;
+    std::vector<pushEncoder *> m_stack;
     realEncoder() = default;
     realEncoder(size_t capacity)
     {
@@ -43,7 +43,7 @@ struct realEncoder : packetEncoder
     int putInt64Array(const std::vector<int64_t> &in);
     void putEmptyTaggedFieldArray();
     int offset() const { return static_cast<int>(m_offset); }
-    void push(std::shared_ptr<pushEncoder> in);
+    void push(pushEncoder &in);
     int pop();
 };
 

@@ -3,8 +3,9 @@
 #include "sleep_for.h"
 #include "consumer_message.h"
 #include "consumer_group_handler.h"
+#include "offset_manager.h"
 
-ConsumerGroupSession::ConsumerGroupSession(std::shared_ptr<ConsumerGroup> &_parent, const std::string &_memberID, int32_t _generationID, std::shared_ptr<ConsumerGroupHandler> _handler, std::shared_ptr<IOffsetManager> _offsets, std::map<std::string, std::vector<int32_t>> &_claims, std::shared_ptr<Context> &_ctx, std::function<void()> _cancel) : m_parent(_parent), m_member_id(_memberID), m_generation_id(_generationID), m_handler(_handler), m_offsets(_offsets), m_claims(_claims), m_context(_ctx), m_cancel(_cancel)
+ConsumerGroupSession::ConsumerGroupSession(std::shared_ptr<ConsumerGroup> &_parent, const std::string &_memberID, int32_t _generationID, std::shared_ptr<ConsumerGroupHandler> _handler, std::shared_ptr<OffsetManager> _offsets, std::map<std::string, std::vector<int32_t>> &_claims, std::shared_ptr<Context> &_ctx, std::function<void()> _cancel) : m_parent(_parent), m_member_id(_memberID), m_generation_id(_generationID), m_handler(_handler), m_offsets(_offsets), m_claims(_claims), m_context(_ctx), m_cancel(_cancel)
 {
 
     m_task << ConsumerGroupSession::HeartbeatLoop_();

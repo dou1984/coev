@@ -12,7 +12,7 @@ void OffsetCommitResponse::set_version(int16_t v)
     m_version = v;
 }
 
-void OffsetCommitResponse::AddError(const std::string &topic, int32_t partition, KError kerror)
+void OffsetCommitResponse::add_error(const std::string &topic, int32_t partition, KError kerror)
 {
     auto &partitions = m_errors[topic];
     partitions[partition] = kerror;

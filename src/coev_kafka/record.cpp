@@ -1,12 +1,15 @@
 #include "record.h"
 
+RecordHeader::RecordHeader(const std::string &k, const std::string &v) : m_key(k), m_value(v)
+{
+}
 int RecordHeader::encode(packetEncoder &pe)
 {
-    if (pe.putVariantBytes(Key) != 0)
+    if (pe.putVariantBytes(m_key) != 0)
     {
         return -1;
     }
-    if (pe.putVariantBytes(Value) != 0)
+    if (pe.putVariantBytes(m_value) != 0)
     {
         return -1;
     }
@@ -15,11 +18,11 @@ int RecordHeader::encode(packetEncoder &pe)
 
 int RecordHeader::decode(packetDecoder &pd)
 {
-    if (pd.getVariantBytes(Key) != 0)
+    if (pd.getVariantBytes(m_key) != 0)
     {
         return -1;
     }
-    if (pd.getVariantBytes(Value) != 0)
+    if (pd.getVariantBytes(m_value) != 0)
     {
         return -1;
     }
@@ -28,7 +31,7 @@ int RecordHeader::decode(packetDecoder &pd)
 
 int Record::encode(packetEncoder &pe)
 {
-    pe.push(std::dynamic_pointer_cast<pushEncoder>(m_length));
+    pe.push(m_length);
     pe.putInt8(m_attributes);
     pe.putVariant(m_timestamp_delta.count());
     pe.putVariant(m_offset_delta);
@@ -44,7 +47,7 @@ int Record::encode(packetEncoder &pe)
 
     for (auto &h : m_headers)
     {
-        if (h->encode(pe) != 0)
+        if (h.encode(pe) != 0)
         {
             return -1;
         }
@@ -55,7 +58,7 @@ int Record::encode(packetEncoder &pe)
 
 int Record::decode(packetDecoder &pd)
 {
-    if (pd.push(std::dynamic_pointer_cast<pushDecoder>(m_length)) != 0)
+    if (pd.push(m_length) != 0)
     {
         return -1;
     }
@@ -98,8 +101,7 @@ int Record::decode(packetDecoder &pd)
         m_headers.resize(numHeaders);
         for (int64_t i = 0; i < numHeaders; ++i)
         {
-            m_headers[i] = std::make_shared<RecordHeader>();
-            if (m_headers[i]->decode(pd) != 0)
+            if (m_headers[i].decode(pd) != 0)
             {
                 return -1;
             }

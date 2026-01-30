@@ -114,7 +114,7 @@ struct consumerPair
     }
 };
 
-struct partitionMovements
+struct PartitionMovements
 {
     std::map<std::string, std::map<consumerPair, std::map<TopicPartitionAssignment, bool>>> PartitionMovementsByTopic;
     std::map<TopicPartitionAssignment, consumerPair> Movements;
@@ -129,7 +129,7 @@ struct partitionMovements
     bool isSticky();
 };
 
-struct stickyBalanceStrategy : BalanceStrategy
+struct StickyBalanceStrategy : BalanceStrategy
 {
     std::string Name()
     {
@@ -146,7 +146,7 @@ struct stickyBalanceStrategy : BalanceStrategy
                        std::string &data);
 
 private:
-    partitionMovements movements;
+    PartitionMovements movements;
 
     void balance(std::map<std::string, std::vector<TopicPartitionAssignment>> &currentAssignment,
                  const std::map<TopicPartitionAssignment, consumerGenerationPair> &prevAssignment,
@@ -186,12 +186,12 @@ private:
 
 std::shared_ptr<BalanceStrategy> NewBalanceStrategySticky()
 {
-    return std::make_shared<stickyBalanceStrategy>();
+    return std::make_shared<StickyBalanceStrategy>();
 }
 
 std::shared_ptr<BalanceStrategy> BalanceStrategySticky = NewBalanceStrategySticky();
 
-struct topicAndPartition
+struct TopicAndPartition
 {
     std::string topic;
     int32_t partition;
@@ -199,13 +199,13 @@ struct topicAndPartition
     {
         return topic + "-" + std::to_string(partition);
     }
-    bool operator<(const topicAndPartition &other) const
+    bool operator<(const TopicAndPartition &other) const
     {
         return comparedValue() < other.comparedValue();
     }
 };
 
-struct memberAndTopic
+struct MemberAndTopic
 {
     std::unordered_set<std::string> topics;
     std::string memberID;
@@ -215,7 +215,7 @@ struct memberAndTopic
     }
 };
 
-class roundRobinBalancer : public BalanceStrategy
+class RoundRobinBalancer : public BalanceStrategy
 {
 public:
     std::string Name() { return RoundRobinBalanceStrategyName; }
@@ -232,12 +232,10 @@ public:
 
 std::shared_ptr<BalanceStrategy> NewBalanceStrategyRoundRobin()
 {
-    return std::make_shared<roundRobinBalancer>();
+    return std::make_shared<RoundRobinBalancer>();
 }
 
 std::shared_ptr<BalanceStrategy> BalanceStrategyRoundRobin = NewBalanceStrategyRoundRobin();
-
-// Implementations below
 
 int getBalanceScore(const std::map<std::string, std::vector<TopicPartitionAssignment>> &assignment)
 {
@@ -634,7 +632,7 @@ int prepopulateCurrentAssignments(const std::map<std::string, ConsumerGroupMembe
     return 0;
 }
 
-void partitionMovements::removeMovementRecordOfPartition(const TopicPartitionAssignment &partition, consumerPair &outPair)
+void PartitionMovements::removeMovementRecordOfPartition(const TopicPartitionAssignment &partition, consumerPair &outPair)
 {
     outPair = Movements[partition];
     Movements.erase(partition);
@@ -650,7 +648,7 @@ void partitionMovements::removeMovementRecordOfPartition(const TopicPartitionAss
     }
 }
 
-void partitionMovements::addPartitionMovementRecord(const TopicPartitionAssignment &partition, const consumerPair &pair)
+void PartitionMovements::addPartitionMovementRecord(const TopicPartitionAssignment &partition, const consumerPair &pair)
 {
     Movements[partition] = pair;
     if (PartitionMovementsByTopic.find(partition.m_topic) == PartitionMovementsByTopic.end())
@@ -665,7 +663,7 @@ void partitionMovements::addPartitionMovementRecord(const TopicPartitionAssignme
     topicMap[pair][partition] = true;
 }
 
-void partitionMovements::movePartition(const TopicPartitionAssignment &partition, const std::string &oldConsumer, const std::string &newConsumer)
+void PartitionMovements::movePartition(const TopicPartitionAssignment &partition, const std::string &oldConsumer, const std::string &newConsumer)
 {
     consumerPair pair{oldConsumer, newConsumer};
     if (Movements.count(partition))
@@ -687,7 +685,7 @@ void partitionMovements::movePartition(const TopicPartitionAssignment &partition
     }
 }
 
-TopicPartitionAssignment partitionMovements::getTheActualPartitionToBeMoved(
+TopicPartitionAssignment PartitionMovements::getTheActualPartitionToBeMoved(
     const TopicPartitionAssignment &partition,
     const std::string &oldConsumer,
     const std::string &newConsumer)
@@ -714,7 +712,7 @@ TopicPartitionAssignment partitionMovements::getTheActualPartitionToBeMoved(
     return revMap.begin()->first;
 }
 
-std::pair<std::vector<std::string>, bool> partitionMovements::isLinked(
+std::pair<std::vector<std::string>, bool> PartitionMovements::isLinked(
     const std::string &src,
     const std::string &dst,
     std::vector<consumerPair> pairs,
@@ -753,7 +751,7 @@ std::pair<std::vector<std::string>, bool> partitionMovements::isLinked(
     return {currentPath, false};
 }
 
-bool partitionMovements::in(const std::vector<std::string> &cycle, const std::vector<std::vector<std::string>> &cycles)
+bool PartitionMovements::in(const std::vector<std::string> &cycle, const std::vector<std::vector<std::string>> &cycles)
 {
     if (cycle.size() < 2)
         return false;
@@ -778,7 +776,7 @@ bool partitionMovements::in(const std::vector<std::string> &cycle, const std::ve
     return false;
 }
 
-bool partitionMovements::hasCycles(const std::vector<consumerPair> &pairs)
+bool PartitionMovements::hasCycles(const std::vector<consumerPair> &pairs)
 {
     std::vector<std::vector<std::string>> cycles;
     for (size_t i = 0; i < pairs.size(); ++i)
@@ -800,7 +798,7 @@ bool partitionMovements::hasCycles(const std::vector<consumerPair> &pairs)
     return false;
 }
 
-bool partitionMovements::isSticky()
+bool PartitionMovements::isSticky()
 {
     for (auto &[topic, movements] : PartitionMovementsByTopic)
     {
@@ -817,9 +815,9 @@ bool partitionMovements::isSticky()
     return true;
 }
 
-// stickyBalanceStrategy implementations
+// StickyBalanceStrategy implementations
 
-int stickyBalanceStrategy::Plan(const std::map<std::string, ConsumerGroupMemberMetadata> &members, const std::map<std::string, std::vector<int32_t>> &topics, BalanceStrategyPlan &plan)
+int StickyBalanceStrategy::Plan(const std::map<std::string, ConsumerGroupMemberMetadata> &members, const std::map<std::string, std::vector<int32_t>> &topics, BalanceStrategyPlan &plan)
 {
     // Handle edge case: no topics to assign
     if (topics.empty())
@@ -828,7 +826,7 @@ int stickyBalanceStrategy::Plan(const std::map<std::string, ConsumerGroupMemberM
         return 0;
     }
 
-    movements = partitionMovements{};
+    movements = PartitionMovements{};
     std::map<std::string, std::vector<TopicPartitionAssignment>> currentAssignment;
     std::map<TopicPartitionAssignment, consumerGenerationPair> prevAssignment;
     auto err = prepopulateCurrentAssignments(members, currentAssignment, prevAssignment);
@@ -948,7 +946,7 @@ int stickyBalanceStrategy::Plan(const std::map<std::string, ConsumerGroupMemberM
     return 0;
 }
 
-int stickyBalanceStrategy::AssignmentData(
+int StickyBalanceStrategy::AssignmentData(
     const std::string &memberID,
     const std::map<std::string, std::vector<int32_t>> &topics,
     int32_t generationID,
@@ -963,7 +961,7 @@ int stickyBalanceStrategy::AssignmentData(
     return 0;
 }
 
-void stickyBalanceStrategy::balance(
+void StickyBalanceStrategy::balance(
     std::map<std::string, std::vector<TopicPartitionAssignment>> &currentAssignment,
     const std::map<TopicPartitionAssignment, consumerGenerationPair> &prevAssignment,
     std::vector<TopicPartitionAssignment> &sortedPartitions,
@@ -1039,7 +1037,7 @@ void stickyBalanceStrategy::balance(
     }
 }
 
-bool stickyBalanceStrategy::performReassignments(
+bool StickyBalanceStrategy::performReassignments(
     std::vector<TopicPartitionAssignment> &reassignablePartitions,
     std::map<std::string, std::vector<TopicPartitionAssignment>> &currentAssignment,
     const std::map<TopicPartitionAssignment, consumerGenerationPair> &prevAssignment,
@@ -1101,7 +1099,7 @@ bool stickyBalanceStrategy::performReassignments(
     return reassignmentPerformed;
 }
 
-std::vector<std::string> stickyBalanceStrategy::reassignPartitionToNewConsumer(
+std::vector<std::string> StickyBalanceStrategy::reassignPartitionToNewConsumer(
     const TopicPartitionAssignment &partition,
     std::map<std::string, std::vector<TopicPartitionAssignment>> &currentAssignment,
     std::vector<std::string> &sortedCurrentSubscriptions,
@@ -1119,7 +1117,7 @@ std::vector<std::string> stickyBalanceStrategy::reassignPartitionToNewConsumer(
     return sortedCurrentSubscriptions;
 }
 
-std::vector<std::string> stickyBalanceStrategy::reassignPartition(
+std::vector<std::string> StickyBalanceStrategy::reassignPartition(
     const TopicPartitionAssignment &partition,
     std::map<std::string, std::vector<TopicPartitionAssignment>> &currentAssignment,
     std::vector<std::string> &sortedCurrentSubscriptions,
@@ -1133,7 +1131,7 @@ std::vector<std::string> stickyBalanceStrategy::reassignPartition(
                                     sortedCurrentSubscriptions, currentPartitionConsumer);
 }
 
-std::vector<std::string> stickyBalanceStrategy::processPartitionMovement(
+std::vector<std::string> StickyBalanceStrategy::processPartitionMovement(
     const TopicPartitionAssignment &partition,
     const std::string &newConsumer,
     std::map<std::string, std::vector<TopicPartitionAssignment>> &currentAssignment,
@@ -1149,9 +1147,9 @@ std::vector<std::string> stickyBalanceStrategy::processPartitionMovement(
     return sortMemberIDsByPartitionAssignments(currentAssignment);
 }
 
-// roundRobinBalancer implementations
+// RoundRobinBalancer implementations
 
-int roundRobinBalancer::Plan(
+int RoundRobinBalancer::Plan(
     const std::map<std::string, ConsumerGroupMemberMetadata> &memberAndMetadata,
     const std::map<std::string, std::vector<int32_t>> &topics,
     BalanceStrategyPlan &plan)
@@ -1167,7 +1165,7 @@ int roundRobinBalancer::Plan(
         return 0; // no topics to assign, return empty plan
     }
 
-    std::vector<topicAndPartition> topicPartitions;
+    std::vector<TopicAndPartition> topicPartitions;
     for (auto &[topic, partitions] : topics)
     {
         for (int32_t p : partitions)
@@ -1177,10 +1175,10 @@ int roundRobinBalancer::Plan(
     }
     std::sort(topicPartitions.begin(), topicPartitions.end());
 
-    std::vector<memberAndTopic> members;
+    std::vector<MemberAndTopic> members;
     for (auto &[memberID, meta] : memberAndMetadata)
     {
-        memberAndTopic m;
+        MemberAndTopic m;
         m.memberID = memberID;
         for (auto &t : meta.m_topics)
         {
@@ -1189,7 +1187,7 @@ int roundRobinBalancer::Plan(
         members.push_back(m);
     }
     std::sort(members.begin(), members.end(),
-              [](const memberAndTopic &a, const memberAndTopic &b)
+              [](const MemberAndTopic &a, const MemberAndTopic &b)
               {
                   return a.memberID < b.memberID;
               });
@@ -1220,7 +1218,7 @@ int roundRobinBalancer::Plan(
     return 0;
 }
 
-int roundRobinBalancer::AssignmentData(
+int RoundRobinBalancer::AssignmentData(
     const std::string &memberID,
     const std::map<std::string, std::vector<int32_t>> &topics,
     int32_t generationID,

@@ -65,7 +65,7 @@ int crc32_field::reserve_length()
 
 int crc32_field::run(int curOffset, std::string &buf)
 {
-    LOG_CORE("crc32_field::run startOffset: %d, curOffset: %d", startOffset, curOffset);
+    // LOG_CORE("crc32_field::run startOffset: %d, curOffset: %d", startOffset, curOffset);
     uint32_t crc_val;
     int err = crc(curOffset, buf, crc_val);
     if (err != ErrNoError)
@@ -73,14 +73,14 @@ int crc32_field::run(int curOffset, std::string &buf)
         LOG_ERR("crc32_field::run: crc calculation failed with error %d", err);
         return err;
     }
-    LOG_CORE("crc32_field::run calculated CRC value: 0x%08x", crc_val);
+    // LOG_CORE("crc32_field::run calculated CRC value: 0x%08x", crc_val);
     uint32_t network_crc = htonl(crc_val);
     uint8_t *ptr = reinterpret_cast<uint8_t *>(&network_crc);
     buf[startOffset] = ptr[0];
     buf[startOffset + 1] = ptr[1];
     buf[startOffset + 2] = ptr[2];
     buf[startOffset + 3] = ptr[3];
-    LOG_CORE("crc32_field::run CRC value written to buffer");
+    // LOG_CORE("crc32_field::run CRC value written to buffer");
     return 0;
 }
 
@@ -103,14 +103,14 @@ int crc32_field::check(int curOffset, const std::string &buf)
     ptr[3] = buf[startOffset + 3];
     uint32_t expected = ntohl(network_expected);
 
-    LOG_CORE("crc32_field::check calculated CRC: 0x%08x, expected CRC: 0x%08x", crc_val, expected);
+    // LOG_CORE("crc32_field::check calculated CRC: 0x%08x, expected CRC: 0x%08x", crc_val, expected);
     if (crc_val != expected)
     {
-        LOG_ERR("crc32_field::check: CRC mismatch! calculated = 0x%08x, expected = 0x%08x", crc_val, expected);
+        // LOG_ERR("crc32_field::check: CRC mismatch! calculated = 0x%08x, expected = 0x%08x", crc_val, expected);
         return ErrCRCMismatch;
     }
 
-    LOG_CORE("crc32_field::check CRC check passed");
+    // LOG_CORE("crc32_field::check CRC check passed");
     return ErrNoError;
 }
 

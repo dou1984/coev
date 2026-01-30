@@ -231,7 +231,7 @@ coev::awaitable<TransactionManager::Result> TransactionManager::PublishOffsetsTo
     }
 
     ResponsePromise<AddOffsetsToTxnResponse> response;
-    err = co_await coordinator->AddOffsetsToTxn(*request, response);
+    err = co_await coordinator->AddOffsetsToTxn(request, response);
     if (err != ErrNoError)
     {
         co_await coordinator->Close();
@@ -299,7 +299,7 @@ coev::awaitable<TransactionManager::Result> TransactionManager::PublishOffsetsTo
     }
 
     ResponsePromise<TxnOffsetCommitResponse> responses;
-    err = co_await consumerGroupCoordinator->TxnOffsetCommit(*request, responses);
+    err = co_await consumerGroupCoordinator->TxnOffsetCommit(request, responses);
     if (err != ErrNoError)
     {
         consumerGroupCoordinator->Close();
@@ -451,7 +451,7 @@ coev::awaitable<int> TransactionManager::InitProducerId(int64_t &producerID, int
             }
 
             ResponsePromise<InitProducerIDResponse> response;
-            err = co_await coordinator->InitProducerID(*request, response);
+            err = co_await coordinator->InitProducerID(request, response);
             if (err != ErrNoError)
             {
                 if (IsTransactional())

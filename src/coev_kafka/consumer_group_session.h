@@ -6,7 +6,7 @@
 #include "consumer_message.h"
 #include "undefined.h"
 
-struct IOffsetManager;
+struct OffsetManager;
 struct ConsumerGroup;
 struct ConsumerGroupHandler;
 
@@ -31,7 +31,7 @@ struct ConsumerGroupSession : IConsumerGroupSession, std::enable_shared_from_thi
     std::shared_ptr<ConsumerGroupHandler> m_handler;
 
     std::map<std::string, std::vector<int32_t>> m_claims;
-    std::shared_ptr<IOffsetManager> m_offsets;
+    std::shared_ptr<OffsetManager> m_offsets;
     std::shared_ptr<Context> m_context;
     std::function<void()> m_cancel;
 
@@ -42,7 +42,7 @@ struct ConsumerGroupSession : IConsumerGroupSession, std::enable_shared_from_thi
 
     ConsumerGroupSession() = default;
     ConsumerGroupSession(std::shared_ptr<ConsumerGroup> &, const std::string &,
-                         int32_t, std::shared_ptr<ConsumerGroupHandler>, std::shared_ptr<IOffsetManager>,
+                         int32_t, std::shared_ptr<ConsumerGroupHandler>, std::shared_ptr<OffsetManager>,
                          std::map<std::string, std::vector<int32_t>> &,
                          std::shared_ptr<Context> &, std::function<void()>);
 

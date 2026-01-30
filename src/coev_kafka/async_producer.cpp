@@ -519,16 +519,16 @@ void AsyncProducer::retry_messages(const std::vector<std::shared_ptr<ProducerMes
     LOG_CORE("retry_messages completed");
 }
 
-coev::awaitable<void> AsyncProducer::retry_batch(const std::string &topic, int32_t partition, std::shared_ptr<PartitionSet> pSet, KError kerr)
+coev::awaitable<void> AsyncProducer::retry_batch(const std::string &topic, int32_t partition, std::shared_ptr<PartitionSet> pset, KError kerr)
 {
     LOG_CORE("retry_batch called for topic %s, partition %d, %zu messages, error %d",
-             topic.c_str(), partition, pSet->m_messages.size(), (int)kerr);
-    for (auto &msg : pSet->m_messages)
+             topic.c_str(), partition, pset->m_messages.size(), (int)kerr);
+    for (auto &msg : pset->m_messages)
     {
         if (msg->m_retries >= m_conf->Producer.Retry.Max)
         {
             LOG_CORE("retry_batch maximum retries reached for message, returning errors");
-            return_errors(pSet->m_messages, kerr);
+            return_errors(pset->m_messages, kerr);
             co_return;
         }
         LOG_CORE("retry_batch incrementing retry count for message to %d", msg->m_retries + 1);
@@ -541,7 +541,7 @@ coev::awaitable<void> AsyncProducer::retry_batch(const std::string &topic, int32
     if (err != 0)
     {
         LOG_CORE("retry_batch failed to get leader, error %d, returning errors", err);
-        for (auto &msg : pSet->m_messages)
+        for (auto &msg : pset->m_messages)
         {
             return_error(msg, kerr);
         }
@@ -551,9 +551,9 @@ coev::awaitable<void> AsyncProducer::retry_batch(const std::string &topic, int32
     LOG_CORE("retry_batch got leader broker %d, getting broker producer", leader->ID());
     auto bp = get_broker_producer(leader);
     auto produce_set = std::make_shared<ProduceSet>(shared_from_this());
-    produce_set->m_messages[topic][partition] = pSet;
-    produce_set->m_buffer_bytes += pSet->m_buffer_bytes;
-    produce_set->m_buffer_count += pSet->m_messages.size();
+    produce_set->m_messages[topic][partition] = pset;
+    produce_set->m_buffer_bytes += pset->m_buffer_bytes;
+    produce_set->m_buffer_count += pset->m_messages.size();
 
     LOG_CORE("retry_batch sending produce_set to broker producer, %d messages, %d bytes", produce_set->m_buffer_count, produce_set->m_buffer_bytes);
     bp->m_output.set(produce_set);

@@ -5,7 +5,7 @@
 #include <string>
 #include <memory>
 #include <chrono>
-
+#include <map>
 #include "encoder_decoder.h"
 #include "packet_decoder.h"
 #include "packet_encoder.h"
@@ -15,19 +15,18 @@
 
 struct ProduceResponseBlock
 {
-
     KError m_err;
     int64_t m_offset = 0;
-    std::chrono::system_clock::time_point m_timestamp;
     int64_t m_start_offset = 0;
+    std::chrono::system_clock::time_point m_timestamp;
 
-    int decode(packetDecoder &pd, int16_t version);
-    int encode(packetEncoder &pe, int16_t version);
+    int decode(packetDecoder & pd, int16_t version);
+    int encode(packetEncoder & pe, int16_t version) const;
 };
 
 struct ProduceResponse : protocol_body
 {
-    std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<ProduceResponseBlock>>> m_blocks;
+    std::unordered_map<std::string, std::map<int32_t, ProduceResponseBlock>> m_blocks;
     int16_t m_version = 0;
     std::chrono::milliseconds m_throttle_time;
 
@@ -40,6 +39,6 @@ struct ProduceResponse : protocol_body
     bool is_valid_version() const;
     KafkaVersion required_version() const;
     std::chrono::milliseconds throttle_time() const;
-    std::shared_ptr<ProduceResponseBlock> GetBlock(const std::string &topic, int32_t partition) const;
-    void AddTopicPartition(const std::string &topic, int32_t partition, KError err);
+    ProduceResponseBlock &get_block(const std::string &topic, int32_t partition);
+    void add_topic_partition(const std::string &topic, int32_t partition, KError err);
 };

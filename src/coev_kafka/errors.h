@@ -162,6 +162,7 @@ enum KError : int16_t
     ErrSyncProducerError,
     ErrSyncProducerSuccess,
     ErrStrategyNotFound,
+    ErrCorrelationID,
     ErrUnknownMessage,
 
 };

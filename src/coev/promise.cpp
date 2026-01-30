@@ -35,7 +35,7 @@ namespace coev
             }
             void operator()(nullptr_t)
             {
-                // LOG_CORE("~promise this:%p nullptr_t", m_this);
+                LOG_CORE("~promise this:%p nullptr_t", m_this);
             }
         } _(this);
 

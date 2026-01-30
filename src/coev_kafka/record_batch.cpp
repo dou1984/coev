@@ -17,22 +17,21 @@ int RecordBatch::encode(packetEncoder &pe)
 {
     if (m_version != 2)
     {
-
         return ErrUnsupportedRecordBatchVersion;
     }
 
     pe.putInt64(m_first_offset);
 
-    auto lenField = std::make_shared<LengthField>();
-    pe.push(lenField);
+    LengthField length_field;
+    pe.push(length_field);
 
     pe.putInt32(m_partition_leader_epoch);
     pe.putInt8(m_version);
 
-    auto crcField = std::make_shared<crc32_field>(CrcPolynomial::CrcCastagnoli);
-    pe.push(crcField);
+    crc32_field cf(CrcPolynomial::CrcCastagnoli);
+    pe.push(cf);
 
-    pe.putInt16(ComputeAttributes());
+    pe.putInt16(compute_attributes());
     pe.putInt32(m_last_offset_delta);
 
     Timestamp first = m_first_timestamp;
@@ -49,7 +48,7 @@ int RecordBatch::encode(packetEncoder &pe)
 
     if (m_compressed_records.empty())
     {
-        EncodeRecords(pe);
+        encode_records(pe);
     }
 
     pe.putRawBytes(m_compressed_records);
@@ -81,8 +80,8 @@ int RecordBatch::decode(packetDecoder &pd)
         throw std::runtime_error("unsupported record batch version (" + std::to_string(m_version) + ")");
     }
 
-    auto crcField = std::make_shared<crc32_field>(CrcPolynomial::CrcCastagnoli);
-    pd.push(std::dynamic_pointer_cast<pushDecoder>(crcField));
+    crc32_field cf(CrcPolynomial::CrcCastagnoli);
+    pd.push(cf);
 
     int16_t attributes;
     pd.getInt16(attributes);
@@ -148,7 +147,7 @@ int RecordBatch::decode(packetDecoder &pd)
     return 0;
 }
 
-int16_t RecordBatch::ComputeAttributes() const
+int16_t RecordBatch::compute_attributes() const
 {
     int16_t attr = static_cast<int16_t>(static_cast<int8_t>(m_codec)) & 0x07;
     if (m_control)
@@ -160,7 +159,7 @@ int16_t RecordBatch::ComputeAttributes() const
     return attr;
 }
 
-void RecordBatch::EncodeRecords(packetEncoder &pe)
+void RecordBatch::encode_records(packetEncoder &pe)
 {
 
     std::string raw;

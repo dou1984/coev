@@ -14,7 +14,6 @@ struct BrokerConsumer : IConsumer, std::enable_shared_from_this<BrokerConsumer>
     coev::co_channel<std::shared_ptr<PartitionConsumer>> m_input;
     std::vector<std::shared_ptr<PartitionConsumer>> m_new_subscriptions;
     coev::co_task m_task;
-    coev::co_waitgroup m_acks;
     int m_refs = 0;
     BrokerConsumer();
     virtual ~BrokerConsumer() = default;

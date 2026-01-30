@@ -293,13 +293,13 @@ void realEncoder::putEmptyTaggedFieldArray()
     }
 }
 
-void realEncoder::push(std::shared_ptr<pushEncoder> in)
+void realEncoder::push(pushEncoder &in)
 {
-    in->save_offset(m_offset);
-    int reserve = in->reserve_length();
+    in.save_offset(m_offset);
+    int reserve = in.reserve_length();
     assert(m_offset + reserve <= m_raw.size());
     m_offset += reserve;
-    m_stack.push_back(in);
+    m_stack.push_back(&in);
 }
 
 int realEncoder::pop()

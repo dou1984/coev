@@ -39,7 +39,6 @@ coev::awaitable<int> ConsumerGroup::Consume(std::shared_ptr<Context> &ctx, const
         co_return ErrorGroupClosed;
     }
 
-    std::lock_guard<std::mutex> lock_guard(m_lock);
     if (topics.empty())
     {
         co_return ErrTopicsProvided;
@@ -369,7 +368,7 @@ coev::awaitable<int> ConsumerGroup::JoinGroup(std::shared_ptr<Broker> coordinato
     }
 
     ResponsePromise<JoinGroupResponse> promise;
-    err = co_await coordinator->JoinGroup(*request, promise);
+    err = co_await coordinator->JoinGroup(request, promise);
     if (err != 0)
     {
         co_return err;
@@ -455,7 +454,7 @@ coev::awaitable<int> ConsumerGroup::SyncGroup(std::shared_ptr<Broker> coordinato
     }
 
     ResponsePromise<SyncGroupResponse> sync_promise;
-    err = co_await coordinator->SyncGroup(*req, sync_promise);
+    err = co_await coordinator->SyncGroup(req, sync_promise);
     if (err != 0)
     {
         co_return err;
@@ -491,7 +490,7 @@ coev::awaitable<int> ConsumerGroup::Heartbeat(std::shared_ptr<Broker> coordinato
     }
 
     ResponsePromise<HeartbeatResponse> promise;
-    int err = co_await coordinator->Heartbeat(*req, promise);
+    int err = co_await coordinator->Heartbeat(req, promise);
     if (err == 0)
     {
         response = std::make_shared<HeartbeatResponse>(promise.m_response);
@@ -543,7 +542,6 @@ coev::awaitable<int> ConsumerGroup::Balance(std::shared_ptr<BalanceStrategy> str
 
 coev::awaitable<int> ConsumerGroup::Leave()
 {
-    std::lock_guard<std::mutex> lock_guard(m_lock);
     if (m_member_id.empty())
     {
         co_return 0;
@@ -554,8 +552,6 @@ coev::awaitable<int> ConsumerGroup::Leave()
     {
         co_return err;
     }
-
-    // Keep the group_instance_id, it will be sent in the LeaveGroupRequest when version >= 4
 
     auto req = std::make_shared<LeaveGroupRequest>();
     req->m_group_id = m_group_id;
@@ -580,7 +576,7 @@ coev::awaitable<int> ConsumerGroup::Leave()
     }
 
     ResponsePromise<LeaveGroupResponse> promise;
-    err = co_await m_coordinator->LeaveGroup(*req, promise);
+    err = co_await m_coordinator->LeaveGroup(req, promise);
     if (err != ErrNoError)
     {
         co_await m_coordinator->Close();
@@ -616,7 +612,6 @@ void ConsumerGroup::HandleError(std::shared_ptr<ConsumerError> err, const std::s
         return;
     }
 
-    std::shared_lock<std::shared_mutex> lock(m_errors_lock);
     bool _closed = false;
     if (m_closed.try_get(_closed))
     {
@@ -707,7 +702,7 @@ coev::awaitable<int> ConsumerGroup::TopicToPartitionNumbers(const std::vector<st
     co_return 0;
 }
 
-coev::awaitable<int> NewConsumerGroup(const std::vector<std::string> &addrs, const std::string &group_id, std::shared_ptr<Config> config, std::shared_ptr<IConsumerGroup> &consumer_group)
+coev::awaitable<int> NewConsumerGroup(const std::vector<std::string> &addrs, const std::string &group_id, std::shared_ptr<Config> config, std::shared_ptr<ConsumerGroup> &consumer_group)
 {
     std::shared_ptr<Client> client;
     auto err = co_await NewClient(addrs, config, client);

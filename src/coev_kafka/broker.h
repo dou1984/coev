@@ -125,47 +125,46 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
 
     coev::awaitable<int> Open(std::shared_ptr<Config> conf);
     coev::awaitable<int> Close();
-    coev::awaitable<int> GetMetadata(const MetadataRequest &request, ResponsePromise<MetadataResponse> &response);
-    coev::awaitable<int> GetConsumerMetadata(const ConsumerMetadataRequest &request, ResponsePromise<ConsumerMetadataResponse> &response);
-    coev::awaitable<int> FindCoordinator(const FindCoordinatorRequest &request, ResponsePromise<FindCoordinatorResponse> &response);
-    coev::awaitable<int> GetAvailableOffsets(const OffsetRequest &request, ResponsePromise<OffsetResponse> &response);
-    coev::awaitable<int> Produce(const ProduceRequest &request, ResponsePromise<ProduceResponse> &response);
-    coev::awaitable<int> Fetch(const FetchRequest &request, ResponsePromise<FetchResponse> &response);
-    coev::awaitable<int> CommitOffset(const OffsetCommitRequest &request, ResponsePromise<OffsetCommitResponse> &response);
-    coev::awaitable<int> FetchOffset(const OffsetFetchRequest &request, ResponsePromise<OffsetFetchResponse> &response);
-    coev::awaitable<int> JoinGroup(const JoinGroupRequest &request, ResponsePromise<JoinGroupResponse> &response);
-    coev::awaitable<int> SyncGroup(const SyncGroupRequest &request, ResponsePromise<SyncGroupResponse> &response);
-    coev::awaitable<int> LeaveGroup(const LeaveGroupRequest &request, ResponsePromise<LeaveGroupResponse> &response);
-    coev::awaitable<int> Heartbeat(const HeartbeatRequest &request, ResponsePromise<HeartbeatResponse> &response);
-    coev::awaitable<int> ListGroups(const ListGroupsRequest &request, ResponsePromise<ListGroupsResponse> &response);
-    coev::awaitable<int> DescribeGroups(const DescribeGroupsRequest &request, ResponsePromise<DescribeGroupsResponse> &response);
-    coev::awaitable<int> ApiVersions(const ApiVersionsRequest &request, ResponsePromise<ApiVersionsResponse> &response);
-    coev::awaitable<int> CreateTopics(const CreateTopicsRequest &request, ResponsePromise<CreateTopicsResponse> &response);
-    coev::awaitable<int> DeleteTopics(const DeleteTopicsRequest &request, ResponsePromise<DeleteTopicsResponse> &response);
-    coev::awaitable<int> CreatePartitions(const CreatePartitionsRequest &request, ResponsePromise<CreatePartitionsResponse> &response);
-    coev::awaitable<int> AlterPartitionReassignments(const AlterPartitionReassignmentsRequest &request, ResponsePromise<AlterPartitionReassignmentsResponse> &response);
-    coev::awaitable<int> ListPartitionReassignments(const ListPartitionReassignmentsRequest &request, ResponsePromise<ListPartitionReassignmentsResponse> &response);
-    coev::awaitable<int> ElectLeaders(const ElectLeadersRequest &request, ResponsePromise<ElectLeadersResponse> &response);
-    coev::awaitable<int> DeleteRecords(const DeleteRecordsRequest &request, ResponsePromise<DeleteRecordsResponse> &response);
-    coev::awaitable<int> DescribeAcls(const DescribeAclsRequest &request, ResponsePromise<DescribeAclsResponse> &response);
-    coev::awaitable<int> CreateAcls(const CreateAclsRequest &request, ResponsePromise<CreateAclsResponse> &response);
-    coev::awaitable<int> DeleteAcls(const DeleteAclsRequest &request, ResponsePromise<DeleteAclsResponse> &response);
-    coev::awaitable<int> InitProducerID(const InitProducerIDRequest &request, ResponsePromise<InitProducerIDResponse> &response);
-    coev::awaitable<int> AddPartitionsToTxn(const AddPartitionsToTxnRequest &request, ResponsePromise<AddPartitionsToTxnResponse> &response);
-    coev::awaitable<int> AddOffsetsToTxn(const AddOffsetsToTxnRequest &request, ResponsePromise<AddOffsetsToTxnResponse> &response);
-    coev::awaitable<int> EndTxn(const EndTxnRequest &request, ResponsePromise<EndTxnResponse> &response);
-    coev::awaitable<int> TxnOffsetCommit(const TxnOffsetCommitRequest &request, ResponsePromise<TxnOffsetCommitResponse> &response);
-    coev::awaitable<int> DescribeConfigs(const DescribeConfigsRequest &request, ResponsePromise<DescribeConfigsResponse> &response);
-    coev::awaitable<int> AlterConfigs(const AlterConfigsRequest &request, ResponsePromise<AlterConfigsResponse> &response);
-    coev::awaitable<int> IncrementalAlterConfigs(const IncrementalAlterConfigsRequest &request, ResponsePromise<IncrementalAlterConfigsResponse> &response);
-    coev::awaitable<int> DeleteGroups(const DeleteGroupsRequest &request, ResponsePromise<DeleteGroupsResponse> &response);
-    coev::awaitable<int> DeleteOffsets(const DeleteOffsetsRequest &request, ResponsePromise<DeleteOffsetsResponse> &response);
-    coev::awaitable<int> DescribeLogDirs(const DescribeLogDirsRequest &request, ResponsePromise<DescribeLogDirsResponse> &response);
-    coev::awaitable<int> DescribeUserScramCredentials(const DescribeUserScramCredentialsRequest &req, ResponsePromise<DescribeUserScramCredentialsResponse> &res);
-    coev::awaitable<int> AlterUserScramCredentials(const AlterUserScramCredentialsRequest &req, ResponsePromise<AlterUserScramCredentialsResponse> &res);
-    coev::awaitable<int> DescribeClientQuotas(const DescribeClientQuotasRequest &request, ResponsePromise<DescribeClientQuotasResponse> &response);
-    coev::awaitable<int> AlterClientQuotas(const AlterClientQuotasRequest &request, ResponsePromise<AlterClientQuotasResponse> &response);
-    coev::awaitable<int> AsyncProduce(const ProduceRequest &request, std::function<void(ResponsePromise<ProduceResponse> &)> _f);
+    coev::awaitable<int> GetMetadata(std::shared_ptr<MetadataRequest> request, ResponsePromise<MetadataResponse> &response);
+    coev::awaitable<int> GetConsumerMetadata(std::shared_ptr<ConsumerMetadataRequest> request, ResponsePromise<ConsumerMetadataResponse> &response);
+    coev::awaitable<int> FindCoordinator(std::shared_ptr<FindCoordinatorRequest> request, ResponsePromise<FindCoordinatorResponse> &response);
+    coev::awaitable<int> GetAvailableOffsets(std::shared_ptr<OffsetRequest> request, ResponsePromise<OffsetResponse> &response);
+    coev::awaitable<int> Produce(std::shared_ptr<ProduceRequest> request, ResponsePromise<ProduceResponse> &response);
+    coev::awaitable<int> Fetch(std::shared_ptr<FetchRequest> request, ResponsePromise<FetchResponse> &response);
+    coev::awaitable<int> CommitOffset(std::shared_ptr<OffsetCommitRequest> request, ResponsePromise<OffsetCommitResponse> &response);
+    coev::awaitable<int> FetchOffset(std::shared_ptr<OffsetFetchRequest> request, ResponsePromise<OffsetFetchResponse> &response);
+    coev::awaitable<int> JoinGroup(std::shared_ptr<JoinGroupRequest> request, ResponsePromise<JoinGroupResponse> &response);
+    coev::awaitable<int> SyncGroup(std::shared_ptr<SyncGroupRequest> request, ResponsePromise<SyncGroupResponse> &response);
+    coev::awaitable<int> LeaveGroup(std::shared_ptr<LeaveGroupRequest> request, ResponsePromise<LeaveGroupResponse> &response);
+    coev::awaitable<int> Heartbeat(std::shared_ptr<HeartbeatRequest> request, ResponsePromise<HeartbeatResponse> &response);
+    coev::awaitable<int> ListGroups(std::shared_ptr<ListGroupsRequest> request, ResponsePromise<ListGroupsResponse> &response);
+    coev::awaitable<int> DescribeGroups(std::shared_ptr<DescribeGroupsRequest> request, ResponsePromise<DescribeGroupsResponse> &response);
+    coev::awaitable<int> ApiVersions(std::shared_ptr<ApiVersionsRequest> request, ResponsePromise<ApiVersionsResponse> &response);
+    coev::awaitable<int> CreateTopics(std::shared_ptr<CreateTopicsRequest> request, ResponsePromise<CreateTopicsResponse> &response);
+    coev::awaitable<int> DeleteTopics(std::shared_ptr<DeleteTopicsRequest> request, ResponsePromise<DeleteTopicsResponse> &response);
+    coev::awaitable<int> CreatePartitions(std::shared_ptr<CreatePartitionsRequest> request, ResponsePromise<CreatePartitionsResponse> &response);
+    coev::awaitable<int> AlterPartitionReassignments(std::shared_ptr<AlterPartitionReassignmentsRequest> request, ResponsePromise<AlterPartitionReassignmentsResponse> &response);
+    coev::awaitable<int> ListPartitionReassignments(std::shared_ptr<ListPartitionReassignmentsRequest> request, ResponsePromise<ListPartitionReassignmentsResponse> &response);
+    coev::awaitable<int> ElectLeaders(std::shared_ptr<ElectLeadersRequest> request, ResponsePromise<ElectLeadersResponse> &response);
+    coev::awaitable<int> DeleteRecords(std::shared_ptr<DeleteRecordsRequest> request, ResponsePromise<DeleteRecordsResponse> &response);
+    coev::awaitable<int> DescribeAcls(std::shared_ptr<DescribeAclsRequest> request, ResponsePromise<DescribeAclsResponse> &response);
+    coev::awaitable<int> CreateAcls(std::shared_ptr<CreateAclsRequest> request, ResponsePromise<CreateAclsResponse> &response);
+    coev::awaitable<int> DeleteAcls(std::shared_ptr<DeleteAclsRequest> request, ResponsePromise<DeleteAclsResponse> &response);
+    coev::awaitable<int> InitProducerID(std::shared_ptr<InitProducerIDRequest> request, ResponsePromise<InitProducerIDResponse> &response);
+    coev::awaitable<int> AddPartitionsToTxn(std::shared_ptr<AddPartitionsToTxnRequest> request, ResponsePromise<AddPartitionsToTxnResponse> &response);
+    coev::awaitable<int> AddOffsetsToTxn(std::shared_ptr<AddOffsetsToTxnRequest> request, ResponsePromise<AddOffsetsToTxnResponse> &response);
+    coev::awaitable<int> EndTxn(std::shared_ptr<EndTxnRequest> request, ResponsePromise<EndTxnResponse> &response);
+    coev::awaitable<int> TxnOffsetCommit(std::shared_ptr<TxnOffsetCommitRequest> request, ResponsePromise<TxnOffsetCommitResponse> &response);
+    coev::awaitable<int> DescribeConfigs(std::shared_ptr<DescribeConfigsRequest> request, ResponsePromise<DescribeConfigsResponse> &response);
+    coev::awaitable<int> AlterConfigs(std::shared_ptr<AlterConfigsRequest> request, ResponsePromise<AlterConfigsResponse> &response);
+    coev::awaitable<int> IncrementalAlterConfigs(std::shared_ptr<IncrementalAlterConfigsRequest> request, ResponsePromise<IncrementalAlterConfigsResponse> &response);
+    coev::awaitable<int> DeleteGroups(std::shared_ptr<DeleteGroupsRequest> request, ResponsePromise<DeleteGroupsResponse> &response);
+    coev::awaitable<int> DeleteOffsets(std::shared_ptr<DeleteOffsetsRequest> request, ResponsePromise<DeleteOffsetsResponse> &response);
+    coev::awaitable<int> DescribeLogDirs(std::shared_ptr<DescribeLogDirsRequest> request, ResponsePromise<DescribeLogDirsResponse> &response);
+    coev::awaitable<int> DescribeUserScramCredentials(std::shared_ptr<DescribeUserScramCredentialsRequest> req, ResponsePromise<DescribeUserScramCredentialsResponse> &res);
+    coev::awaitable<int> AlterUserScramCredentials(std::shared_ptr<AlterUserScramCredentialsRequest> req, ResponsePromise<AlterUserScramCredentialsResponse> &res);
+    coev::awaitable<int> DescribeClientQuotas(std::shared_ptr<DescribeClientQuotasRequest> request, ResponsePromise<DescribeClientQuotasResponse> &response);
+    coev::awaitable<int> AlterClientQuotas(std::shared_ptr<AlterClientQuotasRequest> request, ResponsePromise<AlterClientQuotasResponse> &response);
 
     int decode(packetDecoder &pd, int16_t version);
     int encode(packetEncoder &pe, int16_t version);
@@ -180,14 +179,13 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
 
     std::unique_ptr<Connect> m_conn;
     std::shared_ptr<Config> m_conf;
+    std::shared_ptr<GSSAPIKerberosAuth> m_kerberos_authenticator;
 
     int32_t m_correlation_id;
-    coev::async m_opened;
-
-    ApiVersionMap m_broker_api_versions;
-    std::shared_ptr<GSSAPIKerberosAuth> m_kerberos_authenticator;
     int64_t m_session_reauthentication_time;
+    ApiVersionMap m_broker_api_versions;
 
+    coev::async m_opened;
     coev::co_task m_task;
     coev::co_channel<bool> m_done;
 
@@ -213,31 +211,42 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
     int64_t CurrentUnixMilli();
     void ComputeSaslSessionLifetime(std::shared_ptr<SaslAuthenticateResponse> res);
 
-    template <class Req, class Resp>
-    coev::awaitable<int> SendAndReceive(const Req &request, ResponsePromise<Resp> &promise)
+    template <class Req, class Res>
+    coev::awaitable<int> SendAndReceive(std::shared_ptr<Req> request, ResponsePromise<Res> &promise)
     {
         int err = 0;
         if (m_session_reauthentication_time > 0 && CurrentUnixMilli() > m_session_reauthentication_time)
         {
             err = co_await AuthenticateViaSASLv1();
-            if (err)
+            if (err != ErrNoError)
             {
                 co_return err;
             }
         }
-        co_return co_await SendInternal(request, promise);
+        err = co_await SendInternal(request, promise);
+        if (err != ErrNoError)
+        {
+            co_return err;
+        }
+        err = co_await ResponseReceiver(request, promise, err);
+        if (err != ErrNoError)
+        {
+            co_return err;
+        }
+
+        co_return err;
     }
 
-    template <class Req, class Resp>
-    coev::awaitable<int> SendInternal(const Req &req, ResponsePromise<Resp> &promise)
+    template <class Req, class Res>
+    coev::awaitable<int> SendInternal(std::shared_ptr<Req> request, ResponsePromise<Res> &promise)
     {
-        RestrictApiVersion(req, m_broker_api_versions);
-        Request request;
-        request.m_correlation_id = m_correlation_id;
-        request.m_client_id = m_conf->ClientID;
-        request.m_body = &req;
+        RestrictApiVersion(*request, m_broker_api_versions);
+        Request _request;
+        _request.m_correlation_id = m_correlation_id;
+        _request.m_client_id = m_conf->ClientID;
+        _request.m_body = request.get();
         std::string buf;
-        ::encode(request, buf);
+        ::encode(_request, buf);
 
         auto requestTime = std::chrono::system_clock::now();
         auto err = co_await Write(buf);
@@ -248,13 +257,13 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
         }
 
         promise.m_request_time = requestTime;
-        promise.m_correlation_id = request.m_correlation_id;
+        promise.m_correlation_id = _request.m_correlation_id;
         m_correlation_id++;
-        co_return co_await ResponseReceiver(req, promise, err);
+        co_return ErrNoError;
     }
 
-    template <class Req, class Resp>
-    coev::awaitable<int> ResponseReceiver(const Req &request, ResponsePromise<Resp> &promise, int &err)
+    template <class Req, class Res>
+    coev::awaitable<int> ResponseReceiver(std::shared_ptr<Req> request, ResponsePromise<Res> &promise, int &err)
     {
         std::string header;
         auto bytesReadHeader = getHeaderLength(promise.m_response.header_version());
@@ -262,48 +271,40 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
         auto m_request_latency = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - promise.m_request_time);
         if (err)
         {
-            co_return INVALID;
+            co_return err;
         }
         ResponseHeader decoded_header;
         err = versionedDecode(header, decoded_header, promise.m_response.header_version());
         if (err)
         {
-            co_return INVALID;
+            co_return err;
         }
-        LOG_CORE("correlation id %d:%d length: %d ", decoded_header.m_correlation_id, promise.m_correlation_id, decoded_header.m_length);
         if (decoded_header.m_correlation_id != promise.m_correlation_id)
         {
-            err = 1;
-            LOG_CORE("correlation id %d != %d", decoded_header.m_correlation_id, promise.m_correlation_id);
-            co_return INVALID;
+
+            co_return ErrCorrelationID;
         }
 
         size_t bytesReadBody = decoded_header.m_length - bytesReadHeader + 4;
-        LOG_CORE("Reading body: %ld bytes", bytesReadBody);
         err = co_await ReadFull(promise.m_packets, bytesReadBody);
         if (err)
         {
-            LOG_CORE("Read %d %s", errno, strerror(errno));
-            co_return INVALID;
+            co_return err;
         }
         if (promise.m_packets.size() != bytesReadBody)
         {
-            LOG_CORE("promise packets %ld != %ld", promise.m_packets.size(), bytesReadBody);
-            co_return INVALID;
-        }
-        LOG_CORE("Decoding response with version: %d", request.version());
-        err = promise.decode(request.version());
-        if (err)
-        {
-            LOG_CORE("Decode failed with error: %d", err);
             co_return err;
         }
-        LOG_CORE("Decode successful");
+        err = promise.decode(request->version());
+        if (err)
+        {
+            co_return err;
+        }
         co_return ErrNoError;
     }
 
-    template <class Resp>
-    coev::awaitable<int> DefaultAuthSendReceiver(const std::string &authBytes, ResponsePromise<Resp> &promise)
+    template <class Res>
+    coev::awaitable<int> DefaultAuthSendReceiver(const std::string &authBytes, ResponsePromise<Res> &promise)
     {
         SaslAuthenticateRequest authenticateRequest;
         auto err = CreateSaslAuthenticateRequest(authBytes, authenticateRequest);
@@ -311,7 +312,7 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
         {
             co_return err;
         }
-        err = co_await SendAndReceive(authenticateRequest, promise);
+        err = co_await SendAndReceive(std::make_shared<SaslAuthenticateRequest>(authenticateRequest), promise);
         if (err)
         {
             co_return err;
@@ -322,6 +323,27 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
             co_return err;
         }
 
+        co_return 0;
+    }
+    template <class Func, class... Args>
+    coev::awaitable<int> AsyncProduce(std::shared_ptr<ProduceRequest> request, const Func &_f, Args &&...args)
+    {
+        bool needAcks = request->m_acks != NoResponse;
+        if (needAcks)
+        {
+            m_task << [](auto _this, auto request, const auto &_f, auto &&...args) -> coev::awaitable<void>
+            {
+                ResponsePromise<ProduceResponse> response;
+                auto err = co_await _this->SendAndReceive(request, response);
+                _f(response, err, std::forward<decltype(args)>(args)...);
+            }(shared_from_this(), request, _f, std::forward<Args>(args)...);
+        }
+        else
+        {
+            ResponsePromise<ProduceResponse> response;
+            auto err = co_await SendAndReceive(request, response);
+            _f(response, err, std::forward<decltype(args)>(args)...);
+        }
         co_return 0;
     }
 };

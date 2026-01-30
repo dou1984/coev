@@ -11,8 +11,7 @@
 #include "packet_encoder.h"
 #include "packet_decoder.h"
 #include "version.h"
-
-struct MessageSet;
+#include "message_set.h"
 
 std::string toString(CompressionCodec codec);
 bool fromString(const std::string &s, CompressionCodec &out);
@@ -24,7 +23,7 @@ struct Message
     bool m_log_append_time = false;
     std::string m_key;
     std::string m_value;
-    std::shared_ptr<MessageSet> m_set;
+    MessageSet m_message_set;
     int8_t m_version = 0;
     Timestamp m_timestamp;
 
@@ -37,6 +36,7 @@ struct Message
     int encode(packetEncoder &pe);
     int decode(packetDecoder &pd);
     int decode_set();
+    void clear();
 };
 
 std::string compress(CompressionCodec codec, int level, const std::string &data);
