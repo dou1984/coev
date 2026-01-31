@@ -6,7 +6,32 @@
 #include "length_field.h"
 #include "timestamp.h"
 #include "errors.h"
+#include "real_decoder.h"
+#include "packet_decoding_error.h"
 
+int decode(const std::string &buf, std::vector<std::shared_ptr<Record>> &inputs)
+{
+    if (buf.empty())
+    {
+        return ErrNoError;
+    }
+
+    realDecoder helper;
+    helper.m_raw = buf;
+
+    for (auto &in : inputs)
+    {
+        if (in->decode(helper) != ErrNoError)
+        {
+            return ErrDecodeError;
+        }
+    }
+    if (helper.m_offset != static_cast<int>(buf.size()))
+    {
+        throw PacketDecodingError{"invalid length: buf=" + std::to_string(buf.size()) + " decoded=" + std::to_string(helper.m_offset)};
+    }
+    return ErrNoError;
+}
 RecordBatch::RecordBatch(int8_t v) : m_version(v)
 {
 }
@@ -134,9 +159,11 @@ int RecordBatch::decode(packetDecoder &pd)
 
     try
     {
+        int offset = 0;
         for (auto i = 0; i < num_record; ++i)
         {
-            ::decode(decompressed, *m_records[i]);
+            ::decode(decompressed, m_records);
+            offset += m_records[i]->m_length.m_length;
         }
     }
     catch (const std::runtime_error &e)

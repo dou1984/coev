@@ -90,3 +90,4 @@ int magicValue(packetDecoder &pd, int8_t &magic);
 int prepareFlexibleDecoder(packetDecoder &pd, versioned_decoder &req, int16_t version);
 int prepareFlexibleEncoder(packetEncoder &pe, IEncoder &req);
 std::shared_ptr<packetDecoder> downgradeFlexibleDecoder(std::shared_ptr<packetDecoder> pd);
+
