@@ -26,17 +26,7 @@ struct ProxyDialer : std::enable_shared_from_this<ProxyDialer>
     }
 };
 
-namespace buf
-{
-    struct Conn
-    {
-        auto ConnectionState()
-        {
-            return 0;
-        }
-    };
 
-}
 
 struct Timer
 {

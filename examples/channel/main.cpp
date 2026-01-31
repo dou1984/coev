@@ -21,7 +21,8 @@ awaitable<void> task_01()
 	{
 		x++;
 		ch.set(x);
-		x = co_await ch.get();
+
+		co_await ch.get(x);
 		LOG_DBG("x=%d", x);
 	}
 	total += x;
@@ -35,8 +36,8 @@ awaitable<void> task_02()
 	for (int i = 0; i < 1000; i++)
 	{
 		x++;
-		ch = x;
-		x = co_await ch;
+		ch.set(x);
+		co_await ch.get(x);
 		LOG_DBG("x=%d", x);
 	}
 	total += x;

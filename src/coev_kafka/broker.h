@@ -114,7 +114,6 @@ struct GSSAPIKerberosAuth;
 
 struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_this<Broker>
 {
-
     Broker() = default;
     Broker(const std::string &addr);
     Broker(int id, const std::string &addr);

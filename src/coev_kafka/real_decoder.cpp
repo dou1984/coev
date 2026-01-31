@@ -619,7 +619,7 @@ int realDecoder::getStringArray(std::vector<std::string> &result)
         }
         return 0;
     }
-    else if (FLEXIBLE)
+    else if (isFlexible())
     {
         int32_t n;
         int err = getArrayLength(n);

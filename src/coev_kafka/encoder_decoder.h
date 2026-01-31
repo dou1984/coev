@@ -5,36 +5,23 @@
 #include <cstdint>
 #include <cassert>
 
-enum EType : uint8_t
-{
-    FIXED,
-    FLEXIBLE,
-};
-
 struct packetType
 {
-    // std::vector<EType> m_type;
     int m_flexible = 0;
     bool isFixed()
     {
-        // return m_type.empty() || m_type.back() == FIXED;
         return m_flexible == 0;
     }
     bool isFlexible()
     {
-        // return m_type.size() > 0 && m_type.back() == FLEXIBLE;
         return m_flexible > 0;
     }
     void pushFlexible()
     {
-        // m_type = FLEXIBLE;
-        // m_type.push_back(FLEXIBLE);
         m_flexible++;
     }
     void popFlexible()
     {
-        // m_type = FIXED;
-        // m_type.pop_back();
         assert(m_flexible > 0);
         m_flexible--;
     }
@@ -90,4 +77,3 @@ int magicValue(packetDecoder &pd, int8_t &magic);
 int prepareFlexibleDecoder(packetDecoder &pd, versioned_decoder &req, int16_t version);
 int prepareFlexibleEncoder(packetEncoder &pe, IEncoder &req);
 std::shared_ptr<packetDecoder> downgradeFlexibleDecoder(std::shared_ptr<packetDecoder> pd);
-

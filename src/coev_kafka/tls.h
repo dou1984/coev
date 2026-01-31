@@ -7,14 +7,5 @@ namespace tls
     {
         std::string ServerName;
     };
-    enum ConnectionState
-    {
-    };
-    struct Conn
-    {
-        auto ConnectionState()
-        {
-            return 0;
-        }
-    };
+
 }

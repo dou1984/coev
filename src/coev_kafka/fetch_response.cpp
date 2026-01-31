@@ -83,14 +83,14 @@ int FetchResponseBlock::decode(packetDecoder &pd, int16_t version)
         m_preferred_read_replica = -1;
     }
 
-    int32_t recordsSize;
-    if ((err = pd.getInt32(recordsSize)) != 0)
+    int32_t records_size;
+    if ((err = pd.getInt32(records_size)) != 0)
     {
         return err;
     }
 
     std::shared_ptr<packetDecoder> records_decoder;
-    if ((err = pd.getSubset(recordsSize, records_decoder)) != 0)
+    if ((err = pd.getSubset(records_size, records_decoder)) != 0)
     {
         return err;
     }
@@ -134,7 +134,7 @@ int FetchResponseBlock::decode(packetDecoder &pd, int16_t version)
 
         if (n > 0 || (partial && m_records_set.empty()))
         {
-            m_records_set.push_back(records);
+            m_records_set.emplace_back(std::move(records));
         }
 
         bool overflow = false;

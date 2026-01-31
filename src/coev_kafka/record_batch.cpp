@@ -139,18 +139,10 @@ int RecordBatch::decode(packetDecoder &pd)
 
     int buf_size = static_cast<int>(batch_len) - RECORD_BATCH_OVERHEAD;
     std::string rec_buffer;
-    try
+    err = pd.getRawBytes(buf_size, rec_buffer);
+    if (err != ErrNoError)
     {
-        pd.getRawBytes(buf_size, rec_buffer);
-    }
-    catch (const std::runtime_error &e)
-    {
-        if (std::string(e.what()).find("InsufficientData") != std::string::npos)
-        {
-            m_partial_trailing_record = true;
-            m_records.clear();
-            pd.pop();
-        }
+        return err;
     }
 
     pd.pop();
