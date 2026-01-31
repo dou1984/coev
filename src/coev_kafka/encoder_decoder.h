@@ -3,6 +3,7 @@
 #include <vector>
 #include <memory>
 #include <cstdint>
+#include <cassert>
 
 enum EType : uint8_t
 {
@@ -12,24 +13,30 @@ enum EType : uint8_t
 
 struct packetType
 {
-    std::vector<EType> m_type;
+    // std::vector<EType> m_type;
+    int m_flexible = 0;
     bool isFixed()
     {
-        return m_type.empty() || m_type.back() == FIXED;
+        // return m_type.empty() || m_type.back() == FIXED;
+        return m_flexible == 0;
     }
     bool isFlexible()
     {
-        return m_type.size() > 0 && m_type.back() == FLEXIBLE;
+        // return m_type.size() > 0 && m_type.back() == FLEXIBLE;
+        return m_flexible > 0;
     }
     void pushFlexible()
     {
         // m_type = FLEXIBLE;
-        m_type.push_back(FLEXIBLE);
+        // m_type.push_back(FLEXIBLE);
+        m_flexible++;
     }
     void popFlexible()
     {
         // m_type = FIXED;
-        m_type.pop_back();
+        // m_type.pop_back();
+        assert(m_flexible > 0);
+        m_flexible--;
     }
 };
 

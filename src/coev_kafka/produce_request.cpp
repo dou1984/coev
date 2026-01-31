@@ -30,27 +30,24 @@ int ProduceRequest::encode(packetEncoder &pe) const
         return err;
     }
 
-    for (auto record : m_records)
+    for (auto &[topic, partitions] : m_records)
     {
-        auto &topic = record.first;
-        auto &partitions = record.second;
+
         if (int err = pe.putString(topic); err != 0)
             return err;
         if (int err = pe.putArrayLength(static_cast<int32_t>(partitions.size())); err != 0)
             return err;
 
         int64_t topicRecordCount = 0;
-        for (auto patition : partitions)
+        for (auto &[pid, partition] : partitions)
         {
-            auto &partitionId = patition.first;
-            auto &recs = patition.second;
 
             int startOffset = pe.offset();
-            pe.putInt32(partitionId);
+            pe.putInt32(pid);
 
             LengthField length_field;
             pe.push(length_field);
-            if (int err = recs.encode(pe); err != 0)
+            if (int err = partition.encode(pe); err != 0)
             {
                 return err;
             }
@@ -81,7 +78,6 @@ int ProduceRequest::decode(packetDecoder &pd, int16_t version)
         return err;
     }
     m_acks = static_cast<RequiredAcks>(acks);
-
     if (int err = pd.getDurationMs(m_timeout); err != 0)
     {
         return err;
@@ -104,14 +100,14 @@ int ProduceRequest::decode(packetDecoder &pd, int16_t version)
             return err;
         }
 
-        int32_t partitionCount;
-        if (int err = pd.getArrayLength(partitionCount); err != 0)
+        int32_t partition_count;
+        if (int err = pd.getArrayLength(partition_count); err != 0)
         {
             return err;
         }
 
-        auto &part_map = m_records[topic];
-        for (int j = 0; j < partitionCount; ++j)
+        auto &partition_map = m_records[topic];
+        for (int j = 0; j < partition_count; ++j)
         {
             int32_t partition;
             if (int err = pd.getInt32(partition); err != 0)
@@ -131,7 +127,7 @@ int ProduceRequest::decode(packetDecoder &pd, int16_t version)
                 return err;
             }
 
-            if (int err = part_map[partition].decode(*subset); err != 0)
+            if (int err = partition_map[partition].decode(*subset); err != 0)
             {
                 return err;
             }

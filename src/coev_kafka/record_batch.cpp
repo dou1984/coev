@@ -64,8 +64,8 @@ int RecordBatch::decode(packetDecoder &pd)
     if (err)
         return err;
 
-    int32_t batchLen;
-    err = pd.getInt32(batchLen);
+    int32_t batch_len;
+    err = pd.getInt32(batch_len);
     if (err)
         return err;
     err = pd.getInt32(m_partition_leader_epoch);
@@ -101,20 +101,22 @@ int RecordBatch::decode(packetDecoder &pd)
     pd.getInt16(m_producer_epoch);
     pd.getInt32(m_first_sequence);
 
-    int numRecs;
-    pd.getArrayLength(numRecs);
-    if (numRecs >= 0)
+    int num_record;
+    pd.getArrayLength(num_record);
+    if (num_record >= 0)
     {
-        m_records.resize(numRecs);
-        for (auto &r : m_records)
-            r = std::make_unique<Record>();
+        m_records.resize(num_record);
+        for (auto i = 0; i < num_record; i++)
+        {
+            m_records[i] = std::make_shared<Record>();
+        }
     }
 
-    int bufSize = static_cast<int>(batchLen) - RECORD_BATCH_OVERHEAD;
-    std::string recBuffer;
+    int buf_size = static_cast<int>(batch_len) - RECORD_BATCH_OVERHEAD;
+    std::string rec_buffer;
     try
     {
-        pd.getRawBytes(bufSize, recBuffer);
+        pd.getRawBytes(buf_size, rec_buffer);
     }
     catch (const std::runtime_error &e)
     {
@@ -127,14 +129,15 @@ int RecordBatch::decode(packetDecoder &pd)
     }
 
     pd.pop();
-    auto decompressed = decompress(m_codec, recBuffer);
+    auto decompressed = decompress(m_codec, rec_buffer);
     m_records_len = decompressed.size();
 
     try
     {
-        auto record = std::make_shared<Record>();
-        int l = ::decode(decompressed, *record);
-        m_records.push_back(record);
+        for (auto i = 0; i < num_record; ++i)
+        {
+            ::decode(decompressed, *m_records[i]);
+        }
     }
     catch (const std::runtime_error &e)
     {

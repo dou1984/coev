@@ -112,9 +112,9 @@ int Records::decode(packetDecoder &pd)
     return -1;
 }
 
-int Records::num_records(int &numRecords) const
+int Records::num_records(int &_num_records) const
 {
-    numRecords = 0;
+    _num_records = 0;
     if (m_records_type == UnknownRecords)
     {
         bool empty;
@@ -126,12 +126,11 @@ int Records::num_records(int &numRecords) const
     }
     if (m_records_type == LegacyRecords)
     {
-
         if (m_message_set == nullptr)
         {
             return 0;
         }
-        numRecords = static_cast<int>(m_message_set->m_messages.size());
+        _num_records = static_cast<int>(m_message_set->m_messages.size());
         return 0;
     }
     if (m_records_type == DefaultRecords)
@@ -140,7 +139,7 @@ int Records::num_records(int &numRecords) const
         {
             return 0;
         }
-        numRecords = m_record_batch->m_records.size();
+        _num_records = m_record_batch->m_records.size();
         return 0;
     }
     return -1;
