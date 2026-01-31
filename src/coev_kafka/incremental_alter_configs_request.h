@@ -19,7 +19,7 @@ struct IncrementalAlterConfigsEntry : IEncoder, versioned_decoder
     IncrementalAlterConfigsOperation m_operation;
     std::string m_value;
 
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
 };
 
@@ -29,7 +29,7 @@ struct IncrementalAlterConfigsResource : IEncoder, versioned_decoder
     std::string m_name;
     std::map<std::string, IncrementalAlterConfigsEntry> m_config_entries;
 
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
 };
 
@@ -44,7 +44,7 @@ struct IncrementalAlterConfigsRequest : protocol_body, flexible_version
     {
     }
     void set_version(int16_t v);
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;

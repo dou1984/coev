@@ -7,7 +7,7 @@ void InitProducerIDRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int InitProducerIDRequest::encode(packetEncoder &pe)
+int InitProducerIDRequest::encode(packetEncoder &pe) const
 {
 
     int err = pe.putNullableString(m_transactional_id);

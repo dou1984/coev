@@ -53,7 +53,7 @@ void OffsetFetchRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int OffsetFetchRequest::encode(packetEncoder &pe)
+int OffsetFetchRequest::encode(packetEncoder &pe) const
 {
     if (m_version < 0 || m_version > 7)
     {
@@ -71,7 +71,7 @@ int OffsetFetchRequest::encode(packetEncoder &pe)
         pe.putArrayLength(static_cast<int32_t>(m_partitions.size()));
     }
 
-    for (auto &entry : m_partitions)
+    for (const auto &entry : m_partitions)
     {
         pe.putString(entry.first);
         pe.putInt32Array(entry.second);

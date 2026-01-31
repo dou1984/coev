@@ -6,7 +6,7 @@ void SaslAuthenticateRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int SaslAuthenticateRequest::encode(packetEncoder &pe)
+int SaslAuthenticateRequest::encode(packetEncoder &pe) const
 {
     return pe.putBytes(m_sasl_auth_bytes);
 }

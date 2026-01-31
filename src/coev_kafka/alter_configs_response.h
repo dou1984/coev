@@ -22,7 +22,7 @@ struct AlterConfigsResourceResponse : versioned_decoder, IEncoder
     ConfigResourceType m_type;
     std::string m_name;
 
-    int encode(class packetEncoder &pe);
+    int encode(class packetEncoder &pe) const;
     int decode(class packetDecoder &pd, int16_t version);
 };
 
@@ -37,7 +37,7 @@ struct AlterConfigsResponse : protocol_body
     {
     }
     void set_version(int16_t v);
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
 
     int16_t key() const;

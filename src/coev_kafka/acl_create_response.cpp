@@ -6,7 +6,7 @@ void CreateAclsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int CreateAclsResponse::encode(packetEncoder &pe)
+int CreateAclsResponse::encode(packetEncoder &pe) const
 {
     pe.putDurationMs(m_throttle_time);
 
@@ -88,7 +88,7 @@ std::chrono::milliseconds CreateAclsResponse::throttle_time() const
     return m_throttle_time;
 }
 
-int AclCreationResponse::encode(packetEncoder &pe)
+int AclCreationResponse::encode(packetEncoder &pe) const
 {
     pe.putKError(m_err);
 

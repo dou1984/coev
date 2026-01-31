@@ -16,7 +16,7 @@ struct AlterClientQuotasEntry : IEncoder, versioned_decoder
     std::vector<QuotaEntityComponent> m_entity;
     std::vector<ClientQuotasOp> m_ops;
 
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
 };
 
@@ -26,7 +26,7 @@ struct ClientQuotasOp : IEncoder, versioned_decoder
     double m_value;
     bool m_remove = false;
 
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
 };
 
@@ -41,7 +41,7 @@ struct AlterClientQuotasRequest : protocol_body
     bool m_validate_only = false;
 
     void set_version(int16_t v);
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
 
     int16_t key() const;

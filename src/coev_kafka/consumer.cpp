@@ -139,7 +139,7 @@ std::shared_ptr<BrokerConsumer> Consumer::RefBrokerConsumer(std::shared_ptr<Brok
     auto it = m_broker_consumers.find(broker->ID());
     if (it == m_broker_consumers.end())
     {
-        auto bc = NewBrokerConsumer(shared_from_this(), broker);
+        auto bc = std::make_shared<BrokerConsumer>(shared_from_this(), broker);
         m_broker_consumers[broker->ID()] = bc;
         it = m_broker_consumers.find(broker->ID());
     }
@@ -147,18 +147,6 @@ std::shared_ptr<BrokerConsumer> Consumer::RefBrokerConsumer(std::shared_ptr<Brok
     return it->second;
 }
 
-void Consumer::UnrefBrokerConsumer(std::shared_ptr<BrokerConsumer> brokerWorker)
-{
-    brokerWorker->m_refs--;
-    if (brokerWorker->m_refs == 0)
-    {
-        auto it = m_broker_consumers.find(brokerWorker->m_broker->ID());
-        if (it != m_broker_consumers.end() && it->second.get() == brokerWorker.get())
-        {
-            m_broker_consumers.erase(it);
-        }
-    }
-}
 coev::awaitable<int> Consumer::ConsumePartition(const std::string &topic, int32_t partition, int64_t offset, std::shared_ptr<PartitionConsumer> &child)
 {
     child = std::make_shared<PartitionConsumer>();

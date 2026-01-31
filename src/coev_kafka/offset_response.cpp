@@ -42,7 +42,7 @@ int OffsetResponseBlock::decode(packetDecoder &pd, int16_t version)
     return 0;
 }
 
-int OffsetResponseBlock::encode(packetEncoder &pe, int16_t version)
+int OffsetResponseBlock::encode(packetEncoder &pe, int16_t version) const
 {
     pe.putKError(m_err);
 
@@ -141,7 +141,7 @@ std::shared_ptr<OffsetResponseBlock> OffsetResponse::GetBlock(const std::string 
     return partitionIt->second;
 }
 
-int OffsetResponse::encode(packetEncoder &pe)
+int OffsetResponse::encode(packetEncoder &pe) const
 {
     if (m_version >= 2)
     {

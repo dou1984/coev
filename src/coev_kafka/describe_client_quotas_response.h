@@ -19,7 +19,7 @@ struct QuotaEntityComponent
     QuotaMatchType m_match_type;
     std::string m_name;
 
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
 };
 
@@ -28,7 +28,7 @@ struct DescribeClientQuotasEntry
     std::vector<QuotaEntityComponent> m_entity;
     std::map<std::string, double> m_values;
 
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
 };
 
@@ -42,7 +42,7 @@ struct DescribeClientQuotasResponse : protocol_body, flexible_version
     std::vector<DescribeClientQuotasEntry> m_entries;
 
     void set_version(int16_t v);
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;

@@ -7,7 +7,7 @@ void LeaveGroupRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int LeaveGroupRequest::encode(packetEncoder &pe)
+int LeaveGroupRequest::encode(packetEncoder &pe) const
 {
     int err = pe.putString(m_group_id);
     if (err != 0)
@@ -26,7 +26,7 @@ int LeaveGroupRequest::encode(packetEncoder &pe)
         if (err != 0)
             return err;
 
-        for (auto &member : m_members)
+        for (const auto &member : m_members)
         {
             err = pe.putString(member.m_member_id);
             if (err != 0)

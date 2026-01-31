@@ -6,7 +6,7 @@ void CreatePartitionsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int CreatePartitionsResponse::encode(packetEncoder &pe)
+int CreatePartitionsResponse::encode(packetEncoder &pe) const
 {
     pe.putDurationMs(m_throttle_time);
 
@@ -110,7 +110,7 @@ std::string TopicPartitionError::Error() const
     return text;
 }
 
-int TopicPartitionError::encode(packetEncoder &pe)
+int TopicPartitionError::encode(packetEncoder &pe) const
 {
     pe.putKError(m_err);
     if (pe.putNullableString(m_err_msg) != ErrNoError)

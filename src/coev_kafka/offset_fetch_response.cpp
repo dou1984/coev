@@ -2,7 +2,7 @@
 #include "offset_fetch_response.h"
 #include "api_versions.h"
 
-int OffsetFetchResponseBlock::encode(packetEncoder &pe, int16_t version)
+int OffsetFetchResponseBlock::encode(packetEncoder &pe, int16_t version) const
 {
     pe.putInt64(m_offset);
 
@@ -63,7 +63,7 @@ void OffsetFetchResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int OffsetFetchResponse::encode(packetEncoder &pe)
+int OffsetFetchResponse::encode(packetEncoder &pe) const
 {
     if (m_version >= 3)
     {
@@ -71,16 +71,15 @@ int OffsetFetchResponse::encode(packetEncoder &pe)
     }
 
     pe.putArrayLength(static_cast<int32_t>(m_blocks.size()));
-    for (auto &topicEntry : m_blocks)
+    for (const auto &[topic, partitions] : m_blocks)
     {
-        auto &topic = topicEntry.first;
-        auto &partitions = topicEntry.second;
+
         pe.putString(topic);
         pe.putArrayLength(static_cast<int32_t>(partitions.size()));
-        for (auto &partEntry : partitions)
+        for (const auto &[pid, partition] : partitions)
         {
-            pe.putInt32(partEntry.first);
-            partEntry.second->encode(pe, m_version);
+            pe.putInt32(pid);
+            partition->encode(pe, m_version);
         }
         pe.putEmptyTaggedFieldArray();
     }
@@ -107,17 +106,17 @@ int OffsetFetchResponse::decode(packetDecoder &pd, int16_t version)
         }
     }
 
-    int32_t numTopics;
-    auto err = pd.getArrayLength(numTopics);
+    int32_t num_topics;
+    auto err = pd.getArrayLength(num_topics);
     if (err)
     {
         return err;
     }
-    if (numTopics > 0)
+    if (num_topics > 0)
     {
         m_blocks.clear();
-        m_blocks.reserve(numTopics);
-        for (int i = 0; i < numTopics; ++i)
+        m_blocks.reserve(num_topics);
+        for (int i = 0; i < num_topics; ++i)
         {
             std::string name;
             err = pd.getString(name);
@@ -125,18 +124,18 @@ int OffsetFetchResponse::decode(packetDecoder &pd, int16_t version)
             {
                 return err;
             }
-            int32_t numBlocks;
-            err = pd.getArrayLength(numBlocks);
+            int32_t num_blocks;
+            err = pd.getArrayLength(num_blocks);
             if (err)
             {
                 return err;
             }
 
             auto &partitionMap = m_blocks[name];
-            if (numBlocks > 0)
+            if (num_blocks > 0)
             {
-                partitionMap.reserve(numBlocks);
-                for (int j = 0; j < numBlocks; ++j)
+                partitionMap.reserve(num_blocks);
+                for (int j = 0; j < num_blocks; ++j)
                 {
                     int32_t id;
                     err = pd.getInt32(id);

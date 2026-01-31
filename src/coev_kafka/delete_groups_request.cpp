@@ -7,7 +7,7 @@ void DeleteGroupsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int DeleteGroupsRequest::encode(packetEncoder &pe)
+int DeleteGroupsRequest::encode(packetEncoder &pe) const
 {
     if (pe.putStringArray(m_groups) != ErrNoError)
     {

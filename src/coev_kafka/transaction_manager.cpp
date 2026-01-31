@@ -234,7 +234,7 @@ coev::awaitable<TransactionManager::Result> TransactionManager::PublishOffsetsTo
     err = co_await coordinator->AddOffsetsToTxn(request, response);
     if (err != ErrNoError)
     {
-        co_await coordinator->Close();
+        coordinator->Close();
         err = co_await m_client->RefreshTransactionCoordinator(m_transactional_id);
         if (err != ErrNoError)
         {
@@ -456,7 +456,7 @@ coev::awaitable<int> TransactionManager::InitProducerId(int64_t &producerID, int
             {
                 if (IsTransactional())
                 {
-                    co_await coordinator->Close();
+                    coordinator->Close();
                     co_await m_client->RefreshTransactionCoordinator(m_transactional_id);
                 }
                 producerID = noProducerID;
@@ -488,7 +488,7 @@ coev::awaitable<int> TransactionManager::InitProducerId(int64_t &producerID, int
             case ErrOffsetsLoadInProgress:
                 if (IsTransactional())
                 {
-                    co_await coordinator->Close();
+                    coordinator->Close();
                     co_await m_client->RefreshTransactionCoordinator(m_transactional_id);
                 }
                 producerID = noProducerID;

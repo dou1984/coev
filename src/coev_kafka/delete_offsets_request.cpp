@@ -6,7 +6,7 @@ void DeleteOffsetsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int DeleteOffsetsRequest::encode(packetEncoder &pe)
+int DeleteOffsetsRequest::encode(packetEncoder &pe) const
 {
     if (pe.putString(m_group) != ErrNoError)
     {
@@ -23,7 +23,7 @@ int DeleteOffsetsRequest::encode(packetEncoder &pe)
         {
             return ErrEncodeError;
         }
-        for (auto &kv : m_partitions)
+        for (const auto &kv : m_partitions)
         {
             if (pe.putString(kv.first) != ErrNoError)
             {

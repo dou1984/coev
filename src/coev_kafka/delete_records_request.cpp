@@ -3,7 +3,7 @@
 #include "delete_records_request.h"
 #include "api_versions.h"
 
-int DeleteRecordsRequestTopic::encode(packetEncoder &pe)
+int DeleteRecordsRequestTopic::encode(packetEncoder &pe) const
 {
     if (pe.putArrayLength(static_cast<int32_t>(m_partition_offsets.size())) != ErrNoError)
     {
@@ -60,7 +60,7 @@ void DeleteRecordsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int DeleteRecordsRequest::encode(packetEncoder &pe)
+int DeleteRecordsRequest::encode(packetEncoder &pe) const
 {
     if (pe.putArrayLength(static_cast<int32_t>(m_topics.size())) != ErrNoError)
     {

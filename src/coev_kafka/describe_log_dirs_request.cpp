@@ -6,7 +6,7 @@ void DescribeLogDirsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int DescribeLogDirsRequest::encode(packetEncoder &pe)
+int DescribeLogDirsRequest::encode(packetEncoder &pe) const
 {
     int32_t length = static_cast<int32_t>(m_describe_topics.size());
     if (length == 0)
@@ -18,7 +18,7 @@ int DescribeLogDirsRequest::encode(packetEncoder &pe)
         return ErrEncodeError;
     }
 
-    for (auto &d : m_describe_topics)
+    for (const auto &d : m_describe_topics)
     {
         if (pe.putString(d.m_topic) != ErrNoError)
         {

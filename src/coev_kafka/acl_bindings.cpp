@@ -2,7 +2,7 @@
 #include <iostream>
 #include "acl_bindings.h"
 
-int Resource::encode(packetEncoder &pe, int16_t version)
+int Resource::encode(packetEncoder &pe, int16_t version) const
 {
     pe.putInt8(static_cast<int8_t>(m_resource_type));
 
@@ -51,7 +51,7 @@ int Resource::decode(packetDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-int Acl::encode(packetEncoder &pe)
+int Acl::encode(packetEncoder &pe) const
 {
     if (pe.putString(m_principal) != ErrNoError)
     {
@@ -98,7 +98,7 @@ int Acl::decode(packetDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-int ResourceAcls::encode(packetEncoder &pe, int16_t version)
+int ResourceAcls::encode(packetEncoder &pe, int16_t version) const
 {
     if (m_resource.encode(pe, version) != ErrNoError)
     {
@@ -110,7 +110,7 @@ int ResourceAcls::encode(packetEncoder &pe, int16_t version)
         return -1;
     }
 
-    for (auto &acl : m_acls)
+    for (const auto &acl : m_acls)
     {
         if (acl->encode(pe) != ErrNoError)
         {

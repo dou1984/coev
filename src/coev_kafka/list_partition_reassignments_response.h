@@ -20,7 +20,7 @@ struct PartitionReplicaReassignmentsStatus
     std::vector<int32_t> m_adding_replicas;
     std::vector<int32_t> m_removing_replicas;
 
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd);
 };
 
@@ -39,7 +39,7 @@ struct ListPartitionReassignmentsResponse : protocol_body, flexible_version
                   const std::vector<int32_t> &addingReplicas,
                   const std::vector<int32_t> &removingReplicas);
 
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
 
     int16_t key() const;

@@ -6,7 +6,7 @@ void DescribeGroupsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int DescribeGroupsRequest::encode(packetEncoder &pe)
+int DescribeGroupsRequest::encode(packetEncoder &pe) const
 {
     if (pe.putStringArray(m_groups) != ErrNoError)
     {

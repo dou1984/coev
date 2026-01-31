@@ -19,7 +19,7 @@ Records::Records(std::shared_ptr<RecordBatch> batch)
     m_record_batch = batch;
 }
 
-int Records::set_type_from_fields(bool &empty)
+int Records::set_type_from_fields(bool &empty) const
 {
     empty = false;
     if (m_message_set == nullptr && m_record_batch == nullptr)
@@ -40,7 +40,7 @@ int Records::set_type_from_fields(bool &empty)
     return 0;
 }
 
-int Records::encode(packetEncoder &pe)
+int Records::encode(packetEncoder &pe) const
 {
     if (m_records_type == UnknownRecords)
     {

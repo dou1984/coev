@@ -2,7 +2,7 @@
 #include "api_versions_response.h"
 #include "api_versions.h"
 
-int ApiVersionsResponseKey::encode(packetEncoder &pe, int16_t version)
+int ApiVersionsResponseKey::encode(packetEncoder &pe, int16_t version) const
 {
     pe.putInt16(m_api_key);
     pe.putInt16(m_min_version);
@@ -40,7 +40,7 @@ void ApiVersionsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int ApiVersionsResponse::encode(packetEncoder &pe)
+int ApiVersionsResponse::encode(packetEncoder &pe) const
 {
     pe.putInt16(m_error_code);
 

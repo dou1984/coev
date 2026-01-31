@@ -21,7 +21,7 @@ struct OffsetCommitRequestBlock : versioned_decoder, versioned_encoder
         : m_offset(_offset), m_timestamp(_timestamp), m_committed_leader_epoch(_epoch), m_metadata(_metadata)
     {
     }
-    int encode(packetEncoder &pe, int16_t version);
+    int encode(packetEncoder &pe, int16_t version) const;
     int decode(packetDecoder &pd, int16_t version);
 };
 
@@ -41,7 +41,7 @@ struct OffsetCommitRequest : protocol_body
     }
 
     void set_version(int16_t v);
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;

@@ -18,7 +18,7 @@
 struct GroupMemberDescription : versioned_encoder, versioned_decoder
 {
 
-    int16_t m_version;
+    mutable int16_t m_version;
     std::string m_member_id;
     std::string m_group_instance_id;
     std::string m_client_id;
@@ -26,7 +26,7 @@ struct GroupMemberDescription : versioned_encoder, versioned_decoder
     std::string m_member_metadata;
     std::string m_member_assignment;
 
-    int encode(packetEncoder &pe, int16_t version);
+    int encode(packetEncoder &pe, int16_t version) const;
     int decode(packetDecoder &pd, int16_t version);
     std::shared_ptr<ConsumerGroupMemberAssignment> GetMemberAssignment();
     std::shared_ptr<ConsumerGroupMemberMetadata> GetMemberMetadata();
@@ -34,7 +34,7 @@ struct GroupMemberDescription : versioned_encoder, versioned_decoder
 
 struct GroupDescription : versioned_encoder, versioned_decoder
 {
-    int16_t m_version;
+    mutable int16_t m_version;
     KError m_error_code;
     std::string m_error_msg;
     std::string m_group_id;
@@ -44,7 +44,7 @@ struct GroupDescription : versioned_encoder, versioned_decoder
     std::map<std::string, std::shared_ptr<GroupMemberDescription>> m_members;
     int32_t m_authorized_operations;
 
-    int encode(packetEncoder &pe, int16_t version);
+    int encode(packetEncoder &pe, int16_t version) const;
     int decode(packetDecoder &pd, int16_t version);
 };
 
@@ -55,7 +55,7 @@ struct DescribeGroupsResponse : protocol_body, flexible_version
     std::vector<std::shared_ptr<GroupDescription>> m_groups;
 
     void set_version(int16_t v);
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;

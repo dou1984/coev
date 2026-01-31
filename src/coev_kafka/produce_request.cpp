@@ -10,7 +10,7 @@ void ProduceRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int ProduceRequest::encode(packetEncoder &pe)
+int ProduceRequest::encode(packetEncoder &pe) const
 {
     if (m_version >= 3)
     {

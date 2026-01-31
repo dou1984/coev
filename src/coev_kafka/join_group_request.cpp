@@ -14,7 +14,7 @@ int GroupProtocol::decode(packetDecoder &pd)
     return pd.getEmptyTaggedFieldArray(_);
 }
 
-int GroupProtocol::encode(packetEncoder &pe)
+int GroupProtocol::encode(packetEncoder &pe) const
 {
     int err = pe.putString(m_name);
     if (err != 0)
@@ -33,7 +33,7 @@ void JoinGroupRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int JoinGroupRequest::encode(packetEncoder &pe)
+int JoinGroupRequest::encode(packetEncoder &pe) const
 {
     int err = pe.putString(m_group_id);
     if (err != 0)

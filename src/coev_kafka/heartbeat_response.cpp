@@ -7,7 +7,7 @@ void HeartbeatResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int HeartbeatResponse::encode(packetEncoder &pe)
+int HeartbeatResponse::encode(packetEncoder &pe) const
 {
     if (m_version >= 1)
     {

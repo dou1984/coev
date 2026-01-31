@@ -597,17 +597,14 @@ void AsyncProducer::unref_broker_producer(std::shared_ptr<Broker> broker, std::s
 
 coev::awaitable<void> AsyncProducer::abandon_broker_connection(std::shared_ptr<Broker> broker)
 {
-    LOG_CORE("called for broker %d", broker->ID());
     bool ok;
     co_await m_brokers[broker->ID()]->m_abandoned.get(ok);
     if (ok)
     {
-        LOG_CORE("abandoning broker %d, closing connection", broker->ID());
-        co_await broker->Close();
+        broker->Close();
         LOG_CORE("removing broker %d from m_brokers", broker->ID());
         m_brokers.erase(broker->ID());
     }
-    LOG_CORE("completed");
 }
 
 coev::awaitable<int> NewAsyncProducer(const std::vector<std::string> &addrs, std::shared_ptr<Config> conf, std::shared_ptr<AsyncProducer> &producer)

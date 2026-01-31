@@ -243,7 +243,6 @@ const char *KErrorToString(KError err)
         return "transaction manager: cannot transition with a nil error";
     case ErrTxnUnableToParseResponse:
         return "transaction manager: unable to parse response";
-
     case ErrTopicUnkonw:
         return "kafka: topic is unknown";
     case ErrTopicNoDetails:

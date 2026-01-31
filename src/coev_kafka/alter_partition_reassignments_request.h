@@ -16,7 +16,7 @@ struct AlterPartitionReassignmentsBlock : IEncoder, IDecoder
     AlterPartitionReassignmentsBlock(const std::vector<int32_t> &r) : m_replicas(r)
     {
     }
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd);
 };
 
@@ -30,7 +30,7 @@ struct AlterPartitionReassignmentsRequest : protocol_body, throttle_support, fle
     {
     }
     void set_version(int16_t v);
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
 
     int16_t key() const;

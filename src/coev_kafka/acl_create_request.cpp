@@ -6,14 +6,14 @@ void CreateAclsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int CreateAclsRequest::encode(packetEncoder &pe)
+int CreateAclsRequest::encode(packetEncoder &pe) const
 {
     if (pe.putArrayLength(static_cast<int32_t>(m_acl_creations.size())) != 0)
     {
         return -1;
     }
 
-    for (auto &aclCreation : m_acl_creations)
+    for (const auto &aclCreation : m_acl_creations)
     {
         if (aclCreation->encode(pe, m_version) != 0)
         {
@@ -77,7 +77,7 @@ KafkaVersion CreateAclsRequest::required_version() const
     }
 }
 
-int AclCreation::encode(packetEncoder &pe, int16_t version)
+int AclCreation::encode(packetEncoder &pe, int16_t version) const
 {
     if (m_resource.encode(pe, version) != 0)
     {

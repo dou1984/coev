@@ -9,7 +9,7 @@ struct PartitionOffsetManager
 {
     PartitionOffsetManager() = default;
     PartitionOffsetManager(std::shared_ptr<OffsetManager> parent, const std::string &topic, int32_t partition,
-                           int32_t leaderEpoch, size_t channelBufferSize, int64_t offset, const std::string &metadata);
+                           int32_t leaderEpoch, int64_t offset, const std::string &metadata);
 
     std::pair<int64_t, std::string> NextOffset();
     coev::awaitable<void> Errors(std::shared_ptr<ConsumerError> &err);
@@ -27,7 +27,6 @@ struct PartitionOffsetManager
     int32_t m_partition;
     int32_t m_leaderEpoch;
 
-    std::mutex m_lock;
     int64_t m_offset;
     std::string m_metadata;
     bool m_dirty;

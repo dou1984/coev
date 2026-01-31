@@ -29,7 +29,7 @@ std::vector<std::shared_ptr<MessageBlock>> MessageBlock::Messages()
     return single;
 }
 
-int MessageBlock::encode(packetEncoder &pe)
+int MessageBlock::encode(packetEncoder &pe) const
 {
     pe.putInt64(m_offset);
     LengthField length_field;
@@ -69,7 +69,7 @@ int MessageBlock::decode(packetDecoder &pd)
     return err;
 }
 
-int MessageSet::encode(packetEncoder &pe)
+int MessageSet::encode(packetEncoder &pe) const
 {
     for (auto &message_block : m_messages)
     {

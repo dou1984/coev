@@ -17,7 +17,7 @@ struct Broker;
 
 struct PartitionMetadata : versioned_decoder, versioned_encoder
 {
-    int16_t m_version;
+    mutable int16_t m_version;
     KError m_err;
     int32_t m_id;
     int32_t m_leader;
@@ -31,12 +31,12 @@ struct PartitionMetadata : versioned_decoder, versioned_encoder
     {
     }
     int decode(packetDecoder &pd, int16_t version);
-    int encode(packetEncoder &pe, int16_t version);
+    int encode(packetEncoder &pe, int16_t version) const;
 };
 
 struct TopicMetadata : versioned_decoder, versioned_encoder
 {
-    int16_t m_version;
+    mutable int16_t m_version;
     KError m_err;
     std::string Name;
     Uuid Uuid_;
@@ -45,7 +45,7 @@ struct TopicMetadata : versioned_decoder, versioned_encoder
     int32_t TopicAuthorizedOperations;
 
     int decode(packetDecoder &pd, int16_t version);
-    int encode(packetEncoder &pe, int16_t version);
+    int encode(packetEncoder &pe, int16_t version) const;
 };
 
 struct MetadataResponse : protocol_body, flexible_version
@@ -60,7 +60,7 @@ struct MetadataResponse : protocol_body, flexible_version
 
     void set_version(int16_t v);
     int decode(packetDecoder &pd, int16_t version);
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

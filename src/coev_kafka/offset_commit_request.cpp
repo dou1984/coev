@@ -3,7 +3,7 @@
 #include "api_versions.h"
 #include "offset_commit_request.h"
 
-int OffsetCommitRequestBlock::encode(packetEncoder &pe, int16_t version)
+int OffsetCommitRequestBlock::encode(packetEncoder &pe, int16_t version) const
 {
     pe.putInt64(m_offset);
 
@@ -53,7 +53,7 @@ void OffsetCommitRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int OffsetCommitRequest::encode(packetEncoder &pe)
+int OffsetCommitRequest::encode(packetEncoder &pe) const
 {
     if (m_version < 0 || m_version > 7)
     {

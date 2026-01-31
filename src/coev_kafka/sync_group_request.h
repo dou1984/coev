@@ -21,7 +21,7 @@ struct SyncGroupRequestAssignment : versioned_decoder, versioned_encoder
     SyncGroupRequestAssignment(const std::string &memberId, const std::string &assignment) : m_member_id(memberId), m_assignment(assignment)
     {
     }
-    int encode(packetEncoder &pe, int16_t version);
+    int encode(packetEncoder &pe, int16_t version) const;
     int decode(packetDecoder &pd, int16_t version);
 };
 
@@ -38,7 +38,7 @@ struct SyncGroupRequest : protocol_body, flexible_version
     {
     }
     void set_version(int16_t v);
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
 
     int16_t key() const;

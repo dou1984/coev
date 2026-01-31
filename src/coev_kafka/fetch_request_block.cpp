@@ -4,7 +4,7 @@
 FetchRequestBlock::FetchRequestBlock()
     : m_version(0), m_current_leader_epoch(0), m_fetch_offset(0), m_log_start_offset(0), m_max_bytes(0) {}
 
-int FetchRequestBlock::encode(packetEncoder &pe, int16_t version)
+int FetchRequestBlock::encode(packetEncoder &pe, int16_t version) const
 {
     if (version >= 9)
     {

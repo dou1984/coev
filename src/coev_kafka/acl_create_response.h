@@ -17,7 +17,7 @@ struct AclCreationResponse : IEncoder, versioned_decoder
     std::string m_err_msg;
 
     AclCreationResponse() = default;
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
 };
 
@@ -28,7 +28,7 @@ struct CreateAclsResponse : protocol_body
     std::vector<std::shared_ptr<AclCreationResponse>> m_acl_creation_responses;
 
     void set_version(int16_t v);
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;

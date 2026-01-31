@@ -23,7 +23,7 @@ struct ConsumerGroupMemberMetadata : IEncoder, IDecoder
     ConsumerGroupMemberMetadata() = default;
     ConsumerGroupMemberMetadata(int16_t v) : m_version(v) {}
 
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd);
 };
 
@@ -35,7 +35,7 @@ struct OwnedPartition : IEncoder, IDecoder
     OwnedPartition() = default;
     OwnedPartition(const std::string &t, const std::vector<int32_t> &p) : topic(t), partitions(p) {}
 
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd);
 };
 
@@ -48,6 +48,6 @@ struct ConsumerGroupMemberAssignment : IEncoder, IDecoder
     ConsumerGroupMemberAssignment() = default;
     ConsumerGroupMemberAssignment(int16_t v) : m_version(v) {}
 
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd);
 };

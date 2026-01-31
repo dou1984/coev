@@ -39,7 +39,7 @@ inline constexpr int64_t OffsetOldest = -2;
 inline constexpr int64_t AllPartitions = 0;
 inline constexpr int64_t WritablePartitions_ = 1;
 inline constexpr int64_t MaxPartitionIndex = 2;
-inline constexpr const char *defaultClientSoftwareName = "sarama";
+inline constexpr const char *defaultClientSoftwareName = "coev";
 inline constexpr const char *defaultClientSoftwareVersion = "dev";
 
 using SASLMechanism = std::string;

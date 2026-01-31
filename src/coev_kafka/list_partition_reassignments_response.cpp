@@ -1,7 +1,7 @@
 #include "list_partition_reassignments_response.h"
 #include "api_versions.h"
 
-int PartitionReplicaReassignmentsStatus::encode(packetEncoder &pe)
+int PartitionReplicaReassignmentsStatus::encode(packetEncoder &pe) const
 {
     int err = pe.putInt32Array(m_replicas);
     if (err != 0)
@@ -58,7 +58,7 @@ void ListPartitionReassignmentsResponse::add_block(
     partitions[partition] = std::move(block);
 }
 
-int ListPartitionReassignmentsResponse::encode(packetEncoder &pe)
+int ListPartitionReassignmentsResponse::encode(packetEncoder &pe) const
 {
     pe.putDurationMs(m_throttle_time);
     pe.putKError(m_err);

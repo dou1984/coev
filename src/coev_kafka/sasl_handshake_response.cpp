@@ -7,7 +7,7 @@ void SaslHandshakeResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int SaslHandshakeResponse::encode(packetEncoder &pe)
+int SaslHandshakeResponse::encode(packetEncoder &pe) const
 {
     pe.putKError(m_err);
     return pe.putStringArray(m_enabled_mechanisms);

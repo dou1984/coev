@@ -10,7 +10,7 @@ void FindCoordinatorRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int FindCoordinatorRequest::encode(packetEncoder &pe)
+int FindCoordinatorRequest::encode(packetEncoder &pe) const
 {
     int err = pe.putString(m_coordinator_key);
     if (err != 0)

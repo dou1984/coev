@@ -102,7 +102,7 @@ Message::Message(const std::string &key, const std::string &value, bool logAppen
     : m_key(key), m_value(value), m_log_append_time(logAppendTime), m_timestamp(msgTimestamp), m_version(version)
 {
 }
-int Message::encode(packetEncoder &pe)
+int Message::encode(packetEncoder &pe) const
 {
     crc32_field field(CrcCastagnoli);
     pe.push(field);

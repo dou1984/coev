@@ -19,11 +19,10 @@ void ApiVersionsRequest::set_version(int16_t v)
     }
 }
 
-int ApiVersionsRequest::encode(packetEncoder &pe)
+int ApiVersionsRequest::encode(packetEncoder &pe) const
 {
     if (m_version >= 3)
     {
-        // Ensure client software fields are properly initialized before encoding
         if (m_client_software_name.empty())
         {
             m_client_software_name = defaultClientSoftwareName;

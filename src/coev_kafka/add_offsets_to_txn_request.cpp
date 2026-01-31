@@ -6,7 +6,7 @@ void AddOffsetsToTxnRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int AddOffsetsToTxnRequest::encode(packetEncoder &pe)
+int AddOffsetsToTxnRequest::encode(packetEncoder &pe) const
 {
     if (pe.putString(m_transactional_id) != 0)
     {

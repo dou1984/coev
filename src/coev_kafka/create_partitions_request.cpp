@@ -5,7 +5,7 @@ void CreatePartitionsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int CreatePartitionsRequest::encode(packetEncoder &pe)
+int CreatePartitionsRequest::encode(packetEncoder &pe) const
 {
     if (pe.putArrayLength(static_cast<int32_t>(m_topic_partitions.size())) != ErrNoError)
     {

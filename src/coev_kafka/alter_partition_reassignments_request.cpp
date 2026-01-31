@@ -1,7 +1,7 @@
 #include "version.h"
 #include "api_versions.h"
 #include "alter_partition_reassignments_request.h"
-int AlterPartitionReassignmentsBlock::encode(packetEncoder &pe)
+int AlterPartitionReassignmentsBlock::encode(packetEncoder &pe) const
 {
     if (pe.putNullableInt32Array(m_replicas) != ErrNoError)
     {
@@ -26,7 +26,7 @@ void AlterPartitionReassignmentsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int AlterPartitionReassignmentsRequest::encode(packetEncoder &pe)
+int AlterPartitionReassignmentsRequest::encode(packetEncoder &pe) const
 {
     pe.putInt32(m_timeout.count());
 

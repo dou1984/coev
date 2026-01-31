@@ -40,7 +40,7 @@ TEST(FetchRequestTest, EncodeWithBlocks) {
     FetchRequest request(0);
     
     // Add a block
-    request.AddBlock("test-topic", 0, 100, 1024, 0);
+    request.add_block("test-topic", 0, 100, 1024, 0);
     
     realEncoder encoder(1024);
     EXPECT_EQ(request.encode(encoder), 0);
@@ -53,7 +53,7 @@ TEST(FetchRequestTest, EncodeWithVersionSpecificFields) {
     request.m_session_epoch = 456;
     
     // Add a block
-    request.AddBlock("test-topic", 0, 100, 1024, 0);
+    request.add_block("test-topic", 0, 100, 1024, 0);
     
     realEncoder encoder(1024);
     EXPECT_EQ(request.encode(encoder), 0);

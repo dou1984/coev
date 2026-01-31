@@ -17,7 +17,7 @@ int AbortedTransaction::decode(packetDecoder &pd)
     return 0;
 }
 
-int AbortedTransaction::encode(packetEncoder &pe)
+int AbortedTransaction::encode(packetEncoder &pe) const
 {
     pe.putInt64(m_producer_id);
     pe.putInt64(m_first_offset);
@@ -152,7 +152,7 @@ int FetchResponseBlock::decode(packetDecoder &pd, int16_t version)
     return 0;
 }
 
-int FetchResponseBlock::encode(packetEncoder &pe, int16_t version)
+int FetchResponseBlock::encode(packetEncoder &pe, int16_t version) const
 {
     pe.putKError(m_err);
     pe.putInt64(m_high_water_mark_offset);
@@ -226,7 +226,8 @@ int FetchResponseBlock::is_partial(bool &partial) const
         m_records_set[0].is_partial(partial);
         return 0;
     }
-    return INVALID;
+    partial = false;
+    return 0;
 }
 
 std::vector<AbortedTransaction> &FetchResponseBlock::get_aborted_transactions()
@@ -315,7 +316,7 @@ int FetchResponse::decode(packetDecoder &pd, int16_t version)
     return 0;
 }
 
-int FetchResponse::encode(packetEncoder &pe)
+int FetchResponse::encode(packetEncoder &pe) const
 {
     if (m_version >= 1)
     {

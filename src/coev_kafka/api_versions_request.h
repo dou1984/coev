@@ -11,15 +11,15 @@
 struct ApiVersionsRequest : protocol_body, flexible_version
 {
     int16_t m_version = 0;
-    std::string m_client_software_name = defaultClientSoftwareName;
-    std::string m_client_software_version = defaultClientSoftwareVersion;
+    mutable std::string m_client_software_name = defaultClientSoftwareName;
+    mutable std::string m_client_software_version = defaultClientSoftwareVersion;
     ApiVersionsRequest() = default;
     ApiVersionsRequest(int16_t v) : m_version(v)
     {
     }
     void set_version(int16_t v);
 
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
 
     int16_t key() const;

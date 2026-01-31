@@ -11,6 +11,6 @@ struct RecordHeader : IEncoder, IDecoder
 
     RecordHeader() = default;
     RecordHeader(const std::string &k, const std::string &v);
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd);
 };

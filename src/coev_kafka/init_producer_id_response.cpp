@@ -6,7 +6,7 @@ void InitProducerIDResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int InitProducerIDResponse::encode(packetEncoder &pe)
+int InitProducerIDResponse::encode(packetEncoder &pe) const
 {
     pe.putDurationMs(m_throttle_time);
     pe.putKError(m_err);

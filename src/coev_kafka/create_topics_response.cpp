@@ -8,7 +8,7 @@ void CreateTopicsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int CreateTopicsResponse::encode(packetEncoder &pe)
+int CreateTopicsResponse::encode(packetEncoder &pe) const
 {
     if (m_version >= 2)
     {
@@ -177,7 +177,7 @@ std::string TopicError::Error() const
     return oss.str();
 }
 
-int TopicError::encode(packetEncoder &pe, int16_t version)
+int TopicError::encode(packetEncoder &pe, int16_t version) const
 {
     pe.putInt16(m_err);
 
@@ -215,7 +215,7 @@ int TopicError::decode(packetDecoder &pd, int16_t version)
 
 // === CreatableTopicConfigs ===
 
-int CreatableTopicConfigs::encode(packetEncoder &pe, int16_t /*version*/)
+int CreatableTopicConfigs::encode(packetEncoder &pe, int16_t /*version*/) const
 {
     if (pe.putNullableString(m_value) != ErrNoError)
     {
@@ -259,7 +259,7 @@ int CreatableTopicConfigs::decode(packetDecoder &pd, int16_t /*version*/)
 
 // === CreatableTopicResult ===
 
-int CreatableTopicResult::encode(packetEncoder &pe, int16_t /*version*/)
+int CreatableTopicResult::encode(packetEncoder &pe, int16_t /*version*/) const
 {
     pe.putInt32(m_num_partitions);
     pe.putInt16(m_replication_factor);

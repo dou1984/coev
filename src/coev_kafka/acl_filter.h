@@ -22,6 +22,6 @@ struct AclFilter : IEncoder, versioned_decoder
     AclFilter(int16_t v) : m_version(v)
     {
     }
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
 };

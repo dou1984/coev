@@ -1,7 +1,7 @@
 #include "version.h"
 #include "acl_filter.h"
 
-int AclFilter::encode(packetEncoder &pe)
+int AclFilter::encode(packetEncoder &pe) const
 {
     pe.putInt8(static_cast<int8_t>(m_resource_type));
 

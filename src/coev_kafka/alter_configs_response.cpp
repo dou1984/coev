@@ -12,7 +12,7 @@ std::string AlterConfigError::Error() const
     return text;
 }
 
-int AlterConfigsResponse::encode(packetEncoder &pe)
+int AlterConfigsResponse::encode(packetEncoder &pe) const
 {
     pe.putDurationMs(m_throttle_time);
 
@@ -58,7 +58,7 @@ int AlterConfigsResponse::decode(packetDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-int AlterConfigsResourceResponse::encode(packetEncoder &pe)
+int AlterConfigsResourceResponse::encode(packetEncoder &pe) const
 {
     pe.putInt16(m_error_code);
     if (pe.putString(m_error_msg) != ErrNoError)

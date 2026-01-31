@@ -26,19 +26,19 @@ struct OffsetManager : std::enable_shared_from_this<OffsetManager>
     std::shared_ptr<PartitionOffsetManager> ManagePartition(const std::string &topic, int32_t partition);
     OffsetManager(std::shared_ptr<Client> client, std::shared_ptr<Config> conf, const std::string &group, std::function<void()> sessionCanceler, const std::string &memberID, int32_t generation);
     std::chrono::milliseconds ComputeBackoff(int retries);
-    coev::awaitable<int> fetchInitialOffset(const std::string &topic, int32_t partition, int retries, int64_t &offset, int32_t &leaderEpoch, std::string &metadata);
+    coev::awaitable<int> FetchInitialOffset(const std::string &topic, int32_t partition, int retries, int64_t &offset, int32_t &leaderEpoch, std::string &metadata);
     coev::awaitable<int> Coordinator(std::shared_ptr<Broker> &);
     coev::awaitable<void> MainLoop();
     coev::awaitable<void> FlushToBroker();
-    int constructRequest(OffsetCommitRequest &req);
-    void releaseCoordinator(std::shared_ptr<Broker> &b);
-    void handleResponse(std::shared_ptr<Broker> broker, const OffsetCommitRequest &req, OffsetCommitResponse &resp);
-    void handleError(KError err);
-    void handleError(int err) { handleError((KError)err); }
-    void asyncClosePOMs();
-    int releasePOMs(bool force);
-    std::shared_ptr<PartitionOffsetManager> findPOM(const std::string &topic, int32_t partition);
-    void tryCancelSession();
+    int ConstructRequest(OffsetCommitRequest &req);
+    void ReleaseCoordinator(std::shared_ptr<Broker> &broker);
+    void HandleResponse(std::shared_ptr<Broker> broker, const OffsetCommitRequest &req, OffsetCommitResponse &resp);
+    void HandleError(KError err);
+    void HandleError(int err) { HandleError((KError)err); }
+    void AsyncClosePOMs();
+    int ReleasePOMs(bool force);
+    std::shared_ptr<PartitionOffsetManager> FindPOM(const std::string &topic, int32_t partition);
+    void TryCancelSession();
 
     std::shared_ptr<Client> m_client;
     std::shared_ptr<Config> m_conf;
@@ -51,8 +51,7 @@ struct OffsetManager : std::enable_shared_from_this<OffsetManager>
 
     std::shared_ptr<Broker> m_broker;
 
-    std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<PartitionOffsetManager>>> m_poms;
-
+    std::unordered_map<std::string, std::map<int32_t, std::shared_ptr<PartitionOffsetManager>>> m_poms;
     std::atomic<bool> m_closing = false;
 
     coev::co_channel<bool> m_closed;

@@ -1,6 +1,6 @@
 #include "consumer_group_members.h"
 
-int ConsumerGroupMemberMetadata::encode(packetEncoder &pe)
+int ConsumerGroupMemberMetadata::encode(packetEncoder &pe) const
 {
     pe.putInt16(m_version);
 
@@ -108,7 +108,7 @@ int ConsumerGroupMemberMetadata::decode(packetDecoder &pd)
     return 0;
 }
 
-int OwnedPartition::encode(packetEncoder &pe)
+int OwnedPartition::encode(packetEncoder &pe) const
 {
     if (int err = pe.putString(topic); err != 0)
     {
@@ -136,7 +136,7 @@ int OwnedPartition::decode(packetDecoder &pd)
     return 0;
 }
 
-int ConsumerGroupMemberAssignment::encode(packetEncoder &pe)
+int ConsumerGroupMemberAssignment::encode(packetEncoder &pe) const
 {
     pe.putInt16(m_version);
 

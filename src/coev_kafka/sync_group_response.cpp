@@ -13,7 +13,7 @@ int SyncGroupResponse::GetMemberAssignment(std::shared_ptr<ConsumerGroupMemberAs
     return ::decode(m_member_assignment, *assignment);
 }
 
-int SyncGroupResponse::encode(packetEncoder &pe)
+int SyncGroupResponse::encode(packetEncoder &pe) const
 {
     if (m_version >= 1)
     {

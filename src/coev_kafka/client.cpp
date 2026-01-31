@@ -804,14 +804,14 @@ coev::awaitable<int> Client::_GetOffset(const std::string &topic, int32_t partit
     err = co_await broker->GetAvailableOffsets(request, promise);
     if (err != 0)
     {
-        co_await broker->Close();
+        broker->Close();
         offset = -1;
         co_return err;
     }
     auto block = promise.m_response.GetBlock(topic, partitionID);
     if (block == nullptr)
     {
-        co_await broker->Close();
+        broker->Close();
         offset = -1;
         co_return ErrIncompleteResponse;
     }
@@ -1131,7 +1131,7 @@ coev::awaitable<int> Client::FindCoordinator(const std::string &coordinatorKey, 
             }
             else
             {
-                co_await broker->Close();
+                broker->Close();
                 brokerErrors.push_back(err);
                 DeregisterBroker(broker);
                 continue;

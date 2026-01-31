@@ -94,7 +94,7 @@
 #include "sasl_authenticate_response.h"
 #include "sasl_authenticate_request.h"
 
-int Request::encode(packetEncoder &pe)
+int Request::encode(packetEncoder &pe) const
 {
 
     LengthField length_field;

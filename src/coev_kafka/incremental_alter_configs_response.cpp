@@ -7,7 +7,7 @@ void IncrementalAlterConfigsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int IncrementalAlterConfigsResponse::encode(packetEncoder &pe)
+int IncrementalAlterConfigsResponse::encode(packetEncoder &pe) const
 {
 
     pe.putDurationMs(m_throttle_time);
@@ -23,11 +23,6 @@ int IncrementalAlterConfigsResponse::encode(packetEncoder &pe)
             return err;
     }
 
-    // Note: In flexible version (v1+), tagged fields are appended AFTER the array.
-    // But according to Kafka protocol spec for this response:
-    // - v0: no tagged fields
-    // - v1: has empty tagged field array at end
-    // So we add it only if flexible
     if (is_flexible_version(m_version))
     {
         pe.putEmptyTaggedFieldArray();

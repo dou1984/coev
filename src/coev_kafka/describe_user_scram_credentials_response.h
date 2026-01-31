@@ -36,7 +36,7 @@ struct DescribeUserScramCredentialsResponse : protocol_body , flexible_version
     std::vector<std::shared_ptr<DescribeUserScramCredentialsResult>> m_results;
 
     void set_version(int16_t v);
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;

@@ -6,7 +6,7 @@ void DeleteAclsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int DeleteAclsResponse::encode(packetEncoder &pe)
+int DeleteAclsResponse::encode(packetEncoder &pe) const
 {
     pe.putDurationMs(m_throttle_time);
 
@@ -88,7 +88,7 @@ std::chrono::milliseconds DeleteAclsResponse::throttle_time() const
     return m_throttle_time;
 }
 
-int MatchingAcl::encode(packetEncoder &pe, int16_t version)
+int MatchingAcl::encode(packetEncoder &pe, int16_t version) const
 {
     pe.putKError(m_err);
 
@@ -135,7 +135,7 @@ int MatchingAcl::decode(packetDecoder &pd, int16_t version)
     return 0;
 }
 
-int FilterResponse::encode(packetEncoder &pe, int16_t version)
+int FilterResponse::encode(packetEncoder &pe, int16_t version) const
 {
     pe.putKError(m_err);
 
@@ -149,7 +149,7 @@ int FilterResponse::encode(packetEncoder &pe, int16_t version)
         return -1;
     }
 
-    for (auto &acl : m_matching_acls)
+    for (const auto &acl : m_matching_acls)
     {
         if (acl->encode(pe, version) != 0)
         {

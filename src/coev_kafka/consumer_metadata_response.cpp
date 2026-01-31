@@ -55,7 +55,7 @@ int ConsumerMetadataResponse::decode(packetDecoder &pd, int16_t version)
     return 0;
 }
 
-int ConsumerMetadataResponse::encode(packetEncoder &pe)
+int ConsumerMetadataResponse::encode(packetEncoder &pe) const
 {
     if (m_coordinator == nullptr)
     {

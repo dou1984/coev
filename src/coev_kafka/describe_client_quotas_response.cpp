@@ -6,7 +6,7 @@ void DescribeClientQuotasResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int DescribeClientQuotasResponse::encode(packetEncoder &pe)
+int DescribeClientQuotasResponse::encode(packetEncoder &pe) const
 {
 
     pe.putDurationMs(m_throttle_time);
@@ -84,7 +84,7 @@ int DescribeClientQuotasResponse::decode(packetDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-int DescribeClientQuotasEntry::encode(packetEncoder &pe)
+int DescribeClientQuotasEntry::encode(packetEncoder &pe) const
 {
     if (pe.putArrayLength(static_cast<int32_t>(m_entity.size())) != ErrNoError)
     {
@@ -174,7 +174,7 @@ int DescribeClientQuotasEntry::decode(packetDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-int QuotaEntityComponent::encode(packetEncoder &pe)
+int QuotaEntityComponent::encode(packetEncoder &pe) const
 {
     if (pe.putString(m_entity_type) != ErrNoError)
     {
@@ -198,7 +198,6 @@ int QuotaEntityComponent::encode(packetEncoder &pe)
 
     pe.putEmptyTaggedFieldArray();
     return ErrNoError;
-    ;
 }
 
 int QuotaEntityComponent::decode(packetDecoder &pd, int16_t /*version*/)

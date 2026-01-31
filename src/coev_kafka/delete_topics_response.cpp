@@ -6,7 +6,7 @@ void DeleteTopicsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int DeleteTopicsResponse::encode(packetEncoder &pe)
+int DeleteTopicsResponse::encode(packetEncoder &pe) const
 {
     if (m_version >= 1)
     {

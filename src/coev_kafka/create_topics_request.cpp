@@ -6,7 +6,7 @@ void CreateTopicsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int CreateTopicsRequest::encode(packetEncoder &pe)
+int CreateTopicsRequest::encode(packetEncoder &pe) const
 {
     if (pe.putArrayLength(static_cast<int32_t>(m_topic_details.size())) != ErrNoError)
     {
@@ -129,7 +129,7 @@ KafkaVersion CreateTopicsRequest::required_version() const
     }
 }
 
-int TopicDetail::encode(packetEncoder &pe)
+int TopicDetail::encode(packetEncoder &pe) const
 {
     pe.putInt32(m_num_partitions);
     pe.putInt16(m_replication_factor);

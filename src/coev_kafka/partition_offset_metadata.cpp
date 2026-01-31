@@ -8,7 +8,7 @@ int PartitionOffsetMetadata::decode(packetDecoder &pd, int16_t version)
     pd.getInt32(m_leader_epoch);
     return 0;
 }
-int PartitionOffsetMetadata::encode(packetEncoder &pe, int16_t version)
+int PartitionOffsetMetadata::encode(packetEncoder &pe, int16_t version) const
 {
     pe.putInt32(m_partition);
     pe.putInt64(m_offset);

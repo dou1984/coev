@@ -14,7 +14,7 @@ struct Timestamp
     Timestamp();
     Timestamp(const std::chrono::system_clock::time_point &t);
 
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd);
 
     std::chrono::system_clock::time_point get_time() const;

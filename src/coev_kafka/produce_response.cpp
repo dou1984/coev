@@ -119,7 +119,7 @@ int ProduceResponse::decode(packetDecoder &pd, int16_t version)
     return 0;
 }
 
-int ProduceResponse::encode(packetEncoder &pe)
+int ProduceResponse::encode(packetEncoder &pe) const
 {
     if (int err = pe.putArrayLength(static_cast<int32_t>(m_blocks.size())); err != 0)
     {

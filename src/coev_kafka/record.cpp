@@ -3,19 +3,6 @@
 RecordHeader::RecordHeader(const std::string &k, const std::string &v) : m_key(k), m_value(v)
 {
 }
-int RecordHeader::encode(packetEncoder &pe)
-{
-    if (pe.putVariantBytes(m_key) != 0)
-    {
-        return -1;
-    }
-    if (pe.putVariantBytes(m_value) != 0)
-    {
-        return -1;
-    }
-    return 0;
-}
-
 int RecordHeader::decode(packetDecoder &pd)
 {
     if (pd.getVariantBytes(m_key) != 0)
@@ -29,7 +16,20 @@ int RecordHeader::decode(packetDecoder &pd)
     return 0;
 }
 
-int Record::encode(packetEncoder &pe)
+int RecordHeader::encode(packetEncoder &pe) const
+{
+    if (pe.putVariantBytes(m_key) != 0)
+    {
+        return -1;
+    }
+    if (pe.putVariantBytes(m_value) != 0)
+    {
+        return -1;
+    }
+    return 0;
+}
+
+int Record::encode(packetEncoder &pe) const
 {
     pe.push(m_length);
     pe.putInt8(m_attributes);

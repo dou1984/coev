@@ -7,7 +7,7 @@ void DescribeLogDirsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int DescribeLogDirsResponse::encode(packetEncoder &pe)
+int DescribeLogDirsResponse::encode(packetEncoder &pe) const
 {
     pe.putDurationMs(m_throttle_time);
     if (m_version >= 3)
@@ -127,7 +127,7 @@ std::chrono::milliseconds DescribeLogDirsResponse::throttle_time() const
     return m_throttle_time;
 }
 
-int DescribeLogDirsResponseDirMetadata::encode(packetEncoder &pe, int16_t version)
+int DescribeLogDirsResponseDirMetadata::encode(packetEncoder &pe, int16_t version) const
 {
     pe.putKError(m_error_code);
 
@@ -202,7 +202,7 @@ int DescribeLogDirsResponseDirMetadata::decode(packetDecoder &pd, int16_t versio
     return ErrNoError;
 }
 
-int DescribeLogDirsResponseTopic::encode(packetEncoder &pe, int16_t version)
+int DescribeLogDirsResponseTopic::encode(packetEncoder &pe, int16_t version) const
 {
     if (pe.putString(m_topic) != ErrNoError)
     {
@@ -256,7 +256,7 @@ int DescribeLogDirsResponseTopic::decode(packetDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-int DescribeLogDirsResponsePartition::encode(packetEncoder &pe, int16_t version)
+int DescribeLogDirsResponsePartition::encode(packetEncoder &pe, int16_t version) const
 {
     pe.putInt32(m_partition_id);
     pe.putInt64(m_size);

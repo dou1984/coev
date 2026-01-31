@@ -3,7 +3,7 @@
 #include "api_versions.h"
 #include <algorithm>
 
-int DeleteRecordsResponsePartition::encode(packetEncoder &pe)
+int DeleteRecordsResponsePartition::encode(packetEncoder &pe) const
 {
     pe.putInt64(m_low_watermark);
     pe.putInt16(static_cast<int16_t>(m_err));
@@ -26,7 +26,7 @@ int DeleteRecordsResponsePartition::decode(packetDecoder &pd, int16_t /*version*
 
     return ErrNoError;
 }
-int DeleteRecordsResponseTopic::encode(packetEncoder &pe)
+int DeleteRecordsResponseTopic::encode(packetEncoder &pe) const
 {
     if (pe.putArrayLength(static_cast<int32_t>(m_partitions.size())) != ErrNoError)
     {
@@ -95,7 +95,7 @@ void DeleteRecordsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int DeleteRecordsResponse::encode(packetEncoder &pe)
+int DeleteRecordsResponse::encode(packetEncoder &pe) const
 {
     pe.putDurationMs(m_throttle_time);
 

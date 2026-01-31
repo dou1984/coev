@@ -10,6 +10,13 @@ BrokerConsumer::BrokerConsumer()
     m_task << SubscriptionManager();
     m_task << SubscriptionConsumer();
 }
+
+BrokerConsumer::BrokerConsumer(std::shared_ptr<Consumer> c, std::shared_ptr<Broker> broker)
+    : m_consumer(c), m_broker(broker), m_refs(0)
+{
+    m_task << SubscriptionManager();
+    m_task << SubscriptionConsumer();
+}
 coev::awaitable<void> BrokerConsumer::SubscriptionManager()
 {
     LOG_CORE("BrokerConsumer::SubscriptionManager starting");
@@ -113,13 +120,13 @@ coev::awaitable<void> BrokerConsumer::HandleResponses()
         auto result = child->m_response_result;
         child->m_response_result = ErrNoError;
 
-        if (!result)
+        if (result == ErrNoError)
         {
             LOG_CORE("no result for partition consumer %s:%d, checking preferred broker", child->m_topic.c_str(), child->m_partition);
-            std::shared_ptr<Broker> preferredBroker;
+            std::shared_ptr<Broker> _broker;
             int _;
-            auto err_code = co_await child->PreferredBroker(preferredBroker, _);
-            if (err_code == 0 && m_broker->ID() != preferredBroker->ID())
+            auto err_code = co_await child->PreferredBroker(_broker, _);
+            if (err_code == 0 && m_broker->ID() != _broker->ID())
             {
                 LOG_CORE("preferred broker changed for %s:%d, removing subscription", child->m_topic.c_str(), child->m_partition);
                 child->m_trigger.set(true);
@@ -167,7 +174,7 @@ coev::awaitable<void> BrokerConsumer::Abort(int err)
 {
     LOG_CORE("BrokerConsumer::Abort called with error %d, abandoning broker consumer", err);
     m_consumer->AbandonBrokerConsumer(shared_from_this());
-    co_await m_broker->Close();
+    m_broker->Close();
 
     LOG_CORE("BrokerConsumer::Abort notifying %zu active subscriptions of error", m_subscriptions.size());
     for (auto &child : m_subscriptions)
@@ -246,7 +253,7 @@ coev::awaitable<int> BrokerConsumer::FetchNewMessages(std::shared_ptr<FetchRespo
     {
         if (!child.first->IsPaused())
         {
-            request.AddBlock(child.first->m_topic, child.first->m_partition, child.first->m_offset, child.first->m_fetch_size, child.first->m_leader_epoch);
+            request.add_block(child.first->m_topic, child.first->m_partition, child.first->m_offset, child.first->m_fetch_size, child.first->m_leader_epoch);
         }
     }
 
@@ -270,17 +277,6 @@ coev::awaitable<int> BrokerConsumer::FetchNewMessages(std::shared_ptr<FetchRespo
     }
     co_return err;
 }
-
-std::shared_ptr<BrokerConsumer> NewBrokerConsumer(std::shared_ptr<Consumer> c, std::shared_ptr<Broker> m_broker)
-{
-    auto bc = std::make_shared<BrokerConsumer>();
-    bc->m_consumer = c;
-    bc->m_broker = m_broker;
-    bc->m_refs = 0;
-
-    return bc;
-}
-
 int BrokerConsumer::Topics(std::vector<std::string> &out)
 {
     return m_consumer->Topics(out);

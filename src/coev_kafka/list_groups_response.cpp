@@ -8,7 +8,7 @@ void ListGroupsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int ListGroupsResponse::encode(packetEncoder &pe)
+int ListGroupsResponse::encode(packetEncoder &pe) const
 {
     if (m_version >= 1)
     {
@@ -36,7 +36,7 @@ int ListGroupsResponse::encode(packetEncoder &pe)
 
         if (m_version >= 4)
         {
-            const GroupData &gd = m_groups_data[groupId]; // safe: assumed populated
+            const GroupData &gd = m_groups_data.at(groupId); // use at() for const access
             err = pe.putString(gd.m_group_state);
             if (err != 0)
                 return err;
@@ -44,7 +44,7 @@ int ListGroupsResponse::encode(packetEncoder &pe)
 
         if (m_version >= 5)
         {
-            const GroupData &gd = m_groups_data[groupId];
+            const GroupData &gd = m_groups_data.at(groupId); // use at() for const access
             err = pe.putString(gd.m_group_type);
             if (err != 0)
                 return err;

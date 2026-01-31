@@ -6,7 +6,7 @@ void ElectLeadersRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int ElectLeadersRequest::encode(packetEncoder &pe)
+int ElectLeadersRequest::encode(packetEncoder &pe) const
 {
     if (m_version > 0)
     {
@@ -18,7 +18,7 @@ int ElectLeadersRequest::encode(packetEncoder &pe)
         return ErrEncodeError;
     }
 
-    for (auto &kv : m_topic_partitions)
+    for (const auto &kv : m_topic_partitions)
     {
         if (pe.putString(kv.first) != ErrNoError)
         {

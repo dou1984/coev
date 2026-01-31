@@ -2,7 +2,7 @@
 #include "elect_leaders_response.h"
 #include <memory>
 
-int PartitionResult::encode(packetEncoder &pe, int16_t /*version*/)
+int PartitionResult::encode(packetEncoder &pe, int16_t /*version*/) const
 {
     pe.putKError(m_error_code);
     if (pe.putNullableString(m_error_message) != ErrNoError)
@@ -39,7 +39,7 @@ void ElectLeadersResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int ElectLeadersResponse::encode(packetEncoder &pe)
+int ElectLeadersResponse::encode(packetEncoder &pe) const
 {
     pe.putDurationMs(m_throttle_time);
 
@@ -66,9 +66,9 @@ int ElectLeadersResponse::encode(packetEncoder &pe)
             return ErrEncodeError;
         }
 
-        for (auto &[id, partition] : partitions)
+        for (auto &[pid, partition] : partitions)
         {
-            pe.putInt32(id); // partition ID
+            pe.putInt32(pid); // partition ID
             if (partition.encode(pe, m_version) != ErrNoError)
             {
                 return ErrEncodeError;
@@ -79,7 +79,7 @@ int ElectLeadersResponse::encode(packetEncoder &pe)
     }
 
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int ElectLeadersResponse::decode(packetDecoder &pd, int16_t version)

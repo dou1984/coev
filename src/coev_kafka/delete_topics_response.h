@@ -18,8 +18,8 @@ struct DeleteTopicsResponse : protocol_body, flexible_version
 	std::map<std::string, KError> m_topic_error_codes;
 
 	void set_version(int16_t v);
-	int encode(packetEncoder &pe);
-	int decode(packetDecoder &pd, int16_t version);
+	int encode(packetEncoder &pe) const;
+    int decode(packetDecoder &pd, int16_t version);
 	int16_t key() const;
 	int16_t version() const;
 	int16_t header_version() const;

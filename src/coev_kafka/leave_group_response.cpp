@@ -6,7 +6,7 @@ void LeaveGroupResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int LeaveGroupResponse::encode(packetEncoder &pe)
+int LeaveGroupResponse::encode(packetEncoder &pe) const
 {
     if (m_version >= 1)
     {
@@ -21,7 +21,7 @@ int LeaveGroupResponse::encode(packetEncoder &pe)
         if (err != 0)
             return err;
 
-        for (auto &member : m_member_responses)
+        for (const auto &member : m_member_responses)
         {
             err = pe.putString(member.m_member_id);
             if (err != 0)

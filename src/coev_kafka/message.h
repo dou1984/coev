@@ -27,13 +27,13 @@ struct Message
     int8_t m_version = 0;
     Timestamp m_timestamp;
 
-    std::string m_compressed_cache;
-    int m_compressed_size = 0;
+    mutable std::string m_compressed_cache;
+    mutable int m_compressed_size = 0;
 
     Message() = default;
 
     Message(const std::string &key, const std::string &value, bool logAppendTime, Timestamp msgTimestamp, int8_t version);
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd);
     int decode_set();
     void clear();

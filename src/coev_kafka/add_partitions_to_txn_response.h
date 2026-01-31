@@ -21,7 +21,7 @@ struct AddPartitionsToTxnResponse : protocol_body
     std::unordered_map<std::string, std::vector<std::shared_ptr<PartitionError>>> m_errors;
 
     void set_version(int16_t v);
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;

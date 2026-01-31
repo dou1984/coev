@@ -52,7 +52,6 @@ struct Consumer : IConsumer, std::enable_shared_from_this<Consumer>
     int AddChild(const std::shared_ptr<PartitionConsumer> &child);
     void RemoveChild(const std::shared_ptr<PartitionConsumer> &child);
     std::shared_ptr<BrokerConsumer> RefBrokerConsumer(std::shared_ptr<Broker> broker);
-    void UnrefBrokerConsumer(std::shared_ptr<BrokerConsumer> brokerWorker);
     void AbandonBrokerConsumer(std::shared_ptr<BrokerConsumer> brokerWorker);
 
     std::shared_ptr<Config> m_conf;

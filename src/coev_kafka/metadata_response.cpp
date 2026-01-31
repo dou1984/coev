@@ -51,7 +51,7 @@ int PartitionMetadata::decode(packetDecoder &pd, int16_t version)
     return err;
 }
 
-int PartitionMetadata::encode(packetEncoder &pe, int16_t version)
+int PartitionMetadata::encode(packetEncoder &pe, int16_t version) const
 {
     m_version = version;
     pe.putKError(m_err);
@@ -150,7 +150,7 @@ int TopicMetadata::decode(packetDecoder &pd, int16_t version)
     return err;
 }
 
-int TopicMetadata::encode(packetEncoder &pe, int16_t version)
+int TopicMetadata::encode(packetEncoder &pe, int16_t version) const
 {
     m_version = version;
     pe.putKError(m_err);
@@ -279,7 +279,7 @@ int MetadataResponse::decode(packetDecoder &pd, int16_t version)
     return err;
 }
 
-int MetadataResponse::encode(packetEncoder &pe)
+int MetadataResponse::encode(packetEncoder &pe) const
 {
     if (m_version >= 3)
     {

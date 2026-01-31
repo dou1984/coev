@@ -6,7 +6,7 @@ void AlterClientQuotasResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int AlterClientQuotasResponse::encode(packetEncoder &pe)
+int AlterClientQuotasResponse::encode(packetEncoder &pe) const
 {
     pe.putDurationMs(m_throttle_time);
 
@@ -88,7 +88,7 @@ std::chrono::milliseconds AlterClientQuotasResponse::throttle_time() const
     return m_throttle_time;
 }
 
-int AlterClientQuotasEntryResponse::encode(packetEncoder &pe)
+int AlterClientQuotasEntryResponse::encode(packetEncoder &pe) const
 {
     pe.putKError(m_error_code);
 

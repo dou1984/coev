@@ -2,14 +2,13 @@
 
 PartitionOffsetManager::PartitionOffsetManager(
     std::shared_ptr<OffsetManager> parent, const std::string &topic,
-    int32_t partition, int32_t leaderEpoch, size_t channelBufferSize, int64_t offset, const std::string &metadata)
+    int32_t partition, int32_t leaderEpoch, int64_t offset, const std::string &metadata)
     : m_parent(parent), m_topic(topic), m_partition(partition), m_leaderEpoch(leaderEpoch), m_offset(offset), m_metadata(metadata), m_dirty(false), m_done(false)
 {
 }
 
 std::pair<int64_t, std::string> PartitionOffsetManager::NextOffset()
 {
-    std::unique_lock<std::mutex> l(m_lock);
     if (m_offset >= 0)
     {
         return std::make_pair(m_offset, m_metadata);
@@ -19,11 +18,9 @@ std::pair<int64_t, std::string> PartitionOffsetManager::NextOffset()
 coev::awaitable<void> PartitionOffsetManager::Errors(std::shared_ptr<ConsumerError> &err)
 {
     co_await m_errors.get(err);
-    co_return;
 }
 void PartitionOffsetManager::MarkOffset(int64_t offset, const std::string &metadata)
 {
-    std::unique_lock<std::mutex> l(m_lock);
     if (offset > m_offset)
     {
         m_offset = offset;
@@ -34,7 +31,6 @@ void PartitionOffsetManager::MarkOffset(int64_t offset, const std::string &metad
 
 void PartitionOffsetManager::ResetOffset(int64_t offset, const std::string &metadata)
 {
-    std::unique_lock<std::mutex> l(m_lock);
     if (offset <= m_offset)
     {
         m_offset = offset;
@@ -45,7 +41,6 @@ void PartitionOffsetManager::ResetOffset(int64_t offset, const std::string &meta
 
 void PartitionOffsetManager::UpdateCommitted(int64_t offset, const std::string &metadata)
 {
-    std::unique_lock<std::mutex> l(m_lock);
     if (m_offset == offset && m_metadata == metadata)
     {
         m_dirty = false;
@@ -54,7 +49,6 @@ void PartitionOffsetManager::UpdateCommitted(int64_t offset, const std::string &
 
 void PartitionOffsetManager::AsyncClose()
 {
-    std::unique_lock<std::mutex> l(m_lock);
     m_done = true;
 }
 

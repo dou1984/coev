@@ -17,7 +17,7 @@
 #include "scram_client.h"
 #include "sleep_for.h"
 
-int8_t getHeaderLength(int16_t header_version)
+int8_t GetHeaderLength(int16_t header_version)
 {
     if (header_version < 1)
     {
@@ -102,7 +102,7 @@ int Broker::decode(packetDecoder &pd, int16_t version)
     return 0;
 }
 
-int Broker::encode(packetEncoder &pe, int16_t version)
+int Broker::encode(packetEncoder &pe, int16_t version) const
 {
 
     auto [host, port] = net::SplitHostPort(m_addr);
@@ -205,22 +205,18 @@ coev::awaitable<int> Broker::_Open()
     int err = ErrNoError;
     if (m_conf->ApiVersionsRequest)
     {
-        LOG_CORE("Sending ApiVersionsRequest with version 3");
         ResponsePromise<ApiVersionsResponse> apiVersionsResponse;
         err = co_await SendAndReceiveApiVersions(3, apiVersionsResponse);
         if (err)
         {
-            LOG_CORE("SendAndReceiveApiVersions version 3 failed with error: %d, trying version 0", err);
             err = co_await SendAndReceiveApiVersions(0, apiVersionsResponse);
             if (err)
             {
-                LOG_CORE("SendAndReceiveApiVersions version 0 also failed with error: %d", err);
                 m_conn->Close();
                 LOG_CORE("connect to %s:%d failed due to ApiVersionsRequest failure", host.data(), port);
                 co_return INVALID;
             }
         }
-        LOG_CORE("ApiVersionsRequest succeeded, received %ld api keys", apiVersionsResponse.m_response.m_api_keys.size());
         m_broker_api_versions.clear();
         for (auto &key : apiVersionsResponse.m_response.m_api_keys)
         {
@@ -278,15 +274,14 @@ int Broker::TLSConnectionState()
     return 0;
 }
 
-coev::awaitable<int> Broker::Close()
+int Broker::Close()
 {
     if (!m_conn->IsOpened())
     {
-        co_return ErrNotConnected;
+        return ErrNotConnected;
     }
 
-    int32_t err = m_conn->Close();
-    co_return 0;
+    return m_conn->Close();
 }
 
 coev::awaitable<int> Broker::GetMetadata(std::shared_ptr<MetadataRequest> request, ResponsePromise<MetadataResponse> &response)
@@ -1116,17 +1111,14 @@ void Broker::ComputeSaslSessionLifetime(std::shared_ptr<SaslAuthenticateResponse
 
 void Broker::SafeAsyncClose()
 {
-    m_task << [](auto b) -> coev::awaitable<void>
+    if (Connected())
     {
-        if (!b->Connected())
+        auto err = Close();
+        if (err != ErrNoError)
         {
-            auto err = co_await b->Close();
-            if (err != ErrNoError)
-            {
-                LOG_CORE("Error closing broker %d: %d", b->ID(), err);
-            }
+            LOG_CORE("Error closing broker %d: %d", ID(), err);
         }
-    }(shared_from_this());
+    }
 }
 std::shared_ptr<tls::Config> ValidServerNameTLS(const std::string &addr, std::shared_ptr<tls::Config> cfg)
 {

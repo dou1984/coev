@@ -57,7 +57,7 @@ struct ConsumerGroup : std::enable_shared_from_this<ConsumerGroup>
     coev::awaitable<int> RetryNewSession(std::shared_ptr<Context> &ctx, const std::vector<std::string> &topics, std::shared_ptr<ConsumerGroupHandler> handler, int retries, bool refreshCoordinator, std::shared_ptr<ConsumerGroupSession> &out);
     coev::awaitable<int> JoinGroup(std::shared_ptr<Broker> coordinator, const std::vector<std::string> &topics, JoinGroupResponse &response);
 
-    std::shared_ptr<BalanceStrategy> findStrategy(const std::string &name, const std::vector<std::shared_ptr<BalanceStrategy>> &groupStrategies, bool &ok);
+    std::shared_ptr<BalanceStrategy> FindStrategy(const std::string &name, const std::vector<std::shared_ptr<BalanceStrategy>> &groupStrategies, bool &ok);
 
     coev::awaitable<int> SyncGroup(std::shared_ptr<Broker> coordinator, std::map<std::string, ConsumerGroupMemberMetadata> members,
                                    const BalanceStrategyPlan &plan, int32_t generationID, std::shared_ptr<BalanceStrategy> strategy, SyncGroupResponse &response);

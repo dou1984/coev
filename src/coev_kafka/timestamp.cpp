@@ -10,7 +10,7 @@ Timestamp::Timestamp(const std::chrono::system_clock::time_point &t) : time_(t)
 {
 }
 
-int Timestamp::encode(packetEncoder &pe)
+int Timestamp::encode(packetEncoder &pe) const
 {
     int64_t timestamp = -1;
 

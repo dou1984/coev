@@ -16,6 +16,7 @@ struct BrokerConsumer : IConsumer, std::enable_shared_from_this<BrokerConsumer>
     coev::co_task m_task;
     int m_refs = 0;
     BrokerConsumer();
+    BrokerConsumer(std::shared_ptr<Consumer> c, std::shared_ptr<Broker> broker);
     virtual ~BrokerConsumer() = default;
 
     int Topics(std::vector<std::string> &out);
@@ -36,4 +37,3 @@ struct BrokerConsumer : IConsumer, std::enable_shared_from_this<BrokerConsumer>
     coev::awaitable<void> Abort(int err);
     coev::awaitable<int> FetchNewMessages(std::shared_ptr<FetchResponse> &response);
 };
-std::shared_ptr<BrokerConsumer> NewBrokerConsumer(std::shared_ptr<Consumer> c, std::shared_ptr<Broker> broker);

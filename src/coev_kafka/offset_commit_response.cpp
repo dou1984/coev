@@ -18,7 +18,7 @@ void OffsetCommitResponse::add_error(const std::string &topic, int32_t partition
     partitions[partition] = kerror;
 }
 
-int OffsetCommitResponse::encode(packetEncoder &pe)
+int OffsetCommitResponse::encode(packetEncoder &pe) const
 {
     if (m_version >= 3)
     {
@@ -56,20 +56,20 @@ int OffsetCommitResponse::decode(packetDecoder &pd, int16_t version)
         }
     }
 
-    int32_t numTopics;
-    err = pd.getArrayLength(numTopics);
+    int32_t num_topics;
+    err = pd.getArrayLength(num_topics);
     if (err != ErrNoError)
     {
         return err;
     }
-    if (numTopics <= 0)
+    if (num_topics <= 0)
     {
         return ErrNoError;
     }
 
     m_errors.clear();
-    m_errors.reserve(numTopics);
-    for (int i = 0; i < numTopics; ++i)
+    m_errors.reserve(num_topics);
+    for (int i = 0; i < num_topics; ++i)
     {
         std::string name;
         err = pd.getString(name);
@@ -77,15 +77,14 @@ int OffsetCommitResponse::decode(packetDecoder &pd, int16_t version)
         {
             return err;
         }
-        int32_t numErrors;
-        err = pd.getArrayLength(numErrors);
+        int32_t num_errors;
+        err = pd.getArrayLength(num_errors);
         if (err != ErrNoError)
         {
             return err;
         }
-        auto &partitionMap = m_errors[name];
-        partitionMap.reserve(numErrors);
-        for (int j = 0; j < numErrors; ++j)
+        auto &partition_map = m_errors[name];
+        for (int j = 0; j < num_errors; ++j)
         {
             int32_t id;
             err = pd.getInt32(id);
@@ -99,7 +98,7 @@ int OffsetCommitResponse::decode(packetDecoder &pd, int16_t version)
             {
                 return err;
             }
-            partitionMap[id] = e;
+            partition_map[id] = e;
         }
     }
     return 0;

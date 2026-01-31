@@ -10,16 +10,16 @@
 #include "errors.h"
 #include "protocol_body.h"
 
-struct alterPartitionReassignmentsErrorBlock : IEncoder, IDecoder
+struct AlterPartitionReassignmentsErrorBlock : IEncoder, IDecoder
 {
     KError m_error_code;
     std::string m_error_message;
 
-    alterPartitionReassignmentsErrorBlock() = default;
-    alterPartitionReassignmentsErrorBlock(KError err, const std::string &msg) : m_error_code(err), m_error_message(msg)
+    AlterPartitionReassignmentsErrorBlock() = default;
+    AlterPartitionReassignmentsErrorBlock(KError err, const std::string &msg) : m_error_code(err), m_error_message(msg)
     {
     }
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd);
 };
 
@@ -29,7 +29,7 @@ struct AlterPartitionReassignmentsResponse : protocol_body, flexible_version
     std::chrono::milliseconds m_throttle_time;
     KError m_error_code = ErrNoError;
     std::string m_error_message;
-    std::map<std::string, std::map<int32_t, std::shared_ptr<alterPartitionReassignmentsErrorBlock>>> m_errors;
+    std::map<std::string, std::map<int32_t, std::shared_ptr<AlterPartitionReassignmentsErrorBlock>>> m_errors;
 
     AlterPartitionReassignmentsResponse() = default;
     AlterPartitionReassignmentsResponse(int16_t v) : m_version(v)
@@ -38,7 +38,7 @@ struct AlterPartitionReassignmentsResponse : protocol_body, flexible_version
     void set_version(int16_t v);
     void add_error(const std::string &topic, int32_t partition, KError kerror, std::string message);
 
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
 
     int16_t key() const;

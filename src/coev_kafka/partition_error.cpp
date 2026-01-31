@@ -1,6 +1,6 @@
 #include "partition_error.h"
 
-int PartitionError::encode(packetEncoder &pe)
+int PartitionError::encode(packetEncoder &pe) const
 {
     pe.putInt32(m_partition);
     pe.putKError(m_err);

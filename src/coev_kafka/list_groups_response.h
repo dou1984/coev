@@ -27,7 +27,7 @@ struct ListGroupsResponse : protocol_body, flexible_version
     std::unordered_map<std::string, GroupData> m_groups_data;
 
     void set_version(int16_t v);
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;

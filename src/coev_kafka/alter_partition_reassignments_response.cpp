@@ -2,7 +2,7 @@
 #include "alter_partition_reassignments_response.h"
 #include "api_versions.h"
 
-int alterPartitionReassignmentsErrorBlock::encode(packetEncoder &pe)
+int AlterPartitionReassignmentsErrorBlock::encode(packetEncoder &pe) const
 {
     pe.putKError(m_error_code);
     if (pe.putNullableString(m_error_message) != ErrNoError)
@@ -13,7 +13,7 @@ int alterPartitionReassignmentsErrorBlock::encode(packetEncoder &pe)
     return ErrNoError;
 }
 
-int alterPartitionReassignmentsErrorBlock::decode(packetDecoder &pd)
+int AlterPartitionReassignmentsErrorBlock::decode(packetDecoder &pd)
 {
     if (pd.getKError(m_error_code) != ErrNoError)
     {
@@ -34,10 +34,10 @@ void AlterPartitionReassignmentsResponse::set_version(int16_t v)
 
 void AlterPartitionReassignmentsResponse::add_error(const std::string &topic, int32_t partition, KError kerror, std::string message)
 {
-    m_errors[topic][partition] = std::make_shared<alterPartitionReassignmentsErrorBlock>(kerror, message);
+    m_errors[topic][partition] = std::make_shared<AlterPartitionReassignmentsErrorBlock>(kerror, message);
 }
 
-int AlterPartitionReassignmentsResponse::encode(packetEncoder &pe)
+int AlterPartitionReassignmentsResponse::encode(packetEncoder &pe) const
 {
     pe.putDurationMs(m_throttle_time);
     pe.putKError(m_error_code);
@@ -132,7 +132,7 @@ int AlterPartitionReassignmentsResponse::decode(packetDecoder &pd, int16_t versi
                     return ErrDecodeError;
                 }
 
-                auto block = std::make_shared<alterPartitionReassignmentsErrorBlock>();
+                auto block = std::make_shared<AlterPartitionReassignmentsErrorBlock>();
                 if (block->decode(pd) != ErrNoError)
                 {
                     return ErrDecodeError;

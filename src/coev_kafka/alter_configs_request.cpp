@@ -7,7 +7,7 @@ void AlterConfigsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int AlterConfigsRequest::encode(packetEncoder &pe)
+int AlterConfigsRequest::encode(packetEncoder &pe) const
 {
     if (pe.putArrayLength(static_cast<int32_t>(m_resources.size())) != ErrNoError)
     {
@@ -54,7 +54,7 @@ int AlterConfigsRequest::decode(packetDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-int AlterConfigsResource::encode(packetEncoder &pe)
+int AlterConfigsResource::encode(packetEncoder &pe) const
 {
     pe.putInt8(static_cast<int8_t>(m_type));
 

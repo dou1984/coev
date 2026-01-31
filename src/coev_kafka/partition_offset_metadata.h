@@ -10,6 +10,6 @@ struct PartitionOffsetMetadata : versioned_decoder, versioned_encoder
     int32_t m_leader_epoch;
     std::string m_metadata;
 
-    int encode(packetEncoder &pe, int16_t version);
+    int encode(packetEncoder &pe, int16_t version) const;
     int decode(packetDecoder &pd, int16_t version);
 };

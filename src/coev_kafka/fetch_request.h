@@ -21,19 +21,19 @@ struct FetchRequest : protocol_body
     IsolationLevel m_isolation;
     int32_t m_session_id;
     int32_t m_session_epoch;
-    std::map<std::string, std::map<int32_t, std::shared_ptr<FetchRequestBlock>>> m_blocks;
+    std::map<std::string, std::map<int32_t, FetchRequestBlock>> m_blocks;
     std::map<std::string, std::vector<int32_t>> m_forgotten;
     std::string m_rack_id;
 
     FetchRequest();
     FetchRequest(int16_t v);
     void set_version(int16_t v);
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;
     bool is_valid_version() const;
     KafkaVersion required_version() const;
-    void AddBlock(const std::string &topic, int32_t partitionID, int64_t fetchOffset, int32_t maxBytes, int32_t leaderEpoch);
+    void add_block(const std::string &topic, int32_t partitionID, int64_t fetchOffset, int32_t maxBytes, int32_t leaderEpoch);
 };

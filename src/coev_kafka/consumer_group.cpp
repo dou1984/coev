@@ -55,7 +55,7 @@ coev::awaitable<int> ConsumerGroup::Consume(std::shared_ptr<Context> &ctx, const
         co_return err;
     }
 
-    co_return co_await session->Release_(true);
+    co_return co_await session->_Release(true);
 }
 
 coev::co_channel<std::shared_ptr<ConsumerError>> &ConsumerGroup::Errors()
@@ -173,7 +173,7 @@ coev::awaitable<int> ConsumerGroup::NewSession(std::shared_ptr<Context> &ctx, co
     err = co_await JoinGroup(m_coordinator, topics, response);
     if (err != 0)
     {
-        co_await m_coordinator->Close();
+        m_coordinator->Close();
         co_return err;
     }
 
@@ -208,7 +208,7 @@ coev::awaitable<int> ConsumerGroup::NewSession(std::shared_ptr<Context> &ctx, co
     bool ok = false;
     if (strategy == nullptr)
     {
-        strategy = findStrategy(response.m_group_protocol, m_config->Consumer.Group.Rebalance.GroupStrategies, ok);
+        strategy = FindStrategy(response.m_group_protocol, m_config->Consumer.Group.Rebalance.GroupStrategies, ok);
         if (!ok)
         {
             co_return ErrStrategyNotFound;
@@ -238,7 +238,7 @@ coev::awaitable<int> ConsumerGroup::NewSession(std::shared_ptr<Context> &ctx, co
     err = co_await SyncGroup(m_coordinator, members, plan, response.m_generation_id, strategy, syncGroupResponse);
     if (err != 0)
     {
-        co_await m_coordinator->Close();
+        m_coordinator->Close();
         co_return err;
     }
 
@@ -377,7 +377,7 @@ coev::awaitable<int> ConsumerGroup::JoinGroup(std::shared_ptr<Broker> coordinato
     co_return 0;
 }
 
-std::shared_ptr<BalanceStrategy> ConsumerGroup::findStrategy(const std::string &name, const std::vector<std::shared_ptr<BalanceStrategy>> &groupStrategies, bool &ok)
+std::shared_ptr<BalanceStrategy> ConsumerGroup::FindStrategy(const std::string &name, const std::vector<std::shared_ptr<BalanceStrategy>> &groupStrategies, bool &ok)
 {
     for (const auto &strategy : groupStrategies)
     {
@@ -579,7 +579,7 @@ coev::awaitable<int> ConsumerGroup::Leave()
     err = co_await m_coordinator->LeaveGroup(req, promise);
     if (err != ErrNoError)
     {
-        co_await m_coordinator->Close();
+        m_coordinator->Close();
         co_return err;
     }
 
@@ -739,9 +739,7 @@ coev::awaitable<int> NewConsumerGroupSession(std::shared_ptr<Context> context, s
         co_return err;
     }
 
-    // Create the session with the provided context
     session = std::make_shared<ConsumerGroupSession>(parent, memberID, generationID, handler, offsets, claims, context, cancel);
-    auto session_ptr = session;
 
     for (auto &claim : claims)
     {
@@ -752,11 +750,11 @@ coev::awaitable<int> NewConsumerGroupSession(std::shared_ptr<Context> context, s
             auto pom = offsets->ManagePartition(topic, partition);
             if (err != ErrNoError)
             {
-                session_ptr->Release_(false);
+                session->_Release(false);
                 co_return ErrNoError;
             }
 
-            session_ptr->m_task << [session_ptr, pom, topic, partition]() -> coev::awaitable<void>
+            session->m_task << [session, pom, topic, partition]() -> coev::awaitable<void>
             {
                 while (true)
                 {
@@ -765,17 +763,18 @@ coev::awaitable<int> NewConsumerGroupSession(std::shared_ptr<Context> context, s
                     if (!err || err->m_err != ErrNoError)
                         break;
                     auto e = std::make_shared<ConsumerError>(topic, partition, err->m_err);
-                    session_ptr->m_parent->HandleError(e, topic, partition);
+                    session->m_parent->HandleError(e, topic, partition);
                 }
                 co_return;
             }();
+            session->m_task << session->HanderError(pom, topic, partition);
         }
     }
 
-    err = handler->Setup(session_ptr);
+    err = handler->Setup(session);
     if (err != ErrNoError)
     {
-        session_ptr->Release_(true);
+        session->_Release(true);
         co_return 0;
     }
 
@@ -785,15 +784,15 @@ coev::awaitable<int> NewConsumerGroupSession(std::shared_ptr<Context> context, s
         const std::vector<int32_t> &partitions = claim.second;
         for (int32_t partition : partitions)
         {
-            session_ptr->m_waitgroup.add();
-            co_start << [session_ptr, topic, partition]() -> coev::awaitable<void>
+            session->m_waitgroup.add();
+            co_start << [session, topic, partition]() -> coev::awaitable<void>
             {
-                if (session_ptr->m_parent->m_client->PartitionNotReadable(topic, partition))
+                if (session->m_parent->m_client->PartitionNotReadable(topic, partition))
                 {
-                    while (session_ptr->m_parent->m_client->PartitionNotReadable(topic, partition))
+                    while (session->m_parent->m_client->PartitionNotReadable(topic, partition))
                     {
                         bool isClosed;
-                        if (session_ptr->m_parent->m_closed.try_get(isClosed))
+                        if (session->m_parent->m_closed.try_get(isClosed))
                         {
                             co_return;
                         }
@@ -801,7 +800,7 @@ coev::awaitable<int> NewConsumerGroupSession(std::shared_ptr<Context> context, s
                     }
                 }
             }();
-            co_await session_ptr->Consume_(topic, partition);
+            co_await session->_Consume(topic, partition);
         }
     }
 

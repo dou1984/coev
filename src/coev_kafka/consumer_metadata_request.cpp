@@ -13,13 +13,18 @@ void ConsumerMetadataRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int ConsumerMetadataRequest::encode(packetEncoder &pe)
+int ConsumerMetadataRequest::encode(packetEncoder &pe) const
 {
-    FindCoordinatorRequest tmp;
-    tmp.m_coordinator_key = m_consumer_group;
-    tmp.m_coordinator_type = CoordinatorGroup;
-    tmp.m_version = m_version;
-    return tmp.encode(pe);
+    int err = pe.putString(m_consumer_group);
+    if (err != 0)
+        return err;
+
+    if (m_version >= 1)
+    {
+        pe.putInt8(static_cast<int8_t>(CoordinatorGroup));
+    }
+
+    return 0;
 }
 
 int ConsumerMetadataRequest::decode(packetDecoder &pd, int16_t version)

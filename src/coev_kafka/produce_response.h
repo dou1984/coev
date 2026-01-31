@@ -13,15 +13,15 @@
 #include "errors.h"
 #include "protocol_body.h"
 
-struct ProduceResponseBlock
+struct ProduceResponseBlock : versioned_encoder, versioned_decoder
 {
     KError m_err;
     int64_t m_offset = 0;
     int64_t m_start_offset = 0;
     std::chrono::system_clock::time_point m_timestamp;
 
-    int decode(packetDecoder & pd, int16_t version);
-    int encode(packetEncoder & pe, int16_t version) const;
+    int decode(packetDecoder &pd, int16_t version);
+    int encode(packetEncoder &pe, int16_t version) const;
 };
 
 struct ProduceResponse : protocol_body
@@ -32,7 +32,7 @@ struct ProduceResponse : protocol_body
 
     void set_version(int16_t v);
     int decode(packetDecoder &pd, int16_t version);
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

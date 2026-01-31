@@ -54,13 +54,6 @@ coev::awaitable<int> PartitionConsumer::Dispatcher()
         }
 
         co_await sleep_for(std::chrono::duration_cast<std::chrono::milliseconds>(ComputeBackoff()));
-
-        if (m_broker != nullptr)
-        {
-            m_consumer->UnrefBrokerConsumer(m_broker);
-            m_broker = nullptr;
-        }
-
         auto err = co_await Dispatch();
         if (err)
         {
@@ -69,10 +62,6 @@ coev::awaitable<int> PartitionConsumer::Dispatcher()
         }
     }
 
-    if (m_broker != nullptr)
-    {
-        m_consumer->UnrefBrokerConsumer(m_broker);
-    }
     m_consumer->RemoveChild(shared_from_this());
     co_return 0;
 }
@@ -409,7 +398,9 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
             std::vector<std::shared_ptr<ConsumerMessage>> msg_set;
             auto err = ParseMessages(records.m_message_set, msg_set);
             if (err)
+            {
                 return err;
+            }
             messages.insert(messages.end(), msg_set.begin(), msg_set.end());
         }
         else if (records.m_records_type == DefaultRecords)
@@ -426,15 +417,17 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
             std::vector<std::shared_ptr<ConsumerMessage>> batch_msgs;
             auto err = ParseRecords(records.m_record_batch, batch_msgs);
             if (err)
+            {
                 return err;
+            }
 
             bool isControl;
-            auto controlErr = records.is_control(isControl);
-            if (controlErr)
+            err = records.is_control(isControl);
+            if (err)
             {
                 if (m_conf->Consumer.IsolationLevel_ == ReadCommitted)
                 {
-                    return controlErr;
+                    return err;
                 }
                 continue;
             }
@@ -444,7 +437,9 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
                 ControlRecord control;
                 auto err = records.get_control_record(control);
                 if (err)
+                {
                     return err;
+                }
 
                 if (control.m_type == ControlRecordType::ControlRecordAbort)
                 {

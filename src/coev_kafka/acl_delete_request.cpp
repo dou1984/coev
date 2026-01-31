@@ -6,14 +6,14 @@ void DeleteAclsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int DeleteAclsRequest::encode(packetEncoder &pe)
+int DeleteAclsRequest::encode(packetEncoder &pe) const
 {
     if (pe.putArrayLength(static_cast<int32_t>(m_filters.size())) != 0)
     {
         return -1;
     }
 
-    for (auto &filter : m_filters)
+    for (const auto &filter : m_filters)
     {
         filter->m_version = m_version;
         if (filter->encode(pe) != 0)

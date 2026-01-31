@@ -5,7 +5,7 @@ void DescribeClientQuotasRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int DescribeClientQuotasRequest::encode(packetEncoder &pe)
+int DescribeClientQuotasRequest::encode(packetEncoder &pe) const
 {
     if (pe.putArrayLength(static_cast<int32_t>(m_components.size())) != ErrNoError)
     {
@@ -59,7 +59,7 @@ int DescribeClientQuotasRequest::decode(packetDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-int QuotaFilterComponent::encode(packetEncoder &pe)
+int QuotaFilterComponent::encode(packetEncoder &pe) const
 {
     if (pe.putString(m_entity_type) != ErrNoError)
     {

@@ -6,7 +6,7 @@ void DescribeConfigsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int DescribeConfigsRequest::encode(packetEncoder &pe)
+int DescribeConfigsRequest::encode(packetEncoder &pe) const
 {
     if (pe.putArrayLength(static_cast<int32_t>(m_resources.size())) != ErrNoError)
     {

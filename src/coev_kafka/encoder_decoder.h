@@ -23,10 +23,12 @@ struct packetType
     }
     void pushFlexible()
     {
+        // m_type = FLEXIBLE;
         m_type.push_back(FLEXIBLE);
     }
     void popFlexible()
     {
+        // m_type = FIXED;
         m_type.pop_back();
     }
 };
@@ -48,7 +50,7 @@ struct flexible_version
 struct IEncoder
 {
     virtual ~IEncoder() = default;
-    virtual int encode(packetEncoder &pe) = 0;
+    virtual int encode(packetEncoder &pe) const = 0;
 };
 
 struct header_encoder : IEncoder
@@ -58,7 +60,7 @@ struct header_encoder : IEncoder
 struct versioned_encoder
 {
     virtual ~versioned_encoder() = default;
-    virtual int encode(packetEncoder &pe, int16_t version) = 0;
+    virtual int encode(packetEncoder &pe, int16_t version) const = 0;
 };
 
 struct IDecoder

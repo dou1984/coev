@@ -54,7 +54,7 @@ int FindCoordinatorResponse::decode(packetDecoder &pd, int16_t version)
     return 0;
 }
 
-int FindCoordinatorResponse::encode(packetEncoder &pe)
+int FindCoordinatorResponse::encode(packetEncoder &pe) const
 {
     if (m_version >= 1)
     {

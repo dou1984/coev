@@ -108,7 +108,7 @@
 #include "txn_offset_commit_response.h"
 #include "undefined.h"
 
-int8_t getHeaderLength(int16_t header_version);
+int8_t GetHeaderLength(int16_t header_version);
 
 struct GSSAPIKerberosAuth;
 
@@ -121,10 +121,10 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
     ~Broker();
 
     bool Connected();
+    int Close();
     int TLSConnectionState();
 
     coev::awaitable<int> Open(std::shared_ptr<Config> conf);
-    coev::awaitable<int> Close();
     coev::awaitable<int> GetMetadata(std::shared_ptr<MetadataRequest> request, ResponsePromise<MetadataResponse> &response);
     coev::awaitable<int> GetConsumerMetadata(std::shared_ptr<ConsumerMetadataRequest> request, ResponsePromise<ConsumerMetadataResponse> &response);
     coev::awaitable<int> FindCoordinator(std::shared_ptr<FindCoordinatorRequest> request, ResponsePromise<FindCoordinatorResponse> &response);
@@ -167,7 +167,7 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
     coev::awaitable<int> AlterClientQuotas(std::shared_ptr<AlterClientQuotasRequest> request, ResponsePromise<AlterClientQuotasResponse> &response);
 
     int decode(packetDecoder &pd, int16_t version);
-    int encode(packetEncoder &pe, int16_t version);
+    int encode(packetEncoder &pe, int16_t version) const;
 
     std::string Addr();
     std::string Rack();
@@ -266,7 +266,7 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
     coev::awaitable<int> ResponseReceiver(std::shared_ptr<Req> request, ResponsePromise<Res> &promise, int &err)
     {
         std::string header;
-        auto bytesReadHeader = getHeaderLength(promise.m_response.header_version());
+        auto bytesReadHeader = GetHeaderLength(promise.m_response.header_version());
         err = co_await ReadFull(header, bytesReadHeader);
         auto m_request_latency = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - promise.m_request_time);
         if (err)

@@ -6,7 +6,7 @@ void EndTxnRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int EndTxnRequest::encode(packetEncoder &pe)
+int EndTxnRequest::encode(packetEncoder &pe) const
 {
     if (pe.putString(m_transactional_id) != ErrNoError)
     {

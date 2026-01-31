@@ -7,7 +7,7 @@ void DescribeAclsRequest::set_version(int16_t v)
     m_filter.m_version = m_version;
 }
 
-int DescribeAclsRequest::encode(packetEncoder &pe)
+int DescribeAclsRequest::encode(packetEncoder &pe) const
 {
     return m_filter.encode(pe);
 }

@@ -7,7 +7,7 @@ void ListGroupsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int ListGroupsRequest::encode(packetEncoder &pe)
+int ListGroupsRequest::encode(packetEncoder &pe) const
 {
     if (m_version >= 4)
     {
@@ -15,7 +15,7 @@ int ListGroupsRequest::encode(packetEncoder &pe)
         if (err != 0)
             return err;
 
-        for (auto &filter : m_states_filter)
+        for (const auto &filter : m_states_filter)
         {
             err = pe.putString(filter);
             if (err != 0)
@@ -28,7 +28,7 @@ int ListGroupsRequest::encode(packetEncoder &pe)
             if (err != 0)
                 return err;
 
-            for (auto &filter : m_types_filter)
+            for (const auto &filter : m_types_filter)
             {
                 err = pe.putString(filter);
                 if (err != 0)

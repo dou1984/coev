@@ -19,7 +19,7 @@ struct ConfigSynonym : versioned_decoder, versioned_encoder
     std::string m_config_value;
     ConfigSource m_source;
 
-    int encode(packetEncoder &pe, int16_t version);
+    int encode(packetEncoder &pe, int16_t version) const;
     int decode(packetDecoder &pd, int16_t version);
 };
 
@@ -33,7 +33,7 @@ struct ConfigEntry : versioned_decoder, versioned_encoder
     ConfigSource m_source;
     std::vector<std::shared_ptr<ConfigSynonym>> m_synonyms;
 
-    int encode(packetEncoder &pe, int16_t version);
+    int encode(packetEncoder &pe, int16_t version) const;
     int decode(packetDecoder &pd, int16_t version);
 };
 
@@ -45,7 +45,7 @@ struct ResourceResponse : versioned_decoder, versioned_encoder
     std::string m_name;
     std::vector<std::shared_ptr<ConfigEntry>> m_configs;
 
-    int encode(packetEncoder &pe, int16_t version);
+    int encode(packetEncoder &pe, int16_t version) const;
     int decode(packetDecoder &pd, int16_t version);
 };
 
@@ -57,7 +57,7 @@ struct DescribeConfigsResponse : protocol_body
     std::vector<std::shared_ptr<ResourceResponse>> m_resources;
 
     void set_version(int16_t v);
-    int encode(packetEncoder &pe);
+    int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;

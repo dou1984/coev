@@ -5,7 +5,7 @@ void DescribeGroupsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int DescribeGroupsResponse::encode(packetEncoder &pe)
+int DescribeGroupsResponse::encode(packetEncoder &pe) const
 {
     if (m_version >= 1)
     {
@@ -127,7 +127,7 @@ std::chrono::milliseconds DescribeGroupsResponse::throttle_time() const
     return m_throttle_time;
 }
 
-int GroupDescription::encode(packetEncoder &pe, int16_t version)
+int GroupDescription::encode(packetEncoder &pe, int16_t version) const
 {
     m_version = version;
     pe.putInt16(m_error_code);
@@ -214,7 +214,7 @@ int GroupDescription::decode(packetDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-int GroupMemberDescription::encode(packetEncoder &pe, int16_t version)
+int GroupMemberDescription::encode(packetEncoder &pe, int16_t version) const
 {
     m_version = version;
     if (pe.putString(m_member_id) != ErrNoError)
@@ -236,7 +236,7 @@ int GroupMemberDescription::encode(packetEncoder &pe, int16_t version)
         return ErrEncodeError;
 
     pe.putEmptyTaggedFieldArray();
-    return true;
+    return ErrNoError;
 }
 
 int GroupMemberDescription::decode(packetDecoder &pd, int16_t version)

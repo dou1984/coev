@@ -5,14 +5,14 @@ void DescribeUserScramCredentialsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int DescribeUserScramCredentialsRequest::encode(packetEncoder &pe)
+int DescribeUserScramCredentialsRequest::encode(packetEncoder &pe) const
 {
     if (pe.putArrayLength(static_cast<int32_t>(m_describe_users.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &d : m_describe_users)
+    for (const auto &d : m_describe_users)
     {
         if (pe.putString(d.m_name) != ErrNoError)
         {

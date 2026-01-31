@@ -8,7 +8,7 @@ void AddPartitionsToTxnResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int AddPartitionsToTxnResponse::encode(packetEncoder &pe)
+int AddPartitionsToTxnResponse::encode(packetEncoder &pe) const
 {
     pe.putDurationMs(m_throttle_time);
 
