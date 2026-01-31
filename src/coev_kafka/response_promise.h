@@ -14,12 +14,17 @@ struct ResponsePromise
 {
     std::chrono::time_point<std::chrono::system_clock> m_request_time;
     int32_t m_correlation_id = 0;
-    Res m_response;
     std::string m_packets;
+    std::shared_ptr<Res> m_response;
+
+    ResponsePromise()
+    {
+        m_response = std::make_shared<Res>();
+    }
 
     int decode(int16_t version)
     {
-        auto err = versionedDecode(m_packets, m_response, version);
+        auto err = versionedDecode(m_packets, *m_response, version);
         if (err)
         {
             return ErrDecodeError;

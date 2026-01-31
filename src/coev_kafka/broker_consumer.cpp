@@ -12,7 +12,7 @@ BrokerConsumer::BrokerConsumer()
 }
 
 BrokerConsumer::BrokerConsumer(std::shared_ptr<Consumer> c, std::shared_ptr<Broker> broker)
-    : m_consumer(c), m_broker(broker), m_refs(0)
+    : m_consumer(c), m_broker(broker)
 {
     m_task << SubscriptionManager();
     m_task << SubscriptionConsumer();
@@ -54,7 +54,6 @@ coev::awaitable<void> BrokerConsumer::SubscriptionConsumer()
     while (true)
     {
         UpdateSubscriptions();
-        LOG_CORE("BrokerConsumer::SubscriptionConsumer has %zu active subscriptions", m_subscriptions.size());
         if (m_subscriptions.empty())
         {
             LOG_CORE("BrokerConsumer::SubscriptionConsumer no active subscriptions, sleeping");
@@ -172,7 +171,6 @@ coev::awaitable<void> BrokerConsumer::HandleResponses()
 
 coev::awaitable<void> BrokerConsumer::Abort(int err)
 {
-    LOG_CORE("BrokerConsumer::Abort called with error %d, abandoning broker consumer", err);
     m_consumer->AbandonBrokerConsumer(shared_from_this());
     m_broker->Close();
 
@@ -182,10 +180,8 @@ coev::awaitable<void> BrokerConsumer::Abort(int err)
         child.first->SendError(err);
         child.first->m_trigger.set(true);
     }
-
     if (m_new_subscriptions.empty())
     {
-        LOG_CORE("BrokerConsumer::Abort no new subscriptions, sleeping");
         co_await sleep_for(PartitionConsumersBatchTimeout);
     }
     else
@@ -197,79 +193,78 @@ coev::awaitable<void> BrokerConsumer::Abort(int err)
             child->m_trigger.set(true);
         }
     }
-    LOG_CORE("BrokerConsumer::Abort finished");
 }
 
 coev::awaitable<int> BrokerConsumer::FetchNewMessages(std::shared_ptr<FetchResponse> &response)
 {
     LOG_CORE("BrokerConsumer::FetchNewMessages starting");
-    FetchRequest request;
-    request.m_min_bytes = m_consumer->m_conf->Consumer.Fetch.Min;
-    request.m_max_wait_time = static_cast<int32_t>(m_consumer->m_conf->Consumer.MaxWaitTime.count() / std::chrono::milliseconds(1).count());
+    auto request = std::make_shared<FetchRequest>();
+    request->m_min_bytes = m_consumer->m_conf->Consumer.Fetch.Min;
+    request->m_max_wait_time = static_cast<int32_t>(m_consumer->m_conf->Consumer.MaxWaitTime.count() / std::chrono::milliseconds(1).count());
 
     if (m_consumer->m_conf->Version.IsAtLeast(V0_9_0_0))
     {
-        request.m_version = 1;
+        request->m_version = 1;
     }
     if (m_consumer->m_conf->Version.IsAtLeast(V0_10_0_0))
     {
-        request.m_version = 2;
+        request->m_version = 2;
     }
     if (m_consumer->m_conf->Version.IsAtLeast(V0_10_1_0))
     {
-        request.m_version = 3;
-        request.m_max_bytes = MaxResponseSize;
+        request->m_version = 3;
+        request->m_max_bytes = MaxResponseSize;
     }
     if (m_consumer->m_conf->Version.IsAtLeast(V0_11_0_0))
     {
-        request.m_version = 5;
-        request.m_isolation = m_consumer->m_conf->Consumer.IsolationLevel_;
+        request->m_version = 5;
+        request->m_isolation = m_consumer->m_conf->Consumer.IsolationLevel_;
     }
     if (m_consumer->m_conf->Version.IsAtLeast(V1_0_0_0))
     {
-        request.m_version = 6;
+        request->m_version = 6;
     }
     if (m_consumer->m_conf->Version.IsAtLeast(V1_1_0_0))
     {
-        request.m_version = 7;
-        request.m_session_id = 0;
-        request.m_session_epoch = -1;
+        request->m_version = 7;
+        request->m_session_id = 0;
+        request->m_session_epoch = -1;
     }
     if (m_consumer->m_conf->Version.IsAtLeast(V2_0_0_0))
     {
-        request.m_version = 8;
+        request->m_version = 8;
     }
     if (m_consumer->m_conf->Version.IsAtLeast(V2_1_0_0))
     {
-        request.m_version = 10;
+        request->m_version = 10;
     }
     if (m_consumer->m_conf->Version.IsAtLeast(V2_3_0_0))
     {
-        request.m_version = 11;
-        request.m_rack_id = m_consumer->m_conf->RackId;
+        request->m_version = 11;
+        request->m_rack_id = m_consumer->m_conf->RackId;
     }
 
     for (auto &child : m_subscriptions)
     {
         if (!child.first->IsPaused())
         {
-            request.add_block(child.first->m_topic, child.first->m_partition, child.first->m_offset, child.first->m_fetch_size, child.first->m_leader_epoch);
+            request->add_block(child.first->m_topic, child.first->m_partition, child.first->m_offset, child.first->m_fetch_size, child.first->m_leader_epoch);
         }
     }
 
-    if (request.m_blocks.empty())
+    if (request->m_blocks.empty())
     {
         LOG_CORE("BrokerConsumer::FetchNewMessages no blocks to fetch, returning");
         co_return 0;
     }
 
-    LOG_CORE("BrokerConsumer::FetchNewMessages sending FetchRequest with %zu blocks", request.m_blocks.size());
+    LOG_CORE("BrokerConsumer::FetchNewMessages sending FetchRequest with %zu blocks", request->m_blocks.size());
     ResponsePromise<FetchResponse> local_response;
-    int err = co_await m_broker->Fetch(std::make_shared<FetchRequest>(request), local_response);
+    int err = co_await m_broker->Fetch(request, local_response);
     if (err == 0)
     {
         LOG_CORE("BrokerConsumer::FetchNewMessages received successful response, creating shared_ptr");
-        response = std::make_shared<FetchResponse>(std::move(local_response.m_response));
+        response = local_response.m_response;
     }
     else
     {
