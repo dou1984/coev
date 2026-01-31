@@ -37,6 +37,42 @@ OffsetManager::OffsetManager(std::shared_ptr<Client> client, std::shared_ptr<Con
                              std::function<void()> sessionCanceler, const std::string &memberID, int32_t generation)
     : m_client(client), m_conf(conf), m_group(group), m_session_canceler(sessionCanceler), m_member_id(memberID), m_generation(generation), m_closing(false)
 {
+    if (!m_conf->Consumer.Group.InstanceID.empty())
+    {
+        m_group_instance_id = m_conf->Consumer.Group.InstanceID;
+    }
+
+    if (m_conf->Consumer.Offsets.AutoCommit.Enable)
+    {
+        m_task << MainLoop();
+    }
+}
+
+OffsetManager::OffsetManager(std::shared_ptr<Client> client, const std::string &group, const std::string &memberID, int32_t generation, std::function<void()> sessionCanceler)
+{
+    if (client->Closed())
+    {
+        throw std::runtime_error("Client is closed");
+    }
+
+    auto conf = client->GetConfig();
+    m_client = client;
+    m_conf = conf;
+    m_group = group;
+    m_session_canceler = sessionCanceler;
+    m_member_id = memberID;
+    m_generation = generation;
+    m_closing = false;
+
+    if (!conf->Consumer.Group.InstanceID.empty())
+    {
+        m_group_instance_id = conf->Consumer.Group.InstanceID;
+    }
+
+    if (conf->Consumer.Offsets.AutoCommit.Enable)
+    {
+        m_task << MainLoop();
+    }
 }
 
 std::shared_ptr<PartitionOffsetManager> OffsetManager::ManagePartition(const std::string &topic, int32_t partition)
@@ -125,7 +161,7 @@ coev::awaitable<int> OffsetManager::FetchInitialOffset(const std::string &topic,
         co_return co_await FetchInitialOffset(topic, partition, retries - 1, offset, leaderEpoch, metadata);
     }
 
-    auto block = resp.m_response.GetBlock(topic, partition);
+    auto block = resp.m_response->get_block(topic, partition);
     if (!block)
     {
         co_return ErrIncompleteResponse;
@@ -248,7 +284,7 @@ coev::awaitable<void> OffsetManager::FlushToBroker()
         co_return;
     }
 
-    HandleResponse(broker, *request, response.m_response);
+    HandleResponse(broker, *request, *response.m_response);
 }
 
 int OffsetManager::ConstructRequest(OffsetCommitRequest &req)
@@ -449,24 +485,13 @@ coev::awaitable<int> NewOffsetManagerFromClient(
     const std::string &group, const std::string &memberID, int32_t generation,
     std::shared_ptr<Client> client, std::function<void()> sessionCanceler, std::shared_ptr<OffsetManager> &om)
 {
-
-    if (client->Closed())
+    try
+    {
+        om = std::make_shared<OffsetManager>(client, group, memberID, generation, sessionCanceler);
+        co_return 0;
+    }
+    catch (const std::runtime_error &e)
     {
         co_return ErrClosedClient;
     }
-
-    auto conf = client->GetConfig();
-    om = std::make_shared<OffsetManager>(client, conf, group, sessionCanceler, memberID, generation);
-
-    if (!conf->Consumer.Group.InstanceID.empty())
-    {
-        om->m_group_instance_id = conf->Consumer.Group.InstanceID;
-    }
-
-    if (conf->Consumer.Offsets.AutoCommit.Enable)
-    {
-        om->m_task << om->MainLoop();
-    }
-
-    co_return 0;
 }

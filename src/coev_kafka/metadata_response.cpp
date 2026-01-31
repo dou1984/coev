@@ -95,7 +95,7 @@ int TopicMetadata::decode(packetDecoder &pd, int16_t version)
         return err;
     }
 
-    if (int err = pd.getString(Name); err != 0)
+    if (int err = pd.getString(m_name); err != 0)
     {
         return err;
     }
@@ -109,13 +109,13 @@ int TopicMetadata::decode(packetDecoder &pd, int16_t version)
         }
         for (size_t i = 0; i < 16; ++i)
         {
-            Uuid_.data[i] = uuidBytes[i];
+            m_uuid.data[i] = uuidBytes[i];
         }
     }
 
     if (m_version >= 1)
     {
-        if (int err = pd.getBool(IsInternal); err != 0)
+        if (int err = pd.getBool(m_is_internal); err != 0)
         {
             return err;
         }
@@ -126,7 +126,7 @@ int TopicMetadata::decode(packetDecoder &pd, int16_t version)
     {
         return err;
     }
-    Partitions.resize(n);
+    m_partitions.resize(n);
     for (int32_t i = 0; i < n; ++i)
     {
         auto block = std::make_shared<PartitionMetadata>();
@@ -134,12 +134,12 @@ int TopicMetadata::decode(packetDecoder &pd, int16_t version)
         {
             return err;
         }
-        Partitions[i] = block;
+        m_partitions[i] = block;
     }
 
     if (m_version >= 8)
     {
-        if (int err = pd.getInt32(TopicAuthorizedOperations); err != 0)
+        if (int err = pd.getInt32(m_topic_authorized_operations); err != 0)
         {
             return err;
         }
@@ -155,14 +155,14 @@ int TopicMetadata::encode(packetEncoder &pe, int16_t version) const
     m_version = version;
     pe.putKError(m_err);
 
-    if (int err = pe.putString(Name); err != 0)
+    if (int err = pe.putString(m_name); err != 0)
     {
         return err;
     }
 
     if (m_version >= 10)
     {
-        std::string uuidBytes(Uuid_.data.begin(), Uuid_.data.end());
+        std::string uuidBytes(m_uuid.data.begin(), m_uuid.data.end());
         if (int err = pe.putRawBytes(uuidBytes); err != 0)
         {
             return err;
@@ -171,14 +171,14 @@ int TopicMetadata::encode(packetEncoder &pe, int16_t version) const
 
     if (m_version >= 1)
     {
-        pe.putBool(IsInternal);
+        pe.putBool(m_is_internal);
     }
 
-    if (int err = pe.putArrayLength(static_cast<int32_t>(Partitions.size())); err != 0)
+    if (int err = pe.putArrayLength(static_cast<int32_t>(m_partitions.size())); err != 0)
     {
         return err;
     }
-    for (auto &block : Partitions)
+    for (auto &block : m_partitions)
     {
         if (int err = block->encode(pe, m_version); err != 0)
         {
@@ -188,7 +188,7 @@ int TopicMetadata::encode(packetEncoder &pe, int16_t version) const
 
     if (m_version >= 8)
     {
-        pe.putInt32(TopicAuthorizedOperations);
+        pe.putInt32(m_topic_authorized_operations);
     }
 
     pe.putEmptyTaggedFieldArray();
@@ -417,7 +417,7 @@ std::shared_ptr<TopicMetadata> MetadataResponse::add_topic(const std::string &to
 {
     for (auto &tm : m_topics)
     {
-        if (tm->Name == topic)
+        if (tm->m_name == topic)
         {
             tm->m_err = (KError)err;
             return tm;
@@ -425,7 +425,7 @@ std::shared_ptr<TopicMetadata> MetadataResponse::add_topic(const std::string &to
     }
 
     auto tmatch = std::make_shared<TopicMetadata>();
-    tmatch->Name = topic;
+    tmatch->m_name = topic;
     tmatch->m_err = (KError)err;
     m_topics.push_back(tmatch);
     return tmatch;
@@ -436,7 +436,7 @@ int MetadataResponse::add_topic_partition(const std::string &topic, int32_t part
                                           int err)
 {
     auto tmatch = add_topic(topic, 0);
-    for (auto &pm : tmatch->Partitions)
+    for (auto &pm : tmatch->m_partitions)
     {
         if (pm->m_id == partition)
         {
@@ -456,6 +456,6 @@ int MetadataResponse::add_topic_partition(const std::string &topic, int32_t part
     pmatch->m_isr = isr.empty() ? std::vector<int32_t>{} : isr;
     pmatch->m_offline_replicas = offline.empty() ? std::vector<int32_t>{} : offline;
     pmatch->m_err = (KError)err;
-    tmatch->Partitions.push_back(pmatch);
+    tmatch->m_partitions.push_back(pmatch);
     return 0;
 }

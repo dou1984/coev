@@ -52,7 +52,7 @@ TEST(OffsetFetchResponseTest, EncodeWithBlocks)
     block->m_offset = 100;
     block->m_metadata = "test-metadata";
     block->m_err = ErrNoError;
-    response.AddBlock("test-topic", 0, block);
+    response.add_block("test-topic", 0, block);
 
     realEncoder encoder(1024);
     EXPECT_EQ(response.encode(encoder), 0);
@@ -70,7 +70,7 @@ TEST(OffsetFetchResponseTest, EncodeWithVersionSpecificFields)
     block->m_leader_epoch = 123;
     block->m_metadata = "test-metadata";
     block->m_err = ErrNoError;
-    response.AddBlock("test-topic", 0, block);
+    response.add_block("test-topic", 0, block);
 
     realEncoder encoder(1024);
     EXPECT_EQ(response.encode(encoder), 0);

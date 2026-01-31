@@ -59,7 +59,7 @@ struct Client
     bool Closed();
     bool PartitionNotReadable(const std::string &topic, int32_t partition);
     int MetadataTopics(std::vector<std::string> &topics);
-    bool UpdateMetadata(MetadataResponse &data, bool allKnownMetaData);
+    bool UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnownMetaData);
     void RandomizeSeedBrokers(const std::vector<std::string> &addrs);
     void UpdateBroker(const std::vector<std::shared_ptr<Broker>> &brokers);
     void RegisterBroker(std::shared_ptr<Broker> broker);

@@ -31,9 +31,15 @@ int8_t GetHeaderLength(int16_t header_version)
 
 Broker::Broker(const std::string &addr) : m_id(-1), m_addr(addr), m_rack(""), m_correlation_id(0), m_session_reauthentication_time(0), m_task()
 {
+    m_conn = std::make_unique<Connect>();
 }
 Broker::Broker(int id, const std::string &addr) : m_id(id), m_addr(addr), m_rack(""), m_correlation_id(0), m_session_reauthentication_time(0), m_task()
 {
+    m_conn = std::make_unique<Connect>();
+}
+Broker::Broker() : m_id(0), m_addr(""), m_rack(""), m_correlation_id(0), m_session_reauthentication_time(0), m_task()
+{
+    m_conn = std::make_unique<Connect>();
 }
 Broker::~Broker()
 {
@@ -218,7 +224,7 @@ coev::awaitable<int> Broker::_Open()
             }
         }
         m_broker_api_versions.clear();
-        for (auto &key : apiVersionsResponse.m_response.m_api_keys)
+        for (auto &key : apiVersionsResponse.m_response->m_api_keys)
         {
             m_broker_api_versions.emplace(key.m_api_key, ApiVersionRange(key.m_min_version, key.m_max_version));
         }
@@ -286,9 +292,8 @@ int Broker::Close()
 
 coev::awaitable<int> Broker::GetMetadata(std::shared_ptr<MetadataRequest> request, ResponsePromise<MetadataResponse> &response)
 {
-    auto correlation_id = m_correlation_id;
-    LOG_CORE("Sending MetadataRequest, version: %d, correlation_id: %d", request->version(), correlation_id);
-    defer(LOG_CORE("Received MetadataResponse, correlation_id: %d", correlation_id));
+    LOG_CORE("Sending MetadataRequest, version: %d, correlation_id: %d", request->version(), m_correlation_id);
+    defer(LOG_CORE("Received MetadataResponse, correlation_id: %d", response.m_correlation_id));
     return SendAndReceive(request, response);
 }
 coev::awaitable<int> Broker::GetConsumerMetadata(std::shared_ptr<ConsumerMetadataRequest> request, ResponsePromise<ConsumerMetadataResponse> &response)
@@ -465,7 +470,7 @@ coev::awaitable<int> Broker::CreateAcls(std::shared_ptr<CreateAclsRequest> reque
         co_return err;
     }
     std::vector<int> errs;
-    for (auto &res : response.m_response.m_acl_creation_responses)
+    for (auto &res : response.m_response->m_acl_creation_responses)
     {
         if (res->m_err != ErrNoError)
         {
@@ -673,9 +678,9 @@ coev::awaitable<int> Broker::AuthenticateViaSASLv1()
             co_return err;
         }
 
-        if (promise.m_response.m_err != 0)
+        if (promise.m_response->m_err != 0)
         {
-            co_return promise.m_response.m_err;
+            co_return promise.m_response->m_err;
         }
     }
 
@@ -696,7 +701,7 @@ coev::awaitable<int> Broker::AuthenticateViaSASLv1()
                 auto err = co_await DefaultAuthSendReceiver(req, promise);
                 if (!err)
                 {
-                    res = promise.m_response;
+                    res = *promise.m_response;
                 }
                 co_return err;
             });
@@ -712,7 +717,7 @@ coev::awaitable<int> Broker::AuthenticateViaSASLv1()
                 auto err = co_await DefaultAuthSendReceiver(req, promise);
                 if (!err)
                 {
-                    res = promise.m_response;
+                    res = *promise.m_response;
                 }
                 co_return err;
             });
@@ -727,7 +732,7 @@ coev::awaitable<int> Broker::AuthenticateViaSASLv1()
                 auto err = co_await DefaultAuthSendReceiver(req, promise);
                 if (!err)
                 {
-                    res = promise.m_response;
+                    res = *promise.m_response;
                 }
                 co_return err;
             });
@@ -739,7 +744,7 @@ coev::awaitable<int> Broker::AuthenticateViaSASLv1()
             auto err = co_await DefaultAuthSendReceiver(req, promise);
             if (!err)
             {
-                res = promise.m_response;
+                res = *promise.m_response;
             }
             co_return err;
         });

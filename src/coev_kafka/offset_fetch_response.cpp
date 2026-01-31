@@ -134,7 +134,7 @@ int OffsetFetchResponse::decode(packetDecoder &pd, int16_t version)
             auto &partitionMap = m_blocks[name];
             if (num_blocks > 0)
             {
-                partitionMap.reserve(num_blocks);
+                // std::map doesn't support reserve
                 for (int j = 0; j < num_blocks; ++j)
                 {
                     int32_t id;
@@ -228,7 +228,7 @@ std::chrono::milliseconds OffsetFetchResponse::throttle_time() const
     return std::chrono::milliseconds(m_throttle_time);
 }
 
-std::shared_ptr<OffsetFetchResponseBlock> OffsetFetchResponse::GetBlock(const std::string &topic, int32_t partition) const
+std::shared_ptr<OffsetFetchResponseBlock> OffsetFetchResponse::get_block(const std::string &topic, int32_t partition) const
 {
     auto topicIt = m_blocks.find(topic);
     if (topicIt == m_blocks.end())
@@ -239,7 +239,7 @@ std::shared_ptr<OffsetFetchResponseBlock> OffsetFetchResponse::GetBlock(const st
     return partIt->second;
 }
 
-void OffsetFetchResponse::AddBlock(const std::string &topic, int32_t partition, std::shared_ptr<OffsetFetchResponseBlock> block)
+void OffsetFetchResponse::add_block(const std::string &topic, int32_t partition, std::shared_ptr<OffsetFetchResponseBlock> block)
 {
     m_blocks[topic][partition] = block;
 }

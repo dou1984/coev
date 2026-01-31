@@ -99,7 +99,7 @@ KafkaVersion DescribeGroupsRequest::required_version() const
     }
 }
 
-void DescribeGroupsRequest::AddGroup(const std::string &group)
+void DescribeGroupsRequest::add_group(const std::string &group)
 {
     m_groups.push_back(group);
 }

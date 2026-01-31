@@ -114,7 +114,7 @@ struct GSSAPIKerberosAuth;
 
 struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_this<Broker>
 {
-    Broker() = default;
+    Broker();
     Broker(const std::string &addr);
     Broker(int id, const std::string &addr);
     ~Broker();
@@ -227,7 +227,7 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
         {
             co_return err;
         }
-        err = co_await ResponseReceiver(request, promise, err);
+        err = co_await ResponseReceiver(request, promise);
         if (err != ErrNoError)
         {
             co_return err;
@@ -262,18 +262,18 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
     }
 
     template <class Req, class Res>
-    coev::awaitable<int> ResponseReceiver(std::shared_ptr<Req> request, ResponsePromise<Res> &promise, int &err)
+    coev::awaitable<int> ResponseReceiver(std::shared_ptr<Req> request, ResponsePromise<Res> &promise)
     {
         std::string header;
-        auto bytesReadHeader = GetHeaderLength(promise.m_response.header_version());
-        err = co_await ReadFull(header, bytesReadHeader);
+        auto bytes_read_header = GetHeaderLength(promise.m_response->header_version());
+        auto err = co_await ReadFull(header, bytes_read_header);
         auto m_request_latency = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - promise.m_request_time);
         if (err)
         {
             co_return err;
         }
         ResponseHeader decoded_header;
-        err = versionedDecode(header, decoded_header, promise.m_response.header_version());
+        err = versionedDecode(header, decoded_header, promise.m_response->header_version());
         if (err)
         {
             co_return err;
@@ -284,13 +284,13 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
             co_return ErrCorrelationID;
         }
 
-        size_t bytesReadBody = decoded_header.m_length - bytesReadHeader + 4;
-        err = co_await ReadFull(promise.m_packets, bytesReadBody);
+        size_t bytes_read_body = decoded_header.m_length - bytes_read_header + 4;
+        err = co_await ReadFull(promise.m_packets, bytes_read_body);
         if (err)
         {
             co_return err;
         }
-        if (promise.m_packets.size() != bytesReadBody)
+        if (promise.m_packets.size() != bytes_read_body)
         {
             co_return err;
         }
@@ -305,18 +305,18 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
     template <class Res>
     coev::awaitable<int> DefaultAuthSendReceiver(const std::string &authBytes, ResponsePromise<Res> &promise)
     {
-        SaslAuthenticateRequest authenticateRequest;
-        auto err = CreateSaslAuthenticateRequest(authBytes, authenticateRequest);
+        SaslAuthenticateRequest authenticate_request;
+        auto err = CreateSaslAuthenticateRequest(authBytes, authenticate_request);
         if (err)
         {
             co_return err;
         }
-        err = co_await SendAndReceive(std::make_shared<SaslAuthenticateRequest>(authenticateRequest), promise);
+        err = co_await SendAndReceive(std::make_shared<SaslAuthenticateRequest>(authenticate_request), promise);
         if (err)
         {
             co_return err;
         }
-        err = promise.decode(authenticateRequest.version());
+        err = promise.decode(authenticate_request.version());
         if (err)
         {
             co_return err;
@@ -327,8 +327,8 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
     template <class Func, class... Args>
     coev::awaitable<int> AsyncProduce(std::shared_ptr<ProduceRequest> request, const Func &_f, Args &&...args)
     {
-        bool needAcks = request->m_acks != NoResponse;
-        if (needAcks)
+        bool need_acks = request->m_acks != NoResponse;
+        if (need_acks)
         {
             m_task << [](auto _this, auto request, const auto &_f, auto &&...args) -> coev::awaitable<void>
             {

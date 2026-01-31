@@ -38,11 +38,11 @@ struct TopicMetadata : versioned_decoder, versioned_encoder
 {
     mutable int16_t m_version;
     KError m_err;
-    std::string Name;
-    Uuid Uuid_;
-    bool IsInternal;
-    std::vector<std::shared_ptr<PartitionMetadata>> Partitions;
-    int32_t TopicAuthorizedOperations;
+    std::string m_name;
+    Uuid m_uuid;
+    bool m_is_internal;
+    std::vector<std::shared_ptr<PartitionMetadata>> m_partitions;
+    int32_t m_topic_authorized_operations;
 
     int decode(packetDecoder &pd, int16_t version);
     int encode(packetEncoder &pe, int16_t version) const;

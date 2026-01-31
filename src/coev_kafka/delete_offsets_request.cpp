@@ -111,7 +111,7 @@ KafkaVersion DeleteOffsetsRequest::required_version() const
     return V2_4_0_0;
 }
 
-void DeleteOffsetsRequest::AddPartition(const std::string &topic, int32_t partitionID)
+void DeleteOffsetsRequest::add_partition(const std::string &topic, int32_t partitionID)
 {
     m_partitions[topic].push_back(partitionID);
 }

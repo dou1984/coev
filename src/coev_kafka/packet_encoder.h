@@ -9,7 +9,7 @@
 #include "encoder_decoder.h"
 #include "dynamic_push_encoder.h"
 
-struct packetEncoder : packetType
+struct packetEncoder : packet_type
 {
     virtual ~packetEncoder() = default;
 

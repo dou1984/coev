@@ -163,18 +163,16 @@ KafkaVersion DescribeClientQuotasRequest::required_version() const
     }
 }
 
-std::shared_ptr<DescribeClientQuotasRequest> NewDescribeClientQuotasRequest(KafkaVersion kafkaVersion, const std::vector<QuotaFilterComponent> &components, bool strict)
+DescribeClientQuotasRequest::DescribeClientQuotasRequest(KafkaVersion version, const std::vector<QuotaFilterComponent> &components, bool strict)
 {
-    auto d = std::make_shared<DescribeClientQuotasRequest>();
-    d->m_components = components;
-    d->m_strict = strict;
-    if (kafkaVersion.IsAtLeast(V2_8_0_0))
+    if (version.IsAtLeast(V2_8_0_0))
     {
-        d->m_version = 1;
+        m_version = 1;
     }
     else
     {
-        d->m_version = 0;
+        m_version = 0;
     }
-    return d;
+    m_components = components;
+    m_strict = strict;
 }

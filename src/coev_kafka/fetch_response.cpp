@@ -54,17 +54,16 @@ int FetchResponseBlock::decode(packetDecoder &pd, int16_t version)
                 return err;
             }
         }
-        int32_t numTransact;
-        if ((err = pd.getArrayLength(numTransact)) != 0)
+        int32_t num_transact;
+        if ((err = pd.getArrayLength(num_transact)) != 0)
         {
             return err;
         }
-        if (numTransact >= 0)
+        if (num_transact >= 0)
         {
-            m_aborted_transactions.resize(numTransact);
-            for (int i = 0; i < numTransact; ++i)
+            m_aborted_transactions.resize(num_transact);
+            for (int i = 0; i < num_transact; ++i)
             {
-
                 if ((err = m_aborted_transactions[i].decode(pd)) != 0)
                 {
                     return err;
@@ -100,25 +99,25 @@ int FetchResponseBlock::decode(packetDecoder &pd, int16_t version)
     {
         Records records;
         err = records.decode(*records_decoder);
-        bool isInsufficientData = (err == ErrInsufficientData);
+        bool is_insufficient_data = (err == ErrInsufficientData);
 
-        if (err != 0 && !isInsufficientData)
+        if (err != 0 && !is_insufficient_data)
         {
             return err;
         }
 
-        if (isInsufficientData && m_records_set.empty())
+        if (is_insufficient_data && m_records_set.empty())
         {
             m_partial = true;
             break;
         }
 
-        int64_t nextOffset;
-        if ((err = records.next_offset(nextOffset)) != 0)
+        int64_t next_offset;
+        if ((err = records.next_offset(next_offset)) != 0)
         {
             return err;
         }
-        m_records_next_offset = nextOffset;
+        m_records_next_offset = next_offset;
 
         bool partial = false;
         if ((err = records.is_partial(partial)) != 0)
@@ -505,9 +504,9 @@ void FetchResponse::add_record_with_timestamp(const std::string &topic, int32_t 
     batch->add_record(rec);
 }
 
-void FetchResponse::AddRecordBatchWithTimestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value,
-                                                int64_t offset, int64_t producerID, bool isTransactional,
-                                                std::chrono::system_clock::time_point timestamp)
+void FetchResponse::add_record_batch_with_timestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value,
+                                                    int64_t offset, int64_t producerID, bool isTransactional,
+                                                    std::chrono::system_clock::time_point timestamp)
 {
     auto &frb = m_blocks[topic][partition];
     auto kv = encodeKV(key, value);
@@ -527,8 +526,8 @@ void FetchResponse::AddRecordBatchWithTimestamp(const std::string &topic, int32_
     frb.m_records_set.emplace_back(batch);
 }
 
-void FetchResponse::AddControlRecordWithTimestamp(const std::string &topic, int32_t partition, int64_t offset,
-                                                  int64_t producerID, ControlRecordType recordType, std::chrono::system_clock::time_point timestamp)
+void FetchResponse::add_control_record_with_timestamp(const std::string &topic, int32_t partition, int64_t offset,
+                                                      int64_t producerID, ControlRecordType recordType, std::chrono::system_clock::time_point timestamp)
 {
     auto &frb = m_blocks[topic][partition];
 
@@ -566,12 +565,12 @@ void FetchResponse::add_record(const std::string &topic, int32_t partition, Enco
 
 void FetchResponse::add_record_batch(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset, int64_t producerID, bool isTransactional)
 {
-    AddRecordBatchWithTimestamp(topic, partition, key, value, offset, producerID, isTransactional, std::chrono::system_clock::time_point{});
+    add_record_batch_with_timestamp(topic, partition, key, value, offset, producerID, isTransactional, std::chrono::system_clock::time_point{});
 }
 
 void FetchResponse::add_control_record(const std::string &topic, int32_t partition, int64_t offset, int64_t producerID, ControlRecordType recordType)
 {
-    AddControlRecordWithTimestamp(topic, partition, offset, producerID, recordType, std::chrono::system_clock::time_point{});
+    add_control_record_with_timestamp(topic, partition, offset, producerID, recordType, std::chrono::system_clock::time_point{});
 }
 
 void FetchResponse::set_last_offset_delta(const std::string &topic, int32_t partition, int32_t offset)

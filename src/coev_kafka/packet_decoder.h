@@ -15,7 +15,7 @@ struct packetDecoder;
 using taggedFieldDecoderFunc = std::function<int(packetDecoder &)>;
 using taggedFieldDecoders = std::unordered_map<uint64_t, taggedFieldDecoderFunc>;
 
-struct packetDecoder : packetType
+struct packetDecoder : packet_type
 {
     virtual ~packetDecoder() = default;
 

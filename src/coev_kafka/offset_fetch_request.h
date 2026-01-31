@@ -18,6 +18,7 @@ struct OffsetFetchRequest : protocol_body, flexible_version
     int16_t m_version;
     std::string m_consumer_group;
     bool m_require_stable;
+    std::map<std::string, std::vector<int32_t>> m_partitions;
 
     OffsetFetchRequest();
     OffsetFetchRequest(int16_t v) : m_version(v)
@@ -37,7 +38,4 @@ struct OffsetFetchRequest : protocol_body, flexible_version
     KafkaVersion required_version() const;
     void ZeroPartitions();
     void AddPartition(const std::string &topic, int32_t partitionID);
-
-private:
-    std::map<std::string, std::vector<int32_t>> m_partitions;
 };

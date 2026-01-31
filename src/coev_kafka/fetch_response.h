@@ -81,9 +81,9 @@ struct FetchResponse : protocol_body
                                     std::chrono::system_clock::time_point timestamp, int8_t version);
     void add_record_with_timestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset,
                                    std::chrono::system_clock::time_point timestamp);
-    void AddRecordBatchWithTimestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset,
+    void add_record_batch_with_timestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset,
                                      int64_t producerID, bool isTransactional, std::chrono::system_clock::time_point timestamp);
-    void AddControlRecordWithTimestamp(const std::string &topic, int32_t partition, int64_t offset, int64_t producerID,
+    void add_control_record_with_timestamp(const std::string &topic, int32_t partition, int64_t offset, int64_t producerID,
                                        ControlRecordType recordType, std::chrono::system_clock::time_point timestamp);
     void add_message(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset);
     void add_record(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset);

@@ -2,6 +2,7 @@
 #include "find_coordinator_response.h"
 #include "broker.h"
 #include "version.h"
+#include "api_versions.h"
 #include <string>
 #include <sstream>
 #include <stdexcept>
@@ -81,7 +82,7 @@ int ConsumerMetadataResponse::encode(packetEncoder &pe) const
 
 int16_t ConsumerMetadataResponse::key() const
 {
-#include "api_versions.h"
+
     return apiKeyFindCoordinator;
 }
 

@@ -373,7 +373,7 @@ coev::awaitable<int> ConsumerGroup::JoinGroup(std::shared_ptr<Broker> coordinato
     {
         co_return err;
     }
-    response = promise.m_response;
+    response = *promise.m_response;
     co_return 0;
 }
 
@@ -459,7 +459,7 @@ coev::awaitable<int> ConsumerGroup::SyncGroup(std::shared_ptr<Broker> coordinato
     {
         co_return err;
     }
-    response = sync_promise.m_response;
+    response = *sync_promise.m_response;
     co_return 0;
 }
 
@@ -493,7 +493,7 @@ coev::awaitable<int> ConsumerGroup::Heartbeat(std::shared_ptr<Broker> coordinato
     int err = co_await coordinator->Heartbeat(req, promise);
     if (err == 0)
     {
-        response = std::make_shared<HeartbeatResponse>(promise.m_response);
+        response = promise.m_response;
     }
     co_return err;
 }
@@ -585,14 +585,14 @@ coev::awaitable<int> ConsumerGroup::Leave()
 
     m_member_id = "";
 
-    switch (promise.m_response.m_err)
+    switch (promise.m_response->m_err)
     {
     case ErrRebalanceInProgress:
     case ErrUnknownMemberId:
     case ErrNoError:
         co_return ErrNoError;
     default:
-        co_return promise.m_response.m_err;
+        co_return promise.m_response->m_err;
     }
 }
 
@@ -648,10 +648,9 @@ coev::awaitable<void> ConsumerGroup::LoopCheckPartitionNumbers(
         }
 
         bool changed = false;
-        for (auto &kv : oldTopicToPartitionNum)
+        for (auto &[topic, oldNum] : oldTopicToPartitionNum)
         {
-            const std::string &topic = kv.first;
-            int oldNum = kv.second;
+
             int newNum = newTopicToPartitionNum[topic];
             if (newNum != oldNum)
             {
@@ -666,12 +665,12 @@ coev::awaitable<void> ConsumerGroup::LoopCheckPartitionNumbers(
         {
             co_await sleep_for(m_config->Metadata.RefreshFrequency);
         }();
-        m_task << [&session]() -> coev::awaitable<void>
+        m_task << [](auto session) -> coev::awaitable<void>
         {
             bool dummy;
             co_await session->m_context->get().get(dummy);
             co_return;
-        }();
+        }(session);
         m_task << [this]() -> coev::awaitable<void>
         {
             bool dummy;

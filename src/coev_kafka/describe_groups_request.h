@@ -28,5 +28,5 @@ struct DescribeGroupsRequest : protocol_body, flexible_version
     bool is_flexible() const;
     bool is_flexible_version(int16_t version) const;
     KafkaVersion required_version() const;
-    void AddGroup(const std::string &group);
+    void add_group(const std::string &group);
 };

@@ -17,6 +17,8 @@ struct DeleteTopicsRequest : protocol_body, flexible_version
 	DeleteTopicsRequest(int16_t v) : m_version(v)
 	{
 	}
+	
+	DeleteTopicsRequest(KafkaVersion version, const std::vector<std::string> &topics, int64_t timeoutMs);
 	void set_version(int16_t v);
 
 	int encode(packetEncoder &pe) const;
@@ -29,4 +31,3 @@ struct DeleteTopicsRequest : protocol_body, flexible_version
 	bool is_valid_version() const;
 	KafkaVersion required_version() const;
 };
-std::shared_ptr<DeleteTopicsRequest> NewDeleteTopicsRequest(KafkaVersion, const std::vector<std::string> &topics, int64_t timeoutMs);

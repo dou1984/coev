@@ -12,6 +12,7 @@
 #include "errors.h"
 #include "version.h"
 #include "protocol_body.h"
+#include <map>
 
 struct OffsetFetchResponseBlock : versioned_encoder, versioned_decoder
 {
@@ -29,7 +30,7 @@ struct OffsetFetchResponse : protocol_body, flexible_version
 
     int16_t m_version;
     std::chrono::milliseconds m_throttle_time;
-    std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<OffsetFetchResponseBlock>>> m_blocks;
+    std::unordered_map<std::string, std::map<int32_t, std::shared_ptr<OffsetFetchResponseBlock>>> m_blocks;
     KError m_err;
 
     OffsetFetchResponse();
@@ -45,6 +46,6 @@ struct OffsetFetchResponse : protocol_body, flexible_version
     bool is_flexible_version(int16_t version) const;
     KafkaVersion required_version() const;
     std::chrono::milliseconds throttle_time() const;
-    std::shared_ptr<OffsetFetchResponseBlock> GetBlock(const std::string &topic, int32_t partition) const;
-    void AddBlock(const std::string &topic, int32_t partition, std::shared_ptr<OffsetFetchResponseBlock> block);
+    std::shared_ptr<OffsetFetchResponseBlock> get_block(const std::string &topic, int32_t partition) const;
+    void add_block(const std::string &topic, int32_t partition, std::shared_ptr<OffsetFetchResponseBlock> block);
 };

@@ -31,6 +31,7 @@ struct DescribeClientQuotasRequest : protocol_body, flexible_version
     DescribeClientQuotasRequest(int16_t v) : m_version(v)
     {
     }
+    DescribeClientQuotasRequest(KafkaVersion version, const std::vector<QuotaFilterComponent> &components, bool strict);
     void set_version(int16_t v);
     int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
@@ -42,4 +43,3 @@ struct DescribeClientQuotasRequest : protocol_body, flexible_version
     bool is_flexible_version(int16_t version) const;
     KafkaVersion required_version() const;
 };
-std::shared_ptr<DescribeClientQuotasRequest> NewDescribeClientQuotasRequest(KafkaVersion kafkaVersion, const std::vector<QuotaFilterComponent> &components, bool strict);

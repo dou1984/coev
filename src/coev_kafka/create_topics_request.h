@@ -34,9 +34,8 @@ struct CreateTopicsRequest : protocol_body, flexible_version
     CreateTopicsRequest(int16_t v) : m_version(v)
     {
     }
-    CreateTopicsRequest(int16_t v, int64_t timeoutMs, bool validateOnly) : m_version(v), m_timeout(timeoutMs), m_validate_only(validateOnly)
-    {
-    }
+
+    CreateTopicsRequest(const KafkaVersion &version, int64_t timeoutMs, bool validateOnly, std::map<std::string, std::shared_ptr<TopicDetail>> &topicDetails);
 
     void set_version(int16_t v);
 
@@ -50,5 +49,3 @@ struct CreateTopicsRequest : protocol_body, flexible_version
     bool is_valid_version() const;
     KafkaVersion required_version() const;
 };
-
-std::shared_ptr<CreateTopicsRequest> NewCreateTopicsRequest(const KafkaVersion &Version_, std::map<std::string, std::shared_ptr<TopicDetail>> topicDetails, int64_t timeoutMs, bool validateOnly);

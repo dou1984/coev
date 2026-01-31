@@ -268,7 +268,7 @@ int GroupMemberDescription::decode(packetDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-std::shared_ptr<ConsumerGroupMemberAssignment> GroupMemberDescription::GetMemberAssignment()
+std::shared_ptr<ConsumerGroupMemberAssignment> GroupMemberDescription::get_member_assignment()
 {
     if (m_member_assignment.empty())
     {
@@ -279,7 +279,7 @@ std::shared_ptr<ConsumerGroupMemberAssignment> GroupMemberDescription::GetMember
     return assignment;
 }
 
-std::shared_ptr<ConsumerGroupMemberMetadata> GroupMemberDescription::GetMemberMetadata()
+std::shared_ptr<ConsumerGroupMemberMetadata> GroupMemberDescription::get_member_metadata()
 {
     if (m_member_metadata.empty())
     {

@@ -247,14 +247,14 @@ coev::awaitable<TransactionManager::Result> TransactionManager::PublishOffsetsTo
         co_return {true, ErrTxnUnableToParseResponse};
     }
 
-    if (response.m_response.m_err == ErrNoError)
+    if (response.m_response->m_err == ErrNoError)
     {
         LOG_DBG("successful add-offset-to-txn with group %s, transactional_id: %s",
                 groupId.c_str(), m_transactional_id.c_str());
         co_return {false, ErrNoError};
     }
 
-    switch (response.m_response.m_err)
+    switch (response.m_response->m_err)
     {
     case ErrConsumerCoordinatorNotAvailable:
     case ErrNotCoordinatorForConsumer:
@@ -263,14 +263,14 @@ coev::awaitable<TransactionManager::Result> TransactionManager::PublishOffsetsTo
         [[fallthrough]];
     case ErrOffsetsLoadInProgress:
     case ErrConcurrentTransactions:
-        co_return {true, response.m_response.m_err};
+        co_return {true, response.m_response->m_err};
     case ErrUnknownProducerID:
     case ErrInvalidProducerIDMapping:
-        co_return {false, AbortableErrorIfPossible(response.m_response.m_err)};
+        co_return {false, AbortableErrorIfPossible(response.m_response->m_err)};
     case ErrGroupAuthorizationFailed:
-        co_return {false, TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagAbortableError), response.m_response.m_err)};
+        co_return {false, TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagAbortableError), response.m_response->m_err)};
     default:
-        co_return {false, TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagFatalError), response.m_response.m_err)};
+        co_return {false, TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagFatalError), response.m_response->m_err)};
     }
 }
 coev::awaitable<TransactionManager::Result> TransactionManager::PublishOffsetsToTxnCommit(const TopicPartitionOffsets &offsets, const std::string &groupId, TopicPartitionOffsets &outOffsets)
@@ -315,7 +315,7 @@ coev::awaitable<TransactionManager::Result> TransactionManager::PublishOffsetsTo
     std::vector<KError> responseErrors;
     TopicPartitionOffsets failedTxn;
 
-    for (auto &it : responses.m_response.m_topics)
+    for (auto &it : responses.m_response->m_topics)
     {
         auto &topic = it.first;
         auto &partitionErrors = it.second;
@@ -464,7 +464,7 @@ coev::awaitable<int> TransactionManager::InitProducerId(int64_t &producerID, int
                 co_return {true, err};
             }
 
-            if (response.m_response.m_err == ErrNoError)
+            if (response.m_response->m_err == ErrNoError)
             {
                 if (isEpochBump)
                 {
@@ -477,11 +477,11 @@ coev::awaitable<int> TransactionManager::InitProducerId(int64_t &producerID, int
                     producerEpoch = noProducerEpoch;
                     co_return {true, err};
                 }
-                producerID = response.m_response.m_producer_id;
-                producerEpoch = response.m_response.m_producer_epoch;
+                producerID = response.m_response->m_producer_id;
+                producerEpoch = response.m_response->m_producer_epoch;
                 co_return {false, ErrNoError};
             }
-            switch (response.m_response.m_err)
+            switch (response.m_response->m_err)
             {
             case ErrConsumerCoordinatorNotAvailable:
             case ErrNotCoordinatorForConsumer:
@@ -493,12 +493,12 @@ coev::awaitable<int> TransactionManager::InitProducerId(int64_t &producerID, int
                 }
                 producerID = noProducerID;
                 producerEpoch = noProducerEpoch;
-                co_return {true, response.m_response.m_err};
+                co_return {true, response.m_response->m_err};
             default:
-                TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagFatalError), response.m_response.m_err);
+                TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagFatalError), response.m_response->m_err);
                 producerID = noProducerID;
                 producerEpoch = noProducerEpoch;
-                co_return {false, response.m_response.m_err};
+                co_return {false, response.m_response->m_err};
             }
         });
 }

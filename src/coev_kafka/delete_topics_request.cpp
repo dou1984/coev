@@ -114,11 +114,10 @@ KafkaVersion DeleteTopicsRequest::required_version() const
     }
 }
 
-std::shared_ptr<DeleteTopicsRequest> NewDeleteTopicsRequest(KafkaVersion kafkaVersion, const std::vector<std::string> &topics, int64_t timeoutMs)
+DeleteTopicsRequest::DeleteTopicsRequest(KafkaVersion version, const std::vector<std::string> &topics, int64_t timeoutMs)
 {
-    auto req = std::shared_ptr<DeleteTopicsRequest>();
-    req->m_topics = topics;
-    req->m_timeout = std::chrono::milliseconds(timeoutMs);
-    req->m_version = getVersionFromKafkaVersion(kafkaVersion);
-    return req;
+    m_version = getVersionFromKafkaVersion(version);
+    m_topics = topics;
+    m_timeout = std::chrono::milliseconds(timeoutMs);
 }
+

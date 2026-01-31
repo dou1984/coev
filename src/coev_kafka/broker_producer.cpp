@@ -118,7 +118,7 @@ coev::awaitable<void> BrokerProducer::bridge()
                                             auto broker_response = std::make_shared<BrokerProducerResponse>();
                                             broker_response->m_pset = pset;
                                             broker_response->m_err = ErrNoError;
-                                            broker_response->m_res = std::make_shared<ProduceResponse>(response.m_response);
+                                            broker_response->m_res = response.m_response;
                                             m_responses.set(broker_response); }, pset);
     }
 }

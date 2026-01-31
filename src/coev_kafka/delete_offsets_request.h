@@ -27,5 +27,5 @@ struct DeleteOffsetsRequest : protocol_body
 	int16_t header_version() const;
 	bool is_valid_version() const;
 	KafkaVersion required_version() const;
-	void AddPartition(const std::string &topic, int32_t partitionID);
+	void add_partition(const std::string &topic, int32_t partitionID);
 };

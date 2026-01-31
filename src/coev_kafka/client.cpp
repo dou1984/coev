@@ -157,7 +157,7 @@ coev::awaitable<int> Client::InitProducerID(InitProducerIDResponse &response)
         err = co_await broker->InitProducerID(request, promise);
         if (err == 0)
         {
-            response = std::move(promise.m_response);
+            response = *std::move(promise.m_response);
             co_return 0;
         }
         else
@@ -808,7 +808,7 @@ coev::awaitable<int> Client::_GetOffset(const std::string &topic, int32_t partit
         offset = -1;
         co_return err;
     }
-    auto block = promise.m_response.GetBlock(topic, partitionID);
+    auto block = promise.m_response->GetBlock(topic, partitionID);
     if (block == nullptr)
     {
         broker->Close();
@@ -923,7 +923,7 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
         err = co_await broker->GetMetadata(request, promise);
         if (err == 0)
         {
-            if (promise.m_response.m_brokers.empty())
+            if (promise.m_response->m_brokers.empty())
             {
                 LOG_CORE("receiving empty brokers from the metadata response when requesting the broker #%d at %s", broker->ID(), broker->Addr().c_str());
                 broker->Close();
@@ -974,15 +974,15 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
     co_return co_await RetryRefreshMetadata(topics, attemptsRemaining, deadline, err);
 }
 
-bool Client::UpdateMetadata(MetadataResponse &data, bool allKnownMetaData)
+bool Client::UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnownMetaData)
 {
     if (Closed())
     {
         return false;
     }
 
-    UpdateBroker(data.m_brokers);
-    m_controller_id = data.m_controller_id;
+    UpdateBroker(data->m_brokers);
+    m_controller_id = data->m_controller_id;
     if (allKnownMetaData)
     {
         m_metadata.clear();
@@ -991,14 +991,14 @@ bool Client::UpdateMetadata(MetadataResponse &data, bool allKnownMetaData)
     }
     bool retry = false;
     int err = 0;
-    for (auto &topic : data.m_topics)
+    for (auto &topic : data->m_topics)
     {
-        if (m_metadata_topics.find(topic->Name) == m_metadata_topics.end())
+        if (m_metadata_topics.find(topic->m_name) == m_metadata_topics.end())
         {
-            m_metadata_topics[topic->Name] = true;
+            m_metadata_topics[topic->m_name] = true;
         }
-        m_metadata.erase(topic->Name);
-        m_cached_partitions_results.erase(topic->Name);
+        m_metadata.erase(topic->m_name);
+        m_cached_partitions_results.erase(topic->m_name);
         switch (topic->m_err)
         {
         case ErrNoError:
@@ -1019,8 +1019,8 @@ bool Client::UpdateMetadata(MetadataResponse &data, bool allKnownMetaData)
             err = topic->m_err;
             continue;
         }
-        auto &partitions = m_metadata[topic->Name];
-        for (auto &partition : topic->Partitions)
+        auto &partitions = m_metadata[topic->m_name];
+        for (auto &partition : topic->m_partitions)
         {
             partitions[partition->m_id] = partition;
             if (partition->m_err == ErrLeaderNotAvailable)
@@ -1029,9 +1029,9 @@ bool Client::UpdateMetadata(MetadataResponse &data, bool allKnownMetaData)
             }
         }
 
-        auto &partitionCache = m_cached_partitions_results[topic->Name];
-        partitionCache[AllPartitions] = _SetPartitionCache(topic->Name, AllPartitions);
-        partitionCache[WritablePartitions_] = _SetPartitionCache(topic->Name, WritablePartitions_);
+        auto &partitionCache = m_cached_partitions_results[topic->m_name];
+        partitionCache[AllPartitions] = _SetPartitionCache(topic->m_name, AllPartitions);
+        partitionCache[WritablePartitions_] = _SetPartitionCache(topic->m_name, WritablePartitions_);
     }
     return retry;
 }
@@ -1137,7 +1137,7 @@ coev::awaitable<int> Client::FindCoordinator(const std::string &coordinatorKey, 
                 continue;
             }
         }
-        response = promise.m_response;
+        response = *promise.m_response;
         if (response.m_err == ErrNoError)
         {
             LOG_DBG("coordinator for %s is #%d (%s)", coordinatorKey.c_str(), response.m_coordinator->ID(), response.m_coordinator->Addr().c_str());

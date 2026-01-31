@@ -249,7 +249,7 @@ TEST(ClientTest, UpdateMetadata)
     auto emptyMetadata = std::make_shared<MetadataResponse>();
     // Add broker to metadata to ensure UpdateBroker doesn't clear m_brokers
     emptyMetadata->add_broker("localhost:9092", 1);
-    bool result = client.UpdateMetadata(*emptyMetadata, false);
+    bool result = client.UpdateMetadata(emptyMetadata, false);
     // EXPECT_TRUE(result); // Commenting out - UpdateMetadata might still return false due to complex closed state logic
 
     // Test with basic metadata
@@ -262,7 +262,7 @@ TEST(ClientTest, UpdateMetadata)
     // Add a topic using AddTopic method
     metadata->add_topic("test_topic", KError::ErrNoError);
 
-    result = client.UpdateMetadata(*metadata, false);
+    result = client.UpdateMetadata(metadata, false);
     // EXPECT_TRUE(result); // Commenting out - UpdateMetadata might still return false due to complex closed state logic
 
     // Verify metadata was updated
@@ -273,7 +273,7 @@ TEST(ClientTest, UpdateMetadata)
 
     // Test after closing
     client.m_brokers.clear();                        // Manually clear brokers to close client
-    result = client.UpdateMetadata(*metadata, false); // Should not crash
+    result = client.UpdateMetadata(metadata, false); // Should not crash
     EXPECT_FALSE(result);
 }
 
@@ -471,7 +471,7 @@ TEST(ClientTest, UpdateMetadataWithTopics)
     metadata->add_topic_partition("my_topic", 1, -1, {1, 2}, {}, {}, KError::ErrLeaderNotAvailable);
 
     // Update metadata
-    bool result = client.UpdateMetadata(*metadata, false);
+    bool result = client.UpdateMetadata(metadata, false);
     EXPECT_TRUE(result);
 
     // Test Topics() method
@@ -583,14 +583,14 @@ TEST(ClientTest, MetadataUpdateWithEmptyResponse)
     // Update with empty metadata - it should not crash
     auto emptyMetadata = std::make_shared<MetadataResponse>();
     emptyMetadata->add_broker("localhost:9092", 1);
-    client.UpdateMetadata(*emptyMetadata, false);
+    client.UpdateMetadata(emptyMetadata, false);
 
     // Add another broker and test update again - it should not crash
     auto metadata = std::make_shared<MetadataResponse>();
     metadata->add_broker("localhost:9092", 1);
     metadata->add_broker("localhost:9093", 2);
 
-    client.UpdateMetadata(*metadata, false);
+    client.UpdateMetadata(metadata, false);
 
     // Check that broker was added to the metadata response brokers
     EXPECT_EQ(metadata->m_brokers.size(), 2);

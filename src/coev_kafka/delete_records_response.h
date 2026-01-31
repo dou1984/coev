@@ -35,6 +35,7 @@ struct DeleteRecordsResponse : protocol_body
     std::chrono::milliseconds m_throttle_time;
     std::map<std::string, std::shared_ptr<DeleteRecordsResponseTopic>> m_topics;
 
+    ~DeleteRecordsResponse();
     void set_version(int16_t v);
     int encode(packetEncoder &pe) const;
     int decode(packetDecoder &pd, int16_t version);
@@ -44,6 +45,4 @@ struct DeleteRecordsResponse : protocol_body
     bool is_valid_version() const;
     KafkaVersion required_version() const;
     std::chrono::milliseconds throttle_time() const;
-
-    ~DeleteRecordsResponse();
 };

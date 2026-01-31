@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <cassert>
 
-struct packetType
+struct packet_type
 {
     int m_flexible = 0;
     bool isFixed()

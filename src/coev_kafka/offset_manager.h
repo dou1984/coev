@@ -25,6 +25,7 @@ struct OffsetManager : std::enable_shared_from_this<OffsetManager>
 
     std::shared_ptr<PartitionOffsetManager> ManagePartition(const std::string &topic, int32_t partition);
     OffsetManager(std::shared_ptr<Client> client, std::shared_ptr<Config> conf, const std::string &group, std::function<void()> sessionCanceler, const std::string &memberID, int32_t generation);
+    OffsetManager(std::shared_ptr<Client> client, const std::string &group, const std::string &memberID, int32_t generation, std::function<void()> sessionCanceler);
     std::chrono::milliseconds ComputeBackoff(int retries);
     coev::awaitable<int> FetchInitialOffset(const std::string &topic, int32_t partition, int retries, int64_t &offset, int32_t &leaderEpoch, std::string &metadata);
     coev::awaitable<int> Coordinator(std::shared_ptr<Broker> &);

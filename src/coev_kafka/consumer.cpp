@@ -30,30 +30,21 @@ coev::awaitable<int> Consumer::Partitions(const std::string &topic, std::vector<
 
 std::map<std::string, std::map<int32_t, int64_t>> Consumer::HighWaterMarks()
 {
-
     std::map<std::string, std::map<int32_t, int64_t>> hwms;
-    for (auto &topic_pair : m_children)
+    for (auto &[topic, pmap] : m_children)
     {
-        auto &topic = topic_pair.first;
-        auto &p_map = topic_pair.second;
-        std::map<int32_t, int64_t> hwm;
-        for (auto &part_pair : p_map)
+        for (auto &[partition, pc] : pmap)
         {
-            int32_t partition = part_pair.first;
-            auto pc = part_pair.second;
-            hwm[partition] = pc->HighWaterMarkOffset();
+            hwms[topic][partition] = pc->HighWaterMarkOffset();
         }
-        hwms[topic] = hwm;
     }
     return hwms;
 }
 
-void Consumer::Pause(const std::map<std::string, std::vector<int32_t>> &topicPartitions)
+void Consumer::Pause(const std::map<std::string, std::vector<int32_t>> &topic_partitions)
 {
-    for (auto &tp : topicPartitions)
+    for (auto &[topic, partitions] : topic_partitions)
     {
-        auto &topic = tp.first;
-        auto &partitions = tp.second;
         auto it_topic = m_children.find(topic);
         if (it_topic != m_children.end())
         {
@@ -70,12 +61,10 @@ void Consumer::Pause(const std::map<std::string, std::vector<int32_t>> &topicPar
     }
 }
 
-void Consumer::Resume(const std::map<std::string, std::vector<int32_t>> &topicPartitions)
+void Consumer::Resume(const std::map<std::string, std::vector<int32_t>> &topic_partitions)
 {
-    for (auto &tp : topicPartitions)
+    for (auto &[topic, partitions] : topic_partitions)
     {
-        auto &topic = tp.first;
-        auto &partitions = tp.second;
         auto it_topic = m_children.find(topic);
         if (it_topic != m_children.end())
         {
@@ -116,12 +105,12 @@ void Consumer::ResumeAll()
 
 int Consumer::AddChild(const std::shared_ptr<PartitionConsumer> &child)
 {
-    auto &topicChildren = m_children[child->m_topic];
-    if (topicChildren.find(child->m_partition) != topicChildren.end())
+    auto &topic_children = m_children[child->m_topic];
+    if (topic_children.find(child->m_partition) != topic_children.end())
     {
         return ErrTopicPartitionConsumed;
     }
-    topicChildren[child->m_partition] = child;
+    topic_children[child->m_partition] = child;
     return 0;
 }
 

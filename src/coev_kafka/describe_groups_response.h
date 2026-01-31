@@ -28,8 +28,8 @@ struct GroupMemberDescription : versioned_encoder, versioned_decoder
 
     int encode(packetEncoder &pe, int16_t version) const;
     int decode(packetDecoder &pd, int16_t version);
-    std::shared_ptr<ConsumerGroupMemberAssignment> GetMemberAssignment();
-    std::shared_ptr<ConsumerGroupMemberMetadata> GetMemberMetadata();
+    std::shared_ptr<ConsumerGroupMemberAssignment> get_member_assignment();
+    std::shared_ptr<ConsumerGroupMemberMetadata> get_member_metadata();
 };
 
 struct GroupDescription : versioned_encoder, versioned_decoder

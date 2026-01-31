@@ -29,8 +29,8 @@ struct IConsumer
     virtual coev::awaitable<int> Partitions(const std::string &topic, std::vector<int32_t> &) = 0;
     virtual coev::awaitable<int> Close() = 0;
     virtual std::map<std::string, std::map<int32_t, int64_t>> HighWaterMarks() = 0;
-    virtual void Pause(const std::map<std::string, std::vector<int32_t>> &topicPartitions) = 0;
-    virtual void Resume(const std::map<std::string, std::vector<int32_t>> &topicPartitions) = 0;
+    virtual void Pause(const std::map<std::string, std::vector<int32_t>> &topic_partitions) = 0;
+    virtual void Resume(const std::map<std::string, std::vector<int32_t>> &topic_partitions) = 0;
     virtual void PauseAll() = 0;
     virtual void ResumeAll() = 0;
 };
@@ -44,8 +44,8 @@ struct Consumer : IConsumer, std::enable_shared_from_this<Consumer>
     coev::awaitable<int> ConsumePartition(const std::string &topic, int32_t partition, int64_t offset, std::shared_ptr<PartitionConsumer> &child);
 
     std::map<std::string, std::map<int32_t, int64_t>> HighWaterMarks();
-    void Pause(const std::map<std::string, std::vector<int32_t>> &topicPartitions);
-    void Resume(const std::map<std::string, std::vector<int32_t>> &topicPartitions);
+    void Pause(const std::map<std::string, std::vector<int32_t>> &topic_partitions);
+    void Resume(const std::map<std::string, std::vector<int32_t>> &topic_partitions);
     void PauseAll();
     void ResumeAll();
 

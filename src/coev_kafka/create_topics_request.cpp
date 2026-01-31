@@ -242,33 +242,29 @@ int TopicDetail::decode(packetDecoder &pd, int16_t version)
     return pd.getEmptyTaggedFieldArray(_);
 }
 
-std::shared_ptr<CreateTopicsRequest> NewCreateTopicsRequest(const KafkaVersion &_version, std::map<std::string, std::shared_ptr<TopicDetail>> topicDetails, int64_t timeoutMs, bool validateOnly)
+CreateTopicsRequest::CreateTopicsRequest(const KafkaVersion &version, int64_t timeout_ms, bool validate_only, std::map<std::string, std::shared_ptr<TopicDetail>> &topic_details)
 {
-    auto r = std::make_shared<CreateTopicsRequest>();
-    r->m_topic_details = topicDetails;
-    r->m_timeout = std::chrono::milliseconds(timeoutMs);
-    r->m_validate_only = validateOnly;
-
-    if (_version >= V2_4_0_0)
+    if (version >= V2_4_0_0)
     {
-        r->m_version = 5;
+        m_version = 5;
     }
-    else if (_version >= V2_0_0_0)
+    else if (version >= V2_0_0_0)
     {
-        r->m_version = 3;
+        m_version = 3;
     }
-    else if (_version >= V0_11_0_0)
+    else if (version >= V0_11_0_0)
     {
-        r->m_version = 2;
+        m_version = 2;
     }
-    else if (_version >= V0_10_2_0)
+    else if (version >= V0_10_2_0)
     {
-        r->m_version = 1;
+        m_version = 1;
     }
     else
     {
-        r->m_version = 0;
+        m_version = 0;
     }
-
-    return r;
+    m_timeout = std::chrono::milliseconds(timeout_ms);
+    m_validate_only = validate_only;
+    m_topic_details = std::move(topic_details);
 }

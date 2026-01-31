@@ -64,7 +64,7 @@ int prepEncoder::putArrayLength(int32_t in)
     {
         if (in > std::numeric_limits<int32_t>::max())
         {
-            return -1; // PacketEncodingError equivalent
+            return -1;
         }
         m_length += 4;
         return 0;

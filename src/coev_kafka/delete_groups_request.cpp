@@ -73,7 +73,7 @@ KafkaVersion DeleteGroupsRequest::required_version() const
     }
 }
 
-void DeleteGroupsRequest::AddGroup(const std::string &group)
+void DeleteGroupsRequest::add_group(const std::string &group)
 {
     m_groups.push_back(group);
 }
