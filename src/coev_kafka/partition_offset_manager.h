@@ -9,7 +9,7 @@ struct PartitionOffsetManager
 {
     PartitionOffsetManager() = default;
     PartitionOffsetManager(std::shared_ptr<OffsetManager> parent, const std::string &topic, int32_t partition,
-                           int32_t leaderEpoch, int64_t offset, const std::string &metadata);
+                           int32_t leader_epoch, int64_t offset, const std::string &metadata);
 
     std::pair<int64_t, std::string> next_offset();
     coev::awaitable<void> errors(std::shared_ptr<ConsumerError> &err);

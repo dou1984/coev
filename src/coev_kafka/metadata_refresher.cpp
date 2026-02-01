@@ -1,14 +1,10 @@
 #include "metadata_refresher.h"
 
-metadata_refresher::metadata_refresher()
+MetadataRefresher::MetadataRefresher()
 {
 }
 
-void metadata_refresher::set_refresher(fRefresher f)
-{
-    m_refresh_func = f;
-}
-std::vector<std::string> metadata_refresher::add_topics(const std::vector<std::string> &topics)
+std::vector<std::string> MetadataRefresher::add_topics(const std::vector<std::string> &topics)
 {
     std::vector<std::string> refresh_topics;
     auto now = std::chrono::system_clock::now();
@@ -37,8 +33,11 @@ std::vector<std::string> metadata_refresher::add_topics(const std::vector<std::s
     }
     return refresh_topics;
 }
-
-bool metadata_refresher::has_topics(const std::vector<std::string> &topics)
+void MetadataRefresher::update_topic(const std::string &topic)
+{
+    m_topics_map[topic].m_last_response_time = std::chrono::system_clock::now();
+}
+bool MetadataRefresher::has_topics(const std::vector<std::string> &topics)
 {
     for (const auto &topic : topics)
     {
@@ -50,14 +49,8 @@ bool metadata_refresher::has_topics(const std::vector<std::string> &topics)
     return true;
 }
 
-void metadata_refresher::clear()
+void MetadataRefresher::clear()
 {
     m_topics.clear();
     m_topics_map.clear();
-}
-
-coev::awaitable<int> metadata_refresher::refresh(const std::vector<std::string> &topics)
-{
-    assert(m_refresh_func != nullptr);
-    return m_refresh_func(topics);
 }

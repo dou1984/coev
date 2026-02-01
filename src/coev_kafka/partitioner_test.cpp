@@ -12,7 +12,7 @@
 void assertPartitioningConsistent(Partitioner *partitioner, std::shared_ptr<ProducerMessage> message, int32_t numPartitions)
 {
     int32_t choice = 0;
-    int result = partitioner->Partition(message, numPartitions, choice);
+    int result = partitioner->partition(message, numPartitions, choice);
     ASSERT_EQ(result, 0) << "Partitioning failed";
     ASSERT_GE(choice, 0) << "Partition out of range";
     ASSERT_LT(choice, numPartitions) << "Partition out of range";
@@ -20,7 +20,7 @@ void assertPartitioningConsistent(Partitioner *partitioner, std::shared_ptr<Prod
     for (int i = 1; i < 50; ++i)
     {
         int32_t newChoice = 0;
-        result = partitioner->Partition(message, numPartitions, newChoice);
+        result = partitioner->partition(message, numPartitions, newChoice);
         ASSERT_EQ(result, 0) << "Partitioning failed";
         ASSERT_EQ(newChoice, choice) << "Inconsistent partitioning";
     }
@@ -38,7 +38,7 @@ void partitionAndAssert(Partitioner *partitioner, int32_t numPartitions, const P
     message->m_key = std::make_shared<StringEncoder>(testCase.key);
 
     int32_t choice = 0;
-    int result = partitioner->Partition(message, numPartitions, choice);
+    int result = partitioner->partition(message, numPartitions, choice);
     ASSERT_EQ(result, 0) << "Partitioning failed for key: " << testCase.key;
     ASSERT_EQ(choice, testCase.expectedPartition) << "Partition mismatch for key: " << testCase.key << ", expected: " << testCase.expectedPartition << ", got: " << choice;
 }
@@ -49,14 +49,14 @@ TEST(PartitionerTest, RandomPartitioner)
 
     // Test with 1 partition
     int32_t choice = 0;
-    int result = partitioner->Partition(std::make_shared<ProducerMessage>(), 1, choice);
+    int result = partitioner->partition(std::make_shared<ProducerMessage>(), 1, choice);
     ASSERT_EQ(result, 0) << "Partitioning failed";
     ASSERT_EQ(choice, 0) << "Returned non-zero partition when only one available";
 
     // Test with 50 partitions multiple times
     for (int i = 1; i < 50; ++i)
     {
-        result = partitioner->Partition(std::make_shared<ProducerMessage>(), 50, choice);
+        result = partitioner->partition(std::make_shared<ProducerMessage>(), 50, choice);
         ASSERT_EQ(result, 0) << "Partitioning failed";
         ASSERT_GE(choice, 0) << "Returned partition outside of range";
         ASSERT_LT(choice, 50) << "Returned partition outside of range";
@@ -69,14 +69,14 @@ TEST(PartitionerTest, RoundRobinPartitioner)
 
     // Test with 1 partition
     int32_t choice = 0;
-    int result = partitioner->Partition(std::make_shared<ProducerMessage>(), 1, choice);
+    int result = partitioner->partition(std::make_shared<ProducerMessage>(), 1, choice);
     ASSERT_EQ(result, 0) << "Partitioning failed";
     ASSERT_EQ(choice, 0) << "Returned non-zero partition when only one available";
 
     // Test round-robin behavior with 7 partitions
     for (int32_t i = 1; i < 50; ++i)
     {
-        result = partitioner->Partition(std::make_shared<ProducerMessage>(), 7, choice);
+        result = partitioner->partition(std::make_shared<ProducerMessage>(), 7, choice);
         ASSERT_EQ(result, 0) << "Partitioning failed";
         ASSERT_EQ(choice, i % 7) << "Returned partition " << choice << " expecting " << (i % 7);
     }
@@ -88,14 +88,14 @@ TEST(PartitionerTest, HashPartitioner)
 
     // Test with 1 partition
     int32_t choice = 0;
-    int result = partitioner->Partition(std::make_shared<ProducerMessage>(), 1, choice);
+    int result = partitioner->partition(std::make_shared<ProducerMessage>(), 1, choice);
     ASSERT_EQ(result, 0) << "Partitioning failed";
     ASSERT_EQ(choice, 0) << "Returned non-zero partition when only one available";
 
     // Test with 50 partitions for nil key
     for (int i = 1; i < 50; ++i)
     {
-        result = partitioner->Partition(std::make_shared<ProducerMessage>(), 50, choice);
+        result = partitioner->partition(std::make_shared<ProducerMessage>(), 50, choice);
         ASSERT_EQ(result, 0) << "Partitioning failed";
         ASSERT_GE(choice, 0) << "Returned partition outside of range for nil key";
         ASSERT_LT(choice, 50) << "Returned partition outside of range for nil key";
@@ -121,11 +121,11 @@ TEST(PartitionerTest, HashPartitionerConsistency)
     // Test that messages with keys require consistency
     auto messageWithKey = std::make_shared<ProducerMessage>();
     messageWithKey->m_key = std::make_shared<StringEncoder>("hi");
-    ASSERT_TRUE(dynamicPartitioner->MessageRequiresConsistency(messageWithKey)) << "Messages with keys should require consistency";
+    ASSERT_TRUE(dynamicPartitioner->message_requires_consistency(messageWithKey)) << "Messages with keys should require consistency";
 
     // Test that messages without keys do not require consistency
     auto messageWithoutKey = std::make_shared<ProducerMessage>();
-    ASSERT_FALSE(dynamicPartitioner->MessageRequiresConsistency(messageWithoutKey)) << "Messages without keys should not require consistency";
+    ASSERT_FALSE(dynamicPartitioner->message_requires_consistency(messageWithoutKey)) << "Messages without keys should not require consistency";
 }
 
 TEST(PartitionerTest, ManualPartitioner)
@@ -134,7 +134,7 @@ TEST(PartitionerTest, ManualPartitioner)
 
     // Test with 1 partition
     int32_t choice = 0;
-    int result = partitioner->Partition(std::make_shared<ProducerMessage>(), 1, choice);
+    int result = partitioner->partition(std::make_shared<ProducerMessage>(), 1, choice);
     ASSERT_EQ(result, 0) << "Partitioning failed";
     ASSERT_EQ(choice, 0) << "Returned non-zero partition when only one available";
 
@@ -143,7 +143,7 @@ TEST(PartitionerTest, ManualPartitioner)
     {
         auto message = std::make_shared<ProducerMessage>();
         message->m_partition = i;
-        result = partitioner->Partition(message, 50, choice);
+        result = partitioner->partition(message, 50, choice);
         ASSERT_EQ(result, 0) << "Partitioning failed";
         ASSERT_EQ(choice, i) << "Returned partition not the same as the input partition";
     }
@@ -172,19 +172,19 @@ TEST(PartitionerTest, RequiresConsistency)
     // Test that different partitioners correctly report consistency requirements
 
     auto randomPartitioner = NewRandomPartitioner("mytopic");
-    ASSERT_FALSE(randomPartitioner->RequiresConsistency()) << "Random partitioner should not require consistency";
+    ASSERT_FALSE(randomPartitioner->requires_consistency()) << "Random partitioner should not require consistency";
 
     auto roundRobinPartitioner = NewRoundRobinPartitioner("mytopic");
-    ASSERT_FALSE(roundRobinPartitioner->RequiresConsistency()) << "Round-robin partitioner should not require consistency";
+    ASSERT_FALSE(roundRobinPartitioner->requires_consistency()) << "Round-robin partitioner should not require consistency";
 
     auto hashPartitioner = NewHashPartitioner("mytopic");
-    ASSERT_TRUE(hashPartitioner->RequiresConsistency()) << "Hash partitioner should require consistency";
+    ASSERT_TRUE(hashPartitioner->requires_consistency()) << "Hash partitioner should require consistency";
 
     auto manualPartitioner = std::make_shared<ManualPartitioner>();
-    ASSERT_TRUE(manualPartitioner->RequiresConsistency()) << "Manual partitioner should require consistency";
+    ASSERT_TRUE(manualPartitioner->requires_consistency()) << "Manual partitioner should require consistency";
 
     auto consistentCRCHashPartitioner = NewConsistentCRCHashPartitioner("mytopic");
-    ASSERT_TRUE(consistentCRCHashPartitioner->RequiresConsistency()) << "Consistent CRC hash partitioner should require consistency";
+    ASSERT_TRUE(consistentCRCHashPartitioner->requires_consistency()) << "Consistent CRC hash partitioner should require consistency";
 }
 
 TEST(PartitionerTest, HashPartitionerWithSpecialKeys)
@@ -196,7 +196,7 @@ TEST(PartitionerTest, HashPartitionerWithSpecialKeys)
     auto emptyKeyMessage = std::make_shared<ProducerMessage>();
     emptyKeyMessage->m_key = std::make_shared<StringEncoder>("");
     int32_t choice = 0;
-    int result = partitioner->Partition(emptyKeyMessage, 50, choice);
+    int result = partitioner->partition(emptyKeyMessage, 50, choice);
     ASSERT_EQ(result, 0) << "Partitioning failed for empty key";
     ASSERT_GE(choice, 0) << "Returned partition outside of range for empty key";
     ASSERT_LT(choice, 50) << "Returned partition outside of range for empty key";
@@ -205,7 +205,7 @@ TEST(PartitionerTest, HashPartitionerWithSpecialKeys)
     std::string longKey(1000, 'a');
     auto longKeyMessage = std::make_shared<ProducerMessage>();
     longKeyMessage->m_key = std::make_shared<StringEncoder>(longKey);
-    result = partitioner->Partition(longKeyMessage, 50, choice);
+    result = partitioner->partition(longKeyMessage, 50, choice);
     ASSERT_EQ(result, 0) << "Partitioning failed for long key";
     ASSERT_GE(choice, 0) << "Returned partition outside of range for long key";
     ASSERT_LT(choice, 50) << "Returned partition outside of range for long key";
@@ -213,7 +213,7 @@ TEST(PartitionerTest, HashPartitionerWithSpecialKeys)
     // Test with numeric key that might produce min int32
     auto minIntKeyMessage = std::make_shared<ProducerMessage>();
     minIntKeyMessage->m_key = std::make_shared<StringEncoder>("1468509572224");
-    result = partitioner->Partition(minIntKeyMessage, 50, choice);
+    result = partitioner->partition(minIntKeyMessage, 50, choice);
     ASSERT_EQ(result, 0) << "Partitioning failed for min int32 key";
     ASSERT_GE(choice, 0) << "Returned partition outside of range for min int32 key";
     ASSERT_LT(choice, 50) << "Returned partition outside of range for min int32 key";

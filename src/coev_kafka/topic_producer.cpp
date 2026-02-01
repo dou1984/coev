@@ -47,11 +47,11 @@ coev::awaitable<int> TopicProducer::partition_message(std::shared_ptr<ProducerMe
     bool requires_consistency = false;
     if (auto dcp = dynamic_cast<DynamicConsistencyPartitioner *>(m_partitioner.get()))
     {
-        requires_consistency = dcp->MessageRequiresConsistency(msg);
+        requires_consistency = dcp->message_requires_consistency(msg);
     }
     else
     {
-        requires_consistency = m_partitioner->RequiresConsistency();
+        requires_consistency = m_partitioner->requires_consistency();
     }
 
     int err = 0;
@@ -77,7 +77,7 @@ coev::awaitable<int> TopicProducer::partition_message(std::shared_ptr<ProducerMe
     }
 
     int32_t choice;
-    err = m_partitioner->Partition(msg, num_partitions, choice);
+    err = m_partitioner->partition(msg, num_partitions, choice);
     if (choice < 0 || choice >= num_partitions)
     {
         co_return ErrInvalidPartition;

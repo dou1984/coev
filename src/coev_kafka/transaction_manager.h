@@ -59,15 +59,13 @@ struct TransactionManager
 
     coev::awaitable<int> EndTxn(bool commit);
     coev::awaitable<int> FinishTransaction(bool commit);
-    void MaybeAddPartitionToCurrentTxn(const std::string &topic, int32_t partition);
     coev::awaitable<int> PublishTxnPartitions();
     coev::awaitable<int> InitializeTransactions();
+    void MaybeAddPartitionToCurrentTxn(const std::string &topic, int32_t partition);
     bool IsTransitionValid(ProducerTxnStatusFlag target) const;
     int TransitionTo(ProducerTxnStatusFlag target, int err);
 
-    mutable std::shared_mutex m_status_lock;
     ProducerTxnStatusFlag m_status = ProducerTxnFlagUninitialized;
-    mutable std::mutex m_mutex;
     int64_t m_producer_id = noProducerID;
     int16_t m_producer_epoch = noProducerEpoch;
     std::map<std::string, int32_t> m_sequence_numbers;
@@ -77,7 +75,6 @@ struct TransactionManager
     bool m_coordinator_supports_bumping_epoch = false;
     bool m_epoch_bump_required = false;
     int m_last_error = 0;
-    mutable std::mutex m_partition_in_txn_lock;
     TopicPartitionSet m_pending_partitions_in_current_txn;
     TopicPartitionSet m_partitions_in_current_txn;
     std::map<std::string, TopicPartitionOffsets> m_offsets_in_current_txn;

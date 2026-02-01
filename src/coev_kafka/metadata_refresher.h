@@ -9,26 +9,23 @@
 #include <coev/coev.h>
 #include "errors.h"
 
-using fRefresher = std::function<coev::awaitable<int>(const std::vector<std::string> &)>;
-
-struct metadata_refresher
+struct Client;
+struct MetadataRefresher
 {
     struct RefreshTime
     {
         std::chrono::time_point<std::chrono::system_clock> m_last_request_time;
         std::chrono::time_point<std::chrono::system_clock> m_last_response_time;
     };
-    metadata_refresher();
+    MetadataRefresher();
 
-    void set_refresher(fRefresher f);
     std::vector<std::string> add_topics(const std::vector<std::string> &topics);
+    void update_topic(const std::string &topic);
     bool has_topics(const std::vector<std::string> &topics);
-    coev::awaitable<int> refresh(const std::vector<std::string> &topics);
 
     void clear();
 
     std::unordered_map<std::string, RefreshTime> m_topics_map;
     std::vector<std::string> m_topics;
-    fRefresher m_refresh_func;
     std::chrono::milliseconds m_refresh_interval_mininum{100};
 };

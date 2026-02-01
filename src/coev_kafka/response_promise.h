@@ -15,12 +15,9 @@ struct ResponsePromise
     std::chrono::time_point<std::chrono::system_clock> m_request_time;
     int32_t m_correlation_id = 0;
     std::string m_packets;
-    std::shared_ptr<Res> m_response;
+    std::shared_ptr<Res> m_response = std::make_shared<Res>();
 
-    ResponsePromise()
-    {
-        m_response = std::make_shared<Res>();
-    }
+    ResponsePromise() = default;
 
     int decode(int16_t version)
     {

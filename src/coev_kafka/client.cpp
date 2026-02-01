@@ -15,7 +15,6 @@
 
 coev::awaitable<int> NewClient(const std::vector<std::string> &addrs, std::shared_ptr<Config> conf, std::shared_ptr<Client> &client_)
 {
-    LOG_DBG("Initializing new client");
     if (conf == nullptr)
     {
         conf = std::make_shared<Config>();
@@ -39,18 +38,6 @@ coev::awaitable<int> NewClient(const std::vector<std::string> &addrs, std::share
     }
 
     client_ = std::make_shared<Client>(conf);
-
-    client_->m_refresh_metadata.set_refresher(
-        [client_, conf](const std::vector<std::string> &topics) -> coev::awaitable<int>
-        {
-            auto deadline = std::chrono::steady_clock::now();
-
-            if (conf->Metadata.Timeout.count() > 0)
-            {
-                deadline += conf->Metadata.Timeout;
-            }
-            co_return co_await client_->TryRefreshMetadata(topics, conf->Metadata.Retry.Max, deadline);
-        });
 
     client_->m_seed_brokers = client_->Brokers();
 
@@ -240,13 +227,13 @@ coev::awaitable<int> Client::WritablePartitions(const std::string &topic, std::v
     return _GetPartitions(topic, WritablePartitions_, partitions);
 }
 
-coev::awaitable<int> Client::_GetPartitions(const std::string &topic, int64_t partitionId, std::vector<int32_t> &partitions)
+coev::awaitable<int> Client::_GetPartitions(const std::string &topic, int64_t partition_id, std::vector<int32_t> &partitions)
 {
     if (Closed())
     {
         co_return ErrClosedClient;
     }
-    partitions = _CachedPartitions(topic, partitionId);
+    partitions = _CachedPartitions(topic, partition_id);
     if (partitions.empty())
     {
         std::vector<std::string> topics{topic};
@@ -255,7 +242,7 @@ coev::awaitable<int> Client::_GetPartitions(const std::string &topic, int64_t pa
         {
             co_return err;
         }
-        partitions = _CachedPartitions(topic, partitionId);
+        partitions = _CachedPartitions(topic, partition_id);
     }
     if (partitions.empty())
     {
@@ -399,8 +386,13 @@ coev::awaitable<int> Client::RefreshMetadata(const std::vector<std::string> &top
             co_return ErrInvalidTopic;
         }
     }
-    auto _topics = m_refresh_metadata.add_topics(topics);
-    co_return co_await m_refresh_metadata.refresh(topics);
+    auto _topics = m_metadata_refresher.add_topics(topics);
+    auto err = co_await _RefreshMetadata(_topics);
+    if (err != ErrNoError)
+    {
+        co_return err;
+    }
+    co_return 0;
 }
 
 coev::awaitable<int> Client::GetOffset(const std::string &topic, int32_t partitionID, int64_t timestamp, int64_t &offset)
@@ -667,19 +659,19 @@ void Client::ResurrectDeadBrokers()
     m_dead_seeds.clear();
 }
 
-coev::awaitable<int> Client::LeastLoadedBroker(std::shared_ptr<Broker> &leastLoadedBroker)
+coev::awaitable<int> Client::LeastLoadedBroker(std::shared_ptr<Broker> &least_loaded_broker)
 {
     LOG_CORE("Client::LeastLoadedBroker called, current brokers count: %zu", m_brokers.size());
     if (!m_brokers.empty())
     {
-        leastLoadedBroker = m_brokers.rbegin()->second;
-        LOG_CORE("Client::LeastLoadedBroker selected broker #%d from existing brokers", leastLoadedBroker->ID());
+        least_loaded_broker = m_brokers.rbegin()->second;
+        LOG_CORE("Client::LeastLoadedBroker selected broker #%d from existing brokers", least_loaded_broker->ID());
     }
 
     int err = 0;
-    if (leastLoadedBroker)
+    if (least_loaded_broker)
     {
-        auto err = co_await leastLoadedBroker->Open(m_conf);
+        auto err = co_await least_loaded_broker->Open(m_conf);
         if (err == 0)
         {
             co_return 0;
@@ -703,7 +695,7 @@ coev::awaitable<int> Client::LeastLoadedBroker(std::shared_ptr<Broker> &leastLoa
             co_return err;
         }
 
-        leastLoadedBroker = seed_broker;
+        least_loaded_broker = seed_broker;
         LOG_CORE("Client::LeastLoadedBroker successfully used seed broker %s", seed_broker->Addr().c_str());
         co_return 0;
     }
@@ -726,18 +718,17 @@ std::shared_ptr<PartitionMetadata> Client::_CachedMetadata(const std::string &to
     return nullptr;
 }
 
-std::vector<int32_t> Client::_CachedPartitions(const std::string &topic, int64_t partitionId)
+std::vector<int32_t> Client::_CachedPartitions(const std::string &topic, int64_t partition_id)
 {
-
     auto it = m_cached_partitions_results.find(topic);
     if (it == m_cached_partitions_results.end())
     {
         return {};
     }
-    return it->second[static_cast<size_t>(partitionId)];
+    return it->second[static_cast<size_t>(partition_id)];
 }
 
-std::vector<int32_t> Client::_SetPartitionCache(const std::string &topic, int64_t partitionId)
+std::vector<int32_t> Client::_SetPartitionCache(const std::string &topic, int64_t partition_id)
 {
     auto it = m_metadata.find(topic);
     if (it == m_metadata.end())
@@ -747,7 +738,7 @@ std::vector<int32_t> Client::_SetPartitionCache(const std::string &topic, int64_
     std::vector<int32_t> ret;
     for (auto &kv : it->second)
     {
-        if (partitionId == WritablePartitions_ && kv.second->m_err == ErrLeaderNotAvailable)
+        if (partition_id == WritablePartitions_ && kv.second->m_err == ErrLeaderNotAvailable)
         {
             continue;
         }
@@ -869,12 +860,12 @@ bool PastDeadline(std::chrono::steady_clock::time_point deadline, std::chrono::m
 {
     return (deadline.time_since_epoch().count() != 0 && std::chrono::steady_clock::now() + backoff > deadline);
 };
-coev::awaitable<int> Client::RetryRefreshMetadata(const std::vector<std::string> &topics, int attemptsRemaining, std::chrono::steady_clock::time_point deadline, int err)
+coev::awaitable<int> Client::RetryRefreshMetadata(const std::vector<std::string> &topics, int attempts_remaining, std::chrono::steady_clock::time_point deadline, int err)
 {
 
-    if (attemptsRemaining > 0)
+    if (attempts_remaining > 0)
     {
-        auto backoff = ComputeBackoff(attemptsRemaining);
+        auto backoff = ComputeBackoff(attempts_remaining);
         if (PastDeadline(deadline, backoff))
         {
             LOG_CORE("skipping last retries as we would go past the metadata timeout");
@@ -885,20 +876,19 @@ coev::awaitable<int> Client::RetryRefreshMetadata(const std::vector<std::string>
             co_await sleep_for(backoff);
         }
         int64_t t = m_update_metadata_ms.load();
-        auto lastUpdate = std::chrono::steady_clock::time_point(std::chrono::milliseconds(t));
-        if (std::chrono::steady_clock::now() - lastUpdate < backoff)
+        auto last_update = std::chrono::steady_clock::time_point(std::chrono::milliseconds(t));
+        if (std::chrono::steady_clock::now() - last_update < backoff)
         {
             co_return err;
         }
-        --attemptsRemaining;
-        LOG_CORE("retrying after %ldms... (%d attempts remaining)", backoff.count(), attemptsRemaining);
-        co_return co_await TryRefreshMetadata(topics, attemptsRemaining, deadline);
+        --attempts_remaining;
+        LOG_CORE("retrying after %ldms... (%d attempts remaining)", backoff.count(), attempts_remaining);
+        co_return co_await TryRefreshMetadata(topics, attempts_remaining, deadline);
     }
     co_return err;
 };
-coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &topics, int attemptsRemaining, std::chrono::steady_clock::time_point deadline)
+coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &topics, int attempts_remaining, std::chrono::steady_clock::time_point deadline)
 {
-
     defer(LOG_CORE("metadata refesh finished"));
     int err = ErrNoError;
     std::vector<int> brokerErrors;
@@ -935,7 +925,7 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
             if (shouldRetry)
             {
                 LOG_CORE("found some partitions to be leaderless");
-                err = co_await RetryRefreshMetadata(topics, attemptsRemaining, deadline, ErrLeaderNotAvailable);
+                err = co_await RetryRefreshMetadata(topics, attempts_remaining, deadline, ErrLeaderNotAvailable);
             }
             co_return err;
         }
@@ -948,12 +938,10 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
         {
             if (err == ErrSASLAuthenticationFailed)
             {
-                LOG_CORE("failed SASL authentication");
                 co_return err;
             }
             if (err == ErrTopicAuthorizationFailed)
             {
-                LOG_CORE("client is not authorized to access this topic. The topics were: ");
                 co_return err;
             }
             LOG_CORE("got error from broker %d while fetching metadata: %d", broker->ID(), err);
@@ -969,9 +957,8 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
         }
     }
 
-    LOG_CORE("no available broker to send metadata request to");
     ResurrectDeadBrokers();
-    co_return co_await RetryRefreshMetadata(topics, attemptsRemaining, deadline, err);
+    co_return co_await RetryRefreshMetadata(topics, attempts_remaining, deadline, err);
 }
 
 bool Client::UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnownMetaData)
@@ -1002,6 +989,7 @@ bool Client::UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnow
         switch (topic->m_err)
         {
         case ErrNoError:
+            m_metadata_refresher.update_topic(topic->m_name);
             break;
         case ErrInvalidTopic:
         case ErrTopicAuthorizationFailed:
@@ -1029,9 +1017,9 @@ bool Client::UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnow
             }
         }
 
-        auto &partitionCache = m_cached_partitions_results[topic->m_name];
-        partitionCache[AllPartitions] = _SetPartitionCache(topic->m_name, AllPartitions);
-        partitionCache[WritablePartitions_] = _SetPartitionCache(topic->m_name, WritablePartitions_);
+        auto &partition_cache = m_cached_partitions_results[topic->m_name];
+        partition_cache[AllPartitions] = _SetPartitionCache(topic->m_name, AllPartitions);
+        partition_cache[WritablePartitions_] = _SetPartitionCache(topic->m_name, WritablePartitions_);
     }
     return retry;
 }
@@ -1042,10 +1030,10 @@ std::shared_ptr<Broker> Client::_CachedCoordinator(const std::string &consumerGr
     auto it = m_coordinators.find(consumerGroup);
     if (it != m_coordinators.end())
     {
-        auto brokerIt = m_brokers.find(it->second);
-        if (brokerIt != m_brokers.end())
+        auto broker_it = m_brokers.find(it->second);
+        if (broker_it != m_brokers.end())
         {
-            return brokerIt->second;
+            return broker_it->second;
         }
     }
     return nullptr;
@@ -1076,7 +1064,15 @@ std::shared_ptr<Broker> Client::_CachedController()
     }
     return nullptr;
 }
-
+coev::awaitable<int> Client::_RefreshMetadata(const std::vector<std::string> &topics)
+{
+    auto deadline = std::chrono::steady_clock::now();
+    if (m_conf->Metadata.Timeout.count() > 0)
+    {
+        deadline += m_conf->Metadata.Timeout;
+    }
+    return TryRefreshMetadata(topics, m_conf->Metadata.Retry.Max, deadline);
+}
 std::chrono::milliseconds Client::ComputeBackoff(int attemptsRemaining)
 {
     if (m_conf->Metadata.Retry.BackoffFunc)

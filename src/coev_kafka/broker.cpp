@@ -29,27 +29,21 @@ int8_t GetHeaderLength(int16_t header_version)
     }
 }
 
-Broker::Broker(const std::string &addr) : m_id(-1), m_addr(addr), m_rack(""), m_correlation_id(0), m_session_reauthentication_time(0), m_task()
+Broker::Broker(const std::string &addr) : m_id(-1), m_addr(addr), m_rack(""), m_correlation_id(0), m_session_reauthentication_time(0)
 {
-    // Lazy initialization: don't create Connect object until needed
+   
 }
-Broker::Broker(int id, const std::string &addr) : m_id(id), m_addr(addr), m_rack(""), m_correlation_id(0), m_session_reauthentication_time(0), m_task()
+Broker::Broker(int id, const std::string &addr) : m_id(id), m_addr(addr), m_rack(""), m_correlation_id(0), m_session_reauthentication_time(0)
 {
-    // Lazy initialization: don't create Connect object until needed
+   
 }
-Broker::Broker() : m_id(0), m_addr(""), m_rack(""), m_correlation_id(0), m_session_reauthentication_time(0), m_task()
+Broker::Broker() : m_id(0), m_addr(""), m_rack(""), m_correlation_id(0), m_session_reauthentication_time(0)
 {
-    // Lazy initialization: don't create Connect object until needed
+  
 }
 Broker::~Broker()
 {
     LOG_CORE("broker %p closed", this);
-    
-    // Do not call Close() here - let the Connect object's destructor handle it
-    // This avoids potential issues with libev resource cleanup during destruction
-    
-    // Let the unique_ptr automatically destroy the Connect object
-    // The destruction order is important: m_conn should be destroyed before coev members
 }
 int32_t Broker::ID()
 {
@@ -205,7 +199,6 @@ coev::awaitable<int> Broker::_Open()
         host = host.substr(1, host.size() - 2);
     }
 
-    LOG_CORE("connect to %s:%d", host.data(), port);
     auto fd = co_await m_conn->Dial(host.data(), port);
     if (fd == INVALID)
     {
@@ -213,7 +206,6 @@ coev::awaitable<int> Broker::_Open()
         co_return INVALID;
     }
 
-    LOG_CORE("connected %s:%d", host.data(), port);
     int err = ErrNoError;
     if (m_conf->ApiVersionsRequest)
     {

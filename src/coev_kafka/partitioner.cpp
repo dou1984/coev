@@ -7,13 +7,13 @@
 #include "partitioner.h"
 #include "undefined.h"
 
-int ManualPartitioner::Partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result)
+int ManualPartitioner::partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result)
 {
     result = message->m_partition;
     return 0;
 }
 
-bool ManualPartitioner::RequiresConsistency()
+bool ManualPartitioner::requires_consistency()
 {
     return true;
 }
@@ -27,14 +27,14 @@ RandomPartitioner::RandomPartitioner() : m_generator(std::chrono::system_clock::
 {
 }
 
-int RandomPartitioner::Partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result)
+int RandomPartitioner::partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result)
 {
     std::uniform_int_distribution<int32_t> dist(0, numPartitions - 1);
     result = dist(m_generator);
     return 0;
 }
 
-bool RandomPartitioner::RequiresConsistency()
+bool RandomPartitioner::requires_consistency()
 {
     return false;
 }
@@ -48,7 +48,7 @@ RoundRobinPartitioner::RoundRobinPartitioner() : m_partition(0)
 {
 }
 
-int RoundRobinPartitioner::Partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result)
+int RoundRobinPartitioner::partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result)
 {
     if (m_partition >= numPartitions)
     {
@@ -59,7 +59,7 @@ int RoundRobinPartitioner::Partition(std::shared_ptr<ProducerMessage> message, i
     return 0;
 }
 
-bool RoundRobinPartitioner::RequiresConsistency()
+bool RoundRobinPartitioner::requires_consistency()
 {
     return false;
 }
@@ -68,11 +68,11 @@ HashPartitioner::HashPartitioner() : m_reference_abs(false), m_hash_unsigned(fal
 {
 }
 
-int HashPartitioner::Partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result)
+int HashPartitioner::partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result)
 {
     if (!message->m_key)
     {
-        return m_random_partitioner->Partition(message, numPartitions, result);
+        return m_random_partitioner->partition(message, numPartitions, result);
     }
     std::string bytes;
     int err = message->m_key->Encode(bytes);
@@ -105,22 +105,22 @@ int HashPartitioner::Partition(std::shared_ptr<ProducerMessage> message, int32_t
     return 0;
 }
 
-bool HashPartitioner::RequiresConsistency()
+bool HashPartitioner::requires_consistency()
 {
     return true;
 }
 
-bool HashPartitioner::MessageRequiresConsistency(std::shared_ptr<ProducerMessage> message)
+bool HashPartitioner::message_requires_consistency(std::shared_ptr<ProducerMessage> message)
 {
     return static_cast<bool>(message->m_key);
 }
 
-void WithAbsFirstOption::Apply(HashPartitioner *hp)
+void WithAbsFirstOption::apply(HashPartitioner *hp)
 {
     hp->m_reference_abs = true;
 }
 
-void WithHashUnsignedOption::Apply(HashPartitioner *hp)
+void WithHashUnsignedOption::apply(HashPartitioner *hp)
 {
     hp->m_hash_unsigned = true;
 }
@@ -129,7 +129,7 @@ WithCustomHashFunctionOption::WithCustomHashFunctionOption(std::function<std::sh
 {
 }
 
-void WithCustomHashFunctionOption::Apply(HashPartitioner *hp)
+void WithCustomHashFunctionOption::apply(HashPartitioner *hp)
 {
     hp->m_hasher = m_hasher();
 }
@@ -138,7 +138,7 @@ WithCustomFallbackPartitionerOption::WithCustomFallbackPartitionerOption(std::sh
 {
 }
 
-void WithCustomFallbackPartitionerOption::Apply(HashPartitioner *hp)
+void WithCustomFallbackPartitionerOption::apply(HashPartitioner *hp)
 {
     hp->m_random_partitioner = m_random;
 }
@@ -199,7 +199,7 @@ PartitionerConstructor NewCustomPartitioner(const std::vector<std::shared_ptr<Ha
 
         for (auto &option : options)
         {
-            option->Apply(p.get());
+            option->apply(p.get());
         }
 
         return p;

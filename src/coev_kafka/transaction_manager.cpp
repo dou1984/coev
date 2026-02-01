@@ -93,13 +93,11 @@ bool TransactionManager::IsTransitionValid(ProducerTxnStatusFlag target) const
 
 ProducerTxnStatusFlag TransactionManager::CurrentTxnStatus() const
 {
-    std::shared_lock<std::shared_mutex> lock(m_status_lock);
     return m_status;
 }
 
 int TransactionManager::TransitionTo(ProducerTxnStatusFlag target, int err)
 {
-    std::unique_lock<std::shared_mutex> lock(m_status_lock);
     if (!IsTransitionValid(target))
     {
         return ErrTransitionNotAllowed;
@@ -123,7 +121,6 @@ int TransactionManager::TransitionTo(ProducerTxnStatusFlag target, int err)
 void TransactionManager::GetAndIncrementSequenceNumber(const std::string &topic, int32_t partition, int32_t &sequence, int16_t &epoch)
 {
     std::string key = topic + "-" + std::to_string(partition);
-    std::lock_guard<std::mutex> lock(m_mutex);
     sequence = m_sequence_numbers[key];
     m_sequence_numbers[key] = sequence + 1;
     epoch = m_producer_epoch;
@@ -131,7 +128,6 @@ void TransactionManager::GetAndIncrementSequenceNumber(const std::string &topic,
 
 void TransactionManager::BumpEpoch()
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
     m_producer_epoch++;
     for (auto &kv : m_sequence_numbers)
     {
@@ -141,7 +137,6 @@ void TransactionManager::BumpEpoch()
 
 std::pair<int64_t, int16_t> TransactionManager::GetProducerID()
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
     return {m_producer_id, m_producer_epoch};
 }
 
@@ -181,7 +176,6 @@ coev::awaitable<int> TransactionManager::Retry(int attemptsRemaining, const std:
 }
 int TransactionManager::AddOffsetsToTxn(const std::map<std::string, std::vector<std::shared_ptr<PartitionOffsetMetadata>>> &offsetsToAdd, const std::string &groupId)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
     if ((CurrentTxnStatus() & ProducerTxnFlagInTransaction) == 0)
     {
         return ErrTransactionNotReady;
@@ -553,7 +547,6 @@ coev::awaitable<int> TransactionManager::EndTxn(bool commit)
 
 coev::awaitable<int> TransactionManager::FinishTransaction(bool commit)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
     if (commit && (CurrentTxnStatus() & ProducerTxnFlagInError) != 0)
     {
         co_return m_last_error;
@@ -589,9 +582,13 @@ coev::awaitable<int> TransactionManager::FinishTransaction(bool commit)
     {
         int err = co_await EndTxn(commit);
         if (err != 0)
+        {
             co_return err;
+        }
         if (!epochBump)
+        {
             co_return 0;
+        }
     }
     co_return co_await InitializeTransactions();
 }
@@ -603,7 +600,6 @@ void TransactionManager::MaybeAddPartitionToCurrentTxn(const std::string &topic,
         return;
     }
     TopicPartition tp{topic, partition};
-    std::lock_guard<std::mutex> lock(m_partition_in_txn_lock);
     if (m_partitions_in_current_txn.count(tp) > 0)
     {
         return;
@@ -613,7 +609,6 @@ void TransactionManager::MaybeAddPartitionToCurrentTxn(const std::string &topic,
 
 coev::awaitable<int> TransactionManager::PublishTxnPartitions()
 {
-    std::lock_guard<std::mutex> lock(m_partition_in_txn_lock);
     if ((CurrentTxnStatus() & ProducerTxnFlagInError) != 0)
     {
         co_return m_last_error;

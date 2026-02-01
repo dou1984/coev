@@ -82,6 +82,7 @@ namespace coev
 
 			m_write.data = this;
 			ev_io_init(&m_write, io_context::cb_write, m_fd, EV_WRITE);
+			LOG_CORE("fd:%d", m_fd);
 		}
 		return 0;
 	}
@@ -90,8 +91,14 @@ namespace coev
 		if (m_fd != INVALID)
 		{
 			LOG_CORE("fd:%d", m_fd);
-			ev_io_stop(m_loop, &m_read);
-			ev_io_stop(m_loop, &m_write);
+			if (ev_is_active(&m_read))
+			{
+				ev_io_stop(m_loop, &m_read);
+			}
+			if (ev_is_active(&m_write))
+			{
+				ev_io_stop(m_loop, &m_write);
+			}
 		}
 		return 0;
 	}

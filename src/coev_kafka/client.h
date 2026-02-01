@@ -67,20 +67,20 @@ struct Client
     void ResurrectDeadBrokers();
     void DeregisterController();
     std::chrono::milliseconds ComputeBackoff(int attemptsRemaining);
-
     coev::awaitable<int> _GetPartitions(const std::string &topic, int64_t pt, std::vector<int32_t> &partitions);
     coev::awaitable<int> _GetReplicas(const std::string &topic, int32_t partitionID, PartitionMetadata &out);
     coev::awaitable<int> _GetOffset(const std::string &topic, int32_t partitionID, int64_t timestamp, int64_t &offset);
+    coev::awaitable<int> _RefreshMetadata(const std::vector<std::string> &topics);
+    coev::awaitable<int> _CachedLeader(const std::string &topic, int32_t partitionID, std::shared_ptr<Broker> &broker_, int32_t &leaderEpoch);
     std::shared_ptr<PartitionMetadata> _CachedMetadata(const std::string &topic, int32_t partitionID);
     std::vector<int32_t> _CachedPartitions(const std::string &topic, int64_t partitionSet);
     std::vector<int32_t> _SetPartitionCache(const std::string &topic, int64_t partitionSet);
-    coev::awaitable<int> _CachedLeader(const std::string &topic, int32_t partitionID, std::shared_ptr<Broker> &broker_, int32_t &leaderEpoch);
     std::shared_ptr<Broker> _CachedCoordinator(const std::string &consumerGroup);
     std::shared_ptr<Broker> _CachedTransactionCoordinator(const std::string &transactionID);
     std::shared_ptr<Broker> _CachedController();
 
-    metadata_refresher m_refresh_metadata;
-    std::atomic<int64_t> m_update_metadata_ms{0};
+    MetadataRefresher m_metadata_refresher;
+    std::atomic<int64_t> m_update_metadata_ms;
     std::shared_ptr<Config> m_conf;
     int32_t m_controller_id = INVALID;
     std::deque<std::shared_ptr<Broker>> m_seed_brokers;

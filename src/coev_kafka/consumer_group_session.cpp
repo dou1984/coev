@@ -8,10 +8,10 @@
 ConsumerGroupSession::ConsumerGroupSession(std::shared_ptr<ConsumerGroup> &_parent, const std::string &_memberID, int32_t _generationID, std::shared_ptr<ConsumerGroupHandler> _handler, std::shared_ptr<OffsetManager> _offsets, std::map<std::string, std::vector<int32_t>> &_claims, std::shared_ptr<Context> &_ctx, std::function<void()> _cancel) : m_parent(_parent), m_member_id(_memberID), m_generation_id(_generationID), m_handler(_handler), m_offsets(_offsets), m_claims(_claims), m_context(_ctx), m_cancel(_cancel)
 {
 
-    m_task << ConsumerGroupSession::_HeartbeatLoop();
+    m_task << ConsumerGroupSession::_heartbeat_loop();
 }
 
-std::map<std::string, std::vector<int32_t>> ConsumerGroupSession::GetClaims()
+std::map<std::string, std::vector<int32_t>> ConsumerGroupSession::get_claims()
 {
     return m_claims;
 }
@@ -30,7 +30,7 @@ void ConsumerGroupSession::MarkOffset(const std::string &topic, int32_t partitio
 {
 }
 
-void ConsumerGroupSession::Commit()
+void ConsumerGroupSession::commit()
 {
 }
 
@@ -47,11 +47,11 @@ std::shared_ptr<Context> ConsumerGroupSession::GetContext()
     return m_context;
 }
 
-coev::awaitable<void> ConsumerGroupSession::HanderError(std::shared_ptr<PartitionOffsetManager> pom, const std::string &topic, int32_t partition)
+coev::awaitable<void> ConsumerGroupSession::hander_error(std::shared_ptr<PartitionOffsetManager> pom, const std::string &topic, int32_t partition)
 {
     co_return;
 }
-coev::awaitable<int> ConsumerGroupSession::_Release(bool withCleanup)
+coev::awaitable<int> ConsumerGroupSession::_release(bool withCleanup)
 {
     m_cancel();
 
@@ -76,12 +76,12 @@ coev::awaitable<int> ConsumerGroupSession::_Release(bool withCleanup)
     co_return err;
 }
 
-coev::awaitable<void> ConsumerGroupSession::_Consume(const std::string &topic, int32_t partition)
+coev::awaitable<void> ConsumerGroupSession::_consume(const std::string &topic, int32_t partition)
 {
     co_return;
 }
 
-coev::awaitable<void> ConsumerGroupSession::_HeartbeatLoop()
+coev::awaitable<void> ConsumerGroupSession::_heartbeat_loop()
 {
     m_hd_dead.store(true);
     co_return;

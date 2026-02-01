@@ -7,14 +7,14 @@
 
 void PartitionConsumer::SendError(KError err)
 {
-    auto cErr = std::make_shared<ConsumerError>();
-    cErr->m_topic = m_topic;
-    cErr->m_partition = m_partition;
-    cErr->m_err = err;
+    auto cerr = std::make_shared<ConsumerError>();
+    cerr->m_topic = m_topic;
+    cerr->m_partition = m_partition;
+    cerr->m_err = err;
 
     if (m_conf->Consumer.Return.Errors)
     {
-        m_errors.set(cErr);
+        m_errors.set(cerr);
     }
     else
     {
