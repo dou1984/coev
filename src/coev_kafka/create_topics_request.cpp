@@ -6,7 +6,7 @@ void CreateTopicsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int CreateTopicsRequest::encode(packetEncoder &pe) const
+int CreateTopicsRequest::encode(packet_encoder &pe) const
 {
     if (pe.putArrayLength(static_cast<int32_t>(m_topic_details.size())) != ErrNoError)
     {
@@ -36,7 +36,7 @@ int CreateTopicsRequest::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int CreateTopicsRequest::decode(packetDecoder &pd, int16_t version)
+int CreateTopicsRequest::decode(packet_decoder &pd, int16_t version)
 {
     int32_t n;
     if (pd.getArrayLength(n) != ErrNoError)
@@ -129,7 +129,7 @@ KafkaVersion CreateTopicsRequest::required_version() const
     }
 }
 
-int TopicDetail::encode(packetEncoder &pe) const
+int TopicDetail::encode(packet_encoder &pe) const
 {
     pe.putInt32(m_num_partitions);
     pe.putInt16(m_replication_factor);
@@ -169,7 +169,7 @@ int TopicDetail::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int TopicDetail::decode(packetDecoder &pd, int16_t version)
+int TopicDetail::decode(packet_decoder &pd, int16_t version)
 {
     if (pd.getInt32(m_num_partitions) != ErrNoError)
     {

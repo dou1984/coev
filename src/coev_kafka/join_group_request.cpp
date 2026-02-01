@@ -1,7 +1,7 @@
 #include "version.h"
 #include "join_group_request.h"
 #include "api_versions.h"
-int GroupProtocol::decode(packetDecoder &pd)
+int GroupProtocol::decode(packet_decoder &pd)
 {
     int err = pd.getString(m_name);
     if (err != 0)
@@ -14,7 +14,7 @@ int GroupProtocol::decode(packetDecoder &pd)
     return pd.getEmptyTaggedFieldArray(_);
 }
 
-int GroupProtocol::encode(packetEncoder &pe) const
+int GroupProtocol::encode(packet_encoder &pe) const
 {
     int err = pe.putString(m_name);
     if (err != 0)
@@ -33,7 +33,7 @@ void JoinGroupRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int JoinGroupRequest::encode(packetEncoder &pe) const
+int JoinGroupRequest::encode(packet_encoder &pe) const
 {
     int err = pe.putString(m_group_id);
     if (err != 0)
@@ -103,7 +103,7 @@ int JoinGroupRequest::encode(packetEncoder &pe) const
     return 0;
 }
 
-int JoinGroupRequest::decode(packetDecoder &pd, int16_t version)
+int JoinGroupRequest::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
 

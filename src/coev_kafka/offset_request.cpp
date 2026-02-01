@@ -5,7 +5,7 @@
 OffsetRequestBlock::OffsetRequestBlock()
     : m_leader_epoch(-1), m_timestamp(0), m_max_num_offsets(0) {}
 
-int OffsetRequestBlock::encode(packetEncoder &pe, int16_t version) const
+int OffsetRequestBlock::encode(packet_encoder &pe, int16_t version) const
 {
     if (version >= 4)
     {
@@ -22,7 +22,7 @@ int OffsetRequestBlock::encode(packetEncoder &pe, int16_t version) const
     return 0;
 }
 
-int OffsetRequestBlock::decode(packetDecoder &pd, int16_t version)
+int OffsetRequestBlock::decode(packet_decoder &pd, int16_t version)
 {
     m_leader_epoch = -1;
     int err = 0;
@@ -56,7 +56,7 @@ void OffsetRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int OffsetRequest::encode(packetEncoder &pe) const
+int OffsetRequest::encode(packet_encoder &pe) const
 {
     if (m_is_replica_id_set)
     {
@@ -106,7 +106,7 @@ int OffsetRequest::encode(packetEncoder &pe) const
     return 0;
 }
 
-int OffsetRequest::decode(packetDecoder &pd, int16_t version)
+int OffsetRequest::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
     int32_t replicaID_val;

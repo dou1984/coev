@@ -7,17 +7,17 @@ struct ConsumerGroupHandler
 {
     ConsumerGroupHandler() = default;
     virtual ~ConsumerGroupHandler() = default;
-    int Setup(std::shared_ptr<IConsumerGroupSession>)
+    int setup(std::shared_ptr<ConsumerGroupSession>)
     {
         return 0;
     }
 
-    int Cleanup(std::shared_ptr<IConsumerGroupSession>)
+    int cleanup(std::shared_ptr<ConsumerGroupSession>)
     {
         return 0;
     }
 
-    int ConsumeClaim(std::shared_ptr<IConsumerGroupSession>, std::shared_ptr<IConsumerGroupClaim>)
+    int consume_claim(std::shared_ptr<ConsumerGroupSession>, std::shared_ptr<ConsumerGroupClaim>)
     {
         return 0;
     }

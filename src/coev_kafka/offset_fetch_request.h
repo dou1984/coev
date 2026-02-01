@@ -27,8 +27,8 @@ struct OffsetFetchRequest : protocol_body, flexible_version
     OffsetFetchRequest(const KafkaVersion &version, const std::string &group, const std::map<std::string, std::vector<int32_t>> &partitions);
 
     void set_version(int16_t v);
-    int encode(packetEncoder &pe) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe) const;
+    int decode(packet_decoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;
@@ -36,6 +36,6 @@ struct OffsetFetchRequest : protocol_body, flexible_version
     bool is_flexible() const;
     bool is_flexible_version(int16_t version) const;
     KafkaVersion required_version() const;
-    void ZeroPartitions();
-    void AddPartition(const std::string &topic, int32_t partitionID);
+    void zero_partitions();
+    void add_partition(const std::string &topic, int32_t partitionID);
 };

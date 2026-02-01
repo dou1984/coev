@@ -7,7 +7,7 @@ void JoinGroupResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int JoinGroupResponse::encode(packetEncoder &pe) const
+int JoinGroupResponse::encode(packet_encoder &pe) const
 {
     if (m_version >= 2)
     {
@@ -57,7 +57,7 @@ int JoinGroupResponse::encode(packetEncoder &pe) const
     return 0;
 }
 
-int JoinGroupResponse::decode(packetDecoder &pd, int16_t version)
+int JoinGroupResponse::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
 

@@ -15,8 +15,8 @@ struct DeleteRecordsRequestTopic : versioned_decoder, IEncoder
 {
 
   std::unordered_map<int32_t, int64_t> m_partition_offsets;
-  int encode(packetEncoder &pe) const;
-  int decode(packetDecoder &pd, int16_t version);
+  int encode(packet_encoder &pe) const;
+  int decode(packet_decoder &pd, int16_t version);
 };
 
 struct DeleteRecordsRequest : protocol_body
@@ -32,8 +32,8 @@ struct DeleteRecordsRequest : protocol_body
   }
   ~DeleteRecordsRequest();
   void set_version(int16_t v);
-  int encode(packetEncoder &pe) const;
-  int decode(packetDecoder &pd, int16_t version);
+  int encode(packet_encoder &pe) const;
+  int decode(packet_decoder &pd, int16_t version);
   int16_t key() const;
   int16_t version() const;
   int16_t header_version() const;

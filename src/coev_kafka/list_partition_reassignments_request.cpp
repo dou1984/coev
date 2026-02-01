@@ -7,7 +7,7 @@ void ListPartitionReassignmentsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int ListPartitionReassignmentsRequest::encode(packetEncoder &pe) const
+int ListPartitionReassignmentsRequest::encode(packet_encoder &pe) const
 {
     pe.putInt32(static_cast<int32_t>(m_timeout.count()));
 
@@ -35,7 +35,7 @@ int ListPartitionReassignmentsRequest::encode(packetEncoder &pe) const
     return 0;
 }
 
-int ListPartitionReassignmentsRequest::decode(packetDecoder &pd, int16_t version)
+int ListPartitionReassignmentsRequest::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
 

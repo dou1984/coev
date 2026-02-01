@@ -1,6 +1,6 @@
 #include "partition_offset_metadata.h"
 
-int PartitionOffsetMetadata::decode(packetDecoder &pd, int16_t version)
+int PartitionOffsetMetadata::decode(packet_decoder &pd, int16_t version)
 {
     pd.getInt32(m_partition);
     pd.getInt64(m_offset);
@@ -8,7 +8,7 @@ int PartitionOffsetMetadata::decode(packetDecoder &pd, int16_t version)
     pd.getInt32(m_leader_epoch);
     return 0;
 }
-int PartitionOffsetMetadata::encode(packetEncoder &pe, int16_t version) const
+int PartitionOffsetMetadata::encode(packet_encoder &pe, int16_t version) const
 {
     pe.putInt32(m_partition);
     pe.putInt64(m_offset);

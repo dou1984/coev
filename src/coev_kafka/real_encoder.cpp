@@ -293,7 +293,7 @@ void realEncoder::putEmptyTaggedFieldArray()
     }
 }
 
-void realEncoder::push(pushEncoder &in)
+void realEncoder::push(push_encoder &in)
 {
     in.save_offset(m_offset);
     int reserve = in.reserve_length();

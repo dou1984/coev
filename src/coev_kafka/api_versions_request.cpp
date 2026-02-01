@@ -19,7 +19,7 @@ void ApiVersionsRequest::set_version(int16_t v)
     }
 }
 
-int ApiVersionsRequest::encode(packetEncoder &pe) const
+int ApiVersionsRequest::encode(packet_encoder &pe) const
 {
     if (m_version >= 3)
     {
@@ -46,7 +46,7 @@ int ApiVersionsRequest::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int ApiVersionsRequest::decode(packetDecoder &pd, int16_t version)
+int ApiVersionsRequest::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
     if (m_version >= 3)

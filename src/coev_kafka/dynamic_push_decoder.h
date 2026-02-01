@@ -2,13 +2,13 @@
 
 #include "encoder_decoder.h"
 
-struct pushDecoder
+struct push_decoder
 {
-    virtual ~pushDecoder() = default;
+    virtual ~push_decoder() = default;
     virtual void save_offset(int in) = 0;
     virtual int reserve_length() = 0;
-    virtual int check(int curOffset, const std::string &buf) = 0;
+    virtual int check(int curOffset, const std::string_view &buf) = 0;
 };
-struct dynamicPushDecoder : pushDecoder, IDecoder
+struct dynamicPushDecoder : push_decoder, IDecoder
 {
 };

@@ -16,8 +16,8 @@ struct ApiVersionsResponseKey : versioned_encoder, versioned_decoder
     int16_t m_min_version = 0;
     int16_t m_max_version = 0;
 
-    int encode(packetEncoder &pe, int16_t version) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe, int16_t version) const;
+    int decode(packet_decoder &pd, int16_t version);
 };
 
 struct ApiVersionsResponse : protocol_body, flexible_version
@@ -33,8 +33,8 @@ struct ApiVersionsResponse : protocol_body, flexible_version
 
     void set_version(int16_t v);
 
-    int encode(packetEncoder &pe) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe) const;
+    int decode(packet_decoder &pd, int16_t version);
 
     int16_t key() const;
     int16_t version() const;
@@ -45,5 +45,5 @@ struct ApiVersionsResponse : protocol_body, flexible_version
     KafkaVersion required_version() const;
     std::chrono::milliseconds throttle_time() const;
 
-    static packetDecoder &downgradeFlexibleDecoder(packetDecoder &pd);
+    static packet_decoder &downgradeFlexibleDecoder(packet_decoder &pd);
 };

@@ -3,11 +3,11 @@
 PartitionOffsetManager::PartitionOffsetManager(
     std::shared_ptr<OffsetManager> parent, const std::string &topic,
     int32_t partition, int32_t leaderEpoch, int64_t offset, const std::string &metadata)
-    : m_parent(parent), m_topic(topic), m_partition(partition), m_leaderEpoch(leaderEpoch), m_offset(offset), m_metadata(metadata), m_dirty(false), m_done(false)
+    : m_parent(parent), m_topic(topic), m_partition(partition), m_leader_epoch(leaderEpoch), m_offset(offset), m_metadata(metadata), m_dirty(false), m_done(false)
 {
 }
 
-std::pair<int64_t, std::string> PartitionOffsetManager::NextOffset()
+std::pair<int64_t, std::string> PartitionOffsetManager::next_offset()
 {
     if (m_offset >= 0)
     {
@@ -15,11 +15,11 @@ std::pair<int64_t, std::string> PartitionOffsetManager::NextOffset()
     }
     return std::make_pair(m_parent->m_conf->Consumer.Offsets.Initial, "");
 }
-coev::awaitable<void> PartitionOffsetManager::Errors(std::shared_ptr<ConsumerError> &err)
+coev::awaitable<void> PartitionOffsetManager::errors(std::shared_ptr<ConsumerError> &err)
 {
     co_await m_errors.get(err);
 }
-void PartitionOffsetManager::MarkOffset(int64_t offset, const std::string &metadata)
+void PartitionOffsetManager::mark_offset(int64_t offset, const std::string &metadata)
 {
     if (offset > m_offset)
     {
@@ -29,7 +29,7 @@ void PartitionOffsetManager::MarkOffset(int64_t offset, const std::string &metad
     }
 }
 
-void PartitionOffsetManager::ResetOffset(int64_t offset, const std::string &metadata)
+void PartitionOffsetManager::reset_offset(int64_t offset, const std::string &metadata)
 {
     if (offset <= m_offset)
     {
@@ -39,7 +39,7 @@ void PartitionOffsetManager::ResetOffset(int64_t offset, const std::string &meta
     }
 }
 
-void PartitionOffsetManager::UpdateCommitted(int64_t offset, const std::string &metadata)
+void PartitionOffsetManager::update_committed(int64_t offset, const std::string &metadata)
 {
     if (m_offset == offset && m_metadata == metadata)
     {
@@ -47,17 +47,17 @@ void PartitionOffsetManager::UpdateCommitted(int64_t offset, const std::string &
     }
 }
 
-void PartitionOffsetManager::AsyncClose()
+void PartitionOffsetManager::async_close()
 {
     m_done = true;
 }
 
-void PartitionOffsetManager::Close()
+void PartitionOffsetManager::close()
 {
-    AsyncClose();
+    async_close();
 }
 
-void PartitionOffsetManager::HandleError(KError err)
+void PartitionOffsetManager::handle_error(KError err)
 {
     auto cErr = std::make_shared<ConsumerError>();
     cErr->m_topic = m_topic;
@@ -70,6 +70,6 @@ void PartitionOffsetManager::HandleError(KError err)
     }
 }
 
-void PartitionOffsetManager::Release()
+void PartitionOffsetManager::release()
 {
 }

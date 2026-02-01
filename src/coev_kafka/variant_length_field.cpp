@@ -11,7 +11,7 @@ static int variantSize(int64_t value)
     return size;
 }
 
-int VariantLengthField::decode(packetDecoder &pd)
+int VariantLengthField::decode(packet_decoder &pd)
 {
     int64_t val;
     int err = pd.getVariant(val);
@@ -45,7 +45,7 @@ int VariantLengthField::run(int curOffset, std::string &buf)
     return (n > 0) ? 0 : -1;
 }
 
-int VariantLengthField::check(int curOffset, const std::string & /*buf*/)
+int VariantLengthField::check(int curOffset, const std::string_view & /*buf*/)
 {
     if (static_cast<int64_t>(curOffset - m_start_offset - reserve_length()) != m_length)
     {

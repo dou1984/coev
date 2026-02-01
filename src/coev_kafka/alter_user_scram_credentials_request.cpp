@@ -7,7 +7,7 @@ void AlterUserScramCredentialsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int AlterUserScramCredentialsRequest::encode(packetEncoder &pe) const
+int AlterUserScramCredentialsRequest::encode(packet_encoder &pe) const
 {
     if (pe.putArrayLength(static_cast<int32_t>(m_deletions.size())) != ErrNoError)
     {
@@ -60,7 +60,7 @@ int AlterUserScramCredentialsRequest::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int AlterUserScramCredentialsRequest::decode(packetDecoder &pd, int16_t version)
+int AlterUserScramCredentialsRequest::decode(packet_decoder &pd, int16_t version)
 {
     int32_t numDeletions;
     if (pd.getArrayLength(numDeletions) != ErrNoError)

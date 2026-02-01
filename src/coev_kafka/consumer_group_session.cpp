@@ -59,7 +59,7 @@ coev::awaitable<int> ConsumerGroupSession::_Release(bool withCleanup)
 
     if (withCleanup)
     {
-        if (int e = m_handler->Cleanup(shared_from_this()); e != 0)
+        if (int e = m_handler->cleanup(shared_from_this()); e != 0)
         {
             m_parent->HandleError(std::make_shared<ConsumerError>("", -1, e), "", -1);
             err = e;

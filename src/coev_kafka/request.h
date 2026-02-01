@@ -18,12 +18,12 @@ struct Request : versioned_encoder, IEncoder, IDecoder
     int32_t m_correlation_id = 0;
     std::string m_client_id;
     const protocol_body *m_body;
-    int encode(packetEncoder &pe) const;
-    int encode(packetEncoder &pe, int16_t version) const
+    int encode(packet_encoder &pe) const;
+    int encode(packet_encoder &pe, int16_t version) const
     {
         return encode(pe);
     }
-    int decode(packetDecoder &pd);
+    int decode(packet_decoder &pd);
     bool is_flexible() const;
 };
 

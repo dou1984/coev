@@ -31,7 +31,8 @@ const unsigned char aclDescribeRequestV1[] = {
 TEST(DescribeAclsRequestTest, DecodeRequest)
 {
     realDecoder decoder;
-    decoder.m_raw = std::string(reinterpret_cast<const char *>(aclDescribeRequest), sizeof(aclDescribeRequest));
+    std::string rawData(reinterpret_cast<const char *>(aclDescribeRequest), sizeof(aclDescribeRequest));
+    decoder.m_raw = rawData;
     decoder.m_offset = 0;
 
     DescribeAclsRequest request;
@@ -48,7 +49,8 @@ TEST(DescribeAclsRequestTest, DecodeRequest)
 TEST(DescribeAclsRequestTest, DecodeRequestv1)
 {
     realDecoder decoder;
-    decoder.m_raw = std::string(reinterpret_cast<const char *>(aclDescribeRequestV1), sizeof(aclDescribeRequestV1));
+    std::string rawData(reinterpret_cast<const char *>(aclDescribeRequestV1), sizeof(aclDescribeRequestV1));
+    decoder.m_raw = rawData;
     decoder.m_offset = 0;
 
     DescribeAclsRequest request;
@@ -147,7 +149,8 @@ TEST(DescribeAclsRequestTest, RoundTripEncodingDecoding)
 
     // Decode the request
     realDecoder decoder;
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
+    std::string rawData = encoder.m_raw.substr(0, encoder.m_offset);
+    decoder.m_raw = rawData;
     decoder.m_offset = 0;
 
     DescribeAclsRequest decodedRequest;
@@ -178,7 +181,8 @@ TEST(DescribeAclsRequestTest, RoundTripEncodingDecoding)
     ASSERT_EQ(result, 0) << "Failed to encode V1 request for round-trip test";
 
     realDecoder decoderV1;
-    decoderV1.m_raw = encoderV1.m_raw.substr(0, encoderV1.m_offset);
+    std::string rawDataV1 = encoderV1.m_raw.substr(0, encoderV1.m_offset);
+    decoderV1.m_raw = rawDataV1;
     decoderV1.m_offset = 0;
 
     DescribeAclsRequest decodedRequestV1;

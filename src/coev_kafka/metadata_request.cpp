@@ -47,7 +47,7 @@ void MetadataRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int MetadataRequest::encode(packetEncoder &pe) const
+int MetadataRequest::encode(packet_encoder &pe) const
 {
     if (m_version < 0 || m_version > 10)
     {
@@ -108,7 +108,7 @@ int MetadataRequest::encode(packetEncoder &pe) const
     return 0;
 }
 
-int MetadataRequest::decode(packetDecoder &pd, int16_t version)
+int MetadataRequest::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
     int32_t size;

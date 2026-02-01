@@ -29,7 +29,7 @@ std::vector<std::shared_ptr<MessageBlock>> MessageBlock::Messages()
     return single;
 }
 
-int MessageBlock::encode(packetEncoder &pe) const
+int MessageBlock::encode(packet_encoder &pe) const
 {
     pe.putInt64(m_offset);
     LengthField length_field;
@@ -43,7 +43,7 @@ int MessageBlock::encode(packetEncoder &pe) const
     return pe.pop();
 }
 
-int MessageBlock::decode(packetDecoder &pd)
+int MessageBlock::decode(packet_decoder &pd)
 {
     int err = pd.getInt64(m_offset);
     if (err != 0)
@@ -69,7 +69,7 @@ int MessageBlock::decode(packetDecoder &pd)
     return err;
 }
 
-int MessageSet::encode(packetEncoder &pe) const
+int MessageSet::encode(packet_encoder &pe) const
 {
     for (auto &message_block : m_messages)
     {
@@ -82,7 +82,7 @@ int MessageSet::encode(packetEncoder &pe) const
     return 0;
 }
 
-int MessageSet::decode(packetDecoder &pd)
+int MessageSet::decode(packet_decoder &pd)
 {
     m_messages.clear();
     m_partial_trailing_message = false;

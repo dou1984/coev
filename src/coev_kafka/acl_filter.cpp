@@ -1,7 +1,7 @@
 #include "version.h"
 #include "acl_filter.h"
 
-int AclFilter::encode(packetEncoder &pe) const
+int AclFilter::encode(packet_encoder &pe) const
 {
     pe.putInt8(static_cast<int8_t>(m_resource_type));
 
@@ -31,7 +31,7 @@ int AclFilter::encode(packetEncoder &pe) const
     return 0;
 }
 
-int AclFilter::decode(packetDecoder &pd, int16_t version)
+int AclFilter::decode(packet_decoder &pd, int16_t version)
 {
     int8_t resourceType;
     if (pd.getInt8(resourceType) != 0)

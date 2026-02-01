@@ -85,7 +85,7 @@ int versionedDecode(const std::string &buf, versioned_decoder &in, int16_t versi
     return ErrNoError;
 }
 
-int prepareFlexibleDecoder(packetDecoder &pd, versioned_decoder &req, int16_t version)
+int prepareFlexibleDecoder(packet_decoder &pd, versioned_decoder &req, int16_t version)
 {
     auto f = dynamic_cast<flexible_version *>(&req);
     if (f != nullptr)
@@ -100,7 +100,7 @@ int prepareFlexibleDecoder(packetDecoder &pd, versioned_decoder &req, int16_t ve
     return req.decode(pd, version);
 }
 
-int prepareFlexibleEncoder(packetEncoder &pe, IEncoder &req)
+int prepareFlexibleEncoder(packet_encoder &pe, IEncoder &req)
 {
     auto f = dynamic_cast<flexible_version *>(&req);
     if (f != nullptr)
@@ -114,7 +114,7 @@ int prepareFlexibleEncoder(packetEncoder &pe, IEncoder &req)
     }
     return req.encode(pe);
 }
-std::shared_ptr<packetDecoder> downgradeFlexibleDecoder(std::shared_ptr<packetDecoder> pd)
+std::shared_ptr<packet_decoder> downgradeFlexibleDecoder(std::shared_ptr<packet_decoder> pd)
 {
     if (pd->isFlexible())
     {
@@ -124,7 +124,7 @@ std::shared_ptr<packetDecoder> downgradeFlexibleDecoder(std::shared_ptr<packetDe
 }
 
 inline constexpr int magicOffset = 16;
-int magicValue(packetDecoder &pd, int8_t &magic)
+int magicValue(packet_decoder &pd, int8_t &magic)
 {
     return pd.peekInt8(magicOffset, magic);
 }

@@ -3,7 +3,7 @@
 #include "api_versions.h"
 #include <utility>
 
-int SyncGroupRequestAssignment::encode(packetEncoder &pe, int16_t version) const
+int SyncGroupRequestAssignment::encode(packet_encoder &pe, int16_t version) const
 {
     int err = pe.putString(m_member_id);
     if (err != 0)
@@ -17,7 +17,7 @@ int SyncGroupRequestAssignment::encode(packetEncoder &pe, int16_t version) const
     return 0;
 }
 
-int SyncGroupRequestAssignment::decode(packetDecoder &pd, int16_t version)
+int SyncGroupRequestAssignment::decode(packet_decoder &pd, int16_t version)
 {
     int err = pd.getString(m_member_id);
     if (err != 0)
@@ -38,7 +38,7 @@ void SyncGroupRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int SyncGroupRequest::encode(packetEncoder &pe) const
+int SyncGroupRequest::encode(packet_encoder &pe) const
 {
     int err = pe.putString(m_group_id);
     if (err != 0)
@@ -72,7 +72,7 @@ int SyncGroupRequest::encode(packetEncoder &pe) const
     return 0;
 }
 
-int SyncGroupRequest::decode(packetDecoder &pd, int16_t version)
+int SyncGroupRequest::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
 

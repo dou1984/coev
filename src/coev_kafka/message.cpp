@@ -102,7 +102,7 @@ Message::Message(const std::string &key, const std::string &value, bool logAppen
     : m_key(key), m_value(value), m_log_append_time(logAppendTime), m_timestamp(msgTimestamp), m_version(version)
 {
 }
-int Message::encode(packetEncoder &pe) const
+int Message::encode(packet_encoder &pe) const
 {
     crc32_field field(CrcCastagnoli);
     pe.push(field);
@@ -157,7 +157,7 @@ int Message::encode(packetEncoder &pe) const
     return 0;
 }
 
-int Message::decode(packetDecoder &pd)
+int Message::decode(packet_decoder &pd)
 {
     auto field = acquire_crc32_field(CrcCastagnoli);
     int err = pd.push(*field);
@@ -231,7 +231,7 @@ int Message::decode_set()
     }
 
     realDecoder innerDecoder;
-    innerDecoder.m_raw.assign(m_value.begin(), m_value.end());
+    innerDecoder.m_raw = m_value;
     m_message_set.clear();
     return m_message_set.decode(innerDecoder);
 }

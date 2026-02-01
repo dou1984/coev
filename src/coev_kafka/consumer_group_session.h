@@ -11,20 +11,8 @@ struct ConsumerGroup;
 struct ConsumerGroupHandler;
 struct PartitionOffsetManager;
 
-struct IConsumerGroupSession
-{
-    virtual ~IConsumerGroupSession() = default;
-    virtual std::map<std::string, std::vector<int32_t>> GetClaims() = 0;
-    virtual std::string MemberID() = 0;
-    virtual int32_t GenerationID() = 0;
-    virtual void MarkOffset(const std::string &topic, int32_t partition, int64_t offset, const std::string &metadata) = 0;
-    virtual void Commit() = 0;
-    virtual void ResetOffset(const std::string &topic, int32_t partition, int64_t offset, const std::string &metadata) = 0;
-    virtual void MarkMessage(std::shared_ptr<ConsumerMessage> msg, const std::string &metadata) = 0;
-    virtual std::shared_ptr<Context> GetContext() = 0;
-};
 
-struct ConsumerGroupSession : IConsumerGroupSession, std::enable_shared_from_this<ConsumerGroupSession>
+struct ConsumerGroupSession :  std::enable_shared_from_this<ConsumerGroupSession>
 {
     std::shared_ptr<ConsumerGroup> m_parent;
     std::string m_member_id;

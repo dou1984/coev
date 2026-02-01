@@ -18,7 +18,7 @@ void OffsetCommitResponse::add_error(const std::string &topic, int32_t partition
     partitions[partition] = kerror;
 }
 
-int OffsetCommitResponse::encode(packetEncoder &pe) const
+int OffsetCommitResponse::encode(packet_encoder &pe) const
 {
     if (m_version >= 3)
     {
@@ -41,7 +41,7 @@ int OffsetCommitResponse::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int OffsetCommitResponse::decode(packetDecoder &pd, int16_t version)
+int OffsetCommitResponse::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
 

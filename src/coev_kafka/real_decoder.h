@@ -7,12 +7,13 @@
 #include <vector>
 #include <functional>
 #include <unordered_map>
+#include <string_view>
 #include <coev/coev.h>
 #include "packet_decoder.h"
 #include "errors.h"
 #include "encoder_decoder.h"
 
-struct realDecoder : packetDecoder
+struct realDecoder : packet_decoder
 {
     int getInt8(int8_t &result);
     int getInt16(int16_t &result);
@@ -36,14 +37,14 @@ struct realDecoder : packetDecoder
     int getInt64Array(std::vector<int64_t> &result);
     int getStringArray(std::vector<std::string> &result);
     int remaining();
-    int getSubset(int length, std::shared_ptr<packetDecoder> &result);
+    int getSubset(int length, std::shared_ptr<packet_decoder> &result);
     int getRawBytes(int length, std::string &result);
-    int peek(int offset, int length, std::shared_ptr<packetDecoder> &result);
+    int peek(int offset, int length, std::shared_ptr<packet_decoder> &result);
     int peekInt8(int offset, int8_t &result);
-    int push(pushDecoder &in);
+    int push(push_decoder &in);
     int pop();
 
     int m_offset = 0;
-    std::string m_raw;
-    std::vector<pushDecoder *> m_stack;
+    std::string_view m_raw;
+    std::vector<push_decoder *> m_stack;
 };

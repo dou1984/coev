@@ -46,9 +46,9 @@ struct RecordBatch
         m_records.emplace_back(std::move(r));
     }
 
-    int encode(packetEncoder &pe);
-    int decode(packetDecoder &pd);
+    int encode(packet_encoder &pe);
+    int decode(packet_decoder &pd);
 
     int16_t compute_attributes() const;
-    void encode_records(packetEncoder &pe);
+    void encode_records(packet_encoder &pe);
 };

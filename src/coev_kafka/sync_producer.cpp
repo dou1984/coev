@@ -38,12 +38,13 @@ SyncProducer::~SyncProducer()
 coev::awaitable<int> SyncProducer::SendMessage(std::shared_ptr<ProducerMessage> msg, int32_t &partition, int64_t &offset)
 {
     // m_producer->m_input.set(msg);
-    // auto err = co_await expectationsPool.get();
-    // if (err != nullptr && err->m_err != 0)
+    // std::shared_ptr<ProducerMessage> pmsg;
+    // auto err = co_await expectationsPool.get(pmsg);
+    // if (err != ErrNoError)
     // {
     //     partition = -1;
     //     offset = -1;
-    //     co_return err->m_err;
+    //     co_return err
     // }
     // partition = msg->m_partition;
     // offset = msg->m_offset;
@@ -62,7 +63,6 @@ coev::awaitable<int> SyncProducer::SendMessages(const std::vector<std::shared_pt
     // {
     //     expectationsPool.set(expectations[i]);
     // }
-
     co_return 0;
 }
 

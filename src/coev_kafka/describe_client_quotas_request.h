@@ -18,8 +18,8 @@ struct QuotaFilterComponent
     QuotaMatchType m_match_type;
     std::string m_match;
 
-    int encode(packetEncoder &pe) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe) const;
+    int decode(packet_decoder &pd, int16_t version);
 };
 
 struct DescribeClientQuotasRequest : protocol_body, flexible_version
@@ -33,8 +33,8 @@ struct DescribeClientQuotasRequest : protocol_body, flexible_version
     }
     DescribeClientQuotasRequest(KafkaVersion version, const std::vector<QuotaFilterComponent> &components, bool strict);
     void set_version(int16_t v);
-    int encode(packetEncoder &pe) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe) const;
+    int decode(packet_decoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

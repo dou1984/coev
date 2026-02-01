@@ -7,7 +7,7 @@ void AlterClientQuotasRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int AlterClientQuotasRequest::encode(packetEncoder &pe) const
+int AlterClientQuotasRequest::encode(packet_encoder &pe) const
 {
     // Entries
     if (pe.putArrayLength(static_cast<int32_t>(m_entries.size())) != ErrNoError)
@@ -28,7 +28,7 @@ int AlterClientQuotasRequest::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int AlterClientQuotasRequest::decode(packetDecoder &pd, int16_t version)
+int AlterClientQuotasRequest::decode(packet_decoder &pd, int16_t version)
 {
     // Entries
     int32_t entryCount;
@@ -88,7 +88,7 @@ KafkaVersion AlterClientQuotasRequest::required_version() const
     return V2_6_0_0;
 }
 
-int AlterClientQuotasEntry::encode(packetEncoder &pe) const
+int AlterClientQuotasEntry::encode(packet_encoder &pe) const
 {
     // Entity
     if (pe.putArrayLength(static_cast<int32_t>(m_entity.size())) != ErrNoError)
@@ -119,7 +119,7 @@ int AlterClientQuotasEntry::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int AlterClientQuotasEntry::decode(packetDecoder &pd, int16_t version)
+int AlterClientQuotasEntry::decode(packet_decoder &pd, int16_t version)
 {
     // Entity
     int32_t componentCount;
@@ -168,7 +168,7 @@ int AlterClientQuotasEntry::decode(packetDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-int ClientQuotasOp::encode(packetEncoder &pe) const
+int ClientQuotasOp::encode(packet_encoder &pe) const
 {
     // Key
     if (pe.putString(m_key) != ErrNoError)
@@ -185,7 +185,7 @@ int ClientQuotasOp::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int ClientQuotasOp::decode(packetDecoder &pd, int16_t version)
+int ClientQuotasOp::decode(packet_decoder &pd, int16_t version)
 {
     // Key
     std::string key;

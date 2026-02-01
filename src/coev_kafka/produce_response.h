@@ -20,8 +20,8 @@ struct ProduceResponseBlock : versioned_encoder, versioned_decoder
     int64_t m_start_offset = 0;
     std::chrono::system_clock::time_point m_timestamp;
 
-    int decode(packetDecoder &pd, int16_t version);
-    int encode(packetEncoder &pe, int16_t version) const;
+    int decode(packet_decoder &pd, int16_t version);
+    int encode(packet_encoder &pe, int16_t version) const;
 };
 
 struct ProduceResponse : protocol_body
@@ -31,8 +31,8 @@ struct ProduceResponse : protocol_body
     std::chrono::milliseconds m_throttle_time;
 
     void set_version(int16_t v);
-    int decode(packetDecoder &pd, int16_t version);
-    int encode(packetEncoder &pe) const;
+    int decode(packet_decoder &pd, int16_t version);
+    int encode(packet_encoder &pe) const;
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

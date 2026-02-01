@@ -390,7 +390,6 @@ coev::awaitable<void> AsyncProducer::shutdown()
 
 coev::awaitable<void> AsyncProducer::bump_idempotent_producer_epoch()
 {
-    LOG_CORE("bump_idempotent_producer_epoch called");
     auto [pid, epoch] = m_txnmgr->GetProducerID();
     LOG_CORE("bump_idempotent_producer_epoch current pid: %ld, epoch: %d", pid, epoch);
     if (epoch == std::numeric_limits<int16_t>::max())
@@ -398,10 +397,8 @@ coev::awaitable<void> AsyncProducer::bump_idempotent_producer_epoch()
         LOG_CORE("bump_idempotent_producer_epoch epoch reached max value, creating new transaction manager");
         std::shared_ptr<TransactionManager> new_txnmgr;
         auto err = co_await NewTransactionManager(m_conf, m_client, new_txnmgr);
-        LOG_CORE("bump_idempotent_producer_epoch NewTransactionManager returned %d", err);
         if (err == (KError)ErrNoError)
         {
-            LOG_CORE("bump_idempotent_producer_epoch successfully created new transaction manager");
             m_txnmgr = new_txnmgr;
         }
     }
@@ -410,7 +407,6 @@ coev::awaitable<void> AsyncProducer::bump_idempotent_producer_epoch()
         LOG_CORE("bump_idempotent_producer_epoch bumping epoch from %d to %d", epoch, epoch + 1);
         m_txnmgr->BumpEpoch();
     }
-    LOG_CORE("bump_idempotent_producer_epoch completed");
 }
 
 int AsyncProducer::maybe_transition_to_error_state(KError err)
@@ -472,7 +468,6 @@ void AsyncProducer::return_errors(const std::vector<std::shared_ptr<ProducerMess
     {
         return_error(msg, err);
     }
-    LOG_CORE("return_errors completed");
 }
 
 void AsyncProducer::return_successes(const std::vector<std::shared_ptr<ProducerMessage>> &batch)
@@ -489,13 +484,10 @@ void AsyncProducer::return_successes(const std::vector<std::shared_ptr<ProducerM
         }
         m_in_flight.done();
     }
-    LOG_CORE("return_successes completed");
 }
 
 void AsyncProducer::retry_message(std::shared_ptr<ProducerMessage> msg, KError err)
 {
-    LOG_CORE("retry_message called for message from topic %s, partition %d, retries %d, error %d",
-             msg->m_topic.c_str(), msg->m_partition, msg->m_retries, (int)err);
     if (msg->m_retries >= m_conf->Producer.Retry.Max)
     {
         LOG_CORE("retry_message maximum retries reached, returning error");
@@ -504,19 +496,16 @@ void AsyncProducer::retry_message(std::shared_ptr<ProducerMessage> msg, KError e
     else
     {
         msg->m_retries++;
-        LOG_CORE("retry_message incremented retries to %d, sending to m_retries channel", msg->m_retries);
         m_retries.set(msg);
     }
 }
 
 void AsyncProducer::retry_messages(const std::vector<std::shared_ptr<ProducerMessage>> &batch, KError err)
 {
-    LOG_CORE("retry_messages called for batch of %zu messages, error %d", batch.size(), (int)err);
     for (auto &msg : batch)
     {
         retry_message(msg, err);
     }
-    LOG_CORE("retry_messages completed");
 }
 
 coev::awaitable<void> AsyncProducer::retry_batch(const std::string &topic, int32_t partition, std::shared_ptr<PartitionSet> pset, KError kerr)
@@ -574,22 +563,17 @@ std::shared_ptr<BrokerProducer> AsyncProducer::get_broker_producer(std::shared_p
     }
 
     m_broker_refs[bp]++;
-    LOG_CORE("incremented ref count to %d", m_broker_refs[bp]);
     return bp;
 }
 
 void AsyncProducer::unref_broker_producer(std::shared_ptr<Broker> broker, std::shared_ptr<BrokerProducer> bp)
 {
-    LOG_CORE("called for broker %d", broker->ID());
     m_broker_refs[bp]--;
-    LOG_CORE("ref count decremented to %d", m_broker_refs[bp]);
     if (m_broker_refs[bp] == 0)
     {
-        LOG_CORE("ref count reached 0, removing references");
         m_broker_refs.erase(bp);
         if (m_brokers[broker->ID()] == bp)
         {
-            LOG_CORE("removing broker %d from m_brokers", broker->ID());
             m_brokers.erase(broker->ID());
         }
     }
@@ -609,46 +593,35 @@ coev::awaitable<void> AsyncProducer::abandon_broker_connection(std::shared_ptr<B
 
 coev::awaitable<int> NewAsyncProducer(const std::vector<std::string> &addrs, std::shared_ptr<Config> conf, std::shared_ptr<AsyncProducer> &producer)
 {
-    LOG_CORE("called with %zu addrs", addrs.size());
     std::shared_ptr<Client> client;
     auto err = co_await NewClient(addrs, conf, client);
-    LOG_CORE("NewClient returned %d, client: %p", err, client.get());
     if (!client)
     {
         LOG_CORE("client is null, returning ErrClosedClient");
         co_return ErrClosedClient;
     }
-    LOG_CORE("calling NewAsyncProducer with client");
     co_return co_await NewAsyncProducer(client, producer);
 }
 coev::awaitable<int> NewAsyncProducer(std::shared_ptr<Client> client, std::shared_ptr<AsyncProducer> &producer)
 {
-    LOG_CORE("called with client %p", client.get());
     if (client->Closed())
     {
-        LOG_CORE("client is closed, returning ErrClosedClient");
         co_return ErrClosedClient;
     }
     std::shared_ptr<TransactionManager> txnmgr;
-    LOG_CORE("creating transaction manager");
     auto err = co_await NewTransactionManager(client->GetConfig(), client, txnmgr);
-    LOG_CORE("returned %d, txnmgr: %p", err, txnmgr.get());
     if (err != ErrNoError)
     {
         co_return err;
     }
 
-    LOG_CORE("creating AsyncProducer instance");
     producer = std::make_shared<AsyncProducer>(client, txnmgr);
-    LOG_CORE("starting retry_handler coroutine");
     producer->m_task << producer->dispatcher();
     producer->m_task << producer->retry_handler();
-    LOG_CORE("returning ErrNoError");
     co_return ErrNoError;
 }
 
 coev::awaitable<int> NewAsyncProducerFromClient(std::shared_ptr<Client> client, std::shared_ptr<AsyncProducer> &producer)
 {
-    LOG_CORE("called, delegating to NewAsyncProducer");
     return NewAsyncProducer(client, producer);
 }

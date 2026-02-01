@@ -732,10 +732,13 @@ coev::awaitable<int> NewConsumerGroupSession(std::shared_ptr<Context> context, s
 
     std::function<void()> cancel;
     std::shared_ptr<OffsetManager> offsets;
-    auto err = co_await NewOffsetManagerFromClient(parent->m_group_id, "", -1, parent->m_client, cancel, offsets);
-    if (err != ErrNoError)
+    try
     {
-        co_return err;
+        offsets = std::make_shared<OffsetManager>(parent->m_client, parent->m_group_id, "", -1, cancel);
+    }
+    catch (const std::runtime_error &e)
+    {
+        co_return ErrClosedClient;
     }
 
     session = std::make_shared<ConsumerGroupSession>(parent, memberID, generationID, handler, offsets, claims, context, cancel);
@@ -758,7 +761,7 @@ coev::awaitable<int> NewConsumerGroupSession(std::shared_ptr<Context> context, s
                 while (true)
                 {
                     std::shared_ptr<ConsumerError> err;
-                    co_await pom->Errors(err);
+                    co_await pom->errors(err);
                     if (!err || err->m_err != ErrNoError)
                         break;
                     auto e = std::make_shared<ConsumerError>(topic, partition, err->m_err);
@@ -770,7 +773,7 @@ coev::awaitable<int> NewConsumerGroupSession(std::shared_ptr<Context> context, s
         }
     }
 
-    err = handler->Setup(session);
+    err = handler->setup(session);
     if (err != ErrNoError)
     {
         session->_Release(true);

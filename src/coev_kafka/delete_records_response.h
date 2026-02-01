@@ -15,16 +15,16 @@ struct DeleteRecordsResponsePartition : IEncoder, versioned_encoder
     int64_t m_low_watermark;
     KError m_err;
 
-    int encode(packetEncoder &pe) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe) const;
+    int decode(packet_decoder &pd, int16_t version);
 };
 
 struct DeleteRecordsResponseTopic : versioned_decoder, IEncoder
 {
     std::map<int32_t, std::shared_ptr<DeleteRecordsResponsePartition>> m_partitions;
 
-    int encode(packetEncoder &pe) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe) const;
+    int decode(packet_decoder &pd, int16_t version);
 
     ~DeleteRecordsResponseTopic();
 };
@@ -37,8 +37,8 @@ struct DeleteRecordsResponse : protocol_body
 
     ~DeleteRecordsResponse();
     void set_version(int16_t v);
-    int encode(packetEncoder &pe) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe) const;
+    int decode(packet_decoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

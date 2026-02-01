@@ -256,7 +256,7 @@ int prepEncoder::offset() const
     return m_length;
 }
 
-void prepEncoder::push(pushEncoder &_in)
+void prepEncoder::push(push_encoder &_in)
 {
     auto in = &_in;
     in->save_offset(m_length);

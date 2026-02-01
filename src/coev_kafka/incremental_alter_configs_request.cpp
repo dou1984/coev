@@ -2,7 +2,7 @@
 #include "incremental_alter_configs_request.h"
 #include "api_versions.h"
 
-int IncrementalAlterConfigsEntry::encode(packetEncoder &pe) const
+int IncrementalAlterConfigsEntry::encode(packet_encoder &pe) const
 {
     pe.putInt8(static_cast<int8_t>(m_operation));
 
@@ -14,7 +14,7 @@ int IncrementalAlterConfigsEntry::encode(packetEncoder &pe) const
     return 0;
 }
 
-int IncrementalAlterConfigsEntry::decode(packetDecoder &pd, int16_t /*version*/)
+int IncrementalAlterConfigsEntry::decode(packet_decoder &pd, int16_t /*version*/)
 {
     int8_t op;
     int err = pd.getInt8(op);
@@ -30,7 +30,7 @@ int IncrementalAlterConfigsEntry::decode(packetDecoder &pd, int16_t /*version*/)
     return pd.getEmptyTaggedFieldArray(_);
 }
 
-int IncrementalAlterConfigsResource::encode(packetEncoder &pe) const
+int IncrementalAlterConfigsResource::encode(packet_encoder &pe) const
 {
     pe.putInt8(m_type);
 
@@ -57,7 +57,7 @@ int IncrementalAlterConfigsResource::encode(packetEncoder &pe) const
     return 0;
 }
 
-int IncrementalAlterConfigsResource::decode(packetDecoder &pd, int16_t version)
+int IncrementalAlterConfigsResource::decode(packet_decoder &pd, int16_t version)
 {
     int8_t t;
     int err = pd.getInt8(t);
@@ -102,7 +102,7 @@ void IncrementalAlterConfigsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int IncrementalAlterConfigsRequest::encode(packetEncoder &pe) const
+int IncrementalAlterConfigsRequest::encode(packet_encoder &pe) const
 {
     int err = pe.putArrayLength(static_cast<int32_t>(m_resources.size()));
     if (err != 0)
@@ -121,7 +121,7 @@ int IncrementalAlterConfigsRequest::encode(packetEncoder &pe) const
     return 0;
 }
 
-int IncrementalAlterConfigsRequest::decode(packetDecoder &pd, int16_t version)
+int IncrementalAlterConfigsRequest::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
 

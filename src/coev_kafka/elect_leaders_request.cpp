@@ -6,7 +6,7 @@ void ElectLeadersRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int ElectLeadersRequest::encode(packetEncoder &pe) const
+int ElectLeadersRequest::encode(packet_encoder &pe) const
 {
     if (m_version > 0)
     {
@@ -36,7 +36,7 @@ int ElectLeadersRequest::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int ElectLeadersRequest::decode(packetDecoder &pd, int16_t version)
+int ElectLeadersRequest::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
 

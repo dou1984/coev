@@ -8,7 +8,7 @@
 #include "packet_encoder.h"
 #include "version.h"
 
-struct prepEncoder : packetEncoder
+struct prepEncoder : packet_encoder
 {
     prepEncoder();
 
@@ -36,9 +36,9 @@ struct prepEncoder : packetEncoder
     void putEmptyTaggedFieldArray();
 
     int offset() const;
-    void push(pushEncoder &in);
+    void push(push_encoder &in);
     int pop();
 
-    std::vector<pushEncoder *> m_stack;
+    std::vector<push_encoder *> m_stack;
     int m_length = 0;
 };

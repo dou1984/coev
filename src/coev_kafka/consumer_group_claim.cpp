@@ -4,29 +4,29 @@ ConsumerGroupClaim::ConsumerGroupClaim(const std::string &topic, int32_t partiti
 {
 }
 
-std::string ConsumerGroupClaim::Topic()
+std::string ConsumerGroupClaim::topic()
 {
     return m_topic;
 }
-int32_t ConsumerGroupClaim::Partition()
+int32_t ConsumerGroupClaim::partition()
 {
     return m_partition;
 }
-int64_t ConsumerGroupClaim::InitialOffset()
+int64_t ConsumerGroupClaim::initial_offset()
 {
     return m_offset;
 }
-int64_t ConsumerGroupClaim::HighWaterMarkOffset()
+int64_t ConsumerGroupClaim::high_water_mark_offset()
 {
     return m_partition_consumer->HighWaterMarkOffset();
 }
 
-coev::awaitable<int> ConsumerGroupClaim::Messages(std::shared_ptr<ConsumerMessage> &msg)
+coev::awaitable<int> ConsumerGroupClaim::messages(std::shared_ptr<ConsumerMessage> &msg)
 {
     co_await m_messages.get(msg);
     co_return 0;
 }
-coev::awaitable<int> ConsumerGroupClaim::waitClosed(std::shared_ptr<ConsumerError> &err)
+coev::awaitable<int> ConsumerGroupClaim::wait_closed(std::shared_ptr<ConsumerError> &err)
 {
     co_await m_errors.get(err);
     co_return 0;

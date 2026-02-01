@@ -5,7 +5,7 @@ void DescribeGroupsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int DescribeGroupsResponse::encode(packetEncoder &pe) const
+int DescribeGroupsResponse::encode(packet_encoder &pe) const
 {
     if (m_version >= 1)
     {
@@ -28,7 +28,7 @@ int DescribeGroupsResponse::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int DescribeGroupsResponse::decode(packetDecoder &pd, int16_t version)
+int DescribeGroupsResponse::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
     if (m_version >= 1)
@@ -127,7 +127,7 @@ std::chrono::milliseconds DescribeGroupsResponse::throttle_time() const
     return m_throttle_time;
 }
 
-int GroupDescription::encode(packetEncoder &pe, int16_t version) const
+int GroupDescription::encode(packet_encoder &pe, int16_t version) const
 {
     m_version = version;
     pe.putInt16(m_error_code);
@@ -163,7 +163,7 @@ int GroupDescription::encode(packetEncoder &pe, int16_t version) const
     return ErrNoError;
 }
 
-int GroupDescription::decode(packetDecoder &pd, int16_t version)
+int GroupDescription::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
     int16_t error_code;
@@ -214,7 +214,7 @@ int GroupDescription::decode(packetDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-int GroupMemberDescription::encode(packetEncoder &pe, int16_t version) const
+int GroupMemberDescription::encode(packet_encoder &pe, int16_t version) const
 {
     m_version = version;
     if (pe.putString(m_member_id) != ErrNoError)
@@ -239,7 +239,7 @@ int GroupMemberDescription::encode(packetEncoder &pe, int16_t version) const
     return ErrNoError;
 }
 
-int GroupMemberDescription::decode(packetDecoder &pd, int16_t version)
+int GroupMemberDescription::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
     if (pd.getString(m_member_id) != ErrNoError)

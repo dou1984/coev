@@ -6,7 +6,7 @@
 #include "access_token.h"
 
 struct Client;
-struct pushDecoder;
+struct push_decoder;
 struct AccessTokenProvider
 {
     virtual int Token(std::shared_ptr<AccessToken> &) = 0;
@@ -25,8 +25,6 @@ struct ProxyDialer : std::enable_shared_from_this<ProxyDialer>
         return {nullptr};
     }
 };
-
-
 
 struct Timer
 {

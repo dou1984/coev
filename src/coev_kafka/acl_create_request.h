@@ -20,8 +20,8 @@ struct AclCreation : versioned_decoder, versioned_encoder
     AclCreation(Resource _resource, Acl _acl) : m_resource(_resource), m_acl(_acl)
     {
     }
-    int encode(packetEncoder &pe, int16_t version) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe, int16_t version) const;
+    int decode(packet_decoder &pd, int16_t version);
 };
 
 struct CreateAclsRequest : protocol_body
@@ -35,8 +35,8 @@ struct CreateAclsRequest : protocol_body
     }
 
     void set_version(int16_t v);
-    int encode(packetEncoder &pe) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe) const;
+    int decode(packet_decoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

@@ -48,7 +48,6 @@ TEST(BrokerTest, InitialState)
     // Test initial state of broker members
     auto broker = std::make_shared<Broker>("localhost:9092");
 
-    // m_conn is a Connect object, which is initially valid but not opened
     EXPECT_TRUE(broker->m_conn->IsClosed());   // Connect object starts in CLOSED state
     EXPECT_FALSE(broker->m_conn->IsOpening()); // Not opening initially
     EXPECT_FALSE(broker->m_conn->IsOpened());  // Not opened yet
@@ -81,10 +80,6 @@ TEST(BrokerTest, ConnectedState)
     // Test broker connected state
     auto broker = std::make_shared<Broker>("localhost:9092");
 
-    // A newly constructed broker should not be connected
-    // Connected() returns m_conn, which is initially true (Connect object is valid)
-    // So we can't use Connected() to check if the broker is actually connected
-    // Instead, we can check if it's opened
     EXPECT_FALSE(broker->m_conn->IsOpened());
 
     // TLSConnectionState returns an int, which is 0 when not connected

@@ -31,19 +31,25 @@ int8_t GetHeaderLength(int16_t header_version)
 
 Broker::Broker(const std::string &addr) : m_id(-1), m_addr(addr), m_rack(""), m_correlation_id(0), m_session_reauthentication_time(0), m_task()
 {
-    m_conn = std::make_unique<Connect>();
+    // Lazy initialization: don't create Connect object until needed
 }
 Broker::Broker(int id, const std::string &addr) : m_id(id), m_addr(addr), m_rack(""), m_correlation_id(0), m_session_reauthentication_time(0), m_task()
 {
-    m_conn = std::make_unique<Connect>();
+    // Lazy initialization: don't create Connect object until needed
 }
 Broker::Broker() : m_id(0), m_addr(""), m_rack(""), m_correlation_id(0), m_session_reauthentication_time(0), m_task()
 {
-    m_conn = std::make_unique<Connect>();
+    // Lazy initialization: don't create Connect object until needed
 }
 Broker::~Broker()
 {
     LOG_CORE("broker %p closed", this);
+    
+    // Do not call Close() here - let the Connect object's destructor handle it
+    // This avoids potential issues with libev resource cleanup during destruction
+    
+    // Let the unique_ptr automatically destroy the Connect object
+    // The destruction order is important: m_conn should be destroyed before coev members
 }
 int32_t Broker::ID()
 {
@@ -57,7 +63,7 @@ std::string Broker::Rack()
 {
     return m_rack;
 }
-int Broker::decode(packetDecoder &pd, int16_t version)
+int Broker::decode(packet_decoder &pd, int16_t version)
 {
     int32_t err = pd.getInt32(m_id);
     if (err)
@@ -108,7 +114,7 @@ int Broker::decode(packetDecoder &pd, int16_t version)
     return 0;
 }
 
-int Broker::encode(packetEncoder &pe, int16_t version) const
+int Broker::encode(packet_encoder &pe, int16_t version) const
 {
 
     auto [host, port] = net::SplitHostPort(m_addr);
@@ -258,12 +264,16 @@ coev::awaitable<int> Broker::_Open()
 
 bool Broker::Connected()
 {
+    if (m_conn == nullptr)
+    {
+        return false;
+    }
     return m_conn->IsOpened();
 }
 
 int Broker::TLSConnectionState()
 {
-    if (!m_conn->IsOpened())
+    if (m_conn == nullptr || !m_conn->IsOpened())
     {
         return 0;
     }
@@ -282,11 +292,12 @@ int Broker::TLSConnectionState()
 
 int Broker::Close()
 {
-    if (!m_conn->IsOpened())
+    if (m_conn == nullptr)
     {
         return ErrNotConnected;
     }
-
+    // Always call m_conn->Close() regardless of current state
+    // This ensures proper cleanup of libev resources
     return m_conn->Close();
 }
 

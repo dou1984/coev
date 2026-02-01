@@ -7,7 +7,7 @@ void HeartbeatRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int HeartbeatRequest::encode(packetEncoder &pe) const
+int HeartbeatRequest::encode(packet_encoder &pe) const
 {
     int err = pe.putString(m_group_id);
     if (err != 0)
@@ -34,7 +34,7 @@ int HeartbeatRequest::encode(packetEncoder &pe) const
     return 0;
 }
 
-int HeartbeatRequest::decode(packetDecoder &pd, int16_t version)
+int HeartbeatRequest::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
 

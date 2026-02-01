@@ -14,15 +14,15 @@ enum CrcPolynomial : int8_t
     CrcCastagnoli = 1
 };
 
-struct crc32_field : pushEncoder, pushDecoder
+struct crc32_field : push_encoder, push_decoder
 {
     crc32_field(CrcPolynomial polynomial);
 
     void save_offset(int in);
     int reserve_length();
     int run(int curOffset, std::string &buf);
-    int check(int curOffset, const std::string &buf);
-    int crc(int curOffset, const std::string &buf, uint32_t &out_crc);
+    int check(int curOffset, const std::string_view &buf);
+    int crc(int curOffset, const std::string_view &buf, uint32_t &out_crc);
 
     int startOffset;
     CrcPolynomial polynomial;

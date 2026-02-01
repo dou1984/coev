@@ -165,8 +165,8 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
     coev::awaitable<int> DescribeClientQuotas(std::shared_ptr<DescribeClientQuotasRequest> request, ResponsePromise<DescribeClientQuotasResponse> &response);
     coev::awaitable<int> AlterClientQuotas(std::shared_ptr<AlterClientQuotasRequest> request, ResponsePromise<AlterClientQuotasResponse> &response);
 
-    int decode(packetDecoder &pd, int16_t version);
-    int encode(packetEncoder &pe, int16_t version) const;
+    int decode(packet_decoder &pd, int16_t version);
+    int encode(packet_encoder &pe, int16_t version) const;
 
     std::string Addr();
     std::string Rack();
@@ -176,7 +176,7 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
     std::string m_rack;
     std::string m_addr;
 
-    std::unique_ptr<Connect> m_conn;
+    std::unique_ptr<Connect> m_conn = nullptr;
     std::shared_ptr<Config> m_conf;
     std::shared_ptr<GSSAPIKerberosAuth> m_kerberos_authenticator;
 

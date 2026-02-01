@@ -2,7 +2,7 @@
 #include "metadata_response.h"
 #include "broker.h"
 
-int PartitionMetadata::decode(packetDecoder &pd, int16_t version)
+int PartitionMetadata::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
     if (int err = pd.getKError(m_err); err != 0)
@@ -51,7 +51,7 @@ int PartitionMetadata::decode(packetDecoder &pd, int16_t version)
     return err;
 }
 
-int PartitionMetadata::encode(packetEncoder &pe, int16_t version) const
+int PartitionMetadata::encode(packet_encoder &pe, int16_t version) const
 {
     m_version = version;
     pe.putKError(m_err);
@@ -87,7 +87,7 @@ int PartitionMetadata::encode(packetEncoder &pe, int16_t version) const
     return 0;
 }
 
-int TopicMetadata::decode(packetDecoder &pd, int16_t version)
+int TopicMetadata::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
     if (int err = pd.getKError(m_err); err != 0)
@@ -150,7 +150,7 @@ int TopicMetadata::decode(packetDecoder &pd, int16_t version)
     return err;
 }
 
-int TopicMetadata::encode(packetEncoder &pe, int16_t version) const
+int TopicMetadata::encode(packet_encoder &pe, int16_t version) const
 {
     m_version = version;
     pe.putKError(m_err);
@@ -200,7 +200,7 @@ void MetadataResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int MetadataResponse::decode(packetDecoder &pd, int16_t version)
+int MetadataResponse::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
     if (m_version >= 3)
@@ -279,7 +279,7 @@ int MetadataResponse::decode(packetDecoder &pd, int16_t version)
     return err;
 }
 
-int MetadataResponse::encode(packetEncoder &pe) const
+int MetadataResponse::encode(packet_encoder &pe) const
 {
     if (m_version >= 3)
     {

@@ -3,14 +3,14 @@
 #include "api_versions.h"
 #include <algorithm>
 
-int DeleteRecordsResponsePartition::encode(packetEncoder &pe) const
+int DeleteRecordsResponsePartition::encode(packet_encoder &pe) const
 {
     pe.putInt64(m_low_watermark);
     pe.putInt16(static_cast<int16_t>(m_err));
     return ErrNoError;
 }
 
-int DeleteRecordsResponsePartition::decode(packetDecoder &pd, int16_t /*version*/)
+int DeleteRecordsResponsePartition::decode(packet_decoder &pd, int16_t /*version*/)
 {
     if (pd.getInt64(m_low_watermark) != ErrNoError)
     {
@@ -26,7 +26,7 @@ int DeleteRecordsResponsePartition::decode(packetDecoder &pd, int16_t /*version*
 
     return ErrNoError;
 }
-int DeleteRecordsResponseTopic::encode(packetEncoder &pe) const
+int DeleteRecordsResponseTopic::encode(packet_encoder &pe) const
 {
     if (pe.putArrayLength(static_cast<int32_t>(m_partitions.size())) != ErrNoError)
     {
@@ -54,7 +54,7 @@ int DeleteRecordsResponseTopic::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int DeleteRecordsResponseTopic::decode(packetDecoder &pd, int16_t version)
+int DeleteRecordsResponseTopic::decode(packet_decoder &pd, int16_t version)
 {
     int32_t n;
     if (pd.getArrayLength(n) != ErrNoError)
@@ -95,7 +95,7 @@ void DeleteRecordsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int DeleteRecordsResponse::encode(packetEncoder &pe) const
+int DeleteRecordsResponse::encode(packet_encoder &pe) const
 {
     pe.putDurationMs(m_throttle_time);
 
@@ -128,7 +128,7 @@ int DeleteRecordsResponse::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int DeleteRecordsResponse::decode(packetDecoder &pd, int16_t version)
+int DeleteRecordsResponse::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
 

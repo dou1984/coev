@@ -11,21 +11,21 @@ struct PartitionOffsetManager
     PartitionOffsetManager(std::shared_ptr<OffsetManager> parent, const std::string &topic, int32_t partition,
                            int32_t leaderEpoch, int64_t offset, const std::string &metadata);
 
-    std::pair<int64_t, std::string> NextOffset();
-    coev::awaitable<void> Errors(std::shared_ptr<ConsumerError> &err);
-    void MarkOffset(int64_t offset, const std::string &metadata);
-    void ResetOffset(int64_t offset, const std::string &metadata);
-    void AsyncClose();
-    void Close();
+    std::pair<int64_t, std::string> next_offset();
+    coev::awaitable<void> errors(std::shared_ptr<ConsumerError> &err);
+    void mark_offset(int64_t offset, const std::string &metadata);
+    void reset_offset(int64_t offset, const std::string &metadata);
+    void async_close();
+    void close();
 
-    void HandleError(KError err);
-    void UpdateCommitted(int64_t offset, const std::string &metadata);
-    void Release();
+    void handle_error(KError err);
+    void update_committed(int64_t offset, const std::string &metadata);
+    void release();
 
     std::shared_ptr<OffsetManager> m_parent;
     std::string m_topic;
     int32_t m_partition;
-    int32_t m_leaderEpoch;
+    int32_t m_leader_epoch;
 
     int64_t m_offset;
     std::string m_metadata;

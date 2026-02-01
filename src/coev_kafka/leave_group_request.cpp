@@ -7,7 +7,7 @@ void LeaveGroupRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int LeaveGroupRequest::encode(packetEncoder &pe) const
+int LeaveGroupRequest::encode(packet_encoder &pe) const
 {
     int err = pe.putString(m_group_id);
     if (err != 0)
@@ -44,7 +44,7 @@ int LeaveGroupRequest::encode(packetEncoder &pe) const
     return 0;
 }
 
-int LeaveGroupRequest::decode(packetDecoder &pd, int16_t version)
+int LeaveGroupRequest::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
 

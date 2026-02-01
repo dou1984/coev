@@ -653,7 +653,7 @@ int realDecoder::remaining()
     return static_cast<int>(m_raw.size()) - m_offset;
 }
 
-int realDecoder::getSubset(int length, std::shared_ptr<packetDecoder> &out)
+int realDecoder::getSubset(int length, std::shared_ptr<packet_decoder> &out)
 {
     std::string buf;
     int err = getRawBytes(length, buf);
@@ -684,7 +684,7 @@ int realDecoder::getRawBytes(int length, std::string &result)
     return 0;
 }
 
-int realDecoder::peek(int offset, int length, std::shared_ptr<packetDecoder> &result)
+int realDecoder::peek(int offset, int length, std::shared_ptr<packet_decoder> &result)
 {
     if (remaining() < offset + length)
     {
@@ -693,7 +693,7 @@ int realDecoder::peek(int offset, int length, std::shared_ptr<packetDecoder> &re
     }
     int start = m_offset + offset;
     auto decoder = std::make_shared<realDecoder>();
-    decoder->m_raw.assign(m_raw.begin() + start, m_raw.begin() + start + length);
+    decoder->m_raw = std::string_view(m_raw.begin() + start, m_raw.begin() + start + length);
     result = decoder;
     return 0;
 }
@@ -710,7 +710,7 @@ int realDecoder::peekInt8(int offset, int8_t &result)
     return 0;
 }
 
-int realDecoder::push(pushDecoder &_in)
+int realDecoder::push(push_decoder &_in)
 {
     auto in = &_in;
     in->save_offset(m_offset);

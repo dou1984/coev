@@ -3,7 +3,7 @@
 RecordHeader::RecordHeader(const std::string &k, const std::string &v) : m_key(k), m_value(v)
 {
 }
-int RecordHeader::decode(packetDecoder &pd)
+int RecordHeader::decode(packet_decoder &pd)
 {
     if (pd.getVariantBytes(m_key) != 0)
     {
@@ -16,7 +16,7 @@ int RecordHeader::decode(packetDecoder &pd)
     return 0;
 }
 
-int RecordHeader::encode(packetEncoder &pe) const
+int RecordHeader::encode(packet_encoder &pe) const
 {
     if (pe.putVariantBytes(m_key) != 0)
     {
@@ -29,7 +29,7 @@ int RecordHeader::encode(packetEncoder &pe) const
     return 0;
 }
 
-int Record::encode(packetEncoder &pe) const
+int Record::encode(packet_encoder &pe) const
 {
     pe.push(m_length);
     pe.putInt8(m_attributes);
@@ -56,7 +56,7 @@ int Record::encode(packetEncoder &pe) const
     return pe.pop();
 }
 
-int Record::decode(packetDecoder &pd)
+int Record::decode(packet_decoder &pd)
 {
     if (pd.push(m_length) != 0)
     {

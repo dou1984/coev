@@ -10,7 +10,7 @@ Timestamp::Timestamp(const std::chrono::system_clock::time_point &t) : time_(t)
 {
 }
 
-int Timestamp::encode(packetEncoder &pe) const
+int Timestamp::encode(packet_encoder &pe) const
 {
     int64_t timestamp = -1;
 
@@ -29,7 +29,7 @@ int Timestamp::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int Timestamp::decode(packetDecoder &pd)
+int Timestamp::decode(packet_decoder &pd)
 {
     int64_t millis;
     auto err = pd.getInt64(millis);

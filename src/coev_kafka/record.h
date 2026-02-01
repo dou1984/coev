@@ -27,6 +27,6 @@ struct Record : IEncoder, IDecoder
     Record(std::string &key, std::string &value, int64_t offsetDelta, std::chrono::milliseconds timestampDelta) : m_key(key), m_value(value), m_offset_delta(offsetDelta), m_timestamp_delta(timestampDelta)
     {
     }
-    int encode(packetEncoder &pe) const;
-    int decode(packetDecoder &pd);
+    int encode(packet_encoder &pe) const;
+    int decode(packet_decoder &pd);
 };

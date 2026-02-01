@@ -1,15 +1,15 @@
 #pragma once
 #include <vector>
 
-struct pushEncoder
+struct push_encoder
 {
-    virtual ~pushEncoder() = default;
+    virtual ~push_encoder() = default;
     virtual void save_offset(int in) = 0;
     virtual int reserve_length() = 0;
     virtual int run(int curOffset, std::string &buf) = 0;
 };
 
-struct dynamicPushEncoder : pushEncoder
+struct dynamicPushEncoder : push_encoder
 {
     virtual int adjust_length(int currOffset) = 0;
 };

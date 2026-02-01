@@ -15,6 +15,6 @@ struct ControlRecord
         : m_version(v), m_coordinator_epoch(c), m_type(t)
     {
     }
-    int decode(packetDecoder &key, packetDecoder &value);
-    int encode(packetEncoder &key, packetEncoder &value);
+    int decode(packet_decoder &key, packet_decoder &value);
+    int encode(packet_encoder &key, packet_encoder &value);
 };

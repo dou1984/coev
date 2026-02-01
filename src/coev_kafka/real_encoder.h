@@ -9,12 +9,12 @@
 #include "encoder_decoder.h"
 #include "packet_encoder.h"
 
-struct realEncoder : packetEncoder
+struct realEncoder : packet_encoder
 {
 
     std::string m_raw;
     size_t m_offset = 0;
-    std::vector<pushEncoder *> m_stack;
+    std::vector<push_encoder *> m_stack;
     realEncoder() = default;
     realEncoder(size_t capacity)
     {
@@ -43,7 +43,7 @@ struct realEncoder : packetEncoder
     int putInt64Array(const std::vector<int64_t> &in);
     void putEmptyTaggedFieldArray();
     int offset() const { return static_cast<int>(m_offset); }
-    void push(pushEncoder &in);
+    void push(push_encoder &in);
     int pop();
 };
 

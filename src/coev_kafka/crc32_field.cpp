@@ -84,7 +84,7 @@ int crc32_field::run(int curOffset, std::string &buf)
     return 0;
 }
 
-int crc32_field::check(int curOffset, const std::string &buf)
+int crc32_field::check(int curOffset, const std::string_view &buf)
 {
     LOG_CORE("crc32_field::check startOffset: %d, curOffset: %d", startOffset, curOffset);
     uint32_t crc_val;
@@ -103,18 +103,15 @@ int crc32_field::check(int curOffset, const std::string &buf)
     ptr[3] = buf[startOffset + 3];
     uint32_t expected = ntohl(network_expected);
 
-    // LOG_CORE("crc32_field::check calculated CRC: 0x%08x, expected CRC: 0x%08x", crc_val, expected);
     if (crc_val != expected)
     {
-        // LOG_ERR("crc32_field::check: CRC mismatch! calculated = 0x%08x, expected = 0x%08x", crc_val, expected);
         return ErrCRCMismatch;
     }
 
-    // LOG_CORE("crc32_field::check CRC check passed");
     return ErrNoError;
 }
 
-int crc32_field::crc(int curOffset, const std::string &buf, uint32_t &out_crc)
+int crc32_field::crc(int curOffset, const std::string_view &buf, uint32_t &out_crc)
 {
     uint32_t crc = 0xFFFFFFFF;
     if (polynomial == CrcCastagnoli)

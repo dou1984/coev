@@ -27,7 +27,7 @@ coev::awaitable<int> OffsetManager::NewPartitionOffsetManager(
     pom->m_parent = shared_from_this();
     pom->m_topic = topic;
     pom->m_partition = partition;
-    pom->m_leaderEpoch = leader_epoch;
+    pom->m_leader_epoch = leader_epoch;
     pom->m_offset = offset;
     pom->m_metadata = metadata;
     co_return ErrNoError;
@@ -287,54 +287,54 @@ coev::awaitable<void> OffsetManager::FlushToBroker()
     HandleResponse(broker, *request, *response.m_response);
 }
 
-int OffsetManager::ConstructRequest(OffsetCommitRequest &req)
+int OffsetManager::ConstructRequest(OffsetCommitRequest &request)
 {
-    req.m_version = 1;
-    req.m_consumer_group = m_group;
-    req.m_consumer_id = m_member_id;
-    req.m_consumer_group_generation = m_generation;
+    request.m_version = 1;
+    request.m_consumer_group = m_group;
+    request.m_consumer_id = m_member_id;
+    request.m_consumer_group_generation = m_generation;
 
     if (m_conf->Version.IsAtLeast(V0_9_0_0))
-        req.m_version = 2;
+        request.m_version = 2;
     if (m_conf->Version.IsAtLeast(V0_11_0_0))
-        req.m_version = 3;
+        request.m_version = 3;
     if (m_conf->Version.IsAtLeast(V2_0_0_0))
-        req.m_version = 4;
+        request.m_version = 4;
     if (m_conf->Version.IsAtLeast(V2_1_0_0))
-        req.m_version = 6;
+        request.m_version = 6;
     if (m_conf->Version.IsAtLeast(V2_3_0_0))
     {
-        req.m_version = 7;
-        req.m_group_instance_id = m_group_instance_id;
+        request.m_version = 7;
+        request.m_group_instance_id = m_group_instance_id;
     }
 
-    int64_t commitTimestamp = 0;
-    if (req.m_version == 1)
+    int64_t commit_timestamp = 0;
+    if (request.m_version == 1)
     {
-        commitTimestamp = ReceiveTime;
+        commit_timestamp = ReceiveTime;
     }
 
-    if (req.m_version >= 2 && req.m_version < 5)
+    if (request.m_version >= 2 && request.m_version < 5)
     {
-        req.m_retention_time = -1;
+        request.m_retention_time = -1;
         if (m_conf->Consumer.Offsets.Retention > std::chrono::milliseconds(0))
         {
-            req.m_retention_time = std::chrono::duration_cast<std::chrono::milliseconds>(m_conf->Consumer.Offsets.Retention).count();
+            request.m_retention_time = std::chrono::duration_cast<std::chrono::milliseconds>(m_conf->Consumer.Offsets.Retention).count();
         }
     }
 
-    for (auto &topicManagers : m_poms)
+    for (auto &topic_managers : m_poms)
     {
-        for (auto &pom : topicManagers.second)
+        for (auto &pom : topic_managers.second)
         {
             if (pom.second->m_dirty)
             {
-                req.add_block_with_leader_epoch(pom.second->m_topic, pom.second->m_partition, pom.second->m_offset, pom.second->m_leaderEpoch, commitTimestamp, pom.second->m_metadata);
+                request.add_block_with_leader_epoch(pom.second->m_topic, pom.second->m_partition, pom.second->m_offset, pom.second->m_leader_epoch, commit_timestamp, pom.second->m_metadata);
             }
         }
     }
 
-    if (!req.m_blocks.empty())
+    if (!request.m_blocks.empty())
     {
         return INVALID;
     }
@@ -356,12 +356,12 @@ void OffsetManager::HandleResponse(std::shared_ptr<Broker> broker, const OffsetC
 
             if (!resp.m_errors.count(pom.second->m_topic))
             {
-                pom.second->HandleError(ErrIncompleteResponse);
+                pom.second->handle_error(ErrIncompleteResponse);
                 continue;
             }
             if (!resp.m_errors.at(pom.second->m_topic).count(pom.second->m_partition))
             {
-                pom.second->HandleError(ErrIncompleteResponse);
+                pom.second->handle_error(ErrIncompleteResponse);
                 continue;
             }
 
@@ -370,7 +370,7 @@ void OffsetManager::HandleResponse(std::shared_ptr<Broker> broker, const OffsetC
             if (err == ErrNoError)
             {
                 auto block = req.m_blocks.at(pom.second->m_topic).at(pom.second->m_partition);
-                pom.second->UpdateCommitted(block.m_offset, block.m_metadata);
+                pom.second->update_committed(block.m_offset, block.m_metadata);
             }
             else if (err == ErrNotLeaderForPartition || err == ErrLeaderNotAvailable ||
                      err == ErrConsumerCoordinatorNotAvailable || err == ErrNotCoordinatorForConsumer)
@@ -379,24 +379,24 @@ void OffsetManager::HandleResponse(std::shared_ptr<Broker> broker, const OffsetC
             }
             else if (err == ErrOffsetMetadataTooLarge || err == ErrInvalidCommitOffsetSize)
             {
-                pom.second->HandleError(err);
+                pom.second->handle_error(err);
             }
             else if (err == ErrOffsetsLoadInProgress)
             {
             }
             else if (err == ErrFencedInstancedId)
             {
-                pom.second->HandleError(err);
+                pom.second->handle_error(err);
                 TryCancelSession();
             }
             else if (err == ErrUnknownTopicOrPartition)
             {
-                pom.second->HandleError(err);
+                pom.second->handle_error(err);
                 ReleaseCoordinator(broker);
             }
             else
             {
-                pom.second->HandleError(err);
+                pom.second->handle_error(err);
                 ReleaseCoordinator(broker);
             }
         }
@@ -410,7 +410,7 @@ void OffsetManager::HandleError(KError err)
     {
         for (auto &pom : topicManagers.second)
         {
-            pom.second->HandleError(err);
+            pom.second->handle_error(err);
         }
     }
 }
@@ -422,7 +422,7 @@ void OffsetManager::AsyncClosePOMs()
     {
         for (auto &pom : topicManagers.second)
         {
-            pom.second->AsyncClose();
+            pom.second->async_close();
         }
     }
 }
@@ -442,7 +442,7 @@ int OffsetManager::ReleasePOMs(bool force)
 
             if (releaseDue)
             {
-                pom->Release();
+                pom->release();
                 part_it = topicManagers.erase(part_it);
             }
             else
@@ -481,17 +481,3 @@ void OffsetManager::TryCancelSession()
     }
 }
 
-coev::awaitable<int> NewOffsetManagerFromClient(
-    const std::string &group, const std::string &memberID, int32_t generation,
-    std::shared_ptr<Client> client, std::function<void()> sessionCanceler, std::shared_ptr<OffsetManager> &om)
-{
-    try
-    {
-        om = std::make_shared<OffsetManager>(client, group, memberID, generation, sessionCanceler);
-        co_return 0;
-    }
-    catch (const std::runtime_error &e)
-    {
-        co_return ErrClosedClient;
-    }
-}

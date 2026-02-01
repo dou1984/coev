@@ -6,7 +6,7 @@ void DeleteTopicsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int DeleteTopicsResponse::encode(packetEncoder &pe) const
+int DeleteTopicsResponse::encode(packet_encoder &pe) const
 {
     if (m_version >= 1)
     {
@@ -31,7 +31,7 @@ int DeleteTopicsResponse::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int DeleteTopicsResponse::decode(packetDecoder &pd, int16_t version)
+int DeleteTopicsResponse::decode(packet_decoder &pd, int16_t version)
 {
     if (version >= 1)
     {

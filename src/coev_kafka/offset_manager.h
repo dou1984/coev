@@ -59,5 +59,4 @@ struct OffsetManager : std::enable_shared_from_this<OffsetManager>
     coev::co_task m_task;
 };
 
-coev::awaitable<int> NewOffsetManagerFromClient(const std::string &group, const std::string &memberID, int32_t generation,
-                                                std::shared_ptr<Client> client, std::function<void()> sessionCanceler, std::shared_ptr<OffsetManager> &om);
+

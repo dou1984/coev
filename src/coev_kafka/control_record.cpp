@@ -1,6 +1,6 @@
 #include "control_record.h"
 
-int ControlRecord::decode(packetDecoder &key, packetDecoder &value)
+int ControlRecord::decode(packet_decoder &key, packet_decoder &value)
 {
     int success = 0;
     int16_t tempVersion;
@@ -62,7 +62,7 @@ int ControlRecord::decode(packetDecoder &key, packetDecoder &value)
     return ErrNoError;
 }
 
-int ControlRecord::encode(packetEncoder &key, packetEncoder &value)
+int ControlRecord::encode(packet_encoder &key, packet_encoder &value)
 {
     // Encode key first: version + type
     key.putInt16(m_version);

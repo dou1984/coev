@@ -5,17 +5,7 @@
 #include "consumer.h"
 #include "partition_consumer.h"
 
-struct IConsumerGroupClaim
-{
-    virtual ~IConsumerGroupClaim() = default;
-    virtual std::string Topic() = 0;
-    virtual int32_t Partition() = 0;
-    virtual int64_t InitialOffset() = 0;
-    virtual int64_t HighWaterMarkOffset() = 0;
-    virtual coev::awaitable<int> Messages(std::shared_ptr<ConsumerMessage> &) = 0;
-};
-
-struct ConsumerGroupClaim : IConsumerGroupClaim
+struct ConsumerGroupClaim final
 {
     std::string m_topic;
     int32_t m_partition;
@@ -26,11 +16,11 @@ struct ConsumerGroupClaim : IConsumerGroupClaim
 
     ConsumerGroupClaim(const std::string &topic, int32_t partition, int64_t offset, std::shared_ptr<PartitionConsumer> partition_consumer);
 
-    std::string Topic();
-    int32_t Partition();
-    int64_t InitialOffset();
-    int64_t HighWaterMarkOffset();
+    std::string topic();
+    int32_t partition();
+    int64_t initial_offset();
+    int64_t high_water_mark_offset();
 
-    coev::awaitable<int> Messages(std::shared_ptr<ConsumerMessage> &);
-    coev::awaitable<int> waitClosed(std::shared_ptr<ConsumerError> &);
+    coev::awaitable<int> messages(std::shared_ptr<ConsumerMessage> &);
+    coev::awaitable<int> wait_closed(std::shared_ptr<ConsumerError> &);
 };

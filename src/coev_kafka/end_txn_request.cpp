@@ -6,7 +6,7 @@ void EndTxnRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int EndTxnRequest::encode(packetEncoder &pe) const
+int EndTxnRequest::encode(packet_encoder &pe) const
 {
     if (pe.putString(m_transactional_id) != ErrNoError)
     {
@@ -18,7 +18,7 @@ int EndTxnRequest::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int EndTxnRequest::decode(packetDecoder &pd, int16_t /*version*/)
+int EndTxnRequest::decode(packet_decoder &pd, int16_t /*version*/)
 {
     if (pd.getString(m_transactional_id) != ErrNoError)
     {

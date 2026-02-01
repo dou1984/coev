@@ -15,7 +15,6 @@
 #include "producer_message.h"
 #include "producer_error.h"
 
-
 struct BrokerProducer;
 struct TopicProducer;
 

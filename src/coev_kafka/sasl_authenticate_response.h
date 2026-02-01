@@ -21,8 +21,8 @@ struct SaslAuthenticateResponse : protocol_body
     int64_t m_session_lifetime_ms = 0;
 
     void set_version(int16_t v);
-    int encode(packetEncoder &pe) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe) const;
+    int decode(packet_decoder &pd, int16_t version);
     int16_t key() const;
     int16_t version()const;
     int16_t header_version()const;

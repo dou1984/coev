@@ -13,6 +13,6 @@ struct FetchRequestBlock : versioned_decoder, versioned_encoder
     int32_t m_max_bytes;
 
     FetchRequestBlock();
-    int encode(packetEncoder &pe, int16_t version) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe, int16_t version) const;
+    int decode(packet_decoder &pd, int16_t version);
 };

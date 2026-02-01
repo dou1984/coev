@@ -12,6 +12,7 @@
 
 namespace coev
 {
+
 	template <class TYPE>
 	class co_channel
 	{
@@ -25,7 +26,7 @@ namespace coev
 		void set(const TYPE &d)
 		{
 			m_waiter.resume(
-				[this, d]()
+				[this, &d]()
 				{ m_data.push_back(d); });
 		}
 		awaitable<void> get(TYPE &d)

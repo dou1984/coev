@@ -94,7 +94,7 @@
 #include "sasl_authenticate_response.h"
 #include "sasl_authenticate_request.h"
 
-int Request::encode(packetEncoder &pe) const
+int Request::encode(packet_encoder &pe) const
 {
 
     LengthField length_field;
@@ -149,7 +149,7 @@ int Request::encode(packetEncoder &pe) const
     }
 }
 
-int Request::decode(packetDecoder &pd)
+int Request::decode(packet_decoder &pd)
 {
     int16_t key, version;
 

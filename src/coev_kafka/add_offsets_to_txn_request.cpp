@@ -6,7 +6,7 @@ void AddOffsetsToTxnRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int AddOffsetsToTxnRequest::encode(packetEncoder &pe) const
+int AddOffsetsToTxnRequest::encode(packet_encoder &pe) const
 {
     if (pe.putString(m_transactional_id) != 0)
     {
@@ -24,7 +24,7 @@ int AddOffsetsToTxnRequest::encode(packetEncoder &pe) const
     return 0;
 }
 
-int AddOffsetsToTxnRequest::decode(packetDecoder &pd, int16_t version)
+int AddOffsetsToTxnRequest::decode(packet_decoder &pd, int16_t version)
 {
     int err;
     if ((err = pd.getString(m_transactional_id)) != 0)

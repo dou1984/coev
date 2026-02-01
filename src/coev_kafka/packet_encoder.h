@@ -9,9 +9,9 @@
 #include "encoder_decoder.h"
 #include "dynamic_push_encoder.h"
 
-struct packetEncoder : packet_type
+struct packet_encoder : packet_type
 {
-    virtual ~packetEncoder() = default;
+    virtual ~packet_encoder() = default;
 
     virtual void putInt8(int8_t in) = 0;
     virtual void putInt16(int16_t in) = 0;
@@ -37,7 +37,7 @@ struct packetEncoder : packet_type
     virtual void putEmptyTaggedFieldArray() = 0;
 
     virtual int offset() const = 0;
-    virtual void push(pushEncoder &in) = 0;
+    virtual void push(push_encoder &in) = 0;
 
     virtual int pop() = 0;
 };

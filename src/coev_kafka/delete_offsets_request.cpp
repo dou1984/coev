@@ -6,7 +6,7 @@ void DeleteOffsetsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int DeleteOffsetsRequest::encode(packetEncoder &pe) const
+int DeleteOffsetsRequest::encode(packet_encoder &pe) const
 {
     if (pe.putString(m_group) != ErrNoError)
     {
@@ -39,7 +39,7 @@ int DeleteOffsetsRequest::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int DeleteOffsetsRequest::decode(packetDecoder &pd, int16_t version)
+int DeleteOffsetsRequest::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
 

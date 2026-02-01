@@ -3,7 +3,7 @@
 #include <algorithm>
 #include "length_field.h"
 
-int LengthField::decode(packetDecoder &pd)
+int LengthField::decode(packet_decoder &pd)
 {
     int err = pd.getInt32(m_length);
     if (err != 0)
@@ -32,7 +32,7 @@ int LengthField::run(int cur_offset, std::string &buf)
     return 0;
 }
 
-int LengthField::check(int cur_offset, const std::string & /*buf*/)
+int LengthField::check(int cur_offset, const std::string_view & /*buf*/)
 {
     if (static_cast<int32_t>(cur_offset - m_start_offset - 4) != m_length)
     {

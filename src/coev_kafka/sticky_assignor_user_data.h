@@ -24,8 +24,8 @@ struct StickyAssignorUserDataV0 : StickyAssignorUserData
     std::map<std::string, std::vector<int32_t>> m_topics;
     std::vector<TopicPartitionAssignment> m_topic_partitions;
 
-    int encode(packetEncoder &pe);
-    int decode(packetDecoder &pd);
+    int encode(packet_encoder &pe);
+    int decode(packet_decoder &pd);
 
     std::vector<TopicPartitionAssignment> partitions();
     bool hasGeneration();
@@ -39,8 +39,8 @@ struct StickyAssignorUserDataV1 : StickyAssignorUserData
     int32_t m_generation = 0;
     std::vector<TopicPartitionAssignment> m_topic_partitions;
 
-    int encode(packetEncoder &pe);
-    int decode(packetDecoder &pd);
+    int encode(packet_encoder &pe);
+    int decode(packet_decoder &pd);
 
     std::vector<TopicPartitionAssignment> partitions();
     bool hasGeneration();

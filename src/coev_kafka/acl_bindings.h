@@ -14,8 +14,8 @@ struct Resource : versioned_decoder, versioned_encoder
     std::string m_resource_name;
     mutable AclResourcePatternType m_resource_pattern_type;
 
-    int encode(packetEncoder &pe, int16_t version) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe, int16_t version) const;
+    int decode(packet_decoder &pd, int16_t version);
 };
 
 struct Acl : versioned_decoder, IEncoder
@@ -25,8 +25,8 @@ struct Acl : versioned_decoder, IEncoder
     AclOperation m_operation;
     AclPermissionType m_permission_type;
 
-    int encode(packetEncoder &pe) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe) const;
+    int decode(packet_decoder &pd, int16_t version);
 };
 
 struct ResourceAcls : versioned_decoder, versioned_encoder
@@ -35,6 +35,6 @@ struct ResourceAcls : versioned_decoder, versioned_encoder
     Resource m_resource;
     std::vector<std::shared_ptr<Acl>> m_acls;
 
-    int encode(packetEncoder &pe, int16_t version) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe, int16_t version) const;
+    int decode(packet_decoder &pd, int16_t version);
 };

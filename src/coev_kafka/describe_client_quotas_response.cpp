@@ -6,7 +6,7 @@ void DescribeClientQuotasResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int DescribeClientQuotasResponse::encode(packetEncoder &pe) const
+int DescribeClientQuotasResponse::encode(packet_encoder &pe) const
 {
 
     pe.putDurationMs(m_throttle_time);
@@ -34,7 +34,7 @@ int DescribeClientQuotasResponse::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int DescribeClientQuotasResponse::decode(packetDecoder &pd, int16_t version)
+int DescribeClientQuotasResponse::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
 
@@ -84,7 +84,7 @@ int DescribeClientQuotasResponse::decode(packetDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-int DescribeClientQuotasEntry::encode(packetEncoder &pe) const
+int DescribeClientQuotasEntry::encode(packet_encoder &pe) const
 {
     if (pe.putArrayLength(static_cast<int32_t>(m_entity.size())) != ErrNoError)
     {
@@ -116,7 +116,7 @@ int DescribeClientQuotasEntry::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int DescribeClientQuotasEntry::decode(packetDecoder &pd, int16_t version)
+int DescribeClientQuotasEntry::decode(packet_decoder &pd, int16_t version)
 {
     int32_t componentCount;
     if (pd.getArrayLength(componentCount) != ErrNoError)
@@ -174,7 +174,7 @@ int DescribeClientQuotasEntry::decode(packetDecoder &pd, int16_t version)
     return ErrNoError;
 }
 
-int QuotaEntityComponent::encode(packetEncoder &pe) const
+int QuotaEntityComponent::encode(packet_encoder &pe) const
 {
     if (pe.putString(m_entity_type) != ErrNoError)
     {
@@ -200,7 +200,7 @@ int QuotaEntityComponent::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int QuotaEntityComponent::decode(packetDecoder &pd, int16_t /*version*/)
+int QuotaEntityComponent::decode(packet_decoder &pd, int16_t /*version*/)
 {
     std::string entityType;
     if (pd.getString(entityType) != ErrNoError)

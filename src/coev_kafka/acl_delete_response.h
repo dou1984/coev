@@ -20,8 +20,8 @@ struct MatchingAcl : versioned_encoder, versioned_decoder
     Resource m_resource;
     Acl m_acl;
 
-    int encode(packetEncoder &pe, int16_t version) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe, int16_t version) const;
+    int decode(packet_decoder &pd, int16_t version);
 };
 
 struct FilterResponse : versioned_encoder, versioned_decoder
@@ -30,8 +30,8 @@ struct FilterResponse : versioned_encoder, versioned_decoder
     std::string m_err_msg;
     std::vector<std::shared_ptr<MatchingAcl>> m_matching_acls;
 
-    int encode(packetEncoder &pe, int16_t version) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe, int16_t version) const;
+    int decode(packet_decoder &pd, int16_t version);
 };
 
 struct DeleteAclsResponse : protocol_body
@@ -41,8 +41,8 @@ struct DeleteAclsResponse : protocol_body
     std::vector<std::shared_ptr<FilterResponse>> m_filter_responses;
 
     void set_version(int16_t v);
-    int encode(packetEncoder &pe) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe) const;
+    int decode(packet_decoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

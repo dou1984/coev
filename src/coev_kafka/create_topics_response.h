@@ -19,8 +19,8 @@ struct CreatableTopicConfigs : versioned_encoder, versioned_decoder
     ConfigSource m_config_source;
     bool m_is_sensitive;
 
-    int encode(packetEncoder &pe, int16_t version) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe, int16_t version) const;
+    int decode(packet_decoder &pd, int16_t version);
 };
 
 struct CreatableTopicResult : versioned_encoder, versioned_decoder
@@ -30,8 +30,8 @@ struct CreatableTopicResult : versioned_encoder, versioned_decoder
     int16_t m_replication_factor;
     std::map<std::string, std::shared_ptr<CreatableTopicConfigs>> m_configs;
 
-    int encode(packetEncoder &pe, int16_t version) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe, int16_t version) const;
+    int decode(packet_decoder &pd, int16_t version);
 };
 
 struct TopicError : versioned_encoder, versioned_decoder
@@ -40,8 +40,8 @@ struct TopicError : versioned_encoder, versioned_decoder
     std::string m_err_msg;
 
     std::string Error() const;
-    int encode(packetEncoder &pe, int16_t version) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe, int16_t version) const;
+    int decode(packet_decoder &pd, int16_t version);
 };
 
 struct CreateTopicsResponse : protocol_body, flexible_version
@@ -56,8 +56,8 @@ struct CreateTopicsResponse : protocol_body, flexible_version
     }
 
     void set_version(int16_t v);
-    int encode(packetEncoder &pe) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe) const;
+    int decode(packet_decoder &pd, int16_t version);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

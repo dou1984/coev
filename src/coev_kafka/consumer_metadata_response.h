@@ -27,6 +27,6 @@ struct ConsumerMetadataResponse : protocol_body
     int16_t header_version() const;
     bool is_valid_version() const;
     KafkaVersion required_version() const;
-    int decode(packetDecoder &pd, int16_t version);
-    int encode(packetEncoder &pe) const;
+    int decode(packet_decoder &pd, int16_t version);
+    int encode(packet_encoder &pe) const;
 };

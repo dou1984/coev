@@ -5,7 +5,7 @@ void AddOffsetsToTxnResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int AddOffsetsToTxnResponse::encode(packetEncoder &pe) const
+int AddOffsetsToTxnResponse::encode(packet_encoder &pe) const
 {
 
     pe.putDurationMs(m_throttle_time);
@@ -14,7 +14,7 @@ int AddOffsetsToTxnResponse::encode(packetEncoder &pe) const
     return 0;
 }
 
-int AddOffsetsToTxnResponse::decode(packetDecoder &pd, int16_t version)
+int AddOffsetsToTxnResponse::decode(packet_decoder &pd, int16_t version)
 {
     int err;
     if ((err = pd.getDurationMs(m_throttle_time)) != 0)

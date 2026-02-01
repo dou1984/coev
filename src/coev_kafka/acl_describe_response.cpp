@@ -6,7 +6,7 @@ void DescribeAclsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int DescribeAclsResponse::encode(packetEncoder &pe) const
+int DescribeAclsResponse::encode(packet_encoder &pe) const
 {
     pe.putDurationMs(m_throttle_time);
     pe.putKError(m_err);
@@ -32,7 +32,7 @@ int DescribeAclsResponse::encode(packetEncoder &pe) const
     return 0;
 }
 
-int DescribeAclsResponse::decode(packetDecoder &pd, int16_t version)
+int DescribeAclsResponse::decode(packet_decoder &pd, int16_t version)
 {
     if (pd.getDurationMs(m_throttle_time) != 0)
     {

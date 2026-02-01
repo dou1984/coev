@@ -6,7 +6,7 @@ void CreatePartitionsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int CreatePartitionsResponse::encode(packetEncoder &pe) const
+int CreatePartitionsResponse::encode(packet_encoder &pe) const
 {
     pe.putDurationMs(m_throttle_time);
 
@@ -30,7 +30,7 @@ int CreatePartitionsResponse::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int CreatePartitionsResponse::decode(packetDecoder &pd, int16_t version)
+int CreatePartitionsResponse::decode(packet_decoder &pd, int16_t version)
 {
     if (pd.getDurationMs(m_throttle_time) != ErrNoError)
     {
@@ -110,7 +110,7 @@ std::string TopicPartitionError::Error() const
     return text;
 }
 
-int TopicPartitionError::encode(packetEncoder &pe) const
+int TopicPartitionError::encode(packet_encoder &pe) const
 {
     pe.putKError(m_err);
     if (pe.putNullableString(m_err_msg) != ErrNoError)
@@ -120,7 +120,7 @@ int TopicPartitionError::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int TopicPartitionError::decode(packetDecoder &pd, int16_t version)
+int TopicPartitionError::decode(packet_decoder &pd, int16_t version)
 {
     if (pd.getKError(m_err) != ErrNoError)
     {

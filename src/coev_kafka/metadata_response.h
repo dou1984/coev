@@ -30,8 +30,8 @@ struct PartitionMetadata : versioned_decoder, versioned_encoder
     PartitionMetadata(int16_t v) : m_version(v)
     {
     }
-    int decode(packetDecoder &pd, int16_t version);
-    int encode(packetEncoder &pe, int16_t version) const;
+    int decode(packet_decoder &pd, int16_t version);
+    int encode(packet_encoder &pe, int16_t version) const;
 };
 
 struct TopicMetadata : versioned_decoder, versioned_encoder
@@ -44,8 +44,8 @@ struct TopicMetadata : versioned_decoder, versioned_encoder
     std::vector<std::shared_ptr<PartitionMetadata>> m_partitions;
     int32_t m_topic_authorized_operations;
 
-    int decode(packetDecoder &pd, int16_t version);
-    int encode(packetEncoder &pe, int16_t version) const;
+    int decode(packet_decoder &pd, int16_t version);
+    int encode(packet_encoder &pe, int16_t version) const;
 };
 
 struct MetadataResponse : protocol_body, flexible_version
@@ -59,8 +59,8 @@ struct MetadataResponse : protocol_body, flexible_version
     int32_t m_cluster_authorized_operations;
 
     void set_version(int16_t v);
-    int decode(packetDecoder &pd, int16_t version);
-    int encode(packetEncoder &pe) const;
+    int decode(packet_decoder &pd, int16_t version);
+    int encode(packet_encoder &pe) const;
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

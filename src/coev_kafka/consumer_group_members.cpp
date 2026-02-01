@@ -1,6 +1,6 @@
 #include "consumer_group_members.h"
 
-int ConsumerGroupMemberMetadata::encode(packetEncoder &pe) const
+int ConsumerGroupMemberMetadata::encode(packet_encoder &pe) const
 {
     pe.putInt16(m_version);
 
@@ -45,7 +45,7 @@ int ConsumerGroupMemberMetadata::encode(packetEncoder &pe) const
     return 0;
 }
 
-int ConsumerGroupMemberMetadata::decode(packetDecoder &pd)
+int ConsumerGroupMemberMetadata::decode(packet_decoder &pd)
 {
     int err;
     if ((err = pd.getInt16(m_version)) != 0)
@@ -108,7 +108,7 @@ int ConsumerGroupMemberMetadata::decode(packetDecoder &pd)
     return 0;
 }
 
-int OwnedPartition::encode(packetEncoder &pe) const
+int OwnedPartition::encode(packet_encoder &pe) const
 {
     if (int err = pe.putString(topic); err != 0)
     {
@@ -121,7 +121,7 @@ int OwnedPartition::encode(packetEncoder &pe) const
     return 0;
 }
 
-int OwnedPartition::decode(packetDecoder &pd)
+int OwnedPartition::decode(packet_decoder &pd)
 {
     int err;
     if ((err = pd.getString(topic)) != 0)
@@ -136,7 +136,7 @@ int OwnedPartition::decode(packetDecoder &pd)
     return 0;
 }
 
-int ConsumerGroupMemberAssignment::encode(packetEncoder &pe) const
+int ConsumerGroupMemberAssignment::encode(packet_encoder &pe) const
 {
     pe.putInt16(m_version);
 
@@ -165,7 +165,7 @@ int ConsumerGroupMemberAssignment::encode(packetEncoder &pe) const
     return 0;
 }
 
-int ConsumerGroupMemberAssignment::decode(packetDecoder &pd)
+int ConsumerGroupMemberAssignment::decode(packet_decoder &pd)
 {
     int err;
     if ((err = pd.getInt16(m_version)) != 0)

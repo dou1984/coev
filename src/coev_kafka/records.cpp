@@ -40,7 +40,7 @@ int Records::set_type_from_fields(bool &empty) const
     return 0;
 }
 
-int Records::encode(packetEncoder &pe) const
+int Records::encode(packet_encoder &pe) const
 {
     if (m_records_type == UnknownRecords)
     {
@@ -71,7 +71,7 @@ int Records::encode(packetEncoder &pe) const
     return -1;
 }
 
-int Records::set_type_from_magic(packetDecoder &pd)
+int Records::set_type_from_magic(packet_decoder &pd)
 {
     int8_t magic;
     int err = magicValue(pd, magic);
@@ -88,7 +88,7 @@ int Records::set_type_from_magic(packetDecoder &pd)
     return 0;
 }
 
-int Records::decode(packetDecoder &pd)
+int Records::decode(packet_decoder &pd)
 {
     if (m_records_type == UnknownRecords)
     {

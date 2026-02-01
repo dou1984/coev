@@ -49,8 +49,8 @@ TEST(OffsetFetchRequestTest, EncodeWithPartitions)
     request.m_consumer_group = "test-group";
 
     // Add partitions
-    request.AddPartition("test-topic", 0);
-    request.AddPartition("test-topic", 1);
+    request.add_partition("test-topic", 0);
+    request.add_partition("test-topic", 1);
 
     realEncoder encoder(1024);
     EXPECT_EQ(request.encode(encoder), 0);

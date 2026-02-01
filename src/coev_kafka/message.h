@@ -33,8 +33,8 @@ struct Message
     Message() = default;
 
     Message(const std::string &key, const std::string &value, bool logAppendTime, Timestamp msgTimestamp, int8_t version);
-    int encode(packetEncoder &pe) const;
-    int decode(packetDecoder &pd);
+    int encode(packet_encoder &pe) const;
+    int decode(packet_decoder &pd);
     int decode_set();
     void clear();
 };

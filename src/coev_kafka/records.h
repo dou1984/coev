@@ -26,9 +26,9 @@ struct Records : std::enable_shared_from_this<Records>
     Records(std::shared_ptr<RecordBatch> batch);
 
     int set_type_from_fields(bool &empty) const;
-    int set_type_from_magic(packetDecoder &pd);
-    int encode(packetEncoder &pe) const;
-    int decode(packetDecoder &pd);
+    int set_type_from_magic(packet_decoder &pd);
+    int encode(packet_encoder &pe) const;
+    int decode(packet_decoder &pd);
     int num_records(int &) const;
     int is_partial(bool &) const;
     int is_control(bool &) const;

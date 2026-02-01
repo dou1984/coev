@@ -9,7 +9,7 @@ void TxnOffsetCommitResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int TxnOffsetCommitResponse::encode(packetEncoder &pe) const
+int TxnOffsetCommitResponse::encode(packet_encoder &pe) const
 {
     pe.putDurationMs(m_throttle_time);
     pe.putArrayLength(static_cast<int32_t>(m_topics.size()));
@@ -28,7 +28,7 @@ int TxnOffsetCommitResponse::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int TxnOffsetCommitResponse::decode(packetDecoder &pd, int16_t version)
+int TxnOffsetCommitResponse::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
 

@@ -1,7 +1,7 @@
 #include "version.h"
 #include "api_versions.h"
 #include "alter_partition_reassignments_request.h"
-int AlterPartitionReassignmentsBlock::encode(packetEncoder &pe) const
+int AlterPartitionReassignmentsBlock::encode(packet_encoder &pe) const
 {
     if (pe.putNullableInt32Array(m_replicas) != ErrNoError)
     {
@@ -11,7 +11,7 @@ int AlterPartitionReassignmentsBlock::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int AlterPartitionReassignmentsBlock::decode(packetDecoder &pd)
+int AlterPartitionReassignmentsBlock::decode(packet_decoder &pd)
 {
     if (pd.getInt32Array(m_replicas) != ErrNoError)
     {
@@ -26,7 +26,7 @@ void AlterPartitionReassignmentsRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int AlterPartitionReassignmentsRequest::encode(packetEncoder &pe) const
+int AlterPartitionReassignmentsRequest::encode(packet_encoder &pe) const
 {
     pe.putInt32(m_timeout.count());
 
@@ -66,7 +66,7 @@ int AlterPartitionReassignmentsRequest::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int AlterPartitionReassignmentsRequest::decode(packetDecoder &pd, int16_t version)
+int AlterPartitionReassignmentsRequest::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
     int32_t timeout;

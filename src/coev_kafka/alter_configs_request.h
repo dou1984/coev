@@ -16,8 +16,8 @@ struct AlterConfigsResource : versioned_decoder, IEncoder
     std::string m_name;
     std::map<std::string, std::string> m_config_entries;
 
-    int encode(packetEncoder &pe) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe) const;
+    int decode(packet_decoder &pd, int16_t version);
 };
 
 struct AlterConfigsRequest : protocol_body
@@ -32,8 +32,8 @@ struct AlterConfigsRequest : protocol_body
     }
 
     void set_version(int16_t v);
-    int encode(packetEncoder &pe) const;
-    int decode(packetDecoder &pd, int16_t version);
+    int encode(packet_encoder &pe) const;
+    int decode(packet_decoder &pd, int16_t version);
 
     int16_t key() const;
     int16_t version() const;

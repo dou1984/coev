@@ -7,7 +7,7 @@ void IncrementalAlterConfigsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int IncrementalAlterConfigsResponse::encode(packetEncoder &pe) const
+int IncrementalAlterConfigsResponse::encode(packet_encoder &pe) const
 {
 
     pe.putDurationMs(m_throttle_time);
@@ -31,7 +31,7 @@ int IncrementalAlterConfigsResponse::encode(packetEncoder &pe) const
     return 0;
 }
 
-int IncrementalAlterConfigsResponse::decode(packetDecoder &pd, int16_t version)
+int IncrementalAlterConfigsResponse::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
 

@@ -6,7 +6,7 @@ void DescribeUserScramCredentialsResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int DescribeUserScramCredentialsResponse::encode(packetEncoder &pe) const
+int DescribeUserScramCredentialsResponse::encode(packet_encoder &pe) const
 {
     pe.putDurationMs(m_throttle_time);
     pe.putKError(m_error_code);
@@ -51,7 +51,7 @@ int DescribeUserScramCredentialsResponse::encode(packetEncoder &pe) const
     return ErrNoError;
 }
 
-int DescribeUserScramCredentialsResponse::decode(packetDecoder &pd, int16_t version)
+int DescribeUserScramCredentialsResponse::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
 

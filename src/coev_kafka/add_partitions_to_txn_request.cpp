@@ -6,7 +6,7 @@ void AddPartitionsToTxnRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int AddPartitionsToTxnRequest::encode(packetEncoder &pe) const
+int AddPartitionsToTxnRequest::encode(packet_encoder &pe) const
 {
     if (pe.putString(m_transactional_id) != 0)
     {
@@ -36,7 +36,7 @@ int AddPartitionsToTxnRequest::encode(packetEncoder &pe) const
     return 0;
 }
 
-int AddPartitionsToTxnRequest::decode(packetDecoder &pd, int16_t version)
+int AddPartitionsToTxnRequest::decode(packet_decoder &pd, int16_t version)
 {
     int err;
     if ((err = pd.getString(m_transactional_id)) != 0)

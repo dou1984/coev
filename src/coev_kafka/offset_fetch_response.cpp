@@ -2,7 +2,7 @@
 #include "offset_fetch_response.h"
 #include "api_versions.h"
 
-int OffsetFetchResponseBlock::encode(packetEncoder &pe, int16_t version) const
+int OffsetFetchResponseBlock::encode(packet_encoder &pe, int16_t version) const
 {
     pe.putInt64(m_offset);
 
@@ -17,7 +17,7 @@ int OffsetFetchResponseBlock::encode(packetEncoder &pe, int16_t version) const
     return 0;
 }
 
-int OffsetFetchResponseBlock::decode(packetDecoder &pd, int16_t version)
+int OffsetFetchResponseBlock::decode(packet_decoder &pd, int16_t version)
 {
     auto err = pd.getInt64(m_offset);
     if (err)
@@ -63,7 +63,7 @@ void OffsetFetchResponse::set_version(int16_t v)
     m_version = v;
 }
 
-int OffsetFetchResponse::encode(packetEncoder &pe) const
+int OffsetFetchResponse::encode(packet_encoder &pe) const
 {
     if (m_version >= 3)
     {
@@ -93,7 +93,7 @@ int OffsetFetchResponse::encode(packetEncoder &pe) const
     return 0;
 }
 
-int OffsetFetchResponse::decode(packetDecoder &pd, int16_t version)
+int OffsetFetchResponse::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
 

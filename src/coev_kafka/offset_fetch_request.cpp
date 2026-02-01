@@ -53,7 +53,7 @@ void OffsetFetchRequest::set_version(int16_t v)
     m_version = v;
 }
 
-int OffsetFetchRequest::encode(packetEncoder &pe) const
+int OffsetFetchRequest::encode(packet_encoder &pe) const
 {
     if (m_version < 0 || m_version > 7)
     {
@@ -92,7 +92,7 @@ int OffsetFetchRequest::encode(packetEncoder &pe) const
     return 0;
 }
 
-int OffsetFetchRequest::decode(packetDecoder &pd, int16_t version)
+int OffsetFetchRequest::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
     int err = pd.getString(m_consumer_group);
@@ -206,7 +206,7 @@ KafkaVersion OffsetFetchRequest::required_version() const
     }
 }
 
-void OffsetFetchRequest::ZeroPartitions()
+void OffsetFetchRequest::zero_partitions()
 {
     if (m_partitions.empty() && m_version >= 2)
     {
@@ -214,7 +214,7 @@ void OffsetFetchRequest::ZeroPartitions()
     }
 }
 
-void OffsetFetchRequest::AddPartition(const std::string &topic, int32_t partitionID)
+void OffsetFetchRequest::add_partition(const std::string &topic, int32_t partitionID)
 {
     m_partitions[topic].push_back(partitionID);
 }
