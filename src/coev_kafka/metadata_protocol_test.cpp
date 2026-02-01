@@ -15,13 +15,13 @@ TEST(MetadataProtocolTest, TestMetadataRequestEncodeDecode)
     original.m_include_topic_authorized_operations = true;
 
     // Encode the request
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     int encode_err = original.encode(encoder);
     EXPECT_EQ(encode_err, 0);
 
     // Decode the request
     MetadataRequest decoded;
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
     decoder.m_offset = 0;
 
@@ -54,13 +54,13 @@ TEST(MetadataProtocolTest, TestMetadataResponseEncodeDecode)
         "test-topic", 0, 1, {1, 2, 3}, {1, 2}, {3}, 0);
 
     // Encode the response
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     int encode_err = original.encode(encoder);
     EXPECT_EQ(encode_err, 0);
 
     // Decode the response
     MetadataResponse decoded;
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
     decoder.m_offset = 0;
 
@@ -95,13 +95,13 @@ TEST(MetadataProtocolTest, TestMetadataRequestEmptyTopics)
     original.m_include_topic_authorized_operations = false;
 
     // Encode the request
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     int encode_err = original.encode(encoder);
     EXPECT_EQ(encode_err, 0);
 
     // Decode the request
     MetadataRequest decoded;
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
     decoder.m_offset = 0;
 
@@ -129,13 +129,13 @@ TEST(MetadataProtocolTest, TestMetadataResponseMultipleTopics)
     original.add_topic_partition("topic-2", 0, 1, {1}, {1}, {}, 0);
 
     // Encode the response
-    realEncoder encoder(2048);
+    real_encoder encoder(2048);
     int encode_err = original.encode(encoder);
     EXPECT_EQ(encode_err, 0);
 
     // Decode the response
     MetadataResponse decoded;
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
     decoder.m_offset = 0;
 
@@ -169,13 +169,13 @@ TEST(MetadataProtocolTest, TestMetadataRequestVersionCompatibility)
         }
 
         // Encode the request
-        realEncoder encoder(1024);
+        real_encoder encoder(1024);
         int encode_err = original.encode(encoder);
         EXPECT_EQ(encode_err, 0) << "Failed to encode MetadataRequest with version " << version;
 
         // Decode the request
         MetadataRequest decoded;
-        realDecoder decoder;
+        real_decoder decoder;
         decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
         decoder.m_offset = 0;
 
@@ -234,13 +234,13 @@ TEST(MetadataProtocolTest, TestMetadataResponseVersionCompatibility)
             version >= 5 ? std::vector<int32_t>{version} : std::vector<int32_t>{}, 0);
 
         // Encode the response
-        realEncoder encoder(1024);
+        real_encoder encoder(1024);
         int encode_err = original.encode(encoder);
         EXPECT_EQ(encode_err, 0) << "Failed to encode MetadataResponse with version " << version;
 
         // Decode the response
         MetadataResponse decoded;
-        realDecoder decoder;
+        real_decoder decoder;
         decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
         decoder.m_offset = 0;
 
@@ -280,13 +280,13 @@ TEST(MetadataProtocolTest, TestMetadataRequestEmptyTopicsSpecialCase)
     original.m_topics = {}; // Empty topics list
 
     // Encode the request
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     int encode_err = original.encode(encoder);
     EXPECT_EQ(encode_err, 0);
 
     // Decode the request
     MetadataRequest decoded;
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
     decoder.m_offset = 0;
 
@@ -317,13 +317,13 @@ TEST(MetadataProtocolTest, TestMetadataResponseWithMultipleBrokers)
     original.add_topic_partition("test-topic", 2, 3, {1, 2, 3}, {1, 3}, {2}, 0);
 
     // Encode the response
-    realEncoder encoder(2048);
+    real_encoder encoder(2048);
     int encode_err = original.encode(encoder);
     EXPECT_EQ(encode_err, 0);
 
     // Decode the response
     MetadataResponse decoded;
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
     decoder.m_offset = 0;
 

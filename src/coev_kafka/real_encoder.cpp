@@ -25,13 +25,13 @@ int encodeVariant(uint8_t *buf, int64_t x)
     return encodeUVariant(buf, zigzagEncode(x));
 }
 
-void realEncoder::putInt8(int8_t in)
+void real_encoder::putInt8(int8_t in)
 {
     assert(m_offset + 1 <= m_raw.size());
     m_raw[m_offset++] = static_cast<uint8_t>(in);
 }
 
-void realEncoder::putInt16(int16_t in)
+void real_encoder::putInt16(int16_t in)
 {
     assert(m_offset + 2 <= m_raw.size());
     m_raw[m_offset] = static_cast<uint8_t>((in >> 8) & 0xFF);
@@ -39,7 +39,7 @@ void realEncoder::putInt16(int16_t in)
     m_offset += 2;
 }
 
-void realEncoder::putInt32(int32_t in)
+void real_encoder::putInt32(int32_t in)
 {
     assert(m_offset + 4 <= m_raw.size());
     m_raw[m_offset] = static_cast<uint8_t>((in >> 24) & 0xFF);
@@ -49,7 +49,7 @@ void realEncoder::putInt32(int32_t in)
     m_offset += 4;
 }
 
-void realEncoder::putInt64(int64_t in)
+void real_encoder::putInt64(int64_t in)
 {
     assert(m_offset + 8 <= m_raw.size());
     m_raw[m_offset] = static_cast<uint8_t>((in >> 56) & 0xFF);
@@ -63,25 +63,25 @@ void realEncoder::putInt64(int64_t in)
     m_offset += 8;
 }
 
-void realEncoder::putVariant(int64_t in)
+void real_encoder::putVariant(int64_t in)
 {
     m_offset += encodeVariant((uint8_t *)m_raw.data() + m_offset, in);
     assert(m_offset <= m_raw.size());
 }
 
-void realEncoder::putUVarint(uint64_t in)
+void real_encoder::putUVarint(uint64_t in)
 {
     m_offset += encodeUVariant((uint8_t *)m_raw.data() + m_offset, in);
     assert(m_offset <= m_raw.size());
 }
 
-void realEncoder::putFloat64(double in)
+void real_encoder::putFloat64(double in)
 {
     uint64_t bits = *reinterpret_cast<uint64_t *>(&in);
     putInt64(static_cast<int64_t>(bits));
 }
 
-int realEncoder::putArrayLength(int in)
+int real_encoder::putArrayLength(int in)
 {
     if (isFixed())
     {
@@ -94,22 +94,22 @@ int realEncoder::putArrayLength(int in)
     return 0;
 }
 
-void realEncoder::putBool(bool in)
+void real_encoder::putBool(bool in)
 {
     putInt8(in ? 1 : 0);
 }
 
-void realEncoder::putKError(KError in)
+void real_encoder::putKError(KError in)
 {
     putInt16(static_cast<int16_t>(in));
 }
 
-void realEncoder::putDurationMs(std::chrono::milliseconds ms)
+void real_encoder::putDurationMs(std::chrono::milliseconds ms)
 {
     putInt32(static_cast<int32_t>(ms.count()));
 }
 
-int realEncoder::putRawBytes(const std::string &in)
+int real_encoder::putRawBytes(const std::string &in)
 {
     assert(m_offset + in.size() <= m_raw.size());
     std::memcpy(&m_raw[m_offset], in.data(), in.size());
@@ -117,7 +117,7 @@ int realEncoder::putRawBytes(const std::string &in)
     return 0;
 }
 
-int realEncoder::putBytes(const std::string &in)
+int real_encoder::putBytes(const std::string &in)
 {
     if (isFixed())
     {
@@ -138,7 +138,7 @@ int realEncoder::putBytes(const std::string &in)
     return 0;
 }
 
-int realEncoder::putVariantBytes(const std::string &in)
+int real_encoder::putVariantBytes(const std::string &in)
 {
     if (in.empty())
     {
@@ -150,7 +150,7 @@ int realEncoder::putVariantBytes(const std::string &in)
     return 0;
 }
 
-int realEncoder::putString(const std::string &in)
+int real_encoder::putString(const std::string &in)
 {
     if (isFixed())
     {
@@ -169,7 +169,7 @@ int realEncoder::putString(const std::string &in)
     return 0;
 }
 
-int realEncoder::putNullableString(const std::string &in)
+int real_encoder::putNullableString(const std::string &in)
 {
     if (isFixed())
     {
@@ -193,7 +193,7 @@ int realEncoder::putNullableString(const std::string &in)
     return 0;
 }
 
-int realEncoder::putStringArray(const std::vector<std::string> &in)
+int real_encoder::putStringArray(const std::vector<std::string> &in)
 {
     if (isFixed())
     {
@@ -216,7 +216,7 @@ int realEncoder::putStringArray(const std::vector<std::string> &in)
     return 0;
 }
 
-int realEncoder::putInt32Array(const std::vector<int32_t> &in)
+int real_encoder::putInt32Array(const std::vector<int32_t> &in)
 {
     if (isFixed())
     {
@@ -239,7 +239,7 @@ int realEncoder::putInt32Array(const std::vector<int32_t> &in)
     return 0;
 }
 
-int realEncoder::putNullableInt32Array(const std::vector<int32_t> &in)
+int real_encoder::putNullableInt32Array(const std::vector<int32_t> &in)
 {
     if (isFixed())
     {
@@ -272,7 +272,7 @@ int realEncoder::putNullableInt32Array(const std::vector<int32_t> &in)
     return 0;
 }
 
-int realEncoder::putInt64Array(const std::vector<int64_t> &in)
+int real_encoder::putInt64Array(const std::vector<int64_t> &in)
 {
     putArrayLength(static_cast<int>(in.size()));
     for (int64_t v : in)
@@ -282,7 +282,7 @@ int realEncoder::putInt64Array(const std::vector<int64_t> &in)
     return 0;
 }
 
-void realEncoder::putEmptyTaggedFieldArray()
+void real_encoder::putEmptyTaggedFieldArray()
 {
     if (isFixed())
     {
@@ -293,7 +293,7 @@ void realEncoder::putEmptyTaggedFieldArray()
     }
 }
 
-void realEncoder::push(push_encoder &in)
+void real_encoder::push(push_encoder &in)
 {
     in.save_offset(m_offset);
     int reserve = in.reserve_length();
@@ -302,7 +302,7 @@ void realEncoder::push(push_encoder &in)
     m_stack.push_back(&in);
 }
 
-int realEncoder::pop()
+int real_encoder::pop()
 {
     if (m_stack.empty())
     {

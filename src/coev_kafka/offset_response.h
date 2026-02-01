@@ -14,7 +14,7 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
-struct OffsetResponseBlock : versioned_decoder, versioned_encoder
+struct OffsetResponseBlock : VDecoder, VEncoder
 {
     KError m_err;
     std::vector<int64_t> m_offsets;

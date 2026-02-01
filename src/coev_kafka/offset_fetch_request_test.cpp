@@ -38,7 +38,7 @@ TEST(OffsetFetchRequestTest, EncodeEmptyRequest)
     request.set_version(0);
     request.m_consumer_group = "test-group";
 
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     EXPECT_EQ(request.encode(encoder), 0);
 }
 
@@ -52,7 +52,7 @@ TEST(OffsetFetchRequestTest, EncodeWithPartitions)
     request.add_partition("test-topic", 0);
     request.add_partition("test-topic", 1);
 
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     EXPECT_EQ(request.encode(encoder), 0);
 }
 
@@ -64,6 +64,6 @@ TEST(OffsetFetchRequestTest, EncodeWithRequireStable)
     request.m_consumer_group = "test-group";
     request.m_require_stable = true;
 
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     EXPECT_EQ(request.encode(encoder), 0);
 }

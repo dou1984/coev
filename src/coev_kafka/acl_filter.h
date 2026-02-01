@@ -7,7 +7,7 @@
 #include "packet_decoder.h"
 #include "acl_types.h"
 
-struct AclFilter : IEncoder, versioned_decoder
+struct AclFilter : IEncoder, VDecoder
 {
     int16_t m_version;
     AclResourceType m_resource_type;

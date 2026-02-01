@@ -32,7 +32,7 @@ TEST(FetchRequestTest, VersionCompatibility) {
 TEST(FetchRequestTest, EncodeEmptyRequest) {
     FetchRequest request(0);
     
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     EXPECT_EQ(request.encode(encoder), 0);
 }
 
@@ -42,7 +42,7 @@ TEST(FetchRequestTest, EncodeWithBlocks) {
     // Add a block
     request.add_block("test-topic", 0, 100, 1024, 0);
     
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     EXPECT_EQ(request.encode(encoder), 0);
 }
 
@@ -55,6 +55,6 @@ TEST(FetchRequestTest, EncodeWithVersionSpecificFields) {
     // Add a block
     request.add_block("test-topic", 0, 100, 1024, 0);
     
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     EXPECT_EQ(request.encode(encoder), 0);
 }

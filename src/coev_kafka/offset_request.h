@@ -12,7 +12,7 @@
 #include "packet_decoder.h"
 #include "protocol_body.h"
 
-struct OffsetRequestBlock : versioned_decoder, versioned_encoder
+struct OffsetRequestBlock : VDecoder, VEncoder
 {
 
     int32_t m_leader_epoch;

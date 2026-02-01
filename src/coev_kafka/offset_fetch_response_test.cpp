@@ -38,7 +38,7 @@ TEST(OffsetFetchResponseTest, EncodeEmptyResponse)
     OffsetFetchResponse response;
     response.set_version(0);
 
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     EXPECT_EQ(response.encode(encoder), 0);
 }
 
@@ -54,7 +54,7 @@ TEST(OffsetFetchResponseTest, EncodeWithBlocks)
     block->m_err = ErrNoError;
     response.add_block("test-topic", 0, block);
 
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     EXPECT_EQ(response.encode(encoder), 0);
 }
 
@@ -72,6 +72,6 @@ TEST(OffsetFetchResponseTest, EncodeWithVersionSpecificFields)
     block->m_err = ErrNoError;
     response.add_block("test-topic", 0, block);
 
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     EXPECT_EQ(response.encode(encoder), 0);
 }

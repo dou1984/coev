@@ -21,7 +21,7 @@ struct ResponsePromise
 
     int decode(int16_t version)
     {
-        auto err = versionedDecode(m_packets, *m_response, version);
+        auto err = versioned_decode(m_packets, *m_response, version);
         if (err)
         {
             return ErrDecodeError;

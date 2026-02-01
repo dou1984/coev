@@ -2,8 +2,8 @@
 #include <string>
 #include <memory>
 #include "gssapi_kerberos.h"
-struct PrincipalName;
 
+struct PrincipalName;
 struct KerberosGoKrb5Client
 {
     void *krb5Client;
@@ -13,4 +13,4 @@ struct KerberosGoKrb5Client
 };
 
 std::shared_ptr<KerberosClient> NewKerberosClient(const std::shared_ptr<GSSAPIConfig> &config, int &);
-std::shared_ptr<KerberosClient> createClient(const std::shared_ptr<GSSAPIConfig> &config, void *cfg);
+std::shared_ptr<KerberosClient> CreateClient(const std::shared_ptr<GSSAPIConfig> &config, void *cfg);

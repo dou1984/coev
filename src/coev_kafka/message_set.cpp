@@ -91,7 +91,7 @@ int MessageSet::decode(packet_decoder &pd)
     while (pd.remaining() > 0)
     {
         int8_t magic;
-        int err = magicValue(pd, magic);
+        int err = magic_value(pd, magic);
         if (err != 0)
         {
             if (err == ErrInsufficientData)

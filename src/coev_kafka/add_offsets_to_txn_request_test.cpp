@@ -28,7 +28,7 @@ TEST(AddOffsetsToTxnRequestTest, BasicEncodingDecoding)
     request.m_group_id = "groupid";
 
     // Test encoding
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     int encodeResult = request.encode(encoder);
     ASSERT_EQ(encodeResult, 0) << "Failed to encode request";
 
@@ -43,7 +43,7 @@ TEST(AddOffsetsToTxnRequestTest, BasicEncodingDecoding)
     EXPECT_EQ(actualEncoded, addOffsetsToTxnRequestStr) << "Encoded data mismatch";
 
     // Test decoding
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = actualEncoded;
     decoder.m_offset = 0;
 
@@ -109,7 +109,7 @@ TEST(AddOffsetsToTxnRequestTest, EncodingDifferentVersions)
     {
         request.set_version(version);
 
-        realEncoder encoder(1024);
+        real_encoder encoder(1024);
         int encodeResult = request.encode(encoder);
         ASSERT_EQ(encodeResult, 0) << "Failed to encode request with version " << version;
 

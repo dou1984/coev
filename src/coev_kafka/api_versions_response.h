@@ -9,7 +9,7 @@
 #include "packet_decoder.h"
 #include "request.h"
 
-struct ApiVersionsResponseKey : versioned_encoder, versioned_decoder
+struct ApiVersionsResponseKey : VEncoder, VDecoder
 {
     int16_t m_version = 0;
     int16_t m_api_key = 0;

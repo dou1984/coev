@@ -30,7 +30,7 @@ const unsigned char aclDescribeRequestV1[] = {
 
 TEST(DescribeAclsRequestTest, DecodeRequest)
 {
-    realDecoder decoder;
+    real_decoder decoder;
     std::string rawData(reinterpret_cast<const char *>(aclDescribeRequest), sizeof(aclDescribeRequest));
     decoder.m_raw = rawData;
     decoder.m_offset = 0;
@@ -48,7 +48,7 @@ TEST(DescribeAclsRequestTest, DecodeRequest)
 
 TEST(DescribeAclsRequestTest, DecodeRequestv1)
 {
-    realDecoder decoder;
+    real_decoder decoder;
     std::string rawData(reinterpret_cast<const char *>(aclDescribeRequestV1), sizeof(aclDescribeRequestV1));
     decoder.m_raw = rawData;
     decoder.m_offset = 0;
@@ -76,7 +76,7 @@ TEST(DescribeAclsRequestTest, EncodeRequest)
     request.m_filter.m_operation = AclOperationCreate;
     request.m_filter.m_permission_type = AclPermissionTypeAllow;
 
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     int result = request.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode ACL describe request";
 
@@ -97,7 +97,7 @@ TEST(DescribeAclsRequestTest, EncodeRequestv1)
     request.m_filter.m_operation = AclOperationCreate;
     request.m_filter.m_permission_type = AclPermissionTypeAllow;
 
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     int result = request.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode ACL describe request v1";
 
@@ -143,12 +143,12 @@ TEST(DescribeAclsRequestTest, RoundTripEncodingDecoding)
     originalRequest.m_filter.m_permission_type = AclPermissionTypeDeny;
 
     // Encode the request
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     int result = originalRequest.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode request for round-trip test";
 
     // Decode the request
-    realDecoder decoder;
+    real_decoder decoder;
     std::string rawData = encoder.m_raw.substr(0, encoder.m_offset);
     decoder.m_raw = rawData;
     decoder.m_offset = 0;
@@ -176,11 +176,11 @@ TEST(DescribeAclsRequestTest, RoundTripEncodingDecoding)
     originalRequestV1.m_filter.m_operation = AclOperationRead;
     originalRequestV1.m_filter.m_permission_type = AclPermissionTypeAllow;
 
-    realEncoder encoderV1(1024);
+    real_encoder encoderV1(1024);
     result = originalRequestV1.encode(encoderV1);
     ASSERT_EQ(result, 0) << "Failed to encode V1 request for round-trip test";
 
-    realDecoder decoderV1;
+    real_decoder decoderV1;
     std::string rawDataV1 = encoderV1.m_raw.substr(0, encoderV1.m_offset);
     decoderV1.m_raw = rawDataV1;
     decoderV1.m_offset = 0;

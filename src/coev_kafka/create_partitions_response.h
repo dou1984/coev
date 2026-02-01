@@ -12,12 +12,12 @@
 #include "protocol_body.h"
 #include "version.h"
 
-struct TopicPartitionError : IEncoder, versioned_decoder
+struct TopicPartitionError : IEncoder, VDecoder
 {
     KError m_err;
     std::string m_err_msg;
 
-    std::string Error() const;
+    std::string error() const;
     int encode(packet_encoder &pe) const;
     int decode(packet_decoder &pd, int16_t version);
 };

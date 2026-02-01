@@ -13,7 +13,7 @@
 #include "errors.h"
 #include "encoder_decoder.h"
 
-struct realDecoder : packet_decoder
+struct real_decoder : packet_decoder
 {
     int getInt8(int8_t &result);
     int getInt16(int16_t &result);

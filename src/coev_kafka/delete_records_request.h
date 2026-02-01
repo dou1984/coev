@@ -11,7 +11,7 @@
 #include "protocol_body.h"
 #include "encoder_decoder.h"
 
-struct DeleteRecordsRequestTopic : versioned_decoder, IEncoder
+struct DeleteRecordsRequestTopic : VDecoder, IEncoder
 {
 
   std::unordered_map<int32_t, int64_t> m_partition_offsets;

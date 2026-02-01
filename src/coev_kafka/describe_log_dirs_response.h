@@ -21,7 +21,7 @@ struct DescribeLogDirsResponsePartition
     int decode(packet_decoder &pd, int16_t version);
 };
 
-struct DescribeLogDirsResponseTopic : versioned_decoder, versioned_encoder
+struct DescribeLogDirsResponseTopic : VDecoder, VEncoder
 {
     std::string m_topic;
     std::vector<DescribeLogDirsResponsePartition> m_partitions;
@@ -30,7 +30,7 @@ struct DescribeLogDirsResponseTopic : versioned_decoder, versioned_encoder
     int decode(packet_decoder &pd, int16_t version);
 };
 
-struct DescribeLogDirsResponseDirMetadata : versioned_decoder, versioned_encoder
+struct DescribeLogDirsResponseDirMetadata : VDecoder, VEncoder
 {
     KError m_error_code;
     std::string m_path;

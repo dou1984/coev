@@ -5,7 +5,7 @@
 #include <limits>
 #include <coev/coev.h>
 
-int realDecoder::getInt8(int8_t &result)
+int real_decoder::getInt8(int8_t &result)
 {
     if (remaining() < 1)
     {
@@ -18,7 +18,7 @@ int realDecoder::getInt8(int8_t &result)
     return 0;
 }
 
-int realDecoder::getInt16(int16_t &result)
+int real_decoder::getInt16(int16_t &result)
 {
     if (remaining() < 2)
     {
@@ -31,7 +31,7 @@ int realDecoder::getInt16(int16_t &result)
     return 0;
 }
 
-int realDecoder::getInt32(int32_t &result)
+int real_decoder::getInt32(int32_t &result)
 {
     if (remaining() < 4)
     {
@@ -44,7 +44,7 @@ int realDecoder::getInt32(int32_t &result)
     return 0;
 }
 
-int realDecoder::getInt64(int64_t &result)
+int real_decoder::getInt64(int64_t &result)
 {
     if (remaining() < 8)
     {
@@ -70,7 +70,7 @@ static inline int64_t zigzagDecode(uint64_t x)
     return static_cast<int64_t>((x >> 1) ^ -(x & 1));
 }
 
-int realDecoder::getVariant(int64_t &result)
+int real_decoder::getVariant(int64_t &result)
 {
     uint64_t ux = 0;
     int shift = 0;
@@ -103,7 +103,7 @@ int realDecoder::getVariant(int64_t &result)
     return ErrVariantOverflow;
 }
 
-int realDecoder::getUVariant(uint64_t &result)
+int real_decoder::getUVariant(uint64_t &result)
 {
     result = 0;
     int shift = 0;
@@ -135,7 +135,7 @@ int realDecoder::getUVariant(uint64_t &result)
     return ErrUVariantOverflow;
 }
 
-int realDecoder::getFloat64(double &result)
+int real_decoder::getFloat64(double &result)
 {
     if (remaining() < 8)
     {
@@ -156,7 +156,7 @@ int realDecoder::getFloat64(double &result)
     return 0;
 }
 
-int realDecoder::getArrayLength(int32_t &result)
+int real_decoder::getArrayLength(int32_t &result)
 {
     if (isFixed())
     {
@@ -198,7 +198,7 @@ int realDecoder::getArrayLength(int32_t &result)
     return 0;
 }
 
-int realDecoder::getBool(bool &result)
+int real_decoder::getBool(bool &result)
 {
     int8_t b;
     int err = getInt8(b);
@@ -216,7 +216,7 @@ int realDecoder::getBool(bool &result)
     return 0;
 }
 
-int realDecoder::getKError(KError &result)
+int real_decoder::getKError(KError &result)
 {
     int16_t out;
     auto err = getInt16(out);
@@ -224,7 +224,7 @@ int realDecoder::getKError(KError &result)
     return err;
 }
 
-int realDecoder::getDurationMs(std::chrono::milliseconds &out)
+int real_decoder::getDurationMs(std::chrono::milliseconds &out)
 {
     int32_t t;
     int err = getInt32(t);
@@ -237,7 +237,7 @@ int realDecoder::getDurationMs(std::chrono::milliseconds &out)
     return 0;
 }
 
-int realDecoder::getTaggedFieldArray(const taggedFieldDecoders &decoders)
+int real_decoder::getTaggedFieldArray(const taggedFieldDecoders &decoders)
 {
     if (isFixed())
     {
@@ -295,7 +295,7 @@ int realDecoder::getTaggedFieldArray(const taggedFieldDecoders &decoders)
     return 0;
 }
 
-int realDecoder::getEmptyTaggedFieldArray(int32_t &result)
+int real_decoder::getEmptyTaggedFieldArray(int32_t &result)
 {
     if (isFixed())
     {
@@ -341,7 +341,7 @@ int realDecoder::getEmptyTaggedFieldArray(int32_t &result)
     return 0;
 }
 
-int realDecoder::getBytes(std::string &result)
+int real_decoder::getBytes(std::string &result)
 {
     if (isFixed())
     {
@@ -372,7 +372,7 @@ int realDecoder::getBytes(std::string &result)
     return 0;
 }
 
-int realDecoder::getVariantBytes(std::string &result)
+int real_decoder::getVariantBytes(std::string &result)
 {
     int64_t tmp;
     int err = getVariant(tmp);
@@ -388,7 +388,7 @@ int realDecoder::getVariantBytes(std::string &result)
     return getRawBytes(static_cast<int>(tmp), result);
 }
 
-int realDecoder::getStringLength(int &result)
+int real_decoder::getStringLength(int &result)
 {
     if (isFixed())
     {
@@ -441,7 +441,7 @@ int realDecoder::getStringLength(int &result)
     return 0;
 }
 
-int realDecoder::getString(std::string &result)
+int real_decoder::getString(std::string &result)
 {
     if (isFixed())
     {
@@ -472,7 +472,7 @@ int realDecoder::getString(std::string &result)
     return 0;
 }
 
-int realDecoder::getNullableString(std::string &result)
+int real_decoder::getNullableString(std::string &result)
 {
     if (isFixed())
     {
@@ -503,7 +503,7 @@ int realDecoder::getNullableString(std::string &result)
     return 0;
 }
 
-int realDecoder::getInt32Array(std::vector<int32_t> &result)
+int real_decoder::getInt32Array(std::vector<int32_t> &result)
 {
     if (isFixed())
     {
@@ -556,7 +556,7 @@ int realDecoder::getInt32Array(std::vector<int32_t> &result)
     return 0;
 }
 
-int realDecoder::getInt64Array(std::vector<int64_t> &result)
+int real_decoder::getInt64Array(std::vector<int64_t> &result)
 {
     int32_t n;
     int err = getArrayLength(n);
@@ -591,7 +591,7 @@ int realDecoder::getInt64Array(std::vector<int64_t> &result)
     return 0;
 }
 
-int realDecoder::getStringArray(std::vector<std::string> &result)
+int real_decoder::getStringArray(std::vector<std::string> &result)
 {
     if (isFixed())
     {
@@ -648,12 +648,12 @@ int realDecoder::getStringArray(std::vector<std::string> &result)
     return 0;
 }
 
-int realDecoder::remaining()
+int real_decoder::remaining()
 {
     return static_cast<int>(m_raw.size()) - m_offset;
 }
 
-int realDecoder::getSubset(int length, std::shared_ptr<packet_decoder> &out)
+int real_decoder::getSubset(int length, std::shared_ptr<packet_decoder> &out)
 {
     std::string buf;
     int err = getRawBytes(length, buf);
@@ -662,13 +662,13 @@ int realDecoder::getSubset(int length, std::shared_ptr<packet_decoder> &out)
         out = nullptr;
         return err;
     }
-    auto decoder = std::make_shared<realDecoder>();
+    auto decoder = std::make_shared<real_decoder>();
     decoder->m_raw = std::move(buf);
     out = decoder;
     return 0;
 }
 
-int realDecoder::getRawBytes(int length, std::string &result)
+int real_decoder::getRawBytes(int length, std::string &result)
 {
     if (length < 0)
     {
@@ -684,7 +684,7 @@ int realDecoder::getRawBytes(int length, std::string &result)
     return 0;
 }
 
-int realDecoder::peek(int offset, int length, std::shared_ptr<packet_decoder> &result)
+int real_decoder::peek(int offset, int length, std::shared_ptr<packet_decoder> &result)
 {
     if (remaining() < offset + length)
     {
@@ -692,13 +692,13 @@ int realDecoder::peek(int offset, int length, std::shared_ptr<packet_decoder> &r
         return ErrInsufficientData;
     }
     int start = m_offset + offset;
-    auto decoder = std::make_shared<realDecoder>();
+    auto decoder = std::make_shared<real_decoder>();
     decoder->m_raw = std::string_view(m_raw.begin() + start, m_raw.begin() + start + length);
     result = decoder;
     return 0;
 }
 
-int realDecoder::peekInt8(int offset, int8_t &result)
+int real_decoder::peekInt8(int offset, int8_t &result)
 {
     const int byte_len = 1;
     if (m_offset + offset >= m_raw.size())
@@ -710,7 +710,7 @@ int realDecoder::peekInt8(int offset, int8_t &result)
     return 0;
 }
 
-int realDecoder::push(push_decoder &_in)
+int real_decoder::push(push_decoder &_in)
 {
     auto in = &_in;
     in->save_offset(m_offset);
@@ -738,7 +738,7 @@ int realDecoder::push(push_decoder &_in)
     return 0;
 }
 
-int realDecoder::pop()
+int real_decoder::pop()
 {
     auto in = m_stack.back();
     m_stack.pop_back();

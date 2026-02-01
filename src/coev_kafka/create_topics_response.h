@@ -12,7 +12,7 @@
 #include "config_source.h"
 #include "protocol_body.h"
 
-struct CreatableTopicConfigs : versioned_encoder, versioned_decoder
+struct CreatableTopicConfigs : VEncoder, VDecoder
 {
     std::string m_value;
     bool m_read_only;
@@ -23,7 +23,7 @@ struct CreatableTopicConfigs : versioned_encoder, versioned_decoder
     int decode(packet_decoder &pd, int16_t version);
 };
 
-struct CreatableTopicResult : versioned_encoder, versioned_decoder
+struct CreatableTopicResult : VEncoder, VDecoder
 {
     KError m_topic_config_error_code;
     int32_t m_num_partitions;
@@ -34,7 +34,7 @@ struct CreatableTopicResult : versioned_encoder, versioned_decoder
     int decode(packet_decoder &pd, int16_t version);
 };
 
-struct TopicError : versioned_encoder, versioned_decoder
+struct TopicError : VEncoder, VDecoder
 {
     KError m_err;
     std::string m_err_msg;

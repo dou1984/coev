@@ -124,7 +124,7 @@ const std::string emptyBulkZSTDMessageStr(reinterpret_cast<const char *>(emptyBu
 
 TEST(MessageTest, DecodingEmptyMessage)
 {
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = emptyMessageStr;
     decoder.m_offset = 0;
 
@@ -139,7 +139,7 @@ TEST(MessageTest, DecodingEmptyMessage)
 
 TEST(MessageTest, DecodingEmptyV1Message)
 {
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = emptyV1MessageStr;
     decoder.m_offset = 0;
 
@@ -154,7 +154,7 @@ TEST(MessageTest, DecodingEmptyV1Message)
 
 TEST(MessageTest, DecodingEmptyV2Message)
 {
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = emptyV2MessageStr;
     decoder.m_offset = 0;
 
@@ -183,7 +183,7 @@ TEST(MessageTest, DecodingCompressedMessages)
         original.m_timestamp = Timestamp(std::chrono::system_clock::from_time_t(1479847795));
 
         // Encode the message
-        realEncoder encoder;
+        real_encoder encoder;
         // First pass: calculate required size
         prepEncoder prepEnc;
         int prepResult = original.encode(prepEnc);
@@ -197,7 +197,7 @@ TEST(MessageTest, DecodingCompressedMessages)
         ASSERT_EQ(encodeResult, 0) << "Failed to encode message with codec " << toString(codec);
 
         // Decode the encoded message
-        realDecoder decoder;
+        real_decoder decoder;
         decoder.m_raw = encoder.m_raw;
         decoder.m_offset = 0;
 
@@ -234,7 +234,7 @@ TEST(MessageTest, DecodingEmptyCompressedMessages)
         original.m_timestamp = Timestamp(std::chrono::system_clock::from_time_t(1479847795));
 
         // Encode the message
-        realEncoder encoder;
+        real_encoder encoder;
         // First pass: calculate required size
         prepEncoder prepEnc;
         int prepResult = original.encode(prepEnc);
@@ -248,7 +248,7 @@ TEST(MessageTest, DecodingEmptyCompressedMessages)
         ASSERT_EQ(encodeResult, 0) << "Failed to encode empty message with codec " << toString(codec);
 
         // Decode the encoded message
-        realDecoder decoder;
+        real_decoder decoder;
         decoder.m_raw = encoder.m_raw;
         decoder.m_offset = 0;
 
@@ -271,7 +271,7 @@ TEST(MessageTest, EncodingEmptyMessage)
     original.m_version = 0;
     original.m_codec = CompressionCodec::None;
 
-    realEncoder encoder;
+    real_encoder encoder;
     // First pass: calculate required size
     prepEncoder prepEnc;
     int prepResult = original.encode(prepEnc);
@@ -285,7 +285,7 @@ TEST(MessageTest, EncodingEmptyMessage)
     ASSERT_EQ(encodeResult, 0) << "Failed to encode empty message";
 
     // Decode the encoded message
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = encoder.m_raw;
     decoder.m_offset = 0;
 
@@ -308,7 +308,7 @@ TEST(MessageTest, EncodingEmptyGzipMessage)
     original.m_codec = CompressionCodec::GZIP;
     original.m_value = "";
 
-    realEncoder encoder;
+    real_encoder encoder;
     // First pass: calculate required size
     prepEncoder prepEnc;
     int prepResult = original.encode(prepEnc);
@@ -322,7 +322,7 @@ TEST(MessageTest, EncodingEmptyGzipMessage)
     ASSERT_EQ(encodeResult, 0) << "Failed to encode empty gzip message";
 
     // Decode the encoded message
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = encoder.m_raw;
     decoder.m_offset = 0;
 
@@ -346,7 +346,7 @@ TEST(MessageTest, EncodingEmptyLZ4Message)
     original.m_value = "";
     original.m_timestamp = Timestamp(std::chrono::system_clock::from_time_t(1479847795));
 
-    realEncoder encoder;
+    real_encoder encoder;
     // First pass: calculate required size
     prepEncoder prepEnc;
     int prepResult = original.encode(prepEnc);
@@ -360,7 +360,7 @@ TEST(MessageTest, EncodingEmptyLZ4Message)
     ASSERT_EQ(encodeResult, 0) << "Failed to encode empty lz4 message";
 
     // Decode the encoded message
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = encoder.m_raw;
     decoder.m_offset = 0;
 
@@ -384,7 +384,7 @@ TEST(MessageTest, EncodingEmptyZSTDMessage)
     original.m_value = "";
     original.m_timestamp = Timestamp(std::chrono::system_clock::from_time_t(1479847795));
 
-    realEncoder encoder;
+    real_encoder encoder;
     // First pass: calculate required size
     prepEncoder prepEnc;
     int prepResult = original.encode(prepEnc);
@@ -398,7 +398,7 @@ TEST(MessageTest, EncodingEmptyZSTDMessage)
     ASSERT_EQ(encodeResult, 0) << "Failed to encode empty zstd message";
 
     // Decode the encoded message
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = encoder.m_raw;
     decoder.m_offset = 0;
 
@@ -421,7 +421,7 @@ TEST(MessageTest, VersionHandling)
     original.m_codec = CompressionCodec::None;
     original.m_value = "test version message";
 
-    realEncoder encoder;
+    real_encoder encoder;
     // First pass: calculate required size
     prepEncoder prepEnc;
     int prepResult = original.encode(prepEnc);
@@ -435,7 +435,7 @@ TEST(MessageTest, VersionHandling)
     ASSERT_EQ(encodeResult, 0) << "Failed to encode version 1 message";
 
     // Decode the encoded message
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = encoder.m_raw;
     decoder.m_offset = 0;
 

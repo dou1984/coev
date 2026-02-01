@@ -14,24 +14,16 @@ struct AccessTokenProvider
 struct ProxyDialer : std::enable_shared_from_this<ProxyDialer>
 {
     std::chrono::milliseconds m_timeout;
-    std::chrono::milliseconds KeepAlive;
-    sockaddr_in LocalAddr;
+    std::chrono::milliseconds m_keepalive;
+    sockaddr_in m_local_addr;
     ProxyDialer(std::chrono::milliseconds timeout, std::chrono::milliseconds keepAlive, const sockaddr_in &localAddr)
-        : m_timeout(timeout), KeepAlive(keepAlive), LocalAddr(localAddr)
+        : m_timeout(timeout), m_keepalive(keepAlive), m_local_addr(localAddr)
     {
     }
     std::shared_ptr<Client> Dial(const std::string &, const std::string &)
     {
         return {nullptr};
     }
-};
-
-struct Timer
-{
-};
-
-struct none
-{
 };
 
 struct Ticket

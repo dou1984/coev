@@ -13,7 +13,7 @@ struct Broker;
 
 inline constexpr const int32_t MaxRequestSize = 100 * 1024 * 1024;
 
-struct Request : versioned_encoder, IEncoder, IDecoder
+struct Request : VEncoder, IEncoder, IDecoder
 {
     int32_t m_correlation_id = 0;
     std::string m_client_id;

@@ -190,7 +190,7 @@ int Request::decode(packet_decoder &pd)
             return err;
     }
 
-    return prepareFlexibleDecoder(pd, *const_cast<protocol_body *>(m_body), version);
+    return prepare_flexible_decoder(pd, *const_cast<protocol_body *>(m_body), version);
 }
 
 bool Request::is_flexible() const

@@ -28,7 +28,7 @@ int ResponseHeader::decode(packet_decoder &pd, int16_t version)
 {
     if (version >= 1)
     {
-        auto decoder = static_cast<realDecoder *>(&pd);
+        auto decoder = static_cast<real_decoder *>(&pd);
         if (decoder != nullptr)
         {
             decoder->pushFlexible();

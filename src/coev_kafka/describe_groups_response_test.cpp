@@ -37,7 +37,7 @@ TEST(DescribeGroupsResponseTest, EncodeEmptyResponse)
     DescribeGroupsResponse response;
     response.set_version(0);
 
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     EXPECT_EQ(response.encode(encoder), ErrNoError);
 }
 
@@ -55,7 +55,7 @@ TEST(DescribeGroupsResponseTest, EncodeWithGroups)
     group->m_protocol = "range";
     response.m_groups.push_back(group);
 
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     EXPECT_EQ(response.encode(encoder), ErrNoError);
 }
 
@@ -75,6 +75,6 @@ TEST(DescribeGroupsResponseTest, EncodeWithVersionSpecificFields)
     group->m_authorized_operations = 0x0f; // All operations
     response.m_groups.push_back(group);
 
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     EXPECT_EQ(response.encode(encoder), ErrNoError);
 }

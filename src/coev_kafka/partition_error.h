@@ -4,7 +4,7 @@
 #include "packet_decoder.h"
 #include "packet_encoder.h"
 
-struct PartitionError : IEncoder, versioned_decoder
+struct PartitionError : IEncoder, VDecoder
 {
     int32_t m_partition;
     KError m_err;

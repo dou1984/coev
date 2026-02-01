@@ -112,7 +112,7 @@ int8_t GetHeaderLength(int16_t header_version);
 
 struct GSSAPIKerberosAuth;
 
-struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_this<Broker>
+struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
 {
     Broker();
     Broker(const std::string &addr);
@@ -122,6 +122,9 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
     bool Connected();
     int Close();
     int TLSConnectionState();
+    std::string Addr();
+    std::string Rack();
+    int32_t ID();
 
     coev::awaitable<int> Open(std::shared_ptr<Config> conf);
     coev::awaitable<int> GetMetadata(std::shared_ptr<MetadataRequest> request, ResponsePromise<MetadataResponse> &response);
@@ -167,10 +170,6 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
 
     int decode(packet_decoder &pd, int16_t version);
     int encode(packet_encoder &pe, int16_t version) const;
-
-    std::string Addr();
-    std::string Rack();
-    int32_t ID();
 
     int32_t m_id;
     std::string m_rack;
@@ -239,7 +238,7 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
     template <class Req, class Res>
     coev::awaitable<int> SendInternal(std::shared_ptr<Req> request, ResponsePromise<Res> &promise)
     {
-        RestrictApiVersion(*request, m_broker_api_versions);
+        RestrictApiVersion(request, m_broker_api_versions);
         Request _request;
         _request.m_correlation_id = m_correlation_id;
         _request.m_client_id = m_conf->ClientID;
@@ -273,7 +272,7 @@ struct Broker : versioned_encoder, versioned_decoder, std::enable_shared_from_th
             co_return err;
         }
         ResponseHeader decoded_header;
-        err = versionedDecode(header, decoded_header, promise.m_response->header_version());
+        err = versioned_decode(header, decoded_header, promise.m_response->header_version());
         if (err)
         {
             co_return err;

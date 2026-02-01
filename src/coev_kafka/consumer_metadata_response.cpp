@@ -17,15 +17,15 @@ void ConsumerMetadataResponse::set_version(int16_t v)
 
 int ConsumerMetadataResponse::decode(packet_decoder &pd, int16_t version)
 {
-    auto tmp = std::make_shared<FindCoordinatorResponse>();
+    auto response = std::make_shared<FindCoordinatorResponse>();
 
-    if (int err = tmp->decode(pd, version); err != 0)
+    if (int err = response->decode(pd, version); err != 0)
     {
         return err;
     }
 
-    m_err = tmp->m_err;
-    m_coordinator = tmp->m_coordinator;
+    m_err = response->m_err;
+    m_coordinator = response->m_coordinator;
 
     if (m_coordinator == nullptr)
     {

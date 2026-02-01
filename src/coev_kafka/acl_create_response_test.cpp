@@ -28,7 +28,7 @@ const unsigned char createResponseArray[] = {
 
 TEST(CreateAclsResponseTest, DecodeWithError)
 {
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = std::string(reinterpret_cast<const char *>(createResponseWithError), sizeof(createResponseWithError));
     decoder.m_offset = 0;
 
@@ -45,7 +45,7 @@ TEST(CreateAclsResponseTest, DecodeWithError)
 
 TEST(CreateAclsResponseTest, DecodeResponseArray)
 {
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = std::string(reinterpret_cast<const char *>(createResponseArray), sizeof(createResponseArray));
     decoder.m_offset = 0;
 
@@ -77,7 +77,7 @@ TEST(CreateAclsResponseTest, EncodeWithError)
     aclResp->m_err_msg = "error";
     response.m_acl_creation_responses.push_back(aclResp);
 
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     int result = response.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode create acls response with error";
 
@@ -103,7 +103,7 @@ TEST(CreateAclsResponseTest, EncodeResponseArray)
     aclResp2->m_err = KError::ErrNoError;
     response.m_acl_creation_responses.push_back(aclResp2);
 
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     int result = response.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode create acls response array";
 
@@ -161,12 +161,12 @@ TEST(CreateAclsResponseTest, RoundTripEncodingDecoding)
     originalResponse.m_acl_creation_responses.push_back(aclResp3);
 
     // Encode the response
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     int result = originalResponse.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode response for round-trip test";
 
     // Decode the response
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
     decoder.m_offset = 0;
 

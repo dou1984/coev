@@ -544,8 +544,8 @@ void FetchResponse::add_control_record_with_timestamp(const std::string &topic, 
 
     auto crAbort = std::make_shared<ControlRecord>(0, producerID, recordType);
 
-    realEncoder crKey;
-    realEncoder crValue;
+    real_encoder crKey;
+    real_encoder crValue;
     crAbort->encode(crKey, crValue);
 
     auto rec = std::make_shared<Record>(crKey.m_raw, crValue.m_raw, 0, std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - batch->m_first_timestamp));

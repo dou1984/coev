@@ -74,7 +74,7 @@ int Records::encode(packet_encoder &pe) const
 int Records::set_type_from_magic(packet_decoder &pd)
 {
     int8_t magic;
-    int err = magicValue(pd, magic);
+    int err = magic_value(pd, magic);
     if (err != 0)
     {
         return err;
@@ -259,10 +259,10 @@ int Records::get_control_record(ControlRecord &out) const
     }
 
     auto &firstRecord = m_record_batch->m_records[0];
-    realDecoder keyDecoder;
+    real_decoder keyDecoder;
     keyDecoder.m_raw = firstRecord->m_key;
 
-    realDecoder valueDecoder;
+    real_decoder valueDecoder;
     valueDecoder.m_raw = firstRecord->m_value;
 
     int err = out.decode(keyDecoder, valueDecoder);

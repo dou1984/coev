@@ -28,11 +28,11 @@ const std::string unknownCtrlRecValue = ""; // empty value for unknown record
 TEST(ControlRecordTest, DecodingControlRecords)
 {
     // Test abort transaction control record
-    realDecoder keyDecoder;
+    real_decoder keyDecoder;
     keyDecoder.m_raw = abortTxCtrlRecKey;
     keyDecoder.m_offset = 0;
 
-    realDecoder valueDecoder;
+    real_decoder valueDecoder;
     valueDecoder.m_raw = abortTxCtrlRecValue;
     valueDecoder.m_offset = 0;
 
@@ -80,8 +80,8 @@ TEST(ControlRecordTest, EncodingControlRecords)
     ASSERT_EQ(prepResult, 0) << "Failed to prepare abort control record";
 
     // Resize buffers to required size
-    realEncoder keyEncoder;
-    realEncoder valueEncoder;
+    real_encoder keyEncoder;
+    real_encoder valueEncoder;
     keyEncoder.m_raw.resize(keyPrepEnc.offset());
     valueEncoder.m_raw.resize(valuePrepEnc.offset());
 
@@ -156,8 +156,8 @@ TEST(ControlRecordTest, VersionHandling)
     ASSERT_EQ(prepResult, 0) << "Failed to prepare control record with version 1";
 
     // Resize buffers to required size
-    realEncoder keyEncoder;
-    realEncoder valueEncoder;
+    real_encoder keyEncoder;
+    real_encoder valueEncoder;
     keyEncoder.m_raw.resize(keyPrepEnc.offset());
     valueEncoder.m_raw.resize(valuePrepEnc.offset());
 
@@ -166,11 +166,11 @@ TEST(ControlRecordTest, VersionHandling)
     ASSERT_EQ(encodeResult, 0) << "Failed to encode control record with version 1";
 
     // Decode the encoded record to verify version is preserved
-    realDecoder keyDecoder;
+    real_decoder keyDecoder;
     keyDecoder.m_raw = keyEncoder.m_raw;
     keyDecoder.m_offset = 0;
 
-    realDecoder valueDecoder;
+    real_decoder valueDecoder;
     valueDecoder.m_raw = valueEncoder.m_raw;
     valueDecoder.m_offset = 0;
 

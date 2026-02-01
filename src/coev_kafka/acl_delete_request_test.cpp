@@ -70,7 +70,7 @@ const unsigned char aclDeleteRequestv1[] = {
 };
 
 TEST(DeleteAclsRequestTest, DecodeRequestNulls) {
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = std::string(reinterpret_cast<const char*>(aclDeleteRequestNulls), sizeof(aclDeleteRequestNulls));
     decoder.m_offset = 0;
     
@@ -89,7 +89,7 @@ TEST(DeleteAclsRequestTest, DecodeRequestNulls) {
 }
 
 TEST(DeleteAclsRequestTest, DecodeRequest) {
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = std::string(reinterpret_cast<const char*>(aclDeleteRequest), sizeof(aclDeleteRequest));
     decoder.m_offset = 0;
     
@@ -108,7 +108,7 @@ TEST(DeleteAclsRequestTest, DecodeRequest) {
 }
 
 TEST(DeleteAclsRequestTest, DecodeRequestArray) {
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = std::string(reinterpret_cast<const char*>(aclDeleteRequestArray), sizeof(aclDeleteRequestArray));
     decoder.m_offset = 0;
     
@@ -137,7 +137,7 @@ TEST(DeleteAclsRequestTest, DecodeRequestArray) {
 }
 
 TEST(DeleteAclsRequestTest, DecodeRequestNullsv1) {
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = std::string(reinterpret_cast<const char*>(aclDeleteRequestNullsv1), sizeof(aclDeleteRequestNullsv1));
     decoder.m_offset = 0;
     
@@ -157,7 +157,7 @@ TEST(DeleteAclsRequestTest, DecodeRequestNullsv1) {
 }
 
 TEST(DeleteAclsRequestTest, DecodeRequestv1) {
-    realDecoder decoder;
+    real_decoder decoder;
     decoder.m_raw = std::string(reinterpret_cast<const char*>(aclDeleteRequestv1), sizeof(aclDeleteRequestv1));
     decoder.m_offset = 0;
     
@@ -186,7 +186,7 @@ TEST(DeleteAclsRequestTest, EncodeRequestNulls) {
     filter->m_permission_type = AclPermissionTypeAllow;
     request.m_filters.push_back(filter);
     
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     int result = request.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode delete acls request with nulls";
     
@@ -208,7 +208,7 @@ TEST(DeleteAclsRequestTest, EncodeRequest) {
     filter->m_permission_type = AclPermissionTypeAllow;
     request.m_filters.push_back(filter);
     
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     int result = request.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode delete acls request";
     
@@ -239,7 +239,7 @@ TEST(DeleteAclsRequestTest, EncodeRequestArray) {
     filter2->m_permission_type = AclPermissionTypeDeny;
     request.m_filters.push_back(filter2);
     
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     int result = request.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode delete acls request array";
     
@@ -259,7 +259,7 @@ TEST(DeleteAclsRequestTest, EncodeRequestNullsv1) {
     filter->m_permission_type = AclPermissionTypeAllow;
     request.m_filters.push_back(filter);
     
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     int result = request.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode delete acls request nulls (version 1)";
     
@@ -282,7 +282,7 @@ TEST(DeleteAclsRequestTest, EncodeRequestv1) {
     filter->m_permission_type = AclPermissionTypeAllow;
     request.m_filters.push_back(filter);
     
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     int result = request.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode delete acls request (version 1)";
     
@@ -343,12 +343,12 @@ TEST(DeleteAclsRequestTest, RoundTripEncodingDecoding) {
         originalRequest.m_filters.push_back(filter2);
         
         // Encode the request
-        realEncoder encoder(1024);
+        real_encoder encoder(1024);
         int result = originalRequest.encode(encoder);
         ASSERT_EQ(result, 0) << "Failed to encode request for round-trip test, version: " << version;
         
         // Decode the encoded request
-        realDecoder decoder;
+        real_decoder decoder;
         decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
         decoder.m_offset = 0;
         

@@ -10,7 +10,7 @@
 #include "version.h"
 #include "protocol_body.h"
 
-struct OffsetCommitRequestBlock : versioned_decoder, versioned_encoder
+struct OffsetCommitRequestBlock : VDecoder, VEncoder
 {
     int64_t m_offset;
     int64_t m_timestamp;

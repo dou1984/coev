@@ -15,7 +15,7 @@
 
 struct Broker;
 
-struct PartitionMetadata : versioned_decoder, versioned_encoder
+struct PartitionMetadata : VDecoder, VEncoder
 {
     mutable int16_t m_version;
     KError m_err;
@@ -34,7 +34,7 @@ struct PartitionMetadata : versioned_decoder, versioned_encoder
     int encode(packet_encoder &pe, int16_t version) const;
 };
 
-struct TopicMetadata : versioned_decoder, versioned_encoder
+struct TopicMetadata : VDecoder, VEncoder
 {
     mutable int16_t m_version;
     KError m_err;

@@ -9,14 +9,14 @@
 #include "encoder_decoder.h"
 #include "packet_encoder.h"
 
-struct realEncoder : packet_encoder
+struct real_encoder : packet_encoder
 {
 
     std::string m_raw;
     size_t m_offset = 0;
     std::vector<push_encoder *> m_stack;
-    realEncoder() = default;
-    realEncoder(size_t capacity)
+    real_encoder() = default;
+    real_encoder(size_t capacity)
     {
         m_raw.resize(capacity);
     }

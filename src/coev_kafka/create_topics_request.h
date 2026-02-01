@@ -10,7 +10,7 @@
 #include "packet_decoder.h"
 #include "protocol_body.h"
 
-struct TopicDetail : IEncoder, versioned_decoder
+struct TopicDetail : IEncoder, VDecoder
 {
     int32_t m_num_partitions;
     int16_t m_replication_factor;

@@ -15,7 +15,7 @@
 #include "describe_groups_response.h"
 #include "protocol_body.h"
 
-struct GroupMemberDescription : versioned_encoder, versioned_decoder
+struct GroupMemberDescription : VEncoder, VDecoder
 {
 
     mutable int16_t m_version;
@@ -32,7 +32,7 @@ struct GroupMemberDescription : versioned_encoder, versioned_decoder
     std::shared_ptr<ConsumerGroupMemberMetadata> get_member_metadata();
 };
 
-struct GroupDescription : versioned_encoder, versioned_decoder
+struct GroupDescription : VEncoder, VDecoder
 {
     mutable int16_t m_version;
     KError m_error_code;

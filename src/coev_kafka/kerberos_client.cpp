@@ -22,7 +22,7 @@ std::shared_ptr<KerberosClient> NewKerberosClient(const std::shared_ptr<GSSAPICo
     return {nullptr};
 }
 
-std::shared_ptr<KerberosClient> createClient(const std::shared_ptr<GSSAPIConfig> &config, void *cfg)
+std::shared_ptr<KerberosClient> CreateClient(const std::shared_ptr<GSSAPIConfig> &config, void *cfg)
 {
     // Stub implementation — actual logic depends on Go runtime or native Kerberos library.
     throw std::runtime_error("createClient not implemented in C++");

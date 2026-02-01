@@ -13,7 +13,7 @@
 #include "version.h"
 #include "consumer_group_members.h"
 
-struct SyncGroupRequestAssignment : versioned_decoder, versioned_encoder
+struct SyncGroupRequestAssignment : VDecoder, VEncoder
 {
     std::string m_member_id;
     std::string m_assignment;

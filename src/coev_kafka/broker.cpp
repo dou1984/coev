@@ -805,7 +805,7 @@ coev::awaitable<int> Broker::SendAndReceiveSASLHandshake(const std::string &sasl
     }
 
     SaslHandshakeResponse res;
-    err = versionedDecode(payload, res, 0);
+    err = versioned_decode(payload, res, 0);
     if (err)
     {
         co_return err;

@@ -12,7 +12,7 @@
 #include "errors.h"
 #include "protocol_body.h"
 
-struct PartitionResult : versioned_decoder, versioned_encoder
+struct PartitionResult : VDecoder, VEncoder
 {
     KError m_error_code;
     std::string m_error_message;

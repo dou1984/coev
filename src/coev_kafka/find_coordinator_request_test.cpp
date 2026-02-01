@@ -35,7 +35,7 @@ TEST(FindCoordinatorRequestTest, EncodeWithVersion0) {
     request.set_version(0);
     request.m_coordinator_key = "test-group";
     
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     EXPECT_EQ(request.encode(encoder), 0);
 }
 
@@ -45,7 +45,7 @@ TEST(FindCoordinatorRequestTest, EncodeWithVersion1) {
     request.m_coordinator_key = "test-group";
     request.m_coordinator_type = CoordinatorGroup;
     
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     EXPECT_EQ(request.encode(encoder), 0);
 }
 
@@ -55,6 +55,6 @@ TEST(FindCoordinatorRequestTest, EncodeWithVersion2) {
     request.m_coordinator_key = "test-group";
     request.m_coordinator_type = CoordinatorGroup;
     
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     EXPECT_EQ(request.encode(encoder), 0);
 }

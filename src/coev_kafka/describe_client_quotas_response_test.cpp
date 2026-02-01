@@ -37,7 +37,7 @@ TEST(DescribeClientQuotasResponseTest, EncodeEmptyResponse)
     DescribeClientQuotasResponse response;
     response.set_version(0);
 
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     EXPECT_EQ(response.encode(encoder), ErrNoError);
 }
 
@@ -48,7 +48,7 @@ TEST(DescribeClientQuotasResponseTest, EncodeWithThrottleTime)
     response.m_throttle_time = std::chrono::milliseconds(100);
     response.m_error_code = ErrNoError;
 
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     EXPECT_EQ(response.encode(encoder), ErrNoError);
 }
 
@@ -60,6 +60,6 @@ TEST(DescribeClientQuotasResponseTest, EncodeWithError)
     response.m_error_code = ErrInvalidRequest;
     response.m_error_msg = "Invalid request";
 
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     EXPECT_EQ(response.encode(encoder), ErrNoError);
 }

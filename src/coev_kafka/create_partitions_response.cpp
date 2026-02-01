@@ -15,13 +15,13 @@ int CreatePartitionsResponse::encode(packet_encoder &pe) const
         return ErrEncodeError;
     }
 
-    for (auto &pair : m_topic_partition_errors)
+    for (auto &[topic, perr] : m_topic_partition_errors)
     {
-        if (pe.putString(pair.first) != ErrNoError)
+        if (pe.putString(topic) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        if (pair.second->encode(pe) != ErrNoError)
+        if (perr->encode(pe) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -100,9 +100,9 @@ std::chrono::milliseconds CreatePartitionsResponse::throttle_time() const
     return m_throttle_time;
 }
 
-std::string TopicPartitionError::Error() const
+std::string TopicPartitionError::error() const
 {
-    std::string text = ""; // In real code, this would map KError to string
+    std::string text = "";
     if (!m_err_msg.empty())
     {
         text += " - " + m_err_msg;

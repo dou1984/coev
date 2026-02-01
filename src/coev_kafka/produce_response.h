@@ -13,7 +13,7 @@
 #include "errors.h"
 #include "protocol_body.h"
 
-struct ProduceResponseBlock : versioned_encoder, versioned_decoder
+struct ProduceResponseBlock : VEncoder, VDecoder
 {
     KError m_err;
     int64_t m_offset = 0;

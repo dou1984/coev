@@ -16,7 +16,7 @@ int decode(const std::string &buf, std::vector<std::shared_ptr<Record>> &inputs)
         return ErrNoError;
     }
 
-    realDecoder helper;
+    real_decoder helper;
     helper.m_raw = buf;
 
     for (auto &in : inputs)

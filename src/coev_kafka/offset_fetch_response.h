@@ -14,7 +14,7 @@
 #include "protocol_body.h"
 #include <map>
 
-struct OffsetFetchResponseBlock : versioned_encoder, versioned_decoder
+struct OffsetFetchResponseBlock : VEncoder, VDecoder
 {
     int64_t m_offset;
     int32_t m_leader_epoch;

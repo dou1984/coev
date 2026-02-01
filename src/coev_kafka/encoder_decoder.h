@@ -47,13 +47,13 @@ struct IEncoder
     virtual int encode(packet_encoder &pe) const = 0;
 };
 
-struct header_encoder : IEncoder
+struct HEncoder : IEncoder
 {
     virtual int16_t header_version() const = 0;
 };
-struct versioned_encoder
+struct VEncoder
 {
-    virtual ~versioned_encoder() = default;
+    virtual ~VEncoder() = default;
     virtual int encode(packet_encoder &pe, int16_t version) const = 0;
 };
 
@@ -63,17 +63,17 @@ struct IDecoder
     virtual int decode(packet_decoder &pd) = 0;
 };
 
-struct versioned_decoder
+struct VDecoder
 {
-    virtual ~versioned_decoder() = default;
+    virtual ~VDecoder() = default;
     virtual int decode(packet_decoder &pd, int16_t version) = 0;
 };
 
 int encode(IEncoder &e, std::string &out);
 int decode(const std::string &buf, IDecoder &in);
-int versionedDecode(const std::string &buf, versioned_decoder &in, int16_t version);
-int magicValue(packet_decoder &pd, int8_t &magic);
+int versioned_decode(const std::string &buf, VDecoder &in, int16_t version);
+int magic_value(packet_decoder &pd, int8_t &magic);
 
-int prepareFlexibleDecoder(packet_decoder &pd, versioned_decoder &req, int16_t version);
-int prepareFlexibleEncoder(packet_encoder &pe, IEncoder &req);
-std::shared_ptr<packet_decoder> downgradeFlexibleDecoder(std::shared_ptr<packet_decoder> pd);
+int prepare_flexible_decoder(packet_decoder &pd, VDecoder &req, int16_t version);
+int prepare_flexible_encoder(packet_encoder &pe, IEncoder &req);
+std::shared_ptr<packet_decoder> downgrade_flexible_decoder(std::shared_ptr<packet_decoder> pd);

@@ -36,7 +36,7 @@ TEST(DescribeConfigsRequestTest, EncodeEmptyRequest)
 {
     DescribeConfigsRequest request(0);
 
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     EXPECT_EQ(request.encode(encoder), ErrNoError);
 }
 
@@ -51,7 +51,7 @@ TEST(DescribeConfigsRequestTest, EncodeWithResources)
     resource->m_config_names = {"retention.ms", "cleanup.policy"};
     request.m_resources.push_back(resource);
 
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     EXPECT_EQ(request.encode(encoder), ErrNoError);
 }
 
@@ -67,6 +67,6 @@ TEST(DescribeConfigsRequestTest, EncodeWithIncludeSynonyms)
     resource->m_name = "test-topic";
     request.m_resources.push_back(resource);
 
-    realEncoder encoder(1024);
+    real_encoder encoder(1024);
     EXPECT_EQ(request.encode(encoder), ErrNoError);
 }

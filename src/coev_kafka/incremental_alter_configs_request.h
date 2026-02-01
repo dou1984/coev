@@ -14,7 +14,7 @@
 #include "protocol_body.h"
 #include "incremental_alter_configs_operation.h"
 
-struct IncrementalAlterConfigsEntry : IEncoder, versioned_decoder
+struct IncrementalAlterConfigsEntry : IEncoder, VDecoder
 {
     IncrementalAlterConfigsOperation m_operation;
     std::string m_value;
@@ -23,7 +23,7 @@ struct IncrementalAlterConfigsEntry : IEncoder, versioned_decoder
     int decode(packet_decoder &pd, int16_t version);
 };
 
-struct IncrementalAlterConfigsResource : IEncoder, versioned_decoder
+struct IncrementalAlterConfigsResource : IEncoder, VDecoder
 {
     ConfigResourceType m_type;
     std::string m_name;
