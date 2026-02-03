@@ -12,23 +12,20 @@ namespace coev::crc32
     {
         IEEE = 0xedb88320,
         Castagnoli = 0x82f63b78,
-        Koopman = 0xeb31d82e
+        Koopman = 0xeb31d82e,
+
     };
 
-    struct Table
-    {
-        uint32_t data[256];
-    };
-    using TablePtr = std::shared_ptr<Table>;
+    using Handle = uint32_t *;
     struct Digest
     {
         uint32_t crc;
-        TablePtr tab;
+        Handle hdl;
     };
 
     struct CRC32 : Hash32
     {
-        CRC32(const TablePtr &table);
+        CRC32(Handle handle);
         CRC32(Polynomial poly);
         void Reset();
         void Update(const char *data, size_t length);
@@ -37,22 +34,18 @@ namespace coev::crc32
         size_t Size() const { return kSize; }
         size_t BlockSize() const { return 1; }
         std::string MarshalBinary() const;
-
         bool UnmarshalBinary(const std::string &b);
         std::shared_ptr<Hash32> Clone() const;
         Digest GetDigest() const;
 
-        Digest digest_;
+        Digest m_digest;
     };
 
-    TablePtr MakeTable(Polynomial poly);
+    uint32_t Update(uint32_t crc, const char *data, size_t length, Handle tab);
 
-    uint32_t Update(uint32_t crc, const TablePtr &tab, const char *data, size_t length);
-
-    uint32_t Checksum(const char *data, size_t length, const TablePtr &tab);
+    uint32_t Checksum(const char *data, size_t length, Handle tab);
     uint32_t ChecksumIEEE(const char *data, size_t length);
 
-    std::shared_ptr<Hash32> New(const TablePtr &tab);
     std::shared_ptr<Hash32> NewIEEE();
 
     void BEAppendUint32(std::string &str, uint32_t value);

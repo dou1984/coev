@@ -187,14 +187,14 @@ TEST(MessageTest, DecodingCompressedMessages)
         // First pass: calculate required size
         prepEncoder prepEnc;
         int prepResult = original.encode(prepEnc);
-        ASSERT_EQ(prepResult, 0) << "Failed to prepare message with codec " << toString(codec);
+        ASSERT_EQ(prepResult, 0) << "Failed to prepare message with codec " << ToString(codec);
 
         // Resize buffer to required size
         encoder.m_raw.resize(prepEnc.offset());
 
         // Second pass: actual encoding
         int encodeResult = original.encode(encoder);
-        ASSERT_EQ(encodeResult, 0) << "Failed to encode message with codec " << toString(codec);
+        ASSERT_EQ(encodeResult, 0) << "Failed to encode message with codec " << ToString(codec);
 
         // Decode the encoded message
         real_decoder decoder;
@@ -203,14 +203,14 @@ TEST(MessageTest, DecodingCompressedMessages)
 
         Message decoded;
         int decodeResult = decoded.decode(decoder);
-        ASSERT_EQ(decodeResult, 0) << "Failed to decode message with codec " << toString(codec);
+        ASSERT_EQ(decodeResult, 0) << "Failed to decode message with codec " << ToString(codec);
 
         // Verify the decoded message matches the original
-        EXPECT_EQ(decoded.m_version, original.m_version) << "Version mismatch for codec " << toString(codec);
-        EXPECT_EQ(decoded.m_codec, original.m_codec) << "Compression codec mismatch for codec " << toString(codec);
-        EXPECT_EQ(decoded.m_key, original.m_key) << "Key mismatch for codec " << toString(codec);
+        EXPECT_EQ(decoded.m_version, original.m_version) << "Version mismatch for codec " << ToString(codec);
+        EXPECT_EQ(decoded.m_codec, original.m_codec) << "Compression codec mismatch for codec " << ToString(codec);
+        EXPECT_EQ(decoded.m_key, original.m_key) << "Key mismatch for codec " << ToString(codec);
         // For compressed messages, the value should be decompressed back to original
-        EXPECT_EQ(decoded.m_value, original.m_value) << "Value mismatch for codec " << toString(codec);
+        EXPECT_EQ(decoded.m_value, original.m_value) << "Value mismatch for codec " << ToString(codec);
     }
 }
 
@@ -238,14 +238,14 @@ TEST(MessageTest, DecodingEmptyCompressedMessages)
         // First pass: calculate required size
         prepEncoder prepEnc;
         int prepResult = original.encode(prepEnc);
-        ASSERT_EQ(prepResult, 0) << "Failed to prepare empty message with codec " << toString(codec);
+        ASSERT_EQ(prepResult, 0) << "Failed to prepare empty message with codec " << ToString(codec);
 
         // Resize buffer to required size
         encoder.m_raw.resize(prepEnc.offset());
 
         // Second pass: actual encoding
         int encodeResult = original.encode(encoder);
-        ASSERT_EQ(encodeResult, 0) << "Failed to encode empty message with codec " << toString(codec);
+        ASSERT_EQ(encodeResult, 0) << "Failed to encode empty message with codec " << ToString(codec);
 
         // Decode the encoded message
         real_decoder decoder;
@@ -254,13 +254,13 @@ TEST(MessageTest, DecodingEmptyCompressedMessages)
 
         Message decoded;
         int decodeResult = decoded.decode(decoder);
-        ASSERT_EQ(decodeResult, 0) << "Failed to decode empty message with codec " << toString(codec);
+        ASSERT_EQ(decodeResult, 0) << "Failed to decode empty message with codec " << ToString(codec);
 
         // Verify the decoded message matches the original
-        EXPECT_EQ(decoded.m_version, original.m_version) << "Version mismatch for empty message with codec " << toString(codec);
-        EXPECT_EQ(decoded.m_codec, original.m_codec) << "Compression codec mismatch for empty message with codec " << toString(codec);
-        EXPECT_EQ(decoded.m_key, original.m_key) << "Key mismatch for empty message with codec " << toString(codec);
-        EXPECT_EQ(decoded.m_value, original.m_value) << "Value mismatch for empty message with codec " << toString(codec);
+        EXPECT_EQ(decoded.m_version, original.m_version) << "Version mismatch for empty message with codec " << ToString(codec);
+        EXPECT_EQ(decoded.m_codec, original.m_codec) << "Compression codec mismatch for empty message with codec " << ToString(codec);
+        EXPECT_EQ(decoded.m_key, original.m_key) << "Key mismatch for empty message with codec " << ToString(codec);
+        EXPECT_EQ(decoded.m_value, original.m_value) << "Value mismatch for empty message with codec " << ToString(codec);
     }
 }
 
@@ -451,29 +451,29 @@ TEST(MessageTest, CompressionCodecFromString)
 {
     CompressionCodec codec;
 
-    EXPECT_TRUE(fromString("none", codec)) << "Should parse 'none' as CompressionCodec::None";
+    EXPECT_TRUE(FromString("none", codec)) << "Should parse 'none' as CompressionCodec::None";
     EXPECT_EQ(codec, CompressionCodec::None) << "'none' should map to CompressionCodec::None";
 
-    EXPECT_TRUE(fromString("gzip", codec)) << "Should parse 'gzip' as CompressionCodec::GZIP";
+    EXPECT_TRUE(FromString("gzip", codec)) << "Should parse 'gzip' as CompressionCodec::GZIP";
     EXPECT_EQ(codec, CompressionCodec::GZIP) << "'gzip' should map to CompressionCodec::GZIP";
 
-    EXPECT_TRUE(fromString("snappy", codec)) << "Should parse 'snappy' as CompressionCodec::Snappy";
+    EXPECT_TRUE(FromString("snappy", codec)) << "Should parse 'snappy' as CompressionCodec::Snappy";
     EXPECT_EQ(codec, CompressionCodec::Snappy) << "'snappy' should map to CompressionCodec::Snappy";
 
-    EXPECT_TRUE(fromString("lz4", codec)) << "Should parse 'lz4' as CompressionCodec::LZ4";
+    EXPECT_TRUE(FromString("lz4", codec)) << "Should parse 'lz4' as CompressionCodec::LZ4";
     EXPECT_EQ(codec, CompressionCodec::LZ4) << "'lz4' should map to CompressionCodec::LZ4";
 
-    EXPECT_TRUE(fromString("zstd", codec)) << "Should parse 'zstd' as CompressionCodec::ZSTD";
+    EXPECT_TRUE(FromString("zstd", codec)) << "Should parse 'zstd' as CompressionCodec::ZSTD";
     EXPECT_EQ(codec, CompressionCodec::ZSTD) << "'zstd' should map to CompressionCodec::ZSTD";
 
-    EXPECT_FALSE(fromString("unknown", codec)) << "Should not parse 'unknown'";
+    EXPECT_FALSE(FromString("unknown", codec)) << "Should not parse 'unknown'";
 }
 
 TEST(MessageTest, CompressionCodecToString)
 {
-    EXPECT_EQ(toString(CompressionCodec::None), "none") << "CompressionCodec::None should be 'none'";
-    EXPECT_EQ(toString(CompressionCodec::GZIP), "gzip") << "CompressionCodec::GZIP should be 'gzip'";
-    EXPECT_EQ(toString(CompressionCodec::Snappy), "snappy") << "CompressionCodec::Snappy should be 'snappy'";
-    EXPECT_EQ(toString(CompressionCodec::LZ4), "lz4") << "CompressionCodec::LZ4 should be 'lz4'";
-    EXPECT_EQ(toString(CompressionCodec::ZSTD), "zstd") << "CompressionCodec::ZSTD should be 'zstd'";
+    EXPECT_EQ(ToString(CompressionCodec::None), "none") << "CompressionCodec::None should be 'none'";
+    EXPECT_EQ(ToString(CompressionCodec::GZIP), "gzip") << "CompressionCodec::GZIP should be 'gzip'";
+    EXPECT_EQ(ToString(CompressionCodec::Snappy), "snappy") << "CompressionCodec::Snappy should be 'snappy'";
+    EXPECT_EQ(ToString(CompressionCodec::LZ4), "lz4") << "CompressionCodec::LZ4 should be 'lz4'";
+    EXPECT_EQ(ToString(CompressionCodec::ZSTD), "zstd") << "CompressionCodec::ZSTD should be 'zstd'";
 }

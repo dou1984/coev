@@ -62,7 +62,8 @@ namespace coev
                 return m_fd;
             }
         }
-        return __close();
+        __close();
+        return m_fd;
     }
     int io_connect::__connect(int fd, const char *ip, int port)
     {

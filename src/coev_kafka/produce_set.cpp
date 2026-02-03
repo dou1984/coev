@@ -271,7 +271,7 @@ std::shared_ptr<ProduceRequest> ProduceSet::build_request()
                 {
                     for (size_t i = 0; i < pset->m_records->m_message_set->m_messages.size(); ++i)
                     {
-                        pset->m_records->m_message_set->m_messages[i]->m_offset = static_cast<int64_t>(i);
+                        pset->m_records->m_message_set->m_messages[i].m_offset = static_cast<int64_t>(i);
                     }
                 }
 
@@ -290,7 +290,7 @@ std::shared_ptr<ProduceRequest> ProduceSet::build_request()
                     comp_msg->m_version = 1;
                     if (!pset->m_records->m_message_set->m_messages.empty())
                     {
-                        comp_msg->m_timestamp = pset->m_records->m_message_set->m_messages[0]->m_msg->m_timestamp;
+                        comp_msg->m_timestamp = pset->m_records->m_message_set->m_messages[0].m_message->m_timestamp;
                     }
                 }
                 req->add_message(topic, partition, comp_msg);

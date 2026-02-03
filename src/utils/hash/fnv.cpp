@@ -50,7 +50,7 @@ namespace coev::fnv
 
     void FNV32::Reset()
     {
-        hash_ = offset32;
+        m_hash = offset32;
     }
 
     void FNV32::Update(const char *data, size_t length)
@@ -58,20 +58,20 @@ namespace coev::fnv
         const uint8_t *bytes = reinterpret_cast<const uint8_t *>(data);
         for (size_t i = 0; i < length; ++i)
         {
-            hash_ *= prime32;
-            hash_ ^= bytes[i];
+            m_hash *= prime32;
+            m_hash ^= bytes[i];
         }
     }
 
     uint32_t FNV32::Final() const
     {
-        return hash_;
+        return m_hash;
     }
 
     std::string FNV32::Sum(const std::string &in) const
     {
         std::string result = in;
-        BEAppendUint32(result, hash_);
+        BEAppendUint32(result, m_hash);
         return result;
     }
 
@@ -80,7 +80,7 @@ namespace coev::fnv
         std::string result;
         result.reserve(marshaledSize32);
         result.append(magic32, 4);
-        BEAppendUint32(result, hash_);
+        BEAppendUint32(result, m_hash);
         return result;
     }
 
@@ -94,7 +94,7 @@ namespace coev::fnv
         {
             return false;
         }
-        hash_ = BEUint32(b, 4);
+        m_hash = BEUint32(b, 4);
         return true;
     }
     std::shared_ptr<Hash32> FNV32::Clone() const
@@ -108,7 +108,7 @@ namespace coev::fnv
 
     void FNV32a::Reset()
     {
-        hash_ = offset32;
+        m_hash = offset32;
     }
 
     void FNV32a::Update(const char *data, size_t length)
@@ -116,20 +116,20 @@ namespace coev::fnv
         const uint8_t *bytes = reinterpret_cast<const uint8_t *>(data);
         for (size_t i = 0; i < length; ++i)
         {
-            hash_ ^= bytes[i];
-            hash_ *= prime32;
+            m_hash ^= bytes[i];
+            m_hash *= prime32;
         }
     }
 
     uint32_t FNV32a::Final() const
     {
-        return hash_;
+        return m_hash;
     }
 
     std::string FNV32a::Sum(const std::string &in) const
     {
         std::string result = in;
-        BEAppendUint32(result, hash_);
+        BEAppendUint32(result, m_hash);
         return result;
     }
 
@@ -138,7 +138,7 @@ namespace coev::fnv
         std::string result;
         result.reserve(marshaledSize32);
         result.append(magic32a, 4);
-        BEAppendUint32(result, hash_);
+        BEAppendUint32(result, m_hash);
         return result;
     }
 
@@ -152,7 +152,7 @@ namespace coev::fnv
         {
             return false;
         }
-        hash_ = BEUint32(b, 4);
+        m_hash = BEUint32(b, 4);
         return true;
     }
 
@@ -167,7 +167,7 @@ namespace coev::fnv
 
     void FNV64::Reset()
     {
-        hash_ = offset64;
+        m_hash = offset64;
     }
 
     void FNV64::Update(const char *data, size_t length)
@@ -175,20 +175,20 @@ namespace coev::fnv
         const uint8_t *bytes = reinterpret_cast<const uint8_t *>(data);
         for (size_t i = 0; i < length; ++i)
         {
-            hash_ *= prime64;
-            hash_ ^= bytes[i];
+            m_hash *= prime64;
+            m_hash ^= bytes[i];
         }
     }
 
     uint64_t FNV64::Final() const
     {
-        return hash_;
+        return m_hash;
     }
 
     std::string FNV64::Sum(const std::string &in) const
     {
         std::string result = in;
-        BEAppendUint64(result, hash_);
+        BEAppendUint64(result, m_hash);
         return result;
     }
 
@@ -197,7 +197,7 @@ namespace coev::fnv
         std::string result;
         result.reserve(marshaledSize64);
         result.append(magic64, 4);
-        BEAppendUint64(result, hash_);
+        BEAppendUint64(result, m_hash);
         return result;
     }
 
@@ -211,7 +211,7 @@ namespace coev::fnv
         {
             return false;
         }
-        hash_ = BEUint64(b, 4);
+        m_hash = BEUint64(b, 4);
         return true;
     }
 
@@ -227,7 +227,7 @@ namespace coev::fnv
 
     void FNV64a::Reset()
     {
-        hash_ = offset64;
+        m_hash = offset64;
     }
 
     void FNV64a::Update(const char *data, size_t length)
@@ -235,20 +235,20 @@ namespace coev::fnv
         const uint8_t *bytes = reinterpret_cast<const uint8_t *>(data);
         for (size_t i = 0; i < length; ++i)
         {
-            hash_ ^= bytes[i];
-            hash_ *= prime64;
+            m_hash ^= bytes[i];
+            m_hash *= prime64;
         }
     }
 
     uint64_t FNV64a::Final() const
     {
-        return hash_;
+        return m_hash;
     }
 
     std::string FNV64a::Sum(const std::string &in) const
     {
         std::string result = in;
-        BEAppendUint64(result, hash_);
+        BEAppendUint64(result, m_hash);
         return result;
     }
 
@@ -257,7 +257,7 @@ namespace coev::fnv
         std::string result;
         result.reserve(marshaledSize64);
         result.append(magic64a, 4);
-        BEAppendUint64(result, hash_);
+        BEAppendUint64(result, m_hash);
         return result;
     }
 
@@ -271,7 +271,7 @@ namespace coev::fnv
         {
             return false;
         }
-        hash_ = BEUint64(b, 4);
+        m_hash = BEUint64(b, 4);
         return true;
     }
 
@@ -305,8 +305,8 @@ namespace coev::fnv
 
     void FNV128::Reset()
     {
-        hash_[0] = offset128Higher;
-        hash_[1] = offset128Lower;
+        m_hash[0] = offset128Higher;
+        m_hash[1] = offset128Lower;
     }
 
     void FNV128::Update(const char *data, size_t length)
@@ -314,21 +314,21 @@ namespace coev::fnv
         const uint8_t *bytes = reinterpret_cast<const uint8_t *>(data);
         for (size_t i = 0; i < length; ++i)
         {
-            multiply128(hash_[0], hash_[1], prime128Lower, prime128Shift);
-            hash_[1] ^= bytes[i];
+            multiply128(m_hash[0], m_hash[1], prime128Lower, prime128Shift);
+            m_hash[1] ^= bytes[i];
         }
     }
 
     std::array<uint64_t, 2> FNV128::Final() const
     {
-        return {hash_[0], hash_[1]};
+        return {m_hash[0], m_hash[1]};
     }
 
     std::string FNV128::Sum(const std::string &in) const
     {
         std::string result = in;
-        BEAppendUint64(result, hash_[0]);
-        BEAppendUint64(result, hash_[1]);
+        BEAppendUint64(result, m_hash[0]);
+        BEAppendUint64(result, m_hash[1]);
         return result;
     }
 
@@ -337,8 +337,8 @@ namespace coev::fnv
         std::string result;
         result.reserve(marshaledSize128);
         result.append(magic128, 4);
-        BEAppendUint64(result, hash_[0]);
-        BEAppendUint64(result, hash_[1]);
+        BEAppendUint64(result, m_hash[0]);
+        BEAppendUint64(result, m_hash[1]);
         return result;
     }
 
@@ -352,8 +352,8 @@ namespace coev::fnv
         {
             return false;
         }
-        hash_[0] = BEUint64(b, 4);
-        hash_[1] = BEUint64(b, 12);
+        m_hash[0] = BEUint64(b, 4);
+        m_hash[1] = BEUint64(b, 12);
         return true;
     }
 
@@ -369,8 +369,8 @@ namespace coev::fnv
 
     void FNV128a::Reset()
     {
-        hash_[0] = offset128Higher;
-        hash_[1] = offset128Lower;
+        m_hash[0] = offset128Higher;
+        m_hash[1] = offset128Lower;
     }
 
     void FNV128a::Update(const char *data, size_t length)
@@ -378,21 +378,21 @@ namespace coev::fnv
         const uint8_t *bytes = reinterpret_cast<const uint8_t *>(data);
         for (size_t i = 0; i < length; ++i)
         {
-            hash_[1] ^= bytes[i];
-            multiply128(hash_[0], hash_[1], prime128Lower, prime128Shift);
+            m_hash[1] ^= bytes[i];
+            multiply128(m_hash[0], m_hash[1], prime128Lower, prime128Shift);
         }
     }
 
     std::array<uint64_t, 2> FNV128a::Final() const
     {
-        return {hash_[0], hash_[1]};
+        return {m_hash[0], m_hash[1]};
     }
 
     std::string FNV128a::Sum(const std::string &in) const
     {
         std::string result = in;
-        BEAppendUint64(result, hash_[0]);
-        BEAppendUint64(result, hash_[1]);
+        BEAppendUint64(result, m_hash[0]);
+        BEAppendUint64(result, m_hash[1]);
         return result;
     }
 
@@ -401,8 +401,8 @@ namespace coev::fnv
         std::string result;
         result.reserve(marshaledSize128);
         result.append(magic128a, 4);
-        BEAppendUint64(result, hash_[0]);
-        BEAppendUint64(result, hash_[1]);
+        BEAppendUint64(result, m_hash[0]);
+        BEAppendUint64(result, m_hash[1]);
         return result;
     }
 
@@ -416,8 +416,8 @@ namespace coev::fnv
         {
             return false;
         }
-        hash_[0] = BEUint64(b, 4);
-        hash_[1] = BEUint64(b, 12);
+        m_hash[0] = BEUint64(b, 4);
+        m_hash[1] = BEUint64(b, 12);
         return true;
     }
 

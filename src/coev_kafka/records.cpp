@@ -9,7 +9,6 @@ Records::Records() : m_records_type(UnknownRecords)
 }
 Records::Records(std::shared_ptr<MessageSet> message_set)
 {
-
     m_records_type = LegacyRecords;
     m_message_set = message_set;
 }
@@ -243,7 +242,7 @@ int Records::next_offset(int64_t &offset)
     case DefaultRecords:
         if (m_record_batch == nullptr)
             return 0;
-        offset = m_record_batch->LastOffset() + 1;
+        offset = m_record_batch->last_offset() + 1;
         return 0;
     default:
         offset = 0;

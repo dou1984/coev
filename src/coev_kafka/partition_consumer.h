@@ -19,7 +19,7 @@ struct PartitionConsumer : std::enable_shared_from_this<PartitionConsumer>
     coev::co_channel<std::shared_ptr<FetchResponse>> m_feeder;
 
     int32_t m_leader_epoch = 0;
-    int32_t m_preferred_read_replica = invalidPreferredReplicaID;
+    int32_t m_preferred_read_replica = InvalidPreferredReplicaID;
 
     coev::co_channel<bool> m_trigger;
     coev::co_channel<bool> m_dying;

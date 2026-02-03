@@ -13,8 +13,8 @@
 #include "version.h"
 #include "message_set.h"
 
-std::string toString(CompressionCodec codec);
-bool fromString(const std::string &s, CompressionCodec &out);
+std::string ToString(CompressionCodec codec);
+bool FromString(const std::string &s, CompressionCodec &out);
 
 struct Message
 {

@@ -8,22 +8,22 @@ namespace coev::crc32
 {
 
     constexpr const char *magic = "crc\x01";
-    constexpr size_t marshaledSize = 4 + 4 + 4;
+    constexpr size_t marshaled_size = 4 + 4 + 4;
+    constexpr size_t handle_size = 256;
 
-    static uint32_t SimpleUpdate(uint32_t crc, const Table *tab, const char *data, size_t length)
+    static uint32_t SimpleUpdate(uint32_t crc, const char *data, size_t length, Handle tab)
     {
         crc = ~crc;
         for (size_t i = 0; i < length; ++i)
         {
-            crc = tab->data[(crc ^ data[i]) & 0xFF] ^ (crc >> 8);
+            crc = tab[(crc ^ data[i]) & 0xFF] ^ (crc >> 8);
         }
         return ~crc;
     }
 
-    TablePtr SimpleMakeTable(uint32_t poly)
+    Handle SimpleMakeHandle(uint32_t poly, Handle table)
     {
-        TablePtr table = std::make_shared<Table>();
-        for (uint32_t i = 0; i < 256; ++i)
+        for (uint32_t i = 0; i < handle_size; ++i)
         {
             uint32_t crc = i;
             for (int j = 0; j < 8; ++j)
@@ -37,83 +37,75 @@ namespace coev::crc32
                     crc >>= 1;
                 }
             }
-            table->data[i] = crc;
+            table[i] = crc;
         }
         return table;
     }
 
-    static TablePtr ieeeTable = SimpleMakeTable(IEEE);
-    static TablePtr castagnoliTable = nullptr;
-    static TablePtr koopmanTable = nullptr;
+    static uint32_t ieee[handle_size];
+    static uint32_t castagnoli[handle_size];
+    static uint32_t koopman[handle_size];
+    static uint32_t default_handle[handle_size];
+    auto _ieee = SimpleMakeHandle(IEEE, ieee);
+    auto _castagnoli = SimpleMakeHandle(Castagnoli, castagnoli);
+    auto _koopman = SimpleMakeHandle(Koopman, koopman);
 
-    static bool castagnoliInitialized = false;
-    static bool koopmanInitialized = false;
-
-    TablePtr MakeTable(Polynomial poly)
+    Handle MakeHandle(Polynomial poly)
     {
         switch (poly)
         {
         case IEEE:
-            return ieeeTable;
+            return ieee;
         case Castagnoli:
-            if (!castagnoliInitialized)
-            {
-                castagnoliTable = SimpleMakeTable(Castagnoli);
-                castagnoliInitialized = true;
-            }
-            return castagnoliTable;
+            return castagnoli;
         case Koopman:
-            if (!koopmanInitialized)
-            {
-                koopmanTable = SimpleMakeTable(Koopman);
-                koopmanInitialized = true;
-            }
-            return koopmanTable;
+            return koopman;
         default:
-            return SimpleMakeTable(static_cast<uint32_t>(poly));
+            SimpleMakeHandle(poly, default_handle);
+            return default_handle;
         }
     }
 
-    uint32_t Update(uint32_t crc, const TablePtr &tab, const char *data, size_t length)
+    uint32_t Update(uint32_t crc, const char *data, size_t length, Handle handle)
     {
-        return SimpleUpdate(crc, tab.get(), data, length);
+        return SimpleUpdate(crc, data, length, handle);
     }
 
-    uint32_t Checksum(const char *data, size_t length, const TablePtr &tab)
+    uint32_t Checksum(const char *data, size_t length, Handle handle)
     {
-        return Update(0, tab, data, length);
+        return Update(0, data, length, handle);
     }
 
     uint32_t ChecksumIEEE(const char *data, size_t length)
     {
-        return Checksum(data, length, ieeeTable);
+        return Checksum(data, length, ieee);
     }
 
-    CRC32::CRC32(const TablePtr &table)
+    CRC32::CRC32(Handle handle)
     {
-        digest_.crc = 0;
-        digest_.tab = table;
+        m_digest.crc = 0;
+        m_digest.hdl = handle;
     }
 
     CRC32::CRC32(Polynomial poly)
     {
-        digest_.crc = 0;
-        digest_.tab = MakeTable(poly);
+        m_digest.crc = 0;
+        m_digest.hdl = MakeHandle(poly);
     }
 
     void CRC32::Reset()
     {
-        digest_.crc = 0;
+        m_digest.crc = 0;
     }
 
     void CRC32::Update(const char *data, size_t length)
     {
-        digest_.crc = crc32::Update(digest_.crc, digest_.tab, data, length);
+        m_digest.crc = crc32::Update(m_digest.crc, data, length, m_digest.hdl);
     }
 
     uint32_t CRC32::Final() const
     {
-        return digest_.crc;
+        return m_digest.crc;
     }
 
     std::string CRC32::Sum(const std::string &in) const
@@ -127,19 +119,19 @@ namespace coev::crc32
     std::string CRC32::MarshalBinary() const
     {
         std::string result;
-        result.reserve(marshaledSize);
+        result.reserve(marshaled_size);
         result.append(magic, 4);
 
         uint32_t tableSum = 0;
-        if (digest_.tab != nullptr)
+        if (m_digest.hdl != nullptr)
         {
-            std::vector<char> tableData(reinterpret_cast<const char *>(digest_.tab.get()),
-                                        reinterpret_cast<const char *>(digest_.tab.get()) + sizeof(Table));
+            std::vector<char> tableData(reinterpret_cast<const char *>(m_digest.hdl),
+                                        reinterpret_cast<const char *>(m_digest.hdl) + sizeof(Handle));
             tableSum = ChecksumIEEE(tableData.data(), tableData.size());
         }
 
         BEAppendUint32(result, tableSum);
-        BEAppendUint32(result, digest_.crc);
+        BEAppendUint32(result, m_digest.crc);
 
         return result;
     }
@@ -150,16 +142,16 @@ namespace coev::crc32
         {
             return false;
         }
-        if (b.size() != marshaledSize)
+        if (b.size() != marshaled_size)
         {
             return false;
         }
 
         uint32_t expectedTableSum = 0;
-        if (digest_.tab != nullptr)
+        if (m_digest.hdl != nullptr)
         {
-            std::vector<char> tableData(reinterpret_cast<const char *>(digest_.tab.get()),
-                                        reinterpret_cast<const char *>(digest_.tab.get()) + sizeof(Table));
+            std::vector<char> tableData(reinterpret_cast<const char *>(m_digest.hdl),
+                                        reinterpret_cast<const char *>(m_digest.hdl) + sizeof(Handle));
             expectedTableSum = ChecksumIEEE(tableData.data(), tableData.size());
         }
 
@@ -169,7 +161,7 @@ namespace coev::crc32
             return false;
         }
 
-        digest_.crc = BEUint32(b, 8);
+        m_digest.crc = BEUint32(b, 8);
 
         return true;
     }
@@ -181,17 +173,12 @@ namespace coev::crc32
 
     Digest CRC32::GetDigest() const
     {
-        return digest_;
-    }
-
-    std::shared_ptr<Hash32> New(const TablePtr &tab)
-    {
-        return std::make_shared<CRC32>(tab);
+        return m_digest;
     }
 
     std::shared_ptr<Hash32> NewIEEE()
     {
-        return std::make_shared<CRC32>(std::shared_ptr<Table>(ieeeTable));
+        return std::make_shared<CRC32>(ieee);
     }
 
     void BEAppendUint32(std::string &str, uint32_t value)

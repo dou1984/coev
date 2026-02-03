@@ -12,13 +12,11 @@ struct Message;
 struct MessageBlock : IEncoder, IDecoder
 {
     int64_t m_offset = 0;
-    std::shared_ptr<Message> m_msg;
-
+    std::shared_ptr<Message> m_message;
     MessageBlock() = default;
-    MessageBlock(std::shared_ptr<Message> msg, int64_t offset) : m_msg(msg), m_offset(offset)
-    {
-    }
-    std::vector<std::shared_ptr<MessageBlock>> Messages();
+    MessageBlock(std::shared_ptr<Message> msg, int64_t offset);
+    MessageBlock(std::shared_ptr<Message> msg);
+    std::vector<MessageBlock> Messages();
     int encode(packet_encoder &pe) const;
     int decode(packet_decoder &pd);
 };
@@ -27,9 +25,8 @@ struct MessageSet : IEncoder, IDecoder
 {
     bool m_partial_trailing_message = false;
     bool m_overflow_message = false;
-    std::vector<std::shared_ptr<MessageBlock>> m_messages;
+    std::vector<MessageBlock> m_messages;
     MessageSet() = default;
-    MessageSet(std::shared_ptr<MessageBlock> msg);
     MessageSet(const MessageSet &o);
     int encode(packet_encoder &pe) const;
     int decode(packet_decoder &pd);

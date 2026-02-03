@@ -37,7 +37,7 @@ struct RecordBatch
     RecordBatch() = default;
     RecordBatch(int8_t v);
     RecordBatch(int8_t v, bool, std::chrono::system_clock::time_point &first, std::chrono::system_clock::time_point &max);
-    int64_t LastOffset() const
+    int64_t last_offset() const
     {
         return m_first_offset + static_cast<int64_t>(m_last_offset_delta);
     }

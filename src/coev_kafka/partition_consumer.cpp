@@ -79,7 +79,7 @@ coev::awaitable<int> PartitionConsumer::PreferredBroker(std::shared_ptr<Broker> 
             co_return 0;
         }
 
-        m_preferred_read_replica = invalidPreferredReplicaID;
+        m_preferred_read_replica = InvalidPreferredReplicaID;
 
         std::vector<std::string> topics = {m_topic};
         err = co_await m_consumer->m_client->RefreshMetadata(topics);
@@ -247,23 +247,23 @@ coev::awaitable<void> PartitionConsumer::ResponseFeeder()
     }
 }
 
-int PartitionConsumer::ParseMessages(std::shared_ptr<MessageSet> msgSet, std::vector<std::shared_ptr<ConsumerMessage>> &messages)
+int PartitionConsumer::ParseMessages(std::shared_ptr<MessageSet> msg_set, std::vector<std::shared_ptr<ConsumerMessage>> &messages)
 {
 
-    for (auto &block : msgSet->m_messages)
+    for (auto &block : msg_set->m_messages)
     {
-        auto msgs = block->Messages();
+        auto msgs = block.Messages();
         for (auto &msg : msgs)
         {
-            int64_t offset = msg->m_offset;
-            auto timestamp = msg->m_msg->m_timestamp;
-            if (msg->m_msg->m_version >= 1)
+            int64_t offset = msg.m_offset;
+            auto timestamp = msg.m_message->m_timestamp;
+            if (msg.m_message->m_version >= 1)
             {
-                int64_t baseOffset = block->m_offset - msgs[msgs.size() - 1]->m_offset;
-                offset += baseOffset;
-                if (msg->m_msg->m_log_append_time)
+                int64_t base_offset = block.m_offset - msgs.back().m_offset;
+                offset += base_offset;
+                if (msg.m_message->m_log_append_time)
                 {
-                    timestamp = block->m_msg->m_timestamp;
+                    timestamp = block.m_message->m_timestamp;
                 }
             }
             if (offset < m_offset)
@@ -273,11 +273,11 @@ int PartitionConsumer::ParseMessages(std::shared_ptr<MessageSet> msgSet, std::ve
             auto cm = std::make_shared<ConsumerMessage>();
             cm->m_topic = m_topic;
             cm->m_partition = m_partition;
-            cm->m_key = msg->m_msg->m_key;
-            cm->m_value = msg->m_msg->m_value;
+            cm->m_key = msg.m_message->m_key;
+            cm->m_value = msg.m_message->m_value;
             cm->m_offset = offset;
             cm->m_timestamp = timestamp.get_time();
-            cm->m_block_timestamp = block->m_msg->m_timestamp.get_time();
+            cm->m_block_timestamp = block.m_message->m_timestamp.get_time();
             messages.push_back(cm);
             m_offset = offset + 1;
         }
@@ -341,7 +341,7 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
 
     auto nRecs = block.num_records();
 
-    if (block.m_preferred_read_replica != invalidPreferredReplicaID)
+    if (block.m_preferred_read_replica != InvalidPreferredReplicaID)
     {
         m_preferred_read_replica = block.m_preferred_read_replica;
     }
@@ -407,15 +407,15 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
         {
             for (auto it = aborted_transactions.begin(); it != aborted_transactions.end();)
             {
-                if (it->m_first_offset > records.m_record_batch->LastOffset())
+                if (it->m_first_offset > records.m_record_batch->last_offset())
                 {
                     break;
                 }
                 aborted_producer_ids.insert(it->m_producer_id);
                 it = aborted_transactions.erase(it);
             }
-            std::vector<std::shared_ptr<ConsumerMessage>> batch_msgs;
-            auto err = ParseRecords(records.m_record_batch, batch_msgs);
+            std::vector<std::shared_ptr<ConsumerMessage>> batch_messages;
+            auto err = ParseRecords(records.m_record_batch, batch_messages);
             if (err)
             {
                 return err;
@@ -456,7 +456,7 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
                 }
             }
 
-            messages.insert(messages.end(), batch_msgs.begin(), batch_msgs.end());
+            messages.insert(messages.end(), batch_messages.begin(), batch_messages.end());
         }
         else
         {

@@ -31,7 +31,7 @@ namespace coev::fnv
         bool UnmarshalBinary(const std::string &b);
         std::shared_ptr<Hash32> Clone() const;
 
-        uint32_t hash_;
+        uint32_t m_hash;
     };
 
     struct FNV32a : Hash32
@@ -45,7 +45,7 @@ namespace coev::fnv
         bool UnmarshalBinary(const std::string &b);
         std::shared_ptr<Hash32> Clone() const;
 
-        uint32_t hash_;
+        uint32_t m_hash;
     };
 
     struct FNV64 : Hash64
@@ -59,7 +59,7 @@ namespace coev::fnv
         bool UnmarshalBinary(const std::string &b);
         std::shared_ptr<Hash64> Clone() const;
 
-        uint64_t hash_;
+        uint64_t m_hash;
     };
 
     struct FNV64a : Hash64
@@ -73,7 +73,7 @@ namespace coev::fnv
         bool UnmarshalBinary(const std::string &b);
         std::shared_ptr<Hash64> Clone() const;
 
-        uint64_t hash_;
+        uint64_t m_hash;
     };
 
     struct FNV128 : Hash128
@@ -87,7 +87,7 @@ namespace coev::fnv
         bool UnmarshalBinary(const std::string &b);
         std::shared_ptr<Hash128> Clone() const;
 
-        uint64_t hash_[2];
+        uint64_t m_hash[2];
     };
 
     struct FNV128a : Hash128
@@ -101,7 +101,7 @@ namespace coev::fnv
         bool UnmarshalBinary(const std::string &b);
         std::shared_ptr<Hash128> Clone() const;
 
-        uint64_t hash_[2];
+        uint64_t m_hash[2];
     };
 
     std::shared_ptr<Hash32> New32();

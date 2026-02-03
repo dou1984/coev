@@ -141,8 +141,8 @@ coev::awaitable<int> Consumer::ConsumePartition(const std::string &topic, int32_
     child->m_topic = topic;
     child->m_partition = partition;
 
-    child->m_leader_epoch = invalidLeaderEpoch;
-    child->m_preferred_read_replica = invalidPreferredReplicaID;
+    child->m_leader_epoch = InvalidLeaderEpoch;
+    child->m_preferred_read_replica = InvalidPreferredReplicaID;
     child->m_fetch_size = m_conf->Consumer.Fetch.DefaultVal;
 
     int err = co_await child->ChooseStartingOffset(offset);

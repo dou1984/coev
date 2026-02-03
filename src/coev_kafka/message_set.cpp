@@ -5,27 +5,26 @@
 #include "message_set.h"
 #include "errors.h"
 #include "length_field.h"
-
-MessageSet::MessageSet(std::shared_ptr<MessageBlock> msg)
+MessageBlock::MessageBlock(std::shared_ptr<Message> msg, int64_t offset) : m_message(msg), m_offset(offset)
 {
-    m_messages.push_back(msg);
+}
+MessageBlock::MessageBlock(std::shared_ptr<Message> msg) : m_message(msg), m_offset(0)
+{
 }
 MessageSet::MessageSet(const MessageSet &o) : m_partial_trailing_message(o.m_partial_trailing_message), m_overflow_message(o.m_overflow_message)
 {
     m_messages = o.m_messages;
 }
-std::vector<std::shared_ptr<MessageBlock>> MessageBlock::Messages()
+
+std::vector<MessageBlock> MessageBlock::Messages()
 {
-    if (m_msg)
+    if (m_message)
     {
-        return std::move(m_msg->m_message_set.m_messages);
+        return std::move(m_message->m_message_set.m_messages);
     }
 
-    std::vector<std::shared_ptr<MessageBlock>> single;
-    auto clone = std::make_shared<MessageBlock>();
-    clone->m_offset = m_offset;
-    clone->m_msg = std::move(m_msg);
-    single.emplace_back(clone);
+    std::vector<MessageBlock> single;
+    single.emplace_back(m_message, m_offset);
     return single;
 }
 
@@ -34,7 +33,7 @@ int MessageBlock::encode(packet_encoder &pe) const
     pe.putInt64(m_offset);
     LengthField length_field;
     pe.push(length_field);
-    int err = m_msg->encode(pe);
+    int err = m_message->encode(pe);
     if (err != 0)
     {
         pe.pop();
@@ -55,8 +54,8 @@ int MessageBlock::decode(packet_decoder &pd)
     {
         return err;
     }
-    m_msg = std::make_shared<Message>();
-    err = m_msg->decode(pd);
+    m_message = std::make_shared<Message>();
+    err = m_message->decode(pd);
     if (err != 0)
     {
         return err;
@@ -71,9 +70,9 @@ int MessageBlock::decode(packet_decoder &pd)
 
 int MessageSet::encode(packet_encoder &pe) const
 {
-    for (auto &message_block : m_messages)
+    for (auto &block : m_messages)
     {
-        int err = message_block->encode(pe);
+        int err = block.encode(pe);
         if (err != 0)
         {
             return err;
@@ -107,15 +106,15 @@ int MessageSet::decode(packet_decoder &pd)
             return 0;
         }
 
-        auto msb = std::make_shared<MessageBlock>();
-        err = msb->decode(pd);
+        MessageBlock msb;
+        err = msb.decode(pd);
         if (err == 0)
         {
-            m_messages.emplace_back(msb);
+            m_messages.emplace_back(msb.m_message);
         }
         else if (err == ErrInsufficientData)
         {
-            if (msb->m_offset == -1)
+            if (msb.m_offset == -1)
             {
                 m_overflow_message = true;
             }
@@ -136,9 +135,7 @@ int MessageSet::decode(packet_decoder &pd)
 
 void MessageSet::add_message(std::shared_ptr<Message> msg)
 {
-    auto block = std::make_shared<MessageBlock>();
-    block->m_msg = std::move(msg);
-    m_messages.emplace_back(std::move(block));
+    m_messages.emplace_back(msg);
 }
 
 void MessageSet::clear()

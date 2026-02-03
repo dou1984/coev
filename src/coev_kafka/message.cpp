@@ -8,7 +8,7 @@
 #include "undefined.h"
 #include "crc32_field.h"
 
-std::string toString(CompressionCodec codec)
+std::string ToString(CompressionCodec codec)
 {
     switch (codec)
     {
@@ -27,7 +27,7 @@ std::string toString(CompressionCodec codec)
     }
 }
 
-bool fromString(const std::string &s, CompressionCodec &out)
+bool FromString(const std::string &s, CompressionCodec &out)
 {
     static const std::map<std::string, CompressionCodec> map = {
         {"none", CompressionCodec::None},

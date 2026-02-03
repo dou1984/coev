@@ -50,9 +50,9 @@ struct Client
     coev::awaitable<int> MetadataRefresh(const std::vector<std::string> &);
     coev::awaitable<int> BackgroundMetadataUpdater();
     coev::awaitable<int> RefreshMetadata();
-    coev::awaitable<int> RetryRefreshMetadata(const std::vector<std::string> &topics, int attemptsRemaining, std::chrono::steady_clock::time_point deadline, int err);
-    coev::awaitable<int> TryRefreshMetadata(const std::vector<std::string> &topics, int attemptsRemaining, std::chrono::steady_clock::time_point deadline);
-    coev::awaitable<int> FindCoordinator(const std::string &coordinatorKey, CoordinatorType coordinatorType, int attemptsRemaining, FindCoordinatorResponse &response);
+    coev::awaitable<int> RetryRefreshMetadata(const std::vector<std::string> &topics, int attempts_remaining, std::chrono::steady_clock::time_point deadline, int err);
+    coev::awaitable<int> TryRefreshMetadata(const std::vector<std::string> &topics, int attempts_remaining, std::chrono::steady_clock::time_point deadline);
+    coev::awaitable<int> FindCoordinator(const std::string &coordinatorKey, CoordinatorType coordinatorType, int attempts_remaining, FindCoordinatorResponse &response);
     coev::awaitable<int> ResolveCanonicalNames(const std::vector<std::string> &addrs, std::vector<std::string> &);
 
     int Close();
@@ -66,7 +66,7 @@ struct Client
     void DeregisterBroker(std::shared_ptr<Broker> broker);
     void ResurrectDeadBrokers();
     void DeregisterController();
-    std::chrono::milliseconds ComputeBackoff(int attemptsRemaining);
+    std::chrono::milliseconds ComputeBackoff(int attempts_remaining);
     coev::awaitable<int> _GetPartitions(const std::string &topic, int64_t pt, std::vector<int32_t> &partitions);
     coev::awaitable<int> _GetReplicas(const std::string &topic, int32_t partitionID, PartitionMetadata &out);
     coev::awaitable<int> _GetOffset(const std::string &topic, int32_t partitionID, int64_t timestamp, int64_t &offset);

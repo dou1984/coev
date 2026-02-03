@@ -22,7 +22,7 @@ struct Records : std::enable_shared_from_this<Records>
     std::shared_ptr<RecordBatch> m_record_batch;
 
     Records();
-    Records(std::shared_ptr<MessageSet> msgSet);
+    Records(std::shared_ptr<MessageSet> message_set);
     Records(std::shared_ptr<RecordBatch> batch);
 
     int set_type_from_fields(bool &empty) const;

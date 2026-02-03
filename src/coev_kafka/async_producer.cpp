@@ -395,9 +395,18 @@ coev::awaitable<void> AsyncProducer::bump_idempotent_producer_epoch()
     if (epoch == std::numeric_limits<int16_t>::max())
     {
         LOG_CORE("bump_idempotent_producer_epoch epoch reached max value, creating new transaction manager");
-        std::shared_ptr<TransactionManager> new_txnmgr;
-        auto err = co_await NewTransactionManager(m_conf, m_client, new_txnmgr);
-        if (err == (KError)ErrNoError)
+        auto new_txnmgr = std::make_shared<TransactionManager>(m_conf, m_client);
+        if (m_conf->Producer.Idempotent)
+        {
+            int64_t producer_id;
+            int16_t producer_epoch;
+            auto err = co_await new_txnmgr->InitProducerId(producer_id, producer_epoch);
+            if (err == (KError)ErrNoError)
+            {
+                m_txnmgr = new_txnmgr;
+            }
+        }
+        else
         {
             m_txnmgr = new_txnmgr;
         }
@@ -608,11 +617,16 @@ coev::awaitable<int> NewAsyncProducer(std::shared_ptr<Client> client, std::share
     {
         co_return ErrClosedClient;
     }
-    std::shared_ptr<TransactionManager> txnmgr;
-    auto err = co_await NewTransactionManager(client->GetConfig(), client, txnmgr);
-    if (err != ErrNoError)
+    auto txnmgr = std::make_shared<TransactionManager>(client->GetConfig(), client);
+    if (client->GetConfig()->Producer.Idempotent)
     {
-        co_return err;
+        int64_t producer_id;
+        int16_t producer_epoch;
+        auto err = co_await txnmgr->InitProducerId(producer_id, producer_epoch);
+        if (err != ErrNoError)
+        {
+            co_return err;
+        }
     }
 
     producer = std::make_shared<AsyncProducer>(client, txnmgr);

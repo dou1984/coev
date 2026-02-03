@@ -137,7 +137,7 @@ coev::awaitable<void> BrokerConsumer::HandleResponses()
         }
 
         LOG_CORE("received result %d for partition consumer %s:%d", result, child->m_topic.c_str(), child->m_partition);
-        child->m_preferred_read_replica = invalidPreferredReplicaID;
+        child->m_preferred_read_replica = InvalidPreferredReplicaID;
 
         if (result == ErrTimedOut)
         {

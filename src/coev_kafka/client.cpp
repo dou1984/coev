@@ -1073,28 +1073,28 @@ coev::awaitable<int> Client::_RefreshMetadata(const std::vector<std::string> &to
     }
     return TryRefreshMetadata(topics, m_conf->Metadata.Retry.Max, deadline);
 }
-std::chrono::milliseconds Client::ComputeBackoff(int attemptsRemaining)
+std::chrono::milliseconds Client::ComputeBackoff(int attempts_remaining)
 {
     if (m_conf->Metadata.Retry.BackoffFunc)
     {
         int maxRetries = m_conf->Metadata.Retry.Max;
-        int retries = maxRetries - attemptsRemaining;
+        int retries = maxRetries - attempts_remaining;
         return m_conf->Metadata.Retry.BackoffFunc(retries, maxRetries);
     }
     return m_conf->Metadata.Retry.Backoff;
 }
 
-coev::awaitable<int> Client::FindCoordinator(const std::string &coordinatorKey, CoordinatorType coordinatorType, int attemptsRemaining, FindCoordinatorResponse &response)
+coev::awaitable<int> Client::FindCoordinator(const std::string &coordinatorKey, CoordinatorType coordinatorType, int attempts_remaining, FindCoordinatorResponse &response)
 {
     auto retry = [&](int err) -> coev::awaitable<int>
     {
-        if (attemptsRemaining > 0)
+        if (attempts_remaining > 0)
         {
-            auto backoff = ComputeBackoff(attemptsRemaining);
-            attemptsRemaining--;
-            LOG_CORE("retrying after %ldms %d attempts remaining", backoff.count(), attemptsRemaining);
+            auto backoff = ComputeBackoff(attempts_remaining);
+            attempts_remaining--;
+            LOG_CORE("retrying after %ldms %d attempts remaining", backoff.count(), attempts_remaining);
             co_await sleep_for(backoff);
-            co_return co_await FindCoordinator(coordinatorKey, coordinatorType, attemptsRemaining, response);
+            co_return co_await FindCoordinator(coordinatorKey, coordinatorType, attempts_remaining, response);
         }
         co_return err;
     };

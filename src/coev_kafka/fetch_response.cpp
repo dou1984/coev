@@ -477,15 +477,14 @@ void FetchResponse::add_message_with_timestamp(const std::string &topic, int32_t
 {
     auto &frb = m_blocks[topic][partition];
     auto kv = encodeKV(key, value);
-    auto msgTimestamp = m_log_append_time ? m_timestamp : timestamp;
-    auto msg = std::make_shared<Message>(kv.first, kv.second, m_log_append_time, msgTimestamp, version);
-    auto msg_block = std::make_shared<MessageBlock>(msg, offset);
+    auto msg_timestamp = m_log_append_time ? m_timestamp : timestamp;
+    auto msg = std::make_shared<Message>(kv.first, kv.second, m_log_append_time, msg_timestamp, version);
 
     if (frb.m_records_set.empty())
     {
-        frb.m_records_set.emplace_back(std::make_shared<MessageSet>(msg_block));
+        frb.m_records_set.resize(1);
     }
-    frb.m_records_set[0].m_message_set->m_messages.emplace_back(msg_block);
+    frb.m_records_set[0].m_message_set->m_messages.emplace_back(msg, offset);
 }
 
 void FetchResponse::add_record_with_timestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value,
@@ -505,7 +504,7 @@ void FetchResponse::add_record_with_timestamp(const std::string &topic, int32_t 
 }
 
 void FetchResponse::add_record_batch_with_timestamp(const std::string &topic, int32_t partition, Encoder *key, Encoder *value,
-                                                    int64_t offset, int64_t producerID, bool isTransactional,
+                                                    int64_t offset, int64_t producer_id, bool is_transactional,
                                                     std::chrono::system_clock::time_point timestamp)
 {
     auto &frb = m_blocks[topic][partition];
@@ -518,8 +517,8 @@ void FetchResponse::add_record_batch_with_timestamp(const std::string &topic, in
     batch->m_max_timestamp = m_timestamp;
     batch->m_first_offset = offset;
     batch->m_last_offset_delta = 0;
-    batch->m_producer_id = producerID;
-    batch->m_is_transactional = isTransactional;
+    batch->m_producer_id = producer_id;
+    batch->m_is_transactional = is_transactional;
 
     auto rec = std::make_shared<Record>(kv.first, kv.second, 0, std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - batch->m_first_timestamp));
     batch->add_record(rec);
@@ -527,7 +526,7 @@ void FetchResponse::add_record_batch_with_timestamp(const std::string &topic, in
 }
 
 void FetchResponse::add_control_record_with_timestamp(const std::string &topic, int32_t partition, int64_t offset,
-                                                      int64_t producerID, ControlRecordType recordType, std::chrono::system_clock::time_point timestamp)
+                                                      int64_t producer_id, ControlRecordType record_type, std::chrono::system_clock::time_point timestamp)
 {
     auto &frb = m_blocks[topic][partition];
 
@@ -538,17 +537,16 @@ void FetchResponse::add_control_record_with_timestamp(const std::string &topic, 
     batch->m_max_timestamp = m_timestamp;
     batch->m_first_offset = offset;
     batch->m_last_offset_delta = 0;
-    batch->m_producer_id = producerID;
+    batch->m_producer_id = producer_id;
     batch->m_is_transactional = true;
     batch->m_control = true;
 
-    auto crAbort = std::make_shared<ControlRecord>(0, producerID, recordType);
+    ControlRecord _abort(0, producer_id, record_type);
+    real_encoder _key;
+    real_encoder _value;
+    _abort.encode(_key, _value);
 
-    real_encoder crKey;
-    real_encoder crValue;
-    crAbort->encode(crKey, crValue);
-
-    auto rec = std::make_shared<Record>(crKey.m_raw, crValue.m_raw, 0, std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - batch->m_first_timestamp));
+    auto rec = std::make_shared<Record>(_key.m_raw, _value.m_raw, 0, std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - batch->m_first_timestamp));
     batch->add_record(rec);
     frb.m_records_set.emplace_back(batch);
 }

@@ -175,7 +175,7 @@ int Request::decode(packet_decoder &pd)
         return err;
     m_client_id = clientID;
 
-    auto body = allocateBody(key, version);
+    auto body = allocate_body(key, version);
     m_body = body.get();
     if (!m_body)
     {
@@ -243,7 +243,7 @@ coev::awaitable<int> decodeRequest(std::shared_ptr<Broker> &broker, Request &req
     co_return 0;
 }
 
-std::shared_ptr<protocol_body> allocateBody(int16_t key, int16_t version)
+std::shared_ptr<protocol_body> allocate_body(int16_t key, int16_t version)
 {
     switch (key)
     {

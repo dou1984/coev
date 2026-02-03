@@ -14,8 +14,8 @@
 #include "consumer_error.h"
 #include "fetch_response.h"
 
-const int32_t invalidLeaderEpoch = -1;
-const int32_t invalidPreferredReplicaID = -1;
+inline constexpr int32_t InvalidLeaderEpoch = -1;
+inline constexpr int32_t InvalidPreferredReplicaID = -1;
 
 struct PartitionConsumer;
 struct BrokerConsumer;

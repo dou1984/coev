@@ -47,19 +47,21 @@ int TxnOffsetCommitRequest::decode(packet_decoder &pd, int16_t version)
         std::string topic;
         err = pd.getString(topic);
         if (err)
+        {
             return err;
+        }
         int32_t m;
         err = pd.getArrayLength(m);
         if (err)
+        {
             return err;
-        std::vector<std::shared_ptr<PartitionOffsetMetadata>> partitions(m);
+        }
+
+        m_topics[topic].resize(m);
         for (int j = 0; j < m; ++j)
         {
-            auto partitionOffsetMetadata = std::make_shared<PartitionOffsetMetadata>();
-            partitionOffsetMetadata->decode(pd, version);
-            partitions[j] = partitionOffsetMetadata;
+            m_topics[topic][j]->decode(pd, version);
         }
-        m_topics[topic] = std::move(partitions);
     }
     return 0;
 }

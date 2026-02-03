@@ -40,16 +40,17 @@ struct TransactionManager
         int Error = 0;
     };
     TransactionManager() = default;
+    TransactionManager(std::shared_ptr<Config> conf, std::shared_ptr<Client> client);
     ~TransactionManager() = default;
 
     ProducerTxnStatusFlag CurrentTxnStatus() const;
     void GetAndIncrementSequenceNumber(const std::string &topic, int32_t partition, int32_t &sequence, int16_t &epoch);
     void BumpEpoch();
     std::pair<int64_t, int16_t> GetProducerID();
-    std::chrono::milliseconds ComputeBackoff(int attemptsRemaining) const;
+    std::chrono::milliseconds ComputeBackoff(int attempts_remaining) const;
     bool IsTransactional() const;
     int AddOffsetsToTxn(const std::map<std::string, std::vector<std::shared_ptr<PartitionOffsetMetadata>>> &offsetsToAdd, const std::string &groupId);
-    coev::awaitable<int> Retry(int attemptsRemaining, const std::function<coev::awaitable<Result>()> &run);
+    coev::awaitable<int> Retry(int attempts_remaining, const std::function<coev::awaitable<Result>()> &run);
     coev::awaitable<int> PublishOffsetsToTxn(const TopicPartitionOffsets &offsets, const std::string &groupId, TopicPartitionOffsets &outOffsets);
     coev::awaitable<Result> PublishOffsetsToTxnAddOffset(const std::string &groupId);
     coev::awaitable<Result> PublishOffsetsToTxnCommit(const TopicPartitionOffsets &offsets, const std::string &groupId, TopicPartitionOffsets &outOffsets);
@@ -79,5 +80,3 @@ struct TransactionManager
     TopicPartitionSet m_partitions_in_current_txn;
     std::map<std::string, TopicPartitionOffsets> m_offsets_in_current_txn;
 };
-
-coev::awaitable<int> NewTransactionManager(std::shared_ptr<Config> conf, std::shared_ptr<Client> client, std::shared_ptr<TransactionManager> &txnmgr);
