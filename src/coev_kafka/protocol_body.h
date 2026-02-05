@@ -3,7 +3,6 @@
 #include "encoder_decoder.h"
 #include "packet_decoder.h"
 #include "packet_encoder.h"
-#include "protocol_body.h"
 #include "version.h"
 #include "throttle_support.h"
 

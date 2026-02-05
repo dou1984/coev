@@ -22,22 +22,22 @@ int DescribeUserScramCredentialsResponse::encode(packet_encoder &pe) const
 
     for (auto &u : m_results)
     {
-        if (pe.putString(u->m_user) != ErrNoError)
+        if (pe.putString(u.m_user) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        pe.putKError(u->m_error_code);
-        if (pe.putNullableString(u->m_error_message) != ErrNoError)
-        {
-            return ErrEncodeError;
-        }
-
-        if (pe.putArrayLength(static_cast<int32_t>(u->m_credential_infos.size())) != ErrNoError)
+        pe.putKError(u.m_error_code);
+        if (pe.putNullableString(u.m_error_message) != ErrNoError)
         {
             return ErrEncodeError;
         }
 
-        for (auto &c : u->m_credential_infos)
+        if (pe.putArrayLength(static_cast<int32_t>(u.m_credential_infos.size())) != ErrNoError)
+        {
+            return ErrEncodeError;
+        }
+
+        for (auto &c : u.m_credential_infos)
         {
             pe.putInt8(static_cast<int8_t>(c->m_mechanism));
             pe.putInt32(c->m_iterations);
@@ -80,19 +80,19 @@ int DescribeUserScramCredentialsResponse::decode(packet_decoder &pd, int16_t ver
     m_results.reserve(numUsers);
     for (int32_t i = 0; i < numUsers; ++i)
     {
-        auto result = std::make_unique<DescribeUserScramCredentialsResult>();
+        DescribeUserScramCredentialsResult result;
 
-        if (pd.getString(result->m_user) != ErrNoError)
+        if (pd.getString(result.m_user) != ErrNoError)
         {
             return ErrDecodeError;
         }
 
-        if (pd.getKError(result->m_error_code) != ErrNoError)
+        if (pd.getKError(result.m_error_code) != ErrNoError)
         {
             return ErrDecodeError;
         }
 
-        if (pd.getNullableString(result->m_error_message) != ErrNoError)
+        if (pd.getNullableString(result.m_error_message) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -103,7 +103,7 @@ int DescribeUserScramCredentialsResponse::decode(packet_decoder &pd, int16_t ver
             return ErrDecodeError;
         }
 
-        result->m_credential_infos.reserve(numCreds);
+        result.m_credential_infos.reserve(numCreds);
         for (int32_t j = 0; j < numCreds; ++j)
         {
             auto cred = std::make_shared<UserScramCredentialsResponseInfo>();
@@ -126,7 +126,7 @@ int DescribeUserScramCredentialsResponse::decode(packet_decoder &pd, int16_t ver
                 return ErrDecodeError;
             }
 
-            result->m_credential_infos.emplace_back(std::move(cred));
+            result.m_credential_infos.emplace_back(std::move(cred));
         }
 
         int32_t dummy;

@@ -1155,33 +1155,34 @@ coev::awaitable<int> ClusterAdmin::DeleteConsumerGroup(const std::string &group)
     co_return co_await RetryOnError(isRetriableGroupCoordinatorError, &ClusterAdmin::_DeleteConsumerGroup, request, group);
 }
 
-coev::awaitable<int> ClusterAdmin::DescribeLogDirs(const std::vector<int32_t> &brokerIds,
+coev::awaitable<int> ClusterAdmin::DescribeLogDirs(const std::vector<int32_t> &broker_ids,
                                                    std::map<int32_t, std::vector<DescribeLogDirsResponseDirMetadata>> &out)
 {
     struct result
     {
         int32_t id;
         std::vector<DescribeLogDirsResponseDirMetadata> logdirs;
+        result(int32_t i, std::vector<DescribeLogDirsResponseDirMetadata> ld) : id(i), logdirs(std::move(ld)) {}
     };
-    std::list<result> logDirsResults;
-    std::list<int> errChan;
+    std::list<result> log_dirs_results;
+    std::list<int> err_chan;
 
-    co_task task_;
-    for (int32_t b_id : brokerIds)
+    co_task task;
+    for (int32_t bid : broker_ids)
     {
         std::shared_ptr<Broker> broker;
-        int err = FindBroker(b_id, broker);
+        int err = FindBroker(bid, broker);
         if (err != 0)
         {
-            LOG_CORE("Admin::DescribeClusterResponse Unable to find broker with ID = %d", b_id);
+            LOG_CORE("Admin::DescribeClusterResponse Unable to find broker with ID = %d", bid);
             continue;
         }
-        task_ << [this](auto broker, auto &logDirsResults, auto &errChan) -> coev::awaitable<void>
+        task << [this](auto broker, auto &log_dirs_results, auto &err_chan) -> coev::awaitable<void>
         {
             auto err = co_await broker->Open(m_conf);
             if (err != 0)
             {
-                errChan.push_back(err);
+                err_chan.push_back(err);
                 co_return;
             }
             auto request = std::make_shared<DescribeLogDirsRequest>();
@@ -1206,31 +1207,31 @@ coev::awaitable<int> ClusterAdmin::DescribeLogDirs(const std::vector<int32_t> &b
             err = co_await broker->DescribeLogDirs(request, response);
             if (err != 0)
             {
-                errChan.push_back(err);
+                err_chan.push_back(err);
                 co_return;
             }
             if (response.m_response->m_error_code != ErrNoError)
             {
-                errChan.push_back(response.m_response->m_error_code);
+                err_chan.push_back(response.m_response->m_error_code);
                 co_return;
             }
-            logDirsResults.emplace_back(broker->ID(), std::move(response.m_response->m_log_dirs));
-        }(broker, logDirsResults, errChan);
+            log_dirs_results.emplace_back(broker->ID(), std::move(response.m_response->m_log_dirs));
+        }(broker, log_dirs_results, err_chan);
     }
-    co_await task_.wait_all();
+    co_await task.wait_all();
 
-    for (auto &it : logDirsResults)
+    for (auto &it : log_dirs_results)
     {
         out[it.id] = std::move(it.logdirs);
     }
-    if (errChan.size() > 0)
+    if (err_chan.size() > 0)
     {
-        co_return errChan.front();
+        co_return err_chan.front();
     }
     co_return ErrNoError;
 }
 
-coev::awaitable<int> ClusterAdmin::DescribeUserScramCredentials(const std::vector<std::string> &users, std::vector<std::shared_ptr<DescribeUserScramCredentialsResult>> &out_results)
+coev::awaitable<int> ClusterAdmin::DescribeUserScramCredentials(const std::vector<std::string> &users, std::vector<DescribeUserScramCredentialsResult> &out_results)
 {
     auto req = std::make_shared<DescribeUserScramCredentialsRequest>();
     for (auto &u : users)

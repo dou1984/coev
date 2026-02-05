@@ -39,8 +39,8 @@ TEST(CreateAclsResponseTest, DecodeWithError)
     EXPECT_EQ(response.m_acl_creation_responses.size(), 1) << "ACL creation responses count mismatch";
 
     auto aclResp = response.m_acl_creation_responses[0];
-    EXPECT_EQ(aclResp->m_err, KError::ErrInvalidRequest) << "ACL creation response error mismatch";
-    EXPECT_EQ(aclResp->m_err_msg, "error") << "ACL creation response error message mismatch";
+    EXPECT_EQ(aclResp.m_err, KError::ErrInvalidRequest) << "ACL creation response error mismatch";
+    EXPECT_EQ(aclResp.m_err_msg, "error") << "ACL creation response error message mismatch";
 }
 
 TEST(CreateAclsResponseTest, DecodeResponseArray)
@@ -57,13 +57,13 @@ TEST(CreateAclsResponseTest, DecodeResponseArray)
 
     // First response with error
     auto aclResp1 = response.m_acl_creation_responses[0];
-    EXPECT_EQ(aclResp1->m_err, KError::ErrInvalidRequest) << "First ACL creation response error mismatch";
-    EXPECT_EQ(aclResp1->m_err_msg, "error") << "First ACL creation response error message mismatch";
+    EXPECT_EQ(aclResp1.m_err, KError::ErrInvalidRequest) << "First ACL creation response error mismatch";
+    EXPECT_EQ(aclResp1.m_err_msg, "error") << "First ACL creation response error message mismatch";
 
     // Second response without error
     auto aclResp2 = response.m_acl_creation_responses[1];
-    EXPECT_EQ(aclResp2->m_err, KError::ErrNoError) << "Second ACL creation response error mismatch";
-    EXPECT_TRUE(aclResp2->m_err_msg.empty()) << "Second ACL creation response error message should be empty";
+    EXPECT_EQ(aclResp2.m_err, KError::ErrNoError) << "Second ACL creation response error mismatch";
+    EXPECT_TRUE(aclResp2.m_err_msg.empty()) << "Second ACL creation response error message should be empty";
 }
 
 TEST(CreateAclsResponseTest, EncodeWithError)
@@ -72,9 +72,9 @@ TEST(CreateAclsResponseTest, EncodeWithError)
     response.set_version(0);
     response.m_throttle_time = std::chrono::milliseconds(100);
 
-    auto aclResp = std::make_shared<AclCreationResponse>();
-    aclResp->m_err = KError::ErrInvalidRequest;
-    aclResp->m_err_msg = "error";
+    AclCreationResponse aclResp;
+    aclResp.m_err = KError::ErrInvalidRequest;
+    aclResp.m_err_msg = "error";
     response.m_acl_creation_responses.push_back(aclResp);
 
     real_encoder encoder(1024);
@@ -93,14 +93,14 @@ TEST(CreateAclsResponseTest, EncodeResponseArray)
     response.m_throttle_time = std::chrono::milliseconds(100);
 
     // First response with error
-    auto aclResp1 = std::make_shared<AclCreationResponse>();
-    aclResp1->m_err = KError::ErrInvalidRequest;
-    aclResp1->m_err_msg = "error";
+    AclCreationResponse aclResp1;
+    aclResp1.m_err = KError::ErrInvalidRequest;
+    aclResp1.m_err_msg = "error";
     response.m_acl_creation_responses.push_back(aclResp1);
 
     // Second response without error
-    auto aclResp2 = std::make_shared<AclCreationResponse>();
-    aclResp2->m_err = KError::ErrNoError;
+    AclCreationResponse aclResp2;
+    aclResp2.m_err = KError::ErrNoError;
     response.m_acl_creation_responses.push_back(aclResp2);
 
     real_encoder encoder(1024);
@@ -144,20 +144,20 @@ TEST(CreateAclsResponseTest, RoundTripEncodingDecoding)
     originalResponse.m_throttle_time = std::chrono::milliseconds(100);
 
     // First response with error
-    auto aclResp1 = std::make_shared<AclCreationResponse>();
-    aclResp1->m_err = KError::ErrInvalidTopic;
-    aclResp1->m_err_msg = "Invalid topic error";
+    AclCreationResponse aclResp1;
+    aclResp1.m_err = KError::ErrInvalidTopic;
+    aclResp1.m_err_msg = "Invalid topic error";
     originalResponse.m_acl_creation_responses.push_back(aclResp1);
 
     // Second response with different error
-    auto aclResp2 = std::make_shared<AclCreationResponse>();
-    aclResp2->m_err = KError::ErrTopicAuthorizationFailed;
-    aclResp2->m_err_msg = "Topic authorization failed";
+    AclCreationResponse aclResp2;
+    aclResp2.m_err = KError::ErrTopicAuthorizationFailed;
+    aclResp2.m_err_msg = "Topic authorization failed";
     originalResponse.m_acl_creation_responses.push_back(aclResp2);
 
     // Third response without error
-    auto aclResp3 = std::make_shared<AclCreationResponse>();
-    aclResp3->m_err = KError::ErrNoError;
+    AclCreationResponse aclResp3;
+    aclResp3.m_err = KError::ErrNoError;
     originalResponse.m_acl_creation_responses.push_back(aclResp3);
 
     // Encode the response
@@ -183,7 +183,7 @@ TEST(CreateAclsResponseTest, RoundTripEncodingDecoding)
         auto originalAclResp = originalResponse.m_acl_creation_responses[i];
         auto decodedAclResp = decodedResponse.m_acl_creation_responses[i];
 
-        EXPECT_EQ(decodedAclResp->m_err, originalAclResp->m_err) << "ACL creation response error mismatch in round-trip, index: " << i;
-        EXPECT_EQ(decodedAclResp->m_err_msg, originalAclResp->m_err_msg) << "ACL creation response error message mismatch in round-trip, index: " << i;
+        EXPECT_EQ(decodedAclResp.m_err, originalAclResp.m_err) << "ACL creation response error mismatch in round-trip, index: " << i;
+        EXPECT_EQ(decodedAclResp.m_err_msg, originalAclResp.m_err_msg) << "ACL creation response error message mismatch in round-trip, index: " << i;
     }
 }

@@ -4,6 +4,7 @@
 #include <memory>
 #include <cstdint>
 #include <cassert>
+#include <string>
 
 struct packet_type
 {

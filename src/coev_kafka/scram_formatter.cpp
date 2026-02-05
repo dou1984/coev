@@ -1,6 +1,7 @@
 #include <openssl/hmac.h>
 #include <openssl/sha.h>
 #include <cstring>
+#include <stdexcept>
 #include "scram_formatter.h"
 
 namespace

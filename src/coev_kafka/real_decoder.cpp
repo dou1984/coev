@@ -693,7 +693,7 @@ int real_decoder::peek(int offset, int length, std::shared_ptr<packet_decoder> &
     }
     int start = m_offset + offset;
     auto decoder = std::make_shared<real_decoder>();
-    decoder->m_raw = std::string_view(m_raw.begin() + start, m_raw.begin() + start + length);
+    decoder->m_raw = std::string_view(m_raw.begin() + start, length);
     result = decoder;
     return 0;
 }

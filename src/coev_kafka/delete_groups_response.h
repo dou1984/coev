@@ -3,11 +3,14 @@
 #include <string>
 #include <map>
 #include <cstdint>
+#include <chrono>
 
 #include "packet_encoder.h"
 #include "packet_decoder.h"
 #include "protocol_body.h"
-struct DeleteGroupsResponse : protocol_body, flexible_version
+#include "throttle_support.h"
+
+struct DeleteGroupsResponse : protocol_body, flexible_version, throttle_support
 {
 	int16_t m_version;
 	std::chrono::milliseconds m_throttle_time;
