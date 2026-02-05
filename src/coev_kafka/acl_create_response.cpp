@@ -17,7 +17,7 @@ int CreateAclsResponse::encode(packet_encoder &pe) const
 
     for (auto &resp : m_acl_creation_responses)
     {
-        if (resp->encode(pe) != 0)
+        if (resp.encode(pe) != 0)
         {
             return -1;
         }
@@ -42,8 +42,7 @@ int CreateAclsResponse::decode(packet_decoder &pd, int16_t version)
     m_acl_creation_responses.resize(n);
     for (int32_t i = 0; i < n; ++i)
     {
-        m_acl_creation_responses[i] = std::make_shared<AclCreationResponse>();
-        if (m_acl_creation_responses[i]->decode(pd, version) != 0)
+        if (m_acl_creation_responses[i].decode(pd, version) != 0)
         {
             return -1;
         }

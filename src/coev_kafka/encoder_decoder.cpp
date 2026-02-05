@@ -9,7 +9,7 @@
 
 int encode(IEncoder &e, std::string &out)
 {
-    prepEncoder enc;
+    prep_encoder enc;
     if (prepare_flexible_encoder(enc, e) != ErrNoError)
     {
         throw PacketEncodingError{"encoding failed"};

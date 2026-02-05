@@ -80,12 +80,12 @@ TEST(DeleteAclsRequestTest, DecodeRequestNulls) {
     EXPECT_EQ(request.m_filters.size(), 1) << "Decoding produced unexpected number of filters";
     
     auto filter = request.m_filters[0];
-    EXPECT_EQ(filter->m_resource_type, AclResourceTypeAny) << "ResourceType mismatch";
-    EXPECT_TRUE(filter->m_resource_name.empty()) << "ResourceName should be empty for null value";
-    EXPECT_TRUE(filter->m_principal.empty()) << "Principal should be empty for null value";
-    EXPECT_TRUE(filter->m_host.empty()) << "Host should be empty for null value";
-    EXPECT_EQ(filter->m_operation, AclOperationAlterConfigs) << "Operation mismatch";
-    EXPECT_EQ(filter->m_permission_type, AclPermissionTypeAllow) << "PermissionType mismatch";
+    EXPECT_EQ(filter.m_resource_type, AclResourceTypeAny) << "ResourceType mismatch";
+    EXPECT_TRUE(filter.m_resource_name.empty()) << "ResourceName should be empty for null value";
+    EXPECT_TRUE(filter.m_principal.empty()) << "Principal should be empty for null value";
+    EXPECT_TRUE(filter.m_host.empty()) << "Host should be empty for null value";
+    EXPECT_EQ(filter.m_operation, AclOperationAlterConfigs) << "Operation mismatch";
+    EXPECT_EQ(filter.m_permission_type, AclPermissionTypeAllow) << "PermissionType mismatch";
 }
 
 TEST(DeleteAclsRequestTest, DecodeRequest) {
@@ -99,12 +99,12 @@ TEST(DeleteAclsRequestTest, DecodeRequest) {
     EXPECT_EQ(request.m_filters.size(), 1) << "Decoding produced unexpected number of filters";
     
     auto filter = request.m_filters[0];
-    EXPECT_EQ(filter->m_resource_type, AclResourceTypeAny) << "ResourceType mismatch";
-    EXPECT_EQ(filter->m_resource_name, "filter") << "ResourceName mismatch";
-    EXPECT_EQ(filter->m_principal, "principal") << "Principal mismatch";
-    EXPECT_EQ(filter->m_host, "host") << "Host mismatch";
-    EXPECT_EQ(filter->m_operation, AclOperationWrite) << "Operation mismatch";
-    EXPECT_EQ(filter->m_permission_type, AclPermissionTypeAllow) << "PermissionType mismatch";
+    EXPECT_EQ(filter.m_resource_type, AclResourceTypeAny) << "ResourceType mismatch";
+    EXPECT_EQ(filter.m_resource_name, "filter") << "ResourceName mismatch";
+    EXPECT_EQ(filter.m_principal, "principal") << "Principal mismatch";
+    EXPECT_EQ(filter.m_host, "host") << "Host mismatch";
+    EXPECT_EQ(filter.m_operation, AclOperationWrite) << "Operation mismatch";
+    EXPECT_EQ(filter.m_permission_type, AclPermissionTypeAllow) << "PermissionType mismatch";
 }
 
 TEST(DeleteAclsRequestTest, DecodeRequestArray) {
@@ -119,21 +119,21 @@ TEST(DeleteAclsRequestTest, DecodeRequestArray) {
     
     // Check first filter
     auto filter1 = request.m_filters[0];
-    EXPECT_EQ(filter1->m_resource_type, AclResourceTypeAny) << "First filter ResourceType mismatch";
-    EXPECT_EQ(filter1->m_resource_name, "filter") << "First filter ResourceName mismatch";
-    EXPECT_EQ(filter1->m_principal, "principal") << "First filter Principal mismatch";
-    EXPECT_EQ(filter1->m_host, "host") << "First filter Host mismatch";
-    EXPECT_EQ(filter1->m_operation, AclOperationWrite) << "First filter Operation mismatch";
-    EXPECT_EQ(filter1->m_permission_type, AclPermissionTypeAllow) << "First filter PermissionType mismatch";
+    EXPECT_EQ(filter1.m_resource_type, AclResourceTypeAny) << "First filter ResourceType mismatch";
+    EXPECT_EQ(filter1.m_resource_name, "filter") << "First filter ResourceName mismatch";
+    EXPECT_EQ(filter1.m_principal, "principal") << "First filter Principal mismatch";
+    EXPECT_EQ(filter1.m_host, "host") << "First filter Host mismatch";
+    EXPECT_EQ(filter1.m_operation, AclOperationWrite) << "First filter Operation mismatch";
+    EXPECT_EQ(filter1.m_permission_type, AclPermissionTypeAllow) << "First filter PermissionType mismatch";
     
     // Check second filter
     auto filter2 = request.m_filters[1];
-    EXPECT_EQ(filter2->m_resource_type, AclResourceTypeTopic) << "Second filter ResourceType mismatch";
-    EXPECT_EQ(filter2->m_resource_name, "topic") << "Second filter ResourceName mismatch";
-    EXPECT_TRUE(filter2->m_principal.empty()) << "Second filter Principal should be empty";
-    EXPECT_TRUE(filter2->m_host.empty()) << "Second filter Host should be empty";
-    EXPECT_EQ(filter2->m_operation, AclOperationDelete) << "Second filter Operation mismatch";
-    EXPECT_EQ(filter2->m_permission_type, AclPermissionTypeDeny) << "Second filter PermissionType mismatch";
+    EXPECT_EQ(filter2.m_resource_type, AclResourceTypeTopic) << "Second filter ResourceType mismatch";
+    EXPECT_EQ(filter2.m_resource_name, "topic") << "Second filter ResourceName mismatch";
+    EXPECT_TRUE(filter2.m_principal.empty()) << "Second filter Principal should be empty";
+    EXPECT_TRUE(filter2.m_host.empty()) << "Second filter Host should be empty";
+    EXPECT_EQ(filter2.m_operation, AclOperationDelete) << "Second filter Operation mismatch";
+    EXPECT_EQ(filter2.m_permission_type, AclPermissionTypeDeny) << "Second filter PermissionType mismatch";
 }
 
 TEST(DeleteAclsRequestTest, DecodeRequestNullsv1) {
@@ -147,13 +147,13 @@ TEST(DeleteAclsRequestTest, DecodeRequestNullsv1) {
     EXPECT_EQ(request.m_filters.size(), 1) << "Decoding produced unexpected number of filters";
     
     auto filter = request.m_filters[0];
-    EXPECT_EQ(filter->m_resource_type, AclResourceTypeAny) << "ResourceType mismatch";
-    EXPECT_TRUE(filter->m_resource_name.empty()) << "ResourceName should be empty for null value";
-    EXPECT_EQ(filter->m_resource_pattern_type_filter, AclResourcePatternTypeAny) << "ResourcePatternTypeFilter mismatch";
-    EXPECT_TRUE(filter->m_principal.empty()) << "Principal should be empty for null value";
-    EXPECT_TRUE(filter->m_host.empty()) << "Host should be empty for null value";
-    EXPECT_EQ(filter->m_operation, AclOperationAlterConfigs) << "Operation mismatch";
-    EXPECT_EQ(filter->m_permission_type, AclPermissionTypeAllow) << "PermissionType mismatch";
+    EXPECT_EQ(filter.m_resource_type, AclResourceTypeAny) << "ResourceType mismatch";
+    EXPECT_TRUE(filter.m_resource_name.empty()) << "ResourceName should be empty for null value";
+    EXPECT_EQ(filter.m_resource_pattern_type_filter, AclResourcePatternTypeAny) << "ResourcePatternTypeFilter mismatch";
+    EXPECT_TRUE(filter.m_principal.empty()) << "Principal should be empty for null value";
+    EXPECT_TRUE(filter.m_host.empty()) << "Host should be empty for null value";
+    EXPECT_EQ(filter.m_operation, AclOperationAlterConfigs) << "Operation mismatch";
+    EXPECT_EQ(filter.m_permission_type, AclPermissionTypeAllow) << "PermissionType mismatch";
 }
 
 TEST(DeleteAclsRequestTest, DecodeRequestv1) {
@@ -167,23 +167,23 @@ TEST(DeleteAclsRequestTest, DecodeRequestv1) {
     EXPECT_EQ(request.m_filters.size(), 1) << "Decoding produced unexpected number of filters";
     
     auto filter = request.m_filters[0];
-    EXPECT_EQ(filter->m_resource_type, AclResourceTypeAny) << "ResourceType mismatch";
-    EXPECT_EQ(filter->m_resource_name, "filter") << "ResourceName mismatch";
-    EXPECT_EQ(filter->m_resource_pattern_type_filter, AclResourcePatternTypeAny) << "ResourcePatternTypeFilter mismatch";
-    EXPECT_EQ(filter->m_principal, "principal") << "Principal mismatch";
-    EXPECT_EQ(filter->m_host, "host") << "Host mismatch";
-    EXPECT_EQ(filter->m_operation, AclOperationWrite) << "Operation mismatch";
-    EXPECT_EQ(filter->m_permission_type, AclPermissionTypeAllow) << "PermissionType mismatch";
+    EXPECT_EQ(filter.m_resource_type, AclResourceTypeAny) << "ResourceType mismatch";
+    EXPECT_EQ(filter.m_resource_name, "filter") << "ResourceName mismatch";
+    EXPECT_EQ(filter.m_resource_pattern_type_filter, AclResourcePatternTypeAny) << "ResourcePatternTypeFilter mismatch";
+    EXPECT_EQ(filter.m_principal, "principal") << "Principal mismatch";
+    EXPECT_EQ(filter.m_host, "host") << "Host mismatch";
+    EXPECT_EQ(filter.m_operation, AclOperationWrite) << "Operation mismatch";
+    EXPECT_EQ(filter.m_permission_type, AclPermissionTypeAllow) << "PermissionType mismatch";
 }
 
 TEST(DeleteAclsRequestTest, EncodeRequestNulls) {
     DeleteAclsRequest request;
     request.set_version(0);
     
-    auto filter = std::make_shared<AclFilter>(0);
-    filter->m_resource_type = AclResourceTypeAny;
-    filter->m_operation = AclOperationAlterConfigs;
-    filter->m_permission_type = AclPermissionTypeAllow;
+    AclFilter filter(0);
+    filter.m_resource_type = AclResourceTypeAny;
+    filter.m_operation = AclOperationAlterConfigs;
+    filter.m_permission_type = AclPermissionTypeAllow;
     request.m_filters.push_back(filter);
     
     real_encoder encoder(1024);
@@ -199,13 +199,13 @@ TEST(DeleteAclsRequestTest, EncodeRequest) {
     DeleteAclsRequest request;
     request.set_version(0);
     
-    auto filter = std::make_shared<AclFilter>(0);
-    filter->m_resource_type = AclResourceTypeAny;
-    filter->m_resource_name = "filter";
-    filter->m_principal = "principal";
-    filter->m_host = "host";
-    filter->m_operation = AclOperationWrite;
-    filter->m_permission_type = AclPermissionTypeAllow;
+    AclFilter filter(0);
+    filter.m_resource_type = AclResourceTypeAny;
+    filter.m_resource_name = "filter";
+    filter.m_principal = "principal";
+    filter.m_host = "host";
+    filter.m_operation = AclOperationWrite;
+    filter.m_permission_type = AclPermissionTypeAllow;
     request.m_filters.push_back(filter);
     
     real_encoder encoder(1024);
@@ -222,21 +222,21 @@ TEST(DeleteAclsRequestTest, EncodeRequestArray) {
     request.set_version(0);
     
     // First filter
-    auto filter1 = std::make_shared<AclFilter>(0);
-    filter1->m_resource_type = AclResourceTypeAny;
-    filter1->m_resource_name = "filter";
-    filter1->m_principal = "principal";
-    filter1->m_host = "host";
-    filter1->m_operation = AclOperationWrite;
-    filter1->m_permission_type = AclPermissionTypeAllow;
+    AclFilter filter1(0);
+    filter1.m_resource_type = AclResourceTypeAny;
+    filter1.m_resource_name = "filter";
+    filter1.m_principal = "principal";
+    filter1.m_host = "host";
+    filter1.m_operation = AclOperationWrite;
+    filter1.m_permission_type = AclPermissionTypeAllow;
     request.m_filters.push_back(filter1);
     
     // Second filter
-    auto filter2 = std::make_shared<AclFilter>(0);
-    filter2->m_resource_type = AclResourceTypeTopic;
-    filter2->m_resource_name = "topic";
-    filter2->m_operation = AclOperationDelete;
-    filter2->m_permission_type = AclPermissionTypeDeny;
+    AclFilter filter2(0);
+    filter2.m_resource_type = AclResourceTypeTopic;
+    filter2.m_resource_name = "topic";
+    filter2.m_operation = AclOperationDelete;
+    filter2.m_permission_type = AclPermissionTypeDeny;
     request.m_filters.push_back(filter2);
     
     real_encoder encoder(1024);
@@ -252,11 +252,11 @@ TEST(DeleteAclsRequestTest, EncodeRequestNullsv1) {
     DeleteAclsRequest request;
     request.set_version(1);
     
-    auto filter = std::make_shared<AclFilter>(1);
-    filter->m_resource_type = AclResourceTypeAny;
-    filter->m_resource_pattern_type_filter = AclResourcePatternTypeAny;
-    filter->m_operation = AclOperationAlterConfigs;
-    filter->m_permission_type = AclPermissionTypeAllow;
+    AclFilter filter(1);
+    filter.m_resource_type = AclResourceTypeAny;
+    filter.m_resource_pattern_type_filter = AclResourcePatternTypeAny;
+    filter.m_operation = AclOperationAlterConfigs;
+    filter.m_permission_type = AclPermissionTypeAllow;
     request.m_filters.push_back(filter);
     
     real_encoder encoder(1024);
@@ -272,14 +272,14 @@ TEST(DeleteAclsRequestTest, EncodeRequestv1) {
     DeleteAclsRequest request;
     request.set_version(1);
     
-    auto filter = std::make_shared<AclFilter>(1);
-    filter->m_resource_type = AclResourceTypeAny;
-    filter->m_resource_name = "filter";
-    filter->m_resource_pattern_type_filter = AclResourcePatternTypeAny;
-    filter->m_principal = "principal";
-    filter->m_host = "host";
-    filter->m_operation = AclOperationWrite;
-    filter->m_permission_type = AclPermissionTypeAllow;
+    AclFilter filter(1);
+    filter.m_resource_type = AclResourceTypeAny;
+    filter.m_resource_name = "filter";
+    filter.m_resource_pattern_type_filter = AclResourcePatternTypeAny;
+    filter.m_principal = "principal";
+    filter.m_host = "host";
+    filter.m_operation = AclOperationWrite;
+    filter.m_permission_type = AclPermissionTypeAllow;
     request.m_filters.push_back(filter);
     
     real_encoder encoder(1024);
@@ -321,24 +321,24 @@ TEST(DeleteAclsRequestTest, RoundTripEncodingDecoding) {
         originalRequest.set_version(version);
         
         // Create multiple filters with different values
-        auto filter1 = std::make_shared<AclFilter>(version);
-        filter1->m_resource_type = AclResourceTypeTopic;
-        filter1->m_resource_name = "test_topic";
-        filter1->m_principal = "user:test";
-        filter1->m_host = "localhost";
-        filter1->m_operation = AclOperationRead;
-        filter1->m_permission_type = AclPermissionTypeAllow;
+        AclFilter filter1(version);
+        filter1.m_resource_type = AclResourceTypeTopic;
+        filter1.m_resource_name = "test_topic";
+        filter1.m_principal = "user:test";
+        filter1.m_host = "localhost";
+        filter1.m_operation = AclOperationRead;
+        filter1.m_permission_type = AclPermissionTypeAllow;
         if (version >= 1) {
-            filter1->m_resource_pattern_type_filter = AclResourcePatternTypeLiteral;
+            filter1.m_resource_pattern_type_filter = AclResourcePatternTypeLiteral;
         }
         originalRequest.m_filters.push_back(filter1);
         
-        auto filter2 = std::make_shared<AclFilter>(version);
-        filter2->m_resource_type = AclResourceTypeGroup;
-        filter2->m_operation = AclOperationAll;
-        filter2->m_permission_type = AclPermissionTypeDeny;
+        AclFilter filter2(version);
+        filter2.m_resource_type = AclResourceTypeGroup;
+        filter2.m_operation = AclOperationAll;
+        filter2.m_permission_type = AclPermissionTypeDeny;
         if (version >= 1) {
-            filter2->m_resource_pattern_type_filter = AclResourcePatternTypePrefixed;
+            filter2.m_resource_pattern_type_filter = AclResourcePatternTypePrefixed;
         }
         originalRequest.m_filters.push_back(filter2);
         
@@ -363,15 +363,15 @@ TEST(DeleteAclsRequestTest, RoundTripEncodingDecoding) {
             auto originalFilter = originalRequest.m_filters[i];
             auto decodedFilter = decodedRequest.m_filters[i];
             
-            EXPECT_EQ(decodedFilter->m_resource_type, originalFilter->m_resource_type) << "ResourceType mismatch in round-trip test, version: " << version << ", filter: " << i;
-            EXPECT_EQ(decodedFilter->m_resource_name, originalFilter->m_resource_name) << "ResourceName mismatch in round-trip test, version: " << version << ", filter: " << i;
-            EXPECT_EQ(decodedFilter->m_principal, originalFilter->m_principal) << "Principal mismatch in round-trip test, version: " << version << ", filter: " << i;
-            EXPECT_EQ(decodedFilter->m_host, originalFilter->m_host) << "Host mismatch in round-trip test, version: " << version << ", filter: " << i;
-            EXPECT_EQ(decodedFilter->m_operation, originalFilter->m_operation) << "Operation mismatch in round-trip test, version: " << version << ", filter: " << i;
-            EXPECT_EQ(decodedFilter->m_permission_type, originalFilter->m_permission_type) << "PermissionType mismatch in round-trip test, version: " << version << ", filter: " << i;
+            EXPECT_EQ(decodedFilter.m_resource_type, originalFilter.m_resource_type) << "ResourceType mismatch in round-trip test, version: " << version << ", filter: " << i;
+            EXPECT_EQ(decodedFilter.m_resource_name, originalFilter.m_resource_name) << "ResourceName mismatch in round-trip test, version: " << version << ", filter: " << i;
+            EXPECT_EQ(decodedFilter.m_principal, originalFilter.m_principal) << "Principal mismatch in round-trip test, version: " << version << ", filter: " << i;
+            EXPECT_EQ(decodedFilter.m_host, originalFilter.m_host) << "Host mismatch in round-trip test, version: " << version << ", filter: " << i;
+            EXPECT_EQ(decodedFilter.m_operation, originalFilter.m_operation) << "Operation mismatch in round-trip test, version: " << version << ", filter: " << i;
+            EXPECT_EQ(decodedFilter.m_permission_type, originalFilter.m_permission_type) << "PermissionType mismatch in round-trip test, version: " << version << ", filter: " << i;
             
             if (version >= 1) {
-                EXPECT_EQ(decodedFilter->m_resource_pattern_type_filter, originalFilter->m_resource_pattern_type_filter) << "ResourcePatternTypeFilter mismatch in round-trip test, version: " << version << ", filter: " << i;
+                EXPECT_EQ(decodedFilter.m_resource_pattern_type_filter, originalFilter.m_resource_pattern_type_filter) << "ResourcePatternTypeFilter mismatch in round-trip test, version: " << version << ", filter: " << i;
             }
         }
     }

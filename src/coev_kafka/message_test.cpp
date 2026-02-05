@@ -185,7 +185,7 @@ TEST(MessageTest, DecodingCompressedMessages)
         // Encode the message
         real_encoder encoder;
         // First pass: calculate required size
-        prepEncoder prepEnc;
+        prep_encoder prepEnc;
         int prepResult = original.encode(prepEnc);
         ASSERT_EQ(prepResult, 0) << "Failed to prepare message with codec " << ToString(codec);
 
@@ -236,7 +236,7 @@ TEST(MessageTest, DecodingEmptyCompressedMessages)
         // Encode the message
         real_encoder encoder;
         // First pass: calculate required size
-        prepEncoder prepEnc;
+        prep_encoder prepEnc;
         int prepResult = original.encode(prepEnc);
         ASSERT_EQ(prepResult, 0) << "Failed to prepare empty message with codec " << ToString(codec);
 
@@ -273,7 +273,7 @@ TEST(MessageTest, EncodingEmptyMessage)
 
     real_encoder encoder;
     // First pass: calculate required size
-    prepEncoder prepEnc;
+    prep_encoder prepEnc;
     int prepResult = original.encode(prepEnc);
     ASSERT_EQ(prepResult, 0) << "Failed to prepare empty message";
 
@@ -310,7 +310,7 @@ TEST(MessageTest, EncodingEmptyGzipMessage)
 
     real_encoder encoder;
     // First pass: calculate required size
-    prepEncoder prepEnc;
+    prep_encoder prepEnc;
     int prepResult = original.encode(prepEnc);
     ASSERT_EQ(prepResult, 0) << "Failed to prepare empty gzip message";
 
@@ -348,7 +348,7 @@ TEST(MessageTest, EncodingEmptyLZ4Message)
 
     real_encoder encoder;
     // First pass: calculate required size
-    prepEncoder prepEnc;
+    prep_encoder prepEnc;
     int prepResult = original.encode(prepEnc);
     ASSERT_EQ(prepResult, 0) << "Failed to prepare empty lz4 message";
 
@@ -386,7 +386,7 @@ TEST(MessageTest, EncodingEmptyZSTDMessage)
 
     real_encoder encoder;
     // First pass: calculate required size
-    prepEncoder prepEnc;
+    prep_encoder prepEnc;
     int prepResult = original.encode(prepEnc);
     ASSERT_EQ(prepResult, 0) << "Failed to prepare empty zstd message";
 
@@ -423,7 +423,7 @@ TEST(MessageTest, VersionHandling)
 
     real_encoder encoder;
     // First pass: calculate required size
-    prepEncoder prepEnc;
+    prep_encoder prepEnc;
     int prepResult = original.encode(prepEnc);
     ASSERT_EQ(prepResult, 0) << "Failed to prepare version 1 message";
 

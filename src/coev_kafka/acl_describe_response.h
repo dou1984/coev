@@ -16,7 +16,7 @@ struct DescribeAclsResponse : protocol_body
 {
     int16_t m_version;
     std::chrono::milliseconds m_throttle_time;
-    std::vector<std::shared_ptr<ResourceAcls>> m_resource_acls;
+    std::vector<ResourceAcls> m_resource_acls;
     std::string m_err_msg;
     KError m_err;
 

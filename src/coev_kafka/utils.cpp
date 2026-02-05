@@ -10,32 +10,26 @@
 #include <limits>
 #include <coev/coev.h>
 
-std::vector<int32_t> dupInt32Slice(const std::vector<int32_t> &input)
-{
-    return input;
-}
-
 int StringEncoder::Encode(std::string &out)
 {
-    out.assign(data_.begin(), data_.end());
+    out.assign(m_data.begin(), m_data.end());
     return 0;
 }
 
 size_t StringEncoder::Length()
 {
-    return data_.size();
+    return m_data.size();
 }
 
-// ByteEncoder
 int ByteEncoder::Encode(std::string &out)
 {
-    out = data_;
+    out = m_data;
     return 0;
 }
 
 size_t ByteEncoder::Length()
 {
-    return data_.size();
+    return m_data.size();
 }
 
 std::function<std::chrono::milliseconds(int, int)> NewExponentialBackoff(

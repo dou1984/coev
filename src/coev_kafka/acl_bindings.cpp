@@ -112,7 +112,7 @@ int ResourceAcls::encode(packet_encoder &pe, int16_t version) const
 
     for (const auto &acl : m_acls)
     {
-        if (acl->encode(pe) != ErrNoError)
+        if (acl.encode(pe) != ErrNoError)
         {
             return -1;
         }
@@ -137,8 +137,7 @@ int ResourceAcls::decode(packet_decoder &pd, int16_t version)
     m_acls.resize(n);
     for (int i = 0; i < n; ++i)
     {
-        m_acls[i] = std::make_shared<Acl>();
-        if (m_acls[i]->decode(pd, version) != ErrNoError)
+        if (m_acls[i].decode(pd, version) != ErrNoError)
         {
             return -1;
         }

@@ -27,5 +27,5 @@ struct Request : VEncoder, IEncoder, IDecoder
     bool is_flexible() const;
 };
 
-coev::awaitable<int> decode_request(std::shared_ptr<Broker> &broker, int &req, Request &size);
+coev::awaitable<int> decode_request(std::shared_ptr<Broker> &broker, Request &req, int &size);
 std::shared_ptr<protocol_body> allocate_body(int16_t key, int16_t version);

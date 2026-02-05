@@ -41,7 +41,6 @@ namespace coev
 		virtual awaitable<int> sendto(const char *, int, addrInfo &);
 		int close();
 		operator bool() const;
-		// auto operator->() = delete;
 
 	protected:
 		uint64_t m_tid = 0;

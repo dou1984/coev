@@ -48,9 +48,8 @@ TEST(BrokerTest, InitialState)
     // Test initial state of broker members
     auto broker = std::make_shared<Broker>("localhost:9092");
 
-    EXPECT_TRUE(broker->m_conn->IsClosed());   // Connect object starts in CLOSED state
-    EXPECT_FALSE(broker->m_conn->IsOpening()); // Not opening initially
-    EXPECT_FALSE(broker->m_conn->IsOpened());  // Not opened yet
+    // m_conn is lazily initialized, so it should be nullptr initially
+    EXPECT_TRUE(broker->m_conn == nullptr);
     EXPECT_EQ(broker->m_id, -1);
     EXPECT_EQ(broker->m_correlation_id, 0);
     EXPECT_EQ(broker->m_session_reauthentication_time, 0);
@@ -80,7 +79,8 @@ TEST(BrokerTest, ConnectedState)
     // Test broker connected state
     auto broker = std::make_shared<Broker>("localhost:9092");
 
-    EXPECT_FALSE(broker->m_conn->IsOpened());
+    // m_conn is lazily initialized, so it should be nullptr initially
+    EXPECT_TRUE(broker->m_conn == nullptr);
 
     // TLSConnectionState returns an int, which is 0 when not connected
     EXPECT_EQ(broker->TLSConnectionState(), 0);

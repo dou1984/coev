@@ -7,12 +7,6 @@
 #include <memory>
 #include <functional>
 
-struct Broker;
-
-std::vector<int32_t> dupInt32Slice(const std::vector<int32_t> &input);
-
-void withRecover(std::function<void()> fn);
-
 struct Encoder
 {
     virtual ~Encoder() = default;
@@ -23,8 +17,8 @@ struct Encoder
 struct StringEncoder : Encoder
 {
 
-    std::string data_;
-    StringEncoder(const std::string &s) : data_(s)
+    std::string m_data;
+    StringEncoder(const std::string &s) : m_data(s)
     {
     }
     int Encode(std::string &);
@@ -34,9 +28,9 @@ struct StringEncoder : Encoder
 struct ByteEncoder : Encoder
 {
 
-    std::string data_;
+    std::string m_data;
 
-    ByteEncoder(const std::string &b) : data_(b)
+    ByteEncoder(const std::string &b) : m_data(b)
     {
     }
     int Encode(std::string &);

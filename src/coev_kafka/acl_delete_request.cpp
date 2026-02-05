@@ -13,10 +13,10 @@ int DeleteAclsRequest::encode(packet_encoder &pe) const
         return -1;
     }
 
-    for (const auto &filter : m_filters)
+    for (auto &filter : m_filters)
     {
-        filter->m_version = m_version;
-        if (filter->encode(pe) != 0)
+        filter.m_version = m_version;
+        if (filter.encode(pe) != 0)
         {
             return -1;
         }
@@ -37,9 +37,8 @@ int DeleteAclsRequest::decode(packet_decoder &pd, int16_t version)
     m_filters.resize(n);
     for (int32_t i = 0; i < n; ++i)
     {
-        m_filters[i] = std::make_shared<AclFilter>();
-        m_filters[i]->m_version = m_version;
-        if (m_filters[i]->decode(pd, version) != 0)
+        m_filters[i].m_version = m_version;
+        if (m_filters[i].decode(pd, version) != 0)
         {
             return -1;
         }

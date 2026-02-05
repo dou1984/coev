@@ -8,9 +8,9 @@
 #include "packet_encoder.h"
 #include "version.h"
 
-struct prepEncoder : packet_encoder
+struct prep_encoder : packet_encoder
 {
-    prepEncoder();
+    prep_encoder();
 
     void putInt8(int8_t in);
     void putInt16(int16_t in);

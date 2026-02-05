@@ -15,7 +15,7 @@ struct DeleteAclsRequest : protocol_body
 {
 
     int16_t m_version;
-    std::vector<std::shared_ptr<AclFilter>> m_filters;
+    mutable std::vector<AclFilter> m_filters;
     DeleteAclsRequest() = default;
     DeleteAclsRequest(int16_t v) : m_version(v)
     {

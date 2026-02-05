@@ -15,7 +15,7 @@ int CreateAclsRequest::encode(packet_encoder &pe) const
 
     for (const auto &aclCreation : m_acl_creations)
     {
-        if (aclCreation->encode(pe, m_version) != 0)
+        if (aclCreation.encode(pe, m_version) != 0)
         {
             return -1;
         }
@@ -36,8 +36,7 @@ int CreateAclsRequest::decode(packet_decoder &pd, int16_t version)
     m_acl_creations.resize(n);
     for (int32_t i = 0; i < n; ++i)
     {
-        m_acl_creations[i] = std::make_shared<AclCreation>();
-        if (m_acl_creations[i]->decode(pd, version) != 0)
+        if (m_acl_creations[i].decode(pd, version) != 0)
         {
             return -1;
         }

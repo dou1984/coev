@@ -96,7 +96,6 @@ namespace coev
 	int MysqlCli::__connect_insert()
 	{
 		assert(fd() != INVALID);
-		TRACE();
 		m_read.data = this;
 		ev_io_init(&m_read, &MysqlCli::cb_read, fd(), EV_READ | EV_WRITE);
 		ev_io_start(m_loop, &m_read);
@@ -113,7 +112,6 @@ namespace coev
 	int MysqlCli::__query_insert()
 	{
 		assert(fd() != INVALID);
-		TRACE();
 		m_read.data = this;
 		ev_io_init(&m_read, &MysqlCli::cb_read, fd(), EV_READ);
 		ev_io_start(m_loop, &m_read);

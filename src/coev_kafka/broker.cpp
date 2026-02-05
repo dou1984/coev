@@ -30,16 +30,13 @@ int8_t GetHeaderLength(int16_t header_version)
 }
 
 Broker::Broker(const std::string &addr) : m_id(-1), m_addr(addr), m_rack(""), m_correlation_id(0), m_session_reauthentication_time(0)
-{
-   
+{    
 }
 Broker::Broker(int id, const std::string &addr) : m_id(id), m_addr(addr), m_rack(""), m_correlation_id(0), m_session_reauthentication_time(0)
-{
-   
+{ 
 }
 Broker::Broker() : m_id(0), m_addr(""), m_rack(""), m_correlation_id(0), m_session_reauthentication_time(0)
-{
-  
+{ 
 }
 Broker::~Broker()
 {
@@ -288,9 +285,13 @@ int Broker::Close()
     {
         return ErrNotConnected;
     }
-    // Always call m_conn->Close() regardless of current state
-    // This ensures proper cleanup of libev resources
-    return m_conn->Close();
+    // Only call m_conn->Close() if the connection is not already closed
+    // This avoids issues with uninitialized libev resources
+    if (m_conn->IsOpened() || m_conn->IsOpening())
+    {
+        return m_conn->Close();
+    }
+    return ErrNotConnected;
 }
 
 coev::awaitable<int> Broker::GetMetadata(std::shared_ptr<MetadataRequest> request, ResponsePromise<MetadataResponse> &response)
@@ -475,9 +476,9 @@ coev::awaitable<int> Broker::CreateAcls(std::shared_ptr<CreateAclsRequest> reque
     std::vector<int> errs;
     for (auto &res : response.m_response->m_acl_creation_responses)
     {
-        if (res->m_err != ErrNoError)
+        if (res.m_err != ErrNoError)
         {
-            errs.push_back(res->m_err);
+            errs.push_back(res.m_err);
         }
     }
     if (!errs.empty())

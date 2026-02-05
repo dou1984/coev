@@ -21,9 +21,9 @@ int DescribeAclsResponse::encode(packet_encoder &pe) const
         return -1;
     }
 
-    for (auto &resourceAcl : m_resource_acls)
+    for (auto &resource_acl : m_resource_acls)
     {
-        if (resourceAcl->encode(pe, m_version) != 0)
+        if (resource_acl.encode(pe, m_version) != 0)
         {
             return -1;
         }
@@ -44,14 +44,14 @@ int DescribeAclsResponse::decode(packet_decoder &pd, int16_t version)
         return -1;
     }
 
-    std::string errmsg;
-    if (pd.getString(errmsg) != 0)
+    std::string err_msg;
+    if (pd.getString(err_msg) != 0)
     {
         return -1;
     }
-    if (!errmsg.empty())
+    if (!err_msg.empty())
     {
-        m_err_msg = std::move(errmsg);
+        m_err_msg = std::move(err_msg);
     }
 
     int32_t n;
@@ -63,8 +63,7 @@ int DescribeAclsResponse::decode(packet_decoder &pd, int16_t version)
     m_resource_acls.resize(n);
     for (int32_t i = 0; i < n; ++i)
     {
-        m_resource_acls[i] = std::make_shared<ResourceAcls>();
-        if (m_resource_acls[i]->decode(pd, version) != 0)
+        if (m_resource_acls[i].decode(pd, version) != 0)
         {
             return -1;
         }

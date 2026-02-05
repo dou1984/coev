@@ -74,8 +74,8 @@ TEST(ControlRecordTest, EncodingControlRecords)
     ControlRecord abortRecord(0, 10, ControlRecordAbort);
 
     // First pass: calculate required size
-    prepEncoder keyPrepEnc;
-    prepEncoder valuePrepEnc;
+    prep_encoder keyPrepEnc;
+    prep_encoder valuePrepEnc;
     int prepResult = abortRecord.encode(keyPrepEnc, valuePrepEnc);
     ASSERT_EQ(prepResult, 0) << "Failed to prepare abort control record";
 
@@ -98,8 +98,8 @@ TEST(ControlRecordTest, EncodingControlRecords)
     ControlRecord commitRecord(0, 15, ControlRecordCommit);
 
     // First pass: calculate required size
-    prepEncoder commitKeyPrepEnc;
-    prepEncoder commitValuePrepEnc;
+    prep_encoder commitKeyPrepEnc;
+    prep_encoder commitValuePrepEnc;
     prepResult = commitRecord.encode(commitKeyPrepEnc, commitValuePrepEnc);
     ASSERT_EQ(prepResult, 0) << "Failed to prepare commit control record";
 
@@ -122,8 +122,8 @@ TEST(ControlRecordTest, EncodingControlRecords)
     ControlRecord unknownRecord(0, 0, ControlRecordUnknown);
 
     // First pass: calculate required size
-    prepEncoder unknownKeyPrepEnc;
-    prepEncoder unknownValuePrepEnc;
+    prep_encoder unknownKeyPrepEnc;
+    prep_encoder unknownValuePrepEnc;
     prepResult = unknownRecord.encode(unknownKeyPrepEnc, unknownValuePrepEnc);
     ASSERT_EQ(prepResult, 0) << "Failed to prepare unknown control record";
 
@@ -150,8 +150,8 @@ TEST(ControlRecordTest, VersionHandling)
     ControlRecord record(1, 20, ControlRecordCommit);
 
     // First pass: calculate required size
-    prepEncoder keyPrepEnc;
-    prepEncoder valuePrepEnc;
+    prep_encoder keyPrepEnc;
+    prep_encoder valuePrepEnc;
     int prepResult = record.encode(keyPrepEnc, valuePrepEnc);
     ASSERT_EQ(prepResult, 0) << "Failed to prepare control record with version 1";
 

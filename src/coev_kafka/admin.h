@@ -38,7 +38,7 @@ struct ClusterAdmin
     coev::awaitable<int> DeleteTopic(const std::string &topic);
     coev::awaitable<int> CreatePartitions(const std::string &topic, int32_t count, const std::vector<std::vector<int32_t>> &assignment, bool validateOnly);
     coev::awaitable<int> AlterPartitionReassignments(const std::string &topic, const std::vector<std::vector<int32_t>> &assignment);
-    coev::awaitable<int> ListPartitionReassignments(const std::string &topic, const std::vector<int32_t> &partitions, std::map<std::string, std::map<int32_t, std::shared_ptr<PartitionReplicaReassignmentsStatus>>> &out_topicStatus);
+    coev::awaitable<int> ListPartitionReassignments(const std::string &topic, const std::vector<int32_t> &partitions, std::map<std::string, std::map<int32_t, std::shared_ptr<PartitionReplicaReassignmentsStatus>>> &out);
     coev::awaitable<int> DeleteRecords(const std::string &topic, const std::map<int32_t, int64_t> &partitionOffsets);
     coev::awaitable<int> DescribeConfig(const ConfigResource &resource, std::vector<std::shared_ptr<ConfigEntry>> &out_entries);
     coev::awaitable<int> AlterConfig(ConfigResourceType resourceType, const std::string &name, const std::map<std::string, std::string> &entries, bool validateOnly);

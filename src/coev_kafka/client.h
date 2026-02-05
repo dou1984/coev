@@ -25,7 +25,6 @@ struct Client
     Client(std::shared_ptr<Config> conf);
     virtual ~Client();
 
-    int Topics(std::vector<std::string> &topics);
     std::deque<std::shared_ptr<Broker>> Brokers();
     std::shared_ptr<Config> GetConfig();
     coev::awaitable<int> Controller(std::shared_ptr<Broker> &broker);
@@ -57,6 +56,7 @@ struct Client
 
     int Close();
     bool Closed();
+    int Topics(std::vector<std::string> &topics);
     bool PartitionNotReadable(const std::string &topic, int32_t partition);
     int MetadataTopics(std::vector<std::string> &topics);
     bool UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnownMetaData);

@@ -28,7 +28,7 @@ struct CreateAclsRequest : protocol_body
 {
 
     int16_t m_version;
-    std::vector<std::shared_ptr<AclCreation>> m_acl_creations;
+    std::vector<AclCreation> m_acl_creations;
     CreateAclsRequest() = default;
     CreateAclsRequest(int16_t v) : m_version(v)
     {

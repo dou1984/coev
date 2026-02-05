@@ -27,38 +27,38 @@ static int uvarintLen(uint64_t x)
     return s + 1;
 }
 
-prepEncoder::prepEncoder() = default;
+prep_encoder::prep_encoder() = default;
 
-void prepEncoder::putInt8(int8_t /*in*/)
+void prep_encoder::putInt8(int8_t /*in*/)
 {
     m_length += 1;
 }
-void prepEncoder::putInt16(int16_t /*in*/)
+void prep_encoder::putInt16(int16_t /*in*/)
 {
     m_length += 2;
 }
-void prepEncoder::putInt32(int32_t /*in*/)
+void prep_encoder::putInt32(int32_t /*in*/)
 {
     m_length += 4;
 }
-void prepEncoder::putInt64(int64_t /*in*/)
+void prep_encoder::putInt64(int64_t /*in*/)
 {
     m_length += 8;
 }
-void prepEncoder::putVariant(int64_t in)
+void prep_encoder::putVariant(int64_t in)
 {
     m_length += varintLen(in);
 }
-void prepEncoder::putUVarint(uint64_t in)
+void prep_encoder::putUVarint(uint64_t in)
 {
     m_length += uvarintLen(in);
 }
-void prepEncoder::putFloat64(double /*in*/)
+void prep_encoder::putFloat64(double /*in*/)
 {
     m_length += 8;
 }
 
-int prepEncoder::putArrayLength(int32_t in)
+int prep_encoder::putArrayLength(int32_t in)
 {
     if (isFixed())
     {
@@ -76,20 +76,20 @@ int prepEncoder::putArrayLength(int32_t in)
     }
     return 0;
 }
-void prepEncoder::putBool(bool /*in*/)
+void prep_encoder::putBool(bool /*in*/)
 {
     m_length++;
 }
-void prepEncoder::putKError(KError /*in*/)
+void prep_encoder::putKError(KError /*in*/)
 {
     m_length += 2;
 }
-void prepEncoder::putDurationMs(std::chrono::milliseconds /*in*/)
+void prep_encoder::putDurationMs(std::chrono::milliseconds /*in*/)
 {
     m_length += 4;
 }
 
-int prepEncoder::putBytes(const std::string &in)
+int prep_encoder::putBytes(const std::string &in)
 {
     if (isFixed())
     {
@@ -110,7 +110,7 @@ int prepEncoder::putBytes(const std::string &in)
     return 0;
 }
 
-int prepEncoder::putVariantBytes(const std::string &in)
+int prep_encoder::putVariantBytes(const std::string &in)
 {
     if (in.empty())
     {
@@ -121,7 +121,7 @@ int prepEncoder::putVariantBytes(const std::string &in)
     return putRawBytes(in);
 }
 
-int prepEncoder::putRawBytes(const std::string &in)
+int prep_encoder::putRawBytes(const std::string &in)
 {
     if (in.size() > static_cast<size_t>(std::numeric_limits<int32_t>::max()))
     {
@@ -131,7 +131,7 @@ int prepEncoder::putRawBytes(const std::string &in)
     return 0;
 }
 
-int prepEncoder::putString(const std::string &in)
+int prep_encoder::putString(const std::string &in)
 {
     if (isFixed())
     {
@@ -153,7 +153,7 @@ int prepEncoder::putString(const std::string &in)
     return 0;
 }
 
-int prepEncoder::putNullableString(const std::string &in)
+int prep_encoder::putNullableString(const std::string &in)
 {
     if (isFixed())
     {
@@ -176,7 +176,7 @@ int prepEncoder::putNullableString(const std::string &in)
     return 0;
 }
 
-int prepEncoder::putStringArray(const std::vector<std::string> &in)
+int prep_encoder::putStringArray(const std::vector<std::string> &in)
 {
     if (isFixed())
     {
@@ -202,7 +202,7 @@ int prepEncoder::putStringArray(const std::vector<std::string> &in)
     return 0;
 }
 
-int prepEncoder::putNullableInt32Array(const std::vector<int32_t> &in)
+int prep_encoder::putNullableInt32Array(const std::vector<int32_t> &in)
 {
     if (isFixed())
     {
@@ -231,7 +231,7 @@ int prepEncoder::putNullableInt32Array(const std::vector<int32_t> &in)
     return 0;
 }
 
-int prepEncoder::putInt64Array(const std::vector<int64_t> &in)
+int prep_encoder::putInt64Array(const std::vector<int64_t> &in)
 {
     int err = putArrayLength(static_cast<int32_t>(in.size()));
     if (err != 0)
@@ -240,7 +240,7 @@ int prepEncoder::putInt64Array(const std::vector<int64_t> &in)
     return 0;
 }
 
-void prepEncoder::putEmptyTaggedFieldArray()
+void prep_encoder::putEmptyTaggedFieldArray()
 {
     if (isFixed())
     {
@@ -251,12 +251,12 @@ void prepEncoder::putEmptyTaggedFieldArray()
     }
 }
 
-int prepEncoder::offset() const
+int prep_encoder::offset() const
 {
     return m_length;
 }
 
-void prepEncoder::push(push_encoder &_in)
+void prep_encoder::push(push_encoder &_in)
 {
     auto in = &_in;
     in->save_offset(m_length);
@@ -264,7 +264,7 @@ void prepEncoder::push(push_encoder &_in)
     m_stack.push_back(in);
 }
 
-int prepEncoder::pop()
+int prep_encoder::pop()
 {
     if (m_stack.empty())
         return -1;
@@ -280,7 +280,7 @@ int prepEncoder::pop()
     return 0;
 }
 
-int prepEncoder::putInt32Array(const std::vector<int32_t> &in)
+int prep_encoder::putInt32Array(const std::vector<int32_t> &in)
 {
     if (isFixed())
     {

@@ -20,6 +20,7 @@ class Connect : protected io_connect
 
 public:
     Connect();
+    ~Connect();
     awaitable<int> ReadFull(std::string &buf, size_t n);
     awaitable<int> Write(const std::string &buf);
     awaitable<int> Dial(const char *addr, int port);

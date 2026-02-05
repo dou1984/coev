@@ -33,7 +33,7 @@ struct ResourceAcls : VDecoder, VEncoder
 {
 
     Resource m_resource;
-    std::vector<std::shared_ptr<Acl>> m_acls;
+    std::vector<Acl> m_acls;
 
     int encode(packet_encoder &pe, int16_t version) const;
     int decode(packet_decoder &pd, int16_t version);

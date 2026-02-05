@@ -206,7 +206,7 @@ bool Request::is_flexible() const
     }
     return false;
 }
-coev::awaitable<int> decodeRequest(std::shared_ptr<Broker> &broker, Request &req, int &size)
+coev::awaitable<int> decode_request(std::shared_ptr<Broker> &broker, Request &req, int &size)
 {
     std::string lengthBytes;
     auto bytesRead = 4;

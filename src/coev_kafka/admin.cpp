@@ -762,11 +762,8 @@ coev::awaitable<int> ClusterAdmin::IncrementalAlterConfig(ConfigResourceType res
 
 coev::awaitable<int> ClusterAdmin::CreateACL(const Resource &resource, const Acl &acl)
 {
-    std::vector<std::shared_ptr<AclCreation>> acls;
-    acls.push_back(std::make_shared<AclCreation>(resource, acl));
-
     auto request = std::make_shared<CreateAclsRequest>();
-    request->m_acl_creations = acls;
+    request->m_acl_creations.emplace_back(resource, acl);
     if (m_conf->Version.IsAtLeast(V2_0_0_0))
     {
         request->m_version = 1;
@@ -782,22 +779,20 @@ coev::awaitable<int> ClusterAdmin::CreateACL(const Resource &resource, const Acl
     co_return co_await broker->CreateAcls(request, rsp);
 }
 
-coev::awaitable<int> ClusterAdmin::CreateACLs(const std::vector<std::shared_ptr<ResourceAcls>> &resourceACLs)
+coev::awaitable<int> ClusterAdmin::CreateACLs(const std::vector<ResourceAcls> &resource_acks)
 {
-    std::vector<std::shared_ptr<AclCreation>> acls;
-    for (auto &resourceACL : resourceACLs)
-    {
-        for (auto &acl : resourceACL->m_acls)
-        {
-            acls.emplace_back(std::make_shared<AclCreation>(resourceACL->m_resource, *acl));
-        }
-    }
-
     auto request = std::make_shared<CreateAclsRequest>();
-    request->m_acl_creations = std::move(acls);
     if (m_conf->Version.IsAtLeast(V2_0_0_0))
     {
         request->m_version = 1;
+    }
+
+    for (auto &resource_acl : resource_acks)
+    {
+        for (auto &acl : resource_acl.m_acls)
+        {
+            request->m_acl_creations.emplace_back(resource_acl.m_resource, acl);
+        }
     }
 
     std::shared_ptr<Broker> broker;
@@ -810,7 +805,7 @@ coev::awaitable<int> ClusterAdmin::CreateACLs(const std::vector<std::shared_ptr<
     co_return co_await broker->CreateAcls(request, response);
 }
 
-coev::awaitable<int> ClusterAdmin::ListAcls(const AclFilter &filter, std::vector<std::shared_ptr<ResourceAcls>> &out_results)
+coev::awaitable<int> ClusterAdmin::ListAcls(const AclFilter &filter, std::vector<ResourceAcls> &out_results)
 {
     auto request = std::make_shared<DescribeAclsRequest>();
     request->m_filter = filter;
@@ -832,21 +827,14 @@ coev::awaitable<int> ClusterAdmin::ListAcls(const AclFilter &filter, std::vector
         co_return err;
     }
 
-    out_results.clear();
-    for (auto &rAcl : response.m_response->m_resource_acls)
-    {
-        out_results.push_back(rAcl);
-    }
+    out_results = std::move(response.m_response->m_resource_acls);
     co_return 0;
 }
 
-coev::awaitable<int> ClusterAdmin::DeleteACL(const AclFilter &filter, bool validateOnly, std::vector<std::shared_ptr<MatchingAcl>> &out_matchingAcls)
+coev::awaitable<int> ClusterAdmin::DeleteACL(const AclFilter &filter, bool validateOnly, std::vector<std::shared_ptr<MatchingAcl>> &out_matching_acls)
 {
-    std::vector<std::shared_ptr<AclFilter>> filters;
-    filters.push_back(std::make_shared<AclFilter>(filter));
-
     auto request = std::make_shared<DeleteAclsRequest>();
-    request->m_filters = filters;
+    request->m_filters = {filter};
     if (m_conf->Version.IsAtLeast(V2_0_0_0))
     {
         request->m_version = 1;
@@ -865,12 +853,12 @@ coev::awaitable<int> ClusterAdmin::DeleteACL(const AclFilter &filter, bool valid
         co_return err;
     }
 
-    out_matchingAcls.clear();
+    out_matching_acls.clear();
     for (auto &fr : rsp.m_response->m_filter_responses)
     {
         for (auto &mACL : fr->m_matching_acls)
         {
-            out_matchingAcls.emplace_back(mACL);
+            out_matching_acls.emplace_back(mACL);
         }
     }
     co_return 0;

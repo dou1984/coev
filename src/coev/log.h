@@ -29,7 +29,6 @@
 	LOG(coev::LOG_LEVEL_ERROR, __VA_ARGS__)
 #define LOG_INFO(...) \
 	LOG(coev::LOG_LEVEL_INFO, __VA_ARGS__)
-#define TRACE() LOG_CORE("")
 
 namespace coev
 {

@@ -15,6 +15,10 @@ static std::string to_hex(const std::string &data)
 Connect::Connect() : m_state(CLOSED)
 {
 }
+
+Connect::~Connect()
+{    
+}
 awaitable<int> Connect::ReadFull(std::string &buf, size_t n)
 {
     assert(buf.size() == n);
