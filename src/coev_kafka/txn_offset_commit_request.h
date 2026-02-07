@@ -20,7 +20,7 @@ struct TxnOffsetCommitRequest : protocol_body
     std::string m_group_id;
     int64_t m_producer_id;
     int16_t m_producer_epoch;
-    std::map<std::string, std::vector<std::shared_ptr<PartitionOffsetMetadata>>> m_topics;
+    std::map<std::string, std::vector<PartitionOffsetMetadata>> m_topics;
 
     TxnOffsetCommitRequest() = default;
     TxnOffsetCommitRequest(int16_t v) : m_version(v)

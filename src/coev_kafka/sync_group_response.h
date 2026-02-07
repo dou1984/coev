@@ -20,13 +20,12 @@ struct SyncGroupResponse : protocol_body, flexible_version
     KError m_err = ErrNoError;
     std::string m_member_assignment;
 
-    void set_version(int16_t v);
-
     int GetMemberAssignment(std::shared_ptr<ConsumerGroupMemberAssignment> &);
 
     int encode(packet_encoder &pe) const;
     int decode(packet_decoder &pd, int16_t version);
 
+    void set_version(int16_t v);
     int16_t key() const;
     int16_t version() const;
     int16_t header_version() const;

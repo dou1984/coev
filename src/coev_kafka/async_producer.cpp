@@ -84,7 +84,7 @@ coev::awaitable<int> AsyncProducer::close()
 
 bool AsyncProducer::is_transactional()
 {
-    auto result = m_txnmgr->IsTransactional();
+    auto result = m_txnmgr->is_transactional();
     LOG_CORE("is_transactional returning %d", static_cast<int>(result));
     return result;
 }
@@ -113,14 +113,14 @@ int AsyncProducer::add_offsets_to_txn(const std::map<std::string, std::vector<st
         return -1;
     }
 
-    int result = m_txnmgr->AddOffsetsToTxn(offsets, group_id);
+    int result = m_txnmgr->add_offsets_to_txn(offsets, group_id);
     LOG_CORE("add_offsets_to_txn returning %d", result);
     return result;
 }
 
 ProducerTxnStatusFlag AsyncProducer::txn_status()
 {
-    auto result = m_txnmgr->CurrentTxnStatus();
+    auto result = m_txnmgr->current_txn_status();
     LOG_CORE("txn_status returning %d", (int)result);
     return result;
 }
@@ -134,7 +134,7 @@ int AsyncProducer::begin_txn()
         return -1;
     }
 
-    int result = m_txnmgr->TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInTransaction), ErrNoError);
+    int result = m_txnmgr->transition_to(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInTransaction), ErrNoError);
     LOG_CORE("begin_txn returning %d", result);
     return result;
 }
@@ -195,7 +195,7 @@ coev::awaitable<int> AsyncProducer::finish_transaction(bool commit)
     m_input.set(msg);
     co_await m_in_flight.wait();
 
-    int result = co_await m_txnmgr->FinishTransaction(commit);
+    int result = co_await m_txnmgr->finish_transaction(commit);
     LOG_CORE("finish_transaction TxnManager::FinishTransaction returned %d", result);
     co_return result;
 }
@@ -215,12 +215,12 @@ coev::awaitable<void> AsyncProducer::dispatcher()
             if (msg->m_flags & FlagSet::Committxn)
             {
                 LOG_CORE("dispatcher committing transaction");
-                err = m_txnmgr->TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagEndTransaction | ProducerTxnFlagCommittingTransaction), err);
+                err = m_txnmgr->transition_to(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagEndTransaction | ProducerTxnFlagCommittingTransaction), err);
             }
             else
             {
                 LOG_CORE("dispatcher aborting transaction");
-                err = m_txnmgr->TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagEndTransaction | ProducerTxnFlagAbortingTransaction), err);
+                err = m_txnmgr->transition_to(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagEndTransaction | ProducerTxnFlagAbortingTransaction), err);
             }
             if (err != 0)
             {
@@ -250,7 +250,7 @@ coev::awaitable<void> AsyncProducer::dispatcher()
                 continue;
             }
             m_in_flight.add();
-            if (is_transactional() && (m_txnmgr->CurrentTxnStatus() & ProducerTxnFlagInTransaction) == 0)
+            if (is_transactional() && (m_txnmgr->current_txn_status() & ProducerTxnFlagInTransaction) == 0)
             {
                 LOG_CORE("dispatcher transaction not ready, returning error");
                 return_error(msg, ErrTransactionNotReady);
@@ -390,7 +390,7 @@ coev::awaitable<void> AsyncProducer::shutdown()
 
 coev::awaitable<void> AsyncProducer::bump_idempotent_producer_epoch()
 {
-    auto [pid, epoch] = m_txnmgr->GetProducerID();
+    auto [pid, epoch] = m_txnmgr->get_producer_id();
     LOG_CORE("bump_idempotent_producer_epoch current pid: %ld, epoch: %d", pid, epoch);
     if (epoch == std::numeric_limits<int16_t>::max())
     {
@@ -400,7 +400,7 @@ coev::awaitable<void> AsyncProducer::bump_idempotent_producer_epoch()
         {
             int64_t producer_id;
             int16_t producer_epoch;
-            auto err = co_await new_txnmgr->InitProducerId(producer_id, producer_epoch);
+            auto err = co_await new_txnmgr->init_producer_id(producer_id, producer_epoch);
             if (err == (KError)ErrNoError)
             {
                 m_txnmgr = new_txnmgr;
@@ -414,7 +414,7 @@ coev::awaitable<void> AsyncProducer::bump_idempotent_producer_epoch()
     else
     {
         LOG_CORE("bump_idempotent_producer_epoch bumping epoch from %d to %d", epoch, epoch + 1);
-        m_txnmgr->BumpEpoch();
+        m_txnmgr->bump_epoch();
     }
 }
 
@@ -426,19 +426,19 @@ int AsyncProducer::maybe_transition_to_error_state(KError err)
         err == ErrUnsupportedVersion || err == ErrTransactionalIDAuthorizationFailed)
     {
         LOG_CORE("maybe_transition_to_error_state transitioning to fatal error state");
-        result = m_txnmgr->TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagFatalError), err);
+        result = m_txnmgr->transition_to(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagFatalError), err);
     }
-    else if (m_txnmgr->m_coordinator_supports_bumping_epoch && (m_txnmgr->CurrentTxnStatus() & ProducerTxnFlagEndTransaction) == 0)
+    else if (m_txnmgr->m_coordinator_supports_bumping_epoch && (m_txnmgr->current_txn_status() & ProducerTxnFlagEndTransaction) == 0)
     {
         LOG_CORE("maybe_transition_to_error_state setting epoch_bump_required to true");
         m_txnmgr->m_epoch_bump_required = true;
         LOG_CORE("maybe_transition_to_error_state transitioning to abortable error state");
-        result = m_txnmgr->TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagAbortableError), err);
+        result = m_txnmgr->transition_to(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagAbortableError), err);
     }
     else
     {
         LOG_CORE("maybe_transition_to_error_state transitioning to abortable error state");
-        result = m_txnmgr->TransitionTo(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagAbortableError), err);
+        result = m_txnmgr->transition_to(static_cast<ProducerTxnStatusFlag>(ProducerTxnFlagInError | ProducerTxnFlagAbortableError), err);
     }
     LOG_CORE("maybe_transition_to_error_state returning %d", result);
     return result;
@@ -622,7 +622,7 @@ coev::awaitable<int> NewAsyncProducer(std::shared_ptr<Client> client, std::share
     {
         int64_t producer_id;
         int16_t producer_epoch;
-        auto err = co_await txnmgr->InitProducerId(producer_id, producer_epoch);
+        auto err = co_await txnmgr->init_producer_id(producer_id, producer_epoch);
         if (err != ErrNoError)
         {
             co_return err;

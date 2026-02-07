@@ -30,7 +30,7 @@ struct AlterConfigsResponse : protocol_body
 {
     int16_t m_version = 0;
     std::chrono::milliseconds m_throttle_time;
-    std::vector<std::shared_ptr<AlterConfigsResourceResponse>> m_resources;
+    std::vector<AlterConfigsResourceResponse> m_resources;
 
     AlterConfigsResponse() = default;
     AlterConfigsResponse(int16_t v) : m_version(v)

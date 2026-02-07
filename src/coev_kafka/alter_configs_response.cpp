@@ -23,7 +23,7 @@ int AlterConfigsResponse::encode(packet_encoder &pe) const
 
     for (auto &r : m_resources)
     {
-        if (r->encode(pe) != ErrNoError)
+        if (r.encode(pe) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -48,8 +48,7 @@ int AlterConfigsResponse::decode(packet_decoder &pd, int16_t version)
     m_resources.resize(responseCount);
     for (int32_t i = 0; i < responseCount; ++i)
     {
-        m_resources[i] = std::make_shared<AlterConfigsResourceResponse>();
-        if (m_resources[i]->decode(pd, version) != ErrNoError)
+        if (m_resources[i].decode(pd, version) != ErrNoError)
         {
             return ErrDecodeError;
         }

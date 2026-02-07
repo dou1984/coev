@@ -129,8 +129,8 @@ int TopicMetadata::decode(packet_decoder &pd, int16_t version)
     m_partitions.resize(n);
     for (int32_t i = 0; i < n; ++i)
     {
-        auto block = std::make_shared<PartitionMetadata>();
-        if (int err = block->decode(pd, m_version); err != 0)
+        PartitionMetadata block;
+        if (int err = block.decode(pd, m_version); err != 0)
         {
             return err;
         }
@@ -180,7 +180,7 @@ int TopicMetadata::encode(packet_encoder &pe, int16_t version) const
     }
     for (auto &block : m_partitions)
     {
-        if (int err = block->encode(pe, m_version); err != 0)
+        if (int err = block.encode(pe, m_version); err != 0)
         {
             return err;
         }
@@ -438,24 +438,24 @@ int MetadataResponse::add_topic_partition(const std::string &topic, int32_t part
     auto tmatch = add_topic(topic, 0);
     for (auto &pm : tmatch->m_partitions)
     {
-        if (pm->m_id == partition)
+        if (pm.m_id == partition)
         {
-            pm->m_leader = brokerID;
-            pm->m_replicas = replicas.empty() ? std::vector<int32_t>{} : replicas;
-            pm->m_isr = isr.empty() ? std::vector<int32_t>{} : isr;
-            pm->m_offline_replicas = offline.empty() ? std::vector<int32_t>{} : offline;
-            pm->m_err = (KError)err;
+            pm.m_leader = brokerID;
+            pm.m_replicas = replicas.empty() ? std::vector<int32_t>{} : replicas;
+            pm.m_isr = isr.empty() ? std::vector<int32_t>{} : isr;
+            pm.m_offline_replicas = offline.empty() ? std::vector<int32_t>{} : offline;
+            pm.m_err = (KError)err;
             return 0;
         }
     }
 
-    auto pmatch = std::make_shared<PartitionMetadata>();
-    pmatch->m_id = partition;
-    pmatch->m_leader = brokerID;
-    pmatch->m_replicas = replicas.empty() ? std::vector<int32_t>{} : replicas;
-    pmatch->m_isr = isr.empty() ? std::vector<int32_t>{} : isr;
-    pmatch->m_offline_replicas = offline.empty() ? std::vector<int32_t>{} : offline;
-    pmatch->m_err = (KError)err;
+    PartitionMetadata pmatch;
+    pmatch.m_id = partition;
+    pmatch.m_leader = brokerID;
+    pmatch.m_replicas = replicas.empty() ? std::vector<int32_t>{} : replicas;
+    pmatch.m_isr = isr.empty() ? std::vector<int32_t>{} : isr;
+    pmatch.m_offline_replicas = offline.empty() ? std::vector<int32_t>{} : offline;
+    pmatch.m_err = (KError)err;
     tmatch->m_partitions.push_back(pmatch);
     return 0;
 }

@@ -45,7 +45,7 @@ int AclFilter::decode(packet_decoder &pd, int16_t version)
         return -1;
     }
 
-    if (m_version == 1)
+    if (version == 1)
     {
         int8_t pattern;
         if (pd.getInt8(pattern) != 0)

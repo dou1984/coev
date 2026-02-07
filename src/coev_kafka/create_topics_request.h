@@ -26,7 +26,7 @@ struct CreateTopicsRequest : protocol_body, flexible_version
 {
 
     int16_t m_version;
-    std::map<std::string, std::shared_ptr<TopicDetail>> m_topic_details;
+    std::map<std::string, TopicDetail> m_topic_details;
     std::chrono::milliseconds m_timeout;
     bool m_validate_only;
 

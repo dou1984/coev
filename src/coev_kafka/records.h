@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <cstdint>
-
+#include <variant>
 #include "packet_encoder.h"
 #include "packet_decoder.h"
 #include "message_set.h"

@@ -240,9 +240,9 @@ coev::awaitable<int> ClusterAdmin::ListTopics(std::map<std::string, TopicDetail>
             topic_details.m_replica_assignment.clear();
             for (auto &partition : topic->m_partitions)
             {
-                topic_details.m_replica_assignment[partition->m_id] = partition->m_replicas;
+                topic_details.m_replica_assignment[partition.m_id] = partition.m_replicas;
             }
-            topic_details.m_replication_factor = static_cast<int16_t>(topic->m_partitions[0]->m_replicas.size());
+            topic_details.m_replication_factor = static_cast<int16_t>(topic->m_partitions[0].m_replicas.size());
         }
 
         auto topic_resource = std::make_shared<ConfigResource>();
@@ -364,14 +364,14 @@ coev::awaitable<int> ClusterAdmin::CreatePartitions(const std::string &topic, in
     {
         co_return ErrInvalidTopic;
     }
-    std::map<std::string, std::shared_ptr<TopicPartition>> topicPartitions;
+    std::map<std::string, std::shared_ptr<TopicPartition>> topic_partitions;
     auto tp = std::make_shared<TopicPartition>();
     tp->m_count = count;
     tp->m_assignment = assignment;
-    topicPartitions[topic] = tp;
+    topic_partitions[topic] = tp;
 
     auto request = std::make_shared<CreatePartitionsRequest>();
-    request->m_topic_partitions = topicPartitions;
+    request->m_topic_partitions = std::move(topic_partitions);
     request->m_timeout = m_conf->Admin.Timeout;
     request->m_validate_only = validateOnly;
     if (m_conf->Version.IsAtLeast(V2_0_0_0))
@@ -403,13 +403,13 @@ coev::awaitable<int> ClusterAdmin::_AlterPartitionReassignments(std::shared_ptr<
         {
             errs.push_back(response.m_response->m_error_code);
         }
-        for (auto &topicErrors : response.m_response->m_errors)
+        for (auto &topic_errors : response.m_response->m_errors)
         {
-            for (auto &partitionError : topicErrors.second)
+            for (auto &partition_error : topic_errors.second)
             {
-                if (partitionError.second->m_error_code != ErrNoError)
+                if (partition_error.second.m_error_code != ErrNoError)
                 {
-                    errs.push_back(partitionError.second->m_error_code);
+                    errs.push_back(partition_error.second.m_error_code);
                 }
             }
         }
@@ -628,11 +628,11 @@ coev::awaitable<int> ClusterAdmin::DescribeConfig(const ConfigResource &resource
 coev::awaitable<int> ClusterAdmin::AlterConfig(ConfigResourceType resourceType, const std::string &name,
                                                const std::map<std::string, std::string> &entries, bool validateOnly)
 {
-    std::vector<std::shared_ptr<AlterConfigsResource>> resources;
-    auto res = std::make_shared<AlterConfigsResource>();
-    res->m_type = resourceType;
-    res->m_name = name;
-    res->m_config_entries = entries;
+    std::vector<AlterConfigsResource> resources;
+    AlterConfigsResource res;
+    res.m_type = resourceType;
+    res.m_name = name;
+    res.m_config_entries = entries;
     resources.push_back(res);
 
     auto request = std::make_shared<AlterConfigsRequest>();
@@ -681,13 +681,13 @@ coev::awaitable<int> ClusterAdmin::AlterConfig(ConfigResourceType resourceType, 
         co_return err;
     }
 
-    for (auto &rspResource : rsp.m_response->m_resources)
+    for (auto &resource : rsp.m_response->m_resources)
     {
-        if (rspResource->m_name == name)
+        if (resource.m_name == name)
         {
-            if (rspResource->m_error_code != 0)
+            if (resource.m_error_code != 0)
             {
-                co_return rspResource->m_error_code;
+                co_return resource.m_error_code;
             }
         }
     }
@@ -743,14 +743,14 @@ coev::awaitable<int> ClusterAdmin::IncrementalAlterConfig(ConfigResourceType res
         co_return err;
     }
 
-    for (auto &rspResource : response.m_response->m_resources)
+    for (auto &resource : response.m_response->m_resources)
     {
-        if (rspResource->m_name == name)
+        if (resource->m_name == name)
         {
-            if (rspResource->m_error_code != ErrNoError)
+            if (resource->m_error_code != ErrNoError)
             {
-                int err = rspResource->m_error_code;
-                if (!rspResource->m_error_msg.empty())
+                int err = resource->m_error_code;
+                if (!resource->m_error_msg.empty())
                 {
                 }
                 co_return err;
@@ -856,9 +856,9 @@ coev::awaitable<int> ClusterAdmin::DeleteACL(const AclFilter &filter, bool valid
     out_matching_acls.clear();
     for (auto &fr : rsp.m_response->m_filter_responses)
     {
-        for (auto &mACL : fr->m_matching_acls)
+        for (auto &mACL : fr.m_matching_acls)
         {
-            out_matching_acls.emplace_back(mACL);
+            out_matching_acls.emplace_back(std::make_shared<MatchingAcl>(mACL));
         }
     }
     co_return 0;
@@ -1291,7 +1291,11 @@ coev::awaitable<int> ClusterAdmin::AlterUserScramCredentials(const std::vector<A
         out_results.clear();
         co_return err;
     }
-    out_results = std::move(rsp.m_response->m_results);
+    out_results.clear();
+    for (auto &result : rsp.m_response->m_results)
+    {
+        out_results.emplace_back(std::make_shared<AlterUserScramCredentialsResult>(result));
+    }
     co_return 0;
 }
 

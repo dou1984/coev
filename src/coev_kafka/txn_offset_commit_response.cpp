@@ -14,15 +14,13 @@ int TxnOffsetCommitResponse::encode(packet_encoder &pe) const
     pe.putDurationMs(m_throttle_time);
     pe.putArrayLength(static_cast<int32_t>(m_topics.size()));
 
-    for (auto &topicPair : m_topics)
+    for (auto &[topic, errors] : m_topics)
     {
-        const std::string &topic = topicPair.first;
-        auto &errors = topicPair.second;
         pe.putString(topic);
         pe.putArrayLength(static_cast<int32_t>(errors.size()));
         for (auto &partitionError : errors)
         {
-            partitionError->encode(pe);
+            partitionError.encode(pe);
         }
     }
     return ErrNoError;
@@ -46,15 +44,13 @@ int TxnOffsetCommitResponse::decode(packet_decoder &pd, int16_t version)
         std::string topic;
         pd.getString(topic);
         int32_t m;
-        pd.getArrayLength(n);
-        std::vector<std::shared_ptr<PartitionError>> errors(m);
+        pd.getArrayLength(m);
+        auto &errors = m_topics[topic];
+        errors.reserve(m);
         for (int j = 0; j < m; ++j)
         {
-            auto err = std::make_shared<PartitionError>();
-            err->decode(pd, version);
-            errors[j] = err;
+            errors[j].decode(pd, version);
         }
-        m_topics[topic] = std::move(errors);
     }
     return ErrNoError;
 }

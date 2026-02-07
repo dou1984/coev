@@ -15,7 +15,7 @@
 
 struct MatchingAcl : VEncoder, VDecoder
 {
-    KError m_err;
+    KError m_err = ErrNoError;
     std::string m_err_msg;
     Resource m_resource;
     Acl m_acl;
@@ -26,9 +26,9 @@ struct MatchingAcl : VEncoder, VDecoder
 
 struct FilterResponse : VEncoder, VDecoder
 {
-    KError m_err;
+    KError m_err = ErrNoError;
     std::string m_err_msg;
-    std::vector<std::shared_ptr<MatchingAcl>> m_matching_acls;
+    std::vector<MatchingAcl> m_matching_acls;
 
     int encode(packet_encoder &pe, int16_t version) const;
     int decode(packet_decoder &pd, int16_t version);
@@ -38,7 +38,7 @@ struct DeleteAclsResponse : protocol_body
 {
     int16_t m_version;
     std::chrono::milliseconds m_throttle_time;
-    std::vector<std::shared_ptr<FilterResponse>> m_filter_responses;
+    std::vector<FilterResponse> m_filter_responses;
 
     void set_version(int16_t v);
     int encode(packet_encoder &pe) const;

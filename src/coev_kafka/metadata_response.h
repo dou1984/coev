@@ -41,7 +41,7 @@ struct TopicMetadata : VDecoder, VEncoder
     std::string m_name;
     Uuid m_uuid;
     bool m_is_internal;
-    std::vector<std::shared_ptr<PartitionMetadata>> m_partitions;
+    std::vector<PartitionMetadata> m_partitions;
     int32_t m_topic_authorized_operations;
 
     int decode(packet_decoder &pd, int16_t version);

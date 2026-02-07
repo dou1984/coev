@@ -108,13 +108,13 @@ coev::awaitable<int> PartitionProducer::dispatch()
 
         if (m_parent->m_conf->Producer.Idempotent && msg->m_retries == 0 && msg->m_flags == 0)
         {
-            m_parent->m_txnmgr->GetAndIncrementSequenceNumber(msg->m_topic, msg->m_partition, msg->m_sequence_number, msg->m_producer_epoch);
+            m_parent->m_txnmgr->get_and_increment_sequence_number(msg->m_topic, msg->m_partition, msg->m_sequence_number, msg->m_producer_epoch);
             msg->m_has_sequence = true;
         }
 
         if (m_parent->is_transactional())
         {
-            m_parent->m_txnmgr->MaybeAddPartitionToCurrentTxn(m_topic, m_partition);
+            m_parent->m_txnmgr->maybe_add_partition_to_current_txn(m_topic, m_partition);
         }
 
         m_broker_producer->m_input.set(msg);
@@ -187,7 +187,7 @@ coev::awaitable<void> PartitionProducer::flush_retry_buffers()
         {
             if (m_parent->m_conf->Producer.Idempotent && msg->m_retries == 0 && msg->m_flags == 0 && !msg->m_has_sequence)
             {
-                m_parent->m_txnmgr->GetAndIncrementSequenceNumber(msg->m_topic, msg->m_partition, msg->m_sequence_number, msg->m_producer_epoch);
+                m_parent->m_txnmgr->get_and_increment_sequence_number(msg->m_topic, msg->m_partition, msg->m_sequence_number, msg->m_producer_epoch);
                 msg->m_has_sequence = true;
             }
             m_broker_producer->m_input.set(msg);

@@ -21,7 +21,7 @@ struct AlterUserScramCredentialsResponse : protocol_body, flexible_version
 {
     int16_t m_version = 0;
     std::chrono::milliseconds m_throttle_time;
-    std::vector<std::shared_ptr<AlterUserScramCredentialsResult>> m_results;
+    std::vector<AlterUserScramCredentialsResult> m_results;
 
     AlterUserScramCredentialsResponse() = default;
     AlterUserScramCredentialsResponse(int16_t v) : m_version(v)

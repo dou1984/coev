@@ -39,19 +39,19 @@ TEST(DeleteAclsResponseTest, DecodeResponse)
     EXPECT_EQ(response.m_filter_responses.size(), 1) << "Filter responses count mismatch";
 
     auto filterResp = response.m_filter_responses[0];
-    EXPECT_EQ(filterResp->m_err, KError::ErrNoError) << "Filter response error mismatch";
-    EXPECT_TRUE(filterResp->m_err_msg.empty()) << "Filter response error message should be empty";
-    EXPECT_EQ(filterResp->m_matching_acls.size(), 1) << "Matching ACLs count mismatch";
+    EXPECT_EQ(filterResp.m_err, KError::ErrNoError) << "Filter response error mismatch";
+    EXPECT_TRUE(filterResp.m_err_msg.empty()) << "Filter response error message should be empty";
+    EXPECT_EQ(filterResp.m_matching_acls.size(), 1) << "Matching ACLs count mismatch";
 
-    auto matchingAcl = filterResp->m_matching_acls[0];
-    EXPECT_EQ(matchingAcl->m_err, KError::ErrNoError) << "Matching ACL error mismatch";
-    EXPECT_TRUE(matchingAcl->m_err_msg.empty()) << "Matching ACL error message should be empty";
-    EXPECT_EQ(matchingAcl->m_resource.m_resource_type, AclResourceTypeTopic) << "Resource type mismatch";
-    EXPECT_EQ(matchingAcl->m_resource.m_resource_name, "topic") << "Resource name mismatch";
-    EXPECT_EQ(matchingAcl->m_acl.m_principal, "principal") << "Principal mismatch";
-    EXPECT_EQ(matchingAcl->m_acl.m_host, "host") << "Host mismatch";
-    EXPECT_EQ(matchingAcl->m_acl.m_operation, AclOperationWrite) << "Operation mismatch";
-    EXPECT_EQ(matchingAcl->m_acl.m_permission_type, AclPermissionTypeAllow) << "PermissionType mismatch";
+    auto matchingAcl = filterResp.m_matching_acls[0];
+    EXPECT_EQ(matchingAcl.m_err, KError::ErrNoError) << "Matching ACL error mismatch";
+    EXPECT_TRUE(matchingAcl.m_err_msg.empty()) << "Matching ACL error message should be empty";
+    EXPECT_EQ(matchingAcl.m_resource.m_resource_type, AclResourceTypeTopic) << "Resource type mismatch";
+    EXPECT_EQ(matchingAcl.m_resource.m_resource_name, "topic") << "Resource name mismatch";
+    EXPECT_EQ(matchingAcl.m_acl.m_principal, "principal") << "Principal mismatch";
+    EXPECT_EQ(matchingAcl.m_acl.m_host, "host") << "Host mismatch";
+    EXPECT_EQ(matchingAcl.m_acl.m_operation, AclOperationWrite) << "Operation mismatch";
+    EXPECT_EQ(matchingAcl.m_acl.m_permission_type, AclPermissionTypeAllow) << "PermissionType mismatch";
 }
 
 TEST(DeleteAclsResponseTest, EncodeResponse)
@@ -61,18 +61,18 @@ TEST(DeleteAclsResponseTest, EncodeResponse)
     response.m_throttle_time = std::chrono::milliseconds(100);
 
     // Create filter response
-    auto filterResp = std::make_shared<FilterResponse>();
+    FilterResponse filterResp;
     response.m_filter_responses.push_back(filterResp);
 
     // Create matching ACL
-    auto matchingAcl = std::make_shared<MatchingAcl>();
-    matchingAcl->m_resource.m_resource_type = AclResourceTypeTopic;
-    matchingAcl->m_resource.m_resource_name = "topic";
-    matchingAcl->m_acl.m_principal = "principal";
-    matchingAcl->m_acl.m_host = "host";
-    matchingAcl->m_acl.m_operation = AclOperationWrite;
-    matchingAcl->m_acl.m_permission_type = AclPermissionTypeAllow;
-    filterResp->m_matching_acls.push_back(matchingAcl);
+    MatchingAcl matchingAcl;
+    matchingAcl.m_resource.m_resource_type = AclResourceTypeTopic;
+    matchingAcl.m_resource.m_resource_name = "topic";
+    matchingAcl.m_acl.m_principal = "principal";
+    matchingAcl.m_acl.m_host = "host";
+    matchingAcl.m_acl.m_operation = AclOperationWrite;
+    matchingAcl.m_acl.m_permission_type = AclPermissionTypeAllow;
+    response.m_filter_responses[0].m_matching_acls.push_back(matchingAcl);
 
     real_encoder encoder(1024);
     int result = response.encode(encoder);
@@ -115,32 +115,32 @@ TEST(DeleteAclsResponseTest, RoundTripEncodingDecoding)
     originalResponse.m_throttle_time = std::chrono::milliseconds(100);
 
     // First filter response
-    auto filterResp1 = std::make_shared<FilterResponse>();
+    FilterResponse filterResp1;
     originalResponse.m_filter_responses.push_back(filterResp1);
 
     // Matching ACLs for first filter response
-    auto matchingAcl1 = std::make_shared<MatchingAcl>();
-    matchingAcl1->m_resource.m_resource_type = AclResourceTypeTopic;
-    matchingAcl1->m_resource.m_resource_name = "test_topic";
-    matchingAcl1->m_acl.m_principal = "user:test1";
-    matchingAcl1->m_acl.m_host = "localhost";
-    matchingAcl1->m_acl.m_operation = AclOperationRead;
-    matchingAcl1->m_acl.m_permission_type = AclPermissionTypeAllow;
-    filterResp1->m_matching_acls.push_back(matchingAcl1);
+    MatchingAcl matchingAcl1;
+    matchingAcl1.m_resource.m_resource_type = AclResourceTypeTopic;
+    matchingAcl1.m_resource.m_resource_name = "test_topic";
+    matchingAcl1.m_acl.m_principal = "user:test1";
+    matchingAcl1.m_acl.m_host = "localhost";
+    matchingAcl1.m_acl.m_operation = AclOperationRead;
+    matchingAcl1.m_acl.m_permission_type = AclPermissionTypeAllow;
+    originalResponse.m_filter_responses[0].m_matching_acls.push_back(matchingAcl1);
 
-    auto matchingAcl2 = std::make_shared<MatchingAcl>();
-    matchingAcl2->m_resource.m_resource_type = AclResourceTypeGroup;
-    matchingAcl2->m_resource.m_resource_name = "test_group";
-    matchingAcl2->m_acl.m_principal = "user:test2";
-    matchingAcl2->m_acl.m_host = "127.0.0.1";
-    matchingAcl2->m_acl.m_operation = AclOperationWrite;
-    matchingAcl2->m_acl.m_permission_type = AclPermissionTypeDeny;
-    filterResp1->m_matching_acls.push_back(matchingAcl2);
+    MatchingAcl matchingAcl2;
+    matchingAcl2.m_resource.m_resource_type = AclResourceTypeGroup;
+    matchingAcl2.m_resource.m_resource_name = "test_group";
+    matchingAcl2.m_acl.m_principal = "user:test2";
+    matchingAcl2.m_acl.m_host = "127.0.0.1";
+    matchingAcl2.m_acl.m_operation = AclOperationWrite;
+    matchingAcl2.m_acl.m_permission_type = AclPermissionTypeDeny;
+    originalResponse.m_filter_responses[0].m_matching_acls.push_back(matchingAcl2);
 
     // Second filter response with error
-    auto filterResp2 = std::make_shared<FilterResponse>();
-    filterResp2->m_err = KError::ErrInvalidTopic;
-    filterResp2->m_err_msg = "Invalid topic";
+    FilterResponse filterResp2;
+    filterResp2.m_err = KError::ErrInvalidTopic;
+    filterResp2.m_err_msg = "Invalid topic";
     originalResponse.m_filter_responses.push_back(filterResp2);
 
     // Encode the response
@@ -164,26 +164,26 @@ TEST(DeleteAclsResponseTest, RoundTripEncodingDecoding)
 
     for (size_t i = 0; i < originalResponse.m_filter_responses.size(); ++i)
     {
-        auto originalFilterResp = originalResponse.m_filter_responses[i];
-        auto decodedFilterResp = decodedResponse.m_filter_responses[i];
+        auto &originalFilterResp = originalResponse.m_filter_responses[i];
+        auto &decodedFilterResp = decodedResponse.m_filter_responses[i];
 
-        EXPECT_EQ(decodedFilterResp->m_err, originalFilterResp->m_err) << "Filter response error mismatch in round-trip, index: " << i;
-        EXPECT_EQ(decodedFilterResp->m_err_msg, originalFilterResp->m_err_msg) << "Filter response error message mismatch in round-trip, index: " << i;
-        EXPECT_EQ(decodedFilterResp->m_matching_acls.size(), originalFilterResp->m_matching_acls.size()) << "Matching ACLs count mismatch in round-trip, index: " << i;
+        EXPECT_EQ(decodedFilterResp.m_err, originalFilterResp.m_err) << "Filter response error mismatch in round-trip, index: " << i;
+        EXPECT_EQ(decodedFilterResp.m_err_msg, originalFilterResp.m_err_msg) << "Filter response error message mismatch in round-trip, index: " << i;
+        EXPECT_EQ(decodedFilterResp.m_matching_acls.size(), originalFilterResp.m_matching_acls.size()) << "Matching ACLs count mismatch in round-trip, index: " << i;
 
-        for (size_t j = 0; j < originalFilterResp->m_matching_acls.size(); ++j)
+        for (size_t j = 0; j < originalFilterResp.m_matching_acls.size(); ++j)
         {
-            auto originalMatchingAcl = originalFilterResp->m_matching_acls[j];
-            auto decodedMatchingAcl = decodedFilterResp->m_matching_acls[j];
+            auto &originalMatchingAcl = originalFilterResp.m_matching_acls[j];
+            auto &decodedMatchingAcl = decodedFilterResp.m_matching_acls[j];
 
-            EXPECT_EQ(decodedMatchingAcl->m_err, originalMatchingAcl->m_err) << "Matching ACL error mismatch in round-trip, index: " << j;
-            EXPECT_EQ(decodedMatchingAcl->m_err_msg, originalMatchingAcl->m_err_msg) << "Matching ACL error message mismatch in round-trip, index: " << j;
-            EXPECT_EQ(decodedMatchingAcl->m_resource.m_resource_type, originalMatchingAcl->m_resource.m_resource_type) << "Resource type mismatch in round-trip, index: " << j;
-            EXPECT_EQ(decodedMatchingAcl->m_resource.m_resource_name, originalMatchingAcl->m_resource.m_resource_name) << "Resource name mismatch in round-trip, index: " << j;
-            EXPECT_EQ(decodedMatchingAcl->m_acl.m_principal, originalMatchingAcl->m_acl.m_principal) << "Principal mismatch in round-trip, index: " << j;
-            EXPECT_EQ(decodedMatchingAcl->m_acl.m_host, originalMatchingAcl->m_acl.m_host) << "Host mismatch in round-trip, index: " << j;
-            EXPECT_EQ(decodedMatchingAcl->m_acl.m_operation, originalMatchingAcl->m_acl.m_operation) << "Operation mismatch in round-trip, index: " << j;
-            EXPECT_EQ(decodedMatchingAcl->m_acl.m_permission_type, originalMatchingAcl->m_acl.m_permission_type) << "PermissionType mismatch in round-trip, index: " << j;
+            EXPECT_EQ(decodedMatchingAcl.m_err, originalMatchingAcl.m_err) << "Matching ACL error mismatch in round-trip, index: " << j;
+            EXPECT_EQ(decodedMatchingAcl.m_err_msg, originalMatchingAcl.m_err_msg) << "Matching ACL error message mismatch in round-trip, index: " << j;
+            EXPECT_EQ(decodedMatchingAcl.m_resource.m_resource_type, originalMatchingAcl.m_resource.m_resource_type) << "Resource type mismatch in round-trip, index: " << j;
+            EXPECT_EQ(decodedMatchingAcl.m_resource.m_resource_name, originalMatchingAcl.m_resource.m_resource_name) << "Resource name mismatch in round-trip, index: " << j;
+            EXPECT_EQ(decodedMatchingAcl.m_acl.m_principal, originalMatchingAcl.m_acl.m_principal) << "Principal mismatch in round-trip, index: " << j;
+            EXPECT_EQ(decodedMatchingAcl.m_acl.m_host, originalMatchingAcl.m_acl.m_host) << "Host mismatch in round-trip, index: " << j;
+            EXPECT_EQ(decodedMatchingAcl.m_acl.m_operation, originalMatchingAcl.m_acl.m_operation) << "Operation mismatch in round-trip, index: " << j;
+            EXPECT_EQ(decodedMatchingAcl.m_acl.m_permission_type, originalMatchingAcl.m_acl.m_permission_type) << "PermissionType mismatch in round-trip, index: " << j;
         }
     }
 }
@@ -210,7 +210,7 @@ TEST(DeleteAclsResponseTest, DecodeWithError)
     EXPECT_EQ(response.m_filter_responses.size(), 1) << "Filter responses count mismatch";
 
     auto filterResp = response.m_filter_responses[0];
-    EXPECT_EQ(filterResp->m_err, KError::ErrInvalidTopic) << "Filter response error mismatch";
-    EXPECT_EQ(filterResp->m_err_msg, "Invalid topic") << "Filter response error message mismatch";
-    EXPECT_EQ(filterResp->m_matching_acls.size(), 0) << "Matching ACLs count should be zero";
+    EXPECT_EQ(filterResp.m_err, KError::ErrInvalidTopic) << "Filter response error mismatch";
+    EXPECT_EQ(filterResp.m_err_msg, "Invalid topic") << "Filter response error message mismatch";
+    EXPECT_EQ(filterResp.m_matching_acls.size(), 0) << "Matching ACLs count should be zero";
 }

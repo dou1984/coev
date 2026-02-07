@@ -16,7 +16,7 @@ int AlterConfigsRequest::encode(packet_encoder &pe) const
 
     for (auto &r : m_resources)
     {
-        if (r->encode(pe) != ErrNoError)
+        if (r.encode(pe) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -37,8 +37,7 @@ int AlterConfigsRequest::decode(packet_decoder &pd, int16_t version)
     m_resources.resize(resourceCount);
     for (int32_t i = 0; i < resourceCount; ++i)
     {
-        m_resources[i] = std::make_shared<AlterConfigsResource>();
-        if (m_resources[i]->decode(pd, version) != ErrNoError)
+        if (m_resources[i].decode(pd, version) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -68,13 +67,13 @@ int AlterConfigsResource::encode(packet_encoder &pe) const
         return ErrEncodeError;
     }
 
-    for (auto &kv : m_config_entries)
+    for (auto &[key, value] : m_config_entries)
     {
-        if (pe.putString(kv.first) != ErrNoError)
+        if (pe.putString(key) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        if (pe.putNullableString(kv.second) != ErrNoError)
+        if (pe.putNullableString(value) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -110,17 +109,17 @@ int AlterConfigsResource::decode(packet_decoder &pd, int16_t version)
         m_config_entries.clear();
         for (int32_t i = 0; i < n; ++i)
         {
-            std::string configKey;
-            if (pd.getString(configKey) != ErrNoError)
+            std::string key;
+            if (pd.getString(key) != ErrNoError)
             {
                 return ErrDecodeError;
             }
-            std::string configValue;
-            if (pd.getNullableString(configValue) != ErrNoError)
+            std::string value;
+            if (pd.getNullableString(value) != ErrNoError)
             {
                 return ErrDecodeError;
             }
-            m_config_entries[configKey] = configValue;
+            m_config_entries[key] = value;
         }
     }
 

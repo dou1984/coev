@@ -18,7 +18,7 @@ struct TxnOffsetCommitResponse : protocol_body
 
     int16_t m_version;
     std::chrono::milliseconds m_throttle_time;
-    std::map<std::string, std::vector<std::shared_ptr<PartitionError>>> m_topics;
+    std::map<std::string, std::vector<PartitionError>> m_topics;
 
     void set_version(int16_t v);
     int encode(packet_encoder &pe) const;

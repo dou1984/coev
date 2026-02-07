@@ -45,16 +45,16 @@ void Consumer::Pause(const std::map<std::string, std::vector<int32_t>> &topic_pa
 {
     for (auto &[topic, partitions] : topic_partitions)
     {
-        auto it_topic = m_children.find(topic);
-        if (it_topic != m_children.end())
+        auto tit = m_children.find(topic);
+        if (tit != m_children.end())
         {
-            auto &topic_consumers = it_topic->second;
+            auto &topic_consumers = tit->second;
             for (int32_t partition : partitions)
             {
-                auto it_pc = topic_consumers.find(partition);
-                if (it_pc != topic_consumers.end())
+                auto pit = topic_consumers.find(partition);
+                if (pit != topic_consumers.end())
                 {
-                    it_pc->second->Pause();
+                    pit->second->Pause();
                 }
             }
         }
@@ -65,16 +65,16 @@ void Consumer::Resume(const std::map<std::string, std::vector<int32_t>> &topic_p
 {
     for (auto &[topic, partitions] : topic_partitions)
     {
-        auto it_topic = m_children.find(topic);
-        if (it_topic != m_children.end())
+        auto tit = m_children.find(topic);
+        if (tit != m_children.end())
         {
-            auto &topic_consumers = it_topic->second;
+            auto &topic_consumers = tit->second;
             for (int32_t partition : partitions)
             {
-                auto it_pc = topic_consumers.find(partition);
-                if (it_pc != topic_consumers.end())
+                auto pit = topic_consumers.find(partition);
+                if (pit != topic_consumers.end())
                 {
-                    it_pc->second->Resume();
+                    pit->second->Resume();
                 }
             }
         }

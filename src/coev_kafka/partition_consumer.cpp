@@ -114,8 +114,8 @@ coev::awaitable<int> PartitionConsumer::Dispatch()
         co_return err;
     }
 
-    auto brokerConsumer = m_consumer->RefBrokerConsumer(broker);
-    brokerConsumer->m_input.set(shared_from_this());
+    auto broker_consumer = m_consumer->RefBrokerConsumer(broker);
+    broker_consumer->m_input.set(shared_from_this());
     co_return ErrNoError;
 }
 
@@ -165,7 +165,7 @@ coev::awaitable<int> PartitionConsumer::Close()
 {
     AsyncClose();
 
-    std::vector<std::shared_ptr<ConsumerError>> consumerErrors;
+    std::vector<std::shared_ptr<ConsumerError>> consumer_errors;
     std::shared_ptr<ConsumerError> err;
     while (true)
     {
@@ -174,7 +174,7 @@ coev::awaitable<int> PartitionConsumer::Close()
         {
             break;
         }
-        consumerErrors.push_back(err);
+        consumer_errors.push_back(err);
     }
     co_return 0;
 }

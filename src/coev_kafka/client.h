@@ -72,7 +72,7 @@ struct Client
     coev::awaitable<int> _GetOffset(const std::string &topic, int32_t partitionID, int64_t timestamp, int64_t &offset);
     coev::awaitable<int> _RefreshMetadata(const std::vector<std::string> &topics);
     coev::awaitable<int> _CachedLeader(const std::string &topic, int32_t partitionID, std::shared_ptr<Broker> &broker_, int32_t &leaderEpoch);
-    std::shared_ptr<PartitionMetadata> _CachedMetadata(const std::string &topic, int32_t partitionID);
+    PartitionMetadata* _CachedMetadata(const std::string &topic, int32_t partitionID);
     std::vector<int32_t> _CachedPartitions(const std::string &topic, int64_t partitionSet);
     std::vector<int32_t> _SetPartitionCache(const std::string &topic, int64_t partitionSet);
     std::shared_ptr<Broker> _CachedCoordinator(const std::string &consumerGroup);
@@ -86,7 +86,7 @@ struct Client
     std::deque<std::shared_ptr<Broker>> m_seed_brokers;
     std::deque<std::shared_ptr<Broker>> m_dead_seeds;
     std::map<int32_t, std::shared_ptr<Broker>> m_brokers;
-    std::map<std::string, std::map<int32_t, std::shared_ptr<PartitionMetadata>>> m_metadata;
+    std::map<std::string, std::map<int32_t, PartitionMetadata>> m_metadata;
     std::map<std::string, bool> m_metadata_topics;
     std::map<std::string, int32_t> m_coordinators;
     std::map<std::string, int32_t> m_transaction_coordinators;

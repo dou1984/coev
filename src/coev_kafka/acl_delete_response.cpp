@@ -17,7 +17,7 @@ int DeleteAclsResponse::encode(packet_encoder &pe) const
 
     for (auto &resp : m_filter_responses)
     {
-        if (resp->encode(pe, m_version) != 0)
+        if (resp.encode(pe, m_version) != 0)
         {
             return -1;
         }
@@ -42,8 +42,7 @@ int DeleteAclsResponse::decode(packet_decoder &pd, int16_t version)
     m_filter_responses.resize(n);
     for (int32_t i = 0; i < n; ++i)
     {
-        m_filter_responses[i] = std::make_shared<FilterResponse>();
-        if (m_filter_responses[i]->decode(pd, version) != 0)
+        if (m_filter_responses[i].decode(pd, version) != 0)
         {
             return -1;
         }
@@ -151,7 +150,7 @@ int FilterResponse::encode(packet_encoder &pe, int16_t version) const
 
     for (const auto &acl : m_matching_acls)
     {
-        if (acl->encode(pe, version) != 0)
+        if (acl.encode(pe, version) != 0)
         {
             return -1;
         }
@@ -181,8 +180,7 @@ int FilterResponse::decode(packet_decoder &pd, int16_t version)
     m_matching_acls.resize(n);
     for (int32_t i = 0; i < n; ++i)
     {
-        m_matching_acls[i] = std::make_shared<MatchingAcl>();
-        if (m_matching_acls[i]->decode(pd, version) != 0)
+        if (m_matching_acls[i].decode(pd, version) != 0)
         {
             return -1;
         }

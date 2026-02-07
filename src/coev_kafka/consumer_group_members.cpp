@@ -22,7 +22,7 @@ int ConsumerGroupMemberMetadata::encode(packet_encoder &pe) const
         }
         for (auto &op : m_owned_partitions)
         {
-            if (int err = op->encode(pe); err != 0)
+            if (int err = op.encode(pe); err != 0)
             {
                 return err;
             }
@@ -80,8 +80,7 @@ int ConsumerGroupMemberMetadata::decode(packet_decoder &pd)
             m_owned_partitions.resize(n);
             for (int i = 0; i < n; i++)
             {
-                m_owned_partitions[i] = std::make_shared<OwnedPartition>();
-                if ((err = m_owned_partitions[i]->decode(pd)) != 0)
+                if ((err = m_owned_partitions[i].decode(pd)) != 0)
                 {
                     return err;
                 }

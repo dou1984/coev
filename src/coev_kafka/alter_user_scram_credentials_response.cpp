@@ -17,12 +17,12 @@ int AlterUserScramCredentialsResponse::encode(packet_encoder &pe) const
 
     for (auto &u : m_results)
     {
-        if (pe.putString(u->m_user) != ErrNoError)
+        if (pe.putString(u.m_user) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        pe.putKError(u->m_error_code);
-        if (pe.putNullableString(u->m_error_message) != ErrNoError)
+        pe.putKError(u.m_error_code);
+        if (pe.putNullableString(u.m_error_message) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -40,29 +40,28 @@ int AlterUserScramCredentialsResponse::decode(packet_decoder &pd, int16_t versio
         return ErrEncodeError;
     }
 
-    int32_t numResults;
-    if (pd.getArrayLength(numResults) != ErrNoError)
+    int32_t num_results;
+    if (pd.getArrayLength(num_results) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    if (numResults > 0)
+    if (num_results > 0)
     {
-        m_results.resize(numResults);
-        for (int32_t i = 0; i < numResults; ++i)
+        m_results.resize(num_results);
+        for (auto &result : m_results)
         {
-            auto result = std::make_shared<AlterUserScramCredentialsResult>();
-            if (pd.getString(result->m_user) != ErrNoError)
+            if (pd.getString(result.m_user) != ErrNoError)
             {
                 return ErrEncodeError;
             }
 
-            if (pd.getKError(result->m_error_code) != ErrNoError)
+            if (pd.getKError(result.m_error_code) != ErrNoError)
             {
                 return ErrEncodeError;
             }
 
-            if (pd.getNullableString(result->m_error_message) != ErrNoError)
+            if (pd.getNullableString(result.m_error_message) != ErrNoError)
             {
                 return ErrEncodeError;
             }
@@ -71,8 +70,6 @@ int AlterUserScramCredentialsResponse::decode(packet_decoder &pd, int16_t versio
             {
                 return ErrEncodeError;
             }
-
-            m_results[i] = result;
         }
     }
     int32_t _;

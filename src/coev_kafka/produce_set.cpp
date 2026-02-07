@@ -100,7 +100,7 @@
 ProduceSet::ProduceSet(std::shared_ptr<AsyncProducer> parent)
     : m_parent(parent)
 {
-    auto [pid, epoch] = parent->m_txnmgr->GetProducerID();
+    auto [pid, epoch] = parent->m_txnmgr->get_producer_id();
     m_producer_id = pid;
     m_producer_epoch = epoch;
 }
@@ -238,9 +238,9 @@ std::shared_ptr<ProduceRequest> ProduceSet::build_request()
         req->m_transactional_id = m_parent->m_conf->Producer.Transaction.ID;
     }
 
-    for (auto &[topic, partition_sets] : m_messages)
+    for (auto &[topic, partitions] : m_messages)
     {
-        for (auto &[partition, pset] : partition_sets)
+        for (auto &[partition, pset] : partitions)
         {
             if (req->m_version >= 3)
             {

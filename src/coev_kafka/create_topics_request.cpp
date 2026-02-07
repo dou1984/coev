@@ -13,13 +13,13 @@ int CreateTopicsRequest::encode(packet_encoder &pe) const
         return ErrEncodeError;
     }
 
-    for (auto &kv : m_topic_details)
+    for (auto &[topic, detail] : m_topic_details)
     {
-        if (pe.putString(kv.first) != ErrNoError)
+        if (pe.putString(topic) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        if (kv.second->encode(pe) != ErrNoError)
+        if (detail.encode(pe) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -52,12 +52,10 @@ int CreateTopicsRequest::decode(packet_decoder &pd, int16_t version)
         {
             return ErrDecodeError;
         }
-        auto detail = std::make_shared<TopicDetail>();
-        if (detail->decode(pd, version) != ErrNoError)
+        if (m_topic_details[topic].decode(pd, version) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        m_topic_details[topic] = detail;
     }
 
     if (pd.getDurationMs(m_timeout) != ErrNoError)
@@ -266,5 +264,8 @@ CreateTopicsRequest::CreateTopicsRequest(const KafkaVersion &version, int64_t ti
     }
     m_timeout = std::chrono::milliseconds(timeout_ms);
     m_validate_only = validate_only;
-    m_topic_details = std::move(topic_details);
+    for (auto &it : topic_details)
+    {
+        m_topic_details[it.first] = *it.second;
+    }
 }

@@ -23,7 +23,7 @@ struct AlterConfigsResource : VDecoder, IEncoder
 struct AlterConfigsRequest : protocol_body
 {
     int16_t m_version;
-    std::vector<std::shared_ptr<AlterConfigsResource>> m_resources;
+    std::vector<AlterConfigsResource> m_resources;
     bool m_validate_only = false;
 
     AlterConfigsRequest() = default;

@@ -17,24 +17,22 @@ int AddPartitionsToTxnResponse::encode(packet_encoder &pe) const
         return -1;
     }
 
-    for (auto &topicEntry : m_errors)
+    for (auto &[topic, errors] : m_errors)
     {
-        const std::string &topic = topicEntry.first;
-        auto &errorList = topicEntry.second;
 
         if (pe.putString(topic) != 0)
         {
             return -1;
         }
 
-        if (pe.putArrayLength(static_cast<int32_t>(errorList.size())) != 0)
+        if (pe.putArrayLength(static_cast<int32_t>(errors.size())) != 0)
         {
             return -1;
         }
 
-        for (auto &partitionError : errorList)
+        for (auto &partition_errors : errors)
         {
-            if (partitionError->encode(pe) != 0)
+            if (partition_errors.encode(pe) != 0)
             {
                 return -1;
             }
@@ -75,19 +73,15 @@ int AddPartitionsToTxnResponse::decode(packet_decoder &pd, int16_t version)
             return err;
         }
 
-        std::vector<std::shared_ptr<PartitionError>> partitionErrors;
-        partitionErrors.reserve(m);
+        auto &partition_errors = m_errors[topic];
+        partition_errors.reserve(m);
         for (int32_t j = 0; j < m; ++j)
         {
-            auto partErr = std::make_shared<PartitionError>();
-            if ((err = partErr->decode(pd, version)) != 0)
+            if ((err = partition_errors[j].decode(pd, version)) != 0)
             {
                 return err;
             }
-            partitionErrors.emplace_back(partErr);
         }
-
-        m_errors[topic] = std::move(partitionErrors);
     }
 
     return 0;

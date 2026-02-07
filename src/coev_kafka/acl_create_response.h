@@ -13,7 +13,7 @@
 
 struct AclCreationResponse : IEncoder, VDecoder
 {
-    KError m_err;
+    KError m_err = ErrNoError;
     std::string m_err_msg;
 
     AclCreationResponse() = default;

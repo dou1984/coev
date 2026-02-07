@@ -16,15 +16,13 @@ int TxnOffsetCommitRequest::encode(packet_encoder &pe) const
     pe.putInt16(m_producer_epoch);
 
     pe.putArrayLength(static_cast<int32_t>(m_topics.size()));
-    for (auto &topicPair : m_topics)
+    for (auto &[topic, partitions] : m_topics)
     {
-        const std::string &topic = topicPair.first;
-        auto &partitions = topicPair.second;
         pe.putString(topic);
         pe.putArrayLength(static_cast<int32_t>(partitions.size()));
         for (auto &partition : partitions)
         {
-            partition->encode(pe, m_version);
+            partition.encode(pe, m_version);
         }
     }
     return 0;
@@ -57,10 +55,11 @@ int TxnOffsetCommitRequest::decode(packet_decoder &pd, int16_t version)
             return err;
         }
 
-        m_topics[topic].resize(m);
+        auto &_topics = m_topics[topic];
+        _topics.resize(m);
         for (int j = 0; j < m; ++j)
         {
-            m_topics[topic][j]->decode(pd, version);
+            _topics[j].decode(pd, version);
         }
     }
     return 0;

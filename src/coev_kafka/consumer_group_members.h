@@ -8,7 +8,6 @@
 #include "packet_decoder.h"
 #include "packet_encoder.h"
 #include "protocol_body.h"
-
 struct OwnedPartition;
 struct ConsumerGroupMemberMetadata : IEncoder, IDecoder
 {
@@ -16,7 +15,7 @@ struct ConsumerGroupMemberMetadata : IEncoder, IDecoder
     int16_t m_version = 0;
     std::vector<std::string> m_topics;
     std::string m_user_data;
-    std::vector<std::shared_ptr<OwnedPartition>> m_owned_partitions;
+    std::vector<OwnedPartition> m_owned_partitions;
     int32_t m_generation_id = 0;
     std::string m_rack_id;
 

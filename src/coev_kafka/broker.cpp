@@ -30,13 +30,13 @@ int8_t GetHeaderLength(int16_t header_version)
 }
 
 Broker::Broker(const std::string &addr) : m_id(-1), m_addr(addr), m_rack(""), m_correlation_id(0), m_session_reauthentication_time(0)
-{    
+{
 }
 Broker::Broker(int id, const std::string &addr) : m_id(id), m_addr(addr), m_rack(""), m_correlation_id(0), m_session_reauthentication_time(0)
-{ 
+{
 }
 Broker::Broker() : m_id(0), m_addr(""), m_rack(""), m_correlation_id(0), m_session_reauthentication_time(0)
-{ 
+{
 }
 Broker::~Broker()
 {
@@ -1069,8 +1069,9 @@ int Broker::BuildClientFirstMessage(std::shared_ptr<AccessToken> token, std::str
         ext = "\x01" + MapToString(token->m_extensions, "=", "\x01");
     }
 
-    auto msg = "n,,\x01auth=Bearer " + token->m_token + ext + "\x01\x01";
-    message.assign(msg.begin(), msg.end());
+    // auto msg = "n,,\x01auth=Bearer " + token->m_token + ext + "\x01\x01";
+    // message.assign(msg.begin(), msg.end());
+    message = "n,,\x01auth=Bearer " + token->m_token + ext + "\x01\x01";
     return 0;
 }
 

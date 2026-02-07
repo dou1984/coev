@@ -56,7 +56,7 @@ coev::awaitable<void> BrokerProducer::run()
             }
         }
 
-        auto [producerID, producerEpoch] = m_parent->m_txnmgr->GetProducerID();
+        auto [producerID, producerEpoch] = m_parent->m_txnmgr->get_producer_id();
         if (producerID != noProducerID && m_buffer->m_producer_epoch != msg->m_producer_epoch)
         {
             int err = wait_for_space(msg, true);

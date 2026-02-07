@@ -34,7 +34,7 @@ void AlterPartitionReassignmentsResponse::set_version(int16_t v)
 
 void AlterPartitionReassignmentsResponse::add_error(const std::string &topic, int32_t partition, KError kerror, std::string message)
 {
-    m_errors[topic][partition] = std::make_shared<AlterPartitionReassignmentsErrorBlock>(kerror, message);
+    m_errors[topic][partition] = AlterPartitionReassignmentsErrorBlock(kerror, message);
 }
 
 int AlterPartitionReassignmentsResponse::encode(packet_encoder &pe) const
@@ -51,10 +51,8 @@ int AlterPartitionReassignmentsResponse::encode(packet_encoder &pe) const
         return ErrEncodeError;
     }
 
-    for (auto &topicPair : m_errors)
+    for (auto &[topic, partitions] : m_errors)
     {
-        auto &topic = topicPair.first;
-        auto &partitions = topicPair.second;
 
         if (pe.putString(topic) != ErrNoError)
         {
@@ -66,10 +64,10 @@ int AlterPartitionReassignmentsResponse::encode(packet_encoder &pe) const
             return ErrEncodeError;
         }
 
-        for (auto &partitionPair : partitions)
+        for (auto &[partition, block] : partitions)
         {
-            pe.putInt32(partitionPair.first);
-            if (partitionPair.second->encode(pe) != ErrNoError)
+            pe.putInt32(partition);
+            if (block.encode(pe) != ErrNoError)
             {
                 return ErrEncodeError;
             }
@@ -117,14 +115,14 @@ int AlterPartitionReassignmentsResponse::decode(packet_decoder &pd, int16_t vers
                 return ErrDecodeError;
             }
 
-            int32_t ongoingPartitionReassignments;
-            if (pd.getArrayLength(ongoingPartitionReassignments) != ErrNoError)
+            int32_t ongoing_partition_reassignments;
+            if (pd.getArrayLength(ongoing_partition_reassignments) != ErrNoError)
             {
                 return ErrDecodeError;
             }
 
-            auto &partitionMap = m_errors[topic];
-            for (int32_t j = 0; j < ongoingPartitionReassignments; ++j)
+            auto &partition_block = m_errors[topic];
+            for (int32_t j = 0; j < ongoing_partition_reassignments; ++j)
             {
                 int32_t partition;
                 if (pd.getInt32(partition) != ErrNoError)
@@ -132,12 +130,10 @@ int AlterPartitionReassignmentsResponse::decode(packet_decoder &pd, int16_t vers
                     return ErrDecodeError;
                 }
 
-                auto block = std::make_shared<AlterPartitionReassignmentsErrorBlock>();
-                if (block->decode(pd) != ErrNoError)
+                if (partition_block[partition].decode(pd) != ErrNoError)
                 {
                     return ErrDecodeError;
                 }
-                partitionMap[partition] = block;
             }
             int32_t _;
             if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)

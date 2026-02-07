@@ -18,7 +18,7 @@ struct AddPartitionsToTxnResponse : protocol_body
 
     int16_t m_version;
     std::chrono::milliseconds m_throttle_time;
-    std::unordered_map<std::string, std::vector<std::shared_ptr<PartitionError>>> m_errors;
+    std::unordered_map<std::string, std::vector<PartitionError>> m_errors;
 
     void set_version(int16_t v);
     int encode(packet_encoder &pe) const;

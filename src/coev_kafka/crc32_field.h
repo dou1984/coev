@@ -24,8 +24,8 @@ struct crc32_field : push_encoder, push_decoder
     int check(int curOffset, const std::string_view &buf);
     int crc(int curOffset, const std::string_view &buf, uint32_t &out_crc);
 
-    int startOffset;
-    CrcPolynomial polynomial;
+    int m_start_offset;
+    CrcPolynomial m_polynomial;
 };
 std::shared_ptr<crc32_field> acquire_crc32_field(CrcPolynomial polynomial);
 void release_crc32_field(std::shared_ptr<crc32_field> c);

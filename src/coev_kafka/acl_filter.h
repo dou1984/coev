@@ -9,14 +9,14 @@
 
 struct AclFilter : IEncoder, VDecoder
 {
-    int16_t m_version;
-    AclResourceType m_resource_type;
+    int16_t m_version = 0;
+    AclResourceType m_resource_type = AclResourceTypeUnknown;
     std::string m_resource_name;
-    AclResourcePatternType m_resource_pattern_type_filter;
+    AclResourcePatternType m_resource_pattern_type_filter = AclResourcePatternTypeLiteral;
     std::string m_principal;
     std::string m_host;
-    AclOperation m_operation;
-    AclPermissionType m_permission_type;
+    AclOperation m_operation = AclOperationUnknown;
+    AclPermissionType m_permission_type = AclPermissionTypeUnknown;
 
     AclFilter() = default;
     AclFilter(int16_t v) : m_version(v)

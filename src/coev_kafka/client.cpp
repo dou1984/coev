@@ -703,16 +703,15 @@ coev::awaitable<int> Client::LeastLoadedBroker(std::shared_ptr<Broker> &least_lo
     co_return ErrBrokerNotAvailable;
 }
 
-std::shared_ptr<PartitionMetadata> Client::_CachedMetadata(const std::string &topic, int32_t partitionID)
+PartitionMetadata *Client::_CachedMetadata(const std::string &topic, int32_t partition_id)
 {
-
-    auto topicIt = m_metadata.find(topic);
-    if (topicIt != m_metadata.end())
+    auto tit = m_metadata.find(topic);
+    if (tit != m_metadata.end())
     {
-        auto it = topicIt->second.find(partitionID);
-        if (it != topicIt->second.end())
+        auto it = tit->second.find(partition_id);
+        if (it != tit->second.end())
         {
-            return it->second;
+            return &(it->second);
         }
     }
     return nullptr;
@@ -736,13 +735,13 @@ std::vector<int32_t> Client::_SetPartitionCache(const std::string &topic, int64_
         return {};
     }
     std::vector<int32_t> ret;
-    for (auto &kv : it->second)
+    for (auto &[pid, metadata] : it->second)
     {
-        if (partition_id == WritablePartitions_ && kv.second->m_err == ErrLeaderNotAvailable)
+        if (partition_id == WritablePartitions_ && metadata.m_err == ErrLeaderNotAvailable)
         {
             continue;
         }
-        ret.push_back(kv.first);
+        ret.push_back(pid);
     }
     sort(ret.begin(), ret.end());
     return ret;
@@ -756,26 +755,26 @@ coev::awaitable<int> Client::_CachedLeader(const std::string &topic, int32_t par
     {
         auto pit = tit->second.find(partitionID);
         if (pit != tit->second.end())
+    {
+        auto &_metadata = pit->second;
+        if (_metadata.m_err == ErrLeaderNotAvailable)
         {
-            auto _metadata = pit->second;
-            if (_metadata->m_err == ErrLeaderNotAvailable)
-            {
-                co_return ErrLeaderNotAvailable;
-            }
-            auto bit = m_brokers.find(_metadata->m_leader);
-            if (bit == m_brokers.end())
-            {
-                co_return ErrLeaderNotAvailable;
-            }
-            auto err = co_await bit->second->Open(m_conf);
-            if (err != 0)
-            {
-                co_return ErrLeaderNotAvailable;
-            }
-            broker_ = bit->second;
-            leaderEpoch = _metadata->m_leader_epoch;
-            co_return err;
+            co_return ErrLeaderNotAvailable;
         }
+        auto bit = m_brokers.find(_metadata.m_leader);
+        if (bit == m_brokers.end())
+        {
+            co_return ErrLeaderNotAvailable;
+        }
+        auto err = co_await bit->second->Open(m_conf);
+        if (err != 0)
+        {
+            co_return ErrLeaderNotAvailable;
+        }
+        broker_ = bit->second;
+        leaderEpoch = _metadata.m_leader_epoch;
+        co_return err;
+    }
     }
     co_return ErrUnknownTopicOrPartition;
 }
@@ -1010,8 +1009,8 @@ bool Client::UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnow
         auto &partitions = m_metadata[topic->m_name];
         for (auto &partition : topic->m_partitions)
         {
-            partitions[partition->m_id] = partition;
-            if (partition->m_err == ErrLeaderNotAvailable)
+            partitions[partition.m_id] = partition;
+            if (partition.m_err == ErrLeaderNotAvailable)
             {
                 retry = true;
             }
@@ -1204,17 +1203,17 @@ coev::awaitable<int> Client::ResolveCanonicalNames(const std::vector<std::string
 bool Client::PartitionNotReadable(const std::string &topic, int32_t partition)
 {
 
-    auto topicIt = m_metadata.find(topic);
-    if (topicIt == m_metadata.end())
+    auto tit = m_metadata.find(topic);
+    if (tit == m_metadata.end())
     {
         return true;
     }
-    auto partIt = topicIt->second.find(partition);
-    if (partIt == topicIt->second.end())
+    auto pit = tit->second.find(partition);
+    if (pit == tit->second.end())
     {
         return true;
     }
-    return partIt->second->m_leader == -1;
+    return pit->second.m_leader == -1;
 }
 
 coev::awaitable<int> Client::MetadataRefresh(const std::vector<std::string> &topics)
