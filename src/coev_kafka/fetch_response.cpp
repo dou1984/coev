@@ -483,11 +483,9 @@ void FetchResponse::add_message_with_timestamp(const std::string &topic, int32_t
     if (frb.m_records_set.empty())
     {
         frb.m_records_set.resize(1);
-        // 初始化MessageSet
-        MessageSet message_set;
-        frb.m_records_set[0].m_records = message_set;
+        frb.m_records_set[0].m_records = MessageSet();
     }
-    
+
     // 确保m_records是MessageSet类型
     if (std::holds_alternative<MessageSet>(frb.m_records_set[0].m_records))
     {
@@ -593,7 +591,7 @@ void FetchResponse::set_last_offset_delta(const std::string &topic, int32_t part
         RecordBatch batch(2);
         frb.m_records_set.emplace_back(std::move(batch));
     }
-    
+
     // 确保m_records是RecordBatch类型
     if (std::holds_alternative<RecordBatch>(frb.m_records_set[0].m_records))
     {

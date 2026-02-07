@@ -28,7 +28,9 @@ int RecordHeader::encode(packet_encoder &pe) const
     }
     return 0;
 }
-
+Record::Record(const std::string &key, const std::string &value, int64_t offset_delta, std::chrono::milliseconds timestamp_delta) : m_key(key), m_value(value), m_offset_delta(offset_delta), m_timestamp_delta(timestamp_delta)
+{
+}
 int Record::encode(packet_encoder &pe) const
 {
     pe.push(m_length);

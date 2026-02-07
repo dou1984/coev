@@ -59,7 +59,7 @@ std::vector<TopicPartitionAssignment> StickyAssignorUserDataV0::partitions()
     return m_topic_partitions;
 }
 
-bool StickyAssignorUserDataV0::hasGeneration()
+bool StickyAssignorUserDataV0::has_generation()
 {
     return false;
 }
@@ -130,7 +130,7 @@ std::vector<TopicPartitionAssignment> StickyAssignorUserDataV1::partitions()
     return m_topic_partitions;
 }
 
-bool StickyAssignorUserDataV1::hasGeneration()
+bool StickyAssignorUserDataV1::has_generation()
 {
     return true;
 }
@@ -143,10 +143,8 @@ int StickyAssignorUserDataV1::generation()
 std::vector<TopicPartitionAssignment> PopulateTopicPartitions(const std::map<std::string, std::vector<int32_t>> &topics)
 {
     std::vector<TopicPartitionAssignment> topicPartitions;
-    for (auto &kv : topics)
+    for (auto &[topic, partitions] : topics)
     {
-        const std::string &topic = kv.first;
-        const std::vector<int32_t> &partitions = kv.second;
         for (int32_t partition : partitions)
         {
             topicPartitions.emplace_back(topic, partition);

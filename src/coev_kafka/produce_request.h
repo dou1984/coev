@@ -37,6 +37,6 @@ struct ProduceRequest : protocol_body
 
     void ensure_records(const std::string &topic, int32_t partition);
     void add_message(const std::string &topic, int32_t partition, std::shared_ptr<Message> msg);
-    void add_set(const std::string &topic, int32_t partition, std::shared_ptr<MessageSet> set);
-    void add_batch(const std::string &topic, int32_t partition, std::shared_ptr<RecordBatch> batch);
+    void add_set(const std::string &topic, int32_t partition, MessageSet &set);
+    void add_batch(const std::string &topic, int32_t partition, RecordBatch &batch);
 };

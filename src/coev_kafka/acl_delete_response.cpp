@@ -15,9 +15,9 @@ int DeleteAclsResponse::encode(packet_encoder &pe) const
         return -1;
     }
 
-    for (auto &resp : m_filter_responses)
+    for (auto &response : m_filter_responses)
     {
-        if (resp.encode(pe, m_version) != 0)
+        if (response.encode(pe, m_version) != 0)
         {
             return -1;
         }

@@ -139,24 +139,23 @@ int ProduceSet::add(std::shared_ptr<ProducerMessage> msg)
         if (m_parent->m_conf->Version.IsAtLeast(V0_11_0_0))
         {
             RecordBatch batch;
-                batch.m_first_timestamp = timestamp;
-                batch.m_version = 2;
-                batch.m_codec = m_parent->m_conf->Producer.Compression;
-                batch.m_compression_level = m_parent->m_conf->Producer.CompressionLevel;
-                batch.m_producer_id = m_producer_id;
-                batch.m_producer_epoch = m_producer_epoch;
-                if (m_parent->m_conf->Producer.Idempotent)
-                {
-                    batch.m_first_sequence = msg->m_sequence_number;
-                }
-                pset->m_records = std::make_shared<Records>(std::move(batch));
+            batch.m_first_timestamp = timestamp;
+            batch.m_version = 2;
+            batch.m_codec = m_parent->m_conf->Producer.Compression;
+            batch.m_compression_level = m_parent->m_conf->Producer.CompressionLevel;
+            batch.m_producer_id = m_producer_id;
+            batch.m_producer_epoch = m_producer_epoch;
+            if (m_parent->m_conf->Producer.Idempotent)
+            {
+                batch.m_first_sequence = msg->m_sequence_number;
+            }
+            pset->m_records = std::make_shared<Records>(std::move(batch));
             size = RECORD_BATCH_OVERHEAD;
         }
         else
-            {
-                MessageSet message_set;
-                pset->m_records = std::make_shared<Records>(std::move(message_set));
-            }
+        {
+            pset->m_records = std::make_shared<Records>(MessageSet());
+        }
         partitions[msg->m_partition] = pset;
         isNewSet = true;
     }
@@ -172,7 +171,7 @@ int ProduceSet::add(std::shared_ptr<ProducerMessage> msg)
             auto &record_batch = std::get<RecordBatch>(pset->m_records->m_records);
             if (m_parent->m_conf->Producer.Idempotent && msg->m_sequence_number < record_batch.m_first_sequence)
             {
-                return -1; // assertion failed: message out of sequence added to a batch
+                return -1;
             }
         }
     }
@@ -272,7 +271,7 @@ std::shared_ptr<ProduceRequest> ProduceSet::build_request()
                         record_batch.m_max_timestamp = record_batch.m_first_timestamp + MaxTimestampDelta;
                     }
                     record_batch.m_is_transactional = m_parent->is_transactional();
-                    req->add_batch(topic, partition, std::make_shared<RecordBatch>(record_batch));
+                    req->add_batch(topic, partition, record_batch);
                     continue;
                 }
             }
@@ -282,7 +281,7 @@ std::shared_ptr<ProduceRequest> ProduceSet::build_request()
                 auto &message_set = std::get<MessageSet>(pset->m_records->m_records);
                 if (m_parent->m_conf->Producer.Compression == CompressionCodec::None)
                 {
-                    req->add_set(topic, partition, std::make_shared<MessageSet>(message_set));
+                    req->add_set(topic, partition, message_set);
                 }
                 else
                 {

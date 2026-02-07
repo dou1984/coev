@@ -53,7 +53,7 @@ std::string marshalText(AclOperation op)
 
 bool unmarshalText(const std::string &text, AclOperation &out, std::string &error)
 {
-    std::string normalized = toLower(std::string(text.begin(), text.end()));
+    std::string normalized = toLower(text);
     static const std::map<std::string, AclOperation> mapping = {
         {"unknown", AclOperationUnknown},
         {"any", AclOperationAny},
@@ -78,8 +78,6 @@ bool unmarshalText(const std::string &text, AclOperation &out, std::string &erro
     error = "no acl operation with name " + normalized;
     return false;
 }
-
-// AclPermissionType
 std::string toString(AclPermissionType pt)
 {
     switch (pt)
@@ -104,7 +102,7 @@ std::string marshalText(AclPermissionType pt)
 
 bool unmarshalText(const std::string &text, AclPermissionType &out, std::string &error)
 {
-    std::string normalized = toLower(std::string(text.begin(), text.end()));
+    std::string normalized = toLower(text);
     static const std::map<std::string, AclPermissionType> mapping = {
         {"unknown", AclPermissionTypeUnknown},
         {"any", AclPermissionTypeAny},
@@ -152,7 +150,7 @@ std::string marshalText(AclResourceType rt)
 
 bool unmarshalText(const std::string &text, AclResourceType &out, std::string &error)
 {
-    std::string normalized = toLower(std::string(text.begin(), text.end()));
+    std::string normalized = toLower(text);
     static const std::map<std::string, AclResourceType> mapping = {
         {"unknown", AclResourceTypeUnknown},
         {"any", AclResourceTypeAny},
@@ -199,7 +197,7 @@ std::string marshalText(AclResourcePatternType rpt)
 
 bool unmarshalText(const std::string &text, AclResourcePatternType &out, std::string &error)
 {
-    std::string normalized = toLower(std::string(text.begin(), text.end()));
+    std::string normalized = toLower(text);
     static const std::map<std::string, AclResourcePatternType> mapping = {
         {"unknown", AclResourcePatternTypeUnknown},
         {"any", AclResourcePatternTypeAny},

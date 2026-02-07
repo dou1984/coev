@@ -81,16 +81,16 @@ int OffsetResponse::decode(packet_decoder &pd, int16_t version)
         }
     }
 
-    int32_t numTopics;
-    int err = pd.getArrayLength(numTopics);
+    int32_t num_topics;
+    int err = pd.getArrayLength(num_topics);
     if (err != 0)
     {
         return err;
     }
 
     m_blocks.clear();
-    m_blocks.reserve(numTopics);
-    for (int i = 0; i < numTopics; ++i)
+    m_blocks.reserve(num_topics);
+    for (int i = 0; i < num_topics; ++i)
     {
         std::string name;
         if ((err = pd.getString(name)) != 0)
@@ -98,15 +98,14 @@ int OffsetResponse::decode(packet_decoder &pd, int16_t version)
             return err;
         }
 
-        int32_t numBlocks;
-        if ((err = pd.getArrayLength(numBlocks)) != 0)
+        int32_t num_blocks;
+        if ((err = pd.getArrayLength(num_blocks)) != 0)
         {
             return err;
         }
 
-        auto &partitionMap = m_blocks[name];
-        partitionMap.reserve(numBlocks);
-        for (int j = 0; j < numBlocks; ++j)
+        auto &partitions = m_blocks[name];
+        for (int j = 0; j < num_blocks; ++j)
         {
             int32_t id;
             if ((err = pd.getInt32(id)) != 0)
@@ -114,33 +113,43 @@ int OffsetResponse::decode(packet_decoder &pd, int16_t version)
                 return err;
             }
 
-            auto block = std::make_shared<OffsetResponseBlock>();
-            if ((err = block->decode(pd, version)) != 0)
+            if ((err = partitions[id].decode(pd, version)) != 0)
             {
                 return err;
             }
-            partitionMap[id] = block;
         }
     }
 
     return 0;
 }
 
-std::shared_ptr<OffsetResponseBlock> OffsetResponse::GetBlock(const std::string &topic, int32_t partition)
+OffsetResponseBlock &OffsetResponse::get_block(const std::string &topic, int32_t partition)
 {
-    auto topicIt = m_blocks.find(topic);
-    if (topicIt == m_blocks.end())
+    auto tit = m_blocks.find(topic);
+    if (tit != m_blocks.end())
     {
-        return nullptr;
+        auto pit = tit->second.find(partition);
+        if (pit != tit->second.end())
+        {
+            return pit->second;
+        }
     }
-    auto partitionIt = topicIt->second.find(partition);
-    if (partitionIt == topicIt->second.end())
-    {
-        return nullptr;
-    }
-    return partitionIt->second;
+    static OffsetResponseBlock _;
+    return _;
 }
-
+bool OffsetResponse::has_block(const std::string &topic, int32_t partition)
+{
+    auto tit = m_blocks.find(topic);
+    if (tit != m_blocks.end())
+    {
+        auto pit = tit->second.find(partition);
+        if (pit != tit->second.end())
+        {
+            return true;
+        }
+    }
+    return false;
+}
 int OffsetResponse::encode(packet_encoder &pe) const
 {
     if (m_version >= 2)
@@ -154,10 +163,8 @@ int OffsetResponse::encode(packet_encoder &pe) const
         return err;
     }
 
-    for (auto &topic_pair : m_blocks)
+    for (auto &[topic, partitions] : m_blocks)
     {
-        const std::string &topic = topic_pair.first;
-        auto &partitions = topic_pair.second;
 
         if ((err = pe.putString(topic)) != 0)
         {
@@ -169,13 +176,10 @@ int OffsetResponse::encode(packet_encoder &pe) const
             return err;
         }
 
-        for (auto &partition_pair : partitions)
+        for (auto &[partition, block] : partitions)
         {
-            int32_t partition = partition_pair.first;
-            auto &block = partition_pair.second;
-
             pe.putInt32(partition);
-            if ((err = block->encode(pe, version())) != 0)
+            if ((err = block.encode(pe, version())) != 0)
             {
                 return err;
             }
@@ -231,14 +235,10 @@ std::chrono::milliseconds OffsetResponse::throttle_time() const
     return std::chrono::milliseconds(m_throttle_time);
 }
 
-void OffsetResponse::AddTopicPartition(const std::string &topic, int32_t partition, int64_t offset)
+void OffsetResponse::add_topic_partition(const std::string &topic, int32_t partition, int64_t offset)
 {
-    if (m_blocks.find(topic) == m_blocks.end())
-    {
-        m_blocks[topic] = std::unordered_map<int32_t, std::shared_ptr<OffsetResponseBlock>>();
-    }
-    auto block = std::make_shared<OffsetResponseBlock>();
-    block->m_offsets = {offset};
-    block->m_offset = offset;
-    m_blocks[topic][partition] = block;
+
+    auto &block = m_blocks[topic][partition];
+    block.m_offsets = {offset};
+    block.m_offset = offset;
 }

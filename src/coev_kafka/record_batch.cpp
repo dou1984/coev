@@ -9,6 +9,30 @@
 #include "real_decoder.h"
 #include "packet_decoding_error.h"
 
+int decode(const std::string &buf, std::vector<Record> &inputs)
+{
+    if (buf.empty())
+    {
+        return ErrNoError;
+    }
+
+    real_decoder helper;
+    helper.m_raw = buf;
+
+    for (auto &in : inputs)
+    {
+        if (in.decode(helper) != ErrNoError)
+        {
+            return ErrDecodeError;
+        }
+    }
+    if (helper.m_offset != static_cast<int>(buf.size()))
+    {
+        throw PacketDecodingError{"invalid length: buf=" + std::to_string(buf.size()) + " decoded=" + std::to_string(helper.m_offset)};
+    }
+    return ErrNoError;
+}
+
 int decode(const std::string &buf, std::vector<std::shared_ptr<Record>> &inputs)
 {
     if (buf.empty())
@@ -87,18 +111,26 @@ int RecordBatch::decode(packet_decoder &pd)
 {
     int err = pd.getInt64(m_first_offset);
     if (err)
+    {
         return err;
+    }
 
     int32_t batch_len;
     err = pd.getInt32(batch_len);
     if (err)
+    {
         return err;
+    }
     err = pd.getInt32(m_partition_leader_epoch);
     if (err)
+    {
         return err;
+    }
     err = pd.getInt8(m_version);
     if (err)
+    {
         return err;
+    }
 
     if (m_version != 2)
     {
@@ -131,10 +163,6 @@ int RecordBatch::decode(packet_decoder &pd)
     if (num_record >= 0)
     {
         m_records.resize(num_record);
-        for (auto i = 0; i < num_record; i++)
-        {
-            m_records[i] = std::make_shared<Record>();
-        }
     }
 
     int buf_size = static_cast<int>(batch_len) - RECORD_BATCH_OVERHEAD;

@@ -14,7 +14,7 @@ struct StickyAssignorUserData
 
     virtual ~StickyAssignorUserData() = default;
     virtual std::vector<TopicPartitionAssignment> partitions() = 0;
-    virtual bool hasGeneration() = 0;
+    virtual bool has_generation() = 0;
     virtual int generation() = 0;
 };
 
@@ -28,7 +28,7 @@ struct StickyAssignorUserDataV0 : StickyAssignorUserData
     int decode(packet_decoder &pd);
 
     std::vector<TopicPartitionAssignment> partitions();
-    bool hasGeneration();
+    bool has_generation();
     int generation();
 };
 
@@ -43,7 +43,7 @@ struct StickyAssignorUserDataV1 : StickyAssignorUserData
     int decode(packet_decoder &pd);
 
     std::vector<TopicPartitionAssignment> partitions();
-    bool hasGeneration();
+    bool has_generation();
     int generation();
 };
 

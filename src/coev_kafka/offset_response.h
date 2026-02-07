@@ -33,11 +33,12 @@ struct OffsetResponse : protocol_body
 
     int16_t m_version;
     std::chrono::milliseconds m_throttle_time;
-    std::unordered_map<std::string, std::unordered_map<int32_t, std::shared_ptr<OffsetResponseBlock>>> m_blocks;
+    std::unordered_map<std::string, std::unordered_map<int32_t, OffsetResponseBlock>> m_blocks;
 
     void set_version(int16_t v);
     int decode(packet_decoder &pd, int16_t version);
-    std::shared_ptr<OffsetResponseBlock> GetBlock(const std::string &topic, int32_t partition);
+    OffsetResponseBlock &get_block(const std::string &topic, int32_t partition);
+    bool has_block(const std::string &topic, int32_t partition);
     int encode(packet_encoder &pe) const;
     int16_t key() const;
     int16_t version() const;
@@ -45,5 +46,5 @@ struct OffsetResponse : protocol_body
     bool is_valid_version() const;
     KafkaVersion required_version() const;
     std::chrono::milliseconds throttle_time() const;
-    void AddTopicPartition(const std::string &topic, int32_t partition, int64_t offset);
+    void add_topic_partition(const std::string &topic, int32_t partition, int64_t offset);
 };

@@ -49,6 +49,6 @@ struct SyncGroupRequest : protocol_body, flexible_version
     bool is_flexible_version(int16_t ver) const;
     KafkaVersion required_version() const;
 
-    void AddGroupAssignment(const std::string &memberId, const std::string &memberAssignment);
-    int AddGroupAssignmentMember(const std::string &memberId, std::shared_ptr<ConsumerGroupMemberAssignment> memberAssignment);
+    void add_group_assignment(const std::string &memberId, const std::string &memberAssignment);
+    int add_group_assignment_member(const std::string &memberId, std::shared_ptr<ConsumerGroupMemberAssignment> memberAssignment);
 };

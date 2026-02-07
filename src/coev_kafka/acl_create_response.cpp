@@ -91,7 +91,6 @@ int AclCreationResponse::encode(packet_encoder &pe) const
 {
     pe.putKError(m_err);
 
-    // Always write nullable string to match decode method
     if (pe.putNullableString(m_err_msg) != 0)
     {
         return -1;

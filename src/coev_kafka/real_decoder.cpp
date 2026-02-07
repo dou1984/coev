@@ -184,7 +184,6 @@ int real_decoder::getArrayLength(int32_t &result)
             result = 0;
             return err;
         }
-        // According to Kafka flexible protocol, arrays are encoded with size+1
         if (n == 0)
         {
             result = 0;

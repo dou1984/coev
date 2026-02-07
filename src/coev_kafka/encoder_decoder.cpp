@@ -123,8 +123,8 @@ std::shared_ptr<packet_decoder> downgrade_flexible_decoder(std::shared_ptr<packe
     return pd;
 }
 
-inline constexpr int magicOffset = 16;
+inline constexpr int magic_offset = 16;
 int magic_value(packet_decoder &pd, int8_t &magic)
 {
-    return pd.peekInt8(magicOffset, magic);
+    return pd.peekInt8(magic_offset, magic);
 }

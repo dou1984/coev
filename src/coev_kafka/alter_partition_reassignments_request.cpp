@@ -35,10 +35,8 @@ int AlterPartitionReassignmentsRequest::encode(packet_encoder &pe) const
         return ErrEncodeError;
     }
 
-    for (auto &topicPair : m_blocks)
+    for (auto &[topic, partitions] : m_blocks)
     {
-        auto &topic = topicPair.first;
-        auto &partitions = topicPair.second;
 
         if (pe.putString(topic) != ErrNoError)
         {
@@ -50,10 +48,10 @@ int AlterPartitionReassignmentsRequest::encode(packet_encoder &pe) const
             return ErrEncodeError;
         }
 
-        for (auto &partitionPair : partitions)
+        for (auto &[partition, block] : partitions)
         {
-            pe.putInt32(partitionPair.first);
-            if (partitionPair.second->encode(pe) != ErrNoError)
+            pe.putInt32(partition);
+            if (block.encode(pe) != ErrNoError)
             {
                 return ErrEncodeError;
             }
@@ -76,15 +74,15 @@ int AlterPartitionReassignmentsRequest::decode(packet_decoder &pd, int16_t versi
     }
     m_timeout = std::chrono::milliseconds(timeout);
 
-    int32_t topicCount;
-    if (pd.getArrayLength(topicCount) != ErrNoError)
+    int32_t topic_count;
+    if (pd.getArrayLength(topic_count) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
-    if (topicCount > 0)
+    if (topic_count > 0)
     {
-        for (int32_t i = 0; i < topicCount; ++i)
+        for (int32_t i = 0; i < topic_count; ++i)
         {
             std::string topic;
             if (pd.getString(topic) != ErrNoError)
@@ -92,14 +90,14 @@ int AlterPartitionReassignmentsRequest::decode(packet_decoder &pd, int16_t versi
                 return ErrDecodeError;
             }
 
-            int32_t partitionCount;
-            if (pd.getArrayLength(partitionCount) != ErrNoError)
+            int32_t partition_count;
+            if (pd.getArrayLength(partition_count) != ErrNoError)
             {
                 return ErrDecodeError;
             }
 
-            auto &partitionMap = m_blocks[topic];
-            for (int32_t j = 0; j < partitionCount; ++j)
+            auto &partitions = m_blocks[topic];
+            for (int32_t j = 0; j < partition_count; ++j)
             {
                 int32_t partition;
                 if (pd.getInt32(partition) != ErrNoError)
@@ -107,12 +105,10 @@ int AlterPartitionReassignmentsRequest::decode(packet_decoder &pd, int16_t versi
                     return ErrDecodeError;
                 }
 
-                auto block = std::make_shared<AlterPartitionReassignmentsBlock>();
-                if (block->decode(pd) != ErrNoError)
+                if (partitions[partition].decode(pd) != ErrNoError)
                 {
                     return ErrDecodeError;
                 }
-                partitionMap[partition] = block;
             }
             int32_t _;
             if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
@@ -166,5 +162,5 @@ std::chrono::milliseconds AlterPartitionReassignmentsRequest::throttle_time() co
 
 void AlterPartitionReassignmentsRequest::add_block(const std::string &topic, int32_t partitionID, const std::vector<int32_t> &replicas)
 {
-    m_blocks[topic][partitionID] = std::make_shared<AlterPartitionReassignmentsBlock>(replicas);
+    m_blocks[topic][partitionID] = replicas;
 }

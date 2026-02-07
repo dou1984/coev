@@ -6,6 +6,7 @@
 
 struct VariantLengthField : dynamicPushDecoder, dynamicPushEncoder
 {
+    VariantLengthField() = default;
     int m_start_offset = 0;
     int64_t m_length = 0;
 

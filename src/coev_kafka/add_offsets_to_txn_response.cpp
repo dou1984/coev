@@ -9,7 +9,6 @@ int AddOffsetsToTxnResponse::encode(packet_encoder &pe) const
 {
 
     pe.putDurationMs(m_throttle_time);
-
     pe.putKError(m_err);
     return 0;
 }

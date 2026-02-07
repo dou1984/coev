@@ -435,7 +435,7 @@ coev::awaitable<int> ConsumerGroup::SyncGroup(std::shared_ptr<Broker> coordinato
         }
         assignment->UserData = userDataBytes;
 
-        err = req->AddGroupAssignmentMember(memberID, assignment);
+        err = req->add_group_assignment_member(memberID, assignment);
         if (err != 0)
         {
             co_return err;
@@ -446,7 +446,7 @@ coev::awaitable<int> ConsumerGroup::SyncGroup(std::shared_ptr<Broker> coordinato
     for (const auto &kv : members)
     {
         const std::string &memberID = kv.first;
-        err = req->AddGroupAssignmentMember(memberID, std::make_shared<ConsumerGroupMemberAssignment>());
+        err = req->add_group_assignment_member(memberID, std::make_shared<ConsumerGroupMemberAssignment>());
         if (err != 0)
         {
             co_return err;

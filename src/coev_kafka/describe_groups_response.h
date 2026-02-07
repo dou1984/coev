@@ -41,7 +41,7 @@ struct GroupDescription : VEncoder, VDecoder
     std::string m_state;
     std::string m_protocol_type;
     std::string m_protocol;
-    std::map<std::string, std::shared_ptr<GroupMemberDescription> > m_members;
+    std::map<std::string,  GroupMemberDescription> m_members;
     int32_t m_authorized_operations;
 
     int encode(packet_encoder &pe, int16_t version) const;

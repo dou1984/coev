@@ -268,13 +268,13 @@ int CreatableTopicResult::encode(packet_encoder &pe, int16_t /*version*/) const
     {
         return ErrEncodeError;
     }
-    for (auto &kv : m_configs)
+    for (auto &[topic, conf] : m_configs)
     {
-        if (pe.putString(kv.first) != ErrNoError)
+        if (pe.putString(topic) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        if (kv.second->encode(pe, 0) != ErrNoError)
+        if (conf->encode(pe, 0) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -286,10 +286,9 @@ int CreatableTopicResult::encode(packet_encoder &pe, int16_t /*version*/) const
         return ErrNoError;
     }
 
-    // 写入带标签字段：1 个字段，tag=0，值为 KError
-    pe.putUVarint(1); // num tagged fields
-    pe.putUVarint(0); // tag id = 0
-    pe.putUVarint(2); // length of value = sizeof(int16_t)
+    pe.putUVarint(1);
+    pe.putUVarint(0);
+    pe.putUVarint(2);
     pe.putInt16(static_cast<int16_t>(m_topic_config_error_code));
 
     return ErrNoError;

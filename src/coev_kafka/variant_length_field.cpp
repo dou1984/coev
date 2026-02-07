@@ -16,7 +16,9 @@ int VariantLengthField::decode(packet_decoder &pd)
     int64_t val;
     int err = pd.getVariant(val);
     if (err != 0)
+    {
         return err;
+    }
     m_length = val;
     return 0;
 }

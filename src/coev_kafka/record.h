@@ -23,10 +23,7 @@ struct Record : IEncoder, IDecoder
     mutable VariantLengthField m_length;
 
     Record() = default;
-
-    Record(std::string &key, std::string &value, int64_t offsetDelta, std::chrono::milliseconds timestampDelta) : m_key(key), m_value(value), m_offset_delta(offsetDelta), m_timestamp_delta(timestampDelta)
-    {
-    }
+    Record(const std::string &key, const std::string &value, int64_t offset_delta, std::chrono::milliseconds timestamp_delta);
     int encode(packet_encoder &pe) const;
     int decode(packet_decoder &pd);
 };

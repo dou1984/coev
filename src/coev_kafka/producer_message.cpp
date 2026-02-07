@@ -2,14 +2,7 @@
 #include <algorithm>
 #include <cstdint>
 
-ProducerMessage::ProducerMessage()
-    : m_offset(0),
-      m_partition(0),
-      m_retries(0),
-      m_flags(static_cast<FlagSet>(0)),
-      m_sequence_number(0),
-      m_producer_epoch(0),
-      m_has_sequence(false)
+ProducerMessage::ProducerMessage() : m_offset(0), m_partition(0), m_retries(0), m_flags(static_cast<FlagSet>(0)), m_sequence_number(0), m_producer_epoch(0), m_has_sequence(false)
 {
 }
 ProducerMessage::~ProducerMessage()

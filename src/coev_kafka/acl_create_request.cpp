@@ -13,9 +13,9 @@ int CreateAclsRequest::encode(packet_encoder &pe) const
         return -1;
     }
 
-    for (const auto &aclCreation : m_acl_creations)
+    for (auto &acl_creation : m_acl_creations)
     {
-        if (aclCreation.encode(pe, m_version) != 0)
+        if (acl_creation.encode(pe, m_version) != 0)
         {
             return -1;
         }
