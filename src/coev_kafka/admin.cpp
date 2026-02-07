@@ -360,14 +360,12 @@ coev::awaitable<int> ClusterAdmin::CreatePartitions(const std::string &topic, in
     {
         co_return ErrInvalidTopic;
     }
-    std::map<std::string, std::shared_ptr<TopicPartition>> topic_partitions;
     auto tp = std::make_shared<TopicPartition>();
     tp->m_count = count;
     tp->m_assignment = assignment;
-    topic_partitions[topic] = tp;
 
     auto request = std::make_shared<CreatePartitionsRequest>();
-    request->m_topic_partitions = std::move(topic_partitions);
+    request->m_topic_partitions[topic] = tp;
     request->m_timeout = m_conf->Admin.Timeout;
     request->m_validate_only = validateOnly;
     if (m_conf->Version.IsAtLeast(V2_0_0_0))
