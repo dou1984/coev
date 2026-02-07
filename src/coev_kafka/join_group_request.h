@@ -23,6 +23,8 @@ struct GroupProtocol : IDecoder, IEncoder
     std::string m_name;
     std::string m_metadata;
 
+    GroupProtocol() = default;
+    GroupProtocol(const std::string &name, const std::string &metadata);
     int decode(packet_decoder &pd);
     int encode(packet_encoder &pe) const;
 };
@@ -38,7 +40,7 @@ struct JoinGroupRequest : protocol_body, flexible_version
     std::string m_group_instance_id;
     std::string m_protocol_type;
     std::map<std::string, std::string> m_group_protocols;
-    std::vector<std::shared_ptr<GroupProtocol>> m_ordered_group_protocols;
+    std::vector<GroupProtocol> m_ordered_group_protocols;
     JoinGroupRequest() = default;
     JoinGroupRequest(int16_t v) : m_version(v)
     {

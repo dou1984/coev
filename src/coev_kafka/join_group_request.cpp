@@ -1,6 +1,10 @@
 #include "version.h"
 #include "join_group_request.h"
 #include "api_versions.h"
+
+GroupProtocol::GroupProtocol(const std::string &name, const std::string &metadata) : m_name(name), m_metadata(metadata)
+{
+}
 int GroupProtocol::decode(packet_decoder &pd)
 {
     int err = pd.getString(m_name);
@@ -93,7 +97,7 @@ int JoinGroupRequest::encode(packet_encoder &pe) const
 
         for (auto &protocol : m_ordered_group_protocols)
         {
-            err = protocol->encode(pe);
+            err = protocol.encode(pe);
             if (err != 0)
                 return err;
         }
@@ -153,13 +157,15 @@ int JoinGroupRequest::decode(packet_decoder &pd, int16_t version)
 
     for (int32_t i = 0; i < n; ++i)
     {
-        auto protocol = std::make_shared<GroupProtocol>();
-        err = protocol->decode(pd);
+        GroupProtocol protocol;
+        err = protocol.decode(pd);
         if (err != 0)
+        {
             return err;
+        }
 
-        m_group_protocols[protocol->m_name] = protocol->m_metadata;
-        m_ordered_group_protocols.push_back(protocol);
+        m_group_protocols[protocol.m_name] = protocol.m_metadata;
+        m_ordered_group_protocols.emplace_back(protocol.m_name, protocol.m_metadata);
     }
     int32_t _;
     return pd.getEmptyTaggedFieldArray(_);
@@ -220,10 +226,7 @@ KafkaVersion JoinGroupRequest::required_version() const
 
 void JoinGroupRequest::add_group_protocol(const std::string &name, const std::string &metadata)
 {
-    auto protocol = std::make_shared<GroupProtocol>();
-    protocol->m_name = name;
-    protocol->m_metadata = metadata;
-    m_ordered_group_protocols.push_back(protocol);
+    m_ordered_group_protocols.emplace_back(name, metadata);
 }
 
 int JoinGroupRequest::add_group_protocol_metadata(const std::string &name, const std::shared_ptr<ConsumerGroupMemberMetadata> &metadata)
