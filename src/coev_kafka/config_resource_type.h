@@ -17,6 +17,10 @@ struct ConfigResource
     ConfigResourceType m_type;
     std::string m_name;
     std::vector<std::string> m_config_names;
+    ConfigResource() = default;
+    ConfigResource(ConfigResourceType type, const std::string &name) : m_type(type), m_name(name)
+    {
+    }
 };
 
 std::string toString(ConfigResourceType crt);

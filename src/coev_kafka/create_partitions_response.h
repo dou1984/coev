@@ -26,7 +26,7 @@ struct CreatePartitionsResponse : protocol_body
 {
     int16_t m_version;
     std::chrono::milliseconds m_throttle_time;
-    std::map<std::string, std::shared_ptr<TopicPartitionError>> m_topic_partition_errors;
+    std::map<std::string, TopicPartitionError> m_topic_partition_errors;
 
     void set_version(int16_t v);
     int encode(packet_encoder &pe) const;

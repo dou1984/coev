@@ -79,8 +79,8 @@ TEST(MetadataProtocolTest, TestMetadataResponseEncodeDecode)
     // Verify topic metadata
     if (!original.m_topics.empty() && !decoded.m_topics.empty())
     {
-        EXPECT_EQ(decoded.m_topics[0]->m_name, original.m_topics[0]->m_name);
-        EXPECT_EQ(decoded.m_topics[0]->m_partitions.size(), original.m_topics[0]->m_partitions.size());
+        EXPECT_EQ(decoded.m_topics[0].m_name, original.m_topics[0].m_name);
+        EXPECT_EQ(decoded.m_topics[0].m_partitions.size(), original.m_topics[0].m_partitions.size());
     }
 }
 
@@ -144,8 +144,8 @@ TEST(MetadataProtocolTest, TestMetadataResponseMultipleTopics)
 
     // Verify the decoded response has the correct number of topics and partitions
     EXPECT_EQ(decoded.m_topics.size(), 2);                  // topic-1 and topic-2
-    EXPECT_EQ(decoded.m_topics[0]->m_partitions.size(), 2); // topic-1 has 2 partitions
-    EXPECT_EQ(decoded.m_topics[1]->m_partitions.size(), 1); // topic-2 has 1 partition
+    EXPECT_EQ(decoded.m_topics[0].m_partitions.size(), 2); // topic-1 has 2 partitions
+    EXPECT_EQ(decoded.m_topics[1].m_partitions.size(), 1); // topic-2 has 1 partition
 }
 
 TEST(MetadataProtocolTest, TestMetadataRequestVersionCompatibility)
@@ -333,15 +333,15 @@ TEST(MetadataProtocolTest, TestMetadataResponseWithMultipleBrokers)
     // Verify the decoded response has the correct number of brokers and partitions
     EXPECT_EQ(decoded.m_brokers.size(), 3);
     EXPECT_EQ(decoded.m_topics.size(), 1);
-    EXPECT_EQ(decoded.m_topics[0]->m_partitions.size(), 3);
+    EXPECT_EQ(decoded.m_topics[0].m_partitions.size(), 3);
 
     // Verify some partition details
-    EXPECT_EQ(decoded.m_topics[0]->m_partitions[0].m_leader, 1);
-    EXPECT_EQ(decoded.m_topics[0]->m_partitions[1].m_leader, 2);
-    EXPECT_EQ(decoded.m_topics[0]->m_partitions[2].m_leader, 3);
+    EXPECT_EQ(decoded.m_topics[0].m_partitions[0].m_leader, 1);
+    EXPECT_EQ(decoded.m_topics[0].m_partitions[1].m_leader, 2);
+    EXPECT_EQ(decoded.m_topics[0].m_partitions[2].m_leader, 3);
 
     // Verify replicas and ISR
-    EXPECT_EQ(decoded.m_topics[0]->m_partitions[0].m_replicas.size(), 3);
-    EXPECT_EQ(decoded.m_topics[0]->m_partitions[0].m_isr.size(), 2);
-    EXPECT_EQ(decoded.m_topics[0]->m_partitions[0].m_offline_replicas.size(), 1);
+    EXPECT_EQ(decoded.m_topics[0].m_partitions[0].m_replicas.size(), 3);
+    EXPECT_EQ(decoded.m_topics[0].m_partitions[0].m_isr.size(), 2);
+    EXPECT_EQ(decoded.m_topics[0].m_partitions[0].m_offline_replicas.size(), 1);
 }

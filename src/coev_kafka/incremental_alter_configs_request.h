@@ -28,6 +28,7 @@ struct IncrementalAlterConfigsResource : IEncoder, VDecoder
     ConfigResourceType m_type;
     std::string m_name;
     std::map<std::string, IncrementalAlterConfigsEntry> m_config_entries;
+    IncrementalAlterConfigsResource(ConfigResourceType t, const std::string &, const std::map<std::string, IncrementalAlterConfigsEntry> &);
 
     int encode(packet_encoder &pe) const;
     int decode(packet_decoder &pd, int16_t version);
@@ -37,7 +38,7 @@ struct IncrementalAlterConfigsRequest : protocol_body, flexible_version
 {
 
     int16_t m_version = 0;
-    std::vector<std::shared_ptr<IncrementalAlterConfigsResource>> m_resources;
+    std::vector<IncrementalAlterConfigsResource> m_resources;
     bool m_validate_only = false;
     IncrementalAlterConfigsRequest() = default;
     IncrementalAlterConfigsRequest(int16_t v) : m_version(v)

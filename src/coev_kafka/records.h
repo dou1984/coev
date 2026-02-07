@@ -18,12 +18,11 @@ const int DefaultRecords = 2;
 struct Records : std::enable_shared_from_this<Records>
 {
     mutable int m_records_type = UnknownRecords;
-    mutable std::shared_ptr<MessageSet> m_message_set;
-    std::shared_ptr<RecordBatch> m_record_batch;
+    mutable std::variant<MessageSet, RecordBatch> m_records;
 
     Records();
-    Records(std::shared_ptr<MessageSet> message_set);
-    Records(std::shared_ptr<RecordBatch> batch);
+    Records(MessageSet &&message_set);
+    Records(RecordBatch &&batch);
 
     int set_type_from_fields(bool &empty) const;
     int set_type_from_magic(packet_decoder &pd);

@@ -755,26 +755,26 @@ coev::awaitable<int> Client::_CachedLeader(const std::string &topic, int32_t par
     {
         auto pit = tit->second.find(partitionID);
         if (pit != tit->second.end())
-    {
-        auto &_metadata = pit->second;
-        if (_metadata.m_err == ErrLeaderNotAvailable)
         {
-            co_return ErrLeaderNotAvailable;
+            auto &_metadata = pit->second;
+            if (_metadata.m_err == ErrLeaderNotAvailable)
+            {
+                co_return ErrLeaderNotAvailable;
+            }
+            auto bit = m_brokers.find(_metadata.m_leader);
+            if (bit == m_brokers.end())
+            {
+                co_return ErrLeaderNotAvailable;
+            }
+            auto err = co_await bit->second->Open(m_conf);
+            if (err != 0)
+            {
+                co_return ErrLeaderNotAvailable;
+            }
+            broker_ = bit->second;
+            leaderEpoch = _metadata.m_leader_epoch;
+            co_return err;
         }
-        auto bit = m_brokers.find(_metadata.m_leader);
-        if (bit == m_brokers.end())
-        {
-            co_return ErrLeaderNotAvailable;
-        }
-        auto err = co_await bit->second->Open(m_conf);
-        if (err != 0)
-        {
-            co_return ErrLeaderNotAvailable;
-        }
-        broker_ = bit->second;
-        leaderEpoch = _metadata.m_leader_epoch;
-        co_return err;
-    }
     }
     co_return ErrUnknownTopicOrPartition;
 }
@@ -979,35 +979,35 @@ bool Client::UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnow
     int err = 0;
     for (auto &topic : data->m_topics)
     {
-        if (m_metadata_topics.find(topic->m_name) == m_metadata_topics.end())
+        if (m_metadata_topics.find(topic.m_name) == m_metadata_topics.end())
         {
-            m_metadata_topics[topic->m_name] = true;
+            m_metadata_topics[topic.m_name] = true;
         }
-        m_metadata.erase(topic->m_name);
-        m_cached_partitions_results.erase(topic->m_name);
-        switch (topic->m_err)
+        m_metadata.erase(topic.m_name);
+        m_cached_partitions_results.erase(topic.m_name);
+        switch (topic.m_err)
         {
         case ErrNoError:
-            m_metadata_refresher.update_topic(topic->m_name);
+            m_metadata_refresher.update_topic(topic.m_name);
             break;
         case ErrInvalidTopic:
         case ErrTopicAuthorizationFailed:
-            err = topic->m_err;
+            err = topic.m_err;
             continue;
         case ErrUnknownTopicOrPartition:
-            err = topic->m_err;
+            err = topic.m_err;
             retry = true;
             continue;
         case ErrLeaderNotAvailable:
             retry = true;
             break;
         default:
-            LOG_CORE("Unexpected topic-level metadata error: %s", KErrorToString(topic->m_err));
-            err = topic->m_err;
+            LOG_CORE("Unexpected topic-level metadata error: %s", KErrorToString(topic.m_err));
+            err = topic.m_err;
             continue;
         }
-        auto &partitions = m_metadata[topic->m_name];
-        for (auto &partition : topic->m_partitions)
+        auto &partitions = m_metadata[topic.m_name];
+        for (auto &partition : topic.m_partitions)
         {
             partitions[partition.m_id] = partition;
             if (partition.m_err == ErrLeaderNotAvailable)
@@ -1016,9 +1016,9 @@ bool Client::UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnow
             }
         }
 
-        auto &partition_cache = m_cached_partitions_results[topic->m_name];
-        partition_cache[AllPartitions] = _SetPartitionCache(topic->m_name, AllPartitions);
-        partition_cache[WritablePartitions_] = _SetPartitionCache(topic->m_name, WritablePartitions_);
+        auto &partition_cache = m_cached_partitions_results[topic.m_name];
+        partition_cache[AllPartitions] = _SetPartitionCache(topic.m_name, AllPartitions);
+        partition_cache[WritablePartitions_] = _SetPartitionCache(topic.m_name, WritablePartitions_);
     }
     return retry;
 }

@@ -1,5 +1,6 @@
-#include "create_partitions_response.h"
 #include <sstream>
+#include "api_versions.h"
+#include "create_partitions_response.h"
 
 void CreatePartitionsResponse::set_version(int16_t v)
 {
@@ -21,7 +22,7 @@ int CreatePartitionsResponse::encode(packet_encoder &pe) const
         {
             return ErrEncodeError;
         }
-        if (perr->encode(pe) != ErrNoError)
+        if (perr.encode(pe) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -51,12 +52,10 @@ int CreatePartitionsResponse::decode(packet_decoder &pd, int16_t version)
         {
             return ErrDecodeError;
         }
-        auto err = std::make_shared<TopicPartitionError>();
-        if (err->decode(pd, version) != ErrNoError)
+        if (m_topic_partition_errors[topic].decode(pd, version) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        m_topic_partition_errors[topic] = err;
     }
 
     return ErrNoError;
@@ -64,7 +63,7 @@ int CreatePartitionsResponse::decode(packet_decoder &pd, int16_t version)
 
 int16_t CreatePartitionsResponse::key() const
 {
-    return 37; // apiKeyCreatePartitions
+    return apiKeyCreatePartitions;
 }
 
 int16_t CreatePartitionsResponse::version() const

@@ -29,7 +29,9 @@ int IncrementalAlterConfigsEntry::decode(packet_decoder &pd, int16_t /*version*/
     int32_t _;
     return pd.getEmptyTaggedFieldArray(_);
 }
-
+IncrementalAlterConfigsResource::IncrementalAlterConfigsResource(ConfigResourceType t, const std::string &name, const std::map<std::string, IncrementalAlterConfigsEntry> &_entries) : m_type(t), m_name(name), m_config_entries(_entries)
+{
+}
 int IncrementalAlterConfigsResource::encode(packet_encoder &pe) const
 {
     pe.putInt8(m_type);
@@ -108,9 +110,9 @@ int IncrementalAlterConfigsRequest::encode(packet_encoder &pe) const
     if (err != 0)
         return err;
 
-    for (const auto &r : m_resources)
+    for (auto &r : m_resources)
     {
-        err = r->encode(pe);
+        err = r.encode(pe);
         if (err != 0)
             return err;
     }
@@ -128,23 +130,26 @@ int IncrementalAlterConfigsRequest::decode(packet_decoder &pd, int16_t version)
     int32_t count;
     int err = pd.getArrayLength(count);
     if (err != 0)
+    {
         return err;
-
+    }
     m_resources.clear();
     m_resources.reserve(count);
     for (int32_t i = 0; i < count; ++i)
     {
-        auto r = std::make_unique<IncrementalAlterConfigsResource>();
-        err = r->decode(pd, version);
+        err = m_resources[i].decode(pd, version);
         if (err != 0)
+        {
             return err;
-        m_resources.push_back(std::move(r));
+        }
     }
 
     bool validateOnly;
     err = pd.getBool(validateOnly);
     if (err != 0)
+    {
         return err;
+    }
     m_validate_only = validateOnly;
 
     int32_t _;

@@ -17,7 +17,7 @@ int DescribeConfigsResponse::encode(packet_encoder &pe) const
 
     for (auto &rr : m_resources)
     {
-        if (rr->encode(pe, m_version) != ErrNoError)
+        if (rr.encode(pe, m_version) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -46,8 +46,7 @@ int DescribeConfigsResponse::decode(packet_decoder &pd, int16_t version)
 
     for (int32_t i = 0; i < n; ++i)
     {
-        m_resources[i] = std::make_shared<ResourceResponse>();
-        if (m_resources[i]->decode(pd, version) != ErrNoError)
+        if (m_resources[i].decode(pd, version) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -116,7 +115,7 @@ int ResourceResponse::encode(packet_encoder &pe, int16_t version) const
 
     for (auto &c : m_configs)
     {
-        if (c->encode(pe, version) != ErrNoError)
+        if (c.encode(pe, version) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -148,8 +147,7 @@ int ResourceResponse::decode(packet_decoder &pd, int16_t version)
     m_configs.resize(n);
     for (int32_t i = 0; i < n; ++i)
     {
-        m_configs[i] = std::make_shared<ConfigEntry>();
-        if (m_configs[i]->decode(pd, version) != ErrNoError)
+        if (m_configs[i].decode(pd, version) != ErrNoError)
         {
             return ErrDecodeError;
         }

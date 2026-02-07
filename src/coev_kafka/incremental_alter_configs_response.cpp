@@ -18,7 +18,7 @@ int IncrementalAlterConfigsResponse::encode(packet_encoder &pe) const
 
     for (auto &res : m_resources)
     {
-        err = res->encode(pe);
+        err = res.encode(pe);
         if (err != 0)
             return err;
     }
@@ -45,14 +45,12 @@ int IncrementalAlterConfigsResponse::decode(packet_decoder &pd, int16_t version)
         return err;
 
     m_resources.clear();
-    m_resources.reserve(count);
+    m_resources.resize(count);
     for (int32_t i = 0; i < count; ++i)
     {
-        auto res = std::make_shared<AlterConfigsResourceResponse>();
-        err = res->decode(pd, version);
+        err = m_resources[i].decode(pd, version);
         if (err != 0)
             return err;
-        m_resources.push_back(std::move(res));
     }
 
     if (is_flexible_version(version))

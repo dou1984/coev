@@ -31,7 +31,7 @@ struct ListPartitionReassignmentsResponse : protocol_body, flexible_version
     std::chrono::milliseconds m_throttle_time;
     KError m_err;
     std::string m_error_message;
-    std::map<std::string, std::map<int32_t, std::shared_ptr<PartitionReplicaReassignmentsStatus>>> m_topic_status;
+    std::map<std::string, std::map<int32_t, PartitionReplicaReassignmentsStatus>> m_topic_status;
 
     void set_version(int16_t v);
     void add_block(const std::string &topic, int32_t partition, const std::vector<int32_t> &replicas, const std::vector<int32_t> &addingReplicas, const std::vector<int32_t> &removingReplicas);

@@ -128,13 +128,11 @@ int TopicMetadata::decode(packet_decoder &pd, int16_t version)
     }
     m_partitions.resize(n);
     for (int32_t i = 0; i < n; ++i)
-    {
-        PartitionMetadata block;
-        if (int err = block.decode(pd, m_version); err != 0)
+    {    
+        if (int err =  m_partitions[i].decode(pd, m_version); err != 0)
         {
             return err;
         }
-        m_partitions[i] = block;
     }
 
     if (m_version >= 8)
@@ -162,8 +160,8 @@ int TopicMetadata::encode(packet_encoder &pe, int16_t version) const
 
     if (m_version >= 10)
     {
-        std::string uuidBytes(m_uuid.data.begin(), m_uuid.data.end());
-        if (int err = pe.putRawBytes(uuidBytes); err != 0)
+        std::string uuid_str(reinterpret_cast<const char*>(m_uuid.data.data()), m_uuid.data.size());
+        if (int err = pe.putRawBytes(uuid_str); err != 0)
         {
             return err;
         }
@@ -244,26 +242,21 @@ int MetadataResponse::decode(packet_decoder &pd, int16_t version)
         }
     }
 
-    int32_t topicArrayLen;
-    if (int err = pd.getArrayLength(topicArrayLen); err != 0)
+    int32_t topic_array_len;
+    if (int err = pd.getArrayLength(topic_array_len); err != 0)
     {
         LOG_CORE("Failed to get topic array length: %d", err);
         return err;
     }
-    LOG_CORE("Topic array length: %d", topicArrayLen);
 
-    m_topics.resize(topicArrayLen);
-    for (int32_t i = 0; i < topicArrayLen; ++i)
+    m_topics.resize(topic_array_len);
+    for (int32_t i = 0; i < topic_array_len; ++i)
     {
-        LOG_CORE("Creating TopicMetadata %d of %d", i + 1, topicArrayLen);
-        auto topic = std::make_shared<TopicMetadata>();
-        if (int err = topic->decode(pd, version); err != 0)
+        if (int err = m_topics[i].decode(pd, version); err != 0)
         {
             LOG_CORE("Failed to decode TopicMetadata %d: %d", i + 1, err);
             return err;
         }
-        m_topics[i] = topic;
-        LOG_CORE("Added TopicMetadata %d to m_topics", i + 1);
     }
 
     if (m_version >= 8)
@@ -318,7 +311,7 @@ int MetadataResponse::encode(packet_encoder &pe) const
     }
     for (auto &block : m_topics)
     {
-        if (int err = block->encode(pe, m_version); err != 0)
+        if (int err = block.encode(pe, m_version); err != 0)
         {
             return err;
         }
@@ -413,30 +406,26 @@ void MetadataResponse::add_broker(const std::string &addr, int32_t id)
     m_brokers.push_back(broker);
 }
 
-std::shared_ptr<TopicMetadata> MetadataResponse::add_topic(const std::string &topic, int16_t err)
+TopicMetadata &MetadataResponse::add_topic(const std::string &topic, int16_t err)
 {
     for (auto &tm : m_topics)
     {
-        if (tm->m_name == topic)
+        if (tm.m_name == topic)
         {
-            tm->m_err = (KError)err;
+            tm.m_err = (KError)err;
             return tm;
         }
     }
-
-    auto tmatch = std::make_shared<TopicMetadata>();
-    tmatch->m_name = topic;
-    tmatch->m_err = (KError)err;
-    m_topics.push_back(tmatch);
-    return tmatch;
+    m_topics.emplace_back(topic, (KError)err);
+    return m_topics.back();
 }
 
 int MetadataResponse::add_topic_partition(const std::string &topic, int32_t partition, int32_t brokerID, const std::vector<int32_t> &replicas,
                                           const std::vector<int32_t> &isr, const std::vector<int32_t> &offline,
                                           int err)
 {
-    auto tmatch = add_topic(topic, 0);
-    for (auto &pm : tmatch->m_partitions)
+    auto &tmatch = add_topic(topic, 0);
+    for (auto &pm : tmatch.m_partitions)
     {
         if (pm.m_id == partition)
         {
@@ -456,6 +445,6 @@ int MetadataResponse::add_topic_partition(const std::string &topic, int32_t part
     pmatch.m_isr = isr.empty() ? std::vector<int32_t>{} : isr;
     pmatch.m_offline_replicas = offline.empty() ? std::vector<int32_t>{} : offline;
     pmatch.m_err = (KError)err;
-    tmatch->m_partitions.push_back(pmatch);
+    tmatch.m_partitions.push_back(pmatch);
     return 0;
 }

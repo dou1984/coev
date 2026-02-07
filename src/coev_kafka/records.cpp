@@ -2,36 +2,34 @@
 #include "records.h"
 #include <utility>
 #include <vector>
+#include <cassert>
+#include <variant>
 #include "errors.h"
 
 Records::Records() : m_records_type(UnknownRecords)
 {
 }
-Records::Records(std::shared_ptr<MessageSet> message_set)
+Records::Records(MessageSet &&message_set)
 {
     m_records_type = LegacyRecords;
-    m_message_set = message_set;
+    m_records = std::move(message_set);
 }
-Records::Records(std::shared_ptr<RecordBatch> batch)
+Records::Records(RecordBatch &&batch)
 {
     m_records_type = DefaultRecords;
-    m_record_batch = batch;
+    m_records = std::move(batch);
 }
 
 int Records::set_type_from_fields(bool &empty) const
 {
     empty = false;
-    if (m_message_set == nullptr && m_record_batch == nullptr)
+    if (m_records.index() == std::variant_npos)
     {
         empty = true;
         return 0;
     }
-    if (m_message_set != nullptr && m_record_batch != nullptr)
-    {
-        return -1;
-    }
     m_records_type = DefaultRecords;
-    if (m_message_set != nullptr)
+    if (std::holds_alternative<MessageSet>(m_records))
     {
         m_records_type = LegacyRecords;
     }
@@ -50,22 +48,13 @@ int Records::encode(packet_encoder &pe) const
             return err;
         }
     }
-
     if (m_records_type == LegacyRecords)
     {
-        if (m_message_set == nullptr)
-        {
-            return 0;
-        }
-        return m_message_set->encode(pe);
+        return std::get<MessageSet>(m_records).encode(pe);
     }
-    else if (m_records_type == DefaultRecords)
+    if (m_records_type == DefaultRecords)
     {
-        if (m_record_batch == nullptr)
-        {
-            return 0;
-        }
-        return m_record_batch->encode(pe);
+        return std::get<RecordBatch>(m_records).encode(pe);
     }
     return -1;
 }
@@ -97,15 +86,14 @@ int Records::decode(packet_decoder &pd)
             return err;
         }
     }
+
     if (m_records_type == LegacyRecords)
     {
-        m_message_set = std::make_shared<MessageSet>();
-        return m_message_set->decode(pd);
+        std::get<MessageSet>(m_records).decode(pd);
     }
     if (m_records_type == DefaultRecords)
     {
-        m_record_batch = std::make_shared<RecordBatch>();
-        return m_record_batch->decode(pd);
+        std::get<RecordBatch>(m_records).decode(pd);
     }
 
     return -1;
@@ -125,20 +113,18 @@ int Records::num_records(int &_num_records) const
     }
     if (m_records_type == LegacyRecords)
     {
-        if (m_message_set == nullptr)
+        if (std::holds_alternative<MessageSet>(m_records))
         {
-            return 0;
+            _num_records = static_cast<int>(std::get<MessageSet>(m_records).m_messages.size());
         }
-        _num_records = static_cast<int>(m_message_set->m_messages.size());
         return 0;
     }
     if (m_records_type == DefaultRecords)
     {
-        if (m_record_batch == nullptr)
+        if (std::holds_alternative<RecordBatch>(m_records))
         {
-            return 0;
+            _num_records = std::get<RecordBatch>(m_records).m_records.size();
         }
-        _num_records = m_record_batch->m_records.size();
         return 0;
     }
     return -1;
@@ -162,14 +148,16 @@ int Records::is_partial(bool &partial) const
     case UnknownRecords:
         return 0;
     case LegacyRecords:
-        if (m_message_set == nullptr)
-            return 0;
-        partial = m_message_set->m_partial_trailing_message;
+        if (std::holds_alternative<MessageSet>(m_records))
+        {
+            partial = std::get<MessageSet>(m_records).m_partial_trailing_message;
+        }
         return 0;
     case DefaultRecords:
-        if (m_record_batch == nullptr)
-            return 0;
-        partial = m_record_batch->m_partial_trailing_record;
+        if (std::holds_alternative<RecordBatch>(m_records))
+        {
+            partial = std::get<RecordBatch>(m_records).m_partial_trailing_record;
+        }
         return 0;
     default:
         return ErrUnknownRecordsType;
@@ -194,9 +182,10 @@ int Records::is_control(bool &out) const
     case LegacyRecords:
         return 0;
     case DefaultRecords:
-        if (m_record_batch == nullptr)
-            return 0;
-        out = m_record_batch->m_control;
+        if (std::holds_alternative<RecordBatch>(m_records))
+        {
+            out = std::get<RecordBatch>(m_records).m_control;
+        }
         return 0;
     default:
         return -1;
@@ -220,9 +209,10 @@ int Records::is_overflow(bool &out)
     case UnknownRecords:
         return 0;
     case LegacyRecords:
-        if (m_message_set == nullptr)
-            return 0;
-        out = m_message_set->m_overflow_message;
+        if (std::holds_alternative<MessageSet>(m_records))
+        {
+            out = std::get<MessageSet>(m_records).m_overflow_message;
+        }
         return 0;
     case DefaultRecords:
         return 0;
@@ -240,9 +230,10 @@ int Records::next_offset(int64_t &offset)
     case LegacyRecords:
         return 0;
     case DefaultRecords:
-        if (m_record_batch == nullptr)
-            return 0;
-        offset = m_record_batch->last_offset() + 1;
+        if (std::holds_alternative<RecordBatch>(m_records))
+        {
+            offset = std::get<RecordBatch>(m_records).last_offset() + 1;
+        }
         return 0;
     default:
         offset = 0;
@@ -252,19 +243,19 @@ int Records::next_offset(int64_t &offset)
 
 int Records::get_control_record(ControlRecord &out) const
 {
-    if (m_record_batch == nullptr || m_record_batch->m_records.empty())
+    if (!std::holds_alternative<RecordBatch>(m_records) || std::get<RecordBatch>(m_records).m_records.empty())
     {
         return -1;
     }
 
-    auto &firstRecord = m_record_batch->m_records[0];
-    real_decoder keyDecoder;
-    keyDecoder.m_raw = firstRecord->m_key;
+    auto &first_record = std::get<RecordBatch>(m_records).m_records[0];
+    real_decoder key;
+    key.m_raw = first_record->m_key;
 
-    real_decoder valueDecoder;
-    valueDecoder.m_raw = firstRecord->m_value;
+    real_decoder value;
+    value.m_raw = first_record->m_value;
 
-    int err = out.decode(keyDecoder, valueDecoder);
+    int err = out.decode(key, value);
     if (err != 0)
     {
         return err;

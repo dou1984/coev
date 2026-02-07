@@ -16,7 +16,7 @@ struct IncrementalAlterConfigsResponse : protocol_body, flexible_version
 {
     int16_t m_version = 0;
     std::chrono::milliseconds m_throttle_time;
-    std::vector<std::shared_ptr<AlterConfigsResourceResponse>> m_resources;
+    std::vector<AlterConfigsResourceResponse> m_resources;
 
     void set_version(int16_t v);
     int encode(packet_encoder &pe) const;

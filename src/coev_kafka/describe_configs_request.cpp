@@ -15,19 +15,19 @@ int DescribeConfigsRequest::encode(packet_encoder &pe) const
 
     for (auto &c : m_resources)
     {
-        pe.putInt8(static_cast<int8_t>(c->m_type));
-        if (pe.putString(c->m_name) != ErrNoError)
+        pe.putInt8(static_cast<int8_t>(c.m_type));
+        if (pe.putString(c.m_name) != ErrNoError)
         {
             return ErrEncodeError;
         }
 
-        if (c->m_config_names.empty())
+        if (c.m_config_names.empty())
         {
             pe.putInt32(-1);
             continue;
         }
 
-        if (pe.putStringArray(c->m_config_names) != ErrNoError)
+        if (pe.putStringArray(c.m_config_names) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -56,42 +56,43 @@ int DescribeConfigsRequest::decode(packet_decoder &pd, int16_t version)
 
     for (int32_t i = 0; i < n; ++i)
     {
-        m_resources[i] = std::make_shared<ConfigResource>();
+
+        auto &_resource = m_resources[i];
 
         int8_t t;
         if (pd.getInt8(t) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        m_resources[i]->m_type = static_cast<ConfigResourceType>(t);
+        _resource.m_type = static_cast<ConfigResourceType>(t);
 
         std::string name;
         if (pd.getString(name) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        m_resources[i]->m_name = name;
+        _resource.m_name = name;
 
-        int32_t confLength;
-        if (pd.getArrayLength(confLength) != ErrNoError)
+        int32_t conf_length;
+        if (pd.getArrayLength(conf_length) != ErrNoError)
         {
             return ErrDecodeError;
         }
 
-        if (confLength == -1)
+        if (conf_length == -1)
         {
             continue;
         }
 
-        m_resources[i]->m_config_names.resize(confLength);
-        for (int32_t j = 0; j < confLength; ++j)
+        _resource.m_config_names.resize(conf_length);
+        for (int32_t j = 0; j < conf_length; ++j)
         {
             std::string s;
             if (pd.getString(s) != ErrNoError)
             {
                 return ErrDecodeError;
             }
-            m_resources[i]->m_config_names[j] = s;
+            _resource.m_config_names[j] = s;
         }
     }
 

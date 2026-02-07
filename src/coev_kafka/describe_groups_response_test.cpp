@@ -47,12 +47,12 @@ TEST(DescribeGroupsResponseTest, EncodeWithGroups)
     response.set_version(0);
 
     // Add a group
-    auto group = std::make_shared<GroupDescription>();
-    group->m_error_code = ErrNoError;
-    group->m_group_id = "test-group";
-    group->m_state = "Stable";
-    group->m_protocol_type = "consumer";
-    group->m_protocol = "range";
+    GroupDescription group;
+    group.m_error_code = ErrNoError;
+    group.m_group_id = "test-group";
+    group.m_state = "Stable";
+    group.m_protocol_type = "consumer";
+    group.m_protocol = "range";
     response.m_groups.push_back(group);
 
     real_encoder encoder(1024);
@@ -66,13 +66,14 @@ TEST(DescribeGroupsResponseTest, EncodeWithVersionSpecificFields)
     response.set_version(3);
 
     // Add a group
-    auto group = std::make_shared<GroupDescription>();
-    group->m_error_code = ErrNoError;
-    group->m_group_id = "test-group";
-    group->m_state = "Stable";
-    group->m_protocol_type = "consumer";
-    group->m_protocol = "range";
-    group->m_authorized_operations = 0x0f; // All operations
+    // auto group = std::make_shared<GroupDescription>();
+    GroupDescription group;
+    group.m_error_code = ErrNoError;
+    group.m_group_id = "test-group";
+    group.m_state = "Stable";
+    group.m_protocol_type = "consumer";
+    group.m_protocol = "range";
+    group.m_authorized_operations = 0x0f; // All operations
     response.m_groups.push_back(group);
 
     real_encoder encoder(1024);

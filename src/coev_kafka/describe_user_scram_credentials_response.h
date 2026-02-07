@@ -24,7 +24,7 @@ struct DescribeUserScramCredentialsResult
     std::string m_user;
     KError m_error_code;
     std::string m_error_message;
-    std::vector<std::shared_ptr<UserScramCredentialsResponseInfo>> m_credential_infos;
+    std::vector<UserScramCredentialsResponseInfo> m_credential_infos;
 };
 
 struct DescribeUserScramCredentialsResponse : protocol_body, flexible_version

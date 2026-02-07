@@ -18,7 +18,7 @@ int DescribeGroupsResponse::encode(packet_encoder &pe) const
 
     for (auto &block : m_groups)
     {
-        if (block->encode(pe, m_version) != ErrNoError)
+        if (block.encode(pe, m_version) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -51,8 +51,7 @@ int DescribeGroupsResponse::decode(packet_decoder &pd, int16_t version)
         m_groups.resize(numGroups);
         for (int32_t i = 0; i < numGroups; ++i)
         {
-            m_groups[i] = std::make_shared<GroupDescription>();
-            if (m_groups[i]->decode(pd, m_version) != ErrNoError)
+            if (m_groups[i].decode(pd, m_version) != ErrNoError)
             {
                 return ErrEncodeError;
             }

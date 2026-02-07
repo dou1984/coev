@@ -36,26 +36,17 @@ int PartitionReplicaReassignmentsStatus::decode(packet_decoder &pd)
     return pd.getEmptyTaggedFieldArray(_);
 }
 
-// ---------- ListPartitionReassignmentsResponse ----------
-
 void ListPartitionReassignmentsResponse::set_version(int16_t v)
 {
     m_version = v;
 }
 
-void ListPartitionReassignmentsResponse::add_block(
-    const std::string &topic, int32_t partition,
-    const std::vector<int32_t> &replicas,
-    const std::vector<int32_t> &addingReplicas,
-    const std::vector<int32_t> &removingReplicas)
+void ListPartitionReassignmentsResponse::add_block(const std::string &topic, int32_t partition, const std::vector<int32_t> &replicas, const std::vector<int32_t> &addingReplicas, const std::vector<int32_t> &removingReplicas)
 {
-
-    auto &partitions = m_topic_status[topic];
-    auto block = std::make_unique<PartitionReplicaReassignmentsStatus>();
-    block->m_replicas = replicas;
-    block->m_adding_replicas = addingReplicas;
-    block->m_removing_replicas = removingReplicas;
-    partitions[partition] = std::move(block);
+    auto &block = m_topic_status[topic][partition];
+    block.m_replicas = replicas;
+    block.m_adding_replicas = addingReplicas;
+    block.m_removing_replicas = removingReplicas;
 }
 
 int ListPartitionReassignmentsResponse::encode(packet_encoder &pe) const
@@ -70,10 +61,8 @@ int ListPartitionReassignmentsResponse::encode(packet_encoder &pe) const
     if (err != 0)
         return err;
 
-    for (auto &topicEntry : m_topic_status)
+    for (auto &[topic, partitions] : m_topic_status)
     {
-        auto &topic = topicEntry.first;
-        auto &partitions = topicEntry.second;
 
         err = pe.putString(topic);
         if (err != 0)
@@ -83,13 +72,10 @@ int ListPartitionReassignmentsResponse::encode(packet_encoder &pe) const
         if (err != 0)
             return err;
 
-        for (auto &partEntry : partitions)
+        for (auto &[partition, block] : partitions)
         {
-            int32_t partition = partEntry.first;
-            auto &block = partEntry.second;
-
             pe.putInt32(partition);
-            err = block->encode(pe);
+            err = block.encode(pe);
             if (err != 0)
                 return err;
         }
@@ -117,40 +103,37 @@ int ListPartitionReassignmentsResponse::decode(packet_decoder &pd, int16_t versi
     if (err != 0)
         return err;
 
-    int32_t numTopics;
-    err = pd.getArrayLength(numTopics);
+    int32_t num_topics;
+    err = pd.getArrayLength(num_topics);
     if (err != 0)
         return err;
 
     m_topic_status.clear();
 
-    for (int32_t i = 0; i < numTopics; ++i)
+    for (int32_t i = 0; i < num_topics; ++i)
     {
         std::string topic;
         err = pd.getString(topic);
         if (err != 0)
             return err;
 
-        int32_t numPartitions;
-        err = pd.getArrayLength(numPartitions);
+        int32_t num_partitions;
+        err = pd.getArrayLength(num_partitions);
         if (err != 0)
             return err;
 
-        auto &partitionsMap = m_topic_status[topic];
+        auto &partitions = m_topic_status[topic];
 
-        for (int32_t j = 0; j < numPartitions; ++j)
+        for (int32_t j = 0; j < num_partitions; ++j)
         {
             int32_t partition;
             err = pd.getInt32(partition);
             if (err != 0)
                 return err;
 
-            auto block = std::make_unique<PartitionReplicaReassignmentsStatus>();
-            err = block->decode(pd);
+            err = partitions[partition].decode(pd);
             if (err != 0)
                 return err;
-
-            partitionsMap[partition] = std::move(block);
         }
         int32_t _;
         err = pd.getEmptyTaggedFieldArray(_);

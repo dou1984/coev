@@ -189,11 +189,13 @@ void ProduceRequest::add_message(const std::string &topic, int32_t partition, st
 {
 
     auto &record = m_records[topic][partition];
-    if (record.m_message_set == nullptr)
+    if (!std::holds_alternative<MessageSet>(record.m_records))
     {
-        record.m_message_set = std::make_shared<MessageSet>();
+        MessageSet message_set;
+        record.m_records = message_set;
     }
-    record.m_message_set->add_message(msg);
+    auto &message_set = std::get<MessageSet>(record.m_records);
+    message_set.add_message(msg);
     record.m_records_type = LegacyRecords;
 }
 
@@ -202,7 +204,10 @@ void ProduceRequest::add_set(const std::string &topic, int32_t partition, std::s
     ensure_records(topic, partition);
     auto &record = m_records[topic][partition];
     record.m_records_type = LegacyRecords;
-    record.m_message_set = set;
+    if (set)
+    {
+        record.m_records = *set;
+    }
 }
 
 void ProduceRequest::add_batch(const std::string &topic, int32_t partition, std::shared_ptr<RecordBatch> batch)
@@ -210,5 +215,8 @@ void ProduceRequest::add_batch(const std::string &topic, int32_t partition, std:
     ensure_records(topic, partition);
     auto &record = m_records[topic][partition];
     record.m_records_type = DefaultRecords;
-    record.m_record_batch = batch;
+    if (batch)
+    {
+        record.m_records = *batch;
+    }
 }

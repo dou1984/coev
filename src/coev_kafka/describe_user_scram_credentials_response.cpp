@@ -39,8 +39,8 @@ int DescribeUserScramCredentialsResponse::encode(packet_encoder &pe) const
 
         for (auto &c : u.m_credential_infos)
         {
-            pe.putInt8(static_cast<int8_t>(c->m_mechanism));
-            pe.putInt32(c->m_iterations);
+            pe.putInt8(static_cast<int8_t>(c.m_mechanism));
+            pe.putInt32(c.m_iterations);
             pe.putEmptyTaggedFieldArray();
         }
 
@@ -70,18 +70,17 @@ int DescribeUserScramCredentialsResponse::decode(packet_decoder &pd, int16_t ver
         return ErrDecodeError;
     }
 
-    int32_t numUsers;
-    if (pd.getArrayLength(numUsers) != ErrNoError)
+    int32_t num_users;
+    if (pd.getArrayLength(num_users) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     m_results.clear();
-    m_results.reserve(numUsers);
-    for (int32_t i = 0; i < numUsers; ++i)
+    m_results.reserve(num_users);
+    for (int32_t i = 0; i < num_users; ++i)
     {
-        DescribeUserScramCredentialsResult result;
-
+        auto &result = m_results[i];
         if (pd.getString(result.m_user) != ErrNoError)
         {
             return ErrDecodeError;
@@ -97,25 +96,25 @@ int DescribeUserScramCredentialsResponse::decode(packet_decoder &pd, int16_t ver
             return ErrDecodeError;
         }
 
-        int32_t numCreds;
-        if (pd.getArrayLength(numCreds) != ErrNoError)
+        int32_t num_creds;
+        if (pd.getArrayLength(num_creds) != ErrNoError)
         {
             return ErrDecodeError;
         }
 
-        result.m_credential_infos.reserve(numCreds);
-        for (int32_t j = 0; j < numCreds; ++j)
+        result.m_credential_infos.reserve(num_creds);
+        for (int32_t j = 0; j < num_creds; ++j)
         {
-            auto cred = std::make_shared<UserScramCredentialsResponseInfo>();
 
             int8_t mech;
             if (pd.getInt8(mech) != ErrNoError)
             {
                 return ErrDecodeError;
             }
-            cred->m_mechanism = static_cast<ScramMechanismType>(mech);
+            auto &info = result.m_credential_infos[j];
+            info.m_mechanism = static_cast<ScramMechanismType>(mech);
 
-            if (pd.getInt32(cred->m_iterations) != ErrNoError)
+            if (pd.getInt32(info.m_iterations) != ErrNoError)
             {
                 return ErrDecodeError;
             }
@@ -125,8 +124,6 @@ int DescribeUserScramCredentialsResponse::decode(packet_decoder &pd, int16_t ver
             {
                 return ErrDecodeError;
             }
-
-            result.m_credential_infos.emplace_back(std::move(cred));
         }
 
         int32_t dummy;
@@ -134,8 +131,6 @@ int DescribeUserScramCredentialsResponse::decode(packet_decoder &pd, int16_t ver
         {
             return ErrDecodeError;
         }
-
-        m_results.emplace_back(std::move(result));
     }
 
     int32_t dummy;

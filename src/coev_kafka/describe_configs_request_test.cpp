@@ -45,10 +45,10 @@ TEST(DescribeConfigsRequestTest, EncodeWithResources)
     DescribeConfigsRequest request(0);
 
     // Add a resource
-    auto resource = std::make_shared<ConfigResource>();
-    resource->m_type = TopicResource;
-    resource->m_name = "test-topic";
-    resource->m_config_names = {"retention.ms", "cleanup.policy"};
+    ConfigResource resource;
+    resource.m_type = TopicResource;
+    resource.m_name = "test-topic";
+    resource.m_config_names = {"retention.ms", "cleanup.policy"};
     request.m_resources.push_back(resource);
 
     real_encoder encoder(1024);
@@ -62,10 +62,8 @@ TEST(DescribeConfigsRequestTest, EncodeWithIncludeSynonyms)
     request.m_include_synonyms = true;
 
     // Add a resource
-    auto resource = std::make_shared<ConfigResource>();
-    resource->m_type = TopicResource;
-    resource->m_name = "test-topic";
-    request.m_resources.push_back(resource);
+
+    request.m_resources.emplace_back(TopicResource, "test-topic");
 
     real_encoder encoder(1024);
     EXPECT_EQ(request.encode(encoder), ErrNoError);

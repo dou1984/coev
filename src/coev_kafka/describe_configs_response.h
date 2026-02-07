@@ -43,7 +43,7 @@ struct ResourceResponse : VDecoder, VEncoder
     std::string m_error_msg;
     ConfigResourceType m_type;
     std::string m_name;
-    std::vector<std::shared_ptr<ConfigEntry>> m_configs;
+    std::vector<ConfigEntry> m_configs;
 
     int encode(packet_encoder &pe, int16_t version) const;
     int decode(packet_decoder &pd, int16_t version);
@@ -54,7 +54,7 @@ struct DescribeConfigsResponse : protocol_body
 
     int16_t m_version;
     std::chrono::milliseconds m_throttle_time;
-    std::vector<std::shared_ptr<ResourceResponse>> m_resources;
+    std::vector<ResourceResponse> m_resources;
 
     void set_version(int16_t v);
     int encode(packet_encoder &pe) const;

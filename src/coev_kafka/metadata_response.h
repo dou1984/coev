@@ -44,6 +44,8 @@ struct TopicMetadata : VDecoder, VEncoder
     std::vector<PartitionMetadata> m_partitions;
     int32_t m_topic_authorized_operations;
 
+    TopicMetadata() : m_err(ErrNoError) {}
+    TopicMetadata(const std::string &name, KError err) : m_err(err), m_name(name) {}
     int decode(packet_decoder &pd, int16_t version);
     int encode(packet_encoder &pe, int16_t version) const;
 };
@@ -53,7 +55,7 @@ struct MetadataResponse : protocol_body, flexible_version
     int16_t m_version;
     std::chrono::milliseconds m_throttle_time;
     std::vector<std::shared_ptr<Broker>> m_brokers;
-    std::vector<std::shared_ptr<TopicMetadata>> m_topics;
+    std::vector<TopicMetadata> m_topics;
     std::string m_cluster_id;
     int32_t m_controller_id;
     int32_t m_cluster_authorized_operations;
@@ -71,7 +73,7 @@ struct MetadataResponse : protocol_body, flexible_version
     std::chrono::milliseconds throttle_time() const;
 
     void add_broker(const std::string &addr, int32_t id);
-    std::shared_ptr<TopicMetadata> add_topic(const std::string &topic, int16_t err);
+    TopicMetadata &add_topic(const std::string &topic, int16_t err);
     int add_topic_partition(
         const std::string &topic, int32_t partition, int32_t brokerID, const std::vector<int32_t> &replicas, const std::vector<int32_t> &isr,
         const std::vector<int32_t> &offline, int err);
