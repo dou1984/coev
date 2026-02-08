@@ -7,11 +7,7 @@
 
 void PartitionConsumer::SendError(KError err)
 {
-    auto cerr = std::make_shared<ConsumerError>();
-    cerr->m_topic = m_topic;
-    cerr->m_partition = m_partition;
-    cerr->m_err = err;
-
+    auto cerr = std::make_shared<ConsumerError>(m_topic, m_partition, err);
     if (m_conf->Consumer.Return.Errors)
     {
         m_errors.set(cerr);
@@ -247,10 +243,10 @@ coev::awaitable<void> PartitionConsumer::ResponseFeeder()
     }
 }
 
-int PartitionConsumer::ParseMessages(std::shared_ptr<MessageSet> msg_set, std::vector<std::shared_ptr<ConsumerMessage>> &messages)
+int PartitionConsumer::ParseMessages(MessageSet &msg_set, std::vector<std::shared_ptr<ConsumerMessage>> &messages)
 {
 
-    for (auto &block : msg_set->m_messages)
+    for (auto &block : msg_set.m_messages)
     {
         auto msgs = block.Messages();
         for (auto &msg : msgs)
@@ -289,19 +285,19 @@ int PartitionConsumer::ParseMessages(std::shared_ptr<MessageSet> msg_set, std::v
     return ErrNoError;
 }
 
-int PartitionConsumer::ParseRecords(std::shared_ptr<RecordBatch> batch, std::vector<std::shared_ptr<ConsumerMessage>> &messages)
+int PartitionConsumer::ParseRecords(RecordBatch &batch, std::vector<std::shared_ptr<ConsumerMessage>> &messages)
 {
 
-    messages.reserve(batch->m_records.size());
-    for (auto &rec : batch->m_records)
+    messages.reserve(batch.m_records.size());
+    for (auto &rec : batch.m_records)
     {
-        int64_t offset = batch->m_first_offset + rec.m_offset_delta;
+        int64_t offset = batch.m_first_offset + rec.m_offset_delta;
         if (offset < m_offset)
             continue;
-        auto timestamp = batch->m_first_timestamp + std::chrono::milliseconds(rec.m_timestamp_delta.count());
-        if (batch->m_log_append_time)
+        auto timestamp = batch.m_first_timestamp + std::chrono::milliseconds(rec.m_timestamp_delta.count());
+        if (batch.m_log_append_time)
         {
-            timestamp = batch->m_max_timestamp;
+            timestamp = batch.m_max_timestamp;
         }
         auto cm = std::make_shared<ConsumerMessage>();
         cm->m_topic = m_topic;
@@ -311,7 +307,6 @@ int PartitionConsumer::ParseRecords(std::shared_ptr<RecordBatch> batch, std::vec
         cm->m_offset = offset;
         cm->m_timestamp = timestamp;
         cm->m_headers = rec.m_headers;
-
         messages.push_back(cm);
         m_offset = offset + 1;
     }
@@ -348,15 +343,15 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
 
     if (nRecs == 0)
     {
-        std::shared_ptr<ConsumerMessage> partialTrailingMessage;
-        bool isPartial;
-        auto err = block.is_partial(isPartial);
-        if (!isPartial)
+        std::shared_ptr<ConsumerMessage> partial_trailing_message;
+        bool is_partial;
+        auto err = block.is_partial(is_partial);
+        if (!is_partial)
         {
             return err;
         }
 
-        if (partialTrailingMessage)
+        if (partial_trailing_message)
         {
             if (m_conf->Consumer.Fetch.Max > 0 && m_fetch_size == m_conf->Consumer.Fetch.Max)
             {
@@ -395,24 +390,21 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
     {
         if (records.m_records_type == LegacyRecords)
         {
-            std::vector<std::shared_ptr<ConsumerMessage>> msg_set;
+            std::vector<std::shared_ptr<ConsumerMessage>> consumer_messages;
             auto &message_set = std::get<MessageSet>(records.m_records);
-            auto msg_set_ptr = std::make_shared<MessageSet>(message_set);
-            auto err = ParseMessages(msg_set_ptr, msg_set);
+            auto err = ParseMessages(message_set, consumer_messages);
             if (err)
             {
                 return err;
             }
-            messages.insert(messages.end(), msg_set.begin(), msg_set.end());
+            messages.insert(messages.end(), consumer_messages.begin(), consumer_messages.end());
         }
         else if (records.m_records_type == DefaultRecords)
         {
             auto &record_batch = std::get<RecordBatch>(records.m_records);
-            auto batch_ptr = std::make_shared<RecordBatch>(record_batch);
-            
             for (auto it = aborted_transactions.begin(); it != aborted_transactions.end();)
             {
-                if (it->m_first_offset > batch_ptr->last_offset())
+                if (it->m_first_offset > record_batch.last_offset())
                 {
                     break;
                 }
@@ -420,14 +412,14 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
                 it = aborted_transactions.erase(it);
             }
             std::vector<std::shared_ptr<ConsumerMessage>> batch_messages;
-            auto err = ParseRecords(batch_ptr, batch_messages);
+            auto err = ParseRecords(record_batch, batch_messages);
             if (err)
             {
                 return err;
             }
 
-            bool isControl;
-            err = records.is_control(isControl);
+            bool is_control;
+            err = records.is_control(is_control);
             if (err)
             {
                 if (m_conf->Consumer.IsolationLevel_ == ReadCommitted)
@@ -437,7 +429,7 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
                 continue;
             }
 
-            if (isControl)
+            if (is_control)
             {
                 ControlRecord control;
                 auto err = records.get_control_record(control);
@@ -448,14 +440,14 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
 
                 if (control.m_type == ControlRecordType::ControlRecordAbort)
                 {
-                    aborted_producer_ids.erase(batch_ptr->m_producer_id);
+                    aborted_producer_ids.erase(record_batch.m_producer_id);
                 }
                 continue;
             }
 
             if (m_conf->Consumer.IsolationLevel_ == ReadCommitted)
             {
-                if (batch_ptr->m_is_transactional && aborted_producer_ids.count(batch_ptr->m_producer_id))
+                if (record_batch.m_is_transactional && aborted_producer_ids.count(record_batch.m_producer_id))
                 {
                     continue;
                 }

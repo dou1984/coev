@@ -238,6 +238,10 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
     template <class Req, class Res>
     coev::awaitable<int> SendInternal(std::shared_ptr<Req> request, ResponsePromise<Res> &promise)
     {
+        if (!m_conn || !m_conn->IsOpened())
+        {
+            co_return ErrNotConnected;
+        }
         RestrictApiVersion(request, m_broker_api_versions);
         Request _request;
         _request.m_correlation_id = m_correlation_id;
@@ -246,7 +250,7 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
         std::string buf;
         ::encode(_request, buf);
 
-        auto requestTime = std::chrono::system_clock::now();
+        auto request_time = std::chrono::system_clock::now();
         auto err = co_await Write(buf);
         if (err)
         {
@@ -254,7 +258,7 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
             co_return err;
         }
 
-        promise.m_request_time = requestTime;
+        promise.m_request_time = request_time;
         promise.m_correlation_id = _request.m_correlation_id;
         m_correlation_id++;
         co_return ErrNoError;
@@ -263,39 +267,55 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
     template <class Req, class Res>
     coev::awaitable<int> ResponseReceiver(std::shared_ptr<Req> request, ResponsePromise<Res> &promise)
     {
+        if (!m_conn || !m_conn->IsOpened())
+        {
+            co_return ErrNotConnected;
+        }
         std::string header;
-        auto bytes_read_header = GetHeaderLength(promise.m_response->header_version());
-        auto err = co_await ReadFull(header, bytes_read_header);
+        auto header_bytes = GetHeaderLength(promise.m_response->header_version());
+        auto err = co_await ReadFull(header, header_bytes);
         auto m_request_latency = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - promise.m_request_time);
         if (err)
         {
+            LOG_CORE("Failed to read header %d", err);
             co_return err;
         }
         ResponseHeader decoded_header;
         err = versioned_decode(header, decoded_header, promise.m_response->header_version());
         if (err)
         {
+            LOG_CORE("Failed to decode header %d", err);
             co_return err;
         }
         if (decoded_header.m_correlation_id != promise.m_correlation_id)
         {
-
+            LOG_CORE("Correlation ID mismatch %d != %d", decoded_header.m_correlation_id, promise.m_correlation_id);
             co_return ErrCorrelationID;
         }
 
-        size_t bytes_read_body = decoded_header.m_length - bytes_read_header + 4;
+        // Check connection again before reading body
+        if (!m_conn || !m_conn->IsOpened())
+        {
+            LOG_CORE("Connection closed before reading body");
+            co_return ErrNotConnected;
+        }
+
+        size_t bytes_read_body = decoded_header.m_length - header_bytes + 4;
         err = co_await ReadFull(promise.m_packets, bytes_read_body);
         if (err)
         {
+            LOG_CORE("Failed to read body %d", err);
             co_return err;
         }
         if (promise.m_packets.size() != bytes_read_body)
         {
+            LOG_CORE("Failed to read body %d", err);
             co_return err;
         }
         err = promise.decode(request->version());
         if (err)
         {
+            LOG_CORE("Failed to decode body %d", err);
             co_return err;
         }
         co_return ErrNoError;

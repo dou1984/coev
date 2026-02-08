@@ -51,13 +51,26 @@ coev::awaitable<void> BrokerConsumer::SubscriptionManager()
 
 coev::awaitable<void> BrokerConsumer::SubscriptionConsumer()
 {
+    auto next_wakeup = std::chrono::system_clock::now();
     while (true)
     {
         UpdateSubscriptions();
         if (m_subscriptions.empty())
         {
-            LOG_CORE("BrokerConsumer::SubscriptionConsumer no active subscriptions, sleeping");
-            co_await sleep_for(PartitionConsumersBatchTimeout);
+            next_wakeup += PartitionConsumersBatchTimeout;
+            auto now = std::chrono::system_clock::now();
+            if (next_wakeup > now)
+            {
+                auto sleep_ms = std::chrono::duration_cast<std::chrono::milliseconds>(next_wakeup - now);
+                if (sleep_ms.count() < 10)
+                {
+                    co_await sleep_for(std::chrono::milliseconds(10));
+                }
+                else
+                {
+                    co_await sleep_for(sleep_ms);
+                }
+            }
             continue;
         }
         auto response = std::make_shared<FetchResponse>();
@@ -69,19 +82,19 @@ coev::awaitable<void> BrokerConsumer::SubscriptionConsumer()
             co_return;
         }
 
-        for (auto &child : m_subscriptions)
+        for (auto &[child, _] : m_subscriptions)
         {
-            auto it1 = response->m_blocks.find(child.first->m_topic);
-            if (it1 == response->m_blocks.end())
+            auto tit = response->m_blocks.find(child->m_topic);
+            if (tit == response->m_blocks.end())
             {
                 continue;
             }
-            auto it2 = it1->second.find(child.first->m_partition);
-            if (it2 == it1->second.end())
+            auto pit = tit->second.find(child->m_partition);
+            if (pit == tit->second.end())
             {
                 continue;
             }
-            child.first->m_feeder.set(response);
+            child->m_feeder.set(response);
         }
         co_await HandleResponses();
     }
@@ -93,6 +106,8 @@ void BrokerConsumer::UpdateSubscriptions()
     {
         m_subscriptions[child] = true;
     }
+
+    m_new_subscriptions.clear();
 
     for (auto it = m_subscriptions.begin(); it != m_subscriptions.end();)
     {
@@ -146,7 +161,7 @@ coev::awaitable<void> BrokerConsumer::HandleResponses()
         }
         else if (result == ErrOffsetOutOfRange)
         {
-            LOG_CORE("received OffsetOutOfRange for %s:%d, sending error and removing subscription", child->m_topic.c_str(), child->m_partition);
+            LOG_CORE("received offset_out_of_range for %s:%d, sending error and removing subscription", child->m_topic.c_str(), child->m_partition);
             child->SendError(result);
             child->m_trigger.set(true);
             it = m_subscriptions.erase(it);
@@ -172,13 +187,12 @@ coev::awaitable<void> BrokerConsumer::HandleResponses()
 coev::awaitable<void> BrokerConsumer::Abort(int err)
 {
     m_consumer->AbandonBrokerConsumer(shared_from_this());
-    m_broker->Close();
 
     LOG_CORE("BrokerConsumer::Abort notifying %zu active subscriptions of error", m_subscriptions.size());
-    for (auto &child : m_subscriptions)
+    for (auto &[child, _] : m_subscriptions)
     {
-        child.first->SendError(err);
-        child.first->m_trigger.set(true);
+        child->SendError(err);
+        child->m_trigger.set(true);
     }
     if (m_new_subscriptions.empty())
     {
@@ -193,6 +207,9 @@ coev::awaitable<void> BrokerConsumer::Abort(int err)
             child->m_trigger.set(true);
         }
     }
+
+    // Close the connection after notifying all subscriptions
+    m_broker->Close();
 }
 
 coev::awaitable<int> BrokerConsumer::FetchNewMessages(std::shared_ptr<FetchResponse> &response)
@@ -244,11 +261,11 @@ coev::awaitable<int> BrokerConsumer::FetchNewMessages(std::shared_ptr<FetchRespo
         request->m_rack_id = m_consumer->m_conf->RackId;
     }
 
-    for (auto &child : m_subscriptions)
+    for (auto &[child, _] : m_subscriptions)
     {
-        if (!child.first->IsPaused())
+        if (!child->IsPaused())
         {
-            request->add_block(child.first->m_topic, child.first->m_partition, child.first->m_offset, child.first->m_fetch_size, child.first->m_leader_epoch);
+            request->add_block(child->m_topic, child->m_partition, child->m_offset, child->m_fetch_size, child->m_leader_epoch);
         }
     }
 
@@ -258,7 +275,6 @@ coev::awaitable<int> BrokerConsumer::FetchNewMessages(std::shared_ptr<FetchRespo
         co_return 0;
     }
 
-    LOG_CORE("BrokerConsumer::FetchNewMessages sending FetchRequest with %zu blocks", request->m_blocks.size());
     ResponsePromise<FetchResponse> local_response;
     int err = co_await m_broker->Fetch(request, local_response);
     if (err == 0)
@@ -268,7 +284,7 @@ coev::awaitable<int> BrokerConsumer::FetchNewMessages(std::shared_ptr<FetchRespo
     }
     else
     {
-        LOG_CORE("BrokerConsumer::FetchNewMessages Fetch failed with error %d", err);
+        LOG_CORE("BrokerConsumer::FetchNewMessages received error response %d", err);
     }
     co_return err;
 }

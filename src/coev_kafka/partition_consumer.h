@@ -50,8 +50,8 @@ struct PartitionConsumer : std::enable_shared_from_this<PartitionConsumer>
     int64_t HighWaterMarkOffset();
 
     coev::awaitable<void> ResponseFeeder();
-    int ParseMessages(std::shared_ptr<MessageSet> msgSet, std::vector<std::shared_ptr<ConsumerMessage>> &messages);
-    int ParseRecords(std::shared_ptr<RecordBatch> batch, std::vector<std::shared_ptr<ConsumerMessage>> &messages);
+    int ParseMessages(MessageSet &msg_set, std::vector<std::shared_ptr<ConsumerMessage>> &messages);
+    int ParseRecords(RecordBatch &batch, std::vector<std::shared_ptr<ConsumerMessage>> &messages);
     int ParseResponse(std::shared_ptr<FetchResponse> response, std::vector<std::shared_ptr<ConsumerMessage>> &messages);
 
     void Pause();
