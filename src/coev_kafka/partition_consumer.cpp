@@ -295,10 +295,10 @@ int PartitionConsumer::ParseRecords(std::shared_ptr<RecordBatch> batch, std::vec
     messages.reserve(batch->m_records.size());
     for (auto &rec : batch->m_records)
     {
-        int64_t offset = batch->m_first_offset + rec->m_offset_delta;
+        int64_t offset = batch->m_first_offset + rec.m_offset_delta;
         if (offset < m_offset)
             continue;
-        auto timestamp = batch->m_first_timestamp + std::chrono::milliseconds(rec->m_timestamp_delta.count());
+        auto timestamp = batch->m_first_timestamp + std::chrono::milliseconds(rec.m_timestamp_delta.count());
         if (batch->m_log_append_time)
         {
             timestamp = batch->m_max_timestamp;
@@ -306,11 +306,11 @@ int PartitionConsumer::ParseRecords(std::shared_ptr<RecordBatch> batch, std::vec
         auto cm = std::make_shared<ConsumerMessage>();
         cm->m_topic = m_topic;
         cm->m_partition = m_partition;
-        cm->m_key = rec->m_key;
-        cm->m_value = rec->m_value;
+        cm->m_key = rec.m_key;
+        cm->m_value = rec.m_value;
         cm->m_offset = offset;
         cm->m_timestamp = timestamp;
-        cm->m_headers = rec->m_headers;
+        cm->m_headers = rec.m_headers;
 
         messages.push_back(cm);
         m_offset = offset + 1;
@@ -395,76 +395,73 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
     {
         if (records.m_records_type == LegacyRecords)
         {
-            if (std::holds_alternative<MessageSet>(records.m_records))
+            std::vector<std::shared_ptr<ConsumerMessage>> msg_set;
+            auto &message_set = std::get<MessageSet>(records.m_records);
+            auto msg_set_ptr = std::make_shared<MessageSet>(message_set);
+            auto err = ParseMessages(msg_set_ptr, msg_set);
+            if (err)
             {
-                auto &message_set = std::get<MessageSet>(records.m_records);
-                std::vector<std::shared_ptr<ConsumerMessage>> msg_set;
-                auto err = ParseMessages(std::make_shared<MessageSet>(message_set), msg_set);
-                if (err)
-                {
-                    return err;
-                }
-                messages.insert(messages.end(), msg_set.begin(), msg_set.end());
+                return err;
             }
+            messages.insert(messages.end(), msg_set.begin(), msg_set.end());
         }
         else if (records.m_records_type == DefaultRecords)
         {
-            if (std::holds_alternative<RecordBatch>(records.m_records))
+            auto &record_batch = std::get<RecordBatch>(records.m_records);
+            auto batch_ptr = std::make_shared<RecordBatch>(record_batch);
+            
+            for (auto it = aborted_transactions.begin(); it != aborted_transactions.end();)
             {
-                auto &record_batch = std::get<RecordBatch>(records.m_records);
-                for (auto it = aborted_transactions.begin(); it != aborted_transactions.end();)
+                if (it->m_first_offset > batch_ptr->last_offset())
                 {
-                    if (it->m_first_offset > record_batch.last_offset())
-                    {
-                        break;
-                    }
-                    aborted_producer_ids.insert(it->m_producer_id);
-                    it = aborted_transactions.erase(it);
+                    break;
                 }
-                std::vector<std::shared_ptr<ConsumerMessage>> batch_messages;
-                auto err = ParseRecords(std::make_shared<RecordBatch>(record_batch), batch_messages);
+                aborted_producer_ids.insert(it->m_producer_id);
+                it = aborted_transactions.erase(it);
+            }
+            std::vector<std::shared_ptr<ConsumerMessage>> batch_messages;
+            auto err = ParseRecords(batch_ptr, batch_messages);
+            if (err)
+            {
+                return err;
+            }
+
+            bool isControl;
+            err = records.is_control(isControl);
+            if (err)
+            {
+                if (m_conf->Consumer.IsolationLevel_ == ReadCommitted)
+                {
+                    return err;
+                }
+                continue;
+            }
+
+            if (isControl)
+            {
+                ControlRecord control;
+                auto err = records.get_control_record(control);
                 if (err)
                 {
                     return err;
                 }
 
-                bool isControl;
-                err = records.is_control(isControl);
-                if (err)
+                if (control.m_type == ControlRecordType::ControlRecordAbort)
                 {
-                    if (m_conf->Consumer.IsolationLevel_ == ReadCommitted)
-                    {
-                        return err;
-                    }
-                    continue;
+                    aborted_producer_ids.erase(batch_ptr->m_producer_id);
                 }
-
-                if (isControl)
-                {
-                    ControlRecord control;
-                    auto err = records.get_control_record(control);
-                    if (err)
-                    {
-                        return err;
-                    }
-
-                    if (control.m_type == ControlRecordType::ControlRecordAbort)
-                    {
-                        aborted_producer_ids.erase(record_batch.m_producer_id);
-                    }
-                    continue;
-                }
-
-                if (m_conf->Consumer.IsolationLevel_ == ReadCommitted)
-                {
-                    if (record_batch.m_is_transactional && aborted_producer_ids.count(record_batch.m_producer_id))
-                    {
-                        continue;
-                    }
-                }
-
-                messages.insert(messages.end(), batch_messages.begin(), batch_messages.end());
+                continue;
             }
+
+            if (m_conf->Consumer.IsolationLevel_ == ReadCommitted)
+            {
+                if (batch_ptr->m_is_transactional && aborted_producer_ids.count(batch_ptr->m_producer_id))
+                {
+                    continue;
+                }
+            }
+
+            messages.insert(messages.end(), batch_messages.begin(), batch_messages.end());
         }
         else
         {

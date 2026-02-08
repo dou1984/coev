@@ -25,7 +25,7 @@ struct RecordBatch
     int64_t m_producer_id = -1;
     int16_t m_producer_epoch = -1;
     int32_t m_first_sequence = -1;
-    std::vector<std::shared_ptr<Record>> m_records;
+    std::vector<Record> m_records;
     bool m_control = false;
     bool m_log_append_time = false;
     bool m_partial_trailing_record = false;
@@ -43,7 +43,7 @@ struct RecordBatch
     }
     void add_record(std::shared_ptr<Record> r)
     {
-        m_records.emplace_back(std::move(r));
+        m_records.push_back(*r);
     }
 
     int encode(packet_encoder &pe);

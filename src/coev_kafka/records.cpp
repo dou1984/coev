@@ -250,10 +250,10 @@ int Records::get_control_record(ControlRecord &out) const
 
     auto &first_record = std::get<RecordBatch>(m_records).m_records[0];
     real_decoder key;
-    key.m_raw = first_record->m_key;
+    key.m_raw = first_record.m_key;
 
     real_decoder value;
-    value.m_raw = first_record->m_value;
+    value.m_raw = first_record.m_value;
 
     int err = out.decode(key, value);
     if (err != 0)

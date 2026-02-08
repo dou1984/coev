@@ -1,5 +1,5 @@
 #include "balance_strategy.h"
-#include "topic_partition_assignment.h"
+#include "topic_type.h"
 #include <algorithm>
 #include <cmath>
 #include <functional>
@@ -7,6 +7,8 @@
 #include <queue>
 #include <unordered_map>
 #include <unordered_set>
+#include "balance_strategy.h"
+#include "topic_type.h"
 
 const std::string RangeBalanceStrategyName = "range";
 const std::string RoundRobinBalanceStrategyName = "roundrobin";
@@ -116,13 +118,13 @@ struct consumerPair
 
 struct PartitionMovements
 {
-    std::map<std::string, std::map<consumerPair, std::map<TopicPartitionAssignment, bool>>> PartitionMovementsByTopic;
-    std::map<TopicPartitionAssignment, consumerPair> Movements;
+    std::map<std::string, std::map<consumerPair, std::map<topic_t, bool>>> PartitionMovementsByTopic;
+    std::map<topic_t, consumerPair> Movements;
 
-    void removeMovementRecordOfPartition(const TopicPartitionAssignment &partition, consumerPair &outPair);
-    void addPartitionMovementRecord(const TopicPartitionAssignment &partition, const consumerPair &pair);
-    void movePartition(const TopicPartitionAssignment &partition, const std::string &oldConsumer, const std::string &newConsumer);
-    TopicPartitionAssignment getTheActualPartitionToBeMoved(const TopicPartitionAssignment &partition, const std::string &oldConsumer, const std::string &newConsumer);
+    void removeMovementRecordOfPartition(const topic_t &partition, consumerPair &outPair);
+    void addPartitionMovementRecord(const topic_t &partition, const consumerPair &pair);
+    void movePartition(const topic_t &partition, const std::string &oldConsumer, const std::string &newConsumer);
+    topic_t getTheActualPartitionToBeMoved(const topic_t &partition, const std::string &oldConsumer, const std::string &newConsumer);
     std::pair<std::vector<std::string>, bool> isLinked(const std::string &src, const std::string &dst, std::vector<consumerPair> pairs, std::vector<std::string> currentPath);
     bool in(const std::vector<std::string> &cycle, const std::vector<std::vector<std::string>> &cycles);
     bool hasCycles(const std::vector<consumerPair> &pairs);
@@ -148,40 +150,40 @@ struct StickyBalanceStrategy : BalanceStrategy
 private:
     PartitionMovements movements;
 
-    void balance(std::map<std::string, std::vector<TopicPartitionAssignment>> &currentAssignment,
-                 const std::map<TopicPartitionAssignment, consumerGenerationPair> &prevAssignment,
-                 std::vector<TopicPartitionAssignment> &sortedPartitions,
-                 std::vector<TopicPartitionAssignment> &unassignedPartitions,
+    void balance(std::map<std::string, std::vector<topic_t>> &currentAssignment,
+                 const std::map<topic_t, consumerGenerationPair> &prevAssignment,
+                 std::vector<topic_t> &sortedPartitions,
+                 std::vector<topic_t> &unassignedPartitions,
                  std::vector<std::string> &sortedCurrentSubscriptions,
-                 const std::map<std::string, std::vector<TopicPartitionAssignment>> &consumer2AllPotentialPartitions,
-                 const std::map<TopicPartitionAssignment, std::vector<std::string>> &partition2AllPotentialConsumers,
-                 std::map<TopicPartitionAssignment, std::string> &currentPartitionConsumer);
+                 const std::map<std::string, std::vector<topic_t>> &consumer2AllPotentialPartitions,
+                 const std::map<topic_t, std::vector<std::string>> &partition2AllPotentialConsumers,
+                 std::map<topic_t, std::string> &currentPartitionConsumer);
 
-    bool performReassignments(std::vector<TopicPartitionAssignment> &reassignablePartitions,
-                              std::map<std::string, std::vector<TopicPartitionAssignment>> &currentAssignment,
-                              const std::map<TopicPartitionAssignment, consumerGenerationPair> &prevAssignment,
+    bool performReassignments(std::vector<topic_t> &reassignablePartitions,
+                              std::map<std::string, std::vector<topic_t>> &currentAssignment,
+                              const std::map<topic_t, consumerGenerationPair> &prevAssignment,
                               std::vector<std::string> &sortedCurrentSubscriptions,
-                              const std::map<std::string, std::vector<TopicPartitionAssignment>> &consumer2AllPotentialPartitions,
-                              const std::map<TopicPartitionAssignment, std::vector<std::string>> &partition2AllPotentialConsumers,
-                              std::map<TopicPartitionAssignment, std::string> &currentPartitionConsumer);
+                              const std::map<std::string, std::vector<topic_t>> &consumer2AllPotentialPartitions,
+                              const std::map<topic_t, std::vector<std::string>> &partition2AllPotentialConsumers,
+                              std::map<topic_t, std::string> &currentPartitionConsumer);
 
-    std::vector<std::string> reassignPartitionToNewConsumer(const TopicPartitionAssignment &partition,
-                                                            std::map<std::string, std::vector<TopicPartitionAssignment>> &currentAssignment,
+    std::vector<std::string> reassignPartitionToNewConsumer(const topic_t &partition,
+                                                            std::map<std::string, std::vector<topic_t>> &currentAssignment,
                                                             std::vector<std::string> &sortedCurrentSubscriptions,
-                                                            std::map<TopicPartitionAssignment, std::string> &currentPartitionConsumer,
-                                                            const std::map<std::string, std::vector<TopicPartitionAssignment>> &consumer2AllPotentialPartitions);
+                                                            std::map<topic_t, std::string> &currentPartitionConsumer,
+                                                            const std::map<std::string, std::vector<topic_t>> &consumer2AllPotentialPartitions);
 
-    std::vector<std::string> reassignPartition(const TopicPartitionAssignment &partition,
-                                               std::map<std::string, std::vector<TopicPartitionAssignment>> &currentAssignment,
+    std::vector<std::string> reassignPartition(const topic_t &partition,
+                                               std::map<std::string, std::vector<topic_t>> &currentAssignment,
                                                std::vector<std::string> &sortedCurrentSubscriptions,
-                                               std::map<TopicPartitionAssignment, std::string> &currentPartitionConsumer,
+                                               std::map<topic_t, std::string> &currentPartitionConsumer,
                                                const std::string &newConsumer);
 
-    std::vector<std::string> processPartitionMovement(const TopicPartitionAssignment &partition,
+    std::vector<std::string> processPartitionMovement(const topic_t &partition,
                                                       const std::string &newConsumer,
-                                                      std::map<std::string, std::vector<TopicPartitionAssignment>> &currentAssignment,
+                                                      std::map<std::string, std::vector<topic_t>> &currentAssignment,
                                                       std::vector<std::string> &sortedCurrentSubscriptions,
-                                                      std::map<TopicPartitionAssignment, std::string> &currentPartitionConsumer);
+                                                      std::map<topic_t, std::string> &currentPartitionConsumer);
 };
 
 std::shared_ptr<BalanceStrategy> NewBalanceStrategySticky()
@@ -237,7 +239,7 @@ std::shared_ptr<BalanceStrategy> NewBalanceStrategyRoundRobin()
 
 std::shared_ptr<BalanceStrategy> BalanceStrategyRoundRobin = NewBalanceStrategyRoundRobin();
 
-int getBalanceScore(const std::map<std::string, std::vector<TopicPartitionAssignment>> &assignment)
+int getBalanceScore(const std::map<std::string, std::vector<topic_t>> &assignment)
 {
     std::map<std::string, int> consumer2AssignmentSize;
     for (auto &[memberID, partitions] : assignment)
@@ -257,8 +259,8 @@ int getBalanceScore(const std::map<std::string, std::vector<TopicPartitionAssign
     return static_cast<int>(score);
 }
 
-bool isBalanced(const std::map<std::string, std::vector<TopicPartitionAssignment>> &currentAssignment,
-                const std::map<std::string, std::vector<TopicPartitionAssignment>> &allSubscriptions)
+bool isBalanced(const std::map<std::string, std::vector<topic_t>> &currentAssignment,
+                const std::map<std::string, std::vector<topic_t>> &allSubscriptions)
 {
     if (currentAssignment.empty())
     {
@@ -284,7 +286,7 @@ bool isBalanced(const std::map<std::string, std::vector<TopicPartitionAssignment
     if (min >= max - 1)
         return true;
 
-    std::map<TopicPartitionAssignment, std::string> allPartitions_;
+    std::map<topic_t, std::string> allPartitions_;
     for (auto &[memberID, partitions] : currentAssignment)
     {
         for (auto &partition : partitions)
@@ -331,9 +333,9 @@ bool isBalanced(const std::map<std::string, std::vector<TopicPartitionAssignment
 
 bool canConsumerParticipateInReassignment(
     const std::string &memberID,
-    const std::map<std::string, std::vector<TopicPartitionAssignment>> &currentAssignment,
-    const std::map<std::string, std::vector<TopicPartitionAssignment>> &consumer2AllPotentialPartitions,
-    const std::map<TopicPartitionAssignment, std::vector<std::string>> &partition2AllPotentialConsumers)
+    const std::map<std::string, std::vector<topic_t>> &currentAssignment,
+    const std::map<std::string, std::vector<topic_t>> &consumer2AllPotentialPartitions,
+    const std::map<topic_t, std::vector<std::string>> &partition2AllPotentialConsumers)
 {
     // Check if memberID exists in currentAssignment
     auto currentIt = currentAssignment.find(memberID);
@@ -375,19 +377,19 @@ bool canConsumerParticipateInReassignment(
 }
 
 bool canTopicPartitionParticipateInReassignment(
-    const TopicPartitionAssignment &partition,
-    const std::map<TopicPartitionAssignment, std::vector<std::string>> &partition2AllPotentialConsumers)
+    const topic_t &partition,
+    const std::map<topic_t, std::vector<std::string>> &partition2AllPotentialConsumers)
 {
     auto it = partition2AllPotentialConsumers.find(partition);
     return it != partition2AllPotentialConsumers.end() && it->second.size() >= 2;
 }
 
 std::vector<std::string> assignPartition(
-    const TopicPartitionAssignment &partition,
+    const topic_t &partition,
     std::vector<std::string> sortedCurrentSubscriptions,
-    std::map<std::string, std::vector<TopicPartitionAssignment>> &currentAssignment,
-    const std::map<std::string, std::vector<TopicPartitionAssignment>> &consumer2AllPotentialPartitions,
-    std::map<TopicPartitionAssignment, std::string> &currentPartitionConsumer)
+    std::map<std::string, std::vector<topic_t>> &currentAssignment,
+    const std::map<std::string, std::vector<topic_t>> &consumer2AllPotentialPartitions,
+    std::map<topic_t, std::string> &currentPartitionConsumer)
 {
     for (auto &memberID : sortedCurrentSubscriptions)
     {
@@ -428,9 +430,9 @@ std::vector<std::string> assignPartition(
     return result;
 }
 
-std::vector<TopicPartitionAssignment> removeTopicPartitionFromMemberAssignments(
-    std::vector<TopicPartitionAssignment> assignments,
-    const TopicPartitionAssignment &topic)
+std::vector<topic_t> removeTopicPartitionFromMemberAssignments(
+    std::vector<topic_t> assignments,
+    const topic_t &topic)
 {
     for (auto it = assignments.begin(); it != assignments.end(); ++it)
     {
@@ -444,8 +446,8 @@ std::vector<TopicPartitionAssignment> removeTopicPartitionFromMemberAssignments(
 }
 
 bool memberAssignmentsIncludeTopicPartition(
-    const std::vector<TopicPartitionAssignment> &assignments,
-    const TopicPartitionAssignment &topic)
+    const std::vector<topic_t> &assignments,
+    const topic_t &topic)
 {
     for (auto &a : assignments)
     {
@@ -456,7 +458,7 @@ bool memberAssignmentsIncludeTopicPartition(
 }
 
 std::vector<std::string> sortMemberIDsByPartitionAssignments(
-    const std::map<std::string, std::vector<TopicPartitionAssignment>> &assignments)
+    const std::map<std::string, std::vector<topic_t>> &assignments)
 {
     std::vector<std::string> sortedMemberIDs;
     for (auto &[id, _] : assignments)
@@ -475,16 +477,16 @@ std::vector<std::string> sortMemberIDsByPartitionAssignments(
     return sortedMemberIDs;
 }
 
-std::vector<TopicPartitionAssignment> sortPartitionsByPotentialConsumerAssignments(
-    const std::map<TopicPartitionAssignment, std::vector<std::string>> &partition2AllPotentialConsumers)
+std::vector<topic_t> sortPartitionsByPotentialConsumerAssignments(
+    const std::map<topic_t, std::vector<std::string>> &partition2AllPotentialConsumers)
 {
-    std::vector<TopicPartitionAssignment> sortedPartitionIDs;
+    std::vector<topic_t> sortedPartitionIDs;
     for (auto &[partition, _] : partition2AllPotentialConsumers)
     {
         sortedPartitionIDs.push_back(partition);
     }
     std::sort(sortedPartitionIDs.begin(), sortedPartitionIDs.end(),
-              [&](const TopicPartitionAssignment &a, const TopicPartitionAssignment &b)
+              [&](const topic_t &a, const topic_t &b)
               {
                   auto &consumersA = partition2AllPotentialConsumers.at(a);
                   auto &consumersB = partition2AllPotentialConsumers.at(b);
@@ -501,10 +503,10 @@ std::vector<TopicPartitionAssignment> sortPartitionsByPotentialConsumerAssignmen
     return sortedPartitionIDs;
 }
 
-std::map<std::string, std::vector<TopicPartitionAssignment>> deepCopyAssignment(
-    const std::map<std::string, std::vector<TopicPartitionAssignment>> &assignment)
+std::map<std::string, std::vector<topic_t>> deepCopyAssignment(
+    const std::map<std::string, std::vector<topic_t>> &assignment)
 {
-    std::map<std::string, std::vector<TopicPartitionAssignment>> m;
+    std::map<std::string, std::vector<topic_t>> m;
     for (auto &[memberID, subscriptions] : assignment)
     {
         m[memberID] = subscriptions;
@@ -513,8 +515,8 @@ std::map<std::string, std::vector<TopicPartitionAssignment>> deepCopyAssignment(
 }
 
 bool areSubscriptionsIdentical(
-    const std::map<TopicPartitionAssignment, std::vector<std::string>> &partition2AllPotentialConsumers,
-    const std::map<std::string, std::vector<TopicPartitionAssignment>> &consumer2AllPotentialPartitions)
+    const std::map<topic_t, std::vector<std::string>> &partition2AllPotentialConsumers,
+    const std::map<std::string, std::vector<topic_t>> &consumer2AllPotentialPartitions)
 {
     std::map<std::string, int> curMembers;
     bool first = true;
@@ -543,7 +545,7 @@ bool areSubscriptionsIdentical(
         }
     }
 
-    std::map<TopicPartitionAssignment, int> curPartitions_;
+    std::map<topic_t, int> curPartitions_;
     first = true;
     for (auto &[_, cur] : consumer2AllPotentialPartitions)
     {
@@ -558,7 +560,7 @@ bool areSubscriptionsIdentical(
         }
         if (curPartitions_.size() != cur.size())
             return false;
-        std::map<TopicPartitionAssignment, int> yMap_;
+        std::map<topic_t, int> yMap_;
         for (auto &yElem : cur)
         {
             yMap_[yElem]++;
@@ -572,17 +574,17 @@ bool areSubscriptionsIdentical(
     return true;
 }
 
-int prepopulateCurrentAssignments(const std::map<std::string, ConsumerGroupMemberMetadata> &members, std::map<std::string, std::vector<TopicPartitionAssignment>> &currentAssignment, std::map<TopicPartitionAssignment, consumerGenerationPair> &prevAssignment)
+int prepopulateCurrentAssignments(const std::map<std::string, ConsumerGroupMemberMetadata> &members, std::map<std::string, std::vector<topic_t>> &currentAssignment, std::map<topic_t, consumerGenerationPair> &prevAssignment)
 {
 
-    std::map<TopicPartitionAssignment, std::map<int, std::string>> sortedPartitionConsumersByGeneration;
+    std::map<topic_t, std::map<int, std::string>> sortedPartitionConsumersByGeneration;
 
     for (auto &it : members)
     {
         auto &memberID = it.first;
         auto &meta = it.second;
 
-        std::vector<TopicPartitionAssignment> userPartitions;
+        std::vector<topic_t> userPartitions;
         int generation = defaultGeneration;
         bool hasGen = false;
 
@@ -632,7 +634,7 @@ int prepopulateCurrentAssignments(const std::map<std::string, ConsumerGroupMembe
     return 0;
 }
 
-void PartitionMovements::removeMovementRecordOfPartition(const TopicPartitionAssignment &partition, consumerPair &outPair)
+void PartitionMovements::removeMovementRecordOfPartition(const topic_t &partition, consumerPair &outPair)
 {
     outPair = Movements[partition];
     Movements.erase(partition);
@@ -648,7 +650,7 @@ void PartitionMovements::removeMovementRecordOfPartition(const TopicPartitionAss
     }
 }
 
-void PartitionMovements::addPartitionMovementRecord(const TopicPartitionAssignment &partition, const consumerPair &pair)
+void PartitionMovements::addPartitionMovementRecord(const topic_t &partition, const consumerPair &pair)
 {
     Movements[partition] = pair;
     if (PartitionMovementsByTopic.find(partition.m_topic) == PartitionMovementsByTopic.end())
@@ -663,7 +665,7 @@ void PartitionMovements::addPartitionMovementRecord(const TopicPartitionAssignme
     topicMap[pair][partition] = true;
 }
 
-void PartitionMovements::movePartition(const TopicPartitionAssignment &partition, const std::string &oldConsumer, const std::string &newConsumer)
+void PartitionMovements::movePartition(const topic_t &partition, const std::string &oldConsumer, const std::string &newConsumer)
 {
     consumerPair pair{oldConsumer, newConsumer};
     if (Movements.count(partition))
@@ -685,8 +687,8 @@ void PartitionMovements::movePartition(const TopicPartitionAssignment &partition
     }
 }
 
-TopicPartitionAssignment PartitionMovements::getTheActualPartitionToBeMoved(
-    const TopicPartitionAssignment &partition,
+topic_t PartitionMovements::getTheActualPartitionToBeMoved(
+    const topic_t &partition,
     const std::string &oldConsumer,
     const std::string &newConsumer)
 {
@@ -827,27 +829,27 @@ int StickyBalanceStrategy::Plan(const std::map<std::string, ConsumerGroupMemberM
     }
 
     movements = PartitionMovements{};
-    std::map<std::string, std::vector<TopicPartitionAssignment>> currentAssignment;
-    std::map<TopicPartitionAssignment, consumerGenerationPair> prevAssignment;
+    std::map<std::string, std::vector<topic_t>> currentAssignment;
+    std::map<topic_t, consumerGenerationPair> prevAssignment;
     auto err = prepopulateCurrentAssignments(members, currentAssignment, prevAssignment);
     bool isFreshAssignment = currentAssignment.empty();
 
-    std::map<TopicPartitionAssignment, std::vector<std::string>> partition2AllPotentialConsumers;
+    std::map<topic_t, std::vector<std::string>> partition2AllPotentialConsumers;
     for (auto &[topic, partitions] : topics)
     {
         for (int32_t p : partitions)
         {
-            TopicPartitionAssignment tpa{topic, p};
+            topic_t tpa{topic, p};
             partition2AllPotentialConsumers[tpa] = {};
         }
     }
 
-    std::map<std::string, std::vector<TopicPartitionAssignment>> consumer2AllPotentialPartitions;
+    std::map<std::string, std::vector<topic_t>> consumer2AllPotentialPartitions;
     for (auto &it : members)
     {
         auto &memberID = it.first;
         auto &meta = it.second;
-        std::vector<TopicPartitionAssignment> list;
+        std::vector<topic_t> list;
         for (auto &topicSubscription : meta.m_topics)
         {
             auto topicIt = topics.find(topicSubscription);
@@ -855,7 +857,7 @@ int StickyBalanceStrategy::Plan(const std::map<std::string, ConsumerGroupMemberM
             {
                 for (int32_t p : topicIt->second)
                 {
-                    TopicPartitionAssignment tpa(topicSubscription, p);
+                    topic_t tpa(topicSubscription, p);
                     list.push_back(tpa);
                     partition2AllPotentialConsumers[tpa].push_back(memberID);
                 }
@@ -868,19 +870,19 @@ int StickyBalanceStrategy::Plan(const std::map<std::string, ConsumerGroupMemberM
         }
     }
 
-    std::map<TopicPartitionAssignment, std::string> currentPartitionConsumers;
-    std::map<TopicPartitionAssignment, bool> unvisitedPartitions;
+    std::map<topic_t, std::string> currentPartitionConsumers;
+    std::map<topic_t, bool> unvisitedPartitions;
     for (auto &[partition, _] : partition2AllPotentialConsumers)
     {
         unvisitedPartitions[partition] = true;
     }
 
-    std::vector<TopicPartitionAssignment> unassignedPartitions;
+    std::vector<topic_t> unassignedPartitions;
     for (auto &it : currentAssignment)
     {
         auto &memberID = it.first;
         auto &partitions = it.second;
-        std::vector<TopicPartitionAssignment> keepPartitions;
+        std::vector<topic_t> keepPartitions;
         for (auto &partition : partitions)
         {
             if (partition2AllPotentialConsumers.count(partition) == 0)
@@ -918,7 +920,7 @@ int StickyBalanceStrategy::Plan(const std::map<std::string, ConsumerGroupMemberM
         return sortPartitionsByPotentialConsumerAssignments(part2Cons);
     };
 
-    std::vector<TopicPartitionAssignment> sortedPartitions = sortPartitionsHelper(
+    std::vector<topic_t> sortedPartitions = sortPartitionsHelper(
         isFreshAssignment, currentAssignment, prevAssignment,
         partition2AllPotentialConsumers, consumer2AllPotentialPartitions);
 
@@ -962,14 +964,14 @@ int StickyBalanceStrategy::AssignmentData(
 }
 
 void StickyBalanceStrategy::balance(
-    std::map<std::string, std::vector<TopicPartitionAssignment>> &currentAssignment,
-    const std::map<TopicPartitionAssignment, consumerGenerationPair> &prevAssignment,
-    std::vector<TopicPartitionAssignment> &sortedPartitions,
-    std::vector<TopicPartitionAssignment> &unassignedPartitions,
+    std::map<std::string, std::vector<topic_t>> &currentAssignment,
+    const std::map<topic_t, consumerGenerationPair> &prevAssignment,
+    std::vector<topic_t> &sortedPartitions,
+    std::vector<topic_t> &unassignedPartitions,
     std::vector<std::string> &sortedCurrentSubscriptions,
-    const std::map<std::string, std::vector<TopicPartitionAssignment>> &consumer2AllPotentialPartitions,
-    const std::map<TopicPartitionAssignment, std::vector<std::string>> &partition2AllPotentialConsumers,
-    std::map<TopicPartitionAssignment, std::string> &currentPartitionConsumer)
+    const std::map<std::string, std::vector<topic_t>> &consumer2AllPotentialPartitions,
+    const std::map<topic_t, std::vector<std::string>> &partition2AllPotentialConsumers,
+    std::map<topic_t, std::string> &currentPartitionConsumer)
 {
     bool initializing = sortedCurrentSubscriptions.empty();
     if (!initializing)
@@ -1002,7 +1004,7 @@ void StickyBalanceStrategy::balance(
         }
     }
 
-    std::map<std::string, std::vector<TopicPartitionAssignment>> fixedAssignments;
+    std::map<std::string, std::vector<topic_t>> fixedAssignments;
     for (auto &[memberID, _] : consumer2AllPotentialPartitions)
     {
         if (!canConsumerParticipateInReassignment(memberID, currentAssignment,
@@ -1038,13 +1040,13 @@ void StickyBalanceStrategy::balance(
 }
 
 bool StickyBalanceStrategy::performReassignments(
-    std::vector<TopicPartitionAssignment> &reassignablePartitions,
-    std::map<std::string, std::vector<TopicPartitionAssignment>> &currentAssignment,
-    const std::map<TopicPartitionAssignment, consumerGenerationPair> &prevAssignment,
+    std::vector<topic_t> &reassignablePartitions,
+    std::map<std::string, std::vector<topic_t>> &currentAssignment,
+    const std::map<topic_t, consumerGenerationPair> &prevAssignment,
     std::vector<std::string> &sortedCurrentSubscriptions,
-    const std::map<std::string, std::vector<TopicPartitionAssignment>> &consumer2AllPotentialPartitions,
-    const std::map<TopicPartitionAssignment, std::vector<std::string>> &partition2AllPotentialConsumers,
-    std::map<TopicPartitionAssignment, std::string> &currentPartitionConsumer)
+    const std::map<std::string, std::vector<topic_t>> &consumer2AllPotentialPartitions,
+    const std::map<topic_t, std::vector<std::string>> &partition2AllPotentialConsumers,
+    std::map<topic_t, std::string> &currentPartitionConsumer)
 {
     bool reassignmentPerformed = false;
     bool modified = false;
@@ -1100,11 +1102,11 @@ bool StickyBalanceStrategy::performReassignments(
 }
 
 std::vector<std::string> StickyBalanceStrategy::reassignPartitionToNewConsumer(
-    const TopicPartitionAssignment &partition,
-    std::map<std::string, std::vector<TopicPartitionAssignment>> &currentAssignment,
+    const topic_t &partition,
+    std::map<std::string, std::vector<topic_t>> &currentAssignment,
     std::vector<std::string> &sortedCurrentSubscriptions,
-    std::map<TopicPartitionAssignment, std::string> &currentPartitionConsumer,
-    const std::map<std::string, std::vector<TopicPartitionAssignment>> &consumer2AllPotentialPartitions)
+    std::map<topic_t, std::string> &currentPartitionConsumer,
+    const std::map<std::string, std::vector<topic_t>> &consumer2AllPotentialPartitions)
 {
     for (auto &anotherConsumer : sortedCurrentSubscriptions)
     {
@@ -1118,25 +1120,25 @@ std::vector<std::string> StickyBalanceStrategy::reassignPartitionToNewConsumer(
 }
 
 std::vector<std::string> StickyBalanceStrategy::reassignPartition(
-    const TopicPartitionAssignment &partition,
-    std::map<std::string, std::vector<TopicPartitionAssignment>> &currentAssignment,
+    const topic_t &partition,
+    std::map<std::string, std::vector<topic_t>> &currentAssignment,
     std::vector<std::string> &sortedCurrentSubscriptions,
-    std::map<TopicPartitionAssignment, std::string> &currentPartitionConsumer,
+    std::map<topic_t, std::string> &currentPartitionConsumer,
     const std::string &newConsumer)
 {
     std::string consumer = currentPartitionConsumer[partition];
-    TopicPartitionAssignment partitionToBeMoved =
+    topic_t partitionToBeMoved =
         movements.getTheActualPartitionToBeMoved(partition, consumer, newConsumer);
     return processPartitionMovement(partitionToBeMoved, newConsumer, currentAssignment,
                                     sortedCurrentSubscriptions, currentPartitionConsumer);
 }
 
 std::vector<std::string> StickyBalanceStrategy::processPartitionMovement(
-    const TopicPartitionAssignment &partition,
+    const topic_t &partition,
     const std::string &newConsumer,
-    std::map<std::string, std::vector<TopicPartitionAssignment>> &currentAssignment,
+    std::map<std::string, std::vector<topic_t>> &currentAssignment,
     std::vector<std::string> &sortedCurrentSubscriptions,
-    std::map<TopicPartitionAssignment, std::string> &currentPartitionConsumer)
+    std::map<topic_t, std::string> &currentPartitionConsumer)
 {
     std::string oldConsumer = currentPartitionConsumer[partition];
     movements.movePartition(partition, oldConsumer, newConsumer);

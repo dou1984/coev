@@ -264,8 +264,11 @@ CreateTopicsRequest::CreateTopicsRequest(const KafkaVersion &version, int64_t ti
     }
     m_timeout = std::chrono::milliseconds(timeout_ms);
     m_validate_only = validate_only;
-    for (auto &it : topic_details)
+    for (auto &[topic, detail_ptr] : topic_details)
     {
-        m_topic_details[it.first] = *it.second;
+        if (detail_ptr)
+        {
+            m_topic_details[topic] = *detail_ptr;
+        }
     }
 }

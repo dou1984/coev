@@ -5,7 +5,6 @@ int ControlRecord::decode(packet_decoder &key, packet_decoder &value)
     int success = 0;
     int16_t tempVersion;
 
-    // Decode key first
     success = key.getInt16(tempVersion);
     if (success != 0)
     {
@@ -33,23 +32,19 @@ int ControlRecord::decode(packet_decoder &key, packet_decoder &value)
         break;
     }
 
-    // Only decode value if it's not an unknown record type and there's data available
     if (m_type != ControlRecordType::ControlRecordUnknown && value.remaining() > 0)
     {
-        // Value has its own version field, but it should match the key's version
         success = value.getInt16(tempVersion);
         if (success != 0)
         {
             return ErrDecodeError;
         }
 
-        // Validate that versions match
         if (tempVersion != m_version)
         {
             return ErrDecodeError;
         }
 
-        // Decode coordinator epoch
         int32_t tempCoordinatorEpoch;
         success = value.getInt32(tempCoordinatorEpoch);
         if (success != 0)
@@ -64,10 +59,8 @@ int ControlRecord::decode(packet_decoder &key, packet_decoder &value)
 
 int ControlRecord::encode(packet_encoder &key, packet_encoder &value)
 {
-    // Encode key first: version + type
     key.putInt16(m_version);
 
-    // Encode record type
     switch (m_type)
     {
     case ControlRecordType::ControlRecordAbort:
@@ -84,10 +77,8 @@ int ControlRecord::encode(packet_encoder &key, packet_encoder &value)
         break;
     }
 
-    // Only encode value if it's not an unknown record type
     if (m_type != ControlRecordType::ControlRecordUnknown)
     {
-        // Encode value: version + coordinator epoch
         value.putInt16(m_version);
         value.putInt32(m_coordinator_epoch);
     }

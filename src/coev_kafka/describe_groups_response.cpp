@@ -145,9 +145,9 @@ int GroupDescription::encode(packet_encoder &pe, int16_t version) const
         return ErrEncodeError;
     }
 
-    for (auto &it : m_members)
+    for (auto &pair : m_members)
     {
-        if (it.second.encode(pe, m_version) != ErrNoError)
+        if (pair.second->encode(pe, m_version) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -188,12 +188,12 @@ int GroupDescription::decode(packet_decoder &pd, int16_t version)
     {
         for (int32_t i = 0; i < numMembers; ++i)
         {
-            GroupMemberDescription block;
-            if (!block.decode(pd, m_version))
+            auto block = std::make_shared<GroupMemberDescription>();
+            if (!block->decode(pd, m_version))
             {
                 return ErrDecodeError;
             }
-            m_members[block.m_member_id] = std::move(block);
+            m_members[block->m_member_id] = block;
         }
     }
 

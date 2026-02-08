@@ -265,8 +265,8 @@ std::shared_ptr<ProduceRequest> ProduceSet::build_request()
                         std::chrono::milliseconds MaxTimestampDelta(0);
                         for (size_t i = 0; i < record_batch.m_records.size(); ++i)
                         {
-                            record_batch.m_records[i]->m_offset_delta = static_cast<int64_t>(i);
-                            MaxTimestampDelta = std::max(MaxTimestampDelta, std::chrono::duration_cast<std::chrono::milliseconds>(record_batch.m_records[i]->m_timestamp_delta));
+                            record_batch.m_records[i].m_offset_delta = static_cast<int64_t>(i);
+                            MaxTimestampDelta = std::max(MaxTimestampDelta, std::chrono::duration_cast<std::chrono::milliseconds>(record_batch.m_records[i].m_timestamp_delta));
                         }
                         record_batch.m_max_timestamp = record_batch.m_first_timestamp + MaxTimestampDelta;
                     }

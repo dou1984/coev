@@ -68,11 +68,11 @@ struct Client
     void DeregisterController();
     std::chrono::milliseconds ComputeBackoff(int attempts_remaining);
     coev::awaitable<int> _GetPartitions(const std::string &topic, int64_t pt, std::vector<int32_t> &partitions);
-    coev::awaitable<int> _GetReplicas(const std::string &topic, int32_t partitionID, PartitionMetadata &out);
+    coev::awaitable<int> _GetReplicas(const std::string &topic, int32_t partitionID, std::shared_ptr<PartitionMetadata> &out);
     coev::awaitable<int> _GetOffset(const std::string &topic, int32_t partitionID, int64_t timestamp, int64_t &offset);
     coev::awaitable<int> _RefreshMetadata(const std::vector<std::string> &topics);
     coev::awaitable<int> _CachedLeader(const std::string &topic, int32_t partitionID, std::shared_ptr<Broker> &broker_, int32_t &leaderEpoch);
-    PartitionMetadata* _CachedMetadata(const std::string &topic, int32_t partitionID);
+    std::shared_ptr<PartitionMetadata> _CachedMetadata(const std::string &topic, int32_t partitionID);
     std::vector<int32_t> _CachedPartitions(const std::string &topic, int64_t partitionSet);
     std::vector<int32_t> _SetPartitionCache(const std::string &topic, int64_t partitionSet);
     std::shared_ptr<Broker> _CachedCoordinator(const std::string &consumerGroup);

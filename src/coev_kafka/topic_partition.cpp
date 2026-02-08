@@ -1,6 +1,6 @@
 #include "topic_partition.h"
 
-TopicPartition::TopicPartition(const std::string &t, int32_t p) : m_topic(t), m_partition(p)
+TopicPartition::TopicPartition(const std::string &t, int32_t p) : topic_t(t, p)
 {
 }
 int TopicPartition::encode(packet_encoder &pe)

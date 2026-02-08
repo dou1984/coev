@@ -54,7 +54,7 @@ int StickyAssignorUserDataV0::decode(packet_decoder &pd)
     return 0;
 }
 
-std::vector<TopicPartitionAssignment> StickyAssignorUserDataV0::partitions()
+std::vector<topic_t> StickyAssignorUserDataV0::partitions()
 {
     return m_topic_partitions;
 }
@@ -125,7 +125,7 @@ int StickyAssignorUserDataV1::decode(packet_decoder &pd)
     return 0;
 }
 
-std::vector<TopicPartitionAssignment> StickyAssignorUserDataV1::partitions()
+std::vector<topic_t> StickyAssignorUserDataV1::partitions()
 {
     return m_topic_partitions;
 }
@@ -140,9 +140,9 @@ int StickyAssignorUserDataV1::generation()
     return static_cast<int>(m_generation);
 }
 
-std::vector<TopicPartitionAssignment> PopulateTopicPartitions(const std::map<std::string, std::vector<int32_t>> &topics)
+std::vector<topic_t> PopulateTopicPartitions(const std::map<std::string, std::vector<int32_t>> &topics)
 {
-    std::vector<TopicPartitionAssignment> topicPartitions;
+    std::vector<topic_t> topicPartitions;
     for (auto &[topic, partitions] : topics)
     {
         for (int32_t partition : partitions)

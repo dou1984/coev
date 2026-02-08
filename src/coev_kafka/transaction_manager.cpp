@@ -174,7 +174,7 @@ int TransactionManager::add_offsets_to_txn(const std::map<std::string, std::vect
         for (auto &offset : topic_offsets)
         {
             TopicPartition tp(topic, offset.m_partition);
-            m_offsets_in_current_txn[groupId].insert({tp, offset});
+            m_offsets_in_current_txn[groupId][tp] = offset;
         }
     }
     return 0;
@@ -337,7 +337,7 @@ coev::awaitable<TransactionManager::Result> TransactionManager::publish_offsets_
             }
             }
             TopicPartition tp(topic, partitionError.m_partition);
-            failed_txn.insert({tp, offsets.at(tp)});
+            failed_txn[tp] = offsets.at(tp);
             response_errors.push_back(partitionError.m_err);
         }
     }

@@ -4,13 +4,13 @@
 #include <cstdint>
 #include "packet_decoder.h"
 #include "packet_encoder.h"
+#include "topic_type.h"
 
-struct TopicPartition
+struct TopicPartition : topic_t
 {
     int32_t m_count;
     std::vector<std::vector<int32_t>> m_assignment;
-    std::string m_topic;
-    int32_t m_partition;
+
     TopicPartition() = default;
     TopicPartition(const std::string &t, int32_t p);
     bool operator==(const TopicPartition &other) const { return m_topic == other.m_topic && m_partition == other.m_partition; }

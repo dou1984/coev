@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14.0)
 
-include_directories(/home/dou1984/github/coev/src/)
+include_directories(${PROJECT_SOURCE_DIR}/src)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
@@ -16,8 +16,6 @@ file(GLOB SRC_FILES "*.cpp")
 list(FILTER SRC_FILES EXCLUDE REGEX ".*_test\.cpp$")
 
 add_library(${PROJECT_NAME} STATIC ${SRC_FILES})
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
-target_compile_options(${PROJECT_NAME} PRIVATE -fcoroutines)
 target_link_libraries(${PROJECT_NAME})
 
 find_package(GTest REQUIRED)
@@ -33,8 +31,6 @@ if(BUILD_TESTS)
     
     # 添加测试程序
     add_executable(${PROJECT_NAME}_test ${TEST_FILES})
-    target_compile_features(${PROJECT_NAME}_test PRIVATE cxx_std_20)
-    target_compile_options(${PROJECT_NAME}_test PRIVATE -fcoroutines)
     target_link_libraries(${PROJECT_NAME}_test 
         GTest::GTest 
         GTest::Main 

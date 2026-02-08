@@ -183,7 +183,7 @@ int RecordBatch::decode(packet_decoder &pd)
         for (auto i = 0; i < num_record; ++i)
         {
             ::decode(decompressed, m_records);
-            offset += m_records[i]->m_length.m_length;
+            offset += m_records[i].m_length.m_length;
         }
     }
     catch (const std::runtime_error &e)
@@ -215,7 +215,7 @@ void RecordBatch::encode_records(packet_encoder &pe)
     std::string raw;
     for (auto &record : m_records)
     {
-        ::encode(*record, raw);
+        ::encode(record, raw);
     }
 
     m_records_len = raw.size();
