@@ -32,7 +32,10 @@ namespace coev
 		}
 		awaitable<void> get(TYPE &d)
 		{
-			co_await m_waiter.suspend();
+			if (m_data.empty())
+			{
+				co_await m_waiter.suspend();
+			}
 			d = __pop_front();
 		}
 		bool try_get(TYPE &d)
