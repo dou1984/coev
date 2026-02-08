@@ -128,12 +128,12 @@ coev::awaitable<int> SyncProducer::AbortTxn()
     return m_producer->abort_txn();
 }
 
-int SyncProducer::AddOffsetsToTxn(const std::map<std::string, std::vector<std::shared_ptr<PartitionOffsetMetadata>>> &offsets, const std::string &group_id)
+int SyncProducer::add_offsets_to_txn(const std::map<std::string, std::vector<PartitionOffsetMetadata>> &offsets, const std::string &group_id)
 {
     return m_producer->add_offsets_to_txn(offsets, group_id);
 }
 
-int SyncProducer::AddMessageToTxn(std::shared_ptr<ConsumerMessage> msg, const std::string &metadata, const std::string &group_id)
+int SyncProducer::add_message_to_txn(std::shared_ptr<ConsumerMessage> msg, const std::string &metadata, const std::string &group_id)
 {
     return m_producer->add_message_to_txn(msg, metadata, group_id);
 }

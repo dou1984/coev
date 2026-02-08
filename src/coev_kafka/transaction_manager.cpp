@@ -155,7 +155,7 @@ bool TransactionManager::is_transactional() const
     return !m_transactional_id.empty();
 }
 
-int TransactionManager::add_offsets_to_txn(const std::map<std::string, std::vector<std::shared_ptr<PartitionOffsetMetadata>>> &offsetsToAdd, const std::string &groupId)
+int TransactionManager::add_offsets_to_txn(const std::map<std::string, std::vector<PartitionOffsetMetadata>> &_offsets, const std::string &groupId)
 {
     if ((current_txn_status() & ProducerTxnFlagInTransaction) == 0)
     {
@@ -169,13 +169,12 @@ int TransactionManager::add_offsets_to_txn(const std::map<std::string, std::vect
     {
         m_offsets_in_current_txn[groupId] = TopicPartitionOffsets{};
     }
-    for (auto &topicOffsets : offsetsToAdd)
+    for (auto &[topic, topic_offsets] : _offsets)
     {
-        const std::string &topic = topicOffsets.first;
-        for (auto &offset : topicOffsets.second)
+        for (auto &offset : topic_offsets)
         {
-            TopicPartition tp(topic, offset->m_partition);
-            m_offsets_in_current_txn[groupId][tp] = *offset;
+            TopicPartition tp(topic, offset.m_partition);
+            m_offsets_in_current_txn[groupId].insert({tp, offset});
         }
     }
     return 0;
@@ -338,7 +337,7 @@ coev::awaitable<TransactionManager::Result> TransactionManager::publish_offsets_
             }
             }
             TopicPartition tp(topic, partitionError.m_partition);
-            failed_txn[tp] = offsets.at(tp);
+            failed_txn.insert({tp, offsets.at(tp)});
             response_errors.push_back(partitionError.m_err);
         }
     }

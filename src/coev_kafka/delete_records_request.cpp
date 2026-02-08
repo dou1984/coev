@@ -12,9 +12,9 @@ int DeleteRecordsRequestTopic::encode(packet_encoder &pe) const
 
     std::vector<int32_t> keys;
     keys.reserve(m_partition_offsets.size());
-    for (auto &kv : m_partition_offsets)
+    for (auto &[key, value] : m_partition_offsets)
     {
-        keys.push_back(kv.first);
+        keys.push_back(key);
     }
     std::sort(keys.begin(), keys.end());
 
@@ -48,7 +48,7 @@ int DeleteRecordsRequestTopic::decode(packet_decoder &pd, int16_t /*version*/)
             {
                 return ErrEncodeError;
             }
-            m_partition_offsets[partition] = offset;
+            m_partition_offsets.emplace(partition, offset);
         }
     }
 
@@ -69,9 +69,9 @@ int DeleteRecordsRequest::encode(packet_encoder &pe) const
 
     std::vector<std::string> keys;
     keys.reserve(m_topics.size());
-    for (auto &kv : m_topics)
+    for (auto &[key, _] : m_topics)
     {
-        keys.push_back(kv.first);
+        keys.push_back(key);
     }
     std::sort(keys.begin(), keys.end());
 

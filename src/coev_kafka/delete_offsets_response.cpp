@@ -94,8 +94,8 @@ int DeleteOffsetsResponse::decode(packet_decoder &pd, int16_t version)
             return ErrDecodeError;
         }
 
-        auto &partitionMap = m_errors[topic];
-        partitionMap.clear();
+        auto &partition_map = m_errors[topic];
+        partition_map.clear();
 
         for (int32_t j = 0; j < numPartitions; ++j)
         {
@@ -110,7 +110,7 @@ int DeleteOffsetsResponse::decode(packet_decoder &pd, int16_t version)
             {
                 return ErrDecodeError;
             }
-            partitionMap[partition] = static_cast<KError>(partErr);
+            partition_map[partition] = static_cast<KError>(partErr);
         }
     }
 

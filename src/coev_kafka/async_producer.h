@@ -29,7 +29,7 @@ struct AsyncProducer : std::enable_shared_from_this<AsyncProducer>
     int begin_txn();
     coev::awaitable<int> commit_txn();
     coev::awaitable<int> abort_txn();
-    int add_offsets_to_txn(const std::map<std::string, std::vector<std::shared_ptr<PartitionOffsetMetadata>>> &offsets, const std::string &group_id);
+    int add_offsets_to_txn(const std::map<std::string, std::vector<PartitionOffsetMetadata>> &offsets, const std::string &group_id);
     int add_message_to_txn(std::shared_ptr<ConsumerMessage> msg, const std::string &metadata, const std::string &group_id);
 
     coev::awaitable<void> dispatcher();

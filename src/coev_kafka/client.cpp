@@ -210,9 +210,9 @@ int Client::MetadataTopics(std::vector<std::string> &topics)
         return ErrClosedClient;
     }
     topics.reserve(m_metadata_topics.size());
-    for (auto &kv : m_metadata_topics)
+    for (auto &[key, _] : m_metadata_topics)
     {
-        topics.push_back(kv.first);
+        topics.push_back(key);
     }
     return 0;
 }

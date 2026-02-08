@@ -134,7 +134,6 @@ int OffsetFetchResponse::decode(packet_decoder &pd, int16_t version)
             auto &partitionMap = m_blocks[name];
             if (num_blocks > 0)
             {
-                // std::map doesn't support reserve
                 for (int j = 0; j < num_blocks; ++j)
                 {
                     int32_t id;

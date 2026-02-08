@@ -129,7 +129,7 @@ int SyncGroupRequest::decode(packet_decoder &pd, int16_t version)
     m_group_assignments.clear();
     if (num_assignments > 0)
     {
-        m_group_assignments.reserve(num_assignments);
+        m_group_assignments.resize(num_assignments);
         for (int i = 0; i < num_assignments; ++i)
         {
             err = m_group_assignments[i].decode(pd, m_version);

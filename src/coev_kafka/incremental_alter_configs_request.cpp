@@ -79,7 +79,6 @@ int IncrementalAlterConfigsResource::decode(packet_decoder &pd, int16_t version)
     m_config_entries.clear();
     if (n > 0)
     {
-        // ConfigEntries.reserve(n);
         for (int32_t i = 0; i < n; ++i)
         {
             std::string name;
@@ -137,11 +136,14 @@ int IncrementalAlterConfigsRequest::decode(packet_decoder &pd, int16_t version)
     m_resources.reserve(count);
     for (int32_t i = 0; i < count; ++i)
     {
-        err = m_resources[i].decode(pd, version);
+        // 创建一个临时对象，然后调用 decode 方法
+        IncrementalAlterConfigsResource resource(UnknownResource, "", std::map<std::string, IncrementalAlterConfigsEntry>());
+        err = resource.decode(pd, version);
         if (err != 0)
         {
             return err;
         }
+        m_resources.push_back(std::move(resource));
     }
 
     bool validateOnly;

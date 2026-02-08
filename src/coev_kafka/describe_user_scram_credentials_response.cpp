@@ -77,7 +77,7 @@ int DescribeUserScramCredentialsResponse::decode(packet_decoder &pd, int16_t ver
     }
 
     m_results.clear();
-    m_results.reserve(num_users);
+    m_results.resize(num_users);
     for (int32_t i = 0; i < num_users; ++i)
     {
         auto &result = m_results[i];
@@ -102,7 +102,7 @@ int DescribeUserScramCredentialsResponse::decode(packet_decoder &pd, int16_t ver
             return ErrDecodeError;
         }
 
-        result.m_credential_infos.reserve(num_creds);
+        result.m_credential_infos.resize(num_creds);
         for (int32_t j = 0; j < num_creds; ++j)
         {
 

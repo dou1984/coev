@@ -50,7 +50,7 @@ struct TransactionManager
     std::pair<int64_t, int16_t> get_producer_id();
     std::chrono::milliseconds compute_backoff(int attempts_remaining) const;
     bool is_transactional() const;
-    int add_offsets_to_txn(const std::map<std::string, std::vector<std::shared_ptr<PartitionOffsetMetadata>>> &offsetsToAdd, const std::string &groupId);
+    int add_offsets_to_txn(const std::map<std::string, std::vector<PartitionOffsetMetadata>> &offsetsToAdd, const std::string &groupId);
     coev::awaitable<int> publish_offsets_to_txn(const TopicPartitionOffsets &offsets, const std::string &groupId, TopicPartitionOffsets &outOffsets);
     coev::awaitable<Result> publish_offsets_to_txn_add_offset(const std::string &groupId);
     coev::awaitable<Result> publish_offsets_to_txn_commit(const TopicPartitionOffsets &offsets, const std::string &groupId, TopicPartitionOffsets &outOffsets);

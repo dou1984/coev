@@ -33,12 +33,11 @@ int DeleteRecordsResponseTopic::encode(packet_encoder &pe) const
         return ErrEncodeError;
     }
 
-    // Sort partition IDs for deterministic encoding
     std::vector<int32_t> keys;
     keys.reserve(m_partitions.size());
-    for (auto &kv : m_partitions)
+    for (auto &[key, _] : m_partitions)
     {
-        keys.push_back(kv.first);
+        keys.push_back(key);
     }
     std::sort(keys.begin(), keys.end());
 
@@ -104,12 +103,11 @@ int DeleteRecordsResponse::encode(packet_encoder &pe) const
         return ErrEncodeError;
     }
 
-    // Sort topic names for deterministic encoding
     std::vector<std::string> keys;
     keys.reserve(m_topics.size());
-    for (auto &kv : m_topics)
+    for (auto &[key, _] : m_topics)
     {
-        keys.push_back(kv.first);
+        keys.push_back(key);
     }
     std::sort(keys.begin(), keys.end());
 

@@ -74,7 +74,7 @@ int AddPartitionsToTxnResponse::decode(packet_decoder &pd, int16_t version)
         }
 
         auto &partition_errors = m_errors[topic];
-        partition_errors.reserve(m);
+        partition_errors.resize(m);
         for (int32_t j = 0; j < m; ++j)
         {
             if ((err = partition_errors[j].decode(pd, version)) != 0)

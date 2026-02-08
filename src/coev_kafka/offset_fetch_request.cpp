@@ -113,7 +113,6 @@ int OffsetFetchRequest::decode(packet_decoder &pd, int16_t version)
     }
 
     m_partitions.clear();
-    // m_partitions.reserve(partitionCount);
     for (int i = 0; i < partitionCount; ++i)
     {
         std::string topic;

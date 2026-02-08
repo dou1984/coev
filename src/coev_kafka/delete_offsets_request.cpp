@@ -48,25 +48,22 @@ int DeleteOffsetsRequest::decode(packet_decoder &pd, int16_t version)
         return ErrDecodeError;
     }
 
-    int32_t partitionCount;
-    if (pd.getArrayLength(partitionCount) != ErrNoError)
+    int32_t partition_count;
+    if (pd.getArrayLength(partition_count) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
-    // 根据 Go 逻辑：
-    // - 如果 version < 2 且 partitionCount == 0，则不解析任何分区（合法）
-    // - 如果 partitionCount < 0（理论上不会发生，但保留判断），也跳过
-    if ((partitionCount == 0 && version < 2) || partitionCount <= 0)
+    if ((partition_count == 0 && version < 2) || partition_count <= 0)
     {
         m_partitions.clear();
         return ErrNoError;
     }
 
     m_partitions.clear();
-    m_partitions.reserve(partitionCount);
+    m_partitions.reserve(partition_count);
 
-    for (int32_t i = 0; i < partitionCount; ++i)
+    for (int32_t i = 0; i < partition_count; ++i)
     {
         std::string topic;
         if (pd.getString(topic) != ErrNoError)
@@ -74,13 +71,11 @@ int DeleteOffsetsRequest::decode(packet_decoder &pd, int16_t version)
             return ErrDecodeError;
         }
 
-        std::vector<int32_t> partitionsList;
-        if (pd.getInt32Array(partitionsList) != ErrNoError)
+        auto &partitions_list = m_partitions[topic];
+        if (pd.getInt32Array(partitions_list) != ErrNoError)
         {
             return ErrDecodeError;
         }
-
-        m_partitions[topic] = std::move(partitionsList);
     }
 
     return ErrNoError;

@@ -155,7 +155,7 @@ namespace coev
     awaitable<int> ZooCli::prime_response()
     {
         std::string msg;
-        msg.reserve(HANDSHAKE_REQ_SIZE);
+        msg.resize(HANDSHAKE_REQ_SIZE);
         auto r = co_await recv(msg);
         if (r == INVALID)
         {

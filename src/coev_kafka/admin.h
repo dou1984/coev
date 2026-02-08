@@ -33,14 +33,14 @@ struct ClusterAdmin
     coev::awaitable<int> GetController(std::shared_ptr<Broker> &out_broker);
     coev::awaitable<int> GetCoordinator(const std::string &group, std::shared_ptr<Broker> &out_broker);
     coev::awaitable<int> CreateTopic(const std::string &topic, const std::shared_ptr<TopicDetail> &detail, bool validate_only);
-    coev::awaitable<int> ListTopics(std::map<std::string, TopicDetail> &out_topics);
+    coev::awaitable<int> ListTopics(std::map<std::string, TopicDetail> &out);
     coev::awaitable<int> DescribeTopics(const std::vector<std::string> &topics, std::vector<TopicMetadata> &out_metadata);
     coev::awaitable<int> DeleteTopic(const std::string &topic);
     coev::awaitable<int> CreatePartitions(const std::string &topic, int32_t count, const std::vector<std::vector<int32_t>> &assignment, bool validate_only);
     coev::awaitable<int> AlterPartitionReassignments(const std::string &topic, const std::vector<std::vector<int32_t>> &assignment);
     coev::awaitable<int> ListPartitionReassignments(const std::string &topic, const std::vector<int32_t> &partitions, std::map<std::string, std::map<int32_t, PartitionReplicaReassignmentsStatus>> &out);
-    coev::awaitable<int> DeleteRecords(const std::string &topic, const std::map<int32_t, int64_t> &partitionOffsets);
-    coev::awaitable<int> DescribeConfig(const ConfigResource &resource, std::vector<ConfigEntry> &out_entries);
+    coev::awaitable<int> DeleteRecords(const std::string &topic, const std::map<int32_t, int64_t> &partition_offsets);
+    coev::awaitable<int> DescribeConfig(const ConfigResource &resource, std::vector<ConfigEntry> &out);
     coev::awaitable<int> AlterConfig(ConfigResourceType resourceType, const std::string &name, const std::map<std::string, std::string> &entries, bool validate_only);
     coev::awaitable<int> IncrementalAlterConfig(ConfigResourceType resourceType, const std::string &name, const std::map<std::string, IncrementalAlterConfigsEntry> &entries, bool validate_only);
     coev::awaitable<int> CreateACL(const Resource &resource, const Acl &acl);

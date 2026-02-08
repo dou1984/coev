@@ -1,5 +1,8 @@
 #include "partition_offset_metadata.h"
 
+PartitionOffsetMetadata::PartitionOffsetMetadata(int32_t partition, int64_t offset, int32_t leader_epoch,const std::string& metadata) : m_partition(partition), m_offset(offset), m_leader_epoch(leader_epoch), m_metadata(metadata)
+{
+}
 int PartitionOffsetMetadata::decode(packet_decoder &pd, int16_t version)
 {
     pd.getInt32(m_partition);
