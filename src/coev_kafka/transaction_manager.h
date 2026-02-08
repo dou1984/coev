@@ -77,9 +77,6 @@ struct TransactionManager
                 co_return r.Error;
             }
             auto backoff = compute_backoff(attempts_remaining);
-            LOG_CORE("retrying after %lldms %d attempts remaining %d",
-                     static_cast<long long>(backoff.count() / 1000000), attempts_remaining, static_cast<int>(r.Error));
-
             co_await sleep_for(backoff);
             attempts_remaining--;
         }

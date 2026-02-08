@@ -138,7 +138,7 @@ int SyncProducer::AddMessageToTxn(std::shared_ptr<ConsumerMessage> msg, const st
     return m_producer->add_message_to_txn(msg, metadata, group_id);
 }
 
-coev::awaitable<int> NewSyncProducer(const std::vector<std::string> &addrs, std::shared_ptr<Config> &config, std::shared_ptr<ISyncProducer> &producer)
+coev::awaitable<int> NewSyncProducer(const std::vector<std::string> &addrs, std::shared_ptr<Config> &config, std::shared_ptr<SyncProducer> &producer)
 {
     producer = nullptr;
     if (config == nullptr)
@@ -162,7 +162,7 @@ coev::awaitable<int> NewSyncProducer(const std::vector<std::string> &addrs, std:
     co_return 0;
 }
 
-coev::awaitable<int> NewSyncProducerFromClient(std::shared_ptr<Client> client, std::shared_ptr<ISyncProducer> &producer)
+coev::awaitable<int> NewSyncProducerFromClient(std::shared_ptr<Client> client, std::shared_ptr<SyncProducer> &producer)
 {
 
     int err = VerifyProducerConfig(client->GetConfig());

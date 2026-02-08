@@ -10,7 +10,7 @@
 
 using namespace coev;
 
-co_channel<int> ch;
+guard::co_channel<int> ch;
 
 std::atomic<int> total = 0;
 awaitable<void> task_01()

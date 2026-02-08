@@ -34,10 +34,12 @@ coev::awaitable<void> TopicProducer::dispatch()
         auto it = m_handlers.find(msg->m_partition);
         if (it == m_handlers.end())
         {
-            m_handlers[msg->m_partition] = std::make_shared<PartitionProducer>(m_parent, msg->m_topic, msg->m_partition);
+            m_handlers.emplace(std::piecewise_construct,
+                               std::forward_as_tuple(msg->m_partition),
+                               std::forward_as_tuple(m_parent, msg->m_topic, msg->m_partition));
             it = m_handlers.find(msg->m_partition);
         }
-        it->second->m_input.set(msg);
+        it->second.m_input.set(msg);
     }
 }
 

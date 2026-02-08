@@ -185,7 +185,7 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
 
     coev::async m_opened;
     coev::co_task m_task;
-    coev::co_channel<bool> m_done;
+    coev::guard::co_channel<bool> m_done;
 
     coev::awaitable<int> ReadFull(std::string &buf, size_t n);
     coev::awaitable<int> Write(const std::string &buf);

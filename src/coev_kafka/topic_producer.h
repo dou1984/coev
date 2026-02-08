@@ -8,7 +8,7 @@
 #include "partition_producer.h"
 
 struct AsyncProducer;
-struct Broker;
+
 struct ProducerMessage;
 struct Partitioner;
 struct TopicProducer
@@ -18,10 +18,10 @@ struct TopicProducer
     coev::awaitable<void> dispatch();
     coev::awaitable<int> partition_message(std::shared_ptr<ProducerMessage> msg);
 
-    std::shared_ptr<AsyncProducer> m_parent;
     std::string m_topic;
+    std::shared_ptr<AsyncProducer> m_parent;
     std::shared_ptr<Partitioner> m_partitioner;
-    std::map<int32_t, std::shared_ptr<PartitionProducer>> m_handlers;
+    std::map<int32_t, PartitionProducer> m_handlers;
     coev::co_channel<std::shared_ptr<ProducerMessage>> m_input;
     co_task m_task;
 };
