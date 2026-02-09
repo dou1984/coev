@@ -71,7 +71,6 @@ coev::awaitable<void> BrokerConsumer::SubscriptionConsumer()
                     co_await sleep_for(sleep_ms);
                 }
             }
-            continue;
         }
         auto response = std::make_shared<FetchResponse>();
         int err = co_await FetchNewMessages(response);
@@ -161,10 +160,20 @@ coev::awaitable<void> BrokerConsumer::HandleResponses()
         }
         else if (result == ErrOffsetOutOfRange)
         {
-            LOG_CORE("received offset_out_of_range for %s:%d, sending error and removing subscription", child->m_topic.c_str(), child->m_partition);
-            child->SendError(result);
-            child->m_trigger.set(true);
-            it = m_subscriptions.erase(it);
+            auto err = co_await child->ChooseStartingOffset(child->m_conf->Consumer.Offsets.Initial);
+            if (err != ErrNoError)
+            {
+                LOG_CORE("failed to reset offset for %s:%d, error %d", child->m_topic.c_str(), child->m_partition, err);
+                child->SendError(err);
+                child->m_trigger.set(true);
+                it = m_subscriptions.erase(it);
+            }
+            else
+            {
+                LOG_CORE("successfully reset offset for %s:%d", child->m_topic.c_str(), child->m_partition);
+                child->m_trigger.set(true);
+                ++it;
+            }
         }
         else if (result == ErrUnknownTopicOrPartition || result == ErrNotLeaderForPartition ||
                  result == ErrLeaderNotAvailable || result == ErrReplicaNotAvailable ||
@@ -208,13 +217,11 @@ coev::awaitable<void> BrokerConsumer::Abort(int err)
         }
     }
 
-    // Close the connection after notifying all subscriptions
     m_broker->Close();
 }
 
 coev::awaitable<int> BrokerConsumer::FetchNewMessages(std::shared_ptr<FetchResponse> &response)
 {
-    LOG_CORE("BrokerConsumer::FetchNewMessages starting");
     auto request = std::make_shared<FetchRequest>();
     request->m_min_bytes = m_consumer->m_conf->Consumer.Fetch.Min;
     request->m_max_wait_time = static_cast<int32_t>(m_consumer->m_conf->Consumer.MaxWaitTime.count() / std::chrono::milliseconds(1).count());

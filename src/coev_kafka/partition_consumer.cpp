@@ -117,16 +117,16 @@ coev::awaitable<int> PartitionConsumer::Dispatch()
 
 coev::awaitable<int> PartitionConsumer::ChooseStartingOffset(int64_t offset)
 {
-    int64_t newestOffset;
-    auto err = co_await m_consumer->m_client->GetOffset(m_topic, m_partition, OffsetNewest, newestOffset);
+    int64_t newest_offset;
+    auto err = co_await m_consumer->m_client->GetOffset(m_topic, m_partition, OffsetNewest, newest_offset);
     if (err)
     {
         co_return err;
     }
-    m_high_water_mark_offset.store(newestOffset);
+    m_high_water_mark_offset.store(newest_offset);
 
-    int64_t oldestOffset;
-    err = co_await m_consumer->m_client->GetOffset(m_topic, m_partition, OffsetOldest, oldestOffset);
+    int64_t oldest_offset;
+    err = co_await m_consumer->m_client->GetOffset(m_topic, m_partition, OffsetOldest, oldest_offset);
     if (err)
     {
         co_return err;
@@ -134,13 +134,13 @@ coev::awaitable<int> PartitionConsumer::ChooseStartingOffset(int64_t offset)
 
     if (offset == OffsetNewest)
     {
-        offset = newestOffset;
+        offset = newest_offset;
     }
     else if (offset == OffsetOldest)
     {
-        offset = oldestOffset;
+        offset = oldest_offset;
     }
-    else if (offset >= oldestOffset && offset <= newestOffset)
+    else if (offset >= oldest_offset && offset <= newest_offset)
     {
         offset = offset;
     }
@@ -149,6 +149,7 @@ coev::awaitable<int> PartitionConsumer::ChooseStartingOffset(int64_t offset)
         co_return ErrOffsetOutOfRange;
     }
 
+    m_offset = offset;
     co_return ErrNoError;
 }
 
@@ -200,7 +201,11 @@ coev::awaitable<void> PartitionConsumer::ResponseFeeder()
         for (size_t i = 0; i < messages.size(); ++i)
         {
             auto msg = messages[i];
-            Interceptors(msg);
+            auto err = co_await Interceptors(msg);
+            if (err)
+            {
+                LOG_CORE("interceptor error: %d", err);
+            }
 
             bool sent = false;
             bool died = false;
@@ -213,7 +218,11 @@ coev::awaitable<void> PartitionConsumer::ResponseFeeder()
 
                     for (size_t j = i; j < messages.size(); ++j)
                     {
-                        Interceptors(messages[j]);
+                        auto err = co_await Interceptors(messages[j]);
+                        if (err)
+                        {
+                            LOG_CORE("interceptor error: %d", err);
+                        }
                         m_messages.set(messages[j]);
 
                         if (m_dying.try_get(died) && died)
@@ -468,7 +477,7 @@ coev::awaitable<int> PartitionConsumer::Interceptors(std::shared_ptr<ConsumerMes
 {
     for (auto &interceptor : m_conf->Consumer.Interceptors)
     {
-        auto err = co_await SafelyApplyInterceptor(msg, interceptor);
+        auto err = co_await safely_apply_interceptor(msg, interceptor);
         if (err)
             co_return err;
     }

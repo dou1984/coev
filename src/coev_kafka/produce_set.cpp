@@ -108,15 +108,19 @@ ProduceSet::ProduceSet(std::shared_ptr<AsyncProducer> parent)
 int ProduceSet::add(std::shared_ptr<ProducerMessage> msg)
 {
     std::string key, val;
-    if (msg->m_key != nullptr)
+    if (msg->m_key)
     {
-        if (int err = msg->m_key->Encode(key); err != 0)
+        if (int err = msg->m_key.Encode(key); err != 0)
+        {
             return err;
+        }
     }
-    if (msg->m_value != nullptr)
+    if (msg->m_value)
     {
-        if (int err = msg->m_value->Encode(val); err != 0)
+        if (int err = msg->m_value.Encode(val); err != 0)
+        {
             return err;
+        }
     }
 
     auto timestamp = msg->m_timestamp;
@@ -132,7 +136,7 @@ int ProduceSet::add(std::shared_ptr<ProducerMessage> msg)
     int size = 0;
 
     auto pset = std::make_shared<PartitionSet>();
-    bool isNewSet = false;
+    bool is_set = false;
     auto it = partitions.find(msg->m_partition);
     if (it == partitions.end())
     {
@@ -157,7 +161,7 @@ int ProduceSet::add(std::shared_ptr<ProducerMessage> msg)
             pset->m_records = std::make_shared<Records>(MessageSet());
         }
         partitions[msg->m_partition] = pset;
-        isNewSet = true;
+        is_set = true;
     }
     else
     {

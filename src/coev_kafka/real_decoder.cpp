@@ -451,7 +451,7 @@ int real_decoder::getString(std::string &result)
             result = "";
             return err;
         }
-        result.assign(reinterpret_cast<const char *>(m_raw.data() + m_offset), length);
+        result.assign(m_raw.data() + m_offset, length);
         m_offset += length;
         return 0;
     }
@@ -464,7 +464,7 @@ int real_decoder::getString(std::string &result)
             result = "";
             return err;
         }
-        result.assign(reinterpret_cast<const char *>(m_raw.data() + m_offset), length);
+        result.assign(m_raw.data() + m_offset, length);
         m_offset += length;
         return 0;
     }
@@ -525,7 +525,7 @@ int real_decoder::getInt32Array(std::vector<int32_t> &result)
         result.resize(n);
         for (int32_t i = 0; i < n; i++)
         {
-            result[i] = static_cast<int32_t>((m_raw[m_offset] << 24) | (m_raw[m_offset + 1] << 16) | (m_raw[m_offset + 2] << 8) | m_raw[m_offset + 3]);
+            result[i] = static_cast<int32_t>((static_cast<uint8_t>(m_raw[m_offset]) << 24) | (static_cast<uint8_t>(m_raw[m_offset + 1]) << 16) | (static_cast<uint8_t>(m_raw[m_offset + 2]) << 8) | static_cast<uint8_t>(m_raw[m_offset + 3]));
             m_offset += 4;
         }
         return 0;
@@ -547,7 +547,7 @@ int real_decoder::getInt32Array(std::vector<int32_t> &result)
         result.resize(array_length);
         for (int i = 0; i < array_length; i++)
         {
-            result[i] = static_cast<int32_t>((m_raw[m_offset] << 24) | (m_raw[m_offset + 1] << 16) | (m_raw[m_offset + 2] << 8) | m_raw[m_offset + 3]);
+            result[i] = static_cast<int32_t>((static_cast<uint8_t>(m_raw[m_offset]) << 24) | (static_cast<uint8_t>(m_raw[m_offset + 1]) << 16) | (static_cast<uint8_t>(m_raw[m_offset + 2]) << 8) | static_cast<uint8_t>(m_raw[m_offset + 3]));
             m_offset += 4;
         }
         return 0;
@@ -678,7 +678,7 @@ int real_decoder::getRawBytes(int length, std::string &result)
         m_offset = m_raw.size();
         return ErrInsufficientData;
     }
-    result.assign(m_raw.begin() + m_offset, m_raw.begin() + m_offset + length);
+    result.assign(m_raw.data() + m_offset, length);
     m_offset += length;
     return 0;
 }
@@ -692,7 +692,7 @@ int real_decoder::peek(int offset, int length, std::shared_ptr<packet_decoder> &
     }
     int start = m_offset + offset;
     auto decoder = std::make_shared<real_decoder>();
-    decoder->m_raw = std::string_view(m_raw.begin() + start, length);
+    decoder->m_raw = m_raw.substr(start, length);
     result = decoder;
     return 0;
 }

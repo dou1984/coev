@@ -22,6 +22,7 @@ int main(int argc, char **argv)
         return -1;
     }
     set_log_level(LOG_LEVEL_CORE);
+    // set_log_level(LOG_LEVEL_DEBUG);
     method = argv[1];
     host = argv[2];
     port = std::stoi(argv[3]);
@@ -110,8 +111,8 @@ int main(int argc, char **argv)
 
                     auto msg = std::make_shared<ProducerMessage>();
                     msg->m_topic = topic;
-                    msg->m_key = std::make_shared<StringEncoder>("key");
-                    msg->m_value = std::make_shared<ByteEncoder>("hello world");
+                    msg->m_key.m_data = "key";
+                    msg->m_value.m_data = "hello world";
 
                     producer->m_input.set(msg);
                     co_await wait_for_any(

@@ -14,16 +14,16 @@ namespace coev
     template <class CLI>
     class client_pool
     {
-        using client_list = std::list<CLI>;
+        using client_queue = std::queue<CLI>;
         class instance
         {
-            client_list &m_connections;
+            client_queue &m_connections;
 
         public:
-            instance(client_list &pool) : m_this_pool(pool)
+            instance(client_queue &pool) : m_connections(pool)
             {
             }
-            ~instance()
+            virtual ~instance()
             {
             }
         };
@@ -32,12 +32,9 @@ namespace coev
         client_pool()
         {
         }
-        instance get(const sd::string &key)
+        instance get(const std::string &key)
         {
             return instance{m_connections[key]};
-        }
-        awaitable<int> query()
-        {
         }
 
     private:
@@ -46,6 +43,6 @@ namespace coev
         }
 
     private:
-        static thread_local std::map<std::string, client_list> m_connections;
+        static thread_local std::map<std::string, client_queue> m_connections;
     };
 }

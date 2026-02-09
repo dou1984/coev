@@ -27,11 +27,11 @@ int ProducerMessage::byte_size(int version) const
 
     if (m_key)
     {
-        size += m_key->Length();
+        size += m_key.Length();
     }
     if (m_value)
     {
-        size += m_value->Length();
+        size += m_value.Length();
     }
 
     return size;

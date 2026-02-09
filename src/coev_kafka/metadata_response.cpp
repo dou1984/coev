@@ -128,8 +128,8 @@ int TopicMetadata::decode(packet_decoder &pd, int16_t version)
     }
     m_partitions.resize(n);
     for (int32_t i = 0; i < n; ++i)
-    {    
-        if (int err =  m_partitions[i].decode(pd, m_version); err != 0)
+    {
+        if (int err = m_partitions[i].decode(pd, m_version); err != 0)
         {
             return err;
         }
@@ -160,7 +160,7 @@ int TopicMetadata::encode(packet_encoder &pe, int16_t version) const
 
     if (m_version >= 10)
     {
-        std::string uuid_str(reinterpret_cast<const char*>(m_uuid.data.data()), m_uuid.data.size());
+        std::string uuid_str(reinterpret_cast<const char *>(m_uuid.data.data()), m_uuid.data.size());
         if (int err = pe.putRawBytes(uuid_str); err != 0)
         {
             return err;

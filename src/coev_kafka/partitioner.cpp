@@ -70,12 +70,12 @@ HashPartitioner::HashPartitioner() : m_reference_abs(false), m_hash_unsigned(fal
 
 int HashPartitioner::partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result)
 {
-    if (!message->m_key)
+    if (message->m_key.Empty())
     {
         return m_random_partitioner->partition(message, numPartitions, result);
     }
     std::string bytes;
-    int err = message->m_key->Encode(bytes);
+    int err = message->m_key.Encode(bytes);
     if (err != 0)
     {
         return -1;
@@ -112,7 +112,7 @@ bool HashPartitioner::requires_consistency()
 
 bool HashPartitioner::message_requires_consistency(std::shared_ptr<ProducerMessage> message)
 {
-    return static_cast<bool>(message->m_key);
+    return !message->m_key.Empty();
 }
 
 void WithAbsFirstOption::apply(HashPartitioner *hp)

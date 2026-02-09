@@ -16,17 +16,17 @@ std::map<std::string, std::vector<int32_t>> ConsumerGroupSession::get_claims()
     return m_claims;
 }
 
-std::string ConsumerGroupSession::MemberID()
+std::string ConsumerGroupSession::member_id()
 {
     return m_member_id;
 }
 
-int32_t ConsumerGroupSession::GenerationID()
+int32_t ConsumerGroupSession::generation_id()
 {
     return m_generation_id;
 }
 
-void ConsumerGroupSession::MarkOffset(const std::string &topic, int32_t partition, int64_t offset, const std::string &metadata)
+void ConsumerGroupSession::mark_offset(const std::string &topic, int32_t partition, int64_t offset, const std::string &metadata)
 {
 }
 
@@ -34,15 +34,15 @@ void ConsumerGroupSession::commit()
 {
 }
 
-void ConsumerGroupSession::ResetOffset(const std::string &topic, int32_t partition, int64_t offset, const std::string &metadata)
+void ConsumerGroupSession::reset_offset(const std::string &topic, int32_t partition, int64_t offset, const std::string &metadata)
 {
 }
 
-void ConsumerGroupSession::MarkMessage(std::shared_ptr<ConsumerMessage> msg, const std::string &metadata)
+void ConsumerGroupSession::mark_message(std::shared_ptr<ConsumerMessage> msg, const std::string &metadata)
 {
-    MarkOffset(msg->m_topic, msg->m_partition, msg->m_offset + 1, metadata);
+    mark_offset(msg->m_topic, msg->m_partition, msg->m_offset + 1, metadata);
 }
-std::shared_ptr<Context> ConsumerGroupSession::GetContext()
+std::shared_ptr<Context> ConsumerGroupSession::get_context()
 {
     return m_context;
 }

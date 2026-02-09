@@ -10,7 +10,8 @@ TEST(EncoderDecoderTest, TestInt8) {
     encoder.putInt8(test_value);
     
     real_decoder decoder;
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
+    std::string encodedData = encoder.m_raw.substr(0, encoder.m_offset);
+    decoder.m_raw = encodedData;
     decoder.m_offset = 0;
     
     int err = decoder.getInt8(result_value);
@@ -26,7 +27,8 @@ TEST(EncoderDecoderTest, TestInt16) {
     encoder.putInt16(test_value);
     
     real_decoder decoder;
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
+    std::string encodedData(encoder.m_raw.data(), encoder.m_offset);
+    decoder.m_raw = encodedData;
     decoder.m_offset = 0;
     
     int err = decoder.getInt16(result_value);
@@ -42,7 +44,8 @@ TEST(EncoderDecoderTest, TestInt32) {
     encoder.putInt32(test_value);
     
     real_decoder decoder;
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
+    std::string encodedData = encoder.m_raw.substr(0, encoder.m_offset);
+    decoder.m_raw = encodedData;
     decoder.m_offset = 0;
     
     int err = decoder.getInt32(result_value);
@@ -58,7 +61,8 @@ TEST(EncoderDecoderTest, TestInt64) {
     encoder.putInt64(test_value);
     
     real_decoder decoder;
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
+    std::string encodedData(encoder.m_raw.data(), encoder.m_offset);
+    decoder.m_raw = encodedData;
     decoder.m_offset = 0;
     
     int err = decoder.getInt64(result_value);

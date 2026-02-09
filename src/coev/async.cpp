@@ -31,7 +31,7 @@ namespace coev
 	{
 		if (auto c = static_cast<co_event *>(pop_front()); c != nullptr)
 		{
-			LOG_CORE("resume one event later");
+			// LOG_CORE("resume one event later");
 			local_async::instance().push_back(c);
 			return true;
 		}

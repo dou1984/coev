@@ -10,28 +10,42 @@
 #include <limits>
 #include <coev/coev.h>
 
+bool StringEncoder::Empty() const
+{
+    return m_data.empty();
+}
 int StringEncoder::Encode(std::string &out)
 {
     out.assign(m_data.begin(), m_data.end());
     return 0;
 }
 
-size_t StringEncoder::Length()
+size_t StringEncoder::Length() const
 {
     return m_data.size();
 }
-
+StringEncoder::operator bool() const
+{
+    return m_data.size() > 0;
+}
+bool ByteEncoder::Empty() const
+{
+    return m_data.empty();
+}
 int ByteEncoder::Encode(std::string &out)
 {
     out = m_data;
     return 0;
 }
 
-size_t ByteEncoder::Length()
+size_t ByteEncoder::Length() const
 {
     return m_data.size();
 }
-
+ByteEncoder::operator bool() const
+{
+    return m_data.size() > 0;
+}
 std::function<std::chrono::milliseconds(int, int)> NewExponentialBackoff(
     std::chrono::milliseconds backoff,
     std::chrono::milliseconds maxBackoff)

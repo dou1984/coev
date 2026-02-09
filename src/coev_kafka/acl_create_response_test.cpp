@@ -29,7 +29,8 @@ const unsigned char createResponseArray[] = {
 TEST(CreateAclsResponseTest, DecodeWithError)
 {
     real_decoder decoder;
-    decoder.m_raw = std::string(reinterpret_cast<const char *>(createResponseWithError), sizeof(createResponseWithError));
+    std::string rawData(reinterpret_cast<const char *>(createResponseWithError), sizeof(createResponseWithError));
+    decoder.m_raw = rawData;
     decoder.m_offset = 0;
 
     CreateAclsResponse response;
@@ -46,7 +47,8 @@ TEST(CreateAclsResponseTest, DecodeWithError)
 TEST(CreateAclsResponseTest, DecodeResponseArray)
 {
     real_decoder decoder;
-    decoder.m_raw = std::string(reinterpret_cast<const char *>(createResponseArray), sizeof(createResponseArray));
+    std::string rawData(reinterpret_cast<const char *>(createResponseArray), sizeof(createResponseArray));
+    decoder.m_raw = rawData;
     decoder.m_offset = 0;
 
     CreateAclsResponse response;
@@ -167,7 +169,8 @@ TEST(CreateAclsResponseTest, RoundTripEncodingDecoding)
 
     // Decode the response
     real_decoder decoder;
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
+    std::string encodedData = encoder.m_raw.substr(0, encoder.m_offset);
+    decoder.m_raw = encodedData;
     decoder.m_offset = 0;
 
     CreateAclsResponse decodedResponse;

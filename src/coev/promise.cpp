@@ -23,13 +23,11 @@ namespace coev
             release(promise *_this) : m_this(_this) {}
             void operator()(co_task *_task)
             {
-                // LOG_CORE("~promise this:%p task:%p", m_this, _task);
                 assert(_task != nullptr);
                 _task->unload(m_this);
             }
             void operator()(std::coroutine_handle<> _caller)
             {
-                // LOG_CORE("~promise this:%p caller:%p", m_this, _caller.address());
                 assert(!_caller.done());
                 _caller.resume();
             }

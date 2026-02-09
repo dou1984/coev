@@ -230,7 +230,7 @@ coev::awaitable<void> AsyncProducer::dispatcher()
             LOG_CORE("dispatcher applying %zu interceptors", m_conf->Producer.Interceptors.size());
             for (auto &interceptor : m_conf->Producer.Interceptors)
             {
-                co_await SafelyApplyInterceptor(msg, interceptor);
+                co_await safely_apply_interceptor(msg, interceptor);
             }
         }
 

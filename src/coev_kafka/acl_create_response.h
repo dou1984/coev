@@ -23,7 +23,7 @@ struct AclCreationResponse : IEncoder, VDecoder
 
 struct CreateAclsResponse : protocol_body
 {
-    int16_t m_version;
+    int16_t m_version = 0;
     std::chrono::milliseconds m_throttle_time;
     std::vector<AclCreationResponse> m_acl_creation_responses;
 

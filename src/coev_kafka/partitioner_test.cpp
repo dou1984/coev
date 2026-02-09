@@ -35,7 +35,7 @@ struct PartitionerTestCase
 void partitionAndAssert(Partitioner *partitioner, int32_t numPartitions, const PartitionerTestCase &testCase)
 {
     auto message = std::make_shared<ProducerMessage>();
-    message->m_key = std::make_shared<StringEncoder>(testCase.key);
+    message->m_key = StringEncoder(testCase.key);
 
     int32_t choice = 0;
     int result = partitioner->partition(message, numPartitions, choice);
@@ -106,7 +106,7 @@ TEST(PartitionerTest, HashPartitioner)
     {
         auto message = std::make_shared<ProducerMessage>();
         std::string key = "test_key_" + std::to_string(i);
-        message->m_key = std::make_shared<StringEncoder>(key);
+        message->m_key = StringEncoder(key);
         assertPartitioningConsistent(partitioner.get(), message, 50);
     }
 }
@@ -120,7 +120,7 @@ TEST(PartitionerTest, HashPartitionerConsistency)
 
     // Test that messages with keys require consistency
     auto messageWithKey = std::make_shared<ProducerMessage>();
-    messageWithKey->m_key = std::make_shared<StringEncoder>("hi");
+    messageWithKey->m_key = StringEncoder("hi");
     ASSERT_TRUE(dynamicPartitioner->message_requires_consistency(messageWithKey)) << "Messages with keys should require consistency";
 
     // Test that messages without keys do not require consistency
@@ -194,7 +194,7 @@ TEST(PartitionerTest, HashPartitionerWithSpecialKeys)
 
     // Test with empty string key
     auto emptyKeyMessage = std::make_shared<ProducerMessage>();
-    emptyKeyMessage->m_key = std::make_shared<StringEncoder>("");
+    emptyKeyMessage->m_key = StringEncoder("");
     int32_t choice = 0;
     int result = partitioner->partition(emptyKeyMessage, 50, choice);
     ASSERT_EQ(result, 0) << "Partitioning failed for empty key";
@@ -204,7 +204,7 @@ TEST(PartitionerTest, HashPartitionerWithSpecialKeys)
     // Test with long key
     std::string longKey(1000, 'a');
     auto longKeyMessage = std::make_shared<ProducerMessage>();
-    longKeyMessage->m_key = std::make_shared<StringEncoder>(longKey);
+    longKeyMessage->m_key = StringEncoder(longKey);
     result = partitioner->partition(longKeyMessage, 50, choice);
     ASSERT_EQ(result, 0) << "Partitioning failed for long key";
     ASSERT_GE(choice, 0) << "Returned partition outside of range for long key";
@@ -212,7 +212,7 @@ TEST(PartitionerTest, HashPartitionerWithSpecialKeys)
 
     // Test with numeric key that might produce min int32
     auto minIntKeyMessage = std::make_shared<ProducerMessage>();
-    minIntKeyMessage->m_key = std::make_shared<StringEncoder>("1468509572224");
+    minIntKeyMessage->m_key = StringEncoder("1468509572224");
     result = partitioner->partition(minIntKeyMessage, 50, choice);
     ASSERT_EQ(result, 0) << "Partitioning failed for min int32 key";
     ASSERT_GE(choice, 0) << "Returned partition outside of range for min int32 key";

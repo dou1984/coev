@@ -208,38 +208,42 @@ bool Request::is_flexible() const
 }
 coev::awaitable<int> decode_request(std::shared_ptr<Broker> &broker, Request &req, int &size)
 {
-    std::string lengthBytes;
-    auto bytesRead = 4;
-    int err = co_await broker->ReadFull(lengthBytes, bytesRead);
+    std::string header_bytes;
+    auto read_bytes = 4;
+    int err = co_await broker->ReadFull(header_bytes, read_bytes);
     if (err != 0)
     {
-        size = bytesRead;
+        size = read_bytes;
+        LOG_CORE("decode_request read failed %d length %d", err, read_bytes);
         co_return err;
     }
-    size_t length = (static_cast<uint32_t>(lengthBytes[0]) << 24) | (static_cast<uint32_t>(lengthBytes[1]) << 16) |
-                    (static_cast<uint32_t>(lengthBytes[2]) << 8) | static_cast<uint32_t>(lengthBytes[3]);
+    size_t length = (static_cast<uint32_t>(header_bytes[0]) << 24) | (static_cast<uint32_t>(header_bytes[1]) << 16) |
+                    (static_cast<uint32_t>(header_bytes[2]) << 8) | static_cast<uint32_t>(header_bytes[3]);
     if (length <= 4 || length > MaxRequestSize)
     {
-        size = bytesRead;
+        size = read_bytes;
+        LOG_CORE("decode_request length %ld is invalid", length);
         co_return -1;
     }
 
-    std::string encodedReq;
-    err = co_await broker->ReadFull(encodedReq, length);
+    std::string encoded_request;
+    err = co_await broker->ReadFull(encoded_request, length);
     if (err != 0)
     {
-        size = bytesRead + length;
+        size = read_bytes + length;
+        LOG_CORE("decode_request read %ld bytes failed, err: %d", length, err);
         co_return -1;
     }
-    bytesRead += length;
+    read_bytes += length;
 
-    err = ::decode(encodedReq, req);
+    err = ::decode(encoded_request, req);
     if (err != 0)
     {
-        size = bytesRead;
+        size = read_bytes;
+        LOG_CORE("decode_request failed, err: %d", err);
         co_return err;
     }
-    size = bytesRead;
+    size = read_bytes;
     co_return 0;
 }
 

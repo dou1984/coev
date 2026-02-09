@@ -101,12 +101,14 @@ int AclCreationResponse::encode(packet_encoder &pe) const
 
 int AclCreationResponse::decode(packet_decoder &pd, int16_t version)
 {
-    if (pd.getKError(m_err) != 0)
-    {
+    int err = pd.getKError(m_err);
+    if (err != 0)
+    {        
         return -1;
     }
 
-    if (pd.getNullableString(m_err_msg) != 0)
+    err = pd.getNullableString(m_err_msg);
+    if (err != 0)
     {
         return -1;
     }

@@ -231,8 +231,7 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
         {
             co_return err;
         }
-
-        co_return err;
+        co_return ErrNoError;
     }
 
     template <class Req, class Res>
@@ -293,21 +292,20 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
             co_return ErrCorrelationID;
         }
 
-        // Check connection again before reading body
         if (!m_conn || !m_conn->IsOpened())
         {
             LOG_CORE("Connection closed before reading body");
             co_return ErrNotConnected;
         }
 
-        size_t bytes_read_body = decoded_header.m_length - header_bytes + 4;
-        err = co_await ReadFull(promise.m_packets, bytes_read_body);
+        size_t read_bytes = decoded_header.m_length - header_bytes + 4;
+        err = co_await ReadFull(promise.m_packets, read_bytes);
         if (err)
         {
             LOG_CORE("Failed to read body %d", err);
             co_return err;
         }
-        if (promise.m_packets.size() != bytes_read_body)
+        if (promise.m_packets.size() != read_bytes)
         {
             LOG_CORE("Failed to read body %d", err);
             co_return err;

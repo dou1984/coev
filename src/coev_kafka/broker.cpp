@@ -285,8 +285,6 @@ int Broker::Close()
     {
         return ErrNotConnected;
     }
-    // Only call m_conn->Close() if the connection is not already closed
-    // This avoids issues with uninitialized libev resources
     if (m_conn->IsOpened() || m_conn->IsOpening())
     {
         return m_conn->Close();
@@ -618,10 +616,7 @@ coev::awaitable<int> Broker::ReadFull(std::string &buf, size_t n)
             co_return INVALID;
         }
     }
-    if (buf.size() < n)
-    {
-        buf.resize(n);
-    }
+    buf.resize(n);
     int err = co_await m_conn->ReadFull(buf, n);
     if (err != ErrNoError)
     {

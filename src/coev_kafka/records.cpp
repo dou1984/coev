@@ -89,11 +89,13 @@ int Records::decode(packet_decoder &pd)
 
     if (m_records_type == LegacyRecords)
     {
-        std::get<MessageSet>(m_records).decode(pd);
+        m_records = MessageSet();
+        return std::get<MessageSet>(m_records).decode(pd);
     }
     if (m_records_type == DefaultRecords)
     {
-        std::get<RecordBatch>(m_records).decode(pd);
+        m_records = RecordBatch();
+        return std::get<RecordBatch>(m_records).decode(pd);
     }
 
     return -1;

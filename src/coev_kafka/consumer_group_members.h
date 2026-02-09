@@ -11,13 +11,12 @@
 struct OwnedPartition;
 struct ConsumerGroupMemberMetadata : IEncoder, IDecoder
 {
-
     int16_t m_version = 0;
-    std::vector<std::string> m_topics;
-    std::string m_user_data;
-    std::vector<OwnedPartition> m_owned_partitions;
     int32_t m_generation_id = 0;
+    std::string m_user_data;
     std::string m_rack_id;
+    std::vector<std::string> m_topics;
+    std::vector<OwnedPartition> m_owned_partitions;
 
     ConsumerGroupMemberMetadata() = default;
     ConsumerGroupMemberMetadata(int16_t v) : m_version(v) {}

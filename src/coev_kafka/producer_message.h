@@ -28,8 +28,8 @@ enum FlagSet : int16_t
 struct ProducerMessage : std::enable_shared_from_this<ProducerMessage>
 {
     std::string m_topic;
-    std::shared_ptr<Encoder> m_key;
-    std::shared_ptr<Encoder> m_value;
+    StringEncoder m_key;
+    ByteEncoder m_value;
     std::vector<RecordHeader> m_headers;
 
     int64_t m_offset;

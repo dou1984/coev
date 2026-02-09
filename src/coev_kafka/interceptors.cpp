@@ -4,12 +4,12 @@
 #include <exception>
 #include <iostream>
 
-coev::awaitable<int> SafelyApplyInterceptor(std::shared_ptr<ProducerMessage> &msg, std::shared_ptr<ProducerInterceptor> &interceptor)
+coev::awaitable<int> safely_apply_interceptor(std::shared_ptr<ProducerMessage> &msg, std::shared_ptr<ProducerInterceptor> &interceptor)
 {
     return interceptor->OnSend(msg);
 }
 
-coev::awaitable<int> SafelyApplyInterceptor(std::shared_ptr<ConsumerMessage> &msg, std::shared_ptr<ConsumerInterceptor> &interceptor)
+coev::awaitable<int> safely_apply_interceptor(std::shared_ptr<ConsumerMessage> &msg, std::shared_ptr<ConsumerInterceptor> &interceptor)
 {
     return interceptor->OnConsume(msg);
 }

@@ -133,7 +133,7 @@ coev::awaitable<int> ClusterAdmin::_CreateTopic(const std::string &topic, std::s
     }
     co_return 0;
 }
-coev::awaitable<int> ClusterAdmin::CreateTopic(const std::string &topic, const std::shared_ptr<TopicDetail> &detail, bool validateOnly)
+coev::awaitable<int> ClusterAdmin::CreateTopic(const std::string &topic, const std::shared_ptr<TopicDetail> &detail, bool validate_only)
 {
     if (topic.empty())
     {
@@ -145,7 +145,7 @@ coev::awaitable<int> ClusterAdmin::CreateTopic(const std::string &topic, const s
     }
     std::map<std::string, std::shared_ptr<TopicDetail>> topicDetails;
     topicDetails[topic] = detail;
-    auto request = std::make_shared<CreateTopicsRequest>(m_conf->Version, m_conf->Admin.Timeout.count(), validateOnly, topicDetails);
+    auto request = std::make_shared<CreateTopicsRequest>(m_conf->Version, m_conf->Admin.Timeout.count(), validate_only, topicDetails);
     co_return co_await RetryOnError(isRetriableControllerError, &ClusterAdmin::_CreateTopic, topic, request);
 }
 
@@ -354,7 +354,7 @@ coev::awaitable<int> ClusterAdmin::_CreatePartitions(const std::string &topic, s
     }
     co_return 0;
 }
-coev::awaitable<int> ClusterAdmin::CreatePartitions(const std::string &topic, int32_t count, const std::vector<std::vector<int32_t>> &assignment, bool validateOnly)
+coev::awaitable<int> ClusterAdmin::CreatePartitions(const std::string &topic, int32_t count, const std::vector<std::vector<int32_t>> &assignment, bool validate_only)
 {
     if (topic.empty())
     {
@@ -367,7 +367,7 @@ coev::awaitable<int> ClusterAdmin::CreatePartitions(const std::string &topic, in
     auto request = std::make_shared<CreatePartitionsRequest>();
     request->m_topic_partitions[topic] = tp;
     request->m_timeout = m_conf->Admin.Timeout;
-    request->m_validate_only = validateOnly;
+    request->m_validate_only = validate_only;
     if (m_conf->Version.IsAtLeast(V2_0_0_0))
     {
         request->m_version = 1;
@@ -479,7 +479,7 @@ coev::awaitable<int> ClusterAdmin::ListPartitionReassignments(const std::string 
     co_return err;
 }
 
-coev::awaitable<int> ClusterAdmin::DeleteRecords(const std::string &topic, const std::map<int32_t, int64_t> &partitionOffsets)
+coev::awaitable<int> ClusterAdmin::DeleteRecords(const std::string &topic, const std::map<int32_t, int64_t> &partition_offsets)
 {
     if (topic.empty())
     {
@@ -487,9 +487,8 @@ coev::awaitable<int> ClusterAdmin::DeleteRecords(const std::string &topic, const
     }
     std::vector<int> errs;
     std::map<std::shared_ptr<Broker>, std::vector<int32_t>> partitionPerBroker;
-    for (auto &kv : partitionOffsets)
+    for (auto &[partition, _] : partition_offsets)
     {
-        int32_t partition = kv.first;
         std::shared_ptr<Broker> broker;
         int err = co_await m_client->Leader(topic, partition, broker);
         if (err != 0)
@@ -503,15 +502,15 @@ coev::awaitable<int> ClusterAdmin::DeleteRecords(const std::string &topic, const
     for (auto &[broker, partitions] : partitionPerBroker)
     {
 
-        std::unordered_map<int32_t, int64_t> recordsToDelete;
+        std::unordered_map<int32_t, int64_t> records_to_delete;
         for (int32_t p : partitions)
         {
-            recordsToDelete[p] = partitionOffsets.at(p);
+            records_to_delete[p] = partition_offsets.at(p);
         }
         std::unordered_map<std::string, std::shared_ptr<DeleteRecordsRequestTopic>> topics;
-        auto topicData = std::make_shared<DeleteRecordsRequestTopic>();
-        topicData->m_partition_offsets = std::move(recordsToDelete);
-        topics[topic] = topicData;
+        auto topic_data = std::make_shared<DeleteRecordsRequestTopic>();
+        topic_data->m_partition_offsets = std::move(records_to_delete);
+        topics[topic] = topic_data;
 
         auto request = std::make_shared<DeleteRecordsRequest>();
         request->m_topics = std::move(topics);
@@ -521,26 +520,26 @@ coev::awaitable<int> ClusterAdmin::DeleteRecords(const std::string &topic, const
             request->m_version = 1;
         }
 
-        ResponsePromise<DeleteRecordsResponse> rsp;
-        int err = co_await broker->DeleteRecords(request, rsp);
+        ResponsePromise<DeleteRecordsResponse> response;
+        int err = co_await broker->DeleteRecords(request, response);
         if (err != 0)
         {
             errs.emplace_back(err);
             continue;
         }
 
-        auto it = rsp.m_response->m_topics.find(topic);
-        if (it == rsp.m_response->m_topics.end())
+        auto it = response.m_response->m_topics.find(topic);
+        if (it == response.m_response->m_topics.end())
         {
             errs.emplace_back(ErrIncompleteResponse);
             continue;
         }
 
-        for (auto &part : it->second->m_partitions)
+        for (auto &[_, part] : it->second->m_partitions)
         {
-            if (part.second->m_err != ErrNoError)
+            if (part->m_err != ErrNoError)
             {
-                errs.emplace_back(part.second->m_err);
+                errs.emplace_back(part->m_err);
             }
         }
     }
@@ -552,7 +551,7 @@ coev::awaitable<int> ClusterAdmin::DeleteRecords(const std::string &topic, const
     co_return 0;
 }
 
-coev::awaitable<int> ClusterAdmin::DescribeConfig(const ConfigResource &resource, std::vector<ConfigEntry> &out)
+coev::awaitable<int> ClusterAdmin::DescribeConfig(const ConfigResource &cfg_resource, std::vector<ConfigEntry> &out)
 {
 
     auto request = std::make_shared<DescribeConfigsRequest>();
@@ -564,14 +563,13 @@ coev::awaitable<int> ClusterAdmin::DescribeConfig(const ConfigResource &resource
     {
         request->m_version = 2;
     }
-    request->m_resources.emplace_back(resource);
+    request->m_resources.emplace_back(cfg_resource);
 
     std::shared_ptr<Broker> broker;
     int err;
-    if (dependsOnSpecificNode(resource))
+    if (dependsOnSpecificNode(cfg_resource))
     {
-
-        int32_t id = static_cast<int32_t>(std::stol(resource.m_name));
+        int32_t id = static_cast<int32_t>(std::stol(cfg_resource.m_name));
         err = FindBroker(id, broker);
         if (err != 0)
         {
@@ -592,17 +590,17 @@ coev::awaitable<int> ClusterAdmin::DescribeConfig(const ConfigResource &resource
         co_return err;
     }
 
-    ResponsePromise<DescribeConfigsResponse> rsp;
-    err = co_await broker->DescribeConfigs(request, rsp);
+    ResponsePromise<DescribeConfigsResponse> response;
+    err = co_await broker->DescribeConfigs(request, response);
     if (err != 0)
     {
         co_return err;
     }
 
     out.clear();
-    for (auto &resource : rsp.m_response->m_resources)
+    for (auto &resource : response.m_response->m_resources)
     {
-        if (resource.m_name == resource.m_name)
+        if (resource.m_name == cfg_resource.m_name)
         {
             if (resource.m_error_code != 0)
             {
@@ -615,27 +613,26 @@ coev::awaitable<int> ClusterAdmin::DescribeConfig(const ConfigResource &resource
     co_return 0;
 }
 
-coev::awaitable<int> ClusterAdmin::AlterConfig(ConfigResourceType resourceType, const std::string &name,
-                                               const std::map<std::string, std::string> &entries, bool validateOnly)
+coev::awaitable<int> ClusterAdmin::AlterConfig(ConfigResourceType resource_type, const std::string &name,
+                                               const std::map<std::string, std::string> &entries, bool validate_only)
 {
     std::vector<AlterConfigsResource> resources;
     AlterConfigsResource res;
-    res.m_type = resourceType;
+    res.m_type = resource_type;
     res.m_name = name;
     res.m_config_entries = entries;
     resources.push_back(res);
 
     auto request = std::make_shared<AlterConfigsRequest>();
     request->m_resources = resources;
-    request->m_validate_only = validateOnly;
+    request->m_validate_only = validate_only;
     if (m_conf->Version.IsAtLeast(V2_0_0_0))
     {
         request->m_version = 1;
     }
-
-    std::shared_ptr<Broker> broker;
     int err;
-    ConfigResource tmp(resourceType, name);
+    std::shared_ptr<Broker> broker;
+    ConfigResource tmp(resource_type, name);
     if (dependsOnSpecificNode(tmp))
     {
 
@@ -661,14 +658,14 @@ coev::awaitable<int> ClusterAdmin::AlterConfig(ConfigResourceType resourceType, 
         co_return err;
     }
 
-    ResponsePromise<AlterConfigsResponse> rsp;
-    err = co_await broker->AlterConfigs(request, rsp);
+    ResponsePromise<AlterConfigsResponse> response;
+    err = co_await broker->AlterConfigs(request, response);
     if (err != 0)
     {
         co_return err;
     }
 
-    for (auto &resource : rsp.m_response->m_resources)
+    for (auto &resource : response.m_response->m_resources)
     {
         if (resource.m_name == name)
         {
@@ -681,12 +678,12 @@ coev::awaitable<int> ClusterAdmin::AlterConfig(ConfigResourceType resourceType, 
     co_return 0;
 }
 
-coev::awaitable<int> ClusterAdmin::IncrementalAlterConfig(ConfigResourceType resourceType, const std::string &name, const std::map<std::string, IncrementalAlterConfigsEntry> &entries, bool validateOnly)
+coev::awaitable<int> ClusterAdmin::IncrementalAlterConfig(ConfigResourceType resource_type, const std::string &name, const std::map<std::string, IncrementalAlterConfigsEntry> &entries, bool validate_only)
 {
 
     auto request = std::make_shared<IncrementalAlterConfigsRequest>();
-    request->m_resources.emplace_back(resourceType, name, entries);
-    request->m_validate_only = validateOnly;
+    request->m_resources.emplace_back(resource_type, name, entries);
+    request->m_validate_only = validate_only;
     if (m_conf->Version.IsAtLeast(V2_4_0_0))
     {
         request->m_version = 1;
@@ -694,7 +691,7 @@ coev::awaitable<int> ClusterAdmin::IncrementalAlterConfig(ConfigResourceType res
 
     std::shared_ptr<Broker> broker;
     int err;
-    ConfigResource tmp(resourceType, name);
+    ConfigResource tmp(resource_type, name);
     if (dependsOnSpecificNode(tmp))
     {
         int32_t id = static_cast<int32_t>(std::stol(name));
@@ -1299,7 +1296,7 @@ coev::awaitable<int> ClusterAdmin::DescribeClientQuotas(const std::vector<QuotaF
     co_return 0;
 }
 
-coev::awaitable<int> ClusterAdmin::AlterClientQuotas(const std::vector<QuotaEntityComponent> &entity, const ClientQuotasOp &op, bool validateOnly)
+coev::awaitable<int> ClusterAdmin::AlterClientQuotas(const std::vector<QuotaEntityComponent> &entity, const ClientQuotasOp &op, bool validate_only)
 {
     AlterClientQuotasEntry entry;
     entry.m_entity = entity;
@@ -1307,7 +1304,7 @@ coev::awaitable<int> ClusterAdmin::AlterClientQuotas(const std::vector<QuotaEnti
 
     auto request = std::make_shared<AlterClientQuotasRequest>();
     request->m_entries = {entry};
-    request->m_validate_only = validateOnly;
+    request->m_validate_only = validate_only;
 
     std::shared_ptr<Broker> broker;
     int err = co_await GetController(broker);
