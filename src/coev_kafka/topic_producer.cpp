@@ -9,7 +9,7 @@ TopicProducer::TopicProducer(std::shared_ptr<AsyncProducer> parent, const std::s
 {
     assert(m_topic != "");
     m_partitioner = m_parent->m_conf->Producer.Partitioner(topic);
-    m_task << dispatch();
+    // m_task << dispatch();
 }
 TopicProducer::~TopicProducer()
 {

@@ -263,8 +263,8 @@ coev::awaitable<void> AsyncProducer::dispatcher()
         if (it == m_topic_producer.end())
         {
             LOG_CORE("dispatcher creating new TopicProducer for topic %s", msg->m_topic.c_str());
-            m_topic_producer[msg->m_topic] = std::make_shared<TopicProducer>(shared_from_this(), msg->m_topic);
-            it = m_topic_producer.find(msg->m_topic);
+            it = m_topic_producer.emplace(msg->m_topic, std::make_shared<TopicProducer>(shared_from_this(), msg->m_topic)).first;
+            it->second->m_task << it->second->dispatch();
         }
         it->second->m_input.set(msg);
     }

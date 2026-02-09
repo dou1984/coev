@@ -34,7 +34,8 @@ void AlterPartitionReassignmentsResponse::set_version(int16_t v)
 
 void AlterPartitionReassignmentsResponse::add_error(const std::string &topic, int32_t partition, KError kerror, std::string message)
 {
-    m_errors[topic][partition] = AlterPartitionReassignmentsErrorBlock(kerror, message);
+    topic_t key{topic, partition};
+    m_errors[key] = AlterPartitionReassignmentsErrorBlock(kerror, message);
 }
 
 int AlterPartitionReassignmentsResponse::encode(packet_encoder &pe) const
@@ -46,14 +47,20 @@ int AlterPartitionReassignmentsResponse::encode(packet_encoder &pe) const
         return ErrEncodeError;
     }
 
-    if (pe.putArrayLength(static_cast<int32_t>(m_errors.size())) != ErrNoError)
+    // 按 topic 分组
+    std::map<std::string, std::vector<std::pair<int32_t, const AlterPartitionReassignmentsErrorBlock*>>> topicMap;
+    for (const auto &[key, block] : m_errors)
+    {
+        topicMap[key.m_topic].emplace_back(key.m_partition, &block);
+    }
+
+    if (pe.putArrayLength(static_cast<int32_t>(topicMap.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (auto &[topic, partitions] : m_errors)
+    for (const auto &[topic, partitions] : topicMap)
     {
-
         if (pe.putString(topic) != ErrNoError)
         {
             return ErrEncodeError;
@@ -64,10 +71,10 @@ int AlterPartitionReassignmentsResponse::encode(packet_encoder &pe) const
             return ErrEncodeError;
         }
 
-        for (auto &[partition, block] : partitions)
+        for (const auto &[partition, block] : partitions)
         {
             pe.putInt32(partition);
-            if (block.encode(pe) != ErrNoError)
+            if (block->encode(pe) != ErrNoError)
             {
                 return ErrEncodeError;
             }
@@ -121,7 +128,6 @@ int AlterPartitionReassignmentsResponse::decode(packet_decoder &pd, int16_t vers
                 return ErrDecodeError;
             }
 
-            auto &partition_block = m_errors[topic];
             for (int32_t j = 0; j < ongoing_partition_reassignments; ++j)
             {
                 int32_t partition;
@@ -130,7 +136,8 @@ int AlterPartitionReassignmentsResponse::decode(packet_decoder &pd, int16_t vers
                     return ErrDecodeError;
                 }
 
-                if (partition_block[partition].decode(pd) != ErrNoError)
+                topic_t key{topic, partition};
+                if (m_errors[key].decode(pd) != ErrNoError)
                 {
                     return ErrDecodeError;
                 }

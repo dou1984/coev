@@ -1,4 +1,3 @@
-
 #include <random>
 #include <algorithm>
 #include <chrono>
@@ -195,11 +194,15 @@ int Client::Topics(std::vector<std::string> &topics)
     {
         return ErrClosedClient;
     }
-    topics.reserve(m_metadata.size());
-    for (auto &kv : m_metadata)
+    auto it = m_metadata.begin();
+    while (it != m_metadata.end())
     {
-        topics.push_back(kv.first);
+        auto &last_topic = it->first.m_topic;
+        topics.push_back(last_topic);
+
+        it = m_metadata.upper_bound(topic_t{last_topic, std::numeric_limits<int32_t>::max()});
     }
+
     return 0;
 }
 
@@ -704,14 +707,11 @@ coev::awaitable<int> Client::LeastLoadedBroker(std::shared_ptr<Broker> &least_lo
 std::shared_ptr<PartitionMetadata> Client::_CachedMetadata(const std::string &topic, int32_t partitionID)
 {
 
-    auto tit = m_metadata.find(topic);
-    if (tit != m_metadata.end())
+    topic_t key{topic, partitionID};
+    auto it = m_metadata.find(key);
+    if (it != m_metadata.end())
     {
-        auto pit = tit->second.find(partitionID);
-        if (pit != tit->second.end())
-        {
-            return std::make_shared<PartitionMetadata>(pit->second);
-        }
+        return std::make_shared<PartitionMetadata>(it->second);
     }
     return nullptr;
 }
@@ -728,19 +728,17 @@ std::vector<int32_t> Client::_CachedPartitions(const std::string &topic, int64_t
 
 std::vector<int32_t> Client::_SetPartitionCache(const std::string &topic, int64_t partition_id)
 {
-    auto it = m_metadata.find(topic);
-    if (it == m_metadata.end())
-    {
-        return {};
-    }
     std::vector<int32_t> ret;
-    for (auto &kv : it->second)
+    for (auto &[key, metadata] : m_metadata)
     {
-        if (partition_id == WritablePartitions_ && kv.second.m_err == ErrLeaderNotAvailable)
+        if (key.m_topic == topic)
         {
-            continue;
+            if (partition_id == WritablePartitions_ && metadata.m_err == ErrLeaderNotAvailable)
+            {
+                continue;
+            }
+            ret.push_back(key.m_partition);
         }
-        ret.push_back(kv.first);
     }
     sort(ret.begin(), ret.end());
     return ret;
@@ -749,31 +747,28 @@ std::vector<int32_t> Client::_SetPartitionCache(const std::string &topic, int64_
 coev::awaitable<int> Client::_CachedLeader(const std::string &topic, int32_t partitionID, std::shared_ptr<Broker> &broker_, int32_t &leaderEpoch)
 {
     leaderEpoch = -1;
-    auto tit = m_metadata.find(topic);
-    if (tit != m_metadata.end())
+    topic_t key{topic, partitionID};
+    auto it = m_metadata.find(key);
+    if (it != m_metadata.end())
     {
-        auto pit = tit->second.find(partitionID);
-        if (pit != tit->second.end())
+        auto &_metadata = it->second;
+        if (_metadata.m_err == ErrLeaderNotAvailable)
         {
-            auto &_metadata = pit->second;
-            if (_metadata.m_err == ErrLeaderNotAvailable)
-            {
-                co_return ErrLeaderNotAvailable;
-            }
-            auto bit = m_brokers.find(_metadata.m_leader);
-            if (bit == m_brokers.end())
-            {
-                co_return ErrLeaderNotAvailable;
-            }
-            auto err = co_await bit->second->Open(m_conf);
-            if (err != 0)
-            {
-                co_return ErrLeaderNotAvailable;
-            }
-            broker_ = bit->second;
-            leaderEpoch = _metadata.m_leader_epoch;
-            co_return err;
+            co_return ErrLeaderNotAvailable;
         }
+        auto bit = m_brokers.find(_metadata.m_leader);
+        if (bit == m_brokers.end())
+        {
+            co_return ErrLeaderNotAvailable;
+        }
+        auto err = co_await bit->second->Open(m_conf);
+        if (err != 0)
+        {
+            co_return ErrLeaderNotAvailable;
+        }
+        broker_ = bit->second;
+        leaderEpoch = _metadata.m_leader_epoch;
+        co_return err;
     }
     co_return ErrUnknownTopicOrPartition;
 }
@@ -976,7 +971,18 @@ bool Client::UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnow
         {
             m_metadata_topics[topic.m_name] = true;
         }
-        m_metadata.erase(topic.m_name);
+        // 删除该 topic 的所有 partition
+        for (auto it = m_metadata.begin(); it != m_metadata.end();)
+        {
+            if (it->first.m_topic == topic.m_name)
+            {
+                it = m_metadata.erase(it);
+            }
+            else
+            {
+                ++it;
+            }
+        }
         m_cached_partitions_results.erase(topic.m_name);
         switch (topic.m_err)
         {
@@ -999,10 +1005,10 @@ bool Client::UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnow
             err = topic.m_err;
             continue;
         }
-        auto &partitions = m_metadata[topic.m_name];
         for (auto &partition : topic.m_partitions)
         {
-            partitions[partition.m_id] = partition;
+            topic_t key{topic.m_name, partition.m_id};
+            m_metadata[key] = partition;
             if (partition.m_err == ErrLeaderNotAvailable)
             {
                 retry = true;
@@ -1196,17 +1202,13 @@ coev::awaitable<int> Client::ResolveCanonicalNames(const std::vector<std::string
 bool Client::PartitionNotReadable(const std::string &topic, int32_t partition)
 {
 
-    auto topicIt = m_metadata.find(topic);
-    if (topicIt == m_metadata.end())
+    topic_t key{topic, partition};
+    auto it = m_metadata.find(key);
+    if (it == m_metadata.end())
     {
         return true;
     }
-    auto partIt = topicIt->second.find(partition);
-    if (partIt == topicIt->second.end())
-    {
-        return true;
-    }
-    return partIt->second.m_leader == -1;
+    return it->second.m_leader == -1;
 }
 
 coev::awaitable<int> Client::MetadataRefresh(const std::vector<std::string> &topics)

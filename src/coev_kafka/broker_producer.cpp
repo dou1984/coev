@@ -23,7 +23,8 @@ coev::awaitable<void> BrokerProducer::run()
 
         if (msg->m_flags & FlagSet::Syn)
         {
-            m_current_retries[msg->m_topic][msg->m_partition] = ErrNoError;
+            topic_t key{msg->m_topic, msg->m_partition};
+            m_current_retries[key] = ErrNoError;
             m_parent->m_in_flight.done();
             continue;
         }
@@ -35,7 +36,8 @@ coev::awaitable<void> BrokerProducer::run()
 
             if (!m_closing && (msg->m_flags & FlagSet::Fin))
             {
-                m_current_retries[msg->m_topic].erase(msg->m_partition);
+                topic_t key{msg->m_topic, msg->m_partition};
+                m_current_retries.erase(key);
             }
             continue;
         }
@@ -147,14 +149,11 @@ KError BrokerProducer::needs_retry(std::shared_ptr<ProducerMessage> msg)
         return m_closing;
     }
 
-    auto it = m_current_retries.find(msg->m_topic);
+    topic_t key{msg->m_topic, msg->m_partition};
+    auto it = m_current_retries.find(key);
     if (it != m_current_retries.end())
     {
-        auto pit = it->second.find(msg->m_partition);
-        if (pit != it->second.end())
-        {
-            return pit->second;
-        }
+        return it->second;
     }
     return ErrNoError;
 }
@@ -281,7 +280,8 @@ coev::awaitable<void> BrokerProducer::handle_success(std::shared_ptr<ProduceSet>
                 case ErrNotEnoughReplicasAfterAppend:
                 case ErrKafkaStorageError:
                 {
-                    m_current_retries[topic][partition] = block.m_err;
+                    topic_t key{topic, partition};
+                    m_current_retries[key] = block.m_err;
                     if (m_parent->m_conf->Producer.Idempotent)
                     {
                         m_task << m_parent->retry_batch(topic, partition, pset, block.m_err);

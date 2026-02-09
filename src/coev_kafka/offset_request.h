@@ -34,8 +34,8 @@ struct OffsetRequest : protocol_body
     bool m_is_replica_id_set;
     std::unordered_map<std::string, std::map<int32_t, OffsetRequestBlock>> m_blocks;
 
-    OffsetRequest() = default;
-    OffsetRequest(int16_t v) : m_version(v)
+    OffsetRequest();
+    OffsetRequest(int16_t v) : m_version(v), m_level(ReadUncommitted), m_replica_id(-1), m_is_replica_id_set(false)
     {
     }
     OffsetRequest(const KafkaVersion &version);

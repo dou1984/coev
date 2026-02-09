@@ -31,7 +31,6 @@ struct Acl : VDecoder, IEncoder
 
 struct ResourceAcls : VDecoder, VEncoder
 {
-
     Resource m_resource;
     std::vector<Acl> m_acls;
 

@@ -51,6 +51,11 @@ int OffsetRequestBlock::decode(packet_decoder &pd, int16_t version)
     return 0;
 }
 
+OffsetRequest::OffsetRequest()
+    : m_version(0), m_level(ReadUncommitted), m_replica_id(-1), m_is_replica_id_set(false)
+{
+}
+
 void OffsetRequest::set_version(int16_t v)
 {
     m_version = v;
@@ -243,6 +248,7 @@ void OffsetRequest::add_block(const std::string &topic, int32_t partition_id, in
 }
 
 OffsetRequest::OffsetRequest(const KafkaVersion &version)
+    : m_level(ReadUncommitted), m_replica_id(-1), m_is_replica_id_set(false)
 {
     if (version.IsAtLeast(V2_2_0_0))
     {

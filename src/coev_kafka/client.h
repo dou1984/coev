@@ -16,6 +16,7 @@
 #include "offset_request.h"
 #include "coordinator_type.h"
 #include "metadata_refresher.h"
+#include "topic_type.h"
 
 struct Broker;
 struct PartitionMetadata;
@@ -86,7 +87,7 @@ struct Client
     std::deque<std::shared_ptr<Broker>> m_seed_brokers;
     std::deque<std::shared_ptr<Broker>> m_dead_seeds;
     std::map<int32_t, std::shared_ptr<Broker>> m_brokers;
-    std::map<std::string, std::map<int32_t, PartitionMetadata>> m_metadata;
+    std::map<topic_t, PartitionMetadata> m_metadata;
     std::map<std::string, bool> m_metadata_topics;
     std::map<std::string, int32_t> m_coordinators;
     std::map<std::string, int32_t> m_transaction_coordinators;
