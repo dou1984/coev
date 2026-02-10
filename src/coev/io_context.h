@@ -12,7 +12,7 @@
 
 namespace coev
 {
-#define IO_CLIENT (0x1 << 0)
+#define IO_CLI (0x1 << 0)
 #define IO_SSL (0x1 << 1)
 #define IO_TCP (0x1 << 2)
 #define IO_UDP (0x1 << 3)
@@ -50,15 +50,15 @@ namespace coev
 		ev_io m_read;
 		ev_io m_write;
 
-		async m_read_waiter;
-		async m_write_waiter;
+		async m_r_waiter;
+		async m_w_waiter;
 		int __finally();
 		int __initial();
 		int __close();
 		bool __valid() const;
 		bool __invalid() const;
 		int __del_write();
-		bool __is_client() const { return m_type & IO_CLIENT; }
+		bool __is_client() const { return m_type & IO_CLI; }
 		bool __is_ssl() const { return m_type & IO_SSL; }
 		static void cb_write(struct ev_loop *loop, struct ev_io *w, int revents);
 		static void cb_read(struct ev_loop *loop, struct ev_io *w, int revents);

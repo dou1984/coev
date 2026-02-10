@@ -19,13 +19,14 @@ namespace coev
 	{
 		return m_reserved;
 	}
-	co_event::co_event(queue *_ev_queue) : m_tid(gtid())
+	co_event::co_event(queue *__ev, bool __seq) : m_tid(gtid())
 	{
-		if (_ev_queue != nullptr)
+		if (__ev != nullptr)
 		{
-			_ev_queue->push_back(this);
+			__seq ? __ev->push_back(this) : __ev->push_front(this);
 		}
 	}
+
 	co_event::~co_event()
 	{
 		if (!queue::empty())

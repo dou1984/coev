@@ -40,7 +40,7 @@ struct OwnedPartition : IEncoder, IDecoder
 struct ConsumerGroupMemberAssignment : IEncoder, IDecoder
 {
     int16_t m_version = 0;
-    std::map<std::string, std::vector<int32_t>> Topics;
+    std::map<std::string, std::vector<int32_t>> m_topics;
     std::string UserData;
 
     ConsumerGroupMemberAssignment() = default;

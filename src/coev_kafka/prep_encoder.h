@@ -24,11 +24,11 @@ struct prep_encoder : packet_encoder
     void putKError(KError in);
     void putDurationMs(std::chrono::milliseconds in);
 
-    int putBytes(const std::string &in);
-    int putVariantBytes(const std::string &in);
-    int putRawBytes(const std::string &in);
-    int putString(const std::string &in);
-    int putNullableString(const std::string &in);
+    int putBytes(const std::string_view &in);
+    int putVariantBytes(const std::string_view &in);
+    int putRawBytes(const std::string_view &in);
+    int putString(const std::string_view &in);
+    int putNullableString(const std::string_view &in);
     int putStringArray(const std::vector<std::string> &in);
     int putInt32Array(const std::vector<int32_t> &in);
     int putInt64Array(const std::vector<int64_t> &in);

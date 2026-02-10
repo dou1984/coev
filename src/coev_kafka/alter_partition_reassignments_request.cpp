@@ -30,19 +30,12 @@ int AlterPartitionReassignmentsRequest::encode(packet_encoder &pe) const
 {
     pe.putInt32(m_timeout.count());
 
-    // 按 topic 分组
-    std::map<std::string, std::vector<std::pair<int32_t, const AlterPartitionReassignmentsBlock*>>> topicMap;
-    for (const auto &[key, block] : m_blocks)
-    {
-        topicMap[key.m_topic].emplace_back(key.m_partition, &block);
-    }
-
-    if (pe.putArrayLength(static_cast<int32_t>(topicMap.size())) != ErrNoError)
+    if (pe.putArrayLength(static_cast<int32_t>(m_blocks.size())) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    for (const auto &[topic, partitions] : topicMap)
+    for (const auto &[topic, partitions] : m_blocks)
     {
         if (pe.putString(topic) != ErrNoError)
         {
@@ -57,7 +50,7 @@ int AlterPartitionReassignmentsRequest::encode(packet_encoder &pe) const
         for (const auto &[partition, block] : partitions)
         {
             pe.putInt32(partition);
-            if (block->encode(pe) != ErrNoError)
+            if (block.encode(pe) != ErrNoError)
             {
                 return ErrEncodeError;
             }
@@ -102,6 +95,7 @@ int AlterPartitionReassignmentsRequest::decode(packet_decoder &pd, int16_t versi
                 return ErrDecodeError;
             }
 
+            auto &partition_map = m_blocks[topic];
             for (int32_t j = 0; j < partition_count; ++j)
             {
                 int32_t partition;
@@ -110,8 +104,7 @@ int AlterPartitionReassignmentsRequest::decode(packet_decoder &pd, int16_t versi
                     return ErrDecodeError;
                 }
 
-                topic_t key{topic, partition};
-                if (m_blocks[key].decode(pd) != ErrNoError)
+                if (partition_map[partition].decode(pd) != ErrNoError)
                 {
                     return ErrDecodeError;
                 }
@@ -168,6 +161,5 @@ std::chrono::milliseconds AlterPartitionReassignmentsRequest::throttle_time() co
 
 void AlterPartitionReassignmentsRequest::add_block(const std::string &topic, int32_t partitionID, const std::vector<int32_t> &replicas)
 {
-    topic_t key{topic, partitionID};
-    m_blocks[key] = replicas;
+    m_blocks[topic][partitionID] = replicas;
 }

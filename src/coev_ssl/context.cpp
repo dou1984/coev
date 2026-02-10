@@ -63,7 +63,7 @@ namespace coev::ssl
                         co_return INVALID;
                     }
                     ev_io_start(m_loop, &m_write);
-                    co_await m_write_waiter.suspend();
+                    co_await m_w_waiter.suspend();
                 }
                 else if (r == 0)
                 {
@@ -87,7 +87,7 @@ namespace coev::ssl
         {
             while (__valid())
             {
-                co_await m_read_waiter.suspend();
+                co_await m_r_waiter.suspend();
                 if (__invalid())
                 {
                     co_return INVALID;
@@ -128,11 +128,11 @@ namespace coev::ssl
                 err = SSL_get_error(m_ssl, err);
                 if (err == SSL_ERROR_WANT_READ)
                 {
-                    co_await m_read_waiter.suspend();
+                    co_await m_r_waiter.suspend();
                 }
                 else if (err == SSL_ERROR_WANT_WRITE)
                 {
-                    co_await m_write_waiter.suspend();
+                    co_await m_w_waiter.suspend();
                 }
                 else if (err == SSL_ERROR_NONE)
                 {
@@ -142,9 +142,9 @@ namespace coev::ssl
                     }
                     co_await wait_for_any(
                         [this]() -> awaitable<void>
-                        { co_await m_read_waiter.suspend(); }(),
+                        { co_await m_r_waiter.suspend(); }(),
                         [this]() -> awaitable<void>
-                        { co_await m_write_waiter.suspend(); }());
+                        { co_await m_w_waiter.suspend(); }());
                 }
                 else
                 {

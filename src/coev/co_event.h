@@ -31,7 +31,7 @@ namespace coev
 		friend class coev::guard::async;
 
 	public:
-		co_event(queue *_eventchain);
+		co_event(queue *__ev, bool __seq);
 		virtual ~co_event();
 		co_event(co_event &&) = delete;
 		co_event(const co_event &) = delete;

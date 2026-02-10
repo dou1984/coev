@@ -14,7 +14,7 @@ struct DeleteOffsetsResponse : protocol_body
     int16_t m_version;
     KError m_error_code;
     std::chrono::milliseconds m_throttle_time;
-    std::unordered_map<std::string, std::map<int32_t, KError>> m_errors;
+    std::map<std::string, std::map<int32_t, KError>> m_errors;
     DeleteOffsetsResponse() = default;
     DeleteOffsetsResponse(int16_t v) : m_version(v)
     {

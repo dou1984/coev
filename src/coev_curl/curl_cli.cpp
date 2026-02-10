@@ -20,8 +20,8 @@ namespace coev
     {
 
         using io_context::io_context;
-        auto read_waiter() { return m_read_waiter.suspend(); }
-        auto write_waiter() { return m_write_waiter.suspend(); }
+        auto read_waiter() { return m_r_waiter.suspend(); }
+        auto write_waiter() { return m_w_waiter.suspend(); }
         auto id() { return m_fd; }
     };
 

@@ -118,16 +118,16 @@ int Records::num_records(int &_num_records) const
         if (std::holds_alternative<MessageSet>(m_records))
         {
             _num_records = static_cast<int>(std::get<MessageSet>(m_records).m_messages.size());
+            return 0;
         }
-        return 0;
     }
-    if (m_records_type == DefaultRecords)
+    else if (m_records_type == DefaultRecords)
     {
         if (std::holds_alternative<RecordBatch>(m_records))
         {
             _num_records = std::get<RecordBatch>(m_records).m_records.size();
+            return 0;
         }
-        return 0;
     }
     return -1;
 }

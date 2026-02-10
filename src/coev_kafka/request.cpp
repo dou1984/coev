@@ -208,13 +208,14 @@ bool Request::is_flexible() const
 }
 coev::awaitable<int> decode_request(std::shared_ptr<Broker> &broker, Request &req, int &size)
 {
+    co_await broker->m_sequence.lock();
+    defer(broker->m_sequence.unlock());
     std::string header_bytes;
     auto read_bytes = 4;
     int err = co_await broker->ReadFull(header_bytes, read_bytes);
     if (err != 0)
     {
         size = read_bytes;
-        LOG_CORE("decode_request read failed %d length %d", err, read_bytes);
         co_return err;
     }
     size_t length = (static_cast<uint32_t>(header_bytes[0]) << 24) | (static_cast<uint32_t>(header_bytes[1]) << 16) |
@@ -222,7 +223,6 @@ coev::awaitable<int> decode_request(std::shared_ptr<Broker> &broker, Request &re
     if (length <= 4 || length > MaxRequestSize)
     {
         size = read_bytes;
-        LOG_CORE("decode_request length %ld is invalid", length);
         co_return -1;
     }
 
@@ -231,7 +231,6 @@ coev::awaitable<int> decode_request(std::shared_ptr<Broker> &broker, Request &re
     if (err != 0)
     {
         size = read_bytes + length;
-        LOG_CORE("decode_request read %ld bytes failed, err: %d", length, err);
         co_return -1;
     }
     read_bytes += length;
@@ -240,7 +239,6 @@ coev::awaitable<int> decode_request(std::shared_ptr<Broker> &broker, Request &re
     if (err != 0)
     {
         size = read_bytes;
-        LOG_CORE("decode_request failed, err: %d", err);
         co_return err;
     }
     size = read_bytes;

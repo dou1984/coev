@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <memory>
 #include <chrono>
@@ -25,11 +26,11 @@ struct packet_encoder : packet_type
     virtual void putDurationMs(std::chrono::milliseconds in) = 0;
 
     virtual int putArrayLength(int32_t in) = 0;
-    virtual int putBytes(const std::string &in) = 0;
-    virtual int putVariantBytes(const std::string &in) = 0;
-    virtual int putRawBytes(const std::string &in) = 0;
-    virtual int putString(const std::string &in) = 0;
-    virtual int putNullableString(const std::string &in) = 0;
+    virtual int putBytes(const std::string_view &in) = 0;
+    virtual int putVariantBytes(const std::string_view &in) = 0;
+    virtual int putRawBytes(const std::string_view &in) = 0;
+    virtual int putString(const std::string_view &in) = 0;
+    virtual int putNullableString(const std::string_view &in) = 0;
     virtual int putStringArray(const std::vector<std::string> &in) = 0;
     virtual int putInt32Array(const std::vector<int32_t> &in) = 0;
     virtual int putInt64Array(const std::vector<int64_t> &in) = 0;

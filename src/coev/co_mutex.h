@@ -10,7 +10,7 @@
 #include "awaitable.h"
 #include "async.h"
 
-namespace coev::guard
+namespace coev
 {
 	class co_mutex final
 	{
@@ -22,5 +22,18 @@ namespace coev::guard
 		bool unlock();
 		bool try_lock();
 	};
+	namespace guard
+	{
+		class co_mutex final
+		{
+			async m_waiter;
+			int m_flag;
+
+		public:
+			awaitable<void> lock();
+			bool unlock();
+			bool try_lock();
+		};
+	}
 
 }

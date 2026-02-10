@@ -17,7 +17,7 @@ Connect::Connect() : m_state(CLOSED)
 }
 
 Connect::~Connect()
-{    
+{
 }
 awaitable<int> Connect::ReadFull(std::string &buf, size_t n)
 {
@@ -25,21 +25,20 @@ awaitable<int> Connect::ReadFull(std::string &buf, size_t n)
     auto res = n;
     while (__valid() && res > 0)
     {
+
         auto r = co_await recv(buf.data() + (n - res), res);
         if (r == INVALID)
         {
-            LOG_ERR("ReadFull failed %d %s", errno, strerror(errno));
             co_return ErrIOEOF;
         }
         else if (r == 0)
         {
-            LOG_ERR("ReadFull connection closed");
             co_return ErrIOEOF;
         }
         res -= r;
     }
     auto hex = to_hex(buf);
-    LOG_CORE("ReadFull received: %.*s", (int)hex.size(), hex.data());
+    LOG_CORE("fd: %d buf_size:%ld ReadFull received: %.*s", m_fd, buf.size(), (int)hex.size(), hex.data());
     co_return ErrNoError;
 }
 

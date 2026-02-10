@@ -4,14 +4,15 @@
 #include <cstring>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <functional>
 #include <unordered_map>
 #include <string_view>
 #include <coev/coev.h>
 #include "packet_decoder.h"
-#include "errors.h"
 #include "encoder_decoder.h"
+#include "errors.h"
 
 struct real_decoder : packet_decoder
 {
@@ -45,6 +46,6 @@ struct real_decoder : packet_decoder
     int pop();
 
     int m_offset = 0;
-    std::string m_raw;
+    std::string_view m_raw;
     std::vector<push_decoder *> m_stack;
 };

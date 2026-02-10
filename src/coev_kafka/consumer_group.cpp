@@ -273,7 +273,7 @@ coev::awaitable<int> ConsumerGroup::NewSession(std::shared_ptr<Context> &context
         {
             co_return err;
         }
-        claims = assignment->Topics;
+        claims = assignment->m_topics;
 
         if (assignment->UserData.size() > 0)
         {
@@ -423,7 +423,7 @@ coev::awaitable<int> ConsumerGroup::SyncGroup(std::shared_ptr<Broker> coordinato
         const auto &topics = kv.second;
 
         auto assignment = std::make_shared<ConsumerGroupMemberAssignment>();
-        assignment->Topics = topics;
+        assignment->m_topics = topics;
 
         std::string userDataBytes;
         err = strategy->AssignmentData(memberID, topics, generationID, userDataBytes);

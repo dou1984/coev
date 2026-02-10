@@ -109,7 +109,7 @@ void real_encoder::putDurationMs(std::chrono::milliseconds ms)
     putInt32(static_cast<int32_t>(ms.count()));
 }
 
-int real_encoder::putRawBytes(const std::string &in)
+int real_encoder::putRawBytes(const std::string_view &in)
 {
     assert(m_offset + in.size() <= m_raw.size());
     std::memcpy(&m_raw[m_offset], in.data(), in.size());
@@ -117,7 +117,7 @@ int real_encoder::putRawBytes(const std::string &in)
     return 0;
 }
 
-int real_encoder::putBytes(const std::string &in)
+int real_encoder::putBytes(const std::string_view &in)
 {
     if (isFixed())
     {
@@ -138,7 +138,7 @@ int real_encoder::putBytes(const std::string &in)
     return 0;
 }
 
-int real_encoder::putVariantBytes(const std::string &in)
+int real_encoder::putVariantBytes(const std::string_view &in)
 {
     if (in.empty())
     {
@@ -150,7 +150,7 @@ int real_encoder::putVariantBytes(const std::string &in)
     return 0;
 }
 
-int real_encoder::putString(const std::string &in)
+int real_encoder::putString(const std::string_view &in)
 {
     if (isFixed())
     {
@@ -169,7 +169,7 @@ int real_encoder::putString(const std::string &in)
     return 0;
 }
 
-int real_encoder::putNullableString(const std::string &in)
+int real_encoder::putNullableString(const std::string_view &in)
 {
     if (isFixed())
     {

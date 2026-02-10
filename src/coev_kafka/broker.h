@@ -186,7 +186,9 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
     coev::async m_opened;
     coev::co_task m_task;
     coev::co_channel<bool> m_done;
+    coev::co_mutex m_sequence;
 
+    coev::awaitable<int> Ready();
     coev::awaitable<int> ReadFull(std::string &buf, size_t n);
     coev::awaitable<int> Write(const std::string &buf);
 
@@ -237,9 +239,10 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
     template <class Req, class Res>
     coev::awaitable<int> SendInternal(std::shared_ptr<Req> request, ResponsePromise<Res> &promise)
     {
-        if (!m_conn || !m_conn->IsOpened())
+        auto err = co_await Ready();
+        if (err)
         {
-            co_return ErrNotConnected;
+            co_return err;
         }
         RestrictApiVersion(request, m_broker_api_versions);
         Request _request;
@@ -250,7 +253,7 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
         ::encode(_request, buf);
 
         auto request_time = std::chrono::system_clock::now();
-        auto err = co_await Write(buf);
+        err = co_await Write(buf);
         if (err)
         {
             LOG_CORE("Write %d %s", errno, strerror(errno));
@@ -266,14 +269,16 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
     template <class Req, class Res>
     coev::awaitable<int> ResponseReceiver(std::shared_ptr<Req> request, ResponsePromise<Res> &promise)
     {
-        if (!m_conn || !m_conn->IsOpened())
+        co_await m_sequence.lock();
+        defer(m_sequence.unlock());
+        auto err = co_await Ready();
+        if (err)
         {
-            co_return ErrNotConnected;
+            co_return err;
         }
         std::string header;
         auto header_bytes = GetHeaderLength(promise.m_response->header_version());
-        auto err = co_await ReadFull(header, header_bytes);
-        auto m_request_latency = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - promise.m_request_time);
+        err = co_await ReadFull(header, header_bytes);
         if (err)
         {
             LOG_CORE("Failed to read header %d", err);
@@ -283,37 +288,26 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
         err = versioned_decode(header, decoded_header, promise.m_response->header_version());
         if (err)
         {
-            LOG_CORE("Failed to decode header %d", err);
             co_return err;
         }
         if (decoded_header.m_correlation_id != promise.m_correlation_id)
         {
-            LOG_CORE("Correlation ID mismatch %d != %d", decoded_header.m_correlation_id, promise.m_correlation_id);
             co_return ErrCorrelationID;
         }
 
-        if (!m_conn || !m_conn->IsOpened())
-        {
-            LOG_CORE("Connection closed before reading body");
-            co_return ErrNotConnected;
-        }
-
-        size_t read_bytes = decoded_header.m_length - header_bytes + 4;
+        auto read_bytes = decoded_header.m_length - header_bytes + 4;
         err = co_await ReadFull(promise.m_packets, read_bytes);
         if (err)
         {
-            LOG_CORE("Failed to read body %d", err);
             co_return err;
         }
         if (promise.m_packets.size() != read_bytes)
         {
-            LOG_CORE("Failed to read body %d", err);
             co_return err;
         }
         err = promise.decode(request->version());
         if (err)
         {
-            LOG_CORE("Failed to decode body %d", err);
             co_return err;
         }
         co_return ErrNoError;
@@ -322,18 +316,18 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
     template <class Res>
     coev::awaitable<int> DefaultAuthSendReceiver(const std::string &authBytes, ResponsePromise<Res> &promise)
     {
-        SaslAuthenticateRequest authenticate_request;
-        auto err = CreateSaslAuthenticateRequest(authBytes, authenticate_request);
+        SaslAuthenticateRequest request;
+        auto err = CreateSaslAuthenticateRequest(authBytes, request);
         if (err)
         {
             co_return err;
         }
-        err = co_await SendAndReceive(std::make_shared<SaslAuthenticateRequest>(authenticate_request), promise);
+        err = co_await SendAndReceive(std::make_shared<SaslAuthenticateRequest>(request), promise);
         if (err)
         {
             co_return err;
         }
-        err = promise.decode(authenticate_request.version());
+        err = promise.decode(request.version());
         if (err)
         {
             co_return err;

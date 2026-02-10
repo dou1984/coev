@@ -17,7 +17,7 @@ namespace coev
         io_connect *_this = (io_connect *)(w->data);
         assert(_this != nullptr);
         _this->__del_connect();
-        _this->m_read_waiter.resume();
+        _this->m_r_waiter.resume();
         local_resume();
     }
     void io_connect::__init_connect()
@@ -37,7 +37,7 @@ namespace coev
     io_connect::io_connect()
     {
         __init_connect();
-        m_type |= IO_CLIENT | IO_TCP;
+        m_type |= IO_CLI | IO_TCP;
     }
     int io_connect::__add_connect()
     {
@@ -79,7 +79,7 @@ namespace coev
         {
             co_return m_fd;
         }
-        co_await m_read_waiter.suspend();
+        co_await m_r_waiter.suspend();
         auto err = getSocketError(m_fd);
         if (err != 0)
         {

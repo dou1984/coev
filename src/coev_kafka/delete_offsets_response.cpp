@@ -22,11 +22,8 @@ int DeleteOffsetsResponse::encode(packet_encoder &pe) const
         return ErrEncodeError;
     }
 
-    for (auto &topicEntry : m_errors)
+    for (auto &[topic, partitions] : m_errors)
     {
-        const std::string &topic = topicEntry.first;
-        auto &partitions = topicEntry.second;
-
         if (pe.putString(topic) != ErrNoError)
         {
             return ErrEncodeError;
@@ -36,11 +33,8 @@ int DeleteOffsetsResponse::encode(packet_encoder &pe) const
             return ErrEncodeError;
         }
 
-        for (auto &partEntry : partitions)
+        for (auto &[partition, err] : partitions)
         {
-            int32_t partition = partEntry.first;
-            KError err = partEntry.second;
-
             pe.putInt32(partition);
             pe.putInt16(static_cast<int16_t>(err));
         }
@@ -78,7 +72,6 @@ int DeleteOffsetsResponse::decode(packet_decoder &pd, int16_t version)
     }
 
     m_errors.clear();
-    m_errors.reserve(numTopics);
 
     for (int32_t i = 0; i < numTopics; ++i)
     {

@@ -118,17 +118,17 @@ int DescribeClientQuotasEntry::encode(packet_encoder &pe) const
 
 int DescribeClientQuotasEntry::decode(packet_decoder &pd, int16_t version)
 {
-    int32_t componentCount;
-    if (pd.getArrayLength(componentCount) != ErrNoError)
+    int32_t component_count;
+    if (pd.getArrayLength(component_count) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     m_entity.clear();
-    if (componentCount > 0)
+    if (component_count > 0)
     {
-        m_entity.resize(componentCount);
-        for (int32_t i = 0; i < componentCount; ++i)
+        m_entity.resize(component_count);
+        for (int32_t i = 0; i < component_count; ++i)
         {
             if (!m_entity[i].decode(pd, version))
             {
@@ -137,16 +137,16 @@ int DescribeClientQuotasEntry::decode(packet_decoder &pd, int16_t version)
         }
     }
 
-    int32_t valueCount;
-    if (pd.getArrayLength(valueCount) != ErrNoError)
+    int32_t value_count;
+    if (pd.getArrayLength(value_count) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
     m_values.clear();
-    if (valueCount > 0)
+    if (value_count > 0)
     {
-        for (int32_t i = 0; i < valueCount; ++i)
+        for (int32_t i = 0; i < value_count; ++i)
         {
             std::string key;
             if (pd.getString(key) != ErrNoError)
@@ -183,7 +183,7 @@ int QuotaEntityComponent::encode(packet_encoder &pe) const
 
     if (m_match_type == QuotaMatchType::QuotaMatchDefault)
     {
-        if (pe.putNullableString(nullptr) != ErrNoError)
+        if (pe.putNullableString("") != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -202,12 +202,12 @@ int QuotaEntityComponent::encode(packet_encoder &pe) const
 
 int QuotaEntityComponent::decode(packet_decoder &pd, int16_t /*version*/)
 {
-    std::string entityType;
-    if (pd.getString(entityType) != ErrNoError)
+    std::string entity_type;
+    if (pd.getString(entity_type) != ErrNoError)
     {
         return ErrDecodeError;
     }
-    m_entity_type = entityType;
+    m_entity_type = entity_type;
 
     if (pd.getNullableString(m_name) != ErrNoError)
     {

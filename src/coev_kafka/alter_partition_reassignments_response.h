@@ -9,7 +9,6 @@
 #include "packet_decoder.h"
 #include "errors.h"
 #include "protocol_body.h"
-#include "topic_type.h"
 
 struct AlterPartitionReassignmentsErrorBlock : IEncoder, IDecoder
 {
@@ -30,7 +29,7 @@ struct AlterPartitionReassignmentsResponse : protocol_body, flexible_version
     std::chrono::milliseconds m_throttle_time;
     KError m_error_code = ErrNoError;
     std::string m_error_message;
-    std::map<topic_t, AlterPartitionReassignmentsErrorBlock> m_errors;
+    std::map<std::string, std::map<int32_t, AlterPartitionReassignmentsErrorBlock>> m_errors;
 
     AlterPartitionReassignmentsResponse() = default;
     AlterPartitionReassignmentsResponse(int16_t v) : m_version(v)

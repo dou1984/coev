@@ -397,11 +397,14 @@ coev::awaitable<int> ClusterAdmin::_AlterPartitionReassignments(std::shared_ptr<
         {
             errs.push_back(response.m_response->m_error_code);
         }
-        for (auto &[key, error_block] : response.m_response->m_errors)
+        for (auto &[topic, partitions] : response.m_response->m_errors)
         {
-            if (error_block.m_error_code != ErrNoError)
+            for (auto &[partition, error_block] : partitions)
             {
-                errs.push_back(error_block.m_error_code);
+                if (error_block.m_error_code != ErrNoError)
+                {
+                    errs.push_back(error_block.m_error_code);
+                }
             }
         }
     }

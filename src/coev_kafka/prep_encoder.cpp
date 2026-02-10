@@ -89,7 +89,7 @@ void prep_encoder::putDurationMs(std::chrono::milliseconds /*in*/)
     m_length += 4;
 }
 
-int prep_encoder::putBytes(const std::string &in)
+int prep_encoder::putBytes(const std::string_view &in)
 {
     if (isFixed())
     {
@@ -110,7 +110,7 @@ int prep_encoder::putBytes(const std::string &in)
     return 0;
 }
 
-int prep_encoder::putVariantBytes(const std::string &in)
+int prep_encoder::putVariantBytes(const std::string_view &in)
 {
     if (in.empty())
     {
@@ -121,7 +121,7 @@ int prep_encoder::putVariantBytes(const std::string &in)
     return putRawBytes(in);
 }
 
-int prep_encoder::putRawBytes(const std::string &in)
+int prep_encoder::putRawBytes(const std::string_view &in)
 {
     if (in.size() > static_cast<size_t>(std::numeric_limits<int32_t>::max()))
     {
@@ -131,7 +131,7 @@ int prep_encoder::putRawBytes(const std::string &in)
     return 0;
 }
 
-int prep_encoder::putString(const std::string &in)
+int prep_encoder::putString(const std::string_view &in)
 {
     if (isFixed())
     {
@@ -153,7 +153,7 @@ int prep_encoder::putString(const std::string &in)
     return 0;
 }
 
-int prep_encoder::putNullableString(const std::string &in)
+int prep_encoder::putNullableString(const std::string_view &in)
 {
     if (isFixed())
     {

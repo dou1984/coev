@@ -181,10 +181,6 @@ KafkaVersion ProduceRequest::required_version() const
     }
 }
 
-void ProduceRequest::ensure_records(const std::string &topic, int32_t partition)
-{
-}
-
 void ProduceRequest::add_message(const std::string &topic, int32_t partition, std::shared_ptr<Message> msg)
 {
     auto &record = m_records[topic][partition];
@@ -199,7 +195,6 @@ void ProduceRequest::add_message(const std::string &topic, int32_t partition, st
 
 void ProduceRequest::add_set(const std::string &topic, int32_t partition, MessageSet &set)
 {
-    ensure_records(topic, partition);
     auto &record = m_records[topic][partition];
     record.m_records_type = LegacyRecords;
     record.m_records = set;
@@ -207,7 +202,6 @@ void ProduceRequest::add_set(const std::string &topic, int32_t partition, Messag
 
 void ProduceRequest::add_batch(const std::string &topic, int32_t partition, RecordBatch &batch)
 {
-    ensure_records(topic, partition);
     auto &record = m_records[topic][partition];
     record.m_records_type = DefaultRecords;
     record.m_records = batch;

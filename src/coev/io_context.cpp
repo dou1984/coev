@@ -19,14 +19,14 @@ namespace coev
 	{
 		auto _this = (io_context *)w->data;
 		assert(_this != NULL);
-		_this->m_read_waiter.resume();
+		_this->m_r_waiter.resume();
 		local_resume();
 	}
 	void io_context::cb_write(struct ev_loop *loop, struct ev_io *w, int revents)
 	{
 		auto _this = (io_context *)w->data;
 		assert(_this != NULL);
-		_this->m_write_waiter.resume();
+		_this->m_w_waiter.resume();
 		local_resume();
 		_this->__del_write();
 	}
@@ -38,10 +38,10 @@ namespace coev
 			auto _fd = m_fd;
 			m_fd = INVALID;
 			::close(_fd);
-			while (m_read_waiter.resume())
+			while (m_r_waiter.resume())
 			{
 			}
-			while (m_write_waiter.resume())
+			while (m_w_waiter.resume())
 			{
 			}
 		}
@@ -104,7 +104,7 @@ namespace coev
 	}
 	int io_context::__del_write()
 	{
-		if (m_write_waiter.empty())
+		if (m_w_waiter.empty())
 		{
 			ev_io_stop(m_loop, &m_write);
 		}
@@ -122,7 +122,7 @@ namespace coev
 			if (r == INVALID && isInprocess())
 			{
 				ev_io_start(m_loop, &m_write);
-				co_await m_write_waiter.suspend();
+				co_await m_w_waiter.suspend();
 			}
 			else if (r == 0)
 			{
@@ -141,7 +141,7 @@ namespace coev
 	{
 		while (__valid())
 		{
-			co_await m_read_waiter.suspend();
+			co_await m_r_waiter.suspend();
 			int r = ::recv(m_fd, buffer, size, 0);
 			if (r == INVALID && isInprocess())
 			{
@@ -165,7 +165,7 @@ namespace coev
 	{
 		while (__valid())
 		{
-			co_await m_read_waiter.suspend();
+			co_await m_r_waiter.suspend();
 			sockaddr_in addr;
 			socklen_t addrsize = sizeof(addr);
 			int r = ::recvfrom(m_fd, buffer, size, 0, (struct sockaddr *)&addr, &addrsize);
@@ -193,7 +193,7 @@ namespace coev
 			if (r == INVALID && isInprocess())
 			{
 				ev_io_start(m_loop, &m_write);
-				co_await m_write_waiter.suspend();
+				co_await m_w_waiter.suspend();
 			}
 			else if (r == 0)
 			{

@@ -4,7 +4,7 @@ namespace coev::nghttp2
 {
     client::client(SSL_CTX *_ssl_ctx) : ssl::client(_ssl_ctx)
     {
-        m_type |= IO_CLIENT;
+        m_type |= IO_CLI;
         if (_ssl_ctx)
         {
             m_type |= IO_SSL;

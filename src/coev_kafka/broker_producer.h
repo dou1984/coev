@@ -10,8 +10,6 @@
 #include "produce_set.h"
 #include "errors.h"
 #include "async_producer.h"
-#include "topic_type.h"
-#
 struct BrokerProducer
 {
     BrokerProducer(std::shared_ptr<AsyncProducer> parent, std::shared_ptr<Broker> broker);
@@ -31,7 +29,7 @@ struct BrokerProducer
     std::shared_ptr<ProduceSet> m_buffer;
     bool m_timer_fired = false;
     KError m_closing = ErrNoError;
-    std::map<topic_t, KError> m_current_retries;
+    std::map<std::string, std::map<int32_t, KError>> m_current_retries;
 
     coev::co_channel<std::shared_ptr<ProducerMessage>> m_input;
     coev::co_channel<std::shared_ptr<ProduceSet>> m_output;

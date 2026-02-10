@@ -139,18 +139,18 @@ int ConsumerGroupMemberAssignment::encode(packet_encoder &pe) const
 {
     pe.putInt16(m_version);
 
-    if (int err = pe.putArrayLength(Topics.size()); err != 0)
+    if (int err = pe.putArrayLength(m_topics.size()); err != 0)
     {
         return err;
     }
 
-    for (auto &pair : Topics)
+    for (auto &[topic, partitions] : m_topics)
     {
-        if (int err = pe.putString(pair.first); err != 0)
+        if (int err = pe.putString(topic); err != 0)
         {
             return err;
         }
-        if (int err = pe.putInt32Array(pair.second); err != 0)
+        if (int err = pe.putInt32Array(partitions); err != 0)
         {
             return err;
         }
@@ -185,7 +185,7 @@ int ConsumerGroupMemberAssignment::decode(packet_decoder &pd)
         {
             return err;
         }
-        if ((err = pd.getInt32Array(Topics[topic])) != 0)
+        if ((err = pd.getInt32Array(m_topics[topic])) != 0)
         {
             return err;
         }

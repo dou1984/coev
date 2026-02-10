@@ -10,13 +10,13 @@
 namespace coev
 {
 	const std::function<void()> __empty_set = []() {};
-	co_event async::suspend()
+	co_event async::suspend(bool __seq)
 	{
-		return co_event(this);
+		return co_event(this, __seq);
 	}
 	co_event async::suspend_util_next_loop()
 	{
-		return co_event(&local_async::instance());
+		return co_event(&local_async::instance(), true);
 	}
 	bool async::resume()
 	{
@@ -60,7 +60,7 @@ namespace coev
 			m_mutex.lock();
 			if (_suppend())
 			{
-				co_event ev(this);
+				co_event ev(this, true);
 				m_mutex.unlock();
 				co_await ev;
 				m_mutex.lock();

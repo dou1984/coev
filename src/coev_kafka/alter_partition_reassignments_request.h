@@ -8,7 +8,6 @@
 #include "packet_encoder.h"
 #include "packet_decoder.h"
 #include "protocol_body.h"
-#include "topic_type.h"
 
 struct AlterPartitionReassignmentsBlock : IEncoder, IDecoder
 {
@@ -24,7 +23,7 @@ struct AlterPartitionReassignmentsBlock : IEncoder, IDecoder
 struct AlterPartitionReassignmentsRequest : protocol_body, throttle_support, flexible_version
 {
     std::chrono::milliseconds m_timeout;
-    std::map<topic_t, AlterPartitionReassignmentsBlock> m_blocks;
+    std::map<std::string, std::map<int32_t, AlterPartitionReassignmentsBlock>> m_blocks;
     int16_t m_version = 0;
     AlterPartitionReassignmentsRequest() = default;
     AlterPartitionReassignmentsRequest(int16_t v) : m_version(v)

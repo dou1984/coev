@@ -23,8 +23,7 @@ coev::awaitable<void> BrokerProducer::run()
 
         if (msg->m_flags & FlagSet::Syn)
         {
-            topic_t key{msg->m_topic, msg->m_partition};
-            m_current_retries[key] = ErrNoError;
+            m_current_retries[msg->m_topic][msg->m_partition] = ErrNoError;
             m_parent->m_in_flight.done();
             continue;
         }
@@ -36,8 +35,11 @@ coev::awaitable<void> BrokerProducer::run()
 
             if (!m_closing && (msg->m_flags & FlagSet::Fin))
             {
-                topic_t key{msg->m_topic, msg->m_partition};
-                m_current_retries.erase(key);
+                auto it = m_current_retries.find(msg->m_topic);
+                if (it != m_current_retries.end())
+                {
+                    it->second.erase(msg->m_partition);
+                }
             }
             continue;
         }
@@ -149,11 +151,14 @@ KError BrokerProducer::needs_retry(std::shared_ptr<ProducerMessage> msg)
         return m_closing;
     }
 
-    topic_t key{msg->m_topic, msg->m_partition};
-    auto it = m_current_retries.find(key);
-    if (it != m_current_retries.end())
+    auto topicIt = m_current_retries.find(msg->m_topic);
+    if (topicIt != m_current_retries.end())
     {
-        return it->second;
+        auto partIt = topicIt->second.find(msg->m_partition);
+        if (partIt != topicIt->second.end())
+        {
+            return partIt->second;
+        }
     }
     return ErrNoError;
 }
@@ -280,8 +285,7 @@ coev::awaitable<void> BrokerProducer::handle_success(std::shared_ptr<ProduceSet>
                 case ErrNotEnoughReplicasAfterAppend:
                 case ErrKafkaStorageError:
                 {
-                    topic_t key{topic, partition};
-                    m_current_retries[key] = block.m_err;
+                    m_current_retries[topic][partition] = block.m_err;
                     if (m_parent->m_conf->Producer.Idempotent)
                     {
                         m_task << m_parent->retry_batch(topic, partition, pset, block.m_err);
