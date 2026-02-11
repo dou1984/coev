@@ -10,8 +10,6 @@
 #include "protocol_body.h"
 #include "real_decoder.h"
 
-struct Broker;
-
 inline constexpr const int32_t MaxRequestSize = 100 * 1024 * 1024;
 
 struct Request : VEncoder, IEncoder, IDecoder
@@ -27,6 +25,3 @@ struct Request : VEncoder, IEncoder, IDecoder
     int decode(packet_decoder &pd);
     bool is_flexible() const;
 };
-
-coev::awaitable<int> decode_request(std::shared_ptr<Broker> &broker, Request &req, int &size);
-std::shared_ptr<protocol_body> allocate_body(int16_t key, int16_t version);

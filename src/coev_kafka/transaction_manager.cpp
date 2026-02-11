@@ -463,16 +463,16 @@ coev::awaitable<int> TransactionManager::finish_transaction(bool commit)
     {
         co_return complete_transaction();
     }
-    bool epochBump = m_epoch_bump_required;
+    bool epoch_bump = m_epoch_bump_required;
     if (commit && !m_offsets_in_current_txn.empty())
     {
         for (auto it = m_offsets_in_current_txn.begin(); it != m_offsets_in_current_txn.end();)
         {
-            TopicPartitionOffsets newOffsets;
-            auto err = co_await publish_offsets_to_txn(it->second, it->first, newOffsets);
+            TopicPartitionOffsets new_offsets;
+            auto err = co_await publish_offsets_to_txn(it->second, it->first, new_offsets);
             if (err != 0)
             {
-                it->second = newOffsets;
+                it->second = new_offsets;
                 co_return err;
             }
             it = m_offsets_in_current_txn.erase(it);
@@ -489,7 +489,7 @@ coev::awaitable<int> TransactionManager::finish_transaction(bool commit)
         {
             co_return err;
         }
-        if (!epochBump)
+        if (!epoch_bump)
         {
             co_return 0;
         }
