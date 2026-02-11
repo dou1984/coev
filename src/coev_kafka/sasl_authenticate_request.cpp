@@ -1,5 +1,19 @@
 #include "version.h"
 #include "sasl_authenticate_request.h"
+#include "config.h"
+
+SaslAuthenticateRequest::SaslAuthenticateRequest(std::shared_ptr<Config> &conf, const std::string &msg)
+{
+    m_sasl_auth_bytes = msg;
+    if (conf->Version.IsAtLeast(V2_2_0_0))
+    {
+        m_version = 1;
+    }
+    else
+    {
+        m_version = 0;
+    }
+}
 
 void SaslAuthenticateRequest::set_version(int16_t v)
 {

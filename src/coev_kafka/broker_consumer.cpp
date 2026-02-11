@@ -82,7 +82,7 @@ coev::awaitable<void> BrokerConsumer::SubscriptionConsumer()
             co_return;
         }
 
-        for (auto &[child, _] : m_subscriptions)
+        for (auto &child : m_subscriptions)
         {
             auto tit = response->m_blocks.find(child->m_topic);
             if (tit == response->m_blocks.end())
@@ -104,7 +104,7 @@ void BrokerConsumer::UpdateSubscriptions()
 {
     for (auto &child : m_new_subscriptions)
     {
-        m_subscriptions[child] = true;
+        m_subscriptions.emplace(child);
     }
 
     m_new_subscriptions.clear();
@@ -112,7 +112,7 @@ void BrokerConsumer::UpdateSubscriptions()
     for (auto it = m_subscriptions.begin(); it != m_subscriptions.end();)
     {
         bool found = false;
-        auto child = it->first;
+        auto child = *it;
         if (child->m_dying.try_get(found))
         {
             child->m_trigger.set(true);
@@ -127,16 +127,14 @@ void BrokerConsumer::UpdateSubscriptions()
 
 coev::awaitable<void> BrokerConsumer::HandleResponses()
 {
-    LOG_CORE("starting with %zu subscriptions", m_subscriptions.size());
     for (auto it = m_subscriptions.begin(); it != m_subscriptions.end();)
     {
-        auto child = it->first;
+        auto child = *it;
         auto result = child->m_response_result;
         child->m_response_result = ErrNoError;
 
         if (result == ErrNoError)
         {
-            LOG_CORE("no result for partition consumer %s:%d, checking preferred broker", child->m_topic.c_str(), child->m_partition);
             std::shared_ptr<Broker> _broker;
             int _;
             auto err_code = co_await child->PreferredBroker(_broker, _);
@@ -151,7 +149,6 @@ coev::awaitable<void> BrokerConsumer::HandleResponses()
             continue;
         }
 
-        LOG_CORE("received result %d for partition consumer %s:%d", result, child->m_topic.c_str(), child->m_partition);
         child->m_preferred_read_replica = InvalidPreferredReplicaID;
 
         if (result == ErrTimedOut)
@@ -176,9 +173,7 @@ coev::awaitable<void> BrokerConsumer::HandleResponses()
                 ++it;
             }
         }
-        else if (result == ErrUnknownTopicOrPartition || result == ErrNotLeaderForPartition ||
-                 result == ErrLeaderNotAvailable || result == ErrReplicaNotAvailable ||
-                 result == ErrFencedLeaderEpoch || result == ErrUnknownLeaderEpoch)
+        else if (result == ErrUnknownTopicOrPartition || result == ErrNotLeaderForPartition || result == ErrLeaderNotAvailable || result == ErrReplicaNotAvailable || result == ErrFencedLeaderEpoch || result == ErrUnknownLeaderEpoch)
         {
             LOG_CORE("received broker error %d for %s:%d, removing subscription", result, child->m_topic.c_str(), child->m_partition);
             child->m_trigger.set(true);
@@ -199,7 +194,7 @@ coev::awaitable<void> BrokerConsumer::Abort(int err)
     m_consumer->AbandonBrokerConsumer(shared_from_this());
 
     LOG_CORE("BrokerConsumer::Abort notifying %zu active subscriptions of error", m_subscriptions.size());
-    for (auto &[child, _] : m_subscriptions)
+    for (auto &child : m_subscriptions)
     {
         child->SendError(err);
         child->m_trigger.set(true);
@@ -269,7 +264,7 @@ coev::awaitable<int> BrokerConsumer::FetchNewMessages(std::shared_ptr<FetchRespo
         request->m_rack_id = m_consumer->m_conf->RackId;
     }
 
-    for (auto &[child, _] : m_subscriptions)
+    for (auto &child : m_subscriptions)
     {
         if (!child->IsPaused())
         {

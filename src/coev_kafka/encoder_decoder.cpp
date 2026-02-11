@@ -60,7 +60,7 @@ int decode(const std::string &buf, IDecoder &in)
     return ErrNoError;
 }
 
-int versioned_decode(const std::string &buf, VDecoder &in, int16_t version)
+int decode_version(const std::string &buf, VDecoder &in, int16_t version)
 {
     if (buf.empty())
     {

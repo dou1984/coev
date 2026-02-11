@@ -72,7 +72,7 @@ struct VDecoder
 
 int encode(IEncoder &e, std::string &out);
 int decode(const std::string &buf, IDecoder &in);
-int versioned_decode(const std::string &buf, VDecoder &in, int16_t version);
+int decode_version(const std::string &buf, VDecoder &in, int16_t version);
 int magic_value(packet_decoder &pd, int8_t &magic);
 
 int prepare_flexible_decoder(packet_decoder &pd, VDecoder &req, int16_t version);

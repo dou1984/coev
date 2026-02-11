@@ -10,6 +10,7 @@
 #include "version.h"
 #include "api_versions.h"
 #include "protocol_body.h"
+#include "config.h"
 
 struct InitProducerIDRequest : protocol_body, flexible_version
 {
@@ -23,6 +24,7 @@ struct InitProducerIDRequest : protocol_body, flexible_version
     InitProducerIDRequest(int16_t v) : m_version(v)
     {
     }
+    InitProducerIDRequest(std::shared_ptr<Config> &conf);
     void set_version(int16_t v);
     int encode(packet_encoder &pe) const;
     int decode(packet_decoder &pd, int16_t version);

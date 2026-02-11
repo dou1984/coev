@@ -209,7 +209,7 @@ struct consumer_group_config
 struct consumer_retry_config
 {
     std::chrono::milliseconds Backoff = std::chrono::milliseconds(2000);
-    std::function<std::chrono::milliseconds(int)> BackoffFunc;
+    std::function<std::chrono::milliseconds(int32_t)> BackoffFunc;
 };
 
 struct consumer_fetch_config

@@ -24,10 +24,10 @@ struct SaslAuthenticateResponse : protocol_body
     int encode(packet_encoder &pe) const;
     int decode(packet_decoder &pd, int16_t version);
     int16_t key() const;
-    int16_t version()const;
-    int16_t header_version()const;
-    bool is_valid_version()const;
-    KafkaVersion required_version()const;
+    int16_t version() const;
+    int16_t header_version() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
 };
 
-using AuthSendReceiver = std::function<coev::awaitable<int>(const std::string &, SaslAuthenticateResponse &)>;
+using AuthSendReceiver = std::function<coev::awaitable<int>(const std::string &, std::shared_ptr<SaslAuthenticateResponse> &)>;

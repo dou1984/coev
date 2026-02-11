@@ -10,6 +10,7 @@
 #include "produce_set.h"
 #include "errors.h"
 #include "async_producer.h"
+
 struct BrokerProducer
 {
     BrokerProducer(std::shared_ptr<AsyncProducer> parent, std::shared_ptr<Broker> broker);

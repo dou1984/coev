@@ -1,6 +1,31 @@
 #include "version.h"
 #include "init_producer_id_request.h"
 #include "api_versions.h"
+#include "config.h"
+
+InitProducerIDRequest::InitProducerIDRequest(std::shared_ptr<Config> &conf)
+{
+    if (conf->Version.IsAtLeast(V2_7_0_0))
+    {
+        m_version = 4;
+    }
+    else if (conf->Version.IsAtLeast(V2_5_0_0))
+    {
+        m_version = 3;
+    }
+    else if (conf->Version.IsAtLeast(V2_4_0_0))
+    {
+        m_version = 2;
+    }
+    else if (conf->Version.IsAtLeast(V2_0_0_0))
+    {
+        m_version = 1;
+    }
+    else
+    {
+        m_version = 0;
+    }
+}
 
 void InitProducerIDRequest::set_version(int16_t v)
 {

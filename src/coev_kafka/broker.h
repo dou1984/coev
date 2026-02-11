@@ -204,7 +204,7 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
     coev::awaitable<int> SendAndReceiveApiVersions(int16_t v, ResponsePromise<ApiVersionsResponse> &promise);
     coev::awaitable<int> _Open();
 
-    int CreateSaslAuthenticateRequest(const std::string &msg, SaslAuthenticateRequest &);
+
     void SafeAsyncClose();
     int BuildClientFirstMessage(std::shared_ptr<AccessToken> token, std::string &);
     std::string MapToString(const std::map<std::string, std::string> &extensions, const std::string &keyValSep, const std::string &elemSep);
@@ -285,7 +285,7 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
             co_return err;
         }
         ResponseHeader decoded_header;
-        err = versioned_decode(header, decoded_header, promise.m_response->header_version());
+        err = decode_version(header, decoded_header, promise.m_response->header_version());
         if (err)
         {
             co_return err;
@@ -314,20 +314,15 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
     }
 
     template <class Res>
-    coev::awaitable<int> DefaultAuthSendReceiver(const std::string &authBytes, ResponsePromise<Res> &promise)
+    coev::awaitable<int> DefaultAuthSendReceiver(const std::string &auth_bytes, ResponsePromise<Res> &promise)
     {
-        SaslAuthenticateRequest request;
-        auto err = CreateSaslAuthenticateRequest(authBytes, request);
+        auto request = std::make_shared<SaslAuthenticateRequest>(m_conf, auth_bytes);
+        int err = co_await SendAndReceive(request, promise);
         if (err)
         {
             co_return err;
         }
-        err = co_await SendAndReceive(std::make_shared<SaslAuthenticateRequest>(request), promise);
-        if (err)
-        {
-            co_return err;
-        }
-        err = promise.decode(request.version());
+        err = promise.decode(request->version());
         if (err)
         {
             co_return err;

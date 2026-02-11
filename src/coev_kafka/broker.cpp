@@ -562,13 +562,13 @@ coev::awaitable<int> Broker::AuthenticateViaSASLv0()
     std::string mechanism = m_conf->Net.SASL.Mechanism;
     if (mechanism == "SCRAM-SHA-256" || mechanism == "SCRAM-SHA-512")
     {
-        co_return co_await SendAndReceiveSASLSCRAMv0();
+        return SendAndReceiveSASLSCRAMv0();
     }
     else if (mechanism == "GSSAPI")
     {
-        co_return co_await SendAndReceiveKerberos();
+        return SendAndReceiveKerberos();
     }
-    co_return co_await SendAndReceiveSASLPlainAuthV0();
+    return SendAndReceiveSASLPlainAuthV0();
 }
 
 coev::awaitable<int> Broker::AuthenticateViaSASLv1()
@@ -609,7 +609,7 @@ coev::awaitable<int> Broker::AuthenticateViaSASLv1()
                 auto err = co_await DefaultAuthSendReceiver(req, promise);
                 if (!err)
                 {
-                    res = *promise.m_response;
+                    res = promise.m_response;
                 }
                 co_return err;
             });
@@ -625,7 +625,7 @@ coev::awaitable<int> Broker::AuthenticateViaSASLv1()
                 auto err = co_await DefaultAuthSendReceiver(req, promise);
                 if (!err)
                 {
-                    res = *promise.m_response;
+                    res = promise.m_response;
                 }
                 co_return err;
             });
@@ -640,7 +640,7 @@ coev::awaitable<int> Broker::AuthenticateViaSASLv1()
                 auto err = co_await DefaultAuthSendReceiver(req, promise);
                 if (!err)
                 {
-                    res = *promise.m_response;
+                    res = promise.m_response;
                 }
                 co_return err;
             });
@@ -652,7 +652,7 @@ coev::awaitable<int> Broker::AuthenticateViaSASLv1()
             auto err = co_await DefaultAuthSendReceiver(req, promise);
             if (!err)
             {
-                res = *promise.m_response;
+                res = promise.m_response;
             }
             co_return err;
         });
@@ -716,7 +716,7 @@ coev::awaitable<int> Broker::SendAndReceiveSASLHandshake(const std::string &sasl
     }
 
     SaslHandshakeResponse res;
-    err = versioned_decode(payload, res, 0);
+    err = decode_version(payload, res, 0);
     if (err)
     {
         co_return err;
@@ -779,14 +779,13 @@ coev::awaitable<int> Broker::SendAndReceiveSASLPlainAuthV0()
     co_return 0;
 }
 
-coev::awaitable<int>
-Broker::SendAndReceiveSASLPlainAuthV1(AuthSendReceiver authSendReceiver)
+coev::awaitable<int> Broker::SendAndReceiveSASLPlainAuthV1(AuthSendReceiver authSendReceiver)
 {
     std::string authStr = m_conf->Net.SASL.AuthIdentity + "\x00" +
                           m_conf->Net.SASL.User + "\x00" +
                           m_conf->Net.SASL.Password;
     std::string auth_bytes(authStr.begin(), authStr.end());
-    SaslAuthenticateResponse response;
+    std::shared_ptr<SaslAuthenticateResponse> response = std::make_shared<SaslAuthenticateResponse>();
     return authSendReceiver(auth_bytes, response);
 }
 
@@ -813,14 +812,14 @@ Broker::SendAndReceiveSASLOAuth(std::shared_ptr<AccessTokenProvider> provider,
     {
         co_return err;
     }
-    SaslAuthenticateResponse res;
+    std::shared_ptr<SaslAuthenticateResponse> res = std::make_shared<SaslAuthenticateResponse>();
     err = co_await authSendReceiver(message, res);
     if (err != ErrNoError)
     {
         co_return err;
     }
 
-    bool isChallenge = !res.m_sasl_auth_bytes.empty();
+    bool isChallenge = !res->m_sasl_auth_bytes.empty();
     if (isChallenge)
     {
         std::string challenge = {'\x01'};
@@ -925,16 +924,16 @@ coev::awaitable<int> Broker::SendAndReceiveSASLSCRAMv1(std::shared_ptr<SCRAMClie
         co_return err;
     }
 
+    std::shared_ptr<SaslAuthenticateResponse> res = std::make_shared<SaslAuthenticateResponse>();
     while (!scramClient->Done())
     {
-        SaslAuthenticateResponse res;
         err = co_await authSendReceiver(msg, res);
         if (err)
         {
             co_return err;
         }
 
-        err = scramClient->Step(res.m_sasl_auth_bytes, msg);
+        err = scramClient->Step(res->m_sasl_auth_bytes, msg);
         if (err)
         {
             co_return err;
@@ -945,24 +944,13 @@ coev::awaitable<int> Broker::SendAndReceiveSASLSCRAMv1(std::shared_ptr<SCRAMClie
 coev::awaitable<int> Broker::SendAndReceiveApiVersions(int16_t v, ResponsePromise<ApiVersionsResponse> &promise)
 {
     int err = 0;
-    auto request = std::make_shared<ApiVersionsRequest>();
-    request->m_version = v;
+    auto request = std::make_shared<ApiVersionsRequest>(v);
     err = co_await SendAndReceive(request, promise);
     if (err)
     {
         co_return err;
     }
     co_return 0;
-}
-
-int Broker::CreateSaslAuthenticateRequest(const std::string &msg, SaslAuthenticateRequest &request)
-{
-    request.m_sasl_auth_bytes = msg;
-    if (m_conf->Version.IsAtLeast(V2_2_0_0))
-    {
-        request.m_version = 1;
-    }
-    return 0;
 }
 
 int Broker::BuildClientFirstMessage(std::shared_ptr<AccessToken> token, std::string &message)
@@ -983,9 +971,6 @@ int Broker::BuildClientFirstMessage(std::shared_ptr<AccessToken> token, std::str
         }
         ext = "\x01" + MapToString(token->m_extensions, "=", "\x01");
     }
-
-    // auto msg = "n,,\x01auth=Bearer " + token->m_token + ext + "\x01\x01";
-    // message.assign(msg.begin(), msg.end());
     message = "n,,\x01auth=Bearer " + token->m_token + ext + "\x01\x01";
     return 0;
 }

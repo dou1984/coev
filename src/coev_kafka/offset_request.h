@@ -39,6 +39,7 @@ struct OffsetRequest : protocol_body
     {
     }
     OffsetRequest(const KafkaVersion &version);
+    OffsetRequest(std::shared_ptr<Config> &conf);
     void set_version(int16_t v);
     int encode(packet_encoder &pe) const;
     int decode(packet_decoder &pd, int16_t version);

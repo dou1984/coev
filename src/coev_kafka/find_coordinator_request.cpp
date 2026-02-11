@@ -1,6 +1,20 @@
 #include "version.h"
 #include "find_coordinator_request.h"
 #include "api_versions.h"
+#include "config.h"
+
+FindCoordinatorRequest::FindCoordinatorRequest(std::shared_ptr<Config> &conf)
+    : m_coordinator_type(CoordinatorGroup)
+{
+    if (conf->Version.IsAtLeast(V0_11_0_0))
+    {
+        m_version = 1;
+    }
+    else
+    {
+        m_version = 0;
+    }
+}
 
 FindCoordinatorRequest::FindCoordinatorRequest()
     : m_version(0), m_coordinator_type(CoordinatorGroup) {}

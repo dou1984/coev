@@ -12,6 +12,7 @@
 #include "api_versions.h"
 #include "version.h"
 #include "protocol_body.h"
+#include "config.h"
 
 struct MetadataRequest : protocol_body, flexible_version
 {
@@ -26,6 +27,7 @@ struct MetadataRequest : protocol_body, flexible_version
     {
     }
     MetadataRequest(KafkaVersion version, const std::vector<std::string> &topics);
+    MetadataRequest(std::shared_ptr<Config> &conf, const std::vector<std::string> &topics);
     void set_version(int16_t v);
 
     int encode(packet_encoder &pe) const;

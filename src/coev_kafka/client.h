@@ -44,7 +44,7 @@ struct Client
     coev::awaitable<int> RefreshCoordinator(const std::string &consumerGroup);
     coev::awaitable<int> TransactionCoordinator(const std::string &transactionID, std::shared_ptr<Broker> &coordinator);
     coev::awaitable<int> RefreshTransactionCoordinator(const std::string &transactionID);
-    coev::awaitable<int> InitProducerID(InitProducerIDResponse &response);
+    coev::awaitable<int> InitProducerID(std::shared_ptr<InitProducerIDResponse> &response);
     coev::awaitable<int> LeastLoadedBroker(std::shared_ptr<Broker> &);
     coev::awaitable<int> MetadataRefresh(const std::vector<std::string> &);
     coev::awaitable<int> BackgroundMetadataUpdater();

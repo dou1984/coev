@@ -2,12 +2,14 @@
 
 #include <vector>
 #include <cstdint>
+#include <string_view>
 
 #include "packet_encoder.h"
 #include "packet_decoder.h"
 #include "api_versions.h"
 #include "version.h"
 #include "protocol_body.h"
+#include "config.h"
 
 struct SaslAuthenticateRequest : protocol_body
 {
@@ -19,6 +21,7 @@ struct SaslAuthenticateRequest : protocol_body
     SaslAuthenticateRequest(int16_t v) : m_version(v)
     {
     }
+    SaslAuthenticateRequest(std::shared_ptr<Config> &conf, const std::string &msg);
     void set_version(int16_t v);
     int encode(packet_encoder &pe) const;
     int decode(packet_decoder &pd, int16_t version);

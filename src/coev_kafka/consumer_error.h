@@ -23,5 +23,3 @@ struct ConsumerError
         return KErrorToString(m_err);
     }
 };
-
-using ConsumerErrors = std::vector<std::shared_ptr<ConsumerError>>;

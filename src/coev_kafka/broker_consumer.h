@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <unordered_set>
 #include <coev/coev.h>
 #include "consumer.h"
 #include "broker.h"
@@ -10,7 +11,7 @@ struct BrokerConsumer : IConsumer, std::enable_shared_from_this<BrokerConsumer>
     std::shared_ptr<Consumer> m_consumer;
     std::shared_ptr<Broker> m_broker;
 
-    std::unordered_map<std::shared_ptr<PartitionConsumer>, bool> m_subscriptions;
+    std::unordered_set<std::shared_ptr<PartitionConsumer>> m_subscriptions;
     std::vector<std::shared_ptr<PartitionConsumer>> m_new_subscriptions;
     coev::co_channel<std::shared_ptr<PartitionConsumer>> m_input;
     coev::co_task m_task;

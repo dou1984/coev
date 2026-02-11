@@ -37,7 +37,6 @@ coev::awaitable<int> NewClient(const std::vector<std::string> &addrs, std::share
     }
 
     client_ = std::make_shared<Client>(conf);
-
     client_->m_seed_brokers = client_->Brokers();
 
     if (conf->Net.ResolveCanonicalBootstrapServers)
@@ -67,7 +66,6 @@ coev::awaitable<int> NewClient(const std::vector<std::string> &addrs, std::share
             }
             else
             {
-                // client_->m_closed.set(true);
                 client_->Close();
                 co_return err;
             }
@@ -115,35 +113,19 @@ coev::awaitable<int> Client::GetBroker(int32_t brokerID, std::shared_ptr<Broker>
     co_return err;
 }
 
-coev::awaitable<int> Client::InitProducerID(InitProducerIDResponse &response)
+coev::awaitable<int> Client::InitProducerID(std::shared_ptr<InitProducerIDResponse> &response)
 {
     std::vector<int> brokerErrors;
     std::shared_ptr<Broker> broker;
     int err;
     for (err = co_await LeastLoadedBroker(broker); err == 0 && broker; err = co_await LeastLoadedBroker(broker))
     {
-        auto request = std::make_shared<InitProducerIDRequest>();
-        if (m_conf->Version.IsAtLeast(V2_7_0_0))
-        {
-            request->m_version = 4;
-        }
-        else if (m_conf->Version.IsAtLeast(V2_5_0_0))
-        {
-            request->m_version = 3;
-        }
-        else if (m_conf->Version.IsAtLeast(V2_4_0_0))
-        {
-            request->m_version = 2;
-        }
-        else if (m_conf->Version.IsAtLeast(V2_0_0_0))
-        {
-            request->m_version = 1;
-        }
+        auto request = std::make_shared<InitProducerIDRequest>(m_conf);
         ResponsePromise<InitProducerIDResponse> promise;
         err = co_await broker->InitProducerID(request, promise);
         if (err == 0)
         {
-            response = *std::move(promise.m_response);
+            response = promise.m_response;
             co_return 0;
         }
         else
@@ -250,10 +232,10 @@ coev::awaitable<int> Client::_GetPartitions(const std::string &topic, int64_t pa
     co_return 0;
 }
 
-coev::awaitable<int> Client::Replicas(const std::string &topic, int32_t partitionID, std::vector<int32_t> &replicas)
+coev::awaitable<int> Client::Replicas(const std::string &topic, int32_t partition_id, std::vector<int32_t> &replicas)
 {
     std::shared_ptr<PartitionMetadata> m;
-    auto err = co_await _GetReplicas(topic, partitionID, m);
+    auto err = co_await _GetReplicas(topic, partition_id, m);
     if (err != 0)
     {
         co_return err;
@@ -262,10 +244,10 @@ coev::awaitable<int> Client::Replicas(const std::string &topic, int32_t partitio
     co_return ErrNoError;
 }
 
-coev::awaitable<int> Client::InSyncReplicas(const std::string &topic, int32_t partitionID, std::vector<int32_t> &isr)
+coev::awaitable<int> Client::InSyncReplicas(const std::string &topic, int32_t partition_id, std::vector<int32_t> &isr)
 {
     std::shared_ptr<PartitionMetadata> m;
-    auto err = co_await _GetReplicas(topic, partitionID, m);
+    auto err = co_await _GetReplicas(topic, partition_id, m);
     if (err != 0)
     {
         co_return err;
@@ -275,10 +257,10 @@ coev::awaitable<int> Client::InSyncReplicas(const std::string &topic, int32_t pa
     co_return ErrNoError;
 }
 
-coev::awaitable<int> Client::OfflineReplicas(const std::string &topic, int32_t partitionID, std::vector<int32_t> &offline)
+coev::awaitable<int> Client::OfflineReplicas(const std::string &topic, int32_t partition_id, std::vector<int32_t> &offline)
 {
     std::shared_ptr<PartitionMetadata> out;
-    auto err = co_await _GetReplicas(topic, partitionID, out);
+    auto err = co_await _GetReplicas(topic, partition_id, out);
     if (err != 0)
     {
         co_return err;
@@ -288,7 +270,7 @@ coev::awaitable<int> Client::OfflineReplicas(const std::string &topic, int32_t p
     co_return ErrNoError;
 }
 
-coev::awaitable<int> Client::_GetReplicas(const std::string &topic, int32_t partitionID, std::shared_ptr<PartitionMetadata> &out)
+coev::awaitable<int> Client::_GetReplicas(const std::string &topic, int32_t partition_id, std::shared_ptr<PartitionMetadata> &out)
 {
 
     if (Closed())
@@ -296,7 +278,7 @@ coev::awaitable<int> Client::_GetReplicas(const std::string &topic, int32_t part
         co_return ErrClosedClient;
     }
 
-    out = _CachedMetadata(topic, partitionID);
+    out = _CachedMetadata(topic, partition_id);
     if (out != nullptr)
     {
         co_return 0;
@@ -309,7 +291,7 @@ coev::awaitable<int> Client::_GetReplicas(const std::string &topic, int32_t part
         co_return err;
     }
 
-    out = _CachedMetadata(topic, partitionID);
+    out = _CachedMetadata(topic, partition_id);
     if (out == nullptr)
     {
         co_return ErrUnknownTopicOrPartition;
@@ -318,20 +300,20 @@ coev::awaitable<int> Client::_GetReplicas(const std::string &topic, int32_t part
     co_return 0;
 }
 
-coev::awaitable<int> Client::Leader(const std::string &topic, int32_t partitionID, std::shared_ptr<Broker> &leader)
+coev::awaitable<int> Client::Leader(const std::string &topic, int32_t partition_id, std::shared_ptr<Broker> &leader)
 {
     int32_t epoch;
-    return LeaderAndEpoch(topic, partitionID, leader, epoch);
+    return LeaderAndEpoch(topic, partition_id, leader, epoch);
 }
 
-coev::awaitable<int> Client::LeaderAndEpoch(const std::string &topic, int32_t partitionID, std::shared_ptr<Broker> &leader, int32_t &epoch)
+coev::awaitable<int> Client::LeaderAndEpoch(const std::string &topic, int32_t partition_id, std::shared_ptr<Broker> &leader, int32_t &epoch)
 {
 
     if (Closed())
     {
         co_return ErrClosedClient;
     }
-    auto err = co_await _CachedLeader(topic, partitionID, leader, epoch);
+    auto err = co_await _CachedLeader(topic, partition_id, leader, epoch);
     if (err != 0)
     {
         std::vector<std::string> topics = {topic};
@@ -340,7 +322,7 @@ coev::awaitable<int> Client::LeaderAndEpoch(const std::string &topic, int32_t pa
         {
             co_return err;
         }
-        err = co_await _CachedLeader(topic, partitionID, leader, epoch);
+        err = co_await _CachedLeader(topic, partition_id, leader, epoch);
     }
     co_return err;
 }
@@ -392,14 +374,14 @@ coev::awaitable<int> Client::RefreshMetadata(const std::vector<std::string> &top
     co_return 0;
 }
 
-coev::awaitable<int> Client::GetOffset(const std::string &topic, int32_t partitionID, int64_t timestamp, int64_t &offset)
+coev::awaitable<int> Client::GetOffset(const std::string &topic, int32_t partition_id, int64_t timestamp, int64_t &offset)
 {
     if (Closed())
     {
         offset = -1;
         co_return ErrClosedClient;
     }
-    int err = co_await _GetOffset(topic, partitionID, timestamp, offset);
+    int err = co_await _GetOffset(topic, partition_id, timestamp, offset);
     if (err != 0)
     {
         std::vector<std::string> topics = {topic};
@@ -408,7 +390,7 @@ coev::awaitable<int> Client::GetOffset(const std::string &topic, int32_t partiti
             offset = -1;
             co_return err;
         }
-        err = co_await _GetOffset(topic, partitionID, timestamp, offset);
+        err = co_await _GetOffset(topic, partition_id, timestamp, offset);
         co_return err;
     }
 
@@ -700,12 +682,12 @@ coev::awaitable<int> Client::LeastLoadedBroker(std::shared_ptr<Broker> &least_lo
     co_return ErrBrokerNotAvailable;
 }
 
-std::shared_ptr<PartitionMetadata> Client::_CachedMetadata(const std::string &topic, int32_t partitionID)
+std::shared_ptr<PartitionMetadata> Client::_CachedMetadata(const std::string &topic, int32_t partition_id)
 {
     auto tit = m_metadata.find(topic);
     if (tit != m_metadata.end())
     {
-        auto pit = tit->second.find(partitionID);
+        auto pit = tit->second.find(partition_id);
         if (pit != tit->second.end())
         {
             return std::make_shared<PartitionMetadata>(pit->second);
@@ -743,13 +725,13 @@ std::vector<int32_t> Client::_SetPartitionCache(const std::string &topic, int64_
     return ret;
 }
 
-coev::awaitable<int> Client::_CachedLeader(const std::string &topic, int32_t partitionID, std::shared_ptr<Broker> &broker_, int32_t &leaderEpoch)
+coev::awaitable<int> Client::_CachedLeader(const std::string &topic, int32_t partition_id, std::shared_ptr<Broker> &broker_, int32_t &leaderEpoch)
 {
     leaderEpoch = -1;
     auto tit = m_metadata.find(topic);
     if (tit != m_metadata.end())
     {
-        auto pit = tit->second.find(partitionID);
+        auto pit = tit->second.find(partition_id);
         if (pit != tit->second.end())
         {
             auto &_metadata = pit->second;
@@ -775,17 +757,17 @@ coev::awaitable<int> Client::_CachedLeader(const std::string &topic, int32_t par
     co_return ErrUnknownTopicOrPartition;
 }
 
-coev::awaitable<int> Client::_GetOffset(const std::string &topic, int32_t partitionID, int64_t timestamp, int64_t &offset)
+coev::awaitable<int> Client::_GetOffset(const std::string &topic, int32_t partition_id, int64_t timestamp, int64_t &offset)
 {
     std::shared_ptr<Broker> broker;
-    int err = co_await Leader(topic, partitionID, broker);
+    int err = co_await Leader(topic, partition_id, broker);
     if (err != 0)
     {
         offset = -1;
         co_return err;
     }
-    auto request = std::make_shared<OffsetRequest>(m_conf->Version);
-    request->add_block(topic, partitionID, timestamp, 1);
+    auto request = std::make_shared<OffsetRequest>(m_conf);
+    request->add_block(topic, partition_id, timestamp, 1);
     ResponsePromise<OffsetResponse> promise;
     err = co_await broker->GetAvailableOffsets(request, promise);
     if (err != 0)
@@ -794,7 +776,7 @@ coev::awaitable<int> Client::_GetOffset(const std::string &topic, int32_t partit
         offset = -1;
         co_return err;
     }
-    auto &block = promise.m_response->get_block(topic, partitionID);
+    auto &block = promise.m_response->get_block(topic, partition_id);
     if (block.m_err != ErrNoError)
     {
         offset = -1;
@@ -895,7 +877,7 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
             allow_auto_topic_creation = false;
             LOG_CORE("fetching metadata for all topics from broker %s", broker->Addr().c_str());
         }
-        auto request = std::make_shared<MetadataRequest>(m_conf->Version, topics);
+        auto request = std::make_shared<MetadataRequest>(m_conf, topics);
         request->m_allow_auto_topic_creation = allow_auto_topic_creation;
         m_update_metadata_ms.store(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count());
         ResponsePromise<MetadataResponse> promise;
@@ -1098,7 +1080,7 @@ coev::awaitable<int> Client::FindCoordinator(const std::string &coordinatorKey, 
     for (err = co_await LeastLoadedBroker(broker); broker != nullptr; err = co_await LeastLoadedBroker(broker))
     {
         LOG_DBG("requesting coordinator for %s from %s", coordinatorKey.c_str(), broker->Addr().c_str());
-        auto request = std::make_shared<FindCoordinatorRequest>();
+        auto request = std::make_shared<FindCoordinatorRequest>(m_conf);
         request->m_coordinator_key = coordinatorKey;
         request->m_coordinator_type = coordinatorType;
         if (m_conf->Version.IsAtLeast(V0_11_0_0))

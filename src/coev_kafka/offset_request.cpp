@@ -262,11 +262,28 @@ OffsetRequest::OffsetRequest(const KafkaVersion &version)
     {
         m_version = 3;
     }
-    else if (version.IsAtLeast(V0_11_0_0))
+}
+
+OffsetRequest::OffsetRequest(std::shared_ptr<Config> &conf)
+    : m_level(ReadUncommitted), m_replica_id(-1), m_is_replica_id_set(false)
+{
+    if (conf->Version.IsAtLeast(V2_2_0_0))
+    {
+        m_version = 5;
+    }
+    else if (conf->Version.IsAtLeast(V2_1_0_0))
+    {
+        m_version = 4;
+    }
+    else if (conf->Version.IsAtLeast(V2_0_0_0))
+    {
+        m_version = 3;
+    }
+    else if (conf->Version.IsAtLeast(V0_11_0_0))
     {
         m_version = 2;
     }
-    else if (version.IsAtLeast(V0_10_1_0))
+    else if (conf->Version.IsAtLeast(V0_10_1_0))
     {
         m_version = 1;
     }

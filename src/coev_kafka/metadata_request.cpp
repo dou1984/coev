@@ -288,12 +288,70 @@ MetadataRequest::MetadataRequest(KafkaVersion version, const std::vector<std::st
     {
         m_version = 4;
     }
-    else if (version.IsAtLeast(V0_10_1_0))
+    else if (version.IsAtLeast(V0_10_0_0))
+    {
+        m_version = 3;
+    }
+    else if (version.IsAtLeast(V0_9_0_0))
     {
         m_version = 2;
     }
-    else if (version.IsAtLeast(V0_10_0_0))
+    else if (version.IsAtLeast(V0_8_2_0))
     {
         m_version = 1;
     }
+    else
+    {
+        m_version = 0;
+    }
 }
+
+MetadataRequest::MetadataRequest(std::shared_ptr<Config> &conf, const std::vector<std::string> &topics)
+{
+    m_topics = topics;
+    if (conf->Version.IsAtLeast(V2_8_0_0))
+    {
+        m_version = 10;
+    }
+    else if (conf->Version.IsAtLeast(V2_4_0_0))
+    {
+        m_version = 9;
+    }
+    else if (conf->Version.IsAtLeast(V2_4_0_0))
+    {
+        m_version = 8;
+    }
+    else if (conf->Version.IsAtLeast(V2_1_0_0))
+    {
+        m_version = 7;
+    }
+    else if (conf->Version.IsAtLeast(V2_0_0_0))
+    {
+        m_version = 6;
+    }
+    else if (conf->Version.IsAtLeast(V1_0_0_0))
+    {
+        m_version = 5;
+    }
+    else if (conf->Version.IsAtLeast(V0_11_0_0))
+    {
+        m_version = 4;
+    }
+    else if (conf->Version.IsAtLeast(V0_10_0_0))
+    {
+        m_version = 3;
+    }
+    else if (conf->Version.IsAtLeast(V0_9_0_0))
+    {
+        m_version = 2;
+    }
+    else if (conf->Version.IsAtLeast(V0_8_2_0))
+    {
+        m_version = 1;
+    }
+    else
+    {
+        m_version = 0;
+    }
+}
+

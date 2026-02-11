@@ -2,11 +2,11 @@
 #include "errors.h"
 #include <cstdint>
 
-Timestamp::Timestamp() : time_(std::chrono::system_clock::time_point{})
+Timestamp::Timestamp() : m_time(std::chrono::system_clock::time_point{})
 {
 }
 
-Timestamp::Timestamp(const std::chrono::system_clock::time_point &t) : time_(t)
+Timestamp::Timestamp(const std::chrono::system_clock::time_point &t) : m_time(t)
 {
 }
 
@@ -15,12 +15,12 @@ int Timestamp::encode(packet_encoder &pe) const
     int64_t timestamp = -1;
 
     auto epoch = std::chrono::system_clock::from_time_t(0);
-    if (time_ >= epoch)
+    if (m_time >= epoch)
     {
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(time_.time_since_epoch());
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(m_time.time_since_epoch());
         timestamp = static_cast<int64_t>(duration.count());
     }
-    else if (time_ != std::chrono::system_clock::time_point{})
+    else if (m_time != std::chrono::system_clock::time_point{})
     {
         return ErrEncodeError;
     }
@@ -47,16 +47,16 @@ int Timestamp::decode(packet_decoder &pd)
         timestamp += std::chrono::nanoseconds(nanos);
     }
 
-    time_ = timestamp;
+    m_time = timestamp;
     return ErrNoError;
 }
 
 std::chrono::system_clock::time_point Timestamp::get_time() const
 {
-    return time_;
+    return m_time;
 }
 
 void Timestamp::set_time(const std::chrono::system_clock::time_point &t)
 {
-    time_ = t;
+    m_time = t;
 }

@@ -25,8 +25,7 @@ std::chrono::duration<double> PartitionConsumer::ComputeBackoff()
 {
     if (m_conf->Consumer.Retry.BackoffFunc)
     {
-        int32_t retries_val = m_retries.fetch_add(1) + 1;
-        return m_conf->Consumer.Retry.BackoffFunc(static_cast<int>(retries_val));
+        return m_conf->Consumer.Retry.BackoffFunc(++m_retries);
     }
     return m_conf->Consumer.Retry.Backoff;
 }
@@ -123,7 +122,7 @@ coev::awaitable<int> PartitionConsumer::ChooseStartingOffset(int64_t offset)
     {
         co_return err;
     }
-    m_high_water_mark_offset.store(newest_offset);
+    m_high_water_mark_offset = newest_offset;
 
     int64_t oldest_offset;
     err = co_await m_consumer->m_client->GetOffset(m_topic, m_partition, OffsetOldest, oldest_offset);
@@ -134,22 +133,20 @@ coev::awaitable<int> PartitionConsumer::ChooseStartingOffset(int64_t offset)
 
     if (offset == OffsetNewest)
     {
-        offset = newest_offset;
+        m_offset = newest_offset;
     }
     else if (offset == OffsetOldest)
     {
-        offset = oldest_offset;
+        m_offset = oldest_offset;
     }
     else if (offset >= oldest_offset && offset <= newest_offset)
     {
-        offset = offset;
+        m_offset = offset;
     }
     else
     {
         co_return ErrOffsetOutOfRange;
     }
-
-    m_offset = offset;
     co_return ErrNoError;
 }
 
@@ -178,7 +175,7 @@ coev::awaitable<int> PartitionConsumer::Close()
 
 int64_t PartitionConsumer::HighWaterMarkOffset()
 {
-    return m_high_water_mark_offset.load();
+    return m_high_water_mark_offset;
 }
 
 coev::awaitable<void> PartitionConsumer::ResponseFeeder()
@@ -196,7 +193,7 @@ coev::awaitable<void> PartitionConsumer::ResponseFeeder()
         m_response_result = (KError)ParseResponse(response, messages);
         if (m_response_result != ErrNoError)
         {
-            m_retries.store(0);
+            m_retries = 0;
         }
         for (size_t i = 0; i < messages.size(); ++i)
         {
@@ -254,7 +251,6 @@ coev::awaitable<void> PartitionConsumer::ResponseFeeder()
 
 int PartitionConsumer::ParseMessages(MessageSet &msg_set, std::vector<std::shared_ptr<ConsumerMessage>> &messages)
 {
-
     for (auto &block : msg_set.m_messages)
     {
         auto msgs = block.Messages();
@@ -390,7 +386,7 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
     }
 
     m_fetch_size = m_conf->Consumer.Fetch.DefaultVal;
-    m_high_water_mark_offset.store(block.m_high_water_mark_offset);
+    m_high_water_mark_offset = block.m_high_water_mark_offset;
 
     std::unordered_set<int64_t> aborted_producer_ids;
     auto &aborted_transactions = block.get_aborted_transactions();
@@ -486,12 +482,12 @@ coev::awaitable<int> PartitionConsumer::Interceptors(std::shared_ptr<ConsumerMes
 
 void PartitionConsumer::Pause()
 {
-    m_paused.store(true);
+    m_paused = true;
 }
 
 void PartitionConsumer::Resume()
 {
-    m_paused.store(false);
+    m_paused = false;
 }
 void PartitionConsumer::PauseAll()
 {
@@ -501,5 +497,5 @@ void PartitionConsumer::ResumeAll()
 }
 bool PartitionConsumer::IsPaused()
 {
-    return m_paused.load();
+    return m_paused;
 }

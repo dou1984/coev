@@ -9,8 +9,7 @@
 
 struct PartitionConsumer : std::enable_shared_from_this<PartitionConsumer>
 {
-
-    std::atomic<int64_t> m_high_water_mark_offset{0};
+    int64_t m_high_water_mark_offset = 0;
     std::shared_ptr<Consumer> m_consumer;
     std::shared_ptr<Config> m_conf;
     std::shared_ptr<BrokerConsumer> m_broker;
@@ -27,9 +26,9 @@ struct PartitionConsumer : std::enable_shared_from_this<PartitionConsumer>
     int32_t m_partition;
     KError m_response_result;
     int32_t m_fetch_size;
-    int64_t m_offset;
-    std::atomic<int32_t> m_retries{0};
-    std::atomic<bool> m_paused{false};
+    int64_t m_offset = 0;
+    int32_t m_retries = 0;
+    bool m_paused = false;
 
     PartitionConsumer() = default;
     void SendError(KError err);
