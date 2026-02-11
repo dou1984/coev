@@ -1,6 +1,22 @@
 #include "version.h"
 #include "add_partitions_to_txn_request.h"
 
+AddPartitionsToTxnRequest::AddPartitionsToTxnRequest(std::shared_ptr<Config> &conf)
+{
+    if (conf->Version.IsAtLeast(V2_7_0_0))
+    {
+        m_version = 2;
+    }
+    else if (conf->Version.IsAtLeast(V2_0_0_0))
+    {
+        m_version = 1;
+    }
+    else
+    {
+        m_version = 0;
+    }
+}
+
 void AddPartitionsToTxnRequest::set_version(int16_t v)
 {
     m_version = v;

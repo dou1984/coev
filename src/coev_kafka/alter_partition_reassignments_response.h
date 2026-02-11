@@ -12,11 +12,11 @@
 
 struct AlterPartitionReassignmentsErrorBlock : IEncoder, IDecoder
 {
-    KError m_error_code;
-    std::string m_error_message;
+    KError m_code;
+    std::string m_message;
 
     AlterPartitionReassignmentsErrorBlock() = default;
-    AlterPartitionReassignmentsErrorBlock(KError err, const std::string &msg) : m_error_code(err), m_error_message(msg)
+    AlterPartitionReassignmentsErrorBlock(KError err, const std::string &msg) : m_code(err), m_message(msg)
     {
     }
     int encode(packet_encoder &pe) const;
@@ -27,8 +27,8 @@ struct AlterPartitionReassignmentsResponse : protocol_body, flexible_version
 {
     int16_t m_version = 0;
     std::chrono::milliseconds m_throttle_time;
-    KError m_error_code = ErrNoError;
-    std::string m_error_message;
+    KError m_code = ErrNoError;
+    std::string m_message;
     std::map<std::string, std::map<int32_t, AlterPartitionReassignmentsErrorBlock>> m_errors;
 
     AlterPartitionReassignmentsResponse() = default;

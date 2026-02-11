@@ -21,8 +21,8 @@ int AlterUserScramCredentialsResponse::encode(packet_encoder &pe) const
         {
             return ErrEncodeError;
         }
-        pe.putKError(u.m_error_code);
-        if (pe.putNullableString(u.m_error_message) != ErrNoError)
+        pe.putKError(u.m_code);
+        if (pe.putNullableString(u.m_message) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -56,12 +56,12 @@ int AlterUserScramCredentialsResponse::decode(packet_decoder &pd, int16_t versio
                 return ErrEncodeError;
             }
 
-            if (pd.getKError(result.m_error_code) != ErrNoError)
+            if (pd.getKError(result.m_code) != ErrNoError)
             {
                 return ErrEncodeError;
             }
 
-            if (pd.getNullableString(result.m_error_message) != ErrNoError)
+            if (pd.getNullableString(result.m_message) != ErrNoError)
             {
                 return ErrEncodeError;
             }

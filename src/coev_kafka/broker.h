@@ -204,7 +204,6 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
     coev::awaitable<int> SendAndReceiveApiVersions(int16_t v, ResponsePromise<ApiVersionsResponse> &promise);
     coev::awaitable<int> _Open();
 
-
     void SafeAsyncClose();
     int BuildClientFirstMessage(std::shared_ptr<AccessToken> token, std::string &);
     std::string MapToString(const std::map<std::string, std::string> &extensions, const std::string &keyValSep, const std::string &elemSep);

@@ -42,7 +42,7 @@ void ApiVersionsResponse::set_version(int16_t v)
 
 int ApiVersionsResponse::encode(packet_encoder &pe) const
 {
-    pe.putInt16(m_error_code);
+    pe.putInt16(m_code);
 
     if (pe.putArrayLength(static_cast<int32_t>(m_api_keys.size())) != ErrNoError)
     {
@@ -70,7 +70,7 @@ int ApiVersionsResponse::encode(packet_encoder &pe) const
     return ErrNoError;
 }
 
-packet_decoder &ApiVersionsResponse::downgradeFlexibleDecoder(packet_decoder &pd)
+packet_decoder &ApiVersionsResponse::downgrade_flexible_decoder(packet_decoder &pd)
 {
     if (pd.isFlexible())
     {
@@ -83,15 +83,15 @@ int ApiVersionsResponse::decode(packet_decoder &pd, int16_t version)
 {
     m_version = version;
 
-    if (pd.getInt16(m_error_code) != ErrNoError)
+    if (pd.getInt16(m_code) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
-    if (m_error_code == ErrUnsupportedVersion)
+    if (m_code == ErrUnsupportedVersion)
     {
         m_version = 0;
-        downgradeFlexibleDecoder(pd);
+        downgrade_flexible_decoder(pd);
     }
 
     int32_t numApiKeys;

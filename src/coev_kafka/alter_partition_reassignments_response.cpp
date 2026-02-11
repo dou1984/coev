@@ -4,8 +4,8 @@
 
 int AlterPartitionReassignmentsErrorBlock::encode(packet_encoder &pe) const
 {
-    pe.putKError(m_error_code);
-    if (pe.putNullableString(m_error_message) != ErrNoError)
+    pe.putKError(m_code);
+    if (pe.putNullableString(m_message) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -15,11 +15,11 @@ int AlterPartitionReassignmentsErrorBlock::encode(packet_encoder &pe) const
 
 int AlterPartitionReassignmentsErrorBlock::decode(packet_decoder &pd)
 {
-    if (pd.getKError(m_error_code) != ErrNoError)
+    if (pd.getKError(m_code) != ErrNoError)
     {
         return ErrEncodeError;
     }
-    if (pd.getNullableString(m_error_message) != ErrNoError)
+    if (pd.getNullableString(m_message) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -40,8 +40,8 @@ void AlterPartitionReassignmentsResponse::add_error(const std::string &topic, in
 int AlterPartitionReassignmentsResponse::encode(packet_encoder &pe) const
 {
     pe.putDurationMs(m_throttle_time);
-    pe.putKError(m_error_code);
-    if (pe.putNullableString(m_error_message) != ErrNoError)
+    pe.putKError(m_code);
+    if (pe.putNullableString(m_message) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -88,12 +88,12 @@ int AlterPartitionReassignmentsResponse::decode(packet_decoder &pd, int16_t vers
         return ErrDecodeError;
     }
 
-    if (pd.getKError(m_error_code) != ErrNoError)
+    if (pd.getKError(m_code) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
-    if (pd.getNullableString(m_error_message) != ErrNoError)
+    if (pd.getNullableString(m_message) != ErrNoError)
     {
         return ErrDecodeError;
     }

@@ -297,7 +297,6 @@ coev::awaitable<void> AsyncProducer::retry_handler()
     std::queue<std::shared_ptr<ProducerMessage>> buf;
     while (true)
     {
-        LOG_CORE("waiting for messages from m_retries channel");
         std::shared_ptr<ProducerMessage> msg;
         co_await m_retries.get(msg);
         if (msg)
@@ -310,21 +309,21 @@ coev::awaitable<void> AsyncProducer::retry_handler()
                 continue;
             }
 
-            auto msg_to_handle = buf.front();
+            auto _msg = buf.front();
             buf.pop();
-            if (msg_to_handle->m_flags == 0)
+            if (_msg->m_flags == 0)
             {
-                LOG_CORE("updating current_byte_size, subtracting %d bytes", (int)msg_to_handle->byte_size(version));
-                current_byte_size -= msg_to_handle->byte_size(version);
+                LOG_CORE("updating current_byte_size, subtracting %d bytes", (int)_msg->byte_size(version));
+                current_byte_size -= _msg->byte_size(version);
             }
-            m_input.set(msg_to_handle);
+            m_input.set(_msg);
         }
         else
         {
-            auto msg_to_handle = buf.front();
+            auto _msg = buf.front();
             buf.pop();
-            m_input.set(msg_to_handle);
-            current_byte_size -= msg_to_handle->byte_size(version);
+            m_input.set(_msg);
+            current_byte_size -= _msg->byte_size(version);
         }
     }
 }

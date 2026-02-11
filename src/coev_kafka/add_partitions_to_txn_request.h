@@ -10,6 +10,8 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
+#include "config.h"
+
 struct AddPartitionsToTxnRequest : protocol_body
 {
     int16_t m_version;
@@ -21,6 +23,7 @@ struct AddPartitionsToTxnRequest : protocol_body
     AddPartitionsToTxnRequest(int16_t v) : m_version(v)
     {
     }
+    AddPartitionsToTxnRequest(std::shared_ptr<Config> &conf);
     void set_version(int16_t v);
     int encode(packet_encoder &pe) const;
     int decode(packet_decoder &pd, int16_t version);

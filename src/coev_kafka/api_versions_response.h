@@ -23,7 +23,7 @@ struct ApiVersionsResponseKey : VEncoder, VDecoder
 struct ApiVersionsResponse : protocol_body, flexible_version
 {
     int16_t m_version = 0;
-    int16_t m_error_code = 0;
+    int16_t m_code = 0;
     std::vector<ApiVersionsResponseKey> m_api_keys;
     std::chrono::milliseconds m_throttle_time;
     ApiVersionsResponse() = default;
@@ -45,5 +45,5 @@ struct ApiVersionsResponse : protocol_body, flexible_version
     KafkaVersion required_version() const;
     std::chrono::milliseconds throttle_time() const;
 
-    static packet_decoder &downgradeFlexibleDecoder(packet_decoder &pd);
+    static packet_decoder &downgrade_flexible_decoder(packet_decoder &pd);
 };

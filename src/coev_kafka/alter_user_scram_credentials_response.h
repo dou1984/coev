@@ -13,8 +13,8 @@
 struct AlterUserScramCredentialsResult
 {
     std::string m_user;
-    KError m_error_code = ErrNoError;
-    std::string m_error_message;
+    KError m_code = ErrNoError;
+    std::string m_message;
 };
 
 struct AlterUserScramCredentialsResponse : protocol_body, flexible_version

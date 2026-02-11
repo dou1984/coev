@@ -7,6 +7,7 @@
 #include <chrono>
 #include <mutex>
 #include <shared_mutex>
+#include <functional>
 #include "broker.h"
 #include "version.h"
 #include "topic_partition.h"
@@ -54,7 +55,7 @@ struct TransactionManager
     coev::awaitable<int> publish_offsets_to_txn(const TopicPartitionOffsets &offsets, const std::string &groupId, TopicPartitionOffsets &outOffsets);
     coev::awaitable<Result> publish_offsets_to_txn_add_offset(const std::string &groupId);
     coev::awaitable<Result> publish_offsets_to_txn_commit(const TopicPartitionOffsets &offsets, const std::string &groupId, TopicPartitionOffsets &outOffsets);
-    coev::awaitable<int> init_producer_id(int64_t &producerID, int16_t &producerEpoch);
+    coev::awaitable<int> init_producer_id(int64_t &producer_id, int16_t &producer_epoch);
     int abortable_error_if_possible(int err);
     int complete_transaction();
 
@@ -66,12 +67,16 @@ struct TransactionManager
     bool is_transition_valid(ProducerTxnStatusFlag target) const;
     int transition_to(ProducerTxnStatusFlag target, int err);
 
+    coev::awaitable<Result> _end_txn(bool commit);
+    coev::awaitable<Result> _publish_txn_partitions();
+    coev::awaitable<Result> _init_producer_id(bool is_epoch_bump, std::shared_ptr<InitProducerIDRequest> request, int64_t &producer_id, int16_t &producer_epoch);
+
     template <class Func, class... Args>
-    coev::awaitable<int> Retry(int attempts_remaining, const Func &run, Args &&...args)
+    coev::awaitable<int> Retry(int attempts_remaining, const Func &func, Args &&...args)
     {
         while (attempts_remaining >= 0)
         {
-            auto r = co_await run(std::forward<Args>(args)...);
+            auto r = co_await (this->*func)(std::forward<Args>(args)...);
             if (!r.Retry)
             {
                 co_return r.Error;
