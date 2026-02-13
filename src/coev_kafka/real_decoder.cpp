@@ -743,3 +743,8 @@ real_decoder::real_decoder(const std::string &buf)
 {
     m_raw = buf;
 }
+
+real_decoder::real_decoder(std::string_view buf)
+{
+    m_raw = buf;
+}
