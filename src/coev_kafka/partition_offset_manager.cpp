@@ -2,8 +2,8 @@
 
 PartitionOffsetManager::PartitionOffsetManager(
     std::shared_ptr<OffsetManager> parent, const std::string &topic,
-    int32_t partition, int32_t leaderEpoch, int64_t offset, const std::string &metadata)
-    : m_parent(parent), m_topic(topic), m_partition(partition), m_leader_epoch(leaderEpoch), m_offset(offset), m_metadata(metadata), m_dirty(false), m_done(false)
+    int32_t partition, int32_t leader_epoch, int64_t offset, const std::string &metadata)
+    : m_parent(parent), m_topic(topic), m_partition(partition), m_leader_epoch(leader_epoch), m_offset(offset), m_metadata(metadata), m_dirty(false), m_done(false)
 {
 }
 

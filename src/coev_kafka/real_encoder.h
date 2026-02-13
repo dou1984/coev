@@ -13,14 +13,8 @@
 struct real_encoder : packet_encoder
 {
 
-    std::string m_raw;
-    size_t m_offset = 0;
-    std::vector<push_encoder *> m_stack;
     real_encoder() = default;
-    real_encoder(size_t capacity)
-    {
-        m_raw.resize(capacity);
-    }
+    real_encoder(size_t capacity);
 
     void putInt8(int8_t in);
     void putInt16(int16_t in);
@@ -46,6 +40,8 @@ struct real_encoder : packet_encoder
     int offset() const { return static_cast<int>(m_offset); }
     void push(push_encoder &in);
     int pop();
-};
 
-int encodeVariant(uint8_t *buf, int64_t x);
+    std::string m_raw;
+    size_t m_offset = 0;
+    std::vector<push_encoder *> m_stack;
+};

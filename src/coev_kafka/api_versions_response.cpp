@@ -72,9 +72,9 @@ int ApiVersionsResponse::encode(packet_encoder &pe) const
 
 packet_decoder &ApiVersionsResponse::downgrade_flexible_decoder(packet_decoder &pd)
 {
-    if (pd._is_flexible())
+    if (pd.__is_flexible())
     {
-        pd._pop_flexible();
+        pd.__pop_flexible();
     }
     return pd;
 }

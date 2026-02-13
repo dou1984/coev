@@ -60,7 +60,7 @@ void prep_encoder::putFloat64(double /*in*/)
 
 int prep_encoder::putArrayLength(int32_t in)
 {
-    if (_is_fixed())
+    if (__is_fixed())
     {
         if (in > std::numeric_limits<int32_t>::max())
         {
@@ -69,7 +69,7 @@ int prep_encoder::putArrayLength(int32_t in)
         m_length += 4;
         return 0;
     }
-    else if (_is_flexible())
+    else if (__is_flexible())
     {
         putUVarint(static_cast<uint64_t>(in + 1));
         return 0;
@@ -91,7 +91,7 @@ void prep_encoder::putDurationMs(std::chrono::milliseconds /*in*/)
 
 int prep_encoder::putBytes(const std::string_view &in)
 {
-    if (_is_fixed())
+    if (__is_fixed())
     {
         m_length += 4;
         if (in.empty())
@@ -102,7 +102,7 @@ int prep_encoder::putBytes(const std::string_view &in)
         }
         return putRawBytes(in);
     }
-    else if (_is_flexible())
+    else if (__is_flexible())
     {
         putUVarint(in.size() + 1);
         return putRawBytes(in);
@@ -133,7 +133,7 @@ int prep_encoder::putRawBytes(const std::string_view &in)
 
 int prep_encoder::putString(const std::string_view &in)
 {
-    if (_is_fixed())
+    if (__is_fixed())
     {
         if (in.length() > static_cast<size_t>(std::numeric_limits<int16_t>::max()))
         {
@@ -143,7 +143,7 @@ int prep_encoder::putString(const std::string_view &in)
         m_length += static_cast<int>(in.length());
         return 0;
     }
-    else if (_is_flexible())
+    else if (__is_flexible())
     {
         int err = putArrayLength(static_cast<int32_t>(in.length()));
         if (err != 0)
@@ -155,7 +155,7 @@ int prep_encoder::putString(const std::string_view &in)
 
 int prep_encoder::putNullableString(const std::string_view &in)
 {
-    if (_is_fixed())
+    if (__is_fixed())
     {
         if (in.empty())
         {
@@ -164,7 +164,7 @@ int prep_encoder::putNullableString(const std::string_view &in)
         }
         return putString(in);
     }
-    else if (_is_flexible())
+    else if (__is_flexible())
     {
         if (in == "")
         {
@@ -178,7 +178,7 @@ int prep_encoder::putNullableString(const std::string_view &in)
 
 int prep_encoder::putStringArray(const std::vector<std::string> &in)
 {
-    if (_is_fixed())
+    if (__is_fixed())
     {
         int err = putArrayLength(static_cast<int32_t>(in.size()));
         if (err != 0)
@@ -191,7 +191,7 @@ int prep_encoder::putStringArray(const std::vector<std::string> &in)
         }
         return 0;
     }
-    else if (_is_flexible())
+    else if (__is_flexible())
     {
         int err = putArrayLength(static_cast<int32_t>(in.size()));
         if (err != 0)
@@ -204,7 +204,7 @@ int prep_encoder::putStringArray(const std::vector<std::string> &in)
 
 int prep_encoder::putNullableInt32Array(const std::vector<int32_t> &in)
 {
-    if (_is_fixed())
+    if (__is_fixed())
     {
         if (in.empty())
         {
@@ -217,7 +217,7 @@ int prep_encoder::putNullableInt32Array(const std::vector<int32_t> &in)
         m_length += 4 * static_cast<int>(in.size());
         return 0;
     }
-    else if (_is_flexible())
+    else if (__is_flexible())
     {
         if (in.empty())
         {
@@ -242,10 +242,10 @@ int prep_encoder::putInt64Array(const std::vector<int64_t> &in)
 
 void prep_encoder::putEmptyTaggedFieldArray()
 {
-    if (_is_fixed())
+    if (__is_fixed())
     {
     }
-    else if (_is_flexible())
+    else if (__is_flexible())
     {
         putUVarint(0);
     }
@@ -282,10 +282,10 @@ int prep_encoder::pop()
 
 int prep_encoder::putInt32Array(const std::vector<int32_t> &in)
 {
-    if (_is_fixed())
+    if (__is_fixed())
     {
     }
-    else if (_is_flexible())
+    else if (__is_flexible())
     {
         if (in.empty())
             return -1; // non-null required

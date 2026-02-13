@@ -45,8 +45,8 @@ int Request::encode(packet_encoder &pe) const
 
     if (is_flexible)
     {
-        pe._push_flexible();
-        defer(pe._pop_flexible());
+        pe.__push_flexible();
+        defer(pe.__pop_flexible());
 
         err = const_cast<protocol_body *>(m_body)->encode(pe);
         if (err != 0)

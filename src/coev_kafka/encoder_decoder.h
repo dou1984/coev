@@ -6,34 +6,29 @@
 #include <cassert>
 #include <string>
 
+struct packet_decoder;
+struct packet_encoder;
+
 struct packet_type
 {
     uint16_t m_flexible = 0;
-    bool _is_fixed()
+    bool __is_fixed()
     {
         return m_flexible == 0;
     }
-    bool _is_flexible()
+    bool __is_flexible()
     {
         return m_flexible > 0;
     }
-    void _push_flexible()
+    void __push_flexible()
     {
         m_flexible++;
     }
-    void _pop_flexible()
+    void __pop_flexible()
     {
         assert(m_flexible > 0);
         m_flexible--;
     }
-};
-
-struct packet_decoder;
-struct packet_encoder;
-
-struct PacketEncodingError
-{
-    std::string m_message;
 };
 
 struct flexible_version
@@ -77,4 +72,4 @@ int magic_value(packet_decoder &pd, int8_t &magic);
 
 int prepare_flexible_decoder(packet_decoder &pd, VDecoder &req, int16_t version);
 int prepare_flexible_encoder(packet_encoder &pe, IEncoder &req);
-std::shared_ptr<packet_decoder> downgrade_flexible_decoder(std::shared_ptr<packet_decoder> pd);
+// std::shared_ptr<packet_decoder> downgrade_flexible_decoder(std::shared_ptr<packet_decoder> pd);

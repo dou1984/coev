@@ -45,9 +45,10 @@ struct real_decoder : packet_decoder
     int push(push_decoder &in);
     int pop();
 
-    real_decoder() = delete;
+    real_decoder() = default;
     real_decoder(const std::string &buf);
     real_decoder(std::string_view buf);
+
     int m_offset = 0;
     std::string_view m_raw;
     std::vector<push_decoder *> m_stack;

@@ -1,5 +1,7 @@
 #include "variant_length_field.h"
 #include "real_encoder.h"
+
+extern int encodeVariant(uint8_t *buf, int64_t x);
 static int variantSize(int64_t value)
 {
     int size = 0;

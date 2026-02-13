@@ -39,7 +39,7 @@ struct RecordBatch
     RecordBatch(int8_t v, bool, std::chrono::system_clock::time_point &first, std::chrono::system_clock::time_point &max);
 
     int64_t last_offset() const;
-    void add_record(std::shared_ptr<Record> r);
+    void add_record(std::shared_ptr<Record> record);
     int encode(packet_encoder &pe) const;
     int decode(packet_decoder &pd);
 

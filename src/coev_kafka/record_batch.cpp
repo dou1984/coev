@@ -7,7 +7,7 @@
 #include "timestamp.h"
 #include "errors.h"
 #include "real_decoder.h"
-#include "packet_decoding_error.h"
+#include "packet_error.h"
 
 int decode(const std::string &buf, std::vector<Record> &inputs)
 {
@@ -26,7 +26,7 @@ int decode(const std::string &buf, std::vector<Record> &inputs)
     }
     if (helper.m_offset != static_cast<int>(buf.size()))
     {
-        throw PacketDecodingError{"invalid length: buf=" + std::to_string(buf.size()) + " decoded=" + std::to_string(helper.m_offset)};
+        throw PacketError{"invalid length: buf=" + std::to_string(buf.size()) + " decoded=" + std::to_string(helper.m_offset)};
     }
     return ErrNoError;
 }
@@ -48,7 +48,7 @@ int decode(const std::string &buf, std::vector<std::shared_ptr<Record>> &inputs)
     }
     if (helper.m_offset != static_cast<int>(buf.size()))
     {
-        throw PacketDecodingError{"invalid length: buf=" + std::to_string(buf.size()) + " decoded=" + std::to_string(helper.m_offset)};
+        throw PacketError{"invalid length: buf=" + std::to_string(buf.size()) + " decoded=" + std::to_string(helper.m_offset)};
     }
     return ErrNoError;
 }
@@ -230,7 +230,7 @@ int64_t RecordBatch::last_offset() const
 {
     return m_first_offset + static_cast<int64_t>(m_last_offset_delta);
 }
-void RecordBatch::add_record(std::shared_ptr<Record> r)
+void RecordBatch::add_record(std::shared_ptr<Record> record)
 {
-    m_records.push_back(r);
+    m_records.push_back(record);
 }
