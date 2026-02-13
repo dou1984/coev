@@ -47,7 +47,8 @@ int ProduceRequest::encode(packet_encoder &pe) const
 
             LengthField length_field;
             pe.push(length_field);
-            if (int err = partition.encode(pe); err != 0)
+            assert(partition);
+            if (int err = partition->encode(pe); err != 0)
             {
                 return err;
             }
@@ -83,16 +84,16 @@ int ProduceRequest::decode(packet_decoder &pd, int16_t version)
         return err;
     }
 
-    int32_t topicCount;
-    if (int err = pd.getArrayLength(topicCount); err != 0)
+    int32_t topic_count;
+    if (int err = pd.getArrayLength(topic_count); err != 0)
     {
         return err;
     }
-    if (topicCount == 0)
+    if (topic_count == 0)
         return 0;
 
     m_records.clear();
-    for (int i = 0; i < topicCount; ++i)
+    for (int i = 0; i < topic_count; ++i)
     {
         std::string topic;
         if (int err = pd.getString(topic); err != 0)
@@ -106,7 +107,7 @@ int ProduceRequest::decode(packet_decoder &pd, int16_t version)
             return err;
         }
 
-        auto &partition_map = m_records[topic];
+        auto &partition_records = m_records[topic];
         for (int j = 0; j < partition_count; ++j)
         {
             int32_t partition;
@@ -120,17 +121,17 @@ int ProduceRequest::decode(packet_decoder &pd, int16_t version)
             {
                 return err;
             }
-
             std::shared_ptr<packet_decoder> subset;
             if (int err = pd.getSubset(size, subset); err != 0)
             {
                 return err;
             }
-
-            if (int err = partition_map[partition].decode(*subset); err != 0)
+            auto _record = std::make_shared<Records>();
+            if (int err = _record->decode(*subset); err != 0)
             {
                 return err;
             }
+            partition_records[partition] = _record;
         }
     }
 
@@ -183,26 +184,27 @@ KafkaVersion ProduceRequest::required_version() const
 
 void ProduceRequest::add_message(const std::string &topic, int32_t partition, std::shared_ptr<Message> msg)
 {
-    auto &record = m_records[topic][partition];
-    if (!std::holds_alternative<MessageSet>(record.m_records))
+    auto record = m_records[topic][partition];
+    assert(record);
+    if (!record->m_message_set)
     {
-        record.m_records = MessageSet();
+        record->m_message_set = std::make_shared<MessageSet>();
     }
-    auto &message_set = std::get<MessageSet>(record.m_records);
-    message_set.add_message(msg);
-    record.m_records_type = LegacyRecords;
+    record->m_message_set->add_message(msg);
+    record->m_records_type = LegacyRecords;
 }
 
-void ProduceRequest::add_set(const std::string &topic, int32_t partition, MessageSet &set)
+void ProduceRequest::add_set(const std::string &topic, int32_t partition, std::shared_ptr<MessageSet> set)
 {
-    auto &record = m_records[topic][partition];
-    record.m_records_type = LegacyRecords;
-    record.m_records = set;
+    auto record = m_records[topic][partition];
+    assert(record);
+    record->m_records_type = LegacyRecords;
+    record->m_message_set = set;
 }
 
-void ProduceRequest::add_batch(const std::string &topic, int32_t partition, RecordBatch &batch)
+void ProduceRequest::add_batch(const std::string &topic, int32_t partition, std::shared_ptr<RecordBatch> batch)
 {
     auto &record = m_records[topic][partition];
-    record.m_records_type = DefaultRecords;
-    record.m_records = batch;
+    record->m_records_type = DefaultRecords;
+    record->m_record_batch = batch;
 }

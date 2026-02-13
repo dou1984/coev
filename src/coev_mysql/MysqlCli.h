@@ -65,9 +65,9 @@ namespace coev
 		static void cb_connect(struct ev_loop *loop, struct ev_io *w, int revents);
 		static void cb_write(struct ev_loop *loop, struct ev_io *w, int revents);
 		static void cb_read(struct ev_loop *loop, struct ev_io *w, int revents);
-		int __tryconnect();
-		int __isneterror(int);
-		int __isqueryerror(int state);
+		int __try_connect();
+		int __is_net_error(int);
+		int __is_query_error(int state);
 		int __connect();
 		int __connect_insert();
 		int __connect_remove();

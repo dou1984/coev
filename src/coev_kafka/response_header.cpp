@@ -31,8 +31,8 @@ int ResponseHeader::decode(packet_decoder &pd, int16_t version)
         auto decoder = static_cast<real_decoder *>(&pd);
         if (decoder != nullptr)
         {
-            decoder->pushFlexible();
-            defer(decoder->popFlexible());
+            decoder->_push_flexible();
+            defer(decoder->_pop_flexible());
             return ::decode(*decoder, m_length, m_correlation_id);
         }
         else

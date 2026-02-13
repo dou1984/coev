@@ -51,6 +51,9 @@ static bool dependsOnSpecificNode(const ConfigResource &resource)
 
 std::shared_ptr<ClusterAdmin> ClusterAdmin::Create(std::shared_ptr<Client> client, std::shared_ptr<Config> conf)
 {
+    if (client == nullptr || conf == nullptr) {
+        return nullptr;
+    }
     return std::make_shared<ClusterAdmin>(client, conf);
 }
 

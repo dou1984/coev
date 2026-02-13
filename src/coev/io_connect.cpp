@@ -44,6 +44,8 @@ namespace coev
         m_read.data = this;
         ev_io_init(&m_read, &io_connect::cb_connect, m_fd, EV_READ | EV_WRITE);
         ev_io_start(m_loop, &m_read);
+        m_write.data = this;
+        ev_io_init(&m_write, &io_connect::cb_connect, m_fd, EV_READ | EV_WRITE);
         return 0;
     }
     int io_connect::__del_connect()

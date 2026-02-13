@@ -28,12 +28,9 @@ const unsigned char aclDescribeRequestV1[] = {
     0x03                                                     // PermissionType: Allow
 };
 
-TEST(DescribeAclsRequestTest, DecodeRequest)
-{
-    real_decoder decoder;
+TEST(DescribeAclsRequestTest, DecodeRequest) {
     std::string rawData(reinterpret_cast<const char *>(aclDescribeRequest), sizeof(aclDescribeRequest));
-    decoder.m_raw = rawData;
-    decoder.m_offset = 0;
+    real_decoder decoder(rawData);
 
     DescribeAclsRequest request;
     int result = request.decode(decoder, 0);
@@ -46,12 +43,9 @@ TEST(DescribeAclsRequestTest, DecodeRequest)
     EXPECT_EQ(request.m_filter.m_permission_type, AclPermissionTypeAllow) << "PermissionType mismatch";
 }
 
-TEST(DescribeAclsRequestTest, DecodeRequestv1)
-{
-    real_decoder decoder;
+TEST(DescribeAclsRequestTest, DecodeRequestv1) {
     std::string rawData(reinterpret_cast<const char *>(aclDescribeRequestV1), sizeof(aclDescribeRequestV1));
-    decoder.m_raw = rawData;
-    decoder.m_offset = 0;
+    real_decoder decoder(rawData);
 
     DescribeAclsRequest request;
     int result = request.decode(decoder, 1);
@@ -148,10 +142,8 @@ TEST(DescribeAclsRequestTest, RoundTripEncodingDecoding)
     ASSERT_EQ(result, 0) << "Failed to encode request for round-trip test";
 
     // Decode the request
-    real_decoder decoder;
     std::string rawData = encoder.m_raw.substr(0, encoder.m_offset);
-    decoder.m_raw = rawData;
-    decoder.m_offset = 0;
+    real_decoder decoder(rawData);
 
     DescribeAclsRequest decodedRequest;
     result = decodedRequest.decode(decoder, 0);
@@ -180,10 +172,8 @@ TEST(DescribeAclsRequestTest, RoundTripEncodingDecoding)
     result = originalRequestV1.encode(encoderV1);
     ASSERT_EQ(result, 0) << "Failed to encode V1 request for round-trip test";
 
-    real_decoder decoderV1;
     std::string rawDataV1 = encoderV1.m_raw.substr(0, encoderV1.m_offset);
-    decoderV1.m_raw = rawDataV1;
-    decoderV1.m_offset = 0;
+    real_decoder decoderV1(rawDataV1);
 
     DescribeAclsRequest decodedRequestV1;
     result = decodedRequestV1.decode(decoderV1, 1);

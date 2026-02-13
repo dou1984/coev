@@ -45,7 +45,6 @@ struct AsyncProducer : std::enable_shared_from_this<AsyncProducer>
     void retry_message(std::shared_ptr<ProducerMessage> msg, KError err);
     void retry_messages(const std::vector<std::shared_ptr<ProducerMessage>> &batch, KError err);
     std::shared_ptr<BrokerProducer> get_broker_producer(std::shared_ptr<Broker> &broker);
-    void unref_broker_producer(std::shared_ptr<Broker> broker, std::shared_ptr<BrokerProducer> bp);
     coev::awaitable<void> abandon_broker_connection(std::shared_ptr<Broker> broker);
     coev::awaitable<int> finish_transaction(bool commit);
     coev::awaitable<void> retry_batch(const std::string &topic, int32_t partition, std::shared_ptr<PartitionSet> pSet, KError kerr);
@@ -56,7 +55,6 @@ struct AsyncProducer : std::enable_shared_from_this<AsyncProducer>
     coev::co_waitgroup m_in_flight;
 
     std::map<int32_t, std::shared_ptr<BrokerProducer>> m_brokers;
-    std::map<std::shared_ptr<BrokerProducer>, int> m_broker_refs;
 
     coev::co_channel<std::shared_ptr<ProducerMessage>> m_input;
     coev::co_channel<std::shared_ptr<ProducerMessage>> m_retries;

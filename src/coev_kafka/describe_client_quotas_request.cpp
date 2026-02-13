@@ -70,7 +70,7 @@ int QuotaFilterComponent::encode(packet_encoder &pe) const
 
     if (m_match_type == QuotaMatchType::QuotaMatchAny || m_match_type == QuotaMatchType::QuotaMatchDefault)
     {
-        if (pe.putNullableString(nullptr) != ErrNoError)
+        if (pe.putNullableString("") != ErrNoError)
         {
             return ErrEncodeError;
         }

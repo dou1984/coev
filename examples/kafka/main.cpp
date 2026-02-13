@@ -109,32 +109,20 @@ int main(int argc, char **argv)
                     }
                     defer(producer->async_close());
 
-                    auto msg = std::make_shared<ProducerMessage>();
-                    msg->m_topic = topic;
-                    msg->m_key.m_data = "key";
-                    msg->m_value.m_data = "hello world";
+                    while (true)
+                    {
 
-                    producer->m_input.set(msg);
-                    co_await wait_for_any(
-                        [](auto _producer) -> coev::awaitable<void>
-                        {
-                            std::shared_ptr<ProducerMessage> succ_msg;
-                            co_await _producer->m_successes.get(succ_msg);
-                            auto offset = succ_msg->m_offset;
-                            LOG_DBG("produced message at offset %ld", offset);
-                        }(producer),
-                        [](auto _producer) -> coev::awaitable<void>
-                        {
-                            std::shared_ptr<ProducerError> fail_msg;
-                            co_await _producer->m_errors.get(fail_msg);
-                            if (fail_msg->m_err == ErrNoError)
-                            {
-                                LOG_ERR("fail: %d", fail_msg->m_err);
-                                auto err = fail_msg->m_err;
-                            }
-                        }(producer));
+                        auto msg = std::make_shared<ProducerMessage>();
+                        msg->m_topic = topic;
+                        msg->m_key.m_data = "key";
+                        msg->m_value.m_data = "hello world";
 
-                        
+                        producer->m_input.set(msg);
+                        std::shared_ptr<ProducerMessage> succ_msg;
+                        co_await producer->m_successes.get(succ_msg);
+                        auto offset = succ_msg->m_offset;
+                        LOG_DBG("produced message at offset %ld", offset);
+                    }
                 })
             .wait();
     }

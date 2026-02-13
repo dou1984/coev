@@ -60,7 +60,6 @@ coev::awaitable<int> PartitionProducer::dispatch()
             bool _;
             if (m_broker_producer->m_abandoned.try_get(_))
             {
-                m_parent->unref_broker_producer(m_leader, m_broker_producer);
                 m_broker_producer.reset();
                 co_await sleep_for(m_parent->m_conf->Producer.Retry.Backoff);
             }
@@ -118,11 +117,6 @@ coev::awaitable<int> PartitionProducer::dispatch()
         }
 
         m_broker_producer->m_input.set(msg);
-
-        if (m_broker_producer)
-        {
-            m_parent->unref_broker_producer(m_leader, m_broker_producer);
-        }
     }
 }
 
@@ -162,8 +156,6 @@ void PartitionProducer::new_high_watermark(int hwm)
     msg->m_flags = FlagSet::Fin;
     msg->m_retries = m_high_watermark - 1;
     m_broker_producer->m_input.set(msg);
-
-    m_parent->unref_broker_producer(m_leader, m_broker_producer);
     m_broker_producer.reset();
 }
 

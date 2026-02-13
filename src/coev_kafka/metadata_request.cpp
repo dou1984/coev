@@ -354,4 +354,3 @@ MetadataRequest::MetadataRequest(std::shared_ptr<Config> &conf, const std::vecto
         m_version = 0;
     }
 }
-

@@ -104,8 +104,8 @@ coev::awaitable<int> request_decode(std::shared_ptr<Broker> &broker, Request &re
         co_return -1;
     }
 
-    std::string encoded_request;
-    err = co_await broker->ReadFull(encoded_request, length);
+    std::string request_encoded;
+    err = co_await broker->ReadFull(request_encoded, length);
     if (err != 0)
     {
         size = read_bytes + length;
@@ -113,7 +113,7 @@ coev::awaitable<int> request_decode(std::shared_ptr<Broker> &broker, Request &re
     }
     read_bytes += length;
 
-    err = ::decode(encoded_request, req);
+    err = ::decode(request_encoded, req);
     if (err != 0)
     {
         size = read_bytes;
@@ -123,7 +123,7 @@ coev::awaitable<int> request_decode(std::shared_ptr<Broker> &broker, Request &re
     co_return 0;
 }
 
-std::shared_ptr<protocol_body> allocate_body(int16_t key, int16_t version)
+std::shared_ptr<protocol_body> request_allocate(int16_t key, int16_t version)
 {
     switch (key)
     {

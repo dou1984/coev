@@ -5,8 +5,6 @@ BrokerProducer::BrokerProducer(std::shared_ptr<AsyncProducer> parent, std::share
     : m_parent(parent), m_broker(broker), m_timer(m_parent->m_conf->Producer.Flush.Frequency.count() / 1000, 0), m_timer_fired(false)
 {
     m_buffer = std::make_shared<ProduceSet>(parent);
-    m_task << run();
-    m_task << bridge();
 }
 
 coev::awaitable<void> BrokerProducer::run()
@@ -143,7 +141,11 @@ coev::awaitable<void> BrokerProducer::shutdown()
     co_await m_responses.get(response);
     handle_response(response);
 }
-
+void BrokerProducer::init()
+{
+    m_task << run();
+    m_task << bridge();
+}
 KError BrokerProducer::needs_retry(std::shared_ptr<ProducerMessage> msg)
 {
     if (m_closing != ErrNoError)

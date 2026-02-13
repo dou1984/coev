@@ -17,7 +17,6 @@ namespace coev::nghttp2
             m_path = std::string(value, valuelen);
         }
         else if (strncmp(name, g_method, strlen(g_method)) == 0)
-
         {
             m_method = std::string(value, valuelen);
         }

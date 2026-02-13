@@ -158,7 +158,7 @@ int real_decoder::getFloat64(double &result)
 
 int real_decoder::getArrayLength(int32_t &result)
 {
-    if (isFixed())
+    if (_is_fixed())
     {
         if (remaining() < 4)
         {
@@ -175,7 +175,7 @@ int real_decoder::getArrayLength(int32_t &result)
         }
         return 0;
     }
-    else if (isFlexible())
+    else if (_is_flexible())
     {
         uint64_t n;
         int err = getUVariant(n);
@@ -238,11 +238,11 @@ int real_decoder::getDurationMs(std::chrono::milliseconds &out)
 
 int real_decoder::getTaggedFieldArray(const taggedFieldDecoders &decoders)
 {
-    if (isFixed())
+    if (_is_fixed())
     {
         return ErrTaggedFieldsInNonFlexibleContext;
     }
-    else if (isFlexible())
+    else if (_is_flexible())
     {
         if (decoders.empty())
         {
@@ -281,8 +281,8 @@ int real_decoder::getTaggedFieldArray(const taggedFieldDecoders &decoders)
                 continue;
             }
             auto decoder = it->second;
-            pushFlexible();
-            defer(popFlexible());
+            _push_flexible();
+            defer(_pop_flexible());
             err = decoder(*this);
             if (err != 0)
             {
@@ -296,12 +296,12 @@ int real_decoder::getTaggedFieldArray(const taggedFieldDecoders &decoders)
 
 int real_decoder::getEmptyTaggedFieldArray(int32_t &result)
 {
-    if (isFixed())
+    if (_is_fixed())
     {
         result = 0;
         return 0;
     }
-    else if (isFlexible())
+    else if (_is_flexible())
     {
         uint64_t tag_count;
         int err = getUVariant(tag_count);
@@ -342,7 +342,7 @@ int real_decoder::getEmptyTaggedFieldArray(int32_t &result)
 
 int real_decoder::getBytes(std::string &result)
 {
-    if (isFixed())
+    if (_is_fixed())
     {
         int32_t tmp;
         int err = getInt32(tmp);
@@ -357,7 +357,7 @@ int real_decoder::getBytes(std::string &result)
         }
         return getRawBytes(static_cast<int>(tmp), result);
     }
-    else if (isFlexible())
+    else if (_is_flexible())
     {
         uint64_t n;
         int err = getUVariant(n);
@@ -389,7 +389,7 @@ int real_decoder::getVariantBytes(std::string &result)
 
 int real_decoder::getStringLength(int &result)
 {
-    if (isFixed())
+    if (_is_fixed())
     {
         int16_t length;
         int err = getInt16(length);
@@ -413,7 +413,7 @@ int real_decoder::getStringLength(int &result)
         result = n;
         return 0;
     }
-    else if (isFlexible())
+    else if (_is_flexible())
     {
         uint64_t length;
         int err = getUVariant(length);
@@ -442,7 +442,7 @@ int real_decoder::getStringLength(int &result)
 
 int real_decoder::getString(std::string &result)
 {
-    if (isFixed())
+    if (_is_fixed())
     {
         int length;
         int err = getStringLength(length);
@@ -455,7 +455,7 @@ int real_decoder::getString(std::string &result)
         m_offset += length;
         return 0;
     }
-    else if (isFlexible())
+    else if (_is_flexible())
     {
         int length;
         int err = getStringLength(length);
@@ -473,7 +473,7 @@ int real_decoder::getString(std::string &result)
 
 int real_decoder::getNullableString(std::string &result)
 {
-    if (isFixed())
+    if (_is_fixed())
     {
         int n;
         int err = getStringLength(n);
@@ -486,7 +486,7 @@ int real_decoder::getNullableString(std::string &result)
         m_offset += n;
         return 0;
     }
-    else if (isFlexible())
+    else if (_is_flexible())
     {
         int length;
         int err = getStringLength(length);
@@ -504,7 +504,7 @@ int real_decoder::getNullableString(std::string &result)
 
 int real_decoder::getInt32Array(std::vector<int32_t> &result)
 {
-    if (isFixed())
+    if (_is_fixed())
     {
         int32_t n;
         int err = getArrayLength(n);
@@ -530,7 +530,7 @@ int real_decoder::getInt32Array(std::vector<int32_t> &result)
         }
         return 0;
     }
-    else if (isFlexible())
+    else if (_is_flexible())
     {
         uint64_t n;
         int err = getUVariant(n);
@@ -592,7 +592,7 @@ int real_decoder::getInt64Array(std::vector<int64_t> &result)
 
 int real_decoder::getStringArray(std::vector<std::string> &result)
 {
-    if (isFixed())
+    if (_is_fixed())
     {
         int32_t n;
         int err = getArrayLength(n);
@@ -618,7 +618,7 @@ int real_decoder::getStringArray(std::vector<std::string> &result)
         }
         return 0;
     }
-    else if (isFlexible())
+    else if (_is_flexible())
     {
         int32_t n;
         int err = getArrayLength(n);
@@ -661,9 +661,7 @@ int real_decoder::getSubset(int length, std::shared_ptr<packet_decoder> &out)
         out = nullptr;
         return err;
     }
-    auto decoder = std::make_shared<real_decoder>();
-    decoder->m_raw = std::move(buf);
-    out = decoder;
+    out = std::make_shared<real_decoder>(buf);
     return 0;
 }
 
@@ -691,9 +689,7 @@ int real_decoder::peek(int offset, int length, std::shared_ptr<packet_decoder> &
         return ErrInsufficientData;
     }
     int start = m_offset + offset;
-    auto decoder = std::make_shared<real_decoder>();
-    decoder->m_raw = m_raw.substr(start, length);
-    result = decoder;
+    result = std::make_shared<real_decoder>(m_raw.substr(start, length));
     return 0;
 }
 
@@ -742,4 +738,8 @@ int real_decoder::pop()
     auto in = m_stack.back();
     m_stack.pop_back();
     return in->check(m_offset, m_raw);
+}
+real_decoder::real_decoder(const std::string &buf)
+{
+    m_raw = buf;
 }

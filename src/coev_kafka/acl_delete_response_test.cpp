@@ -26,11 +26,9 @@ const unsigned char deleteAclsResponse[] = {
     0x03                                                     // PermissionType: Allow
 };
 
-TEST(DeleteAclsResponseTest, DecodeResponse)
-{
-    real_decoder decoder;
-    decoder.m_raw = std::string(reinterpret_cast<const char *>(deleteAclsResponse), sizeof(deleteAclsResponse));
-    decoder.m_offset = 0;
+TEST(DeleteAclsResponseTest, DecodeResponse) {
+    std::string rawData(reinterpret_cast<const char *>(deleteAclsResponse), sizeof(deleteAclsResponse));
+    real_decoder decoder(rawData);
 
     DeleteAclsResponse response;
     int result = response.decode(decoder, 0);
@@ -149,10 +147,8 @@ TEST(DeleteAclsResponseTest, RoundTripEncodingDecoding)
     ASSERT_EQ(result, 0) << "Failed to encode response for round-trip test";
 
     // Decode the response
-    real_decoder decoder;
-    // Only pass the used portion of the encoder buffer
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
-    decoder.m_offset = 0;
+    std::string encodedData = encoder.m_raw.substr(0, encoder.m_offset);
+    real_decoder decoder(encodedData);
 
     DeleteAclsResponse decodedResponse;
     result = decodedResponse.decode(decoder, 0);
@@ -199,9 +195,8 @@ TEST(DeleteAclsResponseTest, DecodeWithError)
         0x00, 0x00, 0x00, 0x00                                                       // 0 matching ACLs
     };
 
-    real_decoder decoder;
-    decoder.m_raw = std::string(reinterpret_cast<const char *>(errorResponse), sizeof(errorResponse));
-    decoder.m_offset = 0;
+    std::string rawData(reinterpret_cast<const char *>(errorResponse), sizeof(errorResponse));
+    real_decoder decoder(rawData);
 
     DeleteAclsResponse response;
     int result = response.decode(decoder, 0);

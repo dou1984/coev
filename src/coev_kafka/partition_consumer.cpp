@@ -294,12 +294,12 @@ int PartitionConsumer::ParseRecords(RecordBatch &batch, std::vector<std::shared_
 {
 
     messages.reserve(batch.m_records.size());
-    for (auto &rec : batch.m_records)
+    for (auto rec : batch.m_records)
     {
-        int64_t offset = batch.m_first_offset + rec.m_offset_delta;
+        int64_t offset = batch.m_first_offset + rec->m_offset_delta;
         if (offset < m_offset)
             continue;
-        auto timestamp = batch.m_first_timestamp + std::chrono::milliseconds(rec.m_timestamp_delta.count());
+        auto timestamp = batch.m_first_timestamp + std::chrono::milliseconds(rec->m_timestamp_delta.count());
         if (batch.m_log_append_time)
         {
             timestamp = batch.m_max_timestamp;
@@ -307,11 +307,11 @@ int PartitionConsumer::ParseRecords(RecordBatch &batch, std::vector<std::shared_
         auto cm = std::make_shared<ConsumerMessage>();
         cm->m_topic = m_topic;
         cm->m_partition = m_partition;
-        cm->m_key = rec.m_key;
-        cm->m_value = rec.m_value;
+        cm->m_key = rec->m_key;
+        cm->m_value = rec->m_value;
         cm->m_offset = offset;
         cm->m_timestamp = timestamp;
-        cm->m_headers = rec.m_headers;
+        cm->m_headers = rec->m_headers;
         messages.push_back(cm);
         m_offset = offset + 1;
     }
@@ -393,10 +393,10 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
 
     for (auto &records : block.m_records_set)
     {
-        if (records.m_records_type == LegacyRecords)
+        if (records.m_records_type == LegacyRecords && records.m_message_set)
         {
             std::vector<std::shared_ptr<ConsumerMessage>> consumer_messages;
-            auto &message_set = std::get<MessageSet>(records.m_records);
+            auto &message_set = *records.m_message_set;
             auto err = ParseMessages(message_set, consumer_messages);
             if (err)
             {
@@ -404,9 +404,9 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
             }
             messages.insert(messages.end(), consumer_messages.begin(), consumer_messages.end());
         }
-        else if (records.m_records_type == DefaultRecords)
+        else if (records.m_records_type == DefaultRecords && records.m_record_batch)
         {
-            auto &record_batch = std::get<RecordBatch>(records.m_records);
+            auto &record_batch = *records.m_record_batch;
             for (auto it = aborted_transactions.begin(); it != aborted_transactions.end();)
             {
                 if (it->m_first_offset > record_batch.last_offset())

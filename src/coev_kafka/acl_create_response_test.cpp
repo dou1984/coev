@@ -26,12 +26,9 @@ const unsigned char createResponseArray[] = {
     0xFF, 0xFF                           // No error message
 };
 
-TEST(CreateAclsResponseTest, DecodeWithError)
-{
-    real_decoder decoder;
+TEST(CreateAclsResponseTest, DecodeWithError) {
     std::string rawData(reinterpret_cast<const char *>(createResponseWithError), sizeof(createResponseWithError));
-    decoder.m_raw = rawData;
-    decoder.m_offset = 0;
+    real_decoder decoder(rawData);
 
     CreateAclsResponse response;
     int result = response.decode(decoder, 0);
@@ -44,12 +41,9 @@ TEST(CreateAclsResponseTest, DecodeWithError)
     EXPECT_EQ(aclResp.m_err_msg, "error") << "ACL creation response error message mismatch";
 }
 
-TEST(CreateAclsResponseTest, DecodeResponseArray)
-{
-    real_decoder decoder;
+TEST(CreateAclsResponseTest, DecodeResponseArray) {
     std::string rawData(reinterpret_cast<const char *>(createResponseArray), sizeof(createResponseArray));
-    decoder.m_raw = rawData;
-    decoder.m_offset = 0;
+    real_decoder decoder(rawData);
 
     CreateAclsResponse response;
     int result = response.decode(decoder, 0);
@@ -168,10 +162,8 @@ TEST(CreateAclsResponseTest, RoundTripEncodingDecoding)
     ASSERT_EQ(result, 0) << "Failed to encode response for round-trip test";
 
     // Decode the response
-    real_decoder decoder;
     std::string encodedData = encoder.m_raw.substr(0, encoder.m_offset);
-    decoder.m_raw = encodedData;
-    decoder.m_offset = 0;
+    real_decoder decoder(encodedData);
 
     CreateAclsResponse decodedResponse;
     result = decodedResponse.decode(decoder, 0);

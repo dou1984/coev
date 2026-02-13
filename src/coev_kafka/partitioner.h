@@ -12,7 +12,7 @@
 struct Partitioner
 {
     virtual ~Partitioner() = default;
-    virtual int partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result) = 0;
+    virtual int partition(std::shared_ptr<ProducerMessage> message, int32_t num_partitions, int32_t &result) = 0;
     virtual bool requires_consistency() = 0;
 };
 
@@ -28,13 +28,13 @@ struct HashPartitionerOption
 
 struct ManualPartitioner : Partitioner
 {
-    int partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result);
+    int partition(std::shared_ptr<ProducerMessage> message, int32_t num_partitions, int32_t &result);
     bool requires_consistency();
 };
 
 struct RandomPartitioner : Partitioner
 {
-    int partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result);
+    int partition(std::shared_ptr<ProducerMessage> message, int32_t num_partitions, int32_t &result);
     bool requires_consistency();
 
     RandomPartitioner();
@@ -45,7 +45,7 @@ struct RoundRobinPartitioner : Partitioner
 {
 
     RoundRobinPartitioner();
-    int partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result);
+    int partition(std::shared_ptr<ProducerMessage> message, int32_t num_partitions, int32_t &result);
     bool requires_consistency();
 
     int32_t m_partition;
@@ -54,7 +54,7 @@ struct RoundRobinPartitioner : Partitioner
 struct HashPartitioner : DynamicConsistencyPartitioner
 {
     HashPartitioner();
-    int partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result);
+    int partition(std::shared_ptr<ProducerMessage> message, int32_t num_partitions, int32_t &result);
     bool requires_consistency();
     bool message_requires_consistency(std::shared_ptr<ProducerMessage> message);
 

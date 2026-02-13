@@ -83,11 +83,11 @@ void real_encoder::putFloat64(double in)
 
 int real_encoder::putArrayLength(int in)
 {
-    if (isFixed())
+    if (_is_fixed())
     {
         putInt32(static_cast<int32_t>(in));
     }
-    else if (isFlexible())
+    else if (_is_flexible())
     {
         putUVarint(static_cast<uint64_t>(in + 1));
     }
@@ -119,7 +119,7 @@ int real_encoder::putRawBytes(const std::string_view &in)
 
 int real_encoder::putBytes(const std::string_view &in)
 {
-    if (isFixed())
+    if (_is_fixed())
     {
         if (in.empty())
         {
@@ -130,7 +130,7 @@ int real_encoder::putBytes(const std::string_view &in)
         putRawBytes(in);
         return 0;
     }
-    else if (isFlexible())
+    else if (_is_flexible())
     {
         putUVarint(static_cast<uint64_t>(in.size() + 1));
         return putRawBytes(in);
@@ -152,7 +152,7 @@ int real_encoder::putVariantBytes(const std::string_view &in)
 
 int real_encoder::putString(const std::string_view &in)
 {
-    if (isFixed())
+    if (_is_fixed())
     {
         putInt16(static_cast<int16_t>(in.size()));
         assert(m_offset + in.size() <= m_raw.size());
@@ -160,7 +160,7 @@ int real_encoder::putString(const std::string_view &in)
         m_offset += in.size();
         return 0;
     }
-    else if (isFlexible())
+    else if (_is_flexible())
     {
         putArrayLength(static_cast<uint64_t>(in.size()));
         putRawBytes(in);
@@ -171,7 +171,7 @@ int real_encoder::putString(const std::string_view &in)
 
 int real_encoder::putNullableString(const std::string_view &in)
 {
-    if (isFixed())
+    if (_is_fixed())
     {
         if (in.empty())
         {
@@ -181,7 +181,7 @@ int real_encoder::putNullableString(const std::string_view &in)
         putString(in);
         return 0;
     }
-    else if (isFlexible())
+    else if (_is_flexible())
     {
         if (in.empty())
         {
@@ -195,7 +195,7 @@ int real_encoder::putNullableString(const std::string_view &in)
 
 int real_encoder::putStringArray(const std::vector<std::string> &in)
 {
-    if (isFixed())
+    if (_is_fixed())
     {
         putArrayLength(static_cast<int>(in.size()));
         for (auto &s : in)
@@ -204,7 +204,7 @@ int real_encoder::putStringArray(const std::vector<std::string> &in)
         }
         return 0;
     }
-    else if (isFlexible())
+    else if (_is_flexible())
     {
         putArrayLength(static_cast<int>(in.size()));
         for (auto &s : in)
@@ -218,7 +218,7 @@ int real_encoder::putStringArray(const std::vector<std::string> &in)
 
 int real_encoder::putInt32Array(const std::vector<int32_t> &in)
 {
-    if (isFixed())
+    if (_is_fixed())
     {
         putArrayLength(static_cast<int>(in.size()));
         for (int32_t v : in)
@@ -227,7 +227,7 @@ int real_encoder::putInt32Array(const std::vector<int32_t> &in)
         }
         return 0;
     }
-    else if (isFlexible())
+    else if (_is_flexible())
     {
         putUVarint(static_cast<uint64_t>(in.size()) + 1);
         for (int32_t v : in)
@@ -241,7 +241,7 @@ int real_encoder::putInt32Array(const std::vector<int32_t> &in)
 
 int real_encoder::putNullableInt32Array(const std::vector<int32_t> &in)
 {
-    if (isFixed())
+    if (_is_fixed())
     {
         if (in.empty())
         {
@@ -255,7 +255,7 @@ int real_encoder::putNullableInt32Array(const std::vector<int32_t> &in)
         }
         return 0;
     }
-    else if (isFlexible())
+    else if (_is_flexible())
     {
         if (in.empty())
         {
@@ -284,10 +284,10 @@ int real_encoder::putInt64Array(const std::vector<int64_t> &in)
 
 void real_encoder::putEmptyTaggedFieldArray()
 {
-    if (isFixed())
+    if (_is_fixed())
     {
     }
-    else if (isFlexible())
+    else if (_is_flexible())
     {
         putUVarint(0);
     }

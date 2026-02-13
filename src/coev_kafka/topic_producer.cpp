@@ -40,7 +40,7 @@ coev::awaitable<void> TopicProducer::dispatch()
     }
 }
 
-coev::awaitable<int> TopicProducer::partition_message(std::shared_ptr<ProducerMessage> msg)
+coev::awaitable<int> TopicProducer::partition_message(std::shared_ptr<ProducerMessage> &msg)
 {
 
     bool requires_consistency = false;

@@ -462,14 +462,14 @@ void AsyncProducer::retry_messages(const std::vector<std::shared_ptr<ProducerMes
     }
 }
 
-coev::awaitable<void> AsyncProducer::retry_batch(const std::string &topic, int32_t partition, std::shared_ptr<PartitionSet> pset, KError kerr)
+coev::awaitable<void> AsyncProducer::retry_batch(const std::string &topic, int32_t partition, std::shared_ptr<PartitionSet> partition_set, KError kerr)
 {
-    for (auto &msg : pset->m_messages)
+    for (auto &msg : partition_set->m_messages)
     {
         if (msg->m_retries >= m_conf->Producer.Retry.Max)
         {
             LOG_CORE("retry_batch maximum retries reached for message, returning errors");
-            return_errors(pset->m_messages, kerr);
+            return_errors(partition_set->m_messages, kerr);
             co_return;
         }
         msg->m_retries++;
@@ -480,55 +480,38 @@ coev::awaitable<void> AsyncProducer::retry_batch(const std::string &topic, int32
     if (err != 0)
     {
         LOG_CORE("retry_batch failed to get leader, error %d, returning errors", err);
-        for (auto &msg : pset->m_messages)
+        for (auto &msg : partition_set->m_messages)
         {
             return_error(msg, kerr);
         }
         co_return;
     }
 
-    auto bp = get_broker_producer(leader);
-    auto produce_set = std::make_shared<ProduceSet>(shared_from_this());
-    produce_set->m_messages[topic][partition] = pset;
-    produce_set->m_buffer_bytes += pset->m_buffer_bytes;
-    produce_set->m_buffer_count += pset->m_messages.size();
+    auto _set = std::make_shared<ProduceSet>(shared_from_this());
+    _set->m_messages[topic][partition] = partition_set;
+    _set->m_buffer_bytes += partition_set->m_buffer_bytes;
+    _set->m_buffer_count += partition_set->m_messages.size();
 
-    bp->m_output.set(produce_set);
-    unref_broker_producer(leader, bp);
+    get_broker_producer(leader)->m_output.set(_set);
 }
 
 std::shared_ptr<BrokerProducer> AsyncProducer::get_broker_producer(std::shared_ptr<Broker> &broker)
 {
-    auto bp = m_brokers[broker->ID()];
-    if (!bp)
+    auto it = m_brokers.find(broker->ID());
+    if (it == m_brokers.end())
     {
         LOG_CORE("creating new BrokerProducer for broker %d", broker->ID());
-        bp = std::make_shared<BrokerProducer>(shared_from_this(), broker);
-        m_brokers[broker->ID()] = bp;
-        m_broker_refs[bp] = 0;
+        it = m_brokers.emplace(broker->ID(), std::make_shared<BrokerProducer>(shared_from_this(), broker)).first;
+        it->second->init();
     }
-
-    m_broker_refs[bp]++;
-    return bp;
-}
-
-void AsyncProducer::unref_broker_producer(std::shared_ptr<Broker> broker, std::shared_ptr<BrokerProducer> bp)
-{
-    m_broker_refs[bp]--;
-    if (m_broker_refs[bp] == 0)
-    {
-        m_broker_refs.erase(bp);
-        if (m_brokers[broker->ID()] == bp)
-        {
-            m_brokers.erase(broker->ID());
-        }
-    }
+    return it->second;
 }
 
 coev::awaitable<void> AsyncProducer::abandon_broker_connection(std::shared_ptr<Broker> broker)
 {
     bool ok;
-    co_await m_brokers[broker->ID()]->m_abandoned.get(ok);
+    auto _broker = m_brokers[broker->ID()];
+    co_await _broker->m_abandoned.get(ok);
     if (ok)
     {
         broker->Close();

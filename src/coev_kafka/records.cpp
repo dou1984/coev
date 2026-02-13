@@ -9,52 +9,36 @@
 Records::Records() : m_records_type(UnknownRecords)
 {
 }
-Records::Records(MessageSet &&message_set)
+Records::Records(std::shared_ptr<MessageSet> &message_set)
 {
     m_records_type = LegacyRecords;
-    m_records = std::move(message_set);
+    m_message_set = message_set;
 }
-Records::Records(RecordBatch &&batch)
+Records::Records(std::shared_ptr<RecordBatch> &batch)
 {
     m_records_type = DefaultRecords;
-    m_records = std::move(batch);
+    m_record_batch = batch;
 }
-
-int Records::set_type_from_fields(bool &empty) const
+Records::~Records()
 {
-    empty = false;
-    if (m_records.index() == std::variant_npos)
-    {
-        empty = true;
-        return 0;
-    }
-    m_records_type = DefaultRecords;
-    if (std::holds_alternative<MessageSet>(m_records))
-    {
-        m_records_type = LegacyRecords;
-    }
-
-    return 0;
+}
+Records::Records(Records &&other)
+{
+    m_records_type = other.m_records_type;
+    m_message_set = std::move(other.m_message_set);
+    m_record_batch = std::move(other.m_record_batch);
+    other.m_records_type = UnknownRecords;
 }
 
 int Records::encode(packet_encoder &pe) const
 {
-    if (m_records_type == UnknownRecords)
+    if (m_records_type == LegacyRecords && m_message_set)
     {
-        bool empty;
-        int err = set_type_from_fields(empty);
-        if (err != 0 || empty)
-        {
-            return err;
-        }
+        return m_message_set->encode(pe);
     }
-    if (m_records_type == LegacyRecords)
+    if (m_records_type == DefaultRecords && m_record_batch)
     {
-        return std::get<MessageSet>(m_records).encode(pe);
-    }
-    if (m_records_type == DefaultRecords)
-    {
-        return std::get<RecordBatch>(m_records).encode(pe);
+        return m_record_batch->encode(pe);
     }
     return -1;
 }
@@ -89,45 +73,30 @@ int Records::decode(packet_decoder &pd)
 
     if (m_records_type == LegacyRecords)
     {
-        m_records = MessageSet();
-        return std::get<MessageSet>(m_records).decode(pd);
+        m_message_set = std::make_shared<MessageSet>();
+        return m_message_set->decode(pd);
     }
     if (m_records_type == DefaultRecords)
     {
-        m_records = RecordBatch();
-        return std::get<RecordBatch>(m_records).decode(pd);
+        m_record_batch = std::make_shared<RecordBatch>();
+        return m_record_batch->decode(pd);
     }
 
     return -1;
 }
 
-int Records::num_records(int &_num_records) const
+int Records::num_records(int &count) const
 {
-    _num_records = 0;
-    if (m_records_type == UnknownRecords)
+    count = 0;
+    if (m_records_type == LegacyRecords && m_message_set)
     {
-        bool empty;
-        int err = const_cast<Records *>(this)->set_type_from_fields(empty);
-        if (err != 0 || empty)
-        {
-            return err;
-        }
+        count = static_cast<int>(m_message_set->m_messages.size());
+        return 0;
     }
-    if (m_records_type == LegacyRecords)
+    else if (m_records_type == DefaultRecords && m_record_batch)
     {
-        if (std::holds_alternative<MessageSet>(m_records))
-        {
-            _num_records = static_cast<int>(std::get<MessageSet>(m_records).m_messages.size());
-            return 0;
-        }
-    }
-    else if (m_records_type == DefaultRecords)
-    {
-        if (std::holds_alternative<RecordBatch>(m_records))
-        {
-            _num_records = std::get<RecordBatch>(m_records).m_records.size();
-            return 0;
-        }
+        count = m_record_batch->m_records.size();
+        return 0;
     }
     return -1;
 }
@@ -135,127 +104,62 @@ int Records::num_records(int &_num_records) const
 int Records::is_partial(bool &partial) const
 {
     partial = false;
-    if (m_records_type == UnknownRecords)
+    if (m_records_type == LegacyRecords && m_message_set)
     {
-        bool empty;
-        int err = const_cast<Records *>(this)->set_type_from_fields(empty);
-        if (err != 0 || empty)
-        {
-            return err;
-        }
+        partial = m_message_set->m_partial_trailing_message;
+        return 0;
     }
-
-    switch (m_records_type)
+    else if (m_records_type == DefaultRecords && m_record_batch)
     {
-    case UnknownRecords:
+        partial = m_record_batch->m_partial_trailing_record;
         return 0;
-    case LegacyRecords:
-        if (std::holds_alternative<MessageSet>(m_records))
-        {
-            partial = std::get<MessageSet>(m_records).m_partial_trailing_message;
-        }
-        return 0;
-    case DefaultRecords:
-        if (std::holds_alternative<RecordBatch>(m_records))
-        {
-            partial = std::get<RecordBatch>(m_records).m_partial_trailing_record;
-        }
-        return 0;
-    default:
-        return ErrUnknownRecordsType;
     }
+    return ErrUnknownRecordsType;
 }
 
 int Records::is_control(bool &out) const
 {
     out = false;
-    if (m_records_type == UnknownRecords)
+    if (m_records_type == DefaultRecords && m_record_batch)
     {
-        bool empty;
-        int err = const_cast<Records *>(this)->set_type_from_fields(empty);
-        if (err != 0 || empty)
-        {
-            return err;
-        }
-    }
-
-    switch (m_records_type)
-    {
-    case LegacyRecords:
+        out = m_record_batch->m_control;
         return 0;
-    case DefaultRecords:
-        if (std::holds_alternative<RecordBatch>(m_records))
-        {
-            out = std::get<RecordBatch>(m_records).m_control;
-        }
-        return 0;
-    default:
-        return -1;
     }
+    return -1;
 }
 
 int Records::is_overflow(bool &out)
 {
     out = false;
-    if (m_records_type == UnknownRecords)
+    if (m_records_type == LegacyRecords && m_message_set)
     {
-        bool empty;
-        int err = set_type_from_fields(empty);
-        if (err != 0 || empty)
-        {
-            return err;
-        }
+        out = m_message_set->m_overflow_message;
+        return 0;
     }
-    switch (m_records_type)
-    {
-    case UnknownRecords:
-        return 0;
-    case LegacyRecords:
-        if (std::holds_alternative<MessageSet>(m_records))
-        {
-            out = std::get<MessageSet>(m_records).m_overflow_message;
-        }
-        return 0;
-    case DefaultRecords:
-        return 0;
-    default:
-        return -1;
-    }
+    return -1;
 }
 
 int Records::next_offset(int64_t &offset)
 {
     offset = 0;
-    switch (m_records_type)
+    if (m_records_type == DefaultRecords && m_record_batch)
     {
-    case UnknownRecords:
-    case LegacyRecords:
+        offset = m_record_batch->last_offset() + 1;
         return 0;
-    case DefaultRecords:
-        if (std::holds_alternative<RecordBatch>(m_records))
-        {
-            offset = std::get<RecordBatch>(m_records).last_offset() + 1;
-        }
-        return 0;
-    default:
-        offset = 0;
-        return -1;
     }
+    return -1;
 }
 
 int Records::get_control_record(ControlRecord &out) const
 {
-    if (!std::holds_alternative<RecordBatch>(m_records) || std::get<RecordBatch>(m_records).m_records.empty())
+    if (m_records_type != DefaultRecords || !m_record_batch || m_record_batch->m_records.empty())
     {
         return -1;
     }
 
-    auto &first_record = std::get<RecordBatch>(m_records).m_records[0];
-    real_decoder key;
-    key.m_raw = first_record.m_key;
-
-    real_decoder value;
-    value.m_raw = first_record.m_value;
+    auto record = m_record_batch->m_records[0];
+    real_decoder key(record->m_key);
+    real_decoder value(record->m_value);
 
     int err = out.decode(key, value);
     if (err != 0)

@@ -482,14 +482,14 @@ void FetchResponse::add_message_with_timestamp(const std::string &topic, int32_t
 
     if (frb.m_records_set.empty())
     {
-        frb.m_records_set.resize(1);
-        frb.m_records_set[0].m_records = MessageSet();
+        auto message_set = std::make_shared<MessageSet>();
+        frb.m_records_set.emplace_back(message_set);
     }
 
-    // 确保m_records是MessageSet类型
-    if (std::holds_alternative<MessageSet>(frb.m_records_set[0].m_records))
+    // 确保m_records_type是LegacyRecords类型
+    if (frb.m_records_set[0].m_records_type == LegacyRecords && frb.m_records_set[0].m_message_set)
     {
-        auto &message_set = std::get<MessageSet>(frb.m_records_set[0].m_records);
+        auto &message_set = *frb.m_records_set[0].m_message_set;
         message_set.m_messages.emplace_back(msg, offset);
     }
 }
@@ -502,14 +502,14 @@ void FetchResponse::add_record_with_timestamp(const std::string &topic, int32_t 
 
     if (frb.m_records_set.empty())
     {
-        RecordBatch batch(2, m_log_append_time, timestamp, m_timestamp);
-        frb.m_records_set.emplace_back(std::move(batch));
+        auto batch = std::make_shared<RecordBatch>(2, m_log_append_time, timestamp, m_timestamp);
+        frb.m_records_set.emplace_back(batch);
     }
 
-    // 确保m_records是RecordBatch类型
-    if (std::holds_alternative<RecordBatch>(frb.m_records_set[0].m_records))
+    // 确保m_records_type是DefaultRecords类型
+    if (frb.m_records_set[0].m_records_type == DefaultRecords && frb.m_records_set[0].m_record_batch)
     {
-        auto &batch = std::get<RecordBatch>(frb.m_records_set[0].m_records);
+        auto &batch = *frb.m_records_set[0].m_record_batch;
         auto rec = std::make_shared<Record>(kv.first, kv.second, offset, std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - batch.m_first_timestamp));
         batch.add_record(rec);
     }
@@ -534,7 +534,7 @@ void FetchResponse::add_record_batch_with_timestamp(const std::string &topic, in
 
     auto rec = std::make_shared<Record>(kv.first, kv.second, 0, std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - batch->m_first_timestamp));
     batch->add_record(rec);
-    frb.m_records_set.emplace_back(std::move(*batch));
+    frb.m_records_set.emplace_back(batch);
 }
 
 void FetchResponse::add_control_record_with_timestamp(const std::string &topic, int32_t partition, int64_t offset,
@@ -560,7 +560,7 @@ void FetchResponse::add_control_record_with_timestamp(const std::string &topic, 
 
     auto rec = std::make_shared<Record>(_key.m_raw, _value.m_raw, 0, std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - batch->m_first_timestamp));
     batch->add_record(rec);
-    frb.m_records_set.emplace_back(std::move(*batch));
+    frb.m_records_set.emplace_back(batch);
 }
 
 void FetchResponse::add_message(const std::string &topic, int32_t partition, Encoder *key, Encoder *value, int64_t offset)
@@ -588,14 +588,14 @@ void FetchResponse::set_last_offset_delta(const std::string &topic, int32_t part
     auto &frb = m_blocks[topic][partition];
     if (frb.m_records_set.empty())
     {
-        RecordBatch batch(2);
-        frb.m_records_set.emplace_back(std::move(batch));
+        auto batch = std::make_shared<RecordBatch>(2);
+        frb.m_records_set.emplace_back(batch);
     }
 
-    // 确保m_records是RecordBatch类型
-    if (std::holds_alternative<RecordBatch>(frb.m_records_set[0].m_records))
+    // 确保m_records_type是DefaultRecords类型
+    if (frb.m_records_set[0].m_records_type == DefaultRecords && frb.m_records_set[0].m_record_batch)
     {
-        auto &batch = std::get<RecordBatch>(frb.m_records_set[0].m_records);
+        auto &batch = *frb.m_records_set[0].m_record_batch;
         batch.m_last_offset_delta = offset;
     }
 }

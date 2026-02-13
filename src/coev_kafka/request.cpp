@@ -45,8 +45,8 @@ int Request::encode(packet_encoder &pe) const
 
     if (is_flexible)
     {
-        pe.pushFlexible();
-        defer(pe.popFlexible());
+        pe._push_flexible();
+        defer(pe._pop_flexible());
 
         err = const_cast<protocol_body *>(m_body)->encode(pe);
         if (err != 0)
@@ -92,7 +92,7 @@ int Request::decode(packet_decoder &pd)
         return err;
     m_client_id = clientID;
 
-    auto body = allocate_body(key, version);
+    auto body = request_allocate(key, version);
     m_body = body.get();
     if (!m_body)
     {

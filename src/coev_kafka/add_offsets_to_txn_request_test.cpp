@@ -43,9 +43,7 @@ TEST(AddOffsetsToTxnRequestTest, BasicEncodingDecoding)
     EXPECT_EQ(actualEncoded, addOffsetsToTxnRequestStr) << "Encoded data mismatch";
 
     // Test decoding
-    real_decoder decoder;
-    decoder.m_raw = actualEncoded;
-    decoder.m_offset = 0;
+    real_decoder decoder(actualEncoded);
 
     AddOffsetsToTxnRequest decoded;
     decoded.set_version(0);

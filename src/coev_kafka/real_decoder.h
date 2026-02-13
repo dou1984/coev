@@ -38,13 +38,15 @@ struct real_decoder : packet_decoder
     int getInt64Array(std::vector<int64_t> &result);
     int getStringArray(std::vector<std::string> &result);
     int remaining();
-    int getSubset(int length, std::shared_ptr<packet_decoder> &result);
     int getRawBytes(int length, std::string &result);
+    int getSubset(int length, std::shared_ptr<packet_decoder> &result);
     int peek(int offset, int length, std::shared_ptr<packet_decoder> &result);
     int peekInt8(int offset, int8_t &result);
     int push(push_decoder &in);
     int pop();
 
+    real_decoder() = delete;
+    real_decoder(const std::string &buf);
     int m_offset = 0;
     std::string m_raw;
     std::vector<push_decoder *> m_stack;

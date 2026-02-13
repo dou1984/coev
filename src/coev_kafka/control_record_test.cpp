@@ -28,13 +28,8 @@ const std::string unknownCtrlRecValue = ""; // empty value for unknown record
 TEST(ControlRecordTest, DecodingControlRecords)
 {
     // Test abort transaction control record
-    real_decoder keyDecoder;
-    keyDecoder.m_raw = abortTxCtrlRecKey;
-    keyDecoder.m_offset = 0;
-
-    real_decoder valueDecoder;
-    valueDecoder.m_raw = abortTxCtrlRecValue;
-    valueDecoder.m_offset = 0;
+    real_decoder keyDecoder(abortTxCtrlRecKey);
+    real_decoder valueDecoder(abortTxCtrlRecValue);
 
     ControlRecord abortRecord;
     int abortResult = abortRecord.decode(keyDecoder, valueDecoder);
@@ -43,27 +38,21 @@ TEST(ControlRecordTest, DecodingControlRecords)
     EXPECT_EQ(abortRecord.m_coordinator_epoch, 10) << "Abort coordinator epoch mismatch";
 
     // Test commit transaction control record
-    keyDecoder.m_raw = commitTxCtrlRecKey;
-    keyDecoder.m_offset = 0;
-
-    valueDecoder.m_raw = commitTxCtrlRecValue;
-    valueDecoder.m_offset = 0;
+    real_decoder keyDecoderCommit(commitTxCtrlRecKey);
+    real_decoder valueDecoderCommit(commitTxCtrlRecValue);
 
     ControlRecord commitRecord;
-    int commitResult = commitRecord.decode(keyDecoder, valueDecoder);
+    int commitResult = commitRecord.decode(keyDecoderCommit, valueDecoderCommit);
     ASSERT_EQ(commitResult, 0) << "Failed to decode commit control record";
     EXPECT_EQ(commitRecord.m_type, ControlRecordCommit) << "Commit record type mismatch";
     EXPECT_EQ(commitRecord.m_coordinator_epoch, 15) << "Commit coordinator epoch mismatch";
 
     // Test unknown control record
-    keyDecoder.m_raw = unknownCtrlRecKey;
-    keyDecoder.m_offset = 0;
-
-    valueDecoder.m_raw = unknownCtrlRecValue;
-    valueDecoder.m_offset = 0;
+    real_decoder keyDecoderUnknown(unknownCtrlRecKey);
+    real_decoder valueDecoderUnknown(unknownCtrlRecValue);
 
     ControlRecord unknownRecord;
-    int unknownResult = unknownRecord.decode(keyDecoder, valueDecoder);
+    int unknownResult = unknownRecord.decode(keyDecoderUnknown, valueDecoderUnknown);
     ASSERT_EQ(unknownResult, 0) << "Failed to decode unknown control record";
     EXPECT_EQ(unknownRecord.m_type, ControlRecordUnknown) << "Unknown record type mismatch";
 }
@@ -166,13 +155,8 @@ TEST(ControlRecordTest, VersionHandling)
     ASSERT_EQ(encodeResult, 0) << "Failed to encode control record with version 1";
 
     // Decode the encoded record to verify version is preserved
-    real_decoder keyDecoder;
-    keyDecoder.m_raw = keyEncoder.m_raw;
-    keyDecoder.m_offset = 0;
-
-    real_decoder valueDecoder;
-    valueDecoder.m_raw = valueEncoder.m_raw;
-    valueDecoder.m_offset = 0;
+    real_decoder keyDecoder(keyEncoder.m_raw);
+    real_decoder valueDecoder(valueEncoder.m_raw);
 
     ControlRecord decodedRecord;
     int decodeResult = decodedRecord.decode(keyDecoder, valueDecoder);

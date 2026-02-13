@@ -21,9 +21,8 @@ TEST(MetadataProtocolTest, TestMetadataRequestEncodeDecode)
 
     // Decode the request
     MetadataRequest decoded;
-    real_decoder decoder;
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
-    decoder.m_offset = 0;
+    std::string encoded_data = encoder.m_raw.substr(0, encoder.m_offset);
+    real_decoder decoder(encoded_data);
 
     int decode_err = decoded.decode(decoder, original.m_version);
     EXPECT_EQ(decode_err, 0);
@@ -60,9 +59,8 @@ TEST(MetadataProtocolTest, TestMetadataResponseEncodeDecode)
 
     // Decode the response
     MetadataResponse decoded;
-    real_decoder decoder;
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
-    decoder.m_offset = 0;
+    std::string encoded_data = encoder.m_raw.substr(0, encoder.m_offset);
+    real_decoder decoder(encoded_data);
 
     int decode_err = decoded.decode(decoder, original.m_version);
     EXPECT_EQ(decode_err, 0);
@@ -101,9 +99,8 @@ TEST(MetadataProtocolTest, TestMetadataRequestEmptyTopics)
 
     // Decode the request
     MetadataRequest decoded;
-    real_decoder decoder;
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
-    decoder.m_offset = 0;
+    std::string encoded_data = encoder.m_raw.substr(0, encoder.m_offset);
+    real_decoder decoder(encoded_data);
 
     int decode_err = decoded.decode(decoder, original.m_version);
     EXPECT_EQ(decode_err, 0);
@@ -135,9 +132,8 @@ TEST(MetadataProtocolTest, TestMetadataResponseMultipleTopics)
 
     // Decode the response
     MetadataResponse decoded;
-    real_decoder decoder;
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
-    decoder.m_offset = 0;
+    std::string encoded_data = encoder.m_raw.substr(0, encoder.m_offset);
+    real_decoder decoder(encoded_data);
 
     int decode_err = decoded.decode(decoder, original.m_version);
     EXPECT_EQ(decode_err, 0);
@@ -175,9 +171,8 @@ TEST(MetadataProtocolTest, TestMetadataRequestVersionCompatibility)
 
         // Decode the request
         MetadataRequest decoded;
-        real_decoder decoder;
-        decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
-        decoder.m_offset = 0;
+        std::string encoded_data = encoder.m_raw.substr(0, encoder.m_offset);
+        real_decoder decoder(encoded_data);
 
         int decode_err = decoded.decode(decoder, original.m_version);
         EXPECT_EQ(decode_err, 0) << "Failed to decode MetadataRequest with version " << version;
@@ -240,9 +235,8 @@ TEST(MetadataProtocolTest, TestMetadataResponseVersionCompatibility)
 
         // Decode the response
         MetadataResponse decoded;
-        real_decoder decoder;
-        decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
-        decoder.m_offset = 0;
+        std::string encoded_data = encoder.m_raw.substr(0, encoder.m_offset);
+        real_decoder decoder(encoded_data);
 
         int decode_err = decoded.decode(decoder, original.m_version);
         EXPECT_EQ(decode_err, 0) << "Failed to decode MetadataResponse with version " << version;
@@ -286,9 +280,8 @@ TEST(MetadataProtocolTest, TestMetadataRequestEmptyTopicsSpecialCase)
 
     // Decode the request
     MetadataRequest decoded;
-    real_decoder decoder;
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
-    decoder.m_offset = 0;
+    std::string encoded_data = encoder.m_raw.substr(0, encoder.m_offset);
+    real_decoder decoder(encoded_data);
 
     int decode_err = decoded.decode(decoder, original.m_version);
     EXPECT_EQ(decode_err, 0);
@@ -323,9 +316,8 @@ TEST(MetadataProtocolTest, TestMetadataResponseWithMultipleBrokers)
 
     // Decode the response
     MetadataResponse decoded;
-    real_decoder decoder;
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
-    decoder.m_offset = 0;
+    std::string encoded_data = encoder.m_raw.substr(0, encoder.m_offset);
+    real_decoder decoder(encoded_data);
 
     int decode_err = decoded.decode(decoder, original.m_version);
     EXPECT_EQ(decode_err, 0);

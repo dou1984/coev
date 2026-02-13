@@ -38,7 +38,7 @@ awaitable<int> Connect::ReadFull(std::string &buf, size_t n)
         res -= r;
     }
     auto hex = to_hex(buf);
-    LOG_CORE("fd: %d buf_size:%ld ReadFull received: %.*s", m_fd, buf.size(), (int)hex.size(), hex.data());
+    LOG_CORE("fd:%d buf_size:%ld ReadFull received: %.*s", m_fd, buf.size(), (int)hex.size(), hex.data());
     co_return ErrNoError;
 }
 

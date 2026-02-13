@@ -124,9 +124,7 @@ const std::string emptyBulkZSTDMessageStr(reinterpret_cast<const char *>(emptyBu
 
 TEST(MessageTest, DecodingEmptyMessage)
 {
-    real_decoder decoder;
-    decoder.m_raw = emptyMessageStr;
-    decoder.m_offset = 0;
+    real_decoder decoder(emptyMessageStr);
 
     Message message;
     int result = message.decode(decoder);
@@ -139,9 +137,7 @@ TEST(MessageTest, DecodingEmptyMessage)
 
 TEST(MessageTest, DecodingEmptyV1Message)
 {
-    real_decoder decoder;
-    decoder.m_raw = emptyV1MessageStr;
-    decoder.m_offset = 0;
+    real_decoder decoder(emptyV1MessageStr);
 
     Message message;
     int result = message.decode(decoder);
@@ -154,9 +150,7 @@ TEST(MessageTest, DecodingEmptyV1Message)
 
 TEST(MessageTest, DecodingEmptyV2Message)
 {
-    real_decoder decoder;
-    decoder.m_raw = emptyV2MessageStr;
-    decoder.m_offset = 0;
+    real_decoder decoder(emptyV2MessageStr);
 
     Message message;
     int result = message.decode(decoder);
@@ -197,9 +191,7 @@ TEST(MessageTest, DecodingCompressedMessages)
         ASSERT_EQ(encodeResult, 0) << "Failed to encode message with codec " << ToString(codec);
 
         // Decode the encoded message
-        real_decoder decoder;
-        decoder.m_raw = encoder.m_raw;
-        decoder.m_offset = 0;
+        real_decoder decoder(encoder.m_raw);
 
         Message decoded;
         int decodeResult = decoded.decode(decoder);
@@ -248,9 +240,7 @@ TEST(MessageTest, DecodingEmptyCompressedMessages)
         ASSERT_EQ(encodeResult, 0) << "Failed to encode empty message with codec " << ToString(codec);
 
         // Decode the encoded message
-        real_decoder decoder;
-        decoder.m_raw = encoder.m_raw;
-        decoder.m_offset = 0;
+        real_decoder decoder(encoder.m_raw);
 
         Message decoded;
         int decodeResult = decoded.decode(decoder);
@@ -285,9 +275,7 @@ TEST(MessageTest, EncodingEmptyMessage)
     ASSERT_EQ(encodeResult, 0) << "Failed to encode empty message";
 
     // Decode the encoded message
-    real_decoder decoder;
-    decoder.m_raw = encoder.m_raw;
-    decoder.m_offset = 0;
+    real_decoder decoder(encoder.m_raw);
 
     Message decoded;
     int decodeResult = decoded.decode(decoder);
@@ -322,9 +310,7 @@ TEST(MessageTest, EncodingEmptyGzipMessage)
     ASSERT_EQ(encodeResult, 0) << "Failed to encode empty gzip message";
 
     // Decode the encoded message
-    real_decoder decoder;
-    decoder.m_raw = encoder.m_raw;
-    decoder.m_offset = 0;
+    real_decoder decoder(encoder.m_raw);
 
     Message decoded;
     int decodeResult = decoded.decode(decoder);
@@ -360,9 +346,7 @@ TEST(MessageTest, EncodingEmptyLZ4Message)
     ASSERT_EQ(encodeResult, 0) << "Failed to encode empty lz4 message";
 
     // Decode the encoded message
-    real_decoder decoder;
-    decoder.m_raw = encoder.m_raw;
-    decoder.m_offset = 0;
+    real_decoder decoder(encoder.m_raw);
 
     Message decoded;
     int decodeResult = decoded.decode(decoder);
@@ -398,9 +382,7 @@ TEST(MessageTest, EncodingEmptyZSTDMessage)
     ASSERT_EQ(encodeResult, 0) << "Failed to encode empty zstd message";
 
     // Decode the encoded message
-    real_decoder decoder;
-    decoder.m_raw = encoder.m_raw;
-    decoder.m_offset = 0;
+    real_decoder decoder(encoder.m_raw);
 
     Message decoded;
     int decodeResult = decoded.decode(decoder);
@@ -435,9 +417,7 @@ TEST(MessageTest, VersionHandling)
     ASSERT_EQ(encodeResult, 0) << "Failed to encode version 1 message";
 
     // Decode the encoded message
-    real_decoder decoder;
-    decoder.m_raw = encoder.m_raw;
-    decoder.m_offset = 0;
+    real_decoder decoder(encoder.m_raw);
 
     Message decoded;
     int decodeResult = decoded.decode(decoder);

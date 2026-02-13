@@ -344,9 +344,9 @@ int OffsetManager::construct_request(OffsetCommitRequest &request)
 void OffsetManager::handle_response(std::shared_ptr<Broker> broker, const OffsetCommitRequest &req, OffsetCommitResponse &resp)
 {
 
-    for (auto &topicManagers : m_poms)
+    for (auto &topic_managers : m_poms)
     {
-        for (auto &pom : topicManagers.second)
+        for (auto &pom : topic_managers.second)
         {
             if (!req.m_blocks.count(pom.second->m_topic) || !req.m_blocks.at(pom.second->m_topic).count(pom.second->m_partition))
             {
@@ -405,9 +405,9 @@ void OffsetManager::handle_response(std::shared_ptr<Broker> broker, const Offset
 void OffsetManager::handle_error(KError err)
 {
 
-    for (auto &topicManagers : m_poms)
+    for (auto &topic_managers : m_poms)
     {
-        for (auto &pom : topicManagers.second)
+        for (auto &pom : topic_managers.second)
         {
             pom.second->handle_error(err);
         }
@@ -417,9 +417,9 @@ void OffsetManager::handle_error(KError err)
 void OffsetManager::async_close_poms()
 {
 
-    for (auto &topicManagers : m_poms)
+    for (auto &topic_managers : m_poms)
     {
-        for (auto &pom : topicManagers.second)
+        for (auto &pom : topic_managers.second)
         {
             pom.second->async_close();
         }
@@ -433,24 +433,24 @@ int OffsetManager::release_poms(bool force)
     for (auto it = m_poms.begin(); it != m_poms.end();)
     {
         auto &topic = it->first;
-        auto &topicManagers = it->second;
-        for (auto part_it = topicManagers.begin(); part_it != topicManagers.end();)
+        auto &topic_managers = it->second;
+        for (auto pit = topic_managers.begin(); pit != topic_managers.end();)
         {
-            auto &pom = part_it->second;
+            auto &pom = pit->second;
             bool releaseDue = pom->m_done && (force || !pom->m_dirty);
 
             if (releaseDue)
             {
                 pom->release();
-                part_it = topicManagers.erase(part_it);
+                pit = topic_managers.erase(pit);
             }
             else
             {
-                ++part_it;
+                ++pit;
                 ++remaining;
             }
         }
-        if (topicManagers.empty())
+        if (topic_managers.empty())
         {
             it = m_poms.erase(it);
         }

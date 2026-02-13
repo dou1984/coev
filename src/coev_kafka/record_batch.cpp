@@ -16,9 +16,7 @@ int decode(const std::string &buf, std::vector<Record> &inputs)
         return ErrNoError;
     }
 
-    real_decoder helper;
-    helper.m_raw = buf;
-
+    real_decoder helper(buf);
     for (auto &in : inputs)
     {
         if (in.decode(helper) != ErrNoError)
@@ -40,9 +38,7 @@ int decode(const std::string &buf, std::vector<std::shared_ptr<Record>> &inputs)
         return ErrNoError;
     }
 
-    real_decoder helper;
-    helper.m_raw = buf;
-
+    real_decoder helper(buf);
     for (auto &in : inputs)
     {
         if (in->decode(helper) != ErrNoError)
@@ -62,7 +58,7 @@ RecordBatch::RecordBatch(int8_t v) : m_version(v)
 RecordBatch::RecordBatch(int8_t v, bool, std::chrono::system_clock::time_point &first, std::chrono::system_clock::time_point &max) : m_version(v), m_first_timestamp(first), m_max_timestamp(max)
 {
 }
-int RecordBatch::encode(packet_encoder &pe)
+int RecordBatch::encode(packet_encoder &pe) const
 {
     if (m_version != 2)
     {
@@ -95,12 +91,21 @@ int RecordBatch::encode(packet_encoder &pe)
 
     pe.putArrayLength(static_cast<int>(m_records.size()));
 
-    if (m_compressed_records.empty())
+    if (!m_compressed_records.empty())
     {
-        encode_records(pe);
+        pe.putRawBytes(m_compressed_records);
     }
-
-    pe.putRawBytes(m_compressed_records);
+    else
+    {
+        // 临时编码记录，避免修改成员变量
+        std::string raw;
+        for (auto record : m_records)
+        {
+            ::encode(*record, raw);
+        }
+        std::string compressed = compress(m_codec, m_compression_level, raw);
+        pe.putRawBytes(compressed);
+    }
 
     pe.pop();
     pe.pop();
@@ -183,7 +188,7 @@ int RecordBatch::decode(packet_decoder &pd)
         for (auto i = 0; i < num_record; ++i)
         {
             ::decode(decompressed, m_records);
-            offset += m_records[i].m_length.m_length;
+            offset += m_records[i]->m_length.m_length;
         }
     }
     catch (const std::runtime_error &e)
@@ -213,11 +218,19 @@ void RecordBatch::encode_records(packet_encoder &pe)
 {
 
     std::string raw;
-    for (auto &record : m_records)
+    for (auto record : m_records)
     {
-        ::encode(record, raw);
+        ::encode(*record, raw);
     }
 
     m_records_len = raw.size();
     m_compressed_records = compress(m_codec, m_compression_level, raw);
+}
+int64_t RecordBatch::last_offset() const
+{
+    return m_first_offset + static_cast<int64_t>(m_last_offset_delta);
+}
+void RecordBatch::add_record(std::shared_ptr<Record> r)
+{
+    m_records.push_back(r);
 }

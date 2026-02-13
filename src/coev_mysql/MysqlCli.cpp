@@ -60,12 +60,12 @@ namespace coev
 	{
 		mysql_close(m_mysql);
 	}
-	int MysqlCli::__tryconnect()
+	int MysqlCli::__try_connect()
 	{
 		return mysql_real_connect_nonblocking(
 			m_mysql, m_url.c_str(), m_username.c_str(), m_password.c_str(), m_db.c_str(), m_port, nullptr, 0);
 	}
-	int MysqlCli::__isneterror(int state)
+	int MysqlCli::__is_net_error(int state)
 	{
 		if (state != NET_ASYNC_ERROR)
 			return 0;
@@ -74,7 +74,7 @@ namespace coev
 		__query_remove();
 		return INVALID;
 	}
-	int MysqlCli::__isqueryerror(int state)
+	int MysqlCli::__is_query_error(int state)
 	{
 		return state != NET_ASYNC_ERROR ? 0 : INVALID;
 	}
@@ -82,7 +82,7 @@ namespace coev
 	{
 		m_tid = gtid();
 		m_loop = cosys::data();
-		auto status = __tryconnect();
+		auto status = __try_connect();
 		if (status == NET_ASYNC_ERROR)
 		{
 			LOG_CORE("mysql connect %d error:%d %s", status, mysql_errno(m_mysql), mysql_error(m_mysql));
@@ -141,10 +141,10 @@ namespace coev
 		__query_insert();
 		co_await m_r_waiter.suspend();
 		int status = 0;
-		while ((status = __tryconnect()) == NET_ASYNC_NOT_READY)
+		while ((status = __try_connect()) == NET_ASYNC_NOT_READY)
 		{
 		}
-		if (__isneterror(NET_ASYNC_ERROR) == INVALID)
+		if (__is_net_error(NET_ASYNC_ERROR) == INVALID)
 		{
 			co_return INVALID;
 		}
@@ -156,7 +156,7 @@ namespace coev
 		int status = 0;
 		while ((status = mysql_send_query_nonblocking(m_mysql, sql, size)) == NET_ASYNC_NOT_READY)
 		{
-			if (__isneterror(status) == INVALID)
+			if (__is_net_error(status) == INVALID)
 			{
 				co_return INVALID;
 			}
@@ -167,7 +167,7 @@ namespace coev
 				ev_io_stop(m_loop, &m_write);
 			}
 		}
-		if (__isneterror(status) == INVALID)
+		if (__is_net_error(status) == INVALID)
 		{
 			LOG_CORE("error %d %d %s", status, mysql_errno(m_mysql), mysql_error(m_mysql));
 			co_return INVALID;
@@ -176,12 +176,12 @@ namespace coev
 		{
 			co_await m_r_waiter.suspend();
 		} while ((status = mysql_real_query_nonblocking(m_mysql, sql, size)) == NET_ASYNC_NOT_READY);
-		if (__isneterror(status) == INVALID)
+		if (__is_net_error(status) == INVALID)
 		{
 			LOG_CORE("error %d %d %s", status, mysql_errno(m_mysql), mysql_error(m_mysql));
 			co_return INVALID;
 		}
-		if (__isqueryerror(status) == INVALID)
+		if (__is_query_error(status) == INVALID)
 		{
 			LOG_CORE("error %d %d %s", status, mysql_errno(m_mysql), mysql_error(m_mysql));
 			co_return INVALID;

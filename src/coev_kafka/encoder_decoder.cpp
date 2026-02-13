@@ -44,9 +44,7 @@ int decode(const std::string &buf, IDecoder &in)
         return ErrNoError;
     }
 
-    real_decoder helper;
-    helper.m_raw = buf;
-
+    real_decoder helper(buf);
     if (in.decode(helper) != ErrNoError)
     {
         return ErrDecodeError;
@@ -67,16 +65,15 @@ int decode_version(const std::string &buf, VDecoder &in, int16_t version)
         return ErrNoError;
     }
 
-    real_decoder baseHelper;
-    baseHelper.m_raw = buf;
+    real_decoder base_helper(buf);
 
-    auto err = prepare_flexible_decoder(baseHelper, in, version);
+    auto err = prepare_flexible_decoder(base_helper, in, version);
     if (err != ErrNoError)
     {
         return err;
     }
 
-    int remaining = baseHelper.remaining();
+    int remaining = base_helper.remaining();
     if (remaining != 0)
     {
         throw PacketDecodingError{"invalid length len=" + std::to_string(buf.size()) + " remaining=" + std::to_string(remaining)};
@@ -92,8 +89,8 @@ int prepare_flexible_decoder(packet_decoder &pd, VDecoder &req, int16_t version)
     {
         if (f->is_flexible_version(version))
         {
-            pd.pushFlexible();
-            defer(pd.popFlexible());
+            pd._push_flexible();
+            defer(pd._pop_flexible());
             return req.decode(pd, version);
         }
     }
@@ -107,8 +104,8 @@ int prepare_flexible_encoder(packet_encoder &pe, IEncoder &req)
     {
         if (f->is_flexible())
         {
-            pe.pushFlexible();
-            defer(pe.popFlexible());
+            pe._push_flexible();
+            defer(pe._pop_flexible());
             return req.encode(pe);
         }
     }
@@ -116,9 +113,9 @@ int prepare_flexible_encoder(packet_encoder &pe, IEncoder &req)
 }
 std::shared_ptr<packet_decoder> downgrade_flexible_decoder(std::shared_ptr<packet_decoder> pd)
 {
-    if (pd->isFlexible())
+    if (pd->_is_flexible())
     {
-        pd->pushFlexible();
+        pd->_push_flexible();
     }
     return pd;
 }

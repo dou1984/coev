@@ -8,20 +8,20 @@
 
 struct packet_type
 {
-    int m_flexible = 0;
-    bool isFixed()
+    uint16_t m_flexible = 0;
+    bool _is_fixed()
     {
         return m_flexible == 0;
     }
-    bool isFlexible()
+    bool _is_flexible()
     {
         return m_flexible > 0;
     }
-    void pushFlexible()
+    void _push_flexible()
     {
         m_flexible++;
     }
-    void popFlexible()
+    void _pop_flexible()
     {
         assert(m_flexible > 0);
         m_flexible--;

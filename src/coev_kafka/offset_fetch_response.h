@@ -30,7 +30,7 @@ struct OffsetFetchResponse : protocol_body, flexible_version
 
     int16_t m_version;
     std::chrono::milliseconds m_throttle_time;
-    std::unordered_map<std::string, std::map<int32_t, std::shared_ptr<OffsetFetchResponseBlock>>> m_blocks;
+    std::map<std::string, std::map<int32_t, std::shared_ptr<OffsetFetchResponseBlock>>> m_blocks;
     KError m_err;
 
     OffsetFetchResponse();

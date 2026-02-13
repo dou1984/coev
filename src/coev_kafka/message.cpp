@@ -230,10 +230,9 @@ int Message::decode_set()
         return 0;
     }
 
-    real_decoder innerDecoder;
-    innerDecoder.m_raw = m_value;
+    real_decoder inner_decoder(m_value);
     m_message_set.clear();
-    return m_message_set.decode(innerDecoder);
+    return m_message_set.decode(inner_decoder);
 }
 
 void Message::clear()

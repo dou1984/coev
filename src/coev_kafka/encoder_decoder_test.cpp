@@ -9,10 +9,8 @@ TEST(EncoderDecoderTest, TestInt8) {
     real_encoder encoder(100);
     encoder.putInt8(test_value);
     
-    real_decoder decoder;
     std::string encodedData = encoder.m_raw.substr(0, encoder.m_offset);
-    decoder.m_raw = encodedData;
-    decoder.m_offset = 0;
+    real_decoder decoder(encodedData);
     
     int err = decoder.getInt8(result_value);
     EXPECT_EQ(err, 0);
@@ -26,10 +24,8 @@ TEST(EncoderDecoderTest, TestInt16) {
     real_encoder encoder(100);
     encoder.putInt16(test_value);
     
-    real_decoder decoder;
     std::string encodedData(encoder.m_raw.data(), encoder.m_offset);
-    decoder.m_raw = encodedData;
-    decoder.m_offset = 0;
+    real_decoder decoder(encodedData);
     
     int err = decoder.getInt16(result_value);
     EXPECT_EQ(err, 0);
@@ -43,10 +39,8 @@ TEST(EncoderDecoderTest, TestInt32) {
     real_encoder encoder(100);
     encoder.putInt32(test_value);
     
-    real_decoder decoder;
     std::string encodedData = encoder.m_raw.substr(0, encoder.m_offset);
-    decoder.m_raw = encodedData;
-    decoder.m_offset = 0;
+    real_decoder decoder(encodedData);
     
     int err = decoder.getInt32(result_value);
     EXPECT_EQ(err, 0);
@@ -60,10 +54,8 @@ TEST(EncoderDecoderTest, TestInt64) {
     real_encoder encoder(100);
     encoder.putInt64(test_value);
     
-    real_decoder decoder;
     std::string encodedData(encoder.m_raw.data(), encoder.m_offset);
-    decoder.m_raw = encodedData;
-    decoder.m_offset = 0;
+    real_decoder decoder(encodedData);
     
     int err = decoder.getInt64(result_value);
     EXPECT_EQ(err, 0);
@@ -77,9 +69,10 @@ TEST(EncoderDecoderTest, TestVariant) {
     real_encoder encoder(100);
     encoder.putVariant(test_value);
     
-    real_decoder decoder;
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
-    decoder.m_offset = 0;
+    // Create a persistent copy of the encoded data
+    std::string encoded_data = encoder.m_raw.substr(0, encoder.m_offset);
+    
+    real_decoder decoder(encoded_data);
     
     int err = decoder.getVariant(result_value);
     EXPECT_EQ(err, 0);
@@ -93,9 +86,10 @@ TEST(EncoderDecoderTest, TestUVarint) {
     real_encoder encoder(100);
     encoder.putUVarint(test_value);
     
-    real_decoder decoder;
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
-    decoder.m_offset = 0;
+    // Create a persistent copy of the encoded data
+    std::string encoded_data = encoder.m_raw.substr(0, encoder.m_offset);
+    
+    real_decoder decoder(encoded_data);
     
     int err = decoder.getUVariant(result_value);
     EXPECT_EQ(err, 0);
@@ -109,9 +103,10 @@ TEST(EncoderDecoderTest, TestFloat64) {
     real_encoder encoder(100);
     encoder.putFloat64(test_value);
     
-    real_decoder decoder;
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
-    decoder.m_offset = 0;
+    // Create a persistent copy of the encoded data
+    std::string encoded_data = encoder.m_raw.substr(0, encoder.m_offset);
+    
+    real_decoder decoder(encoded_data);
     
     int err = decoder.getFloat64(result_value);
     EXPECT_EQ(err, 0);
@@ -125,9 +120,10 @@ TEST(EncoderDecoderTest, TestBool) {
     real_encoder encoder(100);
     encoder.putBool(test_value);
     
-    real_decoder decoder;
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
-    decoder.m_offset = 0;
+    // Create a persistent copy of the encoded data
+    std::string encoded_data = encoder.m_raw.substr(0, encoder.m_offset);
+    
+    real_decoder decoder(encoded_data);
     
     int err = decoder.getBool(result_value);
     EXPECT_EQ(err, 0);
@@ -141,9 +137,10 @@ TEST(EncoderDecoderTest, TestString) {
     real_encoder encoder(100);
     encoder.putString(test_value);
     
-    real_decoder decoder;
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
-    decoder.m_offset = 0;
+    // Create a persistent copy of the encoded data
+    std::string encoded_data = encoder.m_raw.substr(0, encoder.m_offset);
+    
+    real_decoder decoder(encoded_data);
     
     int err = decoder.getString(result_value);
     EXPECT_EQ(err, 0);
@@ -157,9 +154,10 @@ TEST(EncoderDecoderTest, TestNullableString) {
     real_encoder encoder(100);
     encoder.putNullableString(test_value);
     
-    real_decoder decoder;
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
-    decoder.m_offset = 0;
+    // Create a persistent copy of the encoded data
+    std::string encoded_data = encoder.m_raw.substr(0, encoder.m_offset);
+    
+    real_decoder decoder(encoded_data);
     
     int err = decoder.getNullableString(result_value);
     EXPECT_EQ(err, 0);
@@ -173,9 +171,10 @@ TEST(EncoderDecoderTest, TestBytes) {
     real_encoder encoder(100);
     encoder.putBytes(test_value);
     
-    real_decoder decoder;
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
-    decoder.m_offset = 0;
+    // Create a persistent copy of the encoded data
+    std::string encoded_data = encoder.m_raw.substr(0, encoder.m_offset);
+    
+    real_decoder decoder(encoded_data);
     
     int err = decoder.getBytes(result_value);
     EXPECT_EQ(err, 0);
@@ -189,9 +188,10 @@ TEST(EncoderDecoderTest, TestStringArray) {
     real_encoder encoder(100);
     encoder.putStringArray(test_value);
     
-    real_decoder decoder;
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
-    decoder.m_offset = 0;
+    // Create a persistent copy of the encoded data
+    std::string encoded_data = encoder.m_raw.substr(0, encoder.m_offset);
+    
+    real_decoder decoder(encoded_data);
     
     int err = decoder.getStringArray(result_value);
     EXPECT_EQ(err, 0);
@@ -208,9 +208,8 @@ TEST(EncoderDecoderTest, TestInt32Array) {
     real_encoder encoder(100);
     encoder.putInt32Array(test_value);
     
-    real_decoder decoder;
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
-    decoder.m_offset = 0;
+    std::string encoded_data = encoder.m_raw.substr(0, encoder.m_offset);
+    real_decoder decoder(encoded_data);
     
     int err = decoder.getInt32Array(result_value);
     EXPECT_EQ(err, 0);
@@ -227,9 +226,8 @@ TEST(EncoderDecoderTest, TestInt64Array) {
     real_encoder encoder(100);
     encoder.putInt64Array(test_value);
     
-    real_decoder decoder;
-    decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
-    decoder.m_offset = 0;
+    std::string encoded_data = encoder.m_raw.substr(0, encoder.m_offset);
+    real_decoder decoder(encoded_data);
     
     int err = decoder.getInt64Array(result_value);
     EXPECT_EQ(err, 0);

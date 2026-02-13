@@ -115,7 +115,6 @@ int OffsetFetchResponse::decode(packet_decoder &pd, int16_t version)
     if (num_topics > 0)
     {
         m_blocks.clear();
-        m_blocks.reserve(num_topics);
         for (int i = 0; i < num_topics; ++i)
         {
             std::string name;

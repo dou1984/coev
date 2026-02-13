@@ -25,7 +25,7 @@ struct RecordBatch
     int64_t m_producer_id = -1;
     int16_t m_producer_epoch = -1;
     int32_t m_first_sequence = -1;
-    std::vector<Record> m_records;
+    std::vector<std::shared_ptr<Record>> m_records;
     bool m_control = false;
     bool m_log_append_time = false;
     bool m_partial_trailing_record = false;
@@ -37,16 +37,10 @@ struct RecordBatch
     RecordBatch() = default;
     RecordBatch(int8_t v);
     RecordBatch(int8_t v, bool, std::chrono::system_clock::time_point &first, std::chrono::system_clock::time_point &max);
-    int64_t last_offset() const
-    {
-        return m_first_offset + static_cast<int64_t>(m_last_offset_delta);
-    }
-    void add_record(std::shared_ptr<Record> r)
-    {
-        m_records.push_back(*r);
-    }
 
-    int encode(packet_encoder &pe);
+    int64_t last_offset() const;
+    void add_record(std::shared_ptr<Record> r);
+    int encode(packet_encoder &pe) const;
     int decode(packet_decoder &pd);
 
     int16_t compute_attributes() const;

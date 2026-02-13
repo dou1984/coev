@@ -8,15 +8,15 @@
 #include "partition_producer.h"
 
 struct AsyncProducer;
-
 struct ProducerMessage;
 struct Partitioner;
+
 struct TopicProducer
 {
     TopicProducer(std::shared_ptr<AsyncProducer> parent, const std::string &topic);
     ~TopicProducer();
     coev::awaitable<void> dispatch();
-    coev::awaitable<int> partition_message(std::shared_ptr<ProducerMessage> msg);
+    coev::awaitable<int> partition_message(std::shared_ptr<ProducerMessage> &msg);
 
     std::string m_topic;
     std::shared_ptr<AsyncProducer> m_parent;

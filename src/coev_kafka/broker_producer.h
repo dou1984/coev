@@ -14,10 +14,13 @@
 struct BrokerProducer
 {
     BrokerProducer(std::shared_ptr<AsyncProducer> parent, std::shared_ptr<Broker> broker);
+
     coev::awaitable<void> run();
     coev::awaitable<void> bridge();
 
     coev::awaitable<void> shutdown();
+
+    void init();
     KError needs_retry(std::shared_ptr<ProducerMessage> msg);
     int wait_for_space(std::shared_ptr<ProducerMessage> msg, bool force_rollover);
     void rollover();

@@ -70,9 +70,8 @@ const unsigned char aclDeleteRequestv1[] = {
 };
 
 TEST(DeleteAclsRequestTest, DecodeRequestNulls) {
-    real_decoder decoder;
-    decoder.m_raw = std::string(reinterpret_cast<const char*>(aclDeleteRequestNulls), sizeof(aclDeleteRequestNulls));
-    decoder.m_offset = 0;
+    std::string rawData(reinterpret_cast<const char*>(aclDeleteRequestNulls), sizeof(aclDeleteRequestNulls));
+    real_decoder decoder(rawData);
     
     DeleteAclsRequest request;
     int result = request.decode(decoder, 0);
@@ -89,9 +88,8 @@ TEST(DeleteAclsRequestTest, DecodeRequestNulls) {
 }
 
 TEST(DeleteAclsRequestTest, DecodeRequest) {
-    real_decoder decoder;
-    decoder.m_raw = std::string(reinterpret_cast<const char*>(aclDeleteRequest), sizeof(aclDeleteRequest));
-    decoder.m_offset = 0;
+    std::string rawData(reinterpret_cast<const char*>(aclDeleteRequest), sizeof(aclDeleteRequest));
+    real_decoder decoder(rawData);
     
     DeleteAclsRequest request;
     int result = request.decode(decoder, 0);
@@ -108,9 +106,8 @@ TEST(DeleteAclsRequestTest, DecodeRequest) {
 }
 
 TEST(DeleteAclsRequestTest, DecodeRequestArray) {
-    real_decoder decoder;
-    decoder.m_raw = std::string(reinterpret_cast<const char*>(aclDeleteRequestArray), sizeof(aclDeleteRequestArray));
-    decoder.m_offset = 0;
+    std::string rawData(reinterpret_cast<const char*>(aclDeleteRequestArray), sizeof(aclDeleteRequestArray));
+    real_decoder decoder(rawData);
     
     DeleteAclsRequest request;
     int result = request.decode(decoder, 0);
@@ -137,9 +134,8 @@ TEST(DeleteAclsRequestTest, DecodeRequestArray) {
 }
 
 TEST(DeleteAclsRequestTest, DecodeRequestNullsv1) {
-    real_decoder decoder;
-    decoder.m_raw = std::string(reinterpret_cast<const char*>(aclDeleteRequestNullsv1), sizeof(aclDeleteRequestNullsv1));
-    decoder.m_offset = 0;
+    std::string rawData(reinterpret_cast<const char*>(aclDeleteRequestNullsv1), sizeof(aclDeleteRequestNullsv1));
+    real_decoder decoder(rawData);
     
     DeleteAclsRequest request;
     int result = request.decode(decoder, 1);
@@ -157,9 +153,8 @@ TEST(DeleteAclsRequestTest, DecodeRequestNullsv1) {
 }
 
 TEST(DeleteAclsRequestTest, DecodeRequestv1) {
-    real_decoder decoder;
-    decoder.m_raw = std::string(reinterpret_cast<const char*>(aclDeleteRequestv1), sizeof(aclDeleteRequestv1));
-    decoder.m_offset = 0;
+    std::string rawData(reinterpret_cast<const char*>(aclDeleteRequestv1), sizeof(aclDeleteRequestv1));
+    real_decoder decoder(rawData);
     
     DeleteAclsRequest request;
     int result = request.decode(decoder, 1);
@@ -348,9 +343,8 @@ TEST(DeleteAclsRequestTest, RoundTripEncodingDecoding) {
         ASSERT_EQ(result, 0) << "Failed to encode request for round-trip test, version: " << version;
         
         // Decode the encoded request
-        real_decoder decoder;
-        decoder.m_raw = encoder.m_raw.substr(0, encoder.m_offset);
-        decoder.m_offset = 0;
+        std::string encodedData = encoder.m_raw.substr(0, encoder.m_offset);
+        real_decoder decoder(encodedData);
         
         DeleteAclsRequest decodedRequest;
         result = decodedRequest.decode(decoder, version);

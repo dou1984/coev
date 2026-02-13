@@ -54,7 +54,6 @@ crc32_field::crc32_field(CrcPolynomial polynomial) : m_start_offset(0), m_polyno
 
 void crc32_field::save_offset(int in)
 {
-    LOG_CORE("crc32_field::save_offset startOffset: %d", in);
     m_start_offset = in;
 }
 
@@ -65,7 +64,6 @@ int crc32_field::reserve_length()
 
 int crc32_field::run(int curOffset, std::string &buf)
 {
-    // LOG_CORE("crc32_field::run startOffset: %d, curOffset: %d", startOffset, curOffset);
     uint32_t crc_val;
     int err = crc(curOffset, buf, crc_val);
     if (err != ErrNoError)
@@ -73,14 +71,12 @@ int crc32_field::run(int curOffset, std::string &buf)
         LOG_ERR("crc32_field::run: crc calculation failed with error %d", err);
         return err;
     }
-    // LOG_CORE("crc32_field::run calculated CRC value: 0x%08x", crc_val);
     uint32_t network_crc = htonl(crc_val);
     uint8_t *ptr = reinterpret_cast<uint8_t *>(&network_crc);
     buf[m_start_offset] = ptr[0];
     buf[m_start_offset + 1] = ptr[1];
     buf[m_start_offset + 2] = ptr[2];
     buf[m_start_offset + 3] = ptr[3];
-    // LOG_CORE("crc32_field::run CRC value written to buffer");
     return 0;
 }
 
@@ -116,7 +112,6 @@ int crc32_field::crc(int curOffset, const std::string_view &buf, uint32_t &out_c
     uint32_t crc = 0xFFFFFFFF;
     if (m_polynomial == CrcCastagnoli)
     {
-        // Use the precomputed Castagnoli table for faster calculation
         for (int i = m_start_offset + 4; i < curOffset; ++i)
         {
             uint8_t byte = buf[i];
@@ -125,7 +120,6 @@ int crc32_field::crc(int curOffset, const std::string_view &buf, uint32_t &out_c
     }
     else
     {
-        // Use the standard IEEE polynomial calculation
         for (int i = m_start_offset + 4; i < curOffset; ++i)
         {
             uint8_t byte = buf[i];
