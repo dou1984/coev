@@ -23,8 +23,7 @@ int ProduceRequest::encode(packet_encoder &pe) const
     pe.putInt16(static_cast<int16_t>(m_acks));
     pe.putDurationMs(m_timeout);
 
-    int64_t totalRecordCount = 0;
-
+    int64_t total_record_count = 0;
     if (int err = pe.putArrayLength(static_cast<int32_t>(m_records.size())); err != 0)
     {
         return err;
@@ -184,27 +183,41 @@ KafkaVersion ProduceRequest::required_version() const
 
 void ProduceRequest::add_message(const std::string &topic, int32_t partition, std::shared_ptr<Message> msg)
 {
-    auto record = m_records[topic][partition];
-    assert(record);
-    if (!record->m_message_set)
+    auto &partitions = m_records[topic];
+    auto it = partitions.find(partition);
+    if (it == partitions.end())
     {
-        record->m_message_set = std::make_shared<MessageSet>();
+        it = partitions.emplace(partition, std::make_shared<Records>()).first;
     }
-    record->m_message_set->add_message(msg);
-    record->m_records_type = LegacyRecords;
+    if (!it->second->m_message_set)
+    {
+        it->second->m_message_set = std::make_shared<MessageSet>();
+    }
+    it->second->m_records_type = LegacyRecords;
+    it->second->m_message_set->add_message(msg);
 }
 
 void ProduceRequest::add_set(const std::string &topic, int32_t partition, std::shared_ptr<MessageSet> set)
 {
-    auto record = m_records[topic][partition];
-    assert(record);
-    record->m_records_type = LegacyRecords;
-    record->m_message_set = set;
+
+    auto &partitions = m_records[topic];
+    auto it = partitions.find(partition);
+    if (it == partitions.end())
+    {
+        it = partitions.emplace(partition, std::make_shared<Records>()).first;
+    }
+    it->second->m_records_type = LegacyRecords;
+    it->second->m_message_set = set;
 }
 
 void ProduceRequest::add_batch(const std::string &topic, int32_t partition, std::shared_ptr<RecordBatch> batch)
 {
-    auto &record = m_records[topic][partition];
-    record->m_records_type = DefaultRecords;
-    record->m_record_batch = batch;
+    auto &partitions = m_records[topic];
+    auto it = partitions.find(partition);
+    if (it == partitions.end())
+    {
+        it = partitions.emplace(partition, std::make_shared<Records>()).first;
+    }
+    it->second->m_records_type = DefaultRecords;
+    it->second->m_record_batch = batch;
 }
