@@ -22,11 +22,9 @@ struct PartitionProducer
     int32_t m_partition;
     std::shared_ptr<AsyncProducer> m_parent;
     coev::co_channel<std::shared_ptr<ProducerMessage>> m_input;
-
+    std::vector<PartitionRetryState> m_retry_state;
     std::shared_ptr<Broker> m_leader;
     std::shared_ptr<BrokerProducer> m_broker_producer;
-
     int m_high_watermark;
-    std::vector<PartitionRetryState> m_retry_state;
     co_task m_task;
 };

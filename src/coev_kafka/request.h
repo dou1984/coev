@@ -18,10 +18,7 @@ struct Request : VEncoder, IEncoder, IDecoder
     std::string_view m_client_id;
     const protocol_body *m_body;
     int encode(packet_encoder &pe) const;
-    int encode(packet_encoder &pe, int16_t version) const
-    {
-        return encode(pe);
-    }
+    int encode(packet_encoder &pe, int16_t version) const;
     int decode(packet_decoder &pd);
     bool is_flexible() const;
 };

@@ -171,7 +171,7 @@ coev::awaitable<void> PartitionProducer::flush_retry_buffers()
             if (err != 0)
             {
                 m_parent->return_errors(m_retry_state[m_high_watermark].m_buf, err);
-                goto flushDone;
+                goto flush_done;
             }
         }
 
@@ -185,7 +185,7 @@ coev::awaitable<void> PartitionProducer::flush_retry_buffers()
             m_broker_producer->m_input.set(msg);
         }
 
-    flushDone:
+    flush_done:
         m_retry_state[m_high_watermark].m_buf.clear();
         if (m_retry_state[m_high_watermark].m_expect_chaser)
         {

@@ -39,9 +39,13 @@ int decode(const std::string &buf, std::vector<std::shared_ptr<Record>> &inputs)
     }
 
     real_decoder helper(buf);
-    for (auto &in : inputs)
+    for (auto i = 0; i < inputs.size(); ++i)
     {
-        if (in->decode(helper) != ErrNoError)
+        if (inputs[i] == nullptr)
+        {
+            inputs[i] = std::make_shared<Record>();
+        }
+        if (inputs[i]->decode(helper) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -171,12 +175,13 @@ int RecordBatch::decode(packet_decoder &pd)
     }
 
     int buf_size = static_cast<int>(batch_len) - RECORD_BATCH_OVERHEAD;
-    std::string rec_buffer;
-    err = pd.getRawBytes(buf_size, rec_buffer);
+    std::string_view view;
+    err = pd.getRawBytes(buf_size, view);
     if (err != ErrNoError)
     {
         return err;
     }
+    std::string rec_buffer(view.data(), view.size());
 
     pd.pop();
     auto decompressed = decompress(m_codec, rec_buffer);

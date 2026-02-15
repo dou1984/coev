@@ -24,6 +24,11 @@ AsyncProducer::AsyncProducer(std::shared_ptr<Client> client, std::shared_ptr<Tra
     LOG_CORE("AsyncProducer initialized with client and transaction manager");
 }
 
+void AsyncProducer::init()
+{
+    m_task << dispatcher();
+    m_task << retry_handler();
+}
 void AsyncProducer::async_close()
 {
     m_task << shutdown();
@@ -42,7 +47,7 @@ coev::awaitable<int> AsyncProducer::close()
             do
             {
                 std::shared_ptr<ProducerMessage> msg;
-                co_await m_successes.get(msg);
+                co_await m_replies.get(msg);
                 if (msg == nullptr)
                 {
                     break;
@@ -58,7 +63,7 @@ coev::awaitable<int> AsyncProducer::close()
         do
         {
             std::shared_ptr<ProducerError> event;
-            co_await m_errors.get(event);
+            co_await m_replies.get(event);
             if (event == nullptr)
             {
                 break;
@@ -70,7 +75,7 @@ coev::awaitable<int> AsyncProducer::close()
     {
         LOG_CORE("close discarding error messages");
         std::shared_ptr<ProducerError> dummy;
-        co_await m_errors.get(dummy);
+        co_await m_replies.get(dummy);
     }
 
     co_return !perrs.empty();
@@ -212,7 +217,7 @@ coev::awaitable<void> AsyncProducer::dispatcher()
                 if (m_conf->Producer.Return.Errors)
                 {
                     msg->m_err = ErrShuttingDown;
-                    m_errors.set(msg);
+                    m_replies.set(msg);
                 }
                 continue;
             }
@@ -410,7 +415,7 @@ void AsyncProducer::return_error(std::shared_ptr<ProducerMessage> msg, KError er
     {
         LOG_CORE("return_error setting error to m_errors channel");
         msg->m_err = err;
-        m_errors.set(msg);
+        m_replies.set(msg);
     }
     m_in_flight.done();
 }
@@ -434,7 +439,7 @@ void AsyncProducer::return_successes(const std::vector<std::shared_ptr<ProducerM
             LOG_CORE("return_successes returning success for message from topic %s, partition %d",
                      msg->m_topic.c_str(), msg->m_partition);
             msg->clear();
-            m_successes.set(msg);
+            m_replies.set(msg);
         }
         m_in_flight.done();
     }
@@ -492,7 +497,16 @@ coev::awaitable<void> AsyncProducer::retry_batch(const std::string &topic, int32
     _set->m_buffer_bytes += partition_set->m_buffer_bytes;
     _set->m_buffer_count += partition_set->m_messages.size();
 
-    get_broker_producer(leader)->m_output.set(_set);
+    auto producer = get_broker_producer(leader);
+    if (producer)
+    {
+        producer->m_output.set(_set);
+        producer->rollover();
+    }
+    else
+    {
+        LOG_CORE("retry_batch error");
+    }
 }
 
 std::shared_ptr<BrokerProducer> AsyncProducer::get_broker_producer(std::shared_ptr<Broker> &broker)
@@ -550,12 +564,6 @@ coev::awaitable<int> NewAsyncProducer(std::shared_ptr<Client> client, std::share
     }
 
     producer = std::make_shared<AsyncProducer>(client, txnmgr);
-    producer->m_task << producer->dispatcher();
-    producer->m_task << producer->retry_handler();
+    producer->init();
     co_return ErrNoError;
-}
-
-coev::awaitable<int> NewAsyncProducerFromClient(std::shared_ptr<Client> client, std::shared_ptr<AsyncProducer> &producer)
-{
-    return NewAsyncProducer(client, producer);
 }

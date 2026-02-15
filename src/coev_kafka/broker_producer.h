@@ -17,22 +17,21 @@ struct BrokerProducer
 
     coev::awaitable<void> run();
     coev::awaitable<void> bridge();
-
     coev::awaitable<void> shutdown();
 
     void init();
     KError needs_retry(std::shared_ptr<ProducerMessage> msg);
     int wait_for_space(std::shared_ptr<ProducerMessage> msg, bool force_rollover);
     void rollover();
-    void handle_response(std::shared_ptr<BrokerProducerResponse> response);
+    coev::awaitable<void> handle_response(std::shared_ptr<BrokerProducerResponse> response);
     coev::awaitable<void> handle_success(std::shared_ptr<ProduceSet> sent, std::shared_ptr<ProduceResponse> response);
     void handle_error(std::shared_ptr<ProduceSet> sent, KError err);
 
+    bool m_timer_fired = false;
+    KError m_closing = ErrNoError;
     std::shared_ptr<AsyncProducer> m_parent;
     std::shared_ptr<Broker> m_broker;
     std::shared_ptr<ProduceSet> m_buffer;
-    bool m_timer_fired = false;
-    KError m_closing = ErrNoError;
     std::map<std::string, std::map<int32_t, KError>> m_current_retries;
 
     coev::co_channel<std::shared_ptr<ProducerMessage>> m_input;

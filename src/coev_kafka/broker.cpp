@@ -682,9 +682,6 @@ coev::awaitable<int> Broker::SendAndReceiveSASLHandshake(const std::string &sasl
     std::string buf;
     ::encode(req, buf);
 
-    defer(LOG_CORE("SendAndReceiveSASLHandshake %s %d", saslType.c_str(), version));
-
-    auto request_time = std::chrono::system_clock::now();
     auto err = co_await Write(buf);
     if (err)
     {
@@ -692,8 +689,8 @@ coev::awaitable<int> Broker::SendAndReceiveSASLHandshake(const std::string &sasl
         co_return err;
     }
 
-    co_await m_sequence.lock();
-    defer(m_sequence.unlock());
+    co_await RLock();
+    defer(RUnlock());
 
     m_correlation_id++;
     std::string header;
@@ -760,7 +757,6 @@ coev::awaitable<int> Broker::SendAndReceiveSASLPlainAuthV0()
     auth_bytes[offset++] = 0;
     memcpy(&auth_bytes[offset], m_conf->Net.SASL.Password.c_str(), m_conf->Net.SASL.Password.length());
 
-    auto request_time = std::chrono::system_clock::now();
     int32_t err = co_await Write(auth_bytes);
     if (err)
     {
@@ -856,8 +852,6 @@ coev::awaitable<int> Broker::SendAndReceiveSASLSCRAMv0()
 
     while (!scram_client->Done())
     {
-        auto request_time = std::chrono::system_clock::now();
-
         size_t length = msg.length();
         std::string auth_bytes;
         auth_bytes.resize(4);
@@ -866,20 +860,24 @@ coev::awaitable<int> Broker::SendAndReceiveSASLSCRAMv0()
         auth_bytes[1] = (len >> 16) & 0xFF;
         auth_bytes[2] = (len >> 8) & 0xFF;
         auth_bytes[3] = len & 0xFF;
-        err = co_await Write(auth_bytes);
-        if (err)
         {
-            co_return err;
+            co_await WLock();
+            defer(WUnlock());
+            err = co_await Write(auth_bytes);
+            if (err)
+            {
+                co_return err;
+            }
+
+            err = co_await Write(msg);
+            if (err)
+            {
+                co_return err;
+            }
         }
 
-        err = co_await Write(msg);
-        if (err)
-        {
-            co_return err;
-        }
-
-        co_await m_sequence.lock();
-        defer(m_sequence.unlock());
+        co_await RLock();
+        defer(RUnlock());
 
         m_correlation_id++;
         std::string header;

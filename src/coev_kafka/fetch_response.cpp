@@ -88,17 +88,17 @@ int FetchResponseBlock::decode(packet_decoder &pd, int16_t version)
         return err;
     }
 
-    std::shared_ptr<packet_decoder> records_decoder;
-    if ((err = pd.getSubset(records_size, records_decoder)) != 0)
+    real_decoder records_decoder;
+    if ((err = pd.getSubset(records_size, records_decoder.m_raw)) != 0)
     {
         return err;
     }
 
     m_records_set.clear();
-    while (records_decoder->remaining() > 0)
+    while (records_decoder.remaining() > 0)
     {
         Records records;
-        err = records.decode(*records_decoder);
+        err = records.decode(records_decoder);
         bool is_insufficient_data = (err == ErrInsufficientData);
 
         if (err != 0 && !is_insufficient_data)
@@ -281,7 +281,6 @@ int FetchResponse::decode(packet_decoder &pd, int16_t version)
     }
 
     m_blocks.clear();
-    m_blocks.reserve(num_topics);
     for (int i = 0; i < num_topics; ++i)
     {
         std::string name;

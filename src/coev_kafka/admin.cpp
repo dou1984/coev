@@ -51,7 +51,8 @@ static bool dependsOnSpecificNode(const ConfigResource &resource)
 
 std::shared_ptr<ClusterAdmin> ClusterAdmin::Create(std::shared_ptr<Client> client, std::shared_ptr<Config> conf)
 {
-    if (client == nullptr || conf == nullptr) {
+    if (client == nullptr || conf == nullptr)
+    {
         return nullptr;
     }
     return std::make_shared<ClusterAdmin>(client, conf);
@@ -857,14 +858,14 @@ coev::awaitable<int> ClusterAdmin::_ElectLeaders(std::shared_ptr<ElectLeadersReq
     {
         co_return err;
     }
-    if (res.m_response->m_error_code != ErrNoError)
+    if (res.m_response->m_code != ErrNoError)
     {
-        if (isRetriableControllerError(res.m_response->m_error_code))
+        if (isRetriableControllerError(res.m_response->m_code))
         {
             std::shared_ptr<Broker> dummy;
             RefreshController(dummy);
         }
-        co_return res.m_response->m_error_code;
+        co_return res.m_response->m_code;
     }
     co_return 0;
 }

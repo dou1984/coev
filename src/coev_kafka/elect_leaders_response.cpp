@@ -4,8 +4,8 @@
 
 int PartitionResult::encode(packet_encoder &pe, int16_t /*version*/) const
 {
-    pe.putKError(m_error_code);
-    if (pe.putNullableString(m_error_message) != ErrNoError)
+    pe.putKError(m_code);
+    if (pe.putNullableString(m_message) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -15,12 +15,12 @@ int PartitionResult::encode(packet_encoder &pe, int16_t /*version*/) const
 
 int PartitionResult::decode(packet_decoder &pd, int16_t /*version*/)
 {
-    if (pd.getKError(m_error_code) != ErrNoError)
+    if (pd.getKError(m_code) != ErrNoError)
     {
         return ErrEncodeError;
     }
 
-    if (pd.getNullableString(m_error_message) != ErrNoError)
+    if (pd.getNullableString(m_message) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -45,7 +45,7 @@ int ElectLeadersResponse::encode(packet_encoder &pe) const
 
     if (m_version > 0)
     {
-        pe.putKError(m_error_code);
+        pe.putKError(m_code);
     }
 
     if (pe.putArrayLength(static_cast<int32_t>(m_replica_election_results.size())) != ErrNoError)
@@ -92,7 +92,7 @@ int ElectLeadersResponse::decode(packet_decoder &pd, int16_t version)
 
     if (m_version > 0)
     {
-        if (pd.getKError(m_error_code) != ErrNoError)
+        if (pd.getKError(m_code) != ErrNoError)
         {
             return ErrDecodeError;
         }

@@ -22,13 +22,15 @@ struct AsyncProducer : std::enable_shared_from_this<AsyncProducer>
 {
     AsyncProducer() = default;
     AsyncProducer(std::shared_ptr<Client> client, std::shared_ptr<TransactionManager> txnmgr);
-    coev::awaitable<int> close();
+
+    void init();
     void async_close();
     bool is_transactional();
     ProducerTxnStatusFlag txn_status();
     int begin_txn();
     coev::awaitable<int> commit_txn();
     coev::awaitable<int> abort_txn();
+    coev::awaitable<int> close();
     int add_offsets_to_txn(const std::map<std::string, std::vector<PartitionOffsetMetadata>> &offsets, const std::string &group_id);
     int add_message_to_txn(std::shared_ptr<ConsumerMessage> msg, const std::string &metadata, const std::string &group_id);
 
@@ -57,9 +59,8 @@ struct AsyncProducer : std::enable_shared_from_this<AsyncProducer>
     std::map<int32_t, std::shared_ptr<BrokerProducer>> m_brokers;
 
     coev::co_channel<std::shared_ptr<ProducerMessage>> m_input;
+    coev::co_channel<std::shared_ptr<ProducerMessage>> m_replies;
     coev::co_channel<std::shared_ptr<ProducerMessage>> m_retries;
-    coev::co_channel<std::shared_ptr<ProducerError>> m_errors;
-    coev::co_channel<std::shared_ptr<ProducerMessage>> m_successes;
 
     std::map<std::string, std::shared_ptr<TopicProducer>> m_topic_producer;
     coev::co_task m_task;
@@ -72,5 +73,4 @@ struct PartitionRetryState
 };
 
 coev::awaitable<int> NewAsyncProducer(const std::vector<std::string> &addrs, std::shared_ptr<Config> conf, std::shared_ptr<AsyncProducer> &producer);
-coev::awaitable<int> NewAsyncProducerFromClient(std::shared_ptr<Client> client, std::shared_ptr<AsyncProducer> &producer);
 coev::awaitable<int> NewAsyncProducer(std::shared_ptr<Client> client, std::shared_ptr<AsyncProducer> &producer);

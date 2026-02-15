@@ -14,8 +14,8 @@
 
 struct PartitionResult : VDecoder, VEncoder
 {
-    KError m_error_code;
-    std::string m_error_message;
+    KError m_code;
+    std::string m_message;
 
     int encode(packet_encoder &pe, int16_t version) const;
     int decode(packet_decoder &pd, int16_t version);
@@ -26,7 +26,7 @@ struct ElectLeadersResponse : protocol_body, flexible_version
 
     int16_t m_version = 0;
     std::chrono::milliseconds m_throttle_time;
-    KError m_error_code;
+    KError m_code;
     std::unordered_map<std::string, std::map<int32_t, PartitionResult>> m_replica_election_results;
 
     void set_version(int16_t v);

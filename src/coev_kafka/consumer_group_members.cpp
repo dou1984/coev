@@ -156,7 +156,7 @@ int ConsumerGroupMemberAssignment::encode(packet_encoder &pe) const
         }
     }
 
-    if (int err = pe.putBytes(UserData); err != 0)
+    if (int err = pe.putBytes(m_userdata); err != 0)
     {
         return err;
     }
@@ -191,7 +191,7 @@ int ConsumerGroupMemberAssignment::decode(packet_decoder &pd)
         }
     }
 
-    if ((err = pd.getBytes(UserData)) != 0)
+    if ((err = pd.getBytes(m_userdata)) != 0)
     {
         return err;
     }

@@ -275,9 +275,9 @@ coev::awaitable<int> ConsumerGroup::NewSession(std::shared_ptr<Context> &context
         }
         claims = assignment->m_topics;
 
-        if (assignment->UserData.size() > 0)
+        if (assignment->m_userdata.size() > 0)
         {
-            m_user_data = std::move(assignment->UserData);
+            m_user_data = std::move(assignment->m_userdata);
         }
         else
         {
@@ -431,7 +431,7 @@ coev::awaitable<int> ConsumerGroup::SyncGroup(std::shared_ptr<Broker> coordinato
         {
             co_return err;
         }
-        assignment->UserData = userDataBytes;
+        assignment->m_userdata = userDataBytes;
 
         err = req->add_group_assignment_member(memberID, assignment);
         if (err != 0)

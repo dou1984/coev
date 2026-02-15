@@ -141,7 +141,7 @@ int MetadataRequest::decode(packet_decoder &pd, int16_t version)
     {
         for (size_t i = 0; i < m_topics.size(); ++i)
         {
-            std::string t;
+            std::string_view t;
             if (int err = pd.getRawBytes(16, t); err != 0)
             {
                 return err;

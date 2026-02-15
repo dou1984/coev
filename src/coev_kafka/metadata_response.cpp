@@ -102,14 +102,14 @@ int TopicMetadata::decode(packet_decoder &pd, int16_t version)
 
     if (m_version >= 10)
     {
-        std::string uuidBytes;
-        if (int err = pd.getRawBytes(16, uuidBytes); err != 0)
+        std::string_view uuid_bytes;
+        if (int err = pd.getRawBytes(16, uuid_bytes); err != 0)
         {
             return err;
         }
         for (size_t i = 0; i < 16; ++i)
         {
-            m_uuid.data[i] = uuidBytes[i];
+            m_uuid.data[i] = uuid_bytes[i];
         }
     }
 

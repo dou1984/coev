@@ -29,4 +29,8 @@ public:
     bool IsOpening() const;
     bool IsOpened() const;
     int State() const;
+
+public:
+    co_mutex m_rlock;
+    co_mutex m_wlock;
 };

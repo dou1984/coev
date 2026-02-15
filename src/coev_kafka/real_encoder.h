@@ -12,7 +12,6 @@
 
 struct real_encoder : packet_encoder
 {
-
     real_encoder() = default;
     real_encoder(size_t capacity);
 

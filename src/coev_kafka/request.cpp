@@ -65,7 +65,10 @@ int Request::encode(packet_encoder &pe) const
         return pe.pop();
     }
 }
-
+int Request::encode(packet_encoder &pe, int16_t version) const
+{
+    return encode(pe);
+}
 int Request::decode(packet_decoder &pd)
 {
     int16_t key, version;

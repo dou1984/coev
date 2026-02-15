@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <memory>
 #include <chrono>
@@ -32,19 +33,21 @@ struct packet_decoder : packet_type
     virtual int getDurationMs(std::chrono::milliseconds &duration) = 0;
     virtual int getEmptyTaggedFieldArray(int32_t &length) = 0;
     virtual int getTaggedFieldArray(const taggedFieldDecoders &decoders) = 0;
-
+    virtual int getBytes(std::string_view &data) = 0;
     virtual int getBytes(std::string &data) = 0;
+    virtual int getVariantBytes(std::string_view &data) = 0;
     virtual int getVariantBytes(std::string &data) = 0;
-    virtual int getRawBytes(int length, std::string &data) = 0;
+    virtual int getRawBytes(int length, std::string_view &data) = 0;
+    virtual int getString(std::string_view &str) = 0;
     virtual int getString(std::string &str) = 0;
+    virtual int getNullableString(std::string_view &str) = 0;
     virtual int getNullableString(std::string &str) = 0;
     virtual int getInt32Array(std::vector<int32_t> &arr) = 0;
     virtual int getInt64Array(std::vector<int64_t> &arr) = 0;
     virtual int getStringArray(std::vector<std::string> &arr) = 0;
-
     virtual int remaining() = 0;
-    virtual int getSubset(int length, std::shared_ptr<packet_decoder> &out) = 0;
-    virtual int peek(int offset, int length, std::shared_ptr<packet_decoder> &out) = 0;
+    virtual int getSubset(int length, std::string_view &out) = 0;
+    virtual int peek(int offset, int length, std::string_view &out) = 0;
     virtual int peekInt8(int offset, int8_t &val) = 0;
     virtual int push(push_decoder &in) = 0;
 

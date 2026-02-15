@@ -131,30 +131,28 @@ int ProduceSet::add(std::shared_ptr<ProducerMessage> msg)
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(timestamp.time_since_epoch()).count();
     timestamp = std::chrono::system_clock::from_time_t(ms / 1000) + std::chrono::milliseconds(ms % 1000);
 
-    auto &partitions = m_messages[msg->m_topic];
-
     int size = 0;
-
     auto pset = std::make_shared<PartitionSet>();
-    bool is_set = false;
+
+    auto &partitions = m_messages[msg->m_topic];
     auto it = partitions.find(msg->m_partition);
     if (it == partitions.end())
     {
         if (m_parent->m_conf->Version.IsAtLeast(V0_11_0_0))
         {
-            RecordBatch batch;
-            batch.m_first_timestamp = timestamp;
-            batch.m_version = 2;
-            batch.m_codec = m_parent->m_conf->Producer.Compression;
-            batch.m_compression_level = m_parent->m_conf->Producer.CompressionLevel;
-            batch.m_producer_id = m_producer_id;
-            batch.m_producer_epoch = m_producer_epoch;
+            auto batch = std::make_shared<RecordBatch>();
+            batch->m_first_timestamp = timestamp;
+            batch->m_version = 2;
+            batch->m_codec = m_parent->m_conf->Producer.Compression;
+            batch->m_compression_level = m_parent->m_conf->Producer.CompressionLevel;
+            batch->m_producer_id = m_producer_id;
+            batch->m_producer_epoch = m_producer_epoch;
             if (m_parent->m_conf->Producer.Idempotent)
             {
-                batch.m_first_sequence = msg->m_sequence_number;
+                batch->m_first_sequence = msg->m_sequence_number;
             }
-            auto batch_ptr = std::make_shared<RecordBatch>(std::move(batch));
-            pset->m_records = std::make_shared<Records>(batch_ptr);
+
+            pset->m_records = std::make_shared<Records>(batch);
             size = RECORD_BATCH_OVERHEAD;
         }
         else
@@ -163,7 +161,6 @@ int ProduceSet::add(std::shared_ptr<ProducerMessage> msg)
             pset->m_records = std::make_shared<Records>(message_set);
         }
         partitions[msg->m_partition] = pset;
-        is_set = true;
     }
     else
     {
@@ -211,7 +208,6 @@ int ProduceSet::add(std::shared_ptr<ProducerMessage> msg)
     {
         if (pset->m_records->m_message_set)
         {
-            auto message_set = pset->m_records->m_message_set;
             auto msg_to_send = std::make_shared<Message>();
             msg_to_send->m_codec = CompressionCodec::None;
             msg_to_send->m_key = key;
@@ -221,7 +217,7 @@ int ProduceSet::add(std::shared_ptr<ProducerMessage> msg)
                 msg_to_send->m_timestamp.set_time(timestamp);
                 msg_to_send->m_version = 1;
             }
-            message_set->add_message(msg_to_send);
+            pset->m_records->m_message_set->add_message(msg_to_send);
             size = ProducerMessageOverhead + key.size() + val.size();
         }
     }
@@ -349,7 +345,6 @@ std::vector<std::shared_ptr<ProducerMessage>> ProduceSet::drop_partition(const s
 bool ProduceSet::would_overflow(std::shared_ptr<ProducerMessage> msg)
 {
     int version = m_parent->m_conf->Version.IsAtLeast(V0_11_0_0) ? 2 : 1;
-
     if (m_buffer_bytes + msg->byte_size(version) >= MaxRequestSize - 10 * 1024)
     {
         return true;

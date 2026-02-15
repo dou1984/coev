@@ -116,12 +116,3 @@ int magic_value(packet_decoder &pd, int8_t &magic)
 {
     return pd.peekInt8(magic_offset, magic);
 }
-
-// std::shared_ptr<packet_decoder> downgrade_flexible_decoder(std::shared_ptr<packet_decoder> pd)
-// {
-//     if (pd->__is_flexible())
-//     {
-//         pd->__push_flexible();
-//     }
-//     return pd;
-// }

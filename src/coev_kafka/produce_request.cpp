@@ -37,11 +37,11 @@ int ProduceRequest::encode(packet_encoder &pe) const
         if (int err = pe.putArrayLength(static_cast<int32_t>(partitions.size())); err != 0)
             return err;
 
-        int64_t topicRecordCount = 0;
+        int64_t topic_record_count = 0;
         for (auto &[pid, partition] : partitions)
         {
 
-            int startOffset = pe.offset();
+            int start_offset = pe.offset();
             pe.putInt32(pid);
 
             LengthField length_field;
@@ -120,13 +120,13 @@ int ProduceRequest::decode(packet_decoder &pd, int16_t version)
             {
                 return err;
             }
-            std::shared_ptr<packet_decoder> subset;
-            if (int err = pd.getSubset(size, subset); err != 0)
+            real_decoder subset;
+            if (int err = pd.getSubset(size, subset.m_raw); err != 0)
             {
                 return err;
             }
             auto _record = std::make_shared<Records>();
-            if (int err = _record->decode(*subset); err != 0)
+            if (int err = _record->decode(subset); err != 0)
             {
                 return err;
             }

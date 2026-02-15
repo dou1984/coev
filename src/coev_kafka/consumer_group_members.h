@@ -41,7 +41,7 @@ struct ConsumerGroupMemberAssignment : IEncoder, IDecoder
 {
     int16_t m_version = 0;
     std::map<std::string, std::vector<int32_t>> m_topics;
-    std::string UserData;
+    std::string m_userdata;
 
     ConsumerGroupMemberAssignment() = default;
     ConsumerGroupMemberAssignment(int16_t v) : m_version(v) {}

@@ -62,10 +62,10 @@ int crc32_field::reserve_length()
     return 4;
 }
 
-int crc32_field::run(int curOffset, std::string &buf)
+int crc32_field::run(int cur_offset, std::string &buf)
 {
     uint32_t crc_val;
-    int err = crc(curOffset, buf, crc_val);
+    int err = crc(cur_offset, buf, crc_val);
     if (err != ErrNoError)
     {
         LOG_ERR("crc32_field::run: crc calculation failed with error %d", err);
@@ -80,11 +80,11 @@ int crc32_field::run(int curOffset, std::string &buf)
     return 0;
 }
 
-int crc32_field::check(int curOffset, const std::string_view &buf)
+int crc32_field::check(int cur_offset, const std::string_view &buf)
 {
-    LOG_CORE("crc32_field::check startOffset: %d, curOffset: %d", m_start_offset, curOffset);
+    LOG_CORE("crc32_field::check start_offset: %d, cur_offset: %d", m_start_offset, cur_offset);
     uint32_t crc_val;
-    int err = crc(curOffset, buf, crc_val);
+    int err = crc(cur_offset, buf, crc_val);
     if (err != ErrNoError)
     {
         LOG_ERR("crc32_field::check: crc calculation failed with error %d", err);
@@ -107,12 +107,12 @@ int crc32_field::check(int curOffset, const std::string_view &buf)
     return ErrNoError;
 }
 
-int crc32_field::crc(int curOffset, const std::string_view &buf, uint32_t &out_crc)
+int crc32_field::crc(int cur_offset, const std::string_view &buf, uint32_t &out_crc)
 {
     uint32_t crc = 0xFFFFFFFF;
     if (m_polynomial == CrcCastagnoli)
     {
-        for (int i = m_start_offset + 4; i < curOffset; ++i)
+        for (int i = m_start_offset + 4; i < cur_offset; ++i)
         {
             uint8_t byte = buf[i];
             crc = (crc >> 8) ^ castagnoliTable[(crc & 0xFF) ^ byte];
@@ -120,7 +120,7 @@ int crc32_field::crc(int curOffset, const std::string_view &buf, uint32_t &out_c
     }
     else
     {
-        for (int i = m_start_offset + 4; i < curOffset; ++i)
+        for (int i = m_start_offset + 4; i < cur_offset; ++i)
         {
             uint8_t byte = buf[i];
             crc ^= static_cast<uint32_t>(byte);

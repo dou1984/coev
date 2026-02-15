@@ -269,12 +269,13 @@ int real_decoder::getTaggedFieldArray(const taggedFieldDecoders &decoders)
             {
                 return err;
             }
-            std::string bytes;
-            err = getRawBytes(static_cast<int>(length), bytes);
+            std::string_view view;
+            err = getRawBytes(static_cast<int>(length), view);
             if (err != 0)
             {
                 return err;
             }
+            std::string bytes(view.data(), view.size());
             auto it = decoders.find(id);
             if (it == decoders.end())
             {
@@ -326,13 +327,14 @@ int real_decoder::getEmptyTaggedFieldArray(int32_t &result)
                 result = 0;
                 return err;
             }
-            std::string bytes;
-            err = getRawBytes(static_cast<int>(length), bytes);
+            std::string_view view;
+            err = getRawBytes(static_cast<int>(length), view);
             if (err != 0)
             {
                 result = 0;
                 return err;
             }
+           
         }
         result = 0;
         return 0;
@@ -340,7 +342,7 @@ int real_decoder::getEmptyTaggedFieldArray(int32_t &result)
     return 0;
 }
 
-int real_decoder::getBytes(std::string &result)
+int real_decoder::getBytes(std::string_view &result)
 {
     if (__is_fixed())
     {
@@ -352,7 +354,7 @@ int real_decoder::getBytes(std::string &result)
         }
         if (tmp == -1)
         {
-            result.clear();
+            result = std::string_view();
             return 0;
         }
         return getRawBytes(static_cast<int>(tmp), result);
@@ -371,6 +373,34 @@ int real_decoder::getBytes(std::string &result)
     return 0;
 }
 
+int real_decoder::getBytes(std::string &result)
+{
+    std::string_view view;
+    int err = getBytes(view);
+    if (err != 0)
+    {
+        return err;
+    }
+    result.assign(view.data(), view.size());
+    return 0;
+}
+
+int real_decoder::getVariantBytes(std::string_view &result)
+{
+    int64_t tmp;
+    int err = getVariant(tmp);
+    if (err != 0)
+    {
+        return err;
+    }
+    if (tmp == -1)
+    {
+        result = std::string_view();
+        return 0;
+    }
+    return getRawBytes(static_cast<int>(tmp), result);
+}
+
 int real_decoder::getVariantBytes(std::string &result)
 {
     int64_t tmp;
@@ -384,7 +414,14 @@ int real_decoder::getVariantBytes(std::string &result)
         result.clear();
         return 0;
     }
-    return getRawBytes(static_cast<int>(tmp), result);
+    std::string_view view;
+    int err2 = getRawBytes(static_cast<int>(tmp), view);
+    if (err2 != 0)
+    {
+        return err2;
+    }
+    result.assign(view.data(), view.size());
+    return 0;
 }
 
 int real_decoder::getStringLength(int &result)
@@ -440,7 +477,7 @@ int real_decoder::getStringLength(int &result)
     return 0;
 }
 
-int real_decoder::getString(std::string &result)
+int real_decoder::getString(std::string_view &result)
 {
     if (__is_fixed())
     {
@@ -448,10 +485,10 @@ int real_decoder::getString(std::string &result)
         int err = getStringLength(length);
         if (err != 0 || length == -1)
         {
-            result = "";
+            result = std::string_view();
             return err;
         }
-        result.assign(m_raw.data() + m_offset, length);
+        result = std::string_view(m_raw.data() + m_offset, length);
         m_offset += length;
         return 0;
     }
@@ -461,17 +498,29 @@ int real_decoder::getString(std::string &result)
         int err = getStringLength(length);
         if (err != 0 || length == -1)
         {
-            result = "";
+            result = std::string_view();
             return err;
         }
-        result.assign(m_raw.data() + m_offset, length);
+        result = std::string_view(m_raw.data() + m_offset, length);
         m_offset += length;
         return 0;
     }
     return 0;
 }
 
-int real_decoder::getNullableString(std::string &result)
+int real_decoder::getString(std::string &result)
+{
+    std::string_view view;
+    int err = getString(view);
+    if (err != 0)
+    {
+        return err;
+    }
+    result.assign(view.data(), view.size());
+    return 0;
+}
+
+int real_decoder::getNullableString(std::string_view &result)
 {
     if (__is_fixed())
     {
@@ -479,10 +528,10 @@ int real_decoder::getNullableString(std::string &result)
         int err = getStringLength(n);
         if (err != 0 || n == -1)
         {
-            result = "";
+            result = std::string_view();
             return err;
         }
-        result.assign(reinterpret_cast<const char *>(m_raw.data() + m_offset), n);
+        result = std::string_view(m_raw.data() + m_offset, n);
         m_offset += n;
         return 0;
     }
@@ -492,13 +541,25 @@ int real_decoder::getNullableString(std::string &result)
         int err = getStringLength(length);
         if (err != 0 || length == -1)
         {
-            result = "";
+            result = std::string_view();
             return err;
         }
-        result.assign(reinterpret_cast<const char *>(m_raw.data() + m_offset), length);
+        result = std::string_view(m_raw.data() + m_offset, length);
         m_offset += length;
         return 0;
     }
+    return 0;
+}
+
+int real_decoder::getNullableString(std::string &result)
+{
+    std::string_view view;
+    int err = getNullableString(view);
+    if (err != 0)
+    {
+        return err;
+    }
+    result.assign(view.data(), view.size());
     return 0;
 }
 
@@ -652,20 +713,17 @@ int real_decoder::remaining()
     return static_cast<int>(m_raw.size()) - m_offset;
 }
 
-int real_decoder::getSubset(int length, std::shared_ptr<packet_decoder> &out)
+int real_decoder::getSubset(int length, std::string_view &result)
 {
-    std::string buf;
-    int err = getRawBytes(length, buf);
+    int err = getRawBytes(length, result);
     if (err != 0)
     {
-        out = nullptr;
         return err;
     }
-    out = std::make_shared<real_decoder>(buf);
     return 0;
 }
 
-int real_decoder::getRawBytes(int length, std::string &result)
+int real_decoder::getRawBytes(int length, std::string_view &result)
 {
     if (length < 0)
     {
@@ -676,20 +734,20 @@ int real_decoder::getRawBytes(int length, std::string &result)
         m_offset = m_raw.size();
         return ErrInsufficientData;
     }
-    result.assign(m_raw.data() + m_offset, length);
+    result = std::string_view(m_raw.data() + m_offset, length);
     m_offset += length;
     return 0;
 }
 
-int real_decoder::peek(int offset, int length, std::shared_ptr<packet_decoder> &result)
+int real_decoder::peek(int offset, int length, std::string_view &result)
 {
     if (remaining() < offset + length)
     {
-        result = nullptr;
+        result = std::string_view();
         return ErrInsufficientData;
     }
     int start = m_offset + offset;
-    result = std::make_shared<real_decoder>(m_raw.substr(start, length));
+    result = std::string_view(m_raw.data() + start, length);
     return 0;
 }
 

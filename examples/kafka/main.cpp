@@ -116,12 +116,18 @@ int main(int argc, char **argv)
                         msg->m_topic = topic;
                         msg->m_key.m_data = "key";
                         msg->m_value.m_data = "hello world";
-
                         producer->m_input.set(msg);
-                        std::shared_ptr<ProducerMessage> succ_msg;
-                        co_await producer->m_successes.get(succ_msg);
-                        auto offset = succ_msg->m_offset;
-                        LOG_DBG("produced message at offset %ld", offset);
+
+                        std::shared_ptr<ProducerMessage> reply;
+                        co_await producer->m_replies.get(reply);
+                        if (reply->m_err == ErrNoError)
+                        {
+                            LOG_ERR("get message %d", reply->m_err);
+                        }
+                        else
+                        {
+                            LOG_DBG("produced message at offset %ld", reply->m_offset);
+                        }
                     }
                 })
             .wait();

@@ -57,7 +57,7 @@ struct FetchResponse : protocol_body
     int16_t m_error_code;
     int32_t m_session_id;
     std::chrono::milliseconds m_throttle_time;
-    std::unordered_map<std::string, std::map<int32_t, FetchResponseBlock>> m_blocks;
+    std::map<std::string, std::map<int32_t, FetchResponseBlock>> m_blocks;
     std::chrono::system_clock::time_point m_timestamp;
     bool m_log_append_time;
 

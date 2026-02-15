@@ -12,7 +12,7 @@
 #include "offset_request.h"
 #include "partition_producer.h"
 
-coev::awaitable<int> NewClient(const std::vector<std::string> &addrs, std::shared_ptr<Config> conf, std::shared_ptr<Client> &client_)
+coev::awaitable<int> NewClient(const std::vector<std::string> &addrs, std::shared_ptr<Config> conf, std::shared_ptr<Client> &client)
 {
     if (conf == nullptr)
     {
@@ -36,27 +36,27 @@ coev::awaitable<int> NewClient(const std::vector<std::string> &addrs, std::share
         }
     }
 
-    client_ = std::make_shared<Client>(conf);
-    client_->m_seed_brokers = client_->Brokers();
+    client = std::make_shared<Client>(conf);
+    client->m_seed_brokers = client->Brokers();
 
     if (conf->Net.ResolveCanonicalBootstrapServers)
     {
         std::vector<std::string> resolved_addrs;
-        err = co_await client_->ResolveCanonicalNames(addrs, resolved_addrs);
+        err = co_await client->ResolveCanonicalNames(addrs, resolved_addrs);
         if (err != 0)
         {
             co_return err;
         }
-        client_->RandomizeSeedBrokers(resolved_addrs);
+        client->RandomizeSeedBrokers(resolved_addrs);
     }
     else
     {
-        client_->RandomizeSeedBrokers(addrs);
+        client->RandomizeSeedBrokers(addrs);
     }
 
     if (conf->Metadata.Full)
     {
-        err = co_await client_->RefreshMetadata({});
+        err = co_await client->RefreshMetadata({});
         if (err != 0)
         {
             if (err == ErrLeaderNotAvailable || err == ErrReplicaNotAvailable ||
@@ -66,13 +66,13 @@ coev::awaitable<int> NewClient(const std::vector<std::string> &addrs, std::share
             }
             else
             {
-                client_->Close();
+                client->Close();
                 co_return err;
             }
         }
     }
 
-    client_->m_task << client_->BackgroundMetadataUpdater();
+    client->m_task << client->BackgroundMetadataUpdater();
 
     co_return ErrNoError;
 }
@@ -146,8 +146,6 @@ int Client::Close()
         LOG_CORE("Client::Close called on already closed client");
         return ErrClosedClient;
     }
-    // m_closer.resume();
-
     LOG_CORE("Client::Close Closing Client");
     for (auto &kv : m_brokers)
     {
@@ -555,11 +553,11 @@ void Client::RandomizeSeedBrokers(const std::vector<std::string> &addrs)
     }
 }
 
-void Client::UpdateBroker(const std::vector<std::shared_ptr<Broker>> &_brokers_list)
+void Client::UpdateBroker(const std::vector<std::shared_ptr<Broker>> &_brokers)
 {
-    LOG_CORE("Client::UpdateBroker called with %zu brokers", _brokers_list.size());
+    LOG_CORE("Client::UpdateBroker called with %zu brokers", _brokers.size());
     std::map<int32_t, std::shared_ptr<Broker>> current_broker;
-    for (auto &broker : _brokers_list)
+    for (auto &broker : _brokers)
     {
         current_broker[broker->ID()] = broker;
         auto it = m_brokers.find(broker->ID());
@@ -588,7 +586,6 @@ void Client::UpdateBroker(const std::vector<std::shared_ptr<Broker>> &_brokers_l
             ++it;
         }
     }
-    LOG_CORE("Client::UpdateBroker finished, current brokers count: %zu", m_brokers.size());
 }
 
 void Client::RegisterBroker(std::shared_ptr<Broker> broker)
@@ -721,7 +718,7 @@ std::vector<int32_t> Client::_SetPartitionCache(const std::string &topic, int64_
             ret.push_back(partition);
         }
     }
-    sort(ret.begin(), ret.end());
+    std::sort(ret.begin(), ret.end());
     return ret;
 }
 
@@ -862,7 +859,7 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
 {
     defer(LOG_CORE("metadata refesh finished"));
     int err = ErrNoError;
-    std::vector<int> brokerErrors;
+    std::vector<int> broker_errors;
     std::shared_ptr<Broker> broker;
     co_await LeastLoadedBroker(broker);
     for (; broker && !PastDeadline(deadline, std::chrono::milliseconds(0)); co_await LeastLoadedBroker(broker))
@@ -891,9 +888,9 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
                 DeregisterBroker(broker);
                 continue;
             }
-            bool allKnownMetaData = topics.empty();
-            bool shouldRetry = UpdateMetadata(promise.m_response, allKnownMetaData);
-            if (shouldRetry)
+            bool all_known_metadata = topics.empty();
+            bool should_retry = UpdateMetadata(promise.m_response, all_known_metadata);
+            if (should_retry)
             {
                 LOG_CORE("found some partitions to be leaderless");
                 err = co_await RetryRefreshMetadata(topics, attempts_remaining, deadline, ErrLeaderNotAvailable);
@@ -922,7 +919,7 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
         else
         {
             LOG_CORE("got error from broker %d while fetching metadata: %d", broker->ID(), err);
-            brokerErrors.push_back(err);
+            broker_errors.push_back(err);
             broker->Close();
             DeregisterBroker(broker);
         }
@@ -932,7 +929,7 @@ coev::awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &
     co_return co_await RetryRefreshMetadata(topics, attempts_remaining, deadline, err);
 }
 
-bool Client::UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnownMetaData)
+bool Client::UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool all_known_metadata)
 {
     if (Closed())
     {
@@ -941,7 +938,7 @@ bool Client::UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnow
 
     UpdateBroker(data->m_brokers);
     m_controller_id = data->m_controller_id;
-    if (allKnownMetaData)
+    if (all_known_metadata)
     {
         m_metadata.clear();
         m_metadata_topics.clear();
@@ -956,10 +953,10 @@ bool Client::UpdateMetadata(std::shared_ptr<MetadataResponse> data, bool allKnow
             m_metadata_topics[topic.m_name] = true;
         }
         // 删除该 topic 的所有 partition
-        auto topic_it = m_metadata.find(topic.m_name);
-        if (topic_it != m_metadata.end())
+        auto tit = m_metadata.find(topic.m_name);
+        if (tit != m_metadata.end())
         {
-            m_metadata.erase(topic_it);
+            m_metadata.erase(tit);
         }
         m_cached_partitions_results.erase(topic.m_name);
         switch (topic.m_err)

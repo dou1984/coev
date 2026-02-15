@@ -5,8 +5,7 @@
 #include "sync_producer.h"
 #include "producer_error.h"
 
-static std::mutex poolMutex;
-static coev::co_channel<std::shared_ptr<ProducerMessage>> expectationsPool;
+static coev::guard::co_channel<std::shared_ptr<ProducerMessage>> expectations_pool;
 
 int VerifyProducerConfig(std::shared_ptr<Config> config)
 {
@@ -21,78 +20,72 @@ int VerifyProducerConfig(std::shared_ptr<Config> config)
     return ErrNoError;
 }
 
-SyncProducer::SyncProducer(std::shared_ptr<AsyncProducer> p) : m_producer(p)
+SyncProducer::SyncProducer(std::shared_ptr<AsyncProducer> producer) : m_producer(producer)
 {
-    m_task << handleSuccesses();
-    m_task << handleErrors();
+    m_task << handle_replies();
 }
 
 SyncProducer::~SyncProducer()
 {
     if (!closed)
     {
-        Close();
+        close();
     }
 }
 
-coev::awaitable<int> SyncProducer::SendMessage(std::shared_ptr<ProducerMessage> msg, int32_t &partition, int64_t &offset)
+coev::awaitable<int> SyncProducer::send_message(std::shared_ptr<ProducerMessage> msg, int32_t &partition, int64_t &offset)
 {
-    // m_producer->m_input.set(msg);
-    // std::shared_ptr<ProducerMessage> pmsg;
-    // auto err = co_await expectationsPool.get(pmsg);
-    // if (err != ErrNoError)
-    // {
-    //     partition = -1;
-    //     offset = -1;
-    //     co_return err
-    // }
-    // partition = msg->m_partition;
-    // offset = msg->m_offset;
+    m_producer->m_input.set(msg);
+
+    std::shared_ptr<ProducerMessage> _msg;
+    co_await expectations_pool.get(_msg);
+    if (msg == nullptr)
+    {
+        partition = -1;
+        offset = -1;
+        co_return INVALID;
+    }
+    partition = msg->m_partition;
+    offset = msg->m_offset;
     co_return 0;
 }
 
-coev::awaitable<int> SyncProducer::SendMessages(const std::vector<std::shared_ptr<ProducerMessage>> &msgs)
+coev::awaitable<int> SyncProducer::send_messages(const std::vector<std::shared_ptr<ProducerMessage>> &msgs)
 {
-    // std::vector<std::shared_ptr<ProducerError>> expectations(msgs.size());
-    // for (size_t i = 0; i < msgs.size(); ++i)
-    // {
-    //     m_producer->m_input.set(msgs[i]);
-    //     expectations[i] = co_await expectationsPool.get();
-    // }
-    // for (size_t i = 0; i < expectations.size(); ++i)
-    // {
-    //     expectationsPool.set(expectations[i]);
-    // }
+
+    coev::co_task task;
+    task << [this](auto size) -> coev::awaitable<void>
+    {
+        for (auto i = 0; i < size; ++i)
+        {
+            std::shared_ptr<ProducerMessage> msg;
+            co_await m_producer->m_replies.get(msg);
+            if (msg->m_err)
+            {
+                LOG_CORE("send_messages err %d", msg->m_err);
+            }
+        }
+    }(msgs.size());
+    for (size_t i = 0; i < msgs.size(); ++i)
+    {
+        m_producer->m_input.set(msgs[i]);
+    }
+    co_await task.wait_all();
     co_return 0;
 }
 
-coev::awaitable<void> SyncProducer::handleSuccesses()
-{
-    // while (!closed)
-    // {
-    //     auto msg = co_await m_producer->m_successes.get();
-    //     if (msg)
-    //     {
-    //         expectationsPool.set(msg);
-    //     }
-    // }
-    co_return;
-}
-
-coev::awaitable<void> SyncProducer::handleErrors()
+coev::awaitable<void> SyncProducer::handle_replies()
 {
     while (!closed)
     {
-        std::shared_ptr<ProducerError> err;
-        co_await m_producer->m_errors.get(err);
-        if (err && err->m_err != 0)
-        {
-        }
+        std::shared_ptr<ProducerMessage> msg;
+        co_await m_producer->m_replies.get(msg);
+        expectations_pool.set(msg);
     }
     co_return;
 }
 
-int SyncProducer::Close()
+int SyncProducer::close()
 {
     if (closed.exchange(true))
     {
@@ -103,27 +96,27 @@ int SyncProducer::Close()
     return 0;
 }
 
-ProducerTxnStatusFlag SyncProducer::TxnStatus()
+ProducerTxnStatusFlag SyncProducer::txn_status()
 {
     return m_producer->txn_status();
 }
 
-bool SyncProducer::IsTransactional()
+bool SyncProducer::is_transactional()
 {
     return m_producer->is_transactional();
 }
 
-int SyncProducer::BeginTxn()
+int SyncProducer::begin_txn()
 {
     return m_producer->begin_txn();
 }
 
-coev::awaitable<int> SyncProducer::CommitTxn()
+coev::awaitable<int> SyncProducer::commit_txn()
 {
     return m_producer->commit_txn();
 }
 
-coev::awaitable<int> SyncProducer::AbortTxn()
+coev::awaitable<int> SyncProducer::abort_txn()
 {
     return m_producer->abort_txn();
 }
@@ -171,12 +164,12 @@ coev::awaitable<int> NewSyncProducerFromClient(std::shared_ptr<Client> client, s
         co_return err;
     }
 
-    auto p = std::make_shared<AsyncProducer>();
-    err = co_await NewAsyncProducerFromClient(client, p);
+    auto async_producer = std::make_shared<AsyncProducer>();
+    err = co_await NewAsyncProducer(client, async_producer);
     if (err != 0)
     {
         co_return err;
     }
-    producer = std::make_shared<SyncProducer>(p);
+    producer = std::make_shared<SyncProducer>(async_producer);
     co_return 0;
 }

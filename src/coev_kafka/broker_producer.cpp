@@ -58,8 +58,8 @@ coev::awaitable<void> BrokerProducer::run()
             }
         }
 
-        auto [producerID, producerEpoch] = m_parent->m_txnmgr->get_producer_id();
-        if (producerID != noProducerID && m_buffer->m_producer_epoch != msg->m_producer_epoch)
+        auto [producer_id, producer_epoch] = m_parent->m_txnmgr->get_producer_id();
+        if (producer_id != noProducerID && m_buffer->m_producer_epoch != msg->m_producer_epoch)
         {
             int err = wait_for_space(msg, true);
             if (err != 0)
@@ -81,47 +81,42 @@ coev::awaitable<void> BrokerProducer::run()
             m_timer.reset(m_parent->m_conf->Producer.Flush.Frequency.count() / 1000, 0);
         }
 
-        std::shared_ptr<BrokerProducerResponse> response;
-        if (m_responses.try_get(response))
-        {
-            handle_response(response);
-        }
-
         if (m_timer_fired || m_buffer->ready_to_flush())
         {
             m_output.set(m_buffer);
+            rollover();
         }
     }
 }
+
 coev::awaitable<void> BrokerProducer::bridge()
 {
     while (true)
     {
-        std::shared_ptr<ProduceSet> pset;
-        co_await m_output.get(pset);
-        if (!pset)
+        std::shared_ptr<ProduceSet> produce_set;
+        co_await m_output.get(produce_set);
+        if (produce_set == nullptr)
         {
             co_return;
         }
 
-        auto request = pset->build_request();
+        auto request = produce_set->build_request();
         if (request == nullptr)
         {
             auto response = std::make_shared<BrokerProducerResponse>();
-            response->m_pset = pset;
+            response->m_produce_set = produce_set;
             response->m_err = ErrInvalidRequest;
             m_responses.set(response);
             continue;
         }
 
-        int16_t version = request->version();
-        co_await m_broker->AsyncProduce(request, [this](ResponsePromise<ProduceResponse> &response, int err, auto pset)
-                                        {
-                                            auto broker_response = std::make_shared<BrokerProducerResponse>();
-                                            broker_response->m_pset = pset;
-                                            broker_response->m_err = ErrNoError;
-                                            broker_response->m_res = response.m_response;
-                                            m_responses.set(broker_response); }, pset);
+        ResponsePromise<ProduceResponse> response;
+        auto err = co_await m_broker->SyncProduce(request, response);
+        auto broker_response = std::make_shared<BrokerProducerResponse>();
+        broker_response->m_produce_set = produce_set;
+        broker_response->m_err = ErrNoError;
+        broker_response->m_produce_response = response.m_response;
+        co_await handle_response(broker_response);
     }
 }
 coev::awaitable<void> BrokerProducer::shutdown()
@@ -153,13 +148,13 @@ KError BrokerProducer::needs_retry(std::shared_ptr<ProducerMessage> msg)
         return m_closing;
     }
 
-    auto topicIt = m_current_retries.find(msg->m_topic);
-    if (topicIt != m_current_retries.end())
+    auto tit = m_current_retries.find(msg->m_topic);
+    if (tit != m_current_retries.end())
     {
-        auto partIt = topicIt->second.find(msg->m_partition);
-        if (partIt != topicIt->second.end())
+        auto pit = tit->second.find(msg->m_partition);
+        if (pit != tit->second.end())
         {
-            return partIt->second;
+            return pit->second;
         }
     }
     return ErrNoError;
@@ -167,27 +162,26 @@ KError BrokerProducer::needs_retry(std::shared_ptr<ProducerMessage> msg)
 
 int BrokerProducer::wait_for_space(std::shared_ptr<ProducerMessage> msg, bool force_rollover)
 {
-    while (true)
+    std::shared_ptr<BrokerProducerResponse> response;
+    if (m_responses.try_get(response))
     {
-        std::shared_ptr<BrokerProducerResponse> response;
-        if (m_responses.try_get(response))
+        handle_response(response);
+        auto reason = needs_retry(msg);
+        if (reason)
         {
-            handle_response(response);
-
-            auto reason = needs_retry(msg);
-            if (reason)
-            {
-                return -1;
-            }
-            else if (!m_buffer->would_overflow(msg) && !force_rollover)
-            {
-                return 0;
-            }
+            return -1;
         }
+        else if (!m_buffer->would_overflow(msg) && !force_rollover)
+        {
+            return 0;
+        }
+    }
+    if (m_buffer)
+    {
         m_output.set(m_buffer);
         rollover();
-        return 0;
     }
+    return 0;
 }
 
 void BrokerProducer::rollover()
@@ -197,15 +191,15 @@ void BrokerProducer::rollover()
     m_buffer = std::make_shared<ProduceSet>(m_parent);
 }
 
-void BrokerProducer::handle_response(std::shared_ptr<BrokerProducerResponse> response)
+coev::awaitable<void> BrokerProducer::handle_response(std::shared_ptr<BrokerProducerResponse> response)
 {
     if (response->m_err)
     {
-        handle_error(response->m_pset, response->m_err);
+        handle_error(response->m_produce_set, response->m_err);
     }
     else
     {
-        handle_success(response->m_pset, response->m_res);
+        co_await handle_success(response->m_produce_set, response->m_produce_response);
     }
 
     if (m_buffer->empty())

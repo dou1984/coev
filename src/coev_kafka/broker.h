@@ -186,7 +186,6 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
     coev::async m_opened;
     coev::co_task m_task;
     coev::co_channel<bool> m_done;
-    coev::co_mutex m_sequence;
 
     coev::awaitable<int> Ready();
     coev::awaitable<int> ReadFull(std::string &buf, size_t n);
@@ -209,6 +208,10 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
     std::string MapToString(const std::map<std::string, std::string> &extensions, const std::string &keyValSep, const std::string &elemSep);
     int64_t CurrentUnixMilli();
     void ComputeSaslSessionLifetime(std::shared_ptr<SaslAuthenticateResponse> res);
+    auto RLock() { return m_conn->m_rlock.lock(); }
+    auto RUnlock() { return m_conn->m_rlock.unlock(); }
+    auto WLock() { return m_conn->m_wlock.lock(); }
+    auto WUnlock() { return m_conn->m_wlock.unlock(); }
 
     template <class Req, class Res>
     coev::awaitable<int> SendAndReceive(std::shared_ptr<Req> request, ResponsePromise<Res> &promise)
@@ -221,6 +224,11 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
             {
                 co_return err;
             }
+        }
+        err = co_await Ready();
+        if (err)
+        {
+            co_return err;
         }
         err = co_await SendInternal(request, promise);
         if (err != ErrNoError)
@@ -238,11 +246,6 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
     template <class Req, class Res>
     coev::awaitable<int> SendInternal(std::shared_ptr<Req> request, ResponsePromise<Res> &promise)
     {
-        auto err = co_await Ready();
-        if (err)
-        {
-            co_return err;
-        }
         RestrictApiVersion(request, m_broker_api_versions);
         Request _request;
         _request.m_correlation_id = m_correlation_id;
@@ -251,8 +254,10 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
         std::string buf;
         ::encode(_request, buf);
 
+        co_await WLock();
+        defer(WUnlock());
         auto request_time = std::chrono::system_clock::now();
-        err = co_await Write(buf);
+        auto err = co_await Write(buf);
         if (err)
         {
             LOG_CORE("Write %d %s", errno, strerror(errno));
@@ -268,16 +273,11 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
     template <class Req, class Res>
     coev::awaitable<int> ResponseReceiver(std::shared_ptr<Req> request, ResponsePromise<Res> &promise)
     {
-        co_await m_sequence.lock();
-        defer(m_sequence.unlock());
-        auto err = co_await Ready();
-        if (err)
-        {
-            co_return err;
-        }
+        co_await RLock();
+        defer(RUnlock());
         std::string header;
         auto header_bytes = GetHeaderLength(promise.m_response->header_version());
-        err = co_await ReadFull(header, header_bytes);
+        auto err = co_await ReadFull(header, header_bytes);
         if (err)
         {
             LOG_CORE("Failed to read header %d", err);
@@ -330,25 +330,28 @@ struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
         co_return 0;
     }
     template <class Func, class... Args>
-    coev::awaitable<int> AsyncProduce(std::shared_ptr<ProduceRequest> request, const Func &_f, Args &&...args)
+    coev::awaitable<int> AsyncProduce(std::shared_ptr<ProduceRequest> request, const Func &func, Args &&...args)
     {
         bool need_acks = request->m_acks != NoResponse;
         if (need_acks)
         {
-            m_task << [](auto _this, auto request, const auto &_f, auto &&...args) -> coev::awaitable<void>
+            m_task << [](auto _this, auto request, const auto &func, auto &&...args) -> coev::awaitable<void>
             {
                 ResponsePromise<ProduceResponse> response;
                 auto err = co_await _this->SendAndReceive(request, response);
-                _f(response, err, std::forward<decltype(args)>(args)...);
-            }(shared_from_this(), request, _f, std::forward<Args>(args)...);
+                func(response, err, std::forward<decltype(args)>(args)...);
+            }(shared_from_this(), request, func, std::forward<Args>(args)...);
         }
         else
         {
             ResponsePromise<ProduceResponse> response;
             auto err = co_await SendAndReceive(request, response);
-            _f(response, err, std::forward<decltype(args)>(args)...);
+            func(response, err, std::forward<decltype(args)>(args)...);
         }
         co_return 0;
     }
+    coev::awaitable<int> SyncProduce(std::shared_ptr<ProduceRequest> request, ResponsePromise<ProduceResponse> &response)
+    {
+        return SendAndReceive(request, response);
+    }
 };
-std::shared_ptr<tls::Config> ValidServerNameTLS(const std::string &addr, std::shared_ptr<tls::Config> cfg);

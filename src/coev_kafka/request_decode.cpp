@@ -86,8 +86,8 @@
 
 coev::awaitable<int> request_decode(std::shared_ptr<Broker> &broker, Request &req, int &size)
 {
-    co_await broker->m_sequence.lock();
-    defer(broker->m_sequence.unlock());
+    co_await broker->RLock();
+    defer(broker->RUnlock());
     std::string header_bytes;
     auto read_bytes = 4;
     int err = co_await broker->ReadFull(header_bytes, read_bytes);

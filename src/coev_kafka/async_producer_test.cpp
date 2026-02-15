@@ -42,14 +42,14 @@ TEST_F(AsyncProducerTest, TransactionManagerIntegration)
 
 TEST_F(AsyncProducerTest, IsTransactionalDefault)
 {
-    // Test IsTransactional behavior for non-transactional producer
-    EXPECT_TRUE(true) << "Non-transactional producer should return false for IsTransactional";
+    // Test is_transactional behavior for non-transactional producer
+    EXPECT_TRUE(true) << "Non-transactional producer should return false for is_transactional";
 }
 
 TEST_F(AsyncProducerTest, IsTransactionalWhenEnabled)
 {
-    // Test IsTransactional behavior for transactional producer
-    EXPECT_TRUE(true) << "Transactional producer should return true for IsTransactional";
+    // Test is_transactional behavior for transactional producer
+    EXPECT_TRUE(true) << "Transactional producer should return true for is_transactional";
 }
 
 TEST_F(AsyncProducerTest, TxnStatusInitial)
@@ -60,26 +60,26 @@ TEST_F(AsyncProducerTest, TxnStatusInitial)
 
 TEST_F(AsyncProducerTest, BeginTxnSuccess)
 {
-    // Test successful BeginTxn call
-    EXPECT_TRUE(true) << "BeginTxn should succeed when conditions are met";
+    // Test successful begin_txn call
+    EXPECT_TRUE(true) << "begin_txn should succeed when conditions are met";
 }
 
 TEST_F(AsyncProducerTest, BeginTxnNotTransactional)
 {
-    // Test BeginTxn on non-transactional producer
-    EXPECT_TRUE(true) << "BeginTxn should fail on non-transactional producer";
+    // Test begin_txn on non-transactional producer
+    EXPECT_TRUE(true) << "begin_txn should fail on non-transactional producer";
 }
 
 TEST_F(AsyncProducerTest, CommitTxnFlow)
 {
     // Test commit transaction flow
-    EXPECT_TRUE(true) << "CommitTxn should follow correct flow";
+    EXPECT_TRUE(true) << "commit_txn should follow correct flow";
 }
 
 TEST_F(AsyncProducerTest, AbortTxnFlow)
 {
     // Test abort transaction flow
-    EXPECT_TRUE(true) << "AbortTxn should follow correct flow";
+    EXPECT_TRUE(true) << "abort_txn should follow correct flow";
 }
 
 TEST_F(AsyncProducerTest, AddOffsetsToTxnFormat)
