@@ -10,7 +10,6 @@
 #include "message.h"
 #include "version.h"
 #include "config.h"
-const int RECORD_BATCH_OVERHEAD = 49;
 
 struct RecordBatch
 {

@@ -101,13 +101,14 @@ int RecordBatch::encode(packet_encoder &pe) const
     }
     else
     {
-        // 临时编码记录，避免修改成员变量
         std::string raw;
         for (auto record : m_records)
         {
+            assert(record);
             ::encode(*record, raw);
         }
-        std::string compressed = compress(m_codec, m_compression_level, raw);
+        std::string compressed;
+        auto err = compress(m_codec, m_compression_level, raw, compressed);
         pe.putRawBytes(compressed);
     }
 
@@ -184,7 +185,8 @@ int RecordBatch::decode(packet_decoder &pd)
     std::string rec_buffer(view.data(), view.size());
 
     pd.pop();
-    auto decompressed = decompress(m_codec, rec_buffer);
+    std::string decompressed;
+    err = ::decompress(m_codec, rec_buffer, decompressed);
     m_records_len = decompressed.size();
 
     try
@@ -225,11 +227,12 @@ void RecordBatch::encode_records(packet_encoder &pe)
     std::string raw;
     for (auto record : m_records)
     {
+        assert(record);
         ::encode(*record, raw);
     }
 
     m_records_len = raw.size();
-    m_compressed_records = compress(m_codec, m_compression_level, raw);
+    compress(m_codec, m_compression_level, raw, m_compressed_records);
 }
 int64_t RecordBatch::last_offset() const
 {

@@ -40,7 +40,6 @@ Broker::Broker() : m_id(0), m_addr(""), m_rack(""), m_correlation_id(0), m_sessi
 }
 Broker::~Broker()
 {
-    LOG_CORE("broker %p closed", this);
 }
 int32_t Broker::ID()
 {
@@ -115,7 +114,6 @@ int Broker::encode(packet_encoder &pe, int16_t version) const
     }
 
     pe.putInt32(m_id);
-
     int32_t err = pe.putString(host);
     if (err)
     {
@@ -170,6 +168,7 @@ coev::awaitable<int> Broker::_Open()
         co_await m_opened.suspend();
         if (m_conn->IsClosed())
         {
+            LOG_CORE("conn is closed");
             co_return INVALID;
         }
     }

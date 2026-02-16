@@ -21,8 +21,8 @@ int main(int argc, char **argv)
         std::cout << "Usage: " << argv[0] << "(pull|push) host port topic" << std::endl;
         return -1;
     }
-    set_log_level(LOG_LEVEL_CORE);
-    // set_log_level(LOG_LEVEL_DEBUG);
+    // set_log_level(LOG_LEVEL_CORE);
+    set_log_level(LOG_LEVEL_DEBUG);
     method = argv[1];
     host = argv[2];
     port = std::stoi(argv[3]);
@@ -120,7 +120,7 @@ int main(int argc, char **argv)
 
                         std::shared_ptr<ProducerMessage> reply;
                         co_await producer->m_replies.get(reply);
-                        if (reply->m_err == ErrNoError)
+                        if (reply->m_err != ErrNoError)
                         {
                             LOG_ERR("get message %d", reply->m_err);
                         }

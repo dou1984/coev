@@ -44,59 +44,45 @@ bool FromString(const std::string &s, CompressionCodec &out)
     return false;
 }
 
-std::string compress(CompressionCodec codec, int level, const std::string &data)
+int compress(CompressionCodec codec, int level, std::string_view data, std::string &out)
 {
-    std::string out;
+
     switch (codec)
     {
     case GZIP:
-        coev::gzip::Compress(out, data.data(), data.size());
-        return out;
+        return coev::gzip::Compress(out, data.data(), data.size());
     case Snappy:
-        coev::snappy::Compress(out, data.data(), data.size());
-        return out;
+        return coev::snappy::Compress(out, data.data(), data.size());
+
     case LZ4:
-        coev::lz4::Compress(out, data.data(), data.size());
-        return out;
+        return coev::lz4::Compress(out, data.data(), data.size());
+
     case ZSTD:
-        coev::zstd::Compress(out, data.data(), data.size());
-        return out;
-    case None:
-        return data;
+        return coev::zstd::Compress(out, data.data(), data.size());
+
+    default:
+        out.assign(data.data(), data.size());
+        return ErrNoError;
     }
-    return data;
 }
 
-std::string decompress(CompressionCodec codec, const std::string &data)
+int decompress(CompressionCodec codec, std::string_view data, std::string &out)
 {
-    std::string out;
-    int err;
     switch (codec)
     {
     case GZIP:
-        err = coev::gzip::Decompress(out, data.data(), data.size());
-        if (err != 0)
-            return data;
-        return out;
+        return coev::gzip::Decompress(out, data.data(), data.size());
     case Snappy:
-        err = coev::snappy::Decompress(out, data.data(), data.size());
-        if (err != 0)
-            return data;
-        return out;
+        return coev::snappy::Decompress(out, data.data(), data.size());
     case LZ4:
-        err = coev::lz4::Decompress(out, data.data(), data.size());
-        if (err != 0)
-            return data;
-        return out;
+        return coev::lz4::Decompress(out, data.data(), data.size());
     case ZSTD:
-        err = coev::zstd::Decompress(out, data.data(), data.size());
-        if (err != 0)
-            return data;
-        return out;
+        return coev::zstd::Decompress(out, data.data(), data.size());
     case None:
-        return data;
+    default:
+        out.assign(data.data(), data.size());
+        return ErrNoError;
     }
-    return data;
 }
 Message::Message(const std::string &key, const std::string &value, bool logAppendTime, Timestamp msgTimestamp, int8_t version)
     : m_key(key), m_value(value), m_log_append_time(logAppendTime), m_timestamp(msgTimestamp), m_version(version)
@@ -140,7 +126,7 @@ int Message::encode(packet_encoder &pe) const
     }
     else if (!m_value.empty() || m_codec != CompressionCodec::None)
     {
-        payload = compress(m_codec, m_compression_level, m_value);
+        err = compress(m_codec, m_compression_level, m_value, payload);
         if (payload.empty() && !m_value.empty())
         {
             return -1; // compression failed
@@ -168,12 +154,14 @@ int Message::decode(packet_decoder &pd)
     err = pd.getInt8(m_version);
     if (err != 0)
     {
+        LOG_CORE("Message::decode %d", err);
         return err;
     }
 
     if (m_version > 1)
     {
         err = -2;
+        LOG_CORE("Message::decode %d", err);
         return err;
     }
 
@@ -181,6 +169,7 @@ int Message::decode(packet_decoder &pd)
     err = pd.getInt8(attribute);
     if (err != 0)
     {
+        LOG_CORE("Message::decode %d", err);
         return err;
     }
 
@@ -192,29 +181,34 @@ int Message::decode(packet_decoder &pd)
         err = m_timestamp.decode(pd);
         if (err != 0)
         {
+            LOG_CORE("Message::decode %d", err);
             return err;
         }
     }
     err = pd.getBytes(m_key);
     if (err != 0)
     {
+        LOG_CORE("Message::decode %d", err);
         return err;
     }
     err = pd.getBytes(m_value);
     if (err != 0)
     {
+        LOG_CORE("Message::decode %d", err);
         return err;
     }
     m_compressed_size = static_cast<int>(m_value.size());
     if (!m_value.empty() && m_codec != CompressionCodec::None)
     {
-        auto decompressed = decompress(m_codec, m_value);
+        std::string decompressed;
+        err = ::decompress(m_codec, m_value, decompressed);
         if (decompressed != m_value)
         {
             m_value = std::move(decompressed);
             err = decode_set();
             if (err != 0)
             {
+                LOG_CORE("Message::decode %d", err);
                 return err;
             }
         }

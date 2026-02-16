@@ -249,9 +249,9 @@ coev::awaitable<void> PartitionConsumer::ResponseFeeder()
     }
 }
 
-int PartitionConsumer::ParseMessages(MessageSet &msg_set, std::vector<std::shared_ptr<ConsumerMessage>> &messages)
+int PartitionConsumer::ParseMessages(std::shared_ptr<MessageSet> msg_set, std::vector<std::shared_ptr<ConsumerMessage>> &messages)
 {
-    for (auto &block : msg_set.m_messages)
+    for (auto &block : msg_set->m_messages)
     {
         auto msgs = block.Messages();
         for (auto &msg : msgs)
@@ -290,19 +290,19 @@ int PartitionConsumer::ParseMessages(MessageSet &msg_set, std::vector<std::share
     return ErrNoError;
 }
 
-int PartitionConsumer::ParseRecords(RecordBatch &batch, std::vector<std::shared_ptr<ConsumerMessage>> &messages)
+int PartitionConsumer::ParseRecords(std::shared_ptr<RecordBatch> &batch, std::vector<std::shared_ptr<ConsumerMessage>> &messages)
 {
 
-    messages.reserve(batch.m_records.size());
-    for (auto rec : batch.m_records)
+    messages.reserve(batch->m_records.size());
+    for (auto rec : batch->m_records)
     {
-        int64_t offset = batch.m_first_offset + rec->m_offset_delta;
+        int64_t offset = batch->m_first_offset + rec->m_offset_delta;
         if (offset < m_offset)
             continue;
-        auto timestamp = batch.m_first_timestamp + std::chrono::milliseconds(rec->m_timestamp_delta.count());
-        if (batch.m_log_append_time)
+        auto timestamp = batch->m_first_timestamp + std::chrono::milliseconds(rec->m_timestamp_delta.count());
+        if (batch->m_log_append_time)
         {
-            timestamp = batch.m_max_timestamp;
+            timestamp = batch->m_max_timestamp;
         }
         auto cm = std::make_shared<ConsumerMessage>();
         cm->m_topic = m_topic;
@@ -396,8 +396,7 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
         if (records.m_records_type == LegacyRecords && records.m_message_set)
         {
             std::vector<std::shared_ptr<ConsumerMessage>> consumer_messages;
-            auto &message_set = *records.m_message_set;
-            auto err = ParseMessages(message_set, consumer_messages);
+            auto err = ParseMessages(records.m_message_set, consumer_messages);
             if (err)
             {
                 return err;
@@ -406,10 +405,10 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
         }
         else if (records.m_records_type == DefaultRecords && records.m_record_batch)
         {
-            auto &record_batch = *records.m_record_batch;
+            auto &record_batch = records.m_record_batch;
             for (auto it = aborted_transactions.begin(); it != aborted_transactions.end();)
             {
-                if (it->m_first_offset > record_batch.last_offset())
+                if (it->m_first_offset > record_batch->last_offset())
                 {
                     break;
                 }
@@ -445,14 +444,14 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
 
                 if (control.m_type == ControlRecordType::ControlRecordAbort)
                 {
-                    aborted_producer_ids.erase(record_batch.m_producer_id);
+                    aborted_producer_ids.erase(record_batch->m_producer_id);
                 }
                 continue;
             }
 
             if (m_conf->Consumer.IsolationLevel_ == ReadCommitted)
             {
-                if (record_batch.m_is_transactional && aborted_producer_ids.count(record_batch.m_producer_id))
+                if (record_batch->m_is_transactional && aborted_producer_ids.count(record_batch->m_producer_id))
                 {
                     continue;
                 }

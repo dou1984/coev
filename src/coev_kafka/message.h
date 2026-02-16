@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <chrono>
 #include <memory>
+#include <string_view>
 #include <utils/compress/coev_compress.h>
 #include "config.h"
 #include "timestamp.h"
@@ -39,5 +40,5 @@ struct Message
     void clear();
 };
 
-std::string compress(CompressionCodec codec, int level, const std::string &data);
-std::string decompress(CompressionCodec codec, const std::string &data);
+int compress(CompressionCodec codec, int level, std::string_view data, std::string &out);
+int decompress(CompressionCodec codec, std::string_view data, std::string &out);

@@ -46,8 +46,7 @@ int ProduceRequest::encode(packet_encoder &pe) const
 
             LengthField length_field;
             pe.push(length_field);
-            assert(partition);
-            if (int err = partition->encode(pe); err != 0)
+            if (int err = partition.encode(pe); err != 0)
             {
                 return err;
             }
@@ -125,12 +124,10 @@ int ProduceRequest::decode(packet_decoder &pd, int16_t version)
             {
                 return err;
             }
-            auto _record = std::make_shared<Records>();
-            if (int err = _record->decode(subset); err != 0)
+            if (int err = partition_records[partition].decode(subset); err != 0)
             {
                 return err;
             }
-            partition_records[partition] = _record;
         }
     }
 
@@ -187,14 +184,16 @@ void ProduceRequest::add_message(const std::string &topic, int32_t partition, st
     auto it = partitions.find(partition);
     if (it == partitions.end())
     {
-        it = partitions.emplace(partition, std::make_shared<Records>()).first;
+        it = partitions.emplace(partition, Records()).first;
     }
-    if (!it->second->m_message_set)
+    if (!it->second.m_message_set)
     {
-        it->second->m_message_set = std::make_shared<MessageSet>();
+        assert(it->second.m_records_type == LegacyRecords);
+        assert(!it->second.m_record_batch);
+        it->second.m_message_set = std::make_shared<MessageSet>();
     }
-    it->second->m_records_type = LegacyRecords;
-    it->second->m_message_set->add_message(msg);
+    it->second.m_records_type = LegacyRecords;
+    it->second.m_message_set->add_message(msg);
 }
 
 void ProduceRequest::add_set(const std::string &topic, int32_t partition, std::shared_ptr<MessageSet> set)
@@ -204,10 +203,10 @@ void ProduceRequest::add_set(const std::string &topic, int32_t partition, std::s
     auto it = partitions.find(partition);
     if (it == partitions.end())
     {
-        it = partitions.emplace(partition, std::make_shared<Records>()).first;
+        it = partitions.emplace(partition, Records()).first;
     }
-    it->second->m_records_type = LegacyRecords;
-    it->second->m_message_set = set;
+    it->second.m_records_type = LegacyRecords;
+    it->second.m_message_set = set;
 }
 
 void ProduceRequest::add_batch(const std::string &topic, int32_t partition, std::shared_ptr<RecordBatch> batch)
@@ -216,8 +215,8 @@ void ProduceRequest::add_batch(const std::string &topic, int32_t partition, std:
     auto it = partitions.find(partition);
     if (it == partitions.end())
     {
-        it = partitions.emplace(partition, std::make_shared<Records>()).first;
+        it = partitions.emplace(partition, Records()).first;
     }
-    it->second->m_records_type = DefaultRecords;
-    it->second->m_record_batch = batch;
+    it->second.m_records_type = DefaultRecords;
+    it->second.m_record_batch = batch;
 }

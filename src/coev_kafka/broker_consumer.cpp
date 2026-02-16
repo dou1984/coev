@@ -2,6 +2,7 @@
 #include "partition_consumer.h"
 #include "response_header.h"
 #include "sleep_for.h"
+#include "consumer.h"
 
 auto PartitionConsumersBatchTimeout = std::chrono::milliseconds(100);
 

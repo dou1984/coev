@@ -131,13 +131,29 @@ int Records::is_control(bool &out) const
 int Records::is_overflow(bool &out)
 {
     out = false;
-    if (m_records_type == LegacyRecords && m_message_set)
+    if (m_records_type == UnknownRecords)
     {
-        out = m_message_set->m_overflow_message;
         return 0;
     }
-    return -1;
+
+    switch (m_records_type)
+    {
+    case UnknownRecords:
+        return 0;
+    case LegacyRecords:
+        if (!m_message_set)
+        {
+            return 0;
+        }
+        out = m_message_set->m_overflow_message;
+        return 0;
+    case DefaultRecords:
+        return 0;
+    default:
+        return -1;
+    }
 }
+
 
 int Records::next_offset(int64_t &offset)
 {

@@ -20,7 +20,7 @@ struct ProduceRequest : protocol_body
     std::chrono::milliseconds m_timeout;
     int16_t m_version = 0;
 
-    std::unordered_map<std::string, std::map<int32_t, std::shared_ptr<Records>>> m_records;
+    std::map<std::string, std::map<int32_t, Records>> m_records;
 
     ProduceRequest() = default;
     ProduceRequest(int16_t v) : m_version(v)

@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <string_view>
 #include "version.h"
 #include "fetch_response.h"
 #include "length_field.h"
@@ -35,28 +36,33 @@ int FetchResponseBlock::decode(packet_decoder &pd, int16_t version)
     int err = 0;
     if ((err = pd.getKError(m_err)) != 0)
     {
+        LOG_CORE("FetchResponseBlock::decode %d", err);
         return err;
     }
     if ((err = pd.getInt64(m_high_water_mark_offset)) != 0)
     {
+        LOG_CORE("FetchResponseBlock::decode %d", err);
         return err;
     }
     if (version >= 4)
     {
         if ((err = pd.getInt64(m_last_stable_offset)) != 0)
         {
+            LOG_CORE("FetchResponseBlock::decode %d", err);
             return err;
         }
         if (version >= 5)
         {
             if ((err = pd.getInt64(m_log_start_offset)) != 0)
             {
+                LOG_CORE("FetchResponseBlock::decode %d", err);
                 return err;
             }
         }
         int32_t num_transact;
         if ((err = pd.getArrayLength(num_transact)) != 0)
         {
+            LOG_CORE("FetchResponseBlock::decode %d", err);
             return err;
         }
         if (num_transact >= 0)
@@ -66,6 +72,7 @@ int FetchResponseBlock::decode(packet_decoder &pd, int16_t version)
             {
                 if ((err = m_aborted_transactions[i].decode(pd)) != 0)
                 {
+                    LOG_CORE("FetchResponseBlock::decode %d", err);
                     return err;
                 }
             }
@@ -75,7 +82,10 @@ int FetchResponseBlock::decode(packet_decoder &pd, int16_t version)
     if (version >= 11)
     {
         if ((err = pd.getInt32(m_preferred_read_replica)) != 0)
+        {
+            LOG_CORE("FetchResponseBlock::decode %d", err);
             return err;
+        }
     }
     else
     {
@@ -85,12 +95,14 @@ int FetchResponseBlock::decode(packet_decoder &pd, int16_t version)
     int32_t records_size;
     if ((err = pd.getInt32(records_size)) != 0)
     {
+        LOG_CORE("FetchResponseBlock::decode %d", err);
         return err;
     }
 
     real_decoder records_decoder;
     if ((err = pd.getSubset(records_size, records_decoder.m_raw)) != 0)
     {
+        LOG_CORE("FetchResponseBlock::decode %d", err);
         return err;
     }
 
@@ -103,18 +115,21 @@ int FetchResponseBlock::decode(packet_decoder &pd, int16_t version)
 
         if (err != 0 && !is_insufficient_data)
         {
+            LOG_CORE("FetchResponseBlock::decode %d", err);
             return err;
         }
 
         if (is_insufficient_data && m_records_set.empty())
         {
             m_partial = true;
+            LOG_CORE("FetchResponseBlock::decode %d", err);
             break;
         }
 
         int64_t next_offset;
         if ((err = records.next_offset(next_offset)) != 0)
         {
+            LOG_CORE("FetchResponseBlock::decode %d", err);
             return err;
         }
         m_records_next_offset = next_offset;
@@ -122,12 +137,14 @@ int FetchResponseBlock::decode(packet_decoder &pd, int16_t version)
         bool partial = false;
         if ((err = records.is_partial(partial)) != 0)
         {
+            LOG_CORE("FetchResponseBlock::decode %d", err);
             return err;
         }
 
         int n = 0;
         if ((err = records.num_records(n)) != 0)
         {
+            LOG_CORE("FetchResponseBlock::decode %d", err);
             return err;
         }
 
@@ -139,11 +156,13 @@ int FetchResponseBlock::decode(packet_decoder &pd, int16_t version)
         bool overflow = false;
         if ((err = records.is_overflow(overflow)) != 0)
         {
+            LOG_CORE("FetchResponseBlock::decode %d", err);
             return err;
         }
 
         if (partial || overflow)
         {
+            LOG_CORE("FetchResponseBlock::decode %d", err);
             break;
         }
     }
@@ -258,6 +277,7 @@ int FetchResponse::decode(packet_decoder &pd, int16_t version)
     {
         if ((err = pd.getDurationMs(m_throttle_time)) != 0)
         {
+            LOG_CORE("FetchResponse::decode %d", err);
             return err;
         }
     }
@@ -266,10 +286,12 @@ int FetchResponse::decode(packet_decoder &pd, int16_t version)
     {
         if ((err = pd.getInt16(m_error_code)) != 0)
         {
+            LOG_CORE("FetchResponse::decode %d", err);
             return err;
         }
         if ((err = pd.getInt32(m_session_id)) != 0)
         {
+            LOG_CORE("FetchResponse::decode %d", err);
             return err;
         }
     }
@@ -277,6 +299,7 @@ int FetchResponse::decode(packet_decoder &pd, int16_t version)
     int32_t num_topics;
     if ((err = pd.getArrayLength(num_topics)) != 0)
     {
+        LOG_CORE("FetchResponse::decode %d", err);
         return err;
     }
 
@@ -286,12 +309,14 @@ int FetchResponse::decode(packet_decoder &pd, int16_t version)
         std::string name;
         if ((err = pd.getString(name)) != 0)
         {
+            LOG_CORE("FetchResponse::decode %d", err);
             return err;
         }
 
         int32_t num_blocks;
         if ((err = pd.getArrayLength(num_blocks)) != 0)
         {
+            LOG_CORE("FetchResponse::decode %d", err);
             return err;
         }
 
@@ -301,11 +326,13 @@ int FetchResponse::decode(packet_decoder &pd, int16_t version)
             int32_t id;
             if ((err = pd.getInt32(id)) != 0)
             {
+                LOG_CORE("FetchResponse::decode %d", err);
                 return err;
             }
 
             if ((err = partitions[id].decode(pd, version)) != 0)
             {
+                LOG_CORE("FetchResponse::decode %d", err);
                 return err;
             }
         }
@@ -329,23 +356,33 @@ int FetchResponse::encode(packet_encoder &pe) const
 
     int err = pe.putArrayLength(static_cast<int32_t>(m_blocks.size()));
     if (err != 0)
-        return err;
-
-    for (auto &topic_pair : m_blocks)
     {
-        const std::string &topic = topic_pair.first;
-        auto &partitions = topic_pair.second;
+        LOG_CORE("FetchResponse::encode error %d", err);
+        return err;
+    }
+
+    for (auto &[topic, partitions] : m_blocks)
+    {
 
         if ((err = pe.putString(topic)) != 0)
-            return err;
-        if ((err = pe.putArrayLength(static_cast<int32_t>(partitions.size()))) != 0)
-            return err;
-
-        for (auto &part_pair : partitions)
         {
-            pe.putInt32(part_pair.first);
-            if ((err = part_pair.second.encode(pe, m_version)) != 0)
+            LOG_CORE("FetchResponse::encode error %d", err);
+            return err;
+        }
+        if ((err = pe.putArrayLength(static_cast<int32_t>(partitions.size()))) != 0)
+        {
+            LOG_CORE("FetchResponse::encode error %d", err);
+            return err;
+        }
+
+        for (auto &[partition, block] : partitions)
+        {
+            pe.putInt32(partition);
+            if ((err = block.encode(pe, m_version)) != 0)
+            {
+                LOG_CORE("FetchResponse::encode error %d", err);
                 return err;
+            }
         }
     }
 
