@@ -53,7 +53,7 @@ int ListPartitionReassignmentsResponse::encode(packet_encoder &pe) const
 {
     pe.putDurationMs(m_throttle_time);
     pe.putKError(m_err);
-    int err = pe.putNullableString(m_error_message);
+    int err = pe.putNullableString(m_message);
     if (err != 0)
         return err;
 
@@ -99,7 +99,7 @@ int ListPartitionReassignmentsResponse::decode(packet_decoder &pd, int16_t versi
     if (err != 0)
         return err;
 
-    err = pd.getNullableString(m_error_message);
+    err = pd.getNullableString(m_message);
     if (err != 0)
         return err;
 

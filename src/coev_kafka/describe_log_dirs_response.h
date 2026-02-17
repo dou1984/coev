@@ -32,7 +32,7 @@ struct DescribeLogDirsResponseTopic : VDecoder, VEncoder
 
 struct DescribeLogDirsResponseDirMetadata : VDecoder, VEncoder
 {
-    KError m_error_code;
+    KError m_code;
     std::string m_path;
     std::vector<DescribeLogDirsResponseTopic> m_topics;
     int64_t m_total_bytes;
@@ -48,7 +48,7 @@ struct DescribeLogDirsResponse : protocol_body, flexible_version
     std::chrono::milliseconds m_throttle_time;
     int16_t m_version;
     std::vector<DescribeLogDirsResponseDirMetadata> m_log_dirs;
-    KError m_error_code;
+    KError m_code;
 
     void set_version(int16_t v);
     int encode(packet_encoder &pe) const;

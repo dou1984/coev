@@ -75,7 +75,7 @@ int main(int argc, char **argv)
                                 co_await partition_consumer->Messages().get(msg);
                                 if (msg)
                                 {
-                                    LOG_DBG("Messages %s %s", msg->key().c_str(), msg->value().c_str());
+                                    LOG_DBG("offset %ld Messages  %s %s", msg->m_offset, msg->key().c_str(), msg->value().c_str());
                                 }
                             }
                         }(consumer, partition);
@@ -108,7 +108,6 @@ int main(int argc, char **argv)
                         co_return;
                     }
                     defer(producer->async_close());
-
                     while (true)
                     {
 
@@ -128,6 +127,7 @@ int main(int argc, char **argv)
                         {
                             LOG_DBG("produced message at offset %ld", reply->m_offset);
                         }
+                        co_await sleep_for(std::chrono::milliseconds(1000));
                     }
                 })
             .wait();

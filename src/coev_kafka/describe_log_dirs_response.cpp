@@ -12,7 +12,7 @@ int DescribeLogDirsResponse::encode(packet_encoder &pe) const
     pe.putDurationMs(m_throttle_time);
     if (m_version >= 3)
     {
-        pe.putKError(m_error_code);
+        pe.putKError(m_code);
     }
 
     if (pe.putArrayLength(static_cast<int32_t>(m_log_dirs.size())) != ErrNoError)
@@ -42,7 +42,7 @@ int DescribeLogDirsResponse::decode(packet_decoder &pd, int16_t version)
 
     if (version >= 3)
     {
-        if (pd.getKError(m_error_code) != ErrNoError)
+        if (pd.getKError(m_code) != ErrNoError)
         {
             return ErrDecodeError;
         }
@@ -129,7 +129,7 @@ std::chrono::milliseconds DescribeLogDirsResponse::throttle_time() const
 
 int DescribeLogDirsResponseDirMetadata::encode(packet_encoder &pe, int16_t version) const
 {
-    pe.putKError(m_error_code);
+    pe.putKError(m_code);
 
     if (pe.putString(m_path) != ErrNoError)
     {
@@ -161,7 +161,7 @@ int DescribeLogDirsResponseDirMetadata::encode(packet_encoder &pe, int16_t versi
 
 int DescribeLogDirsResponseDirMetadata::decode(packet_decoder &pd, int16_t version)
 {
-    if (pd.getKError(m_error_code) != ErrNoError)
+    if (pd.getKError(m_code) != ErrNoError)
     {
         return ErrDecodeError;
     }

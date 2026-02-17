@@ -129,7 +129,7 @@ std::chrono::milliseconds DescribeGroupsResponse::throttle_time() const
 int GroupDescription::encode(packet_encoder &pe, int16_t version) const
 {
     m_version = version;
-    pe.putInt16(m_error_code);
+    pe.putInt16(m_code);
 
     if (pe.putString(m_group_id) != ErrNoError)
         return ErrEncodeError;
@@ -168,7 +168,7 @@ int GroupDescription::decode(packet_decoder &pd, int16_t version)
     int16_t error_code;
     if (pd.getInt16(error_code) != ErrNoError)
         return ErrDecodeError;
-    m_error_code = static_cast<KError>(error_code);
+    m_code = static_cast<KError>(error_code);
 
     if (pd.getString(m_group_id) != ErrNoError)
         return ErrDecodeError;

@@ -16,7 +16,7 @@ struct SaslAuthenticateResponse : protocol_body
 {
     int16_t m_version = 0;
     KError m_err = ErrNoError;
-    std::string m_error_message;
+    std::string m_message;
     std::string m_sasl_auth_bytes;
     int64_t m_session_lifetime_ms = 0;
 

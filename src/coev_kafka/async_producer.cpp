@@ -353,20 +353,20 @@ coev::awaitable<void> AsyncProducer::bump_idempotent_producer_epoch()
     auto [pid, epoch] = m_txnmgr->get_producer_id();
     if (epoch == std::numeric_limits<int16_t>::max())
     {
-        auto new_txnmgr = std::make_shared<TransactionManager>(m_conf, m_client);
+        auto _txnmgr = std::make_shared<TransactionManager>(m_conf, m_client);
         if (m_conf->Producer.Idempotent)
         {
             int64_t producer_id;
             int16_t producer_epoch;
-            auto err = co_await new_txnmgr->init_producer_id(producer_id, producer_epoch);
+            auto err = co_await _txnmgr->init_producer_id(producer_id, producer_epoch);
             if (err == (KError)ErrNoError)
             {
-                m_txnmgr = new_txnmgr;
+                m_txnmgr = _txnmgr;
             }
         }
         else
         {
-            m_txnmgr = new_txnmgr;
+            m_txnmgr = _txnmgr;
         }
     }
     else

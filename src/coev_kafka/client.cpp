@@ -722,9 +722,9 @@ std::vector<int32_t> Client::_SetPartitionCache(const std::string &topic, int64_
     return ret;
 }
 
-coev::awaitable<int> Client::_CachedLeader(const std::string &topic, int32_t partition_id, std::shared_ptr<Broker> &broker_, int32_t &leaderEpoch)
+coev::awaitable<int> Client::_CachedLeader(const std::string &topic, int32_t partition_id, std::shared_ptr<Broker> &broker_, int32_t &leader_epoch)
 {
-    leaderEpoch = -1;
+    leader_epoch = -1;
     auto tit = m_metadata.find(topic);
     if (tit != m_metadata.end())
     {
@@ -747,7 +747,7 @@ coev::awaitable<int> Client::_CachedLeader(const std::string &topic, int32_t par
                 co_return ErrLeaderNotAvailable;
             }
             broker_ = bit->second;
-            leaderEpoch = _metadata.m_leader_epoch;
+            leader_epoch = _metadata.m_leader_epoch;
             co_return err;
         }
     }

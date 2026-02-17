@@ -15,8 +15,8 @@
 struct AlterClientQuotasEntryResponse : protocol_body
 {
     int16_t m_version;
-    KError m_error_code;
-    std::string m_error_msg;
+    KError m_code;
+    std::string m_message;
     std::vector<QuotaEntityComponent> m_entity;
     AlterClientQuotasEntryResponse() = default;
     AlterClientQuotasEntryResponse(int16_t v) : m_version(v)

@@ -39,8 +39,8 @@ struct ConfigEntry : VDecoder, VEncoder
 
 struct ResourceResponse : VDecoder, VEncoder
 {
-    int16_t m_error_code;
-    std::string m_error_msg;
+    int16_t m_code;
+    std::string m_message;
     ConfigResourceType m_type;
     std::string m_name;
     std::vector<ConfigEntry> m_configs;

@@ -35,8 +35,8 @@ struct GroupMemberDescription : VEncoder, VDecoder
 struct GroupDescription : VEncoder, VDecoder
 {
     mutable int16_t m_version;
-    KError m_error_code;
-    std::string m_error_msg;
+    KError m_code;
+    std::string m_message;
     std::string m_group_id;
     std::string m_state;
     std::string m_protocol_type;

@@ -97,8 +97,8 @@ std::chrono::milliseconds DescribeConfigsResponse::throttle_time() const
 
 int ResourceResponse::encode(packet_encoder &pe, int16_t version) const
 {
-    pe.putInt16(m_error_code);
-    if (pe.putString(m_error_msg) != ErrNoError)
+    pe.putInt16(m_code);
+    if (pe.putString(m_message) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -126,9 +126,9 @@ int ResourceResponse::encode(packet_encoder &pe, int16_t version) const
 
 int ResourceResponse::decode(packet_decoder &pd, int16_t version)
 {
-    if (pd.getInt16(m_error_code) != ErrNoError)
+    if (pd.getInt16(m_code) != ErrNoError)
         return ErrDecodeError;
-    if (pd.getString(m_error_msg) != ErrNoError)
+    if (pd.getString(m_message) != ErrNoError)
         return ErrDecodeError;
 
     int8_t t;

@@ -606,9 +606,9 @@ coev::awaitable<int> ClusterAdmin::DescribeConfig(const ConfigResource &cfg_reso
     {
         if (resource.m_name == cfg_resource.m_name)
         {
-            if (resource.m_error_code != 0)
+            if (resource.m_code != 0)
             {
-                co_return resource.m_error_code;
+                co_return resource.m_code;
             }
 
             out.insert(out.end(), resource.m_configs.begin(), resource.m_configs.end());
@@ -673,9 +673,9 @@ coev::awaitable<int> ClusterAdmin::AlterConfig(ConfigResourceType resource_type,
     {
         if (resource.m_name == name)
         {
-            if (resource.m_error_code != 0)
+            if (resource.m_code != 0)
             {
-                co_return resource.m_error_code;
+                co_return resource.m_code;
             }
         }
     }
@@ -726,10 +726,10 @@ coev::awaitable<int> ClusterAdmin::IncrementalAlterConfig(ConfigResourceType res
     {
         if (resource.m_name == name)
         {
-            if (resource.m_error_code != ErrNoError)
+            if (resource.m_code != ErrNoError)
             {
-                int err = resource.m_error_code;
-                if (!resource.m_error_msg.empty())
+                int err = resource.m_code;
+                if (!resource.m_message.empty())
                 {
                 }
                 co_return err;
@@ -1049,13 +1049,13 @@ coev::awaitable<int> ClusterAdmin::_DeleteConsumerGroupOffset(std::shared_ptr<De
         }
         co_return err;
     }
-    if (response.m_response->m_error_code != ErrNoError)
+    if (response.m_response->m_code != ErrNoError)
     {
-        if (isRetriableGroupCoordinatorError(response.m_response->m_error_code))
+        if (isRetriableGroupCoordinatorError(response.m_response->m_code))
         {
             m_client->RefreshCoordinator(group);
         }
-        co_return response.m_response->m_error_code;
+        co_return response.m_response->m_code;
     }
     auto topicIt = response.m_response->m_errors.find(topic);
     if (topicIt != response.m_response->m_errors.end())
@@ -1187,9 +1187,9 @@ coev::awaitable<int> ClusterAdmin::DescribeLogDirs(const std::vector<int32_t> &b
                 err_chan.push_back(err);
                 co_return;
             }
-            if (response.m_response->m_error_code != ErrNoError)
+            if (response.m_response->m_code != ErrNoError)
             {
-                err_chan.push_back(response.m_response->m_error_code);
+                err_chan.push_back(response.m_response->m_code);
                 co_return;
             }
             log_dirs_results.emplace_back(broker->ID(), std::move(response.m_response->m_log_dirs));
@@ -1288,13 +1288,13 @@ coev::awaitable<int> ClusterAdmin::DescribeClientQuotas(const std::vector<QuotaF
     {
         co_return err;
     }
-    if (!rsp.m_response->m_error_msg.empty())
+    if (!rsp.m_response->m_message.empty())
     {
         co_return ErrDescribeClientQuotas;
     }
-    if (rsp.m_response->m_error_code != ErrNoError)
+    if (rsp.m_response->m_code != ErrNoError)
     {
-        co_return rsp.m_response->m_error_code;
+        co_return rsp.m_response->m_code;
     }
     out = std::move(rsp.m_response->m_entries);
     co_return 0;
@@ -1325,13 +1325,13 @@ coev::awaitable<int> ClusterAdmin::AlterClientQuotas(const std::vector<QuotaEnti
 
     for (auto &entry : rsp.m_response->m_entries)
     {
-        if (!entry.m_error_msg.empty())
+        if (!entry.m_message.empty())
         {
             co_return ErrAlterClientQuotas;
         }
-        if (entry.m_error_code != ErrNoError)
+        if (entry.m_code != ErrNoError)
         {
-            co_return entry.m_error_code;
+            co_return entry.m_code;
         }
     }
     co_return 0;

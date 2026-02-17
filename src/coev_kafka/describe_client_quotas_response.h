@@ -37,8 +37,8 @@ struct DescribeClientQuotasResponse : protocol_body, flexible_version
 
     int16_t m_version;
     std::chrono::milliseconds m_throttle_time;
-    KError m_error_code;
-    std::string m_error_msg;
+    KError m_code;
+    std::string m_message;
     std::vector<DescribeClientQuotasEntry> m_entries;
 
     void set_version(int16_t v);

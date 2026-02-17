@@ -12,7 +12,7 @@ int SaslAuthenticateResponse::encode(packet_encoder &pe) const
 {
     pe.putKError(m_err);
 
-    int err = pe.putNullableString(m_error_message);
+    int err = pe.putNullableString(m_message);
     if (err != 0)
         return err;
 

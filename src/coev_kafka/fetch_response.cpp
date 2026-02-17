@@ -259,7 +259,7 @@ std::vector<AbortedTransaction> &FetchResponseBlock::get_aborted_transactions()
 }
 
 FetchResponse::FetchResponse()
-    : m_version(0), m_error_code(0), m_session_id(0), m_log_append_time(false)
+    : m_version(0), m_code(0), m_session_id(0), m_log_append_time(false)
 {
 }
 
@@ -284,7 +284,7 @@ int FetchResponse::decode(packet_decoder &pd, int16_t version)
 
     if (m_version >= 7)
     {
-        if ((err = pd.getInt16(m_error_code)) != 0)
+        if ((err = pd.getInt16(m_code)) != 0)
         {
             LOG_CORE("FetchResponse::decode %d", err);
             return err;
@@ -350,7 +350,7 @@ int FetchResponse::encode(packet_encoder &pe) const
 
     if (m_version >= 7)
     {
-        pe.putInt16(m_error_code);
+        pe.putInt16(m_code);
         pe.putInt32(m_session_id);
     }
 

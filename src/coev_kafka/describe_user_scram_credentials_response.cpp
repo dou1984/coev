@@ -9,8 +9,8 @@ void DescribeUserScramCredentialsResponse::set_version(int16_t v)
 int DescribeUserScramCredentialsResponse::encode(packet_encoder &pe) const
 {
     pe.putDurationMs(m_throttle_time);
-    pe.putKError(m_error_code);
-    if (pe.putNullableString(m_error_message) != ErrNoError)
+    pe.putKError(m_code);
+    if (pe.putNullableString(m_message) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -26,8 +26,8 @@ int DescribeUserScramCredentialsResponse::encode(packet_encoder &pe) const
         {
             return ErrEncodeError;
         }
-        pe.putKError(u.m_error_code);
-        if (pe.putNullableString(u.m_error_message) != ErrNoError)
+        pe.putKError(u.m_code);
+        if (pe.putNullableString(u.m_message) != ErrNoError)
         {
             return ErrEncodeError;
         }
@@ -60,12 +60,12 @@ int DescribeUserScramCredentialsResponse::decode(packet_decoder &pd, int16_t ver
         return ErrDecodeError;
     }
 
-    if (pd.getKError(m_error_code) != ErrNoError)
+    if (pd.getKError(m_code) != ErrNoError)
     {
         return ErrDecodeError;
     }
 
-    if (pd.getNullableString(m_error_message) != ErrNoError)
+    if (pd.getNullableString(m_message) != ErrNoError)
     {
         return ErrDecodeError;
     }
@@ -86,12 +86,12 @@ int DescribeUserScramCredentialsResponse::decode(packet_decoder &pd, int16_t ver
             return ErrDecodeError;
         }
 
-        if (pd.getKError(result.m_error_code) != ErrNoError)
+        if (pd.getKError(result.m_code) != ErrNoError)
         {
             return ErrDecodeError;
         }
 
-        if (pd.getNullableString(result.m_error_message) != ErrNoError)
+        if (pd.getNullableString(result.m_message) != ErrNoError)
         {
             return ErrDecodeError;
         }

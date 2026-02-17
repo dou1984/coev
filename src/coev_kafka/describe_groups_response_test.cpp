@@ -48,7 +48,7 @@ TEST(DescribeGroupsResponseTest, EncodeWithGroups)
 
     // Add a group
     GroupDescription group;
-    group.m_error_code = ErrNoError;
+    group.m_code = ErrNoError;
     group.m_group_id = "test-group";
     group.m_state = "Stable";
     group.m_protocol_type = "consumer";
@@ -68,7 +68,7 @@ TEST(DescribeGroupsResponseTest, EncodeWithVersionSpecificFields)
     // Add a group
     // auto group = std::make_shared<GroupDescription>();
     GroupDescription group;
-    group.m_error_code = ErrNoError;
+    group.m_code = ErrNoError;
     group.m_group_id = "test-group";
     group.m_state = "Stable";
     group.m_protocol_type = "consumer";

@@ -22,8 +22,8 @@ struct UserScramCredentialsResponseInfo
 struct DescribeUserScramCredentialsResult
 {
     std::string m_user;
-    KError m_error_code;
-    std::string m_error_message;
+    KError m_code;
+    std::string m_message;
     std::vector<UserScramCredentialsResponseInfo> m_credential_infos;
 };
 
@@ -31,8 +31,8 @@ struct DescribeUserScramCredentialsResponse : protocol_body, flexible_version
 {
     int16_t m_version = 0;
     std::chrono::milliseconds m_throttle_time;
-    KError m_error_code;
-    std::string m_error_message;
+    KError m_code;
+    std::string m_message;
     std::vector<DescribeUserScramCredentialsResult> m_results;
 
     void set_version(int16_t v);

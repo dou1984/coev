@@ -30,7 +30,7 @@ struct ListPartitionReassignmentsResponse : protocol_body, flexible_version
     int16_t m_version = 0;
     std::chrono::milliseconds m_throttle_time;
     KError m_err;
-    std::string m_error_message;
+    std::string m_message;
     std::map<std::string, std::map<int32_t, PartitionReplicaReassignmentsStatus>> m_topic_status;
 
     void set_version(int16_t v);

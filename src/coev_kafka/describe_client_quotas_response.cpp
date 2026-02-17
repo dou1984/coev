@@ -11,9 +11,9 @@ int DescribeClientQuotasResponse::encode(packet_encoder &pe) const
 
     pe.putDurationMs(m_throttle_time);
 
-    pe.putInt16(static_cast<int16_t>(m_error_code));
+    pe.putInt16(static_cast<int16_t>(m_code));
 
-    if (pe.putNullableString(m_error_msg) != ErrNoError)
+    if (pe.putNullableString(m_message) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -50,9 +50,9 @@ int DescribeClientQuotasResponse::decode(packet_decoder &pd, int16_t version)
     {
         return ErrDecodeError;
     }
-    m_error_code = static_cast<KError>(errorCode);
+    m_code = static_cast<KError>(errorCode);
 
-    if (pd.getNullableString(m_error_msg) != ErrNoError)
+    if (pd.getNullableString(m_message) != ErrNoError)
     {
 
         return ErrDecodeError;

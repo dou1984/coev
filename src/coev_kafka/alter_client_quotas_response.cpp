@@ -90,9 +90,9 @@ std::chrono::milliseconds AlterClientQuotasResponse::throttle_time() const
 
 int AlterClientQuotasEntryResponse::encode(packet_encoder &pe) const
 {
-    pe.putKError(m_error_code);
+    pe.putKError(m_code);
 
-    if (int err = pe.putNullableString(m_error_msg); err != 0)
+    if (int err = pe.putNullableString(m_message); err != 0)
     {
         return err;
     }
@@ -115,7 +115,7 @@ int AlterClientQuotasEntryResponse::encode(packet_encoder &pe) const
 int AlterClientQuotasEntryResponse::decode(packet_decoder &pd, int16_t version)
 {
     int err = ErrNoError;
-    if (err = pd.getKError(m_error_code); err != 0)
+    if (err = pd.getKError(m_code); err != 0)
     {
         return err;
     }
@@ -125,7 +125,7 @@ int AlterClientQuotasEntryResponse::decode(packet_decoder &pd, int16_t version)
     {
         return err;
     }
-    m_error_msg = errMsg;
+    m_message = errMsg;
 
     int32_t componentCount;
     if (err = pd.getArrayLength(componentCount); err != 0)

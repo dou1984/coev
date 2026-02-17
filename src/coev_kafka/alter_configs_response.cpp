@@ -59,8 +59,8 @@ int AlterConfigsResponse::decode(packet_decoder &pd, int16_t version)
 
 int AlterConfigsResourceResponse::encode(packet_encoder &pe) const
 {
-    pe.putInt16(m_error_code);
-    if (pe.putString(m_error_msg) != ErrNoError)
+    pe.putInt16(m_code);
+    if (pe.putString(m_message) != ErrNoError)
     {
         return ErrEncodeError;
     }
@@ -80,9 +80,9 @@ int AlterConfigsResourceResponse::decode(packet_decoder &pd, int16_t version)
     {
         return ErrDecodeError;
     }
-    m_error_code = errCode;
+    m_code = errCode;
 
-    if (pd.getNullableString(m_error_msg) != ErrNoError)
+    if (pd.getNullableString(m_message) != ErrNoError)
     {
         return ErrDecodeError;
     }

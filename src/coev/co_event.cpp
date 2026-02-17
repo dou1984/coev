@@ -19,12 +19,9 @@ namespace coev
 	{
 		return m_reserved;
 	}
-	co_event::co_event(queue *__ev, bool __seq) : m_tid(gtid())
+	co_event::co_event(queue *__ev) : m_tid(gtid())
 	{
-		if (__ev != nullptr)
-		{
-			__seq ? __ev->push_back(this) : __ev->push_front(this);
-		}
+		__ev->push_back(this);
 	}
 
 	co_event::~co_event()

@@ -17,8 +17,8 @@ struct AlterConfigError
 
 struct AlterConfigsResourceResponse : VDecoder, IEncoder
 {
-    int16_t m_error_code = 0;
-    std::string m_error_msg;
+    int16_t m_code = 0;
+    std::string m_message;
     ConfigResourceType m_type;
     std::string m_name;
 
