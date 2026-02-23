@@ -7,7 +7,6 @@
 #include "promise.h"
 #include "co_task.h"
 #include "co_deliver.h"
-#include "x.h"
 
 namespace coev
 {
@@ -38,7 +37,7 @@ namespace coev
         } _(this);
 
         m_status = CORO_FINISHED;
-        auto _that = X(m_that);
+        auto _that = std::__exchange(m_that, nullptr);
         std::visit(_, _that);
     }
     void promise::unhandled_exception()

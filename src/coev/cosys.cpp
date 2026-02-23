@@ -8,12 +8,12 @@
 #include <list>
 #include <mutex>
 #include <algorithm>
+#include <utility>
 #include "cosys.h"
 #include "local.h"
 #include "co_deliver.h"
 #include "co_task.h"
 #include "io_terminal.h"
-#include "x.h"
 
 #define g_loop local<__ev_loop>::instance()
 namespace coev
@@ -33,7 +33,7 @@ namespace coev
 			if (m_loop)
 			{
 				co_start.destroy();
-				auto _loop = X(m_loop);
+				auto _loop = std::exchange(m_loop, nullptr);
 				ev_loop_destroy(_loop);
 				LOG_CORE("ev_loop_destroy %p", _loop);
 			}

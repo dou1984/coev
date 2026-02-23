@@ -7,7 +7,7 @@
 #include "partitioner.h"
 #include "undefined.h"
 
-int ManualPartitioner::partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result)
+int ManualPartitioner::partition(std::shared_ptr<ProducerMessage> message, int32_t num_partitions, int32_t &result)
 {
     result = message->m_partition;
     return 0;
@@ -27,9 +27,9 @@ RandomPartitioner::RandomPartitioner() : m_generator(std::chrono::system_clock::
 {
 }
 
-int RandomPartitioner::partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result)
+int RandomPartitioner::partition(std::shared_ptr<ProducerMessage> message, int32_t num_partitions, int32_t &result)
 {
-    std::uniform_int_distribution<int32_t> dist(0, numPartitions - 1);
+    std::uniform_int_distribution<int32_t> dist(0, num_partitions - 1);
     result = dist(m_generator);
     return 0;
 }
@@ -48,9 +48,9 @@ RoundRobinPartitioner::RoundRobinPartitioner() : m_partition(0)
 {
 }
 
-int RoundRobinPartitioner::partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result)
+int RoundRobinPartitioner::partition(std::shared_ptr<ProducerMessage> message, int32_t num_partitions, int32_t &result)
 {
-    if (m_partition >= numPartitions)
+    if (m_partition >= num_partitions)
     {
         m_partition = 0;
     }
@@ -68,11 +68,11 @@ HashPartitioner::HashPartitioner() : m_reference_abs(false), m_hash_unsigned(fal
 {
 }
 
-int HashPartitioner::partition(std::shared_ptr<ProducerMessage> message, int32_t numPartitions, int32_t &result)
+int HashPartitioner::partition(std::shared_ptr<ProducerMessage> message, int32_t num_partitions, int32_t &result)
 {
     if (message->m_key.Empty())
     {
-        return m_random_partitioner->partition(message, numPartitions, result);
+        return m_random_partitioner->partition(message, num_partitions, result);
     }
     std::string bytes;
     int err = message->m_key.Encode(bytes);
@@ -87,15 +87,15 @@ int HashPartitioner::partition(std::shared_ptr<ProducerMessage> message, int32_t
 
     if (m_reference_abs)
     {
-        result = (static_cast<int32_t>(hash_value) & 0x7fffffff) % numPartitions;
+        result = (static_cast<int32_t>(hash_value) & 0x7fffffff) % num_partitions;
     }
     else if (m_hash_unsigned)
     {
-        result = static_cast<int32_t>(hash_value % static_cast<uint32_t>(numPartitions));
+        result = static_cast<int32_t>(hash_value % static_cast<uint32_t>(num_partitions));
     }
     else
     {
-        result = static_cast<int32_t>(hash_value) % numPartitions;
+        result = static_cast<int32_t>(hash_value) % num_partitions;
         if (result < 0)
         {
             result = -result;

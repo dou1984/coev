@@ -7,6 +7,7 @@
 #pragma once
 #include <cstring>
 #include <coev/coev.h>
+#include "is_ip.h"
 
 namespace coev
 {

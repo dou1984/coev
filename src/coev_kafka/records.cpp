@@ -154,7 +154,6 @@ int Records::is_overflow(bool &out)
     }
 }
 
-
 int Records::next_offset(int64_t &offset)
 {
     offset = 0;

@@ -5,9 +5,9 @@
  *
  */
 #include <thread>
+#include <utility>
 #include "co_event.h"
 #include "local_resume.h"
-#include "x.h"
 
 namespace coev
 {
@@ -77,7 +77,8 @@ namespace coev
 	{
 		if (m_caller.address() && !m_caller.done())
 		{
-			X(m_caller).resume();
+			auto _caller = std::exchange(m_caller, nullptr);
+			_caller.resume();
 		}
 		else
 		{

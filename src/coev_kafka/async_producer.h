@@ -23,6 +23,8 @@ struct AsyncProducer : std::enable_shared_from_this<AsyncProducer>
     AsyncProducer() = default;
     AsyncProducer(std::shared_ptr<Client> client, std::shared_ptr<TransactionManager> txnmgr);
 
+    coev::awaitable<int> producer(std::shared_ptr<ProducerMessage> msg, std::shared_ptr<ProducerMessage> &reply);
+
     void init();
     void async_close();
     bool is_transactional();
@@ -57,12 +59,11 @@ struct AsyncProducer : std::enable_shared_from_this<AsyncProducer>
     coev::co_waitgroup m_in_flight;
 
     std::map<int32_t, std::shared_ptr<BrokerProducer>> m_brokers;
+    std::map<std::string, std::shared_ptr<TopicProducer>> m_topic_producer;
 
     coev::co_channel<std::shared_ptr<ProducerMessage>> m_input;
     coev::co_channel<std::shared_ptr<ProducerMessage>> m_replies;
     coev::co_channel<std::shared_ptr<ProducerMessage>> m_retries;
-
-    std::map<std::string, std::shared_ptr<TopicProducer>> m_topic_producer;
     coev::co_task m_task;
 };
 

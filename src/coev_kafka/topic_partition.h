@@ -13,7 +13,7 @@ struct TopicPartition : topic_t
 
     TopicPartition() = default;
     TopicPartition(const std::string &t, int32_t p);
-    bool operator==(const TopicPartition &other) const { return m_topic == other.m_topic && m_partition == other.m_partition; }
+    bool operator==(const TopicPartition &other) const;
     int encode(packet_encoder &pe);
     int decode(packet_decoder &pd, int16_t version);
     struct Hash

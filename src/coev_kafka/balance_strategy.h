@@ -30,7 +30,5 @@ struct BalanceStrategy
 };
 
 std::shared_ptr<BalanceStrategy> NewBalanceStrategyRange();
-
 std::shared_ptr<BalanceStrategy> NewBalanceStrategySticky();
-
 std::shared_ptr<BalanceStrategy> NewBalanceStrategyRoundRobin();

@@ -174,9 +174,9 @@ coev::awaitable<int> Consumer::ConsumePartition(const std::string &topic, int32_
     co_return 0;
 }
 
-void Consumer::AbandonBrokerConsumer(std::shared_ptr<BrokerConsumer> brokerWorker)
+void Consumer::AbandonBrokerConsumer(std::shared_ptr<BrokerConsumer> worker)
 {
-    m_broker_consumers.erase(brokerWorker->m_broker->ID());
+    m_broker_consumers.erase(worker->m_broker->ID());
 }
 
 int NewConsumer(const std::shared_ptr<Client> &client, std::shared_ptr<Consumer> &consumer)

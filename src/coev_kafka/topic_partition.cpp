@@ -3,6 +3,11 @@
 TopicPartition::TopicPartition(const std::string &t, int32_t p) : topic_t(t, p)
 {
 }
+
+bool TopicPartition::operator==(const TopicPartition &other) const
+{
+    return m_topic == other.m_topic && m_partition == other.m_partition;
+}
 int TopicPartition::encode(packet_encoder &pe)
 {
     pe.putInt32(m_count);

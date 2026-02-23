@@ -8,41 +8,52 @@
 #pragma once
 #include <queue>
 #include "awaitable.h"
+#include "queue.h"
 
 namespace coev
 {
     template <class CLI>
     class client_pool
     {
-        using client_queue = std::queue<CLI>;
+        using client_list = queue<CLI>;
         class instance
         {
-            client_queue &m_connections;
-
+            client_list &m_connections;
+            async& m_done;
+          
         public:
-            instance(client_queue &pool) : m_connections(pool)
+            instance(client_list &_list, async& _done) : m_connections(_list) ,m_done(_done) {}
+            virtual ~instance() 
+
+            CLI&  operator co_await()
             {
-            }
-            virtual ~instance()
-            {
+                if (m_connections.empty())
+                {
+                    co_await m_done; 
+                }
+                if (m_connections.empty())
+                {
+                }
+
             }
         };
 
     public:
-        client_pool()
-        {
-        }
+        client_pool() = default;
+       
         instance get(const std::string &key)
         {
-            return instance{m_connections[key]};
+            return instance{m_connections[key], m_done[key]};
         }
-
-    private:
-        void erase(instance &)
+        template <class Config>
+        void init(const std::string& key,  Config& conf)
         {
-        }
+            m_connections.emplace(key, conf);
+            m_done[key]; 
+        }   
 
-    private:
-        static thread_local std::map<std::string, client_queue> m_connections;
+    protected:
+         std::map<std::string, client_list> m_connections;
+         std::map<std::string, async > m_done;
     };
 }

@@ -56,14 +56,14 @@ struct balanceStrategy : BalanceStrategy
 
         plan.clear();
 
-        for (auto &[topic, memberIDs] : mbt)
+        for (auto &[topic, member_ids] : mbt)
         {
             auto it = topics.find(topic);
             if (it == topics.end())
             {
                 continue; // Skip topics that don't exist in the topics map
             }
-            auto uniqueMembers = uniq(memberIDs);
+            auto uniqueMembers = uniq(member_ids);
             coreFn(plan, uniqueMembers, topic, it->second);
         }
         return 0;
@@ -83,34 +83,34 @@ private:
 
 std::shared_ptr<BalanceStrategy> NewBalanceStrategyRange()
 {
-    auto coreFn = [](BalanceStrategyPlan &plan, std::vector<std::string> &memberIDs, const std::string &topic, const std::vector<int32_t> &partitions)
+    auto core = [](BalanceStrategyPlan &plan, std::vector<std::string> &member_ids, const std::string &topic, const std::vector<int32_t> &partitions)
     {
-        int partitionsPerConsumer = static_cast<int>(partitions.size()) / static_cast<int>(memberIDs.size());
-        int consumersWithExtraPartition = static_cast<int>(partitions.size()) % static_cast<int>(memberIDs.size());
-        std::sort(memberIDs.begin(), memberIDs.end());
-        for (size_t i = 0; i < memberIDs.size(); ++i)
+        int partitionsPerConsumer = static_cast<int>(partitions.size()) / static_cast<int>(member_ids.size());
+        int consumersWithExtraPartition = static_cast<int>(partitions.size()) % static_cast<int>(member_ids.size());
+        std::sort(member_ids.begin(), member_ids.end());
+        for (size_t i = 0; i < member_ids.size(); ++i)
         {
             int min = static_cast<int>(i) * partitionsPerConsumer + static_cast<int>(std::min(static_cast<double>(consumersWithExtraPartition), static_cast<double>(i)));
             int extra = (i < static_cast<size_t>(consumersWithExtraPartition)) ? 1 : 0;
             int max = min + partitionsPerConsumer + extra;
             std::vector<int32_t> slice(partitions.begin() + min, partitions.begin() + max);
-            AddToPlan(plan, memberIDs[i], topic, slice);
+            AddToPlan(plan, member_ids[i], topic, slice);
         }
     };
-    return std::make_shared<balanceStrategy>(coreFn, RangeBalanceStrategyName);
+    return std::make_shared<balanceStrategy>(core, RangeBalanceStrategyName);
 }
 
 std::shared_ptr<BalanceStrategy> BalanceStrategyRange = NewBalanceStrategyRange();
 
-struct consumerPair
+struct consumer_movement
 {
     std::string SrcMemberID;
     std::string DstMemberID;
-    bool operator==(const consumerPair &other) const
+    bool operator==(const consumer_movement &other) const
     {
         return SrcMemberID == other.SrcMemberID && DstMemberID == other.DstMemberID;
     }
-    bool operator<(const consumerPair &other) const
+    bool operator<(const consumer_movement &other) const
     {
         return SrcMemberID < other.SrcMemberID || (SrcMemberID == other.SrcMemberID && DstMemberID < other.DstMemberID);
     }
@@ -118,17 +118,17 @@ struct consumerPair
 
 struct PartitionMovements
 {
-    std::map<std::string, std::map<consumerPair, std::map<topic_t, bool>>> PartitionMovementsByTopic;
-    std::map<topic_t, consumerPair> Movements;
+    std::map<std::string, std::map<consumer_movement, std::map<topic_t, bool>>> PartitionMovementsByTopic;
+    std::map<topic_t, consumer_movement> Movements;
 
-    void removeMovementRecordOfPartition(const topic_t &partition, consumerPair &outPair);
-    void addPartitionMovementRecord(const topic_t &partition, const consumerPair &pair);
-    void movePartition(const topic_t &partition, const std::string &oldConsumer, const std::string &newConsumer);
-    topic_t getTheActualPartitionToBeMoved(const topic_t &partition, const std::string &oldConsumer, const std::string &newConsumer);
-    std::pair<std::vector<std::string>, bool> isLinked(const std::string &src, const std::string &dst, std::vector<consumerPair> pairs, std::vector<std::string> currentPath);
+    void remove_movement_record_of_partition(const topic_t &partition, consumer_movement &outPair);
+    void add_partition_movement_record(const topic_t &partition, const consumer_movement &pair);
+    void move_partition(const topic_t &partition, const std::string &oldConsumer, const std::string &newConsumer);
+    topic_t get_the_actual_partition_to_be_moved(const topic_t &partition, const std::string &oldConsumer, const std::string &newConsumer);
+    std::pair<std::vector<std::string>, bool> is_linked(const std::string &src, const std::string &dst, std::vector<consumer_movement> pairs, std::vector<std::string> currentPath);
     bool in(const std::vector<std::string> &cycle, const std::vector<std::vector<std::string>> &cycles);
-    bool hasCycles(const std::vector<consumerPair> &pairs);
-    bool isSticky();
+    bool has_cycles(const std::vector<consumer_movement> &pairs);
+    bool is_sticky();
 };
 
 struct StickyBalanceStrategy : BalanceStrategy
@@ -634,7 +634,7 @@ int prepopulateCurrentAssignments(const std::map<std::string, ConsumerGroupMembe
     return 0;
 }
 
-void PartitionMovements::removeMovementRecordOfPartition(const topic_t &partition, consumerPair &outPair)
+void PartitionMovements::remove_movement_record_of_partition(const topic_t &partition, consumer_movement &outPair)
 {
     outPair = Movements[partition];
     Movements.erase(partition);
@@ -650,7 +650,7 @@ void PartitionMovements::removeMovementRecordOfPartition(const topic_t &partitio
     }
 }
 
-void PartitionMovements::addPartitionMovementRecord(const topic_t &partition, const consumerPair &pair)
+void PartitionMovements::add_partition_movement_record(const topic_t &partition, const consumer_movement &pair)
 {
     Movements[partition] = pair;
     if (PartitionMovementsByTopic.find(partition.m_topic) == PartitionMovementsByTopic.end())
@@ -665,29 +665,29 @@ void PartitionMovements::addPartitionMovementRecord(const topic_t &partition, co
     topicMap[pair][partition] = true;
 }
 
-void PartitionMovements::movePartition(const topic_t &partition, const std::string &oldConsumer, const std::string &newConsumer)
+void PartitionMovements::move_partition(const topic_t &partition, const std::string &oldConsumer, const std::string &newConsumer)
 {
-    consumerPair pair{oldConsumer, newConsumer};
+    consumer_movement pair{oldConsumer, newConsumer};
     if (Movements.count(partition))
     {
-        consumerPair existingPair;
-        removeMovementRecordOfPartition(partition, existingPair);
+        consumer_movement existingPair;
+        remove_movement_record_of_partition(partition, existingPair);
         if (existingPair.DstMemberID != oldConsumer)
         {
             // Log mismatch
         }
         if (existingPair.SrcMemberID != newConsumer)
         {
-            addPartitionMovementRecord(partition, consumerPair{existingPair.SrcMemberID, newConsumer});
+            add_partition_movement_record(partition, consumer_movement{existingPair.SrcMemberID, newConsumer});
         }
     }
     else
     {
-        addPartitionMovementRecord(partition, pair);
+        add_partition_movement_record(partition, pair);
     }
 }
 
-topic_t PartitionMovements::getTheActualPartitionToBeMoved(
+topic_t PartitionMovements::get_the_actual_partition_to_be_moved(
     const topic_t &partition,
     const std::string &oldConsumer,
     const std::string &newConsumer)
@@ -705,7 +705,7 @@ topic_t PartitionMovements::getTheActualPartitionToBeMoved(
         }
         actualOld = Movements[partition].SrcMemberID;
     }
-    consumerPair reversePair{newConsumer, actualOld};
+    consumer_movement reversePair{newConsumer, actualOld};
     if (PartitionMovementsByTopic[partition.m_topic].count(reversePair) == 0)
     {
         return partition;
@@ -714,10 +714,10 @@ topic_t PartitionMovements::getTheActualPartitionToBeMoved(
     return revMap.begin()->first;
 }
 
-std::pair<std::vector<std::string>, bool> PartitionMovements::isLinked(
+std::pair<std::vector<std::string>, bool> PartitionMovements::is_linked(
     const std::string &src,
     const std::string &dst,
-    std::vector<consumerPair> pairs,
+    std::vector<consumer_movement> pairs,
     std::vector<std::string> currentPath)
 {
     if (src == dst)
@@ -741,14 +741,14 @@ std::pair<std::vector<std::string>, bool> PartitionMovements::isLinked(
     {
         if (pairs[i].SrcMemberID != src)
             continue;
-        std::vector<consumerPair> reducedSet;
+        std::vector<consumer_movement> reducedSet;
         for (size_t j = 0; j < pairs.size(); ++j)
         {
             if (j != i)
                 reducedSet.push_back(pairs[j]);
         }
         currentPath.push_back(src);
-        return isLinked(pairs[i].DstMemberID, dst, reducedSet, currentPath);
+        return is_linked(pairs[i].DstMemberID, dst, reducedSet, currentPath);
     }
     return {currentPath, false};
 }
@@ -778,18 +778,18 @@ bool PartitionMovements::in(const std::vector<std::string> &cycle, const std::ve
     return false;
 }
 
-bool PartitionMovements::hasCycles(const std::vector<consumerPair> &pairs)
+bool PartitionMovements::has_cycles(const std::vector<consumer_movement> &pairs)
 {
     std::vector<std::vector<std::string>> cycles;
     for (size_t i = 0; i < pairs.size(); ++i)
     {
-        std::vector<consumerPair> reducedPairs;
+        std::vector<consumer_movement> reducedPairs;
         for (size_t j = 0; j < pairs.size(); ++j)
         {
             if (j != i)
                 reducedPairs.push_back(pairs[j]);
         }
-        auto [path, linked] = isLinked(pairs[i].DstMemberID, pairs[i].SrcMemberID, reducedPairs, {pairs[i].SrcMemberID});
+        auto [path, linked] = is_linked(pairs[i].DstMemberID, pairs[i].SrcMemberID, reducedPairs, {pairs[i].SrcMemberID});
         if (linked && !in(path, cycles))
         {
             cycles.push_back(path);
@@ -800,24 +800,22 @@ bool PartitionMovements::hasCycles(const std::vector<consumerPair> &pairs)
     return false;
 }
 
-bool PartitionMovements::isSticky()
+bool PartitionMovements::is_sticky()
 {
     for (auto &[topic, movements] : PartitionMovementsByTopic)
     {
-        std::vector<consumerPair> movementPairs;
+        std::vector<consumer_movement> movementPairs;
         for (auto &[pair, _] : movements)
         {
             movementPairs.push_back(pair);
         }
-        if (hasCycles(movementPairs))
+        if (has_cycles(movementPairs))
         {
             return false;
         }
     }
     return true;
 }
-
-// StickyBalanceStrategy implementations
 
 int StickyBalanceStrategy::Plan(const std::map<std::string, ConsumerGroupMemberMetadata> &members, const std::map<std::string, std::vector<int32_t>> &topics, BalanceStrategyPlan &plan)
 {
@@ -1128,7 +1126,7 @@ std::vector<std::string> StickyBalanceStrategy::reassignPartition(
 {
     std::string consumer = currentPartitionConsumer[partition];
     topic_t partitionToBeMoved =
-        movements.getTheActualPartitionToBeMoved(partition, consumer, newConsumer);
+        movements.get_the_actual_partition_to_be_moved(partition, consumer, newConsumer);
     return processPartitionMovement(partitionToBeMoved, newConsumer, currentAssignment,
                                     sortedCurrentSubscriptions, currentPartitionConsumer);
 }
@@ -1141,7 +1139,7 @@ std::vector<std::string> StickyBalanceStrategy::processPartitionMovement(
     std::map<topic_t, std::string> &currentPartitionConsumer)
 {
     std::string oldConsumer = currentPartitionConsumer[partition];
-    movements.movePartition(partition, oldConsumer, newConsumer);
+    movements.move_partition(partition, oldConsumer, newConsumer);
     currentAssignment[oldConsumer] = removeTopicPartitionFromMemberAssignments(
         currentAssignment[oldConsumer], partition);
     currentAssignment[newConsumer].push_back(partition);

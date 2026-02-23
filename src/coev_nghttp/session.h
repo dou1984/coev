@@ -1,3 +1,9 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2023-2025, Zhao Yun Shan
+ *
+ */
 #pragma once
 #include <unordered_map>
 #include <nghttp2/nghttp2.h>

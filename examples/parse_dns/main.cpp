@@ -1,3 +1,9 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2023-2025, Zhao Yun Shan
+ *
+ */
 #include <coev/coev.h>
 #include <coev_dns/parse_dns.h>
 #include <coev/log.h>
@@ -6,7 +12,7 @@ using namespace coev;
 
 awaitable<void> co_parse_dns()
 {
-    std::string url = "www.baidu.com";
+    std::string url = "www.google.com";
     // std::string url = "xxxxxxxx";
     std::string addr = "";
     auto r = co_await parse_dns(url, addr);
@@ -17,7 +23,7 @@ awaitable<void> co_parse_dns()
     }
     LOG_INFO("baidu -> %s", addr.c_str());
 
-        co_return;
+    co_return;
 }
 
 int main()

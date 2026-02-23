@@ -4,6 +4,7 @@
  *	Copyright (c) 2023-2026, Zhao Yun Shan
  *
  */
+#include <coroutine>
 #include "async.h"
 #include "local_resume.h"
 #include "local.h"

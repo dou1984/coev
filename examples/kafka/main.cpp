@@ -1,3 +1,9 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2023-2025, Zhao Yun Shan
+ *
+ */
 #include <coev/coev.h>
 #include <coev_kafka/consumer.h>
 #include <coev_kafka/message.h>
@@ -115,10 +121,9 @@ int main(int argc, char **argv)
                         msg->m_topic = topic;
                         msg->m_key.m_data = "key";
                         msg->m_value.m_data = "hello world";
-                        producer->m_input.set(msg);
 
                         std::shared_ptr<ProducerMessage> reply;
-                        co_await producer->m_replies.get(reply);
+                        co_await producer->producer(msg, reply);
                         if (reply->m_err != ErrNoError)
                         {
                             LOG_ERR("get message %d", reply->m_err);
@@ -127,7 +132,6 @@ int main(int argc, char **argv)
                         {
                             LOG_DBG("produced message at offset %ld", reply->m_offset);
                         }
-                        co_await sleep_for(std::chrono::milliseconds(1000));
                     }
                 })
             .wait();

@@ -249,9 +249,9 @@ coev::awaitable<void> PartitionConsumer::ResponseFeeder()
     }
 }
 
-int PartitionConsumer::ParseMessages(std::shared_ptr<MessageSet> msg_set, std::vector<std::shared_ptr<ConsumerMessage>> &messages)
+int PartitionConsumer::ParseMessages(std::shared_ptr<MessageSet> message_set, std::vector<std::shared_ptr<ConsumerMessage>> &messages)
 {
-    for (auto &block : msg_set->m_messages)
+    for (auto &block : message_set->m_messages)
     {
         auto msgs = block.Messages();
         for (auto &msg : msgs)
@@ -334,8 +334,9 @@ int PartitionConsumer::ParseResponse(std::shared_ptr<FetchResponse> response, st
 
     auto &block = response->get_block(m_topic, m_partition);
 
-    if (!errorsIs(block.m_err, ErrNoError))
+    if (!IsError(block.m_err, ErrNoError))
     {
+        LOG_CORE("FetchResponse error %s from broker %d", KErrorToString(block.m_err), m_broker->m_broker->ID());
         return block.m_err;
     }
 

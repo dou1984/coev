@@ -180,4 +180,4 @@ auto IsKError(T err)
     return IsKError(static_cast<KError>(err));
 }
 template <typename T>
-bool errorsIs(T a, T b) { return a == b; }
+bool IsError(T a, T b) { return a == b; }

@@ -178,9 +178,7 @@ coev::awaitable<int> Broker::_Open()
         co_return INVALID;
     }
     auto [host, port] = net::SplitHostPort(m_addr);
-    static std::regex ipv4_re("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$");
-    static std::regex ipv6_re("^(\\[)?([0-9a-fA-F:]+)(\\])?$|:");
-    if (!(std::regex_match(host, ipv4_re) || std::regex_match(host, ipv6_re)))
+    if (!(coev::is_ipv4(host) || coev::is_ipv6(host)))
     {
         auto tmp = host;
         auto err = co_await coev::parse_dns(tmp, host);

@@ -40,16 +40,12 @@ namespace coev
     std::shared_ptr<dns_cli> resolver::__find(ares_socket_t _fd)
     {
         auto it = m_clients.find(_fd);
-        if (it != m_clients.end())
-        {
-            return it->second;
-        }
-        else
+        if (it == m_clients.end())
         {
             auto cli = std::make_shared<dns_cli>(_fd, m_channel);
-            m_clients[_fd] = cli;
-            return cli;
+            it = m_clients.emplace(_fd, cli).first;
         }
+        return it->second;
     }
     void resolver::handler(void *data, ares_socket_t _fd, int readable, int writable)
     {
@@ -57,14 +53,8 @@ namespace coev
         if (readable || writable)
         {
             auto cli = _this->__find(_fd);
-            _this->m_task << [](auto cli) -> awaitable<void>
-            {
-                co_await cli->send(nullptr, 0);
-            }(cli);
-            _this->m_task << [](auto cli) -> awaitable<void>
-            {
-                co_await cli->recv(nullptr, 0);
-            }(cli);
+            _this->m_task << cli->send(nullptr, 0);
+            _this->m_task << cli->recv(nullptr, 0);
         }
         else
         {

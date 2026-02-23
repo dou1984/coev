@@ -34,6 +34,12 @@ void AsyncProducer::async_close()
     m_task << shutdown();
 }
 
+coev::awaitable<int> AsyncProducer::producer(std::shared_ptr<ProducerMessage> msg, std::shared_ptr<ProducerMessage> &reply)
+{
+    m_input.set(msg);
+    co_await m_replies.get(reply);
+    co_return ErrNoError;
+}
 coev::awaitable<int> AsyncProducer::close()
 {
     async_close();
