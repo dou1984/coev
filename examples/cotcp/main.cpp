@@ -9,6 +9,7 @@
 using namespace coev;
 
 server_pool<tcp::server> pool;
+thread_local client_pool<io_connect> cpool;
 
 std::string host = "0.0.0.0";
 int port = 9999;
@@ -49,32 +50,39 @@ awaitable<void> co_server()
 	}
 }
 
-awaitable<int> co_dail(const char *ip, int port)
+awaitable<int> co_dail()
 {
-	io_connect c;
-	co_await c.connect(ip, port);
+	auto c = co_await cpool.get();
 	if (!c)
 	{
 		co_return INVALID;
 	}
+	if (c->__invalid())
+	{
+		co_await c->connect(host.c_str(), port);
+		if (!c)
+		{
+			co_return INVALID;
+		}
+	}
 	char sayhi[] = "helloworld";
 	int count = 0;
 	LOG_DBG("co_dail start %s %d", sayhi, port);
-	while (c)
+	while (c->__valid())
 	{
 		LOG_DBG("co_dail send %d", count);
-		int r = co_await c.send(sayhi, strlen(sayhi) + 1);
+		int r = co_await c->send(sayhi, strlen(sayhi) + 1);
 		if (r == INVALID)
 		{
-			c.close();
+			c->close();
 			co_return 0;
 		}
 		LOG_DBG("send %d %s", r, sayhi);
 		char buffer[0x1000];
-		r = co_await c.recv(buffer, sizeof(buffer));
+		r = co_await c->recv(buffer, sizeof(buffer));
 		if (r == INVALID)
 		{
-			c.close();
+			c->close();
 			co_return 0;
 		}
 		LOG_DBG("recv %d %s", r, buffer);
@@ -90,7 +98,7 @@ awaitable<void> co_test()
 {
 	for (int i = 0; i < 100; i++)
 	{
-		co_start << co_dail(host.c_str(), port);
+		co_start << co_dail();
 	}
 	co_return;
 }

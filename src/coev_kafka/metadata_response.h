@@ -40,7 +40,7 @@ struct TopicMetadata : VDecoder, VEncoder
     KError m_err;
     std::string m_name;
     Uuid m_uuid;
-    bool m_is_internal;
+    bool m_is_internal = false;
     std::vector<PartitionMetadata> m_partitions;
     int32_t m_topic_authorized_operations;
 
