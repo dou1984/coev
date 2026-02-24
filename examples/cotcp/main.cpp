@@ -57,18 +57,11 @@ awaitable<int> co_dail()
 	{
 		co_return INVALID;
 	}
-	if (c->__invalid())
-	{
-		co_await c->connect(host.c_str(), port);
-		if (!c)
-		{
-			co_return INVALID;
-		}
-	}
+
 	char sayhi[] = "helloworld";
 	int count = 0;
 	LOG_DBG("co_dail start %s %d", sayhi, port);
-	while (c->__valid())
+	while (true)
 	{
 		LOG_DBG("co_dail send %d", count);
 		int r = co_await c->send(sayhi, strlen(sayhi) + 1);
@@ -88,14 +81,23 @@ awaitable<int> co_dail()
 		LOG_DBG("recv %d %s", r, buffer);
 		if (count++ > 10)
 		{
-			LOG_DBG("co_dail exit %s %d %d", ip, port, count);
+			LOG_DBG("co_dail exit %s %d %d", host.c_str(), port, count);
 			co_return 0;
 		}
 	}
 	co_return 0;
 }
+
 awaitable<void> co_test()
 {
+	cpool.set(
+		[]() -> awaitable<client_pool<io_connect>::CQ *>
+		{
+			auto cq = new client_pool<io_connect>::CQ();
+			co_await cq->connect(host.c_str(), port);
+			co_return cq;
+		},
+		4);
 	for (int i = 0; i < 100; i++)
 	{
 		co_start << co_dail();
