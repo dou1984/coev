@@ -4,12 +4,15 @@
  *	Copyright (c) 2023-2025, Zhao Yun Shan
  *
  */
+#include <atomic>
 #include <coev/coev.h>
 
 using namespace coev;
 
 server_pool<tcp::server> pool;
-thread_local client_pool<io_connect> cpool;
+client_pool<io_connect> cpool;
+
+std::atomic_int g_count = {0};
 
 std::string host = "0.0.0.0";
 int port = 9999;
@@ -17,23 +20,23 @@ awaitable<void> dispatch(addrInfo addr, int fd)
 {
 	LOG_DBG("dispatch start %s %d", addr.ip, addr.port);
 	io_context io(fd);
+	defer(io.close(););
 	while (io)
 	{
 		char buffer[0x1000];
 		auto r = co_await io.recv(buffer, sizeof(buffer));
 		if (r == INVALID)
 		{
-			io.close();
 			co_return;
 		}
 		LOG_DBG("recv %d %s", r, buffer);
 		r = co_await io.send(buffer, r);
 		if (r == INVALID)
 		{
-			io.close();
 			co_return;
 		}
 		LOG_DBG("send %d %s", r, buffer);
+		g_count++;
 	}
 }
 awaitable<void> co_server()
@@ -55,19 +58,19 @@ awaitable<int> co_dail()
 	auto c = co_await cpool.get();
 	if (!c)
 	{
+		LOG_DBG("co_dail co_await cpool.get()");
 		co_return INVALID;
 	}
 
-	char sayhi[] = "helloworld";
+	char sayhi[64] = "helloworld";
 	int count = 0;
 	LOG_DBG("co_dail start %s %d", sayhi, port);
-	while (true)
+	while (c)
 	{
 		LOG_DBG("co_dail send %d", count);
 		int r = co_await c->send(sayhi, strlen(sayhi) + 1);
 		if (r == INVALID)
 		{
-			c->close();
 			co_return 0;
 		}
 		LOG_DBG("send %d %s", r, sayhi);
@@ -75,30 +78,29 @@ awaitable<int> co_dail()
 		r = co_await c->recv(buffer, sizeof(buffer));
 		if (r == INVALID)
 		{
-			c->close();
 			co_return 0;
 		}
 		LOG_DBG("recv %d %s", r, buffer);
-		if (count++ > 10)
+		if (count++ >= 10)
 		{
 			LOG_DBG("co_dail exit %s %d %d", host.c_str(), port, count);
 			co_return 0;
 		}
+		g_count++;
 	}
 	co_return 0;
 }
 
-awaitable<void> co_test()
+awaitable<void> co_client()
 {
-	cpool.set(
-		[]() -> awaitable<client_pool<io_connect>::CQ *>
-		{
-			auto cq = new client_pool<io_connect>::CQ();
-			co_await cq->connect(host.c_str(), port);
-			co_return cq;
-		},
-		4);
-	for (int i = 0; i < 100; i++)
+	cpool.set(4,
+			  []() -> awaitable<client_pool<io_connect>::CQ *>
+			  {
+				  auto cq = new client_pool<io_connect>::CQ();
+				  co_await cq->connect(host.c_str(), port);
+				  co_return cq;
+			  });
+	for (int i = 0; i < 1; i++)
 	{
 		co_start << co_dail();
 	}
@@ -132,14 +134,23 @@ int main(int argc, char **argv)
 		pool.start(host.c_str(), port);
 		runnable::instance()
 			.start(2, co_server)
-			.endless([]()
-					 { pool.stop(); });
+			.endless(
+				[]()
+				{
+					pool.stop();
+					LOG_DBG("g_count %d", g_count.load());
+				});
 	}
 	else if (method == "client")
 	{
 		runnable::instance()
-			.start(4, co_test)
-			.wait();
+			.start(1, co_client)
+			.endless(
+				[]()
+				{
+					cpool.stop();
+					LOG_DBG("g_count %d", g_count.load());
+				});
 	}
 	else
 	{

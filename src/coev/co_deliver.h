@@ -22,7 +22,6 @@ namespace coev
 		int id() const { return m_tid; }
 		void stop();
 		static void stop(int tid);
-		void for_each(const std::function<void()> &);
 
 	protected:
 		int __call_resume(co_event *ev);
