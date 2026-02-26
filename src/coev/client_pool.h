@@ -12,6 +12,7 @@
 #include <utility>
 #include "awaitable.h"
 #include "queue.h"
+#include "sleep_for.h"
 
 namespace coev
 {
@@ -44,36 +45,23 @@ namespace coev
             }
             CQP(CQP &&o) noexcept
             {
-                m_pool = std::move(o.m_pool);
+                m_pool = o.m_pool;
                 m_client = std::exchange(o.m_client, nullptr);
             }
             CQP &operator=(CQP &&o) noexcept
             {
                 if (this != &o)
                 {
-                    m_pool = std::move(o.m_pool);
+                    m_pool = o.m_pool;
                     m_client = std::exchange(o.m_client, nullptr);
                 }
                 return *this;
             }
             ~CQP()
             {
-                if (m_client && m_pool)
+                if (m_client)
                 {
-                    if (*m_client)
-                    {
-                        m_pool->release(m_client);
-                    }
-                    else
-                    {
-                        delete m_client;
-                        m_pool->m_count--;
-                        m_pool->release(nullptr);
-                    }
-                }
-                else if (m_client)
-                {
-                    delete m_client;
+                    m_pool->release(m_client);
                 }
             }
             operator bool() const { return m_client != nullptr && *m_client; }
@@ -133,20 +121,33 @@ namespace coev
     template <class CLI>
     awaitable<typename client_pool<CLI>::CQP> client_pool<CLI>::QS::get()
     {
-        if (m_used == m_count && m_count == m_max)
+        while (true)
         {
-            co_await m_waiter.suspend();
+            if (m_used == m_count && m_count == m_max)
+            {
+                co_await m_waiter.suspend();
+            }
+            if (m_count < m_max)
+            {
+                assert(m_func);
+                auto cq = co_await m_func();
+                push_back(cq);
+                m_count++;
+            }
+            m_used++;
+            auto cq = static_cast<client_pool<CLI>::CQ *>(pop_front());
+            if (*cq)
+            {
+                co_return client_pool<CLI>::CQP(this->shared_from_this(), cq);
+            }
+            else
+            {
+                delete cq;
+                m_count--;
+                m_used--;
+                co_await sleep_for(3.0);
+            }
         }
-        if (m_count < m_max)
-        {
-            assert(m_func);
-            auto cq = co_await m_func();
-            push_back(cq);
-            m_count++;
-        }
-        m_used++;
-        auto cq = static_cast<client_pool<CLI>::CQ *>(pop_front());
-        co_return client_pool<CLI>::CQP(this->shared_from_this(), cq);
     }
 
     template <class CLI>

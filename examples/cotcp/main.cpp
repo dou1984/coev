@@ -16,6 +16,7 @@ std::atomic_int g_count = {0};
 
 std::string host = "0.0.0.0";
 int port = 9999;
+int max_co_client = 1;
 awaitable<void> dispatch(addrInfo addr, int fd)
 {
 	LOG_DBG("dispatch start %s %d", addr.ip, addr.port);
@@ -53,8 +54,10 @@ awaitable<void> co_server()
 	}
 }
 
-awaitable<int> co_dail()
+awaitable<int> co_dail(co_waitgroup &wg)
 {
+	wg.add(1);
+	defer(wg.done());
 	auto c = co_await cpool.get();
 	if (!c)
 	{
@@ -93,17 +96,12 @@ awaitable<int> co_dail()
 
 awaitable<void> co_client()
 {
-	cpool.set(4,
-			  []() -> awaitable<client_pool<io_connect>::CQ *>
-			  {
-				  auto cq = new client_pool<io_connect>::CQ();
-				  co_await cq->connect(host.c_str(), port);
-				  co_return cq;
-			  });
-	for (int i = 0; i < 1; i++)
+	co_waitgroup wg;
+	for (int i = 0; i < max_co_client; i++)
 	{
-		co_start << co_dail();
+		co_start << co_dail(wg);
 	}
+	co_await wg.wait();
 	co_return;
 }
 int main(int argc, char **argv)
@@ -133,7 +131,7 @@ int main(int argc, char **argv)
 	{
 		pool.start(host.c_str(), port);
 		runnable::instance()
-			.start(2, co_server)
+			.start(4, co_server)
 			.endless(
 				[]()
 				{
@@ -143,6 +141,14 @@ int main(int argc, char **argv)
 	}
 	else if (method == "client")
 	{
+		cpool.set(4,
+				  []() -> awaitable<client_pool<io_connect>::CQ *>
+				  {
+					  auto cq = new client_pool<io_connect>::CQ();
+					  co_await cq->connect(host.c_str(), port);
+					  co_return cq;
+				  });
+
 		runnable::instance()
 			.start(1, co_client)
 			.endless(
