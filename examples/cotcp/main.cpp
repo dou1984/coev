@@ -102,6 +102,7 @@ awaitable<void> co_client()
 		co_start << co_dail(wg);
 	}
 	co_await wg.wait();
+	LOG_DBG("co_client exit");
 	co_return;
 }
 int main(int argc, char **argv)

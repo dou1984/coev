@@ -31,8 +31,8 @@ namespace coev
 	class co_task;
 	struct promise : queue
 	{
-		std::coroutine_handle<> m_this = nullptr;		
-		std::variant<co_task *, std::coroutine_handle<>, nullptr_t> m_that;
+		std::coroutine_handle<> m_this = nullptr;
+		std::variant<co_task *, std::coroutine_handle<>, nullptr_t> m_that = nullptr;
 		int m_status = CORO_INIT;
 		uint64_t m_tid = gtid();
 		promise();
