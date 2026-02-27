@@ -22,13 +22,13 @@ namespace coev
     class client_pool
     {
     public:
-        struct CQ : CLI, queue
+        struct ClientQueue : CLI, queue
         {
             using CLI::operator bool;
         };
-        using CreateClientFunc = awaitable<CQ *> (*)();
-        struct CQP;
-        struct SQ : queue, std::enable_shared_from_this<SQ>
+        using CreateClientFunc = awaitable<ClientQueue *> (*)();
+        struct ClientQueueWrapper;
+        struct SharedQueue : queue, std::enable_shared_from_this<SharedQueue>
         {
             uint32_t m_count = 0;
             uint32_t m_used = 0;
@@ -37,22 +37,22 @@ namespace coev
             async m_waiter;
             async m_closed;
             CreateClientFunc m_create;
-            awaitable<CQP> get();
+            awaitable<ClientQueueWrapper> get();
             void release(queue *cq);
-            ~SQ() { clear(); }
+            ~SharedQueue() { clear(); }
             void clear();
             void init();
         };
-        struct CQP
+        struct ClientQueueWrapper
         {
-            CQP() = default;
-            CQP(std::shared_ptr<SQ> _pool, CQ *_client) : m_pool(_pool), m_client(_client) {}
-            CQP(CQP &&o) noexcept
+            ClientQueueWrapper() = default;
+            ClientQueueWrapper(std::shared_ptr<SharedQueue> _pool, ClientQueue *_client) : m_pool(_pool), m_client(_client) {}
+            ClientQueueWrapper(ClientQueueWrapper &&o) noexcept
             {
                 m_pool = o.m_pool;
                 m_client = std::exchange(o.m_client, nullptr);
             }
-            CQP &operator=(CQP &&o) noexcept
+            ClientQueueWrapper &operator=(ClientQueueWrapper &&o) noexcept
             {
                 if (this != &o)
                 {
@@ -61,7 +61,7 @@ namespace coev
                 }
                 return *this;
             }
-            ~CQP()
+            ~ClientQueueWrapper()
             {
                 if (m_client)
                 {
@@ -69,16 +69,16 @@ namespace coev
                 }
             }
             operator bool() const { return m_client != nullptr && *m_client; }
-            CQ *operator->() { return m_client; }
+            ClientQueue *operator->() { return m_client; }
 
-            CQ *m_client = nullptr;
-            std::shared_ptr<SQ> m_pool = nullptr;
+            ClientQueue *m_client = nullptr;
+            std::shared_ptr<SharedQueue> m_pool = nullptr;
         };
-        using ART = co_task;
+        using AutoReleaseTask = co_task;
 
     public:
         client_pool() = default;
-        awaitable<CQP> get() { return __get_sq()->get(); }
+        awaitable<ClientQueueWrapper> get() { return __get_sq()->get(); }
         void set(uint32_t _max, const CreateClientFunc &func)
         {
             m_create = func;
@@ -107,7 +107,7 @@ namespace coev
             auto it = m_pool.find(tid);
             if (it == m_pool.end())
             {
-                auto sq = std::make_shared<SQ>();
+                auto sq = std::make_shared<SharedQueue>();
                 sq->m_create = m_create;
                 sq->m_max = m_max;
                 sq->init();
@@ -116,14 +116,14 @@ namespace coev
             return it->second;
         }
 
-        std::unordered_map<uint64_t, std::shared_ptr<SQ>> m_pool;
+        std::unordered_map<uint64_t, std::shared_ptr<SharedQueue>> m_pool;
         std::mutex m_mutex;
         uint32_t m_max = 0;
         CreateClientFunc m_create;
     };
 
     template <class CLI>
-    awaitable<typename client_pool<CLI>::CQP> client_pool<CLI>::SQ::get()
+    awaitable<typename client_pool<CLI>::ClientQueueWrapper> client_pool<CLI>::SharedQueue::get()
     {
         while (true)
         {
@@ -150,11 +150,11 @@ namespace coev
                 }
             }
 
-            auto cq = static_cast<client_pool<CLI>::CQ *>(pop_front());
+            auto cq = static_cast<client_pool<CLI>::ClientQueue *>(pop_front());
             if (*cq)
             {
                 m_used++;
-                co_return client_pool<CLI>::CQP(this->shared_from_this(), cq);
+                co_return client_pool<CLI>::ClientQueueWrapper(this->shared_from_this(), cq);
             }
             else
             {
@@ -166,7 +166,7 @@ namespace coev
     }
 
     template <class CLI>
-    void client_pool<CLI>::SQ::release(queue *cq)
+    void client_pool<CLI>::SharedQueue::release(queue *cq)
     {
         if (cq)
         {
@@ -177,21 +177,22 @@ namespace coev
     }
 
     template <class CLI>
-    void client_pool<CLI>::SQ::clear()
+    void client_pool<CLI>::SharedQueue::clear()
     {
-        for (auto c = pop_front(); !c->empty(); c = pop_front())
+        for (auto cq = pop_front(); !cq->empty(); cq = pop_front())
         {
-            delete c;
+            delete cq;
             m_count--;
         }
     }
     template <class CLI>
-    void client_pool<CLI>::SQ::init()
+    void client_pool<CLI>::SharedQueue::init()
     {
-        local<ART>::instance() << [this]() -> awaitable<void>
+        local<AutoReleaseTask>::instance() << [](auto _this) -> awaitable<void>
         {
-            defer(clear());
-            co_await m_closed.suspend();
-        }();
+            defer(LOG_CORE("AutoReleaseTask"));
+            defer(_this->clear());
+            co_await _this->m_closed.suspend();
+        }(this->shared_from_this());
     }
 }

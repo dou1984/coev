@@ -4,6 +4,7 @@
  *	Copyright (c) 2023-2026, Zhao Yun Shan
  *
  */
+#include <utility>
 #include "promise.h"
 #include "co_task.h"
 #include "co_deliver.h"
@@ -37,7 +38,7 @@ namespace coev
         } _(this);
 
         m_status = CORO_FINISHED;
-        auto _that = std::__exchange(m_that, nullptr);
+        auto _that = std::exchange(m_that, nullptr);
         std::visit(_, _that);
     }
     void promise::unhandled_exception()

@@ -49,7 +49,10 @@ awaitable<void> co_server()
 		auto fd = co_await srv.accept(h);
 		if (srv.valid())
 		{
-			co_start << dispatch(h, fd);
+			if (fd != INVALID)
+			{
+				co_start << dispatch(h, fd);
+			}
 		}
 	}
 }
@@ -143,11 +146,23 @@ int main(int argc, char **argv)
 	else if (method == "client")
 	{
 		cpool.set(4,
-				  []() -> awaitable<client_pool<io_connect>::CQ *>
+				  []() -> awaitable<client_pool<io_connect>::ClientQueue *>
 				  {
-					  auto cq = new client_pool<io_connect>::CQ();
-					  co_await cq->connect(host.c_str(), port);
-					  co_return cq;
+					  try
+					  {
+						  auto cq = new client_pool<io_connect>::ClientQueue();
+						  auto err = co_await cq->connect(host.c_str(), port);
+						  if (err == INVALID)
+						  {
+							  delete cq;
+							  co_return nullptr;
+						  }
+						  co_return cq;
+					  }
+					  catch (...)
+					  {
+						  co_return nullptr;
+					  }
 				  });
 
 		runnable::instance()
