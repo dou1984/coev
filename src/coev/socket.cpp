@@ -50,6 +50,7 @@ namespace coev
 	}
 	void fillAddr(sockaddr_in &addr, const char *ip, int port)
 	{
+		assert(ip);
 		addr.sin_family = AF_INET;
 		addr.sin_port = htons(port);
 		inet_pton(addr.sin_family, ip, &addr.sin_addr);

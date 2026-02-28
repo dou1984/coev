@@ -14,6 +14,7 @@
 #include "co_deliver.h"
 #include "co_task.h"
 #include "io_terminal.h"
+#include "defer.h"
 
 #define g_loop local<__ev_loop>::instance()
 namespace coev
@@ -32,8 +33,10 @@ namespace coev
 		{
 			if (m_loop)
 			{
+				LOG_CORE("ev_loop_destroy %p", m_loop);
 				co_start.destroy();
 				auto _loop = std::exchange(m_loop, nullptr);
+				LOG_CORE("ev_loop_destroy %p", _loop);
 				ev_loop_destroy(_loop);
 				LOG_CORE("ev_loop_destroy %p", _loop);
 			}
@@ -42,7 +45,6 @@ namespace coev
 		{
 			return m_loop;
 		}
-		void reset() { m_loop = nullptr; }
 	};
 
 	void cosys::start()
@@ -54,7 +56,9 @@ namespace coev
 	void cosys::stop()
 	{
 		local<co_deliver>::instance().stop();
+		auto tid = gtid();
 		auto _loop = g_loop.get();
+		defer(LOG_CORE("tid %ld stop loop %p", tid, _loop));
 		ev_break(_loop, EVBREAK_ALL);
 	}
 	struct ev_loop *cosys::data()

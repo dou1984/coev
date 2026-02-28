@@ -15,7 +15,7 @@ client_pool<io_connect> cpool;
 std::atomic_int g_count = {0};
 
 std::string host = "0.0.0.0";
-int port = 9999;
+uint16_t port = 9999;
 int max_co_client = 1;
 awaitable<void> dispatch(addrInfo addr, int fd)
 {
@@ -61,6 +61,7 @@ awaitable<int> co_dail(co_waitgroup &wg)
 {
 	wg.add(1);
 	defer(wg.done());
+	defer(LOG_CORE("wg.done()"));
 	auto c = co_await cpool.get();
 	if (!c)
 	{
@@ -145,25 +146,14 @@ int main(int argc, char **argv)
 	}
 	else if (method == "client")
 	{
-		cpool.set(4,
-				  []() -> awaitable<client_pool<io_connect>::ClientQueue *>
-				  {
-					  try
-					  {
-						  auto cq = new client_pool<io_connect>::ClientQueue();
-						  auto err = co_await cq->connect(host.c_str(), port);
-						  if (err == INVALID)
-						  {
-							  delete cq;
-							  co_return nullptr;
-						  }
-						  co_return cq;
-					  }
-					  catch (...)
-					  {
-						  co_return nullptr;
-					  }
-				  });
+
+		cpool.set({
+			.m_max = 4,
+			.m_delay = 1.0f,
+			.m_short_delay = 0.1f,
+			.m_host = host,
+			.m_port = port,
+		});
 
 		runnable::instance()
 			.start(1, co_client)

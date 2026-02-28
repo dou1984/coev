@@ -53,11 +53,11 @@ namespace coev
 			_set();
 			return static_cast<co_event *>(pop_front());
 		}
-		awaitable<uint64_t> async::suspend(const std::function<bool()> &_suppend, const std::function<void()> &_get)
+		awaitable<uint64_t> async::suspend(const std::function<bool()> &_suspend, const std::function<void()> &_get)
 		{
 			uint64_t value = 0;
 			m_mutex.lock();
-			if (_suppend())
+			if (_suspend())
 			{
 				co_event ev(this);
 				m_mutex.unlock();

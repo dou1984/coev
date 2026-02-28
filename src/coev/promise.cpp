@@ -13,7 +13,7 @@ namespace coev
 {
     promise::promise()
     {
-        // LOG_CORE("promise this:%p tid:%ld", this, m_tid);
+        LOG_CORE("promise this:%p tid:%ld", this, m_tid);
     }
     promise::~promise()
     {
@@ -23,17 +23,19 @@ namespace coev
             release(promise *_this) : m_this(_this) {}
             void operator()(co_task *_task)
             {
+                LOG_CORE("promise release this:%p tid:%ld", m_this, m_this->m_tid);
                 assert(_task != nullptr);
                 _task->unload(m_this);
             }
             void operator()(std::coroutine_handle<> _caller)
             {
+                LOG_CORE("promise release this:%p tid:%ld", m_this, m_this->m_tid);
                 assert(!_caller.done());
                 _caller.resume();
             }
             void operator()(nullptr_t)
             {
-                LOG_CORE("~promise this:%p nullptr_t", m_this);
+                LOG_CORE("promise release this:%p nullptr_t", m_this);
             }
         } _(this);
 

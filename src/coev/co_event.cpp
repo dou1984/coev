@@ -75,7 +75,7 @@ namespace coev
 	}
 	void co_event::__resume()
 	{
-		if (m_caller.address() && !m_caller.done())
+		if (m_caller && m_caller.address() && !m_caller.done())
 		{
 			auto _caller = std::exchange(m_caller, nullptr);
 			_caller.resume();

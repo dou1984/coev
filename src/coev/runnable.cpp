@@ -72,17 +72,18 @@ namespace coev
 			{
 				co_start << [=]() -> awaitable<void>
 				{
+					auto tid = gtid();
 					co_await _f();
 					cosys::stop();
-					LOG_CORE("cosys stop");
+					LOG_CORE("cosys stop tid:%ld", tid);
 				}();
 				co_start << []() -> awaitable<void>
 				{
-					co_await g_exception.suspend(
-						[]()
-						{ return true; }, []() {});
+					auto tid = gtid();
+					co_await g_exception.suspend([]()
+												 { return true; }, []() {});
 					cosys::stop();
-					LOG_CORE("cosys stop");
+					LOG_CORE("cosys stop tid:%ld", tid);
 				}();
 				++g_loop_count;
 				defer(--g_loop_count);

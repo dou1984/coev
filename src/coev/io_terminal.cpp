@@ -18,7 +18,7 @@ namespace coev
 
     void cb_signal(struct ev_loop *loop, ev_signal *w, int revents)
     {
-        LOG_CORE("Received signal %d, breaking loop", w->signum);
+        LOG_CORE("Received signal %d, breaking loop %p", w->signum, loop);
         ev_signal_stop(loop, &m_sigint);
         ev_signal_stop(loop, &m_sigterm);
         ev_break(loop, EVBREAK_ALL);
@@ -30,6 +30,7 @@ namespace coev
         ev_signal_init(&m_sigterm, cb_signal, SIGTERM);
         ev_signal_start(loop, &m_sigint);
         ev_signal_start(loop, &m_sigterm);
+        LOG_CORE("signal intercepted loop %p", loop);
     }
 
     void ingore_signal(int sign)
