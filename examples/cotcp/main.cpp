@@ -57,10 +57,9 @@ awaitable<void> co_server()
 	}
 }
 
-awaitable<int> co_dail(co_waitgroup &wg)
+awaitable<int> co_dail()
 {
-	wg.add(1);
-	defer(wg.done());
+
 	defer(LOG_CORE("wg.done()"));
 	auto c = co_await cpool.get();
 	if (!c)
@@ -100,12 +99,11 @@ awaitable<int> co_dail(co_waitgroup &wg)
 
 awaitable<void> co_client()
 {
-	co_waitgroup wg;
 	for (int i = 0; i < max_co_client; i++)
 	{
-		co_start << co_dail(wg);
+		co_start << co_dail();
 	}
-	co_await wg.wait();
+	co_await sleep_for(10);
 	LOG_DBG("co_client exit");
 	co_return;
 }

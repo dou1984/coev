@@ -69,7 +69,7 @@ namespace coev
     }
     int io_connect::__connect(int fd, const char *ip, int port)
     {
-        sockaddr_in addr;
+        sockaddr_in addr = {0};
         fillAddr(addr, ip, port);
         return ::connect(fd, (sockaddr *)&addr, sizeof(addr));
     }
