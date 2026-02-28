@@ -11,7 +11,7 @@ namespace coev
 {
 	awaitable<void> co_waitgroup::wait()
 	{
-		co_await m_waiter->suspend(
+		co_await m_waiter.suspend(
 			[this]()
 			{ return m_count > 0; }, []() {});
 	}
