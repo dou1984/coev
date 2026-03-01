@@ -9,7 +9,6 @@
 #include "local.h"
 namespace coev
 {
-	const std::function<void()> __empty_set = []() {};
 	co_event async::suspend()
 	{
 		return co_event(this);
@@ -53,6 +52,11 @@ namespace coev
 			_set();
 			return static_cast<co_event *>(pop_front());
 		}
+		co_event *async::__ev()
+		{
+			std::lock_guard<std::mutex> _(m_mutex);
+			return static_cast<co_event *>(pop_front());
+		}
 		awaitable<uint64_t> async::suspend(const std::function<bool()> &_suspend, const std::function<void()> &_get)
 		{
 			uint64_t value = 0;
@@ -80,7 +84,7 @@ namespace coev
 		}
 		bool async::resume(uint64_t value)
 		{
-			if (auto c = __ev(__empty_set); c != nullptr)
+			if (auto c = __ev(); c != nullptr)
 			{
 				c->__set_reserved(value);
 				c->resume();
@@ -91,7 +95,7 @@ namespace coev
 
 		bool async::deliver(uint64_t value)
 		{
-			if (auto c = __ev(__empty_set); c != nullptr)
+			if (auto c = __ev(); c != nullptr)
 			{
 				c->__set_reserved(value);
 				if (c->id() == gtid())

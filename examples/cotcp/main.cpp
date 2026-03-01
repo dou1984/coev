@@ -17,6 +17,8 @@ std::atomic_int g_count = {0};
 std::string host = "0.0.0.0";
 uint16_t port = 9999;
 int max_co_client = 1;
+
+// co_waitgroup wg;
 awaitable<void> dispatch(addrInfo addr, int fd)
 {
 	LOG_DBG("dispatch start %s %d", addr.ip, addr.port);
@@ -59,7 +61,7 @@ awaitable<void> co_server()
 
 awaitable<int> co_dail()
 {
-
+	// defer(wg.done());
 	defer(LOG_CORE("wg.done()"));
 	auto c = co_await cpool.get();
 	if (!c)
@@ -99,10 +101,12 @@ awaitable<int> co_dail()
 
 awaitable<void> co_client()
 {
+	// wg.add(max_co_client);
 	for (int i = 0; i < max_co_client; i++)
 	{
 		co_start << co_dail();
 	}
+	// co_await wg.wait();
 	co_await sleep_for(10);
 	LOG_DBG("co_client exit");
 	co_return;

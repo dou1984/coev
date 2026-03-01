@@ -36,6 +36,7 @@ namespace coev
 
         private:
             co_event *__ev(const std::function<void()> &_set);
+            co_event *__ev();
             std::mutex m_mutex;
         };
     }
