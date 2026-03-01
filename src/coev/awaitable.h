@@ -73,7 +73,6 @@ namespace coev
 			m_callee.promise().m_that = caller;
 			if (m_callee.promise().m_status == CORO_SUSPEND)
 			{
-				// m_callee should be resumed here
 				m_callee.resume();
 			}
 			else if (m_callee.promise().m_status == CORO_INIT)

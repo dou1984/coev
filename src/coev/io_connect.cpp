@@ -85,7 +85,8 @@ namespace coev
         auto err = getSocketError(m_fd);
         if (err != 0)
         {
-            co_return __close();
+            __close();
+            co_return INVALID;
         }
         __initial();
         co_return m_fd;

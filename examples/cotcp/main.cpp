@@ -62,7 +62,7 @@ awaitable<void> co_server()
 awaitable<int> co_dail()
 {
 	// defer(wg.done());
-	defer(LOG_CORE("wg.done()"));
+	// defer(LOG_CORE("wg.done()"));
 	auto c = co_await cpool.get();
 	if (!c)
 	{
@@ -149,13 +149,13 @@ int main(int argc, char **argv)
 	else if (method == "client")
 	{
 
-		cpool.set({
-			.m_max = 4,
-			.m_delay = 1.0f,
-			.m_short_delay = 0.1f,
-			.m_host = host,
-			.m_port = port,
-		});
+		auto config = cpool.get_config();
+		config->m_max = 4;
+		config->m_delay = 1.0f;
+		config->m_short_delay = 0.1f;
+		config->m_host = host;
+		config->m_port = port;
+		cpool.set(config);
 
 		runnable::instance()
 			.start(1, co_client)

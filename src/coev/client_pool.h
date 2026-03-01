@@ -28,6 +28,7 @@ namespace coev
             uint32_t m_max = 0;
             float m_delay = 1.0f;
             float m_short_delay = 0.1f;
+            uint32_t m_wait_time = 15;
             std::string m_host;
             uint16_t m_port = 0;
         };
@@ -43,13 +44,17 @@ namespace coev
             uint32_t m_used = 0;
             async m_waiter;
             async m_closed;
-            Config m_config;
+            std::shared_ptr<Config> m_config;
             awaitable<ClientQueuePtr> get();
             awaitable<ClientQueue *> create_client();
             void release(queue *cq);
             ~SharedQueue() { clear(); }
             void clear();
             void init();
+            auto get_client()
+            {
+                return static_cast<client_pool<CLI>::ClientQueue *>(pop_front());
+            }
         };
         struct ClientQueuePtr
         {
@@ -87,7 +92,7 @@ namespace coev
     public:
         client_pool() = default;
         awaitable<ClientQueuePtr> get() { return __get_sq()->get(); }
-        void set(Config _conf)
+        void set(std::shared_ptr<Config> _conf)
         {
             m_config = _conf;
             __get_sq();
@@ -95,15 +100,23 @@ namespace coev
         void stop()
         {
             std::lock_guard<std::mutex> _(m_mutex);
-            for (auto &[tid, _qs] : m_pool)
+            for (auto [tid, qs] : m_pool)
             {
-                _qs->m_config.m_max = 0;
-                for (auto c = _qs->m_closed.pop_front(); !c->empty(); c = _qs->m_closed.pop_front())
+                qs->m_config->m_max = 0;
+                while (auto c = qs->m_closed.pop_front())
                 {
                     co_deliver::resume(static_cast<co_event *>(c));
                 }
             }
             m_pool.clear();
+        }
+        std::shared_ptr<Config> get_config()
+        {
+            if (m_config == nullptr)
+            {
+                m_config = std::make_shared<Config>();
+            }
+            return m_config;
         }
 
     protected:
@@ -115,16 +128,15 @@ namespace coev
             if (it == m_pool.end())
             {
                 auto sq = std::make_shared<SharedQueue>();
-                sq->m_config.m_max = m_config.m_max;
+                sq->m_config = m_config;
                 sq->init();
                 it = m_pool.emplace(tid, sq).first;
             }
             return it->second;
         }
-
-        std::unordered_map<uint64_t, std::shared_ptr<SharedQueue>> m_pool;
         std::mutex m_mutex;
-        Config m_config;
+        std::unordered_map<uint64_t, std::shared_ptr<SharedQueue>> m_pool;
+        std::shared_ptr<Config> m_config;
     };
 
     template <class CLI>
@@ -132,18 +144,18 @@ namespace coev
     {
         while (true)
         {
-            if (m_config.m_max == 0)
+            if (m_config->m_max == 0)
             {
                 co_return client_pool<CLI>::ClientQueuePtr(this->shared_from_this(), nullptr);
             }
-            if (m_used == m_count && m_count == m_config.m_max)
+            if (m_used == m_count && m_count == m_config->m_max)
             {
                 co_await m_waiter.suspend();
                 continue;
             }
-            if (m_count < m_config.m_max)
+            if (m_count < m_config->m_max)
             {
-                while (true)
+                for (auto i = 0; i < m_config->m_wait_time; i++)
                 {
                     auto cq = co_await create_client();
                     if (cq)
@@ -159,11 +171,12 @@ namespace coev
                             delete cq;
                         }
                     }
-                    co_await sleep_for(m_config.m_delay);
+                    co_await sleep_for(m_config->m_delay);
                 }
+                co_return client_pool<CLI>::ClientQueuePtr(this->shared_from_this(), nullptr);
             }
 
-            auto cq = static_cast<client_pool<CLI>::ClientQueue *>(pop_front());
+            auto cq = get_client();
             if (*cq)
             {
                 m_used++;
@@ -173,7 +186,7 @@ namespace coev
             {
                 delete cq;
                 m_count--;
-                co_await sleep_for(m_config.m_short_delay);
+                co_await sleep_for(m_config->m_short_delay);
             }
         }
     }
@@ -193,13 +206,12 @@ namespace coev
     void client_pool<CLI>::SharedQueue::clear()
     {
         auto tid = gtid();
-        LOG_CORE("tid:%ld", tid);
-        for (auto cq = pop_front(); cq && !cq->empty(); cq = pop_front())
+        while (auto cq = get_client())
         {
+            LOG_CORE("tid:%ld delete %p", tid, cq);
             delete cq;
             m_count--;
         }
-        LOG_CORE("tid:%ld", tid);
     }
     template <class CLI>
     void client_pool<CLI>::SharedQueue::init()
@@ -215,10 +227,11 @@ namespace coev
     template <class CLI>
     awaitable<typename client_pool<CLI>::ClientQueue *> client_pool<CLI>::SharedQueue::create_client()
     {
+        client_pool<CLI>::ClientQueue *cq = nullptr;
         try
         {
-            auto cq = new client_pool<CLI>::ClientQueue();
-            auto err = co_await cq->connect(m_config.m_host.c_str(), m_config.m_port);
+            cq = new client_pool<CLI>::ClientQueue();
+            auto err = co_await cq->connect(m_config->m_host.c_str(), m_config->m_port);
             if (err == INVALID)
             {
                 delete cq;
@@ -228,6 +241,11 @@ namespace coev
         }
         catch (...)
         {
+            LOG_CORE("[client_pool] connect error");
+            if (cq)
+            {
+                delete cq;
+            }
             co_return nullptr;
         }
     }

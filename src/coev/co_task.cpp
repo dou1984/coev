@@ -29,7 +29,7 @@ namespace coev
 			std::lock_guard<std::mutex> _(m_waiter.lock());
 			return std::move(m_promises);
 		}();
-		for (auto &[p, v] : _promises)
+		for (auto [p, v] : _promises)
 		{
 			std::lock_guard<is_destroying> _(local<is_destroying>::instance());
 			LOG_CORE("promise %p %p", p, p->m_this.address());
