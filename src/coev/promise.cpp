@@ -21,6 +21,12 @@ namespace coev
         {
             promise *m_this;
             release(promise *_this) : m_this(_this) {}
+            void operator()(guard::co_task *_task)
+            {
+                LOG_CORE("promise release this:%p tid:%ld", m_this, m_this->m_tid);
+                assert(_task != nullptr);
+                _task->unload(m_this);
+            }
             void operator()(co_task *_task)
             {
                 LOG_CORE("promise release this:%p tid:%ld", m_this, m_this->m_tid);
@@ -54,6 +60,10 @@ namespace coev
         {
             promise *m_this;
             ready(promise *_this) : m_this(_this) {}
+            bool operator()(guard::co_task *_task)
+            {
+                return _task != nullptr;
+            }
             bool operator()(co_task *_task)
             {
                 return _task != nullptr;

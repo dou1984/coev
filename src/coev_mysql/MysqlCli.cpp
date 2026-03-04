@@ -44,6 +44,11 @@ namespace coev
 	}
 	MysqlCli::MysqlCli(const MysqlConf &conf)
 	{
+		set(conf);
+	}
+	void MysqlCli::set(const MysqlConf &conf)
+	{
+		assert(m_mysql == nullptr);
 		m_mysql = mysql_init(0);
 		if (m_mysql == nullptr)
 		{
@@ -60,6 +65,7 @@ namespace coev
 	{
 		mysql_close(m_mysql);
 	}
+
 	int MysqlCli::__try_connect()
 	{
 		return mysql_real_connect_nonblocking(

@@ -17,10 +17,11 @@ namespace coev
 	{
 		return co_event(&local_async::instance());
 	}
-	bool async::resume()
+	bool async::resume(uint64_t value)
 	{
 		if (auto c = static_cast<co_event *>(pop_front()); c != nullptr)
 		{
+			c->__set_reserved(value);
 			c->resume();
 			return true;
 		}
@@ -70,6 +71,18 @@ namespace coev
 				value = ev.__get_reserved();
 			}
 			_get();
+			m_mutex.unlock();
+			co_return value;
+		}
+		awaitable<uint64_t> async::suspend()
+		{
+			uint64_t value = 0;
+			m_mutex.lock();
+			co_event ev(this);
+			m_mutex.unlock();
+			co_await ev;
+			m_mutex.lock();
+			value = ev.__get_reserved();
 			m_mutex.unlock();
 			co_return value;
 		}

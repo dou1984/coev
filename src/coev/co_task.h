@@ -14,11 +14,11 @@
 
 namespace coev
 {
-#define co_start coev::local<coev::co_task>::instance()
+#define co_start coev::local<coev::guard::co_task>::instance()
 
 	class co_task final
 	{
-		guard::async m_waiter;
+		async m_waiter;
 		std::unordered_map<promise *, uint64_t> m_promises;
 		uint64_t m_id = 0;
 
@@ -35,4 +35,27 @@ namespace coev
 		awaitable<void> wait_all();
 		awaitable<uint64_t> wait();
 	};
+
+	namespace guard
+	{
+		class co_task final
+		{
+			guard::async m_waiter;
+			std::unordered_map<promise *, uint64_t> m_promises;
+			uint64_t m_id = 0;
+
+		public:
+			virtual ~co_task();
+			void destroy();
+			void destroy(uint64_t id);
+
+			int operator<<(promise *);
+			int operator>>(promise *);
+			int load(promise *);
+			int unload(promise *);
+			bool empty();
+			awaitable<void> wait_all();
+			awaitable<uint64_t> wait();
+		};
+	}
 }

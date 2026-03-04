@@ -12,8 +12,7 @@ using namespace coev;
 
 awaitable<void> co_parse_dns()
 {
-    std::string url = "www.google.com";
-    // std::string url = "xxxxxxxx";
+    std::string url = "www.baidu.com";
     std::string addr = "";
     auto r = co_await parse_dns(url, addr);
     if (r != 0)

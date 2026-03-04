@@ -16,12 +16,12 @@ namespace coev
     {
         try
         {
-            resolver _resolver;
+            Resolver _resolver;
             int r = co_await _resolver.resolve(url);
             if (r == 0)
             {
                 addr = _resolver.get_ip();
-                LOG_CORE("resolver %s", addr.c_str());
+                LOG_CORE("Resolver %s", addr.c_str());
                 co_return 0;
             }
             co_return r;

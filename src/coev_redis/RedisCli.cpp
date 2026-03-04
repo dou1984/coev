@@ -106,7 +106,7 @@ namespace coev
 	int RedisCli::__connect()
 	{
 		assert(m_context == nullptr);
-		m_context = redisAsyncConnect(m_ip.c_str(), m_port);
+		m_context = redisAsyncConnect(host.c_str(), port);
 		if (m_context->c.err != 0)
 		{
 			LOG_ERR("redisAsyncConnect error %s", m_context->c.errstr);
@@ -223,17 +223,20 @@ namespace coev
 		auto _this = (RedisCli *)(privdata);
 		ev_io_stop(_this->m_loop, &_this->m_write);
 	}
-	int RedisCli::fd()
+	int RedisCli::fd() const
 	{
 		return m_context != nullptr ? m_context->c.fd : INVALID;
 	}
 	RedisCli::RedisCli(const Redisconf &conf)
 	{
 		m_tid = gtid();
-		m_ip = conf.m_ip;
-		m_port = conf.m_port;
-		m_auth = conf.m_auth;
+		host = conf.host;
+		port = conf.port;
+		auth = conf.auth;
 		m_loop = cosys::data();
+	}
+	RedisCli::RedisCli(const std::string &ip, int port, const std::string &auth) : Redisconf(ip, port, auth)
+	{
 	}
 	awaitable<int> RedisCli::connect()
 	{

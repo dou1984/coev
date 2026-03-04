@@ -8,16 +8,20 @@
 
 namespace coev
 {
-    dns_cli::dns_cli(ares_socket_t _fd, ares_channel _channel) : io_context(_fd), m_channel(_channel)
+    DNSCli::DNSCli(ares_socket_t _fd, ares_channel _channel) : io_context(_fd), m_channel(_channel)
     {
         m_type = IO_CLI;
     }
-    dns_cli::~dns_cli()
+    DNSCli::~DNSCli()
     {
         // 是否要置为INVALID?
         // m_fd = INVALID;
     }
-    awaitable<int> dns_cli::send(const char *buffer, int size)
+    int DNSCli::close()
+    {
+        return io_context::close();
+    }
+    awaitable<int> DNSCli::send(const char *buffer, int size)
     {
         while (__valid())
         {
@@ -26,7 +30,7 @@ namespace coev
         }
         co_return INVALID;
     }
-    awaitable<int> dns_cli::recv(char *buffer, int size)
+    awaitable<int> DNSCli::recv(char *buffer, int size)
     {
         while (__valid())
         {

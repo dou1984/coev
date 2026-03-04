@@ -1149,7 +1149,7 @@ coev::awaitable<int> Client::FindCoordinator(const std::string &coordinatorKey, 
 coev::awaitable<int> Client::ResolveCanonicalNames(const std::vector<std::string> &addrs, std::vector<std::string> &ips)
 {
     ips.resize(addrs.size());
-    co_task task;
+    coev::co_task task;
     for (auto i = 0; i < addrs.size(); ++i)
     {
         auto &addr = addrs[i];

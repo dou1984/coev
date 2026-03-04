@@ -60,7 +60,7 @@ namespace coev::nghttp2
         std::unordered_map<int32_t, response> m_responses;
 
     protected:
-        co_task m_tasks;
+        coev::co_task m_tasks;
         async m_trigger;
         std::unordered_map<int32_t, async> m_w_trigger;
 

@@ -39,5 +39,5 @@ struct BrokerProducer
     coev::co_channel<std::shared_ptr<BrokerProducerResponse>> m_responses;
     coev::co_channel<bool> m_abandoned;
     coev::co_timer m_timer;
-    co_task m_task;
+    coev::co_task m_task;
 };

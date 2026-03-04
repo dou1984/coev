@@ -61,7 +61,7 @@ namespace coev
         int path_init(std::string &path_out, const std::string &path);
         int collect_watchers(int type, const std::string &path);
 
-        co_task m_task;
+        coev::co_task m_task;
         clientid_t m_client_id;
         long long m_last_zxid;
         prime_struct m_primer_storage;

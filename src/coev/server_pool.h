@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include "server.h"
 
-namespace coev
+namespace coev::pool
 {
 	template <class T>
 	class server_pool

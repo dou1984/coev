@@ -11,19 +11,19 @@
 
 namespace coev
 {
-    class CurlCli
+    class CurlCli final
     {
         struct Context;
-        class Instance
+        class instance
         {
             CURLM *m_multi = nullptr;
             CURL *m_curl = nullptr;
             async m_done;
 
         public:
-            Instance();
-            Instance(CURLM *, CURL *);
-            virtual ~Instance();
+            instance();
+            instance(CURLM *, CURL *);
+            virtual ~instance();
             operator CURL *();
             operator bool() const;
             awaitable<int> action();
@@ -39,7 +39,7 @@ namespace coev
     public:
         CurlCli();
         ~CurlCli();
-        Instance get();
+        instance get();
 
     protected:
         std::unordered_map<curl_socket_t, std::shared_ptr<Context>> m_clients;

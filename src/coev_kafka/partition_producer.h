@@ -26,5 +26,5 @@ struct PartitionProducer
     std::shared_ptr<Broker> m_leader;
     std::shared_ptr<BrokerProducer> m_broker_producer;
     int m_high_watermark;
-    co_task m_task;
+    coev::co_task m_task;
 };

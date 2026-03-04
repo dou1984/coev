@@ -120,34 +120,50 @@ auto g_reachable = []() -> awaitable<int>
 };
 awaitable<void> co_task5()
 {
-	co_await []() -> awaitable<int>
-	{
-		auto f1 = g_unreachable();
-		auto f2 = g_unreachable();
-		auto f3 = g_reachable();
-		co_task _task;
-		_task << f1;
-		_task << f2;
-		_task << f3;
-		co_await _task.wait();
-		LOG_DBG("arrived co_task5_end");
-		co_return 0;
-	}();
+
+	auto f1 = g_unreachable();
+	auto f2 = g_unreachable();
+	auto f3 = g_reachable();
+	guard::co_task _task;
+	_task << f1;
+	_task << f2;
+	_task << f3;
+	co_await _task.wait();
+	LOG_DBG("arrived co_task5_end");
 }
 
 awaitable<void> co_task6()
 {
-	co_await []() -> awaitable<int>
-	{
-		co_task _task;
-		_task << g_unreachable();
-		_task << g_unreachable();
-		_task << g_reachable();
-		co_await _task.wait();
-		LOG_DBG("arrived co_task6_end");
-		co_return 0;
-	}();
+	guard::co_task _task;
+	_task << g_unreachable();
+	_task << g_unreachable();
+	_task << g_reachable();
+	co_await _task.wait();
+	LOG_DBG("arrived co_task6_end");
 }
+awaitable<void> co_task7()
+{
+	auto f1 = g_unreachable();
+	auto f2 = g_unreachable();
+	auto f3 = g_reachable();
+	guard::co_task _task;
+	_task << f1;
+	_task << f2;
+	auto _ = _task << f3;
+	auto r = co_await _task.wait();
+	assert(_ == r);
+}
+awaitable<void> co_task8()
+{
+	co_task _task;
+	_task << g_unreachable();
+	_task << g_unreachable();
+	auto _ = _task << g_reachable();
+	auto r = co_await _task.wait();
+	LOG_DBG("arrived co_task6_end");
+	assert(_ == r);
+}
+
 int main()
 {
 	set_log_level(LOG_LEVEL_CORE);
@@ -161,6 +177,8 @@ int main()
 		.start(co_three_task4)
 		.start(co_task5)
 		.start(co_task6)
+		.start(co_task7)
+		.start(co_task8)
 		.wait();
 	return 0;
 }

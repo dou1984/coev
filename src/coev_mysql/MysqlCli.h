@@ -25,10 +25,12 @@ namespace coev
 	class MysqlCli final : MysqlConf
 	{
 	public:
+		MysqlCli() = default;
 		MysqlCli(const MysqlConf &);
 		virtual ~MysqlCli();
 		operator MYSQL *() { return m_mysql; }
 
+		void set(const MysqlConf &);
 		awaitable<int> connect();
 		awaitable<int> query(const char *sql, int size);
 		awaitable<int> query(const std::string &sql)

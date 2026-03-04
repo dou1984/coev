@@ -12,22 +12,22 @@
 
 namespace coev
 {
-    class resolver final
+    class Resolver final
     {
         ares_channel m_channel;
         std::string m_ip;
         co_task m_task;
         async m_done;
-        std::unordered_map<ares_socket_t, std::shared_ptr<dns_cli>> m_clients;
+        std::unordered_map<ares_socket_t, std::shared_ptr<DNSCli>> m_clients;
 
-        std::shared_ptr<dns_cli> __find(ares_socket_t _fd);
+        std::shared_ptr<DNSCli> __find(ares_socket_t _fd);
         static void handler(void *data, ares_socket_t _fd, int readable, int writable);
         static void callback(void *arg, int status, int, struct hostent *host);
 
     public:
-        resolver();
-        virtual ~resolver();
+        Resolver();
+        virtual ~Resolver();
         coev::awaitable<int> resolve(const std::string &hostname);
-        std::string &get_ip();
+        const std::string &get_ip();
     };
 }

@@ -111,7 +111,7 @@ void ConsumerGroup::ResumeAll()
 
 coev::awaitable<int> ConsumerGroup::RetryNewSession(std::shared_ptr<Context> &ctx, const std::vector<std::string> &topics, std::shared_ptr<ConsumerGroupHandler> handler, int retries, bool refreshCoordinator, std::shared_ptr<ConsumerGroupSession> &out)
 {
-    co_task _task;
+    coev::co_task _task;
     auto __get = _task << [](auto ctx) -> coev::awaitable<void>
     {
         bool dummy;
@@ -129,12 +129,12 @@ coev::awaitable<int> ConsumerGroup::RetryNewSession(std::shared_ptr<Context> &ct
         co_await sleep_for(_this->m_config->Consumer.Group.Rebalance.Retry.Backoff);
         co_return;
     }(shared_from_this());
-    auto select_result = co_await _task.wait();
-    if (select_result == __get)
+    auto __select = co_await _task.wait();
+    if (__select == __get)
     {
         co_return 0;
     }
-    else if (select_result == __close)
+    else if (__select == __close)
     {
         co_return ErrClosedClient;
     }
@@ -658,8 +658,7 @@ coev::awaitable<void> ConsumerGroup::LoopCheckPartitionNumbers(
             }
         }
 
-        coev::co_task task_;
-        task_ << [this]() -> coev::awaitable<void>
+        m_task << [this]() -> coev::awaitable<void>
         {
             co_await sleep_for(m_config->Metadata.RefreshFrequency);
         }();

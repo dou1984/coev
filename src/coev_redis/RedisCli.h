@@ -16,15 +16,17 @@ namespace coev
 {
 	struct Redisconf
 	{
-		std::string m_ip = "127.0.0.1";
-		std::string m_auth;
-		int m_port = 6379;
+		std::string host = "127.0.0.1";
+		int port = 6379;
+		std::string auth;
 	};
 
 	class RedisCli : Redisconf
 	{
 	public:
+		RedisCli() = default;
 		RedisCli(const Redisconf &);
+		RedisCli(const std::string &, int, const std::string &);
 		awaitable<int> connect();
 		awaitable<int> query(const char *message);
 		awaitable<int> query(const std::string &);
@@ -32,6 +34,7 @@ namespace coev
 		int result_integer();
 		RedisArray result_array();
 		bool error() const;
+		operator bool() const { return fd() != INVALID; }
 
 	private:
 		int m_tid;
@@ -65,7 +68,7 @@ namespace coev
 		void __oncallback(redisReply *_reply);
 		void __onsend();
 		void __onrecv();
-		int fd();
+		int fd() const;
 	};
 
 }

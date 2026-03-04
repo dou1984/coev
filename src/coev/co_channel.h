@@ -16,10 +16,7 @@ namespace coev
 	class co_channel
 	{
 	public:
-		co_channel()
-		{
-			m_waiter.push_back(&m_waiter);
-		}
+		co_channel() = default;
 		void set(TYPE &&d)
 		{
 			m_data.emplace(std::move(d));

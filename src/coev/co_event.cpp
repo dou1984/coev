@@ -32,16 +32,17 @@ namespace coev
 		}
 		m_caller = nullptr;
 	}
-	void co_event::await_resume()
+	uint64_t co_event::await_resume()
 	{
+		return __get_reserved();
 	}
 	bool co_event::await_ready()
 	{
 		return m_status.load(std::memory_order_consume);
 	}
-	void co_event::await_suspend(std::coroutine_handle<> _awaitable)
+	void co_event::await_suspend(std::coroutine_handle<> _caller)
 	{
-		m_caller = _awaitable;
+		m_caller = _caller;
 		int e0 = CORO_INIT;
 		int e1 = CORO_RESUMED;
 		if (m_status.compare_exchange_strong(e0, CORO_SUSPEND, std::memory_order_acquire, std::memory_order_acquire))

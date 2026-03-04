@@ -14,10 +14,6 @@
 
 namespace coev
 {
-	namespace guard
-	{
-		class async;
-	}
 	class co_event final : public queue
 	{
 		std::coroutine_handle<> m_caller = nullptr;
@@ -25,20 +21,20 @@ namespace coev
 		uint64_t m_tid;
 		uint64_t m_reserved;
 		void __resume();
-		void __set_reserved(uint64_t x);
-		uint64_t __get_reserved();
-
-		friend class coev::guard::async;
 
 	public:
 		co_event(queue *__ev);
 		virtual ~co_event();
 		co_event(co_event &&) = delete;
 		co_event(const co_event &) = delete;
-		void await_resume();
+		uint64_t await_resume();
 		bool await_ready();
-		void await_suspend(std::coroutine_handle<> awaitable);
+		void await_suspend(std::coroutine_handle<> caller);
 		void resume();
 		auto id() const { return m_tid; }
+
+	public:
+		void __set_reserved(uint64_t x);
+		uint64_t __get_reserved();
 	};
 }

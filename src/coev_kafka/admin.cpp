@@ -1144,7 +1144,7 @@ coev::awaitable<int> ClusterAdmin::DescribeLogDirs(const std::vector<int32_t> &b
     std::list<result> log_dirs_results;
     std::list<int> err_chan;
 
-    co_task task;
+    coev::co_task task;
     for (int32_t bid : broker_ids)
     {
         std::shared_ptr<Broker> broker;

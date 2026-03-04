@@ -9,26 +9,26 @@
 #include <random>
 #include <string_view>
 #include <vector>
-#include <coev_redis/RedisCli.h>
+#include <coev_redis/Redis.h>
 
 using namespace coev;
+
+coev::pool::Redis _pool;
 
 awaitable<void> go()
 {
 	set_log_level(LOG_LEVEL_DEBUG);
 
-	Redisconf conf = {
-		.m_ip = "127.0.0.1",
-		.m_auth = "",
-		.m_port = 6379,
-	};
-	RedisCli c(conf);
+	coev::pool::Redis::instance c;
+	auto err = co_await _pool.get(c);
+	if (err != INVALID)
+	{
+		LOG_ERR("get redis client error %d", err);
+		co_return;
+	}
 
-	co_await c.connect();
-
-	co_await c.query("ping hello");
-
-	if (c.error())
+	co_await c->query("ping hello");
+	if (c->error())
 	{
 		co_return;
 	}
@@ -44,77 +44,80 @@ awaitable<void> go()
 		f();
 	}
 	auto s = oss.str();
-	co_await c.query(s);
-	if (c.error())
+	co_await c->query(s);
+	if (c->error())
 	{
 		co_return;
 	}
-	s = c.result();
+	s = c->result();
 	std::cout << s << std::endl;
 
 	oss.str("");
 	oss << "del test_0000 ";
 	s = oss.str();
-	co_await c.query(s);
+	co_await c->query(s);
 
-	if (c.error())
+	if (c->error())
 	{
-		c.result_integer();
+		c->result_integer();
 		co_return;
 	}
-	s = c.result();
+	s = c->result();
 	co_return;
 }
 
 awaitable<void> test_sync()
 {
-	Redisconf conf = {
-		.m_ip = "127.0.0.1",
-		.m_auth = "",
-		.m_port = 6379,
-	};
-	RedisCli c(conf);
-	co_await c.connect();
 
-	co_await c.query("info server");
+	coev::pool::Redis::instance c;
+	auto err = co_await _pool.get(c);
+	if (err != INVALID)
+	{
+		LOG_ERR("get redis client error %d", err);
+		co_return;
+	}
 
-	auto s = c.result();
+	co_await c->query("info server");
+
+	auto s = c->result();
 	LOG_DBG("%s", s.c_str());
 }
 awaitable<void> test_array()
 {
-	Redisconf conf = {
-		.m_ip = "127.0.0.1",
-		.m_auth = "",
-		.m_port = 6379,
-	};
-	RedisCli c(conf);
 
-	co_await c.connect();
+	coev::pool::Redis::instance c;
+	auto err = co_await _pool.get(c);
+	if (err != INVALID)
+	{
+		LOG_ERR("get redis client error %d", err);
+		co_return;
+	}
+
+	co_await c->connect();
 
 	std::ostringstream oss;
 	oss << "hset h:test" << " a 1 " << " b 2 " << " c 3 ";
 
 	auto s = oss.str();
-	co_await c.query(s);
-	if (c.error())
+	co_await c->query(s);
+	if (c->error())
 	{
-		LOG_ERR("test_array %s", c.result().c_str());
+		LOG_ERR("test_array %s", c->result().c_str());
 		co_return;
 	}
-	LOG_DBG("hset h:test %s", c.result().c_str());
+	LOG_DBG("hset h:test %s", c->result().c_str());
 
 	oss.str("");
 	oss << "hgetall h:test";
 	s = oss.str();
-	co_await c.query(s);
+	co_await c->query(s);
 
-	if (c.error())
+	if (c->error())
 	{
-		LOG_ERR("test_array hgeall %s", c.result().c_str());
+		LOG_ERR("test_array hgeall %s", c->result().c_str());
 		co_return;
 	}
-	auto arr = c.result_array();
+	auto arr = c->result_array();
 	std::string key;
 	std::string value;
 
@@ -126,19 +129,27 @@ awaitable<void> test_array()
 
 	oss.str("");
 	oss << "del h:test";
-	co_await c.query(oss.str());
-	if (c.error())
+	co_await c->query(oss.str());
+	if (c->error())
 	{
-		LOG_DBG("del h:test error %s", c.result().c_str());
+		LOG_DBG("del h:test error %s", c->result().c_str());
 		co_return;
 	}
-	s = c.result();
+	s = c->result();
 
 	LOG_DBG("del h:test %s", s.c_str());
 	co_return;
 }
 int main()
 {
+
+	auto conf = _pool.get_config();
+	conf->host = "127.0.0.1";
+	conf->port = 6379;
+	conf->auth = "";
+
+	_pool.set(conf);
+
 	runnable::instance()
 		.start(test_sync)
 		.start(go)

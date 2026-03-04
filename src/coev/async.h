@@ -18,7 +18,7 @@ namespace coev
     {
         co_event suspend();
         co_event suspend_util_next_loop();
-        bool resume();
+        bool resume(uint64_t value = 0);
         bool resume_next_loop();
         int resume_all();
     };
@@ -29,9 +29,10 @@ namespace coev
         {
         public:
             awaitable<uint64_t> suspend(const std::function<bool()> &, const std::function<void()> &);
+            awaitable<uint64_t> suspend();
             bool resume(const std::function<void()> &);
-            bool resume(uint64_t value);
-            bool deliver(uint64_t value);
+            bool resume(uint64_t value = 0);
+            bool deliver(uint64_t value = 0);
             std::mutex &lock() { return m_mutex; }
 
         private:

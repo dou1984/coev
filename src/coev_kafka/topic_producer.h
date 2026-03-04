@@ -23,5 +23,5 @@ struct TopicProducer
     std::shared_ptr<Partitioner> m_partitioner;
     std::map<int32_t, std::shared_ptr<PartitionProducer>> m_handlers;
     coev::co_channel<std::shared_ptr<ProducerMessage>> m_input;
-    co_task m_task;
+    coev::co_task m_task;
 };

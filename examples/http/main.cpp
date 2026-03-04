@@ -10,6 +10,7 @@
 #include <coev_http/server.h>
 
 using namespace coev;
+using namespace coev::pool;
 
 server_pool<http::server> g_server;
 
@@ -82,6 +83,7 @@ int main()
 	set_log_level(LOG_LEVEL_CORE);
 	runnable::instance()
 		.start(1, co_router)
-		.wait();
+		.endless([&]()
+				 { g_server.stop(); });
 	return 0;
 }

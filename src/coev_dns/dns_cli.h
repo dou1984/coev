@@ -10,14 +10,15 @@
 
 namespace coev
 {
-    class dns_cli final : io_context
+    class DNSCli final : io_context
     {
         ares_channel m_channel;
 
     public:
-        dns_cli(ares_socket_t _fd, ares_channel _channel);
-        ~dns_cli();
+        DNSCli(ares_socket_t _fd, ares_channel _channel);
+        ~DNSCli();
         awaitable<int> send(const char *buffer, int size);
         awaitable<int> recv(char *buffer, int size);
+        int close();
     };
 }

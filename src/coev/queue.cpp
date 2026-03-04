@@ -17,15 +17,21 @@ namespace coev
 	bool queue::move_to(queue *_new)
 	{
 		if (empty())
+		{
 			return false;
+		}
 		if (!_new->empty())
+		{
 			return false;
+		}
 		_new->__list_move(m_prev, m_next);
 		__list_clear();
 		return true;
 	}
 	void queue::__list_add(queue *_new, queue *prev, queue *next)
 	{
+		assert(prev->m_next != _new);
+		assert(next->m_prev != _new);
 		prev->m_next = next->m_prev = _new;
 		_new->m_next = next;
 		_new->m_prev = prev;

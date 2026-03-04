@@ -31,14 +31,14 @@ namespace coev
         auto id() { return m_fd; }
     };
 
-    CurlCli::Instance::Instance()
+    CurlCli::instance::instance()
     {
     }
-    CurlCli::Instance::Instance(CURLM *m, CURL *c) : m_multi(m), m_curl(c)
+    CurlCli::instance::instance(CURLM *m, CURL *c) : m_multi(m), m_curl(c)
     {
     }
 
-    CurlCli::Instance::~Instance()
+    CurlCli::instance::~instance()
     {
         if (m_multi && m_curl)
         {
@@ -51,16 +51,16 @@ namespace coev
             m_curl = nullptr;
         }
     }
-    CurlCli::Instance::operator CURL *()
+    CurlCli::instance::operator CURL *()
     {
         return m_curl;
     }
-    CurlCli::Instance::operator bool() const
+    CurlCli::instance::operator bool() const
     {
         return m_curl && m_multi;
     }
 
-    awaitable<int> CurlCli::Instance::action()
+    awaitable<int> CurlCli::instance::action()
     {
         curl_easy_setopt(m_curl, CURLOPT_PRIVATE, this);
         auto r = curl_multi_add_handle(m_multi, m_curl);
@@ -76,11 +76,11 @@ namespace coev
         co_await m_done.suspend();
         co_return 0;
     }
-    void CurlCli::Instance::done()
+    void CurlCli::instance::done()
     {
         m_done.resume_next_loop();
     }
-    void CurlCli::Instance::clear()
+    void CurlCli::instance::clear()
     {
         m_multi = nullptr;
         m_curl = nullptr;
@@ -135,7 +135,7 @@ namespace coev
                 curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &done_url);
                 LOG_CORE("%s done", done_url);
 
-                CurlCli::Instance *o = nullptr;
+                CurlCli::instance *o = nullptr;
                 curl_easy_getinfo(curl, CURLINFO_PRIVATE, &o);
                 o->clear();
                 o->done();
@@ -236,7 +236,7 @@ namespace coev
         return 0;
     }
 
-    CurlCli::Instance CurlCli::get()
+    CurlCli::instance CurlCli::get()
     {
         auto curl = curl_easy_init();
         return {m_multi, curl};

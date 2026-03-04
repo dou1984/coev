@@ -9,11 +9,11 @@
 
 namespace coev
 {
-    class Defer
+    class Defer final
     {
     public:
-        Defer(std::function<void()> f) : deferred_function(f) {}
-        ~Defer() { deferred_function(); }
+        Defer(std::function<void()> f) : defer_function(f) {}
+        ~Defer() { defer_function(); }
 
         // 禁止拷贝和移动
         Defer(const Defer &) = delete;
@@ -22,7 +22,7 @@ namespace coev
         Defer &operator=(Defer &&) = delete;
 
     private:
-        std::function<void()> deferred_function;
+        std::function<void()> defer_function;
     };
 
 }
