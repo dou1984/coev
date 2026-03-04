@@ -1,3 +1,9 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2023-2026, Zhao Yun Shan
+ *
+ */
 #include "consumer_metadata_response.h"
 #include "find_coordinator_response.h"
 #include "broker.h"

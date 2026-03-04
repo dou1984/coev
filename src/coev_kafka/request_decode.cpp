@@ -1,3 +1,9 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2023-2026, Zhao Yun Shan
+ *
+ */
 #include "request_decode.h"
 #include "metadata_request.h"
 #include "metadata_response.h"

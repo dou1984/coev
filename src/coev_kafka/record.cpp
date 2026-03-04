@@ -1,3 +1,9 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2023-2026, Zhao Yun Shan
+ *
+ */
 #include "record.h"
 
 RecordHeader::RecordHeader(const std::string &k, const std::string &v) : m_key(k), m_value(v)

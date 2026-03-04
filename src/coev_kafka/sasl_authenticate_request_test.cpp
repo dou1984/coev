@@ -1,3 +1,9 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2023-2026, Zhao Yun Shan
+ *
+ */
 #include "sasl_authenticate_request.h"
 #include <gtest/gtest.h>
 #include "real_encoder.h"

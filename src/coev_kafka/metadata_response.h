@@ -1,3 +1,9 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2023-2026, Zhao Yun Shan
+ *
+ */
 #pragma once
 
 #include <vector>
@@ -40,7 +46,7 @@ struct TopicMetadata : VDecoder, VEncoder
     KError m_err;
     std::string m_name;
     Uuid m_uuid;
-    bool m_is_internal = false;
+    bool m_is_internal;
     std::vector<PartitionMetadata> m_partitions;
     int32_t m_topic_authorized_operations;
 

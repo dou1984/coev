@@ -1,3 +1,9 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2023-2026, Zhao Yun Shan
+ *
+ */
 #include "topic_partition.h"
 
 TopicPartition::TopicPartition(const std::string &t, int32_t p) : topic_t(t, p)

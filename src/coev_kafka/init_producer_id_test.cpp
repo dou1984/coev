@@ -1,3 +1,9 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2023-2026, Zhao Yun Shan
+ *
+ */
 #include <gtest/gtest.h>
 #include "init_producer_id_request.h"
 #include "init_producer_id_response.h"

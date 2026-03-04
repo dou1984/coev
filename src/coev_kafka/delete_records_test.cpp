@@ -1,3 +1,9 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2023-2026, Zhao Yun Shan
+ *
+ */
 #include <gtest/gtest.h>
 #include "delete_records_request.h"
 #include "delete_records_response.h"

@@ -1,3 +1,9 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2023-2026, Zhao Yun Shan
+ *
+ */
 #include "create_partitions_request.h"
 #include "api_versions.h"
 void CreatePartitionsRequest::set_version(int16_t v)

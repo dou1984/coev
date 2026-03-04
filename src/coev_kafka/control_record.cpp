@@ -1,3 +1,9 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2023-2026, Zhao Yun Shan
+ *
+ */
 #include "control_record.h"
 
 int ControlRecord::decode(packet_decoder &key, packet_decoder &value)

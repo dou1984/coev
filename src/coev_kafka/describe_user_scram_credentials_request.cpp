@@ -1,3 +1,9 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2023-2026, Zhao Yun Shan
+ *
+ */
 #include "describe_user_scram_credentials_request.h"
 
 void DescribeUserScramCredentialsRequest::set_version(int16_t v)

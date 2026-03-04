@@ -1,3 +1,9 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2023-2026, Zhao Yun Shan
+ *
+ */
 #include <gtest/gtest.h>
 #include "sasl_handshake_request.h"
 #include "sasl_handshake_response.h"
