@@ -13,12 +13,12 @@
 #include <coev_ssl/client.h>
 #include "constant.h"
 #include "proto.h"
-#include "Zoo.h"
+#include "ZooDef.h"
 #include "ZooOp.h"
 
 namespace coev
 {
-    class ZooCli final : public ssl::client
+    class ZooCli : public ssl::client
     {
     public:
         using base = ssl::client;
@@ -61,7 +61,7 @@ namespace coev
         int path_init(std::string &path_out, const std::string &path);
         int collect_watchers(int type, const std::string &path);
 
-        coev::co_task m_task;
+        co_task m_task;
         clientid_t m_client_id;
         long long m_last_zxid;
         prime_struct m_primer_storage;

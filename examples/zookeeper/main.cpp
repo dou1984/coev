@@ -5,7 +5,7 @@
  *
  */
 #include <coev/coev.h>
-#include <coev_zookeeper/ZooCli.h>
+#include <coev_zookeeper/Zoo.h>
 
 using namespace coev;
 
@@ -13,31 +13,36 @@ struct zoo_config
 {
 };
 
-zoo_config g_config;
+
+coev::pool::Zoo zoo;
 
 int main(int argc, char **argv)
 {
+    auto config = zoo.get_config();
+    config->host = "127.0.0.1";
+    config->port = 2181;
 
     runnable::instance()
         .start(
             []() -> awaitable<void>
             {
-                ZooCli cli;
+                coev::pool::Zoo::instance c;
 
-                auto r = co_await cli.connect("127.0.0.1", 2181);
-                if (r == INVALID)
+                auto err = co_await zoo.get(c);
+                if (err == INVALID)
                 {
+                    LOG_ERR("get error %d", err);
                     co_return;
                 }
 
-                r = co_await cli.set("/test", "hello", -1);
-                if (r == INVALID)
+                err = co_await c->set("/test", "hello", -1);
+                if (err == INVALID)
                 {
                     co_return;
                 }
                 std::string body;
-                r = co_await cli.get("/test", body);
-                if (r == INVALID)
+                err = co_await c->get("/test", body);
+                if (err == INVALID)
                 {
                     co_return;
                 }
@@ -47,7 +52,8 @@ int main(int argc, char **argv)
 
                 co_return;
             })
-        .wait();
+        .endless([]()
+                 { zoo.stop(); });
 
     return 0;
 }

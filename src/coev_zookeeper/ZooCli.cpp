@@ -56,9 +56,7 @@ namespace coev
     awaitable<int> ZooCli::connect(const char *host, int port)
     {
         m_hostname = std::string(host) + ":" + std::to_string(port);
-
         // zh = zookeeper_init(m_hostname.c_str(), nullptr, 1000, nullptr, nullptr, 0);
-
         auto r = co_await base::connect(host, port);
         if (r == INVALID)
         {

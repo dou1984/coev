@@ -5,38 +5,32 @@
  *
  */
 #pragma once
-#include <cstring>
-#include <cstdint>
-namespace coev
+#include <coev/coev.h>
+#include "ZooCli.h"
+
+namespace coev::pool
 {
-
-    struct clientid_t
+    struct _Zoo : ZooCli
     {
-        int64_t client_id;
-        char passwd[16] = {0};
-        const clientid_t &operator=(const clientid_t &o);
-        void clear();
+        template <class T>
+        _Zoo(T &conf)
+        {
+            host = conf->host;
+            port = conf->port;
+            username = conf->username;
+            password = conf->password;
+        }
+        awaitable<int> connect()
+        {
+            return ZooCli::connect(host.c_str(), port);
+        }
+
+    private:
+        std::string host;
+        uint16_t port;
+        std::string username;
+        std::string password;
     };
 
-    struct prime_struct
-    {
-        int32_t len;
-        int32_t protocolVersion;
-        int32_t timeOut;
-        int64_t sessionId;
-        int32_t passwdLen;
-        char passwd[16];
-        char readOnly;
-    };
-
-    struct auth_info
-    {
-        int m_state;
-        std::string m_scheme;
-        std::string m_auth;
-        const char *m_data;
-    };
-
-    int32_t get_xid();
-
+    using Zoo = coev::client_pool<_Zoo>;
 }

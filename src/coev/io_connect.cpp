@@ -85,6 +85,7 @@ namespace coev
         auto err = getSocketError(m_fd);
         if (err != 0)
         {
+            LOG_ERR("connect error: %s", strerror(err));
             __close();
             co_return INVALID;
         }

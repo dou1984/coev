@@ -16,11 +16,11 @@ namespace coev
 
     struct async : queue
     {
-        co_event suspend();
-        co_event suspend_util_next_loop();
-        bool resume(uint64_t value = 0);
-        bool resume_next_loop();
-        int resume_all();
+        co_event suspend() noexcept;
+        co_event suspend_util_next_loop() noexcept;
+        bool resume(uint64_t value = 0) noexcept;
+        bool resume_next_loop() noexcept;
+        int resume_all() noexcept;
     };
 
     namespace guard
@@ -31,13 +31,13 @@ namespace coev
             awaitable<uint64_t> suspend(const std::function<bool()> &, const std::function<void()> &);
             awaitable<uint64_t> suspend();
             bool resume(const std::function<void()> &);
-            bool resume(uint64_t value = 0);
-            bool deliver(uint64_t value = 0);
-            std::mutex &lock() { return m_mutex; }
+            bool resume(uint64_t value = 0) noexcept;
+            bool deliver(uint64_t value = 0) noexcept;
+            std::mutex &lock() noexcept { return m_mutex; }
 
         private:
             co_event *__ev(const std::function<void()> &_set);
-            co_event *__ev();
+            co_event *__ev() noexcept;
             std::mutex m_mutex;
         };
     }

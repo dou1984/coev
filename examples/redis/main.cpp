@@ -146,7 +146,7 @@ int main()
 	auto conf = _pool.get_config();
 	conf->host = "127.0.0.1";
 	conf->port = 6379;
-	conf->auth = "";
+	conf->password = "";
 
 	_pool.set(conf);
 

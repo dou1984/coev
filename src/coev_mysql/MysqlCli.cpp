@@ -54,7 +54,7 @@ namespace coev
 		{
 			throw("mysql init");
 		}
-		m_url = conf.m_url;
+		m_host = conf.m_host;
 		m_port = conf.m_port;
 		m_username = conf.m_username;
 		m_password = conf.m_password;
@@ -69,14 +69,19 @@ namespace coev
 	int MysqlCli::__try_connect()
 	{
 		return mysql_real_connect_nonblocking(
-			m_mysql, m_url.c_str(), m_username.c_str(), m_password.c_str(), m_db.c_str(), m_port, nullptr, 0);
+			m_mysql, m_host.c_str(), m_username.c_str(), m_password.c_str(), m_db.c_str(), m_port, nullptr, 0);
 	}
 	int MysqlCli::__is_net_error(int state)
 	{
 		if (state != NET_ASYNC_ERROR)
+		{
 			return 0;
+		}
 		if (!is_network_error(mysql_errno(m_mysql)))
+		{
+			LOG_CORE("mysql state %d error:%d %s", state, mysql_errno(m_mysql), mysql_error(m_mysql));
 			return 0;
+		}
 		__query_remove();
 		return INVALID;
 	}
@@ -91,7 +96,7 @@ namespace coev
 		auto status = __try_connect();
 		if (status == NET_ASYNC_ERROR)
 		{
-			LOG_CORE("mysql connect %d error:%d %s", status, mysql_errno(m_mysql), mysql_error(m_mysql));
+			LOG_ERR("mysql connect %d error:%d %s", status, mysql_errno(m_mysql), mysql_error(m_mysql));
 			return INVALID;
 		}
 		assert(status == NET_ASYNC_NOT_READY);
@@ -134,14 +139,16 @@ namespace coev
 		}
 		return 0;
 	}
-	int MysqlCli::fd()
+	int MysqlCli::fd() const
 	{
 		return mysql_get_socket_descriptor(m_mysql);
 	}
 	awaitable<int> MysqlCli::connect()
 	{
 		if (__connect() == INVALID)
+		{
 			co_return INVALID;
+		}
 		co_await m_r_waiter.suspend();
 		__connect_remove();
 		__query_insert();
@@ -152,6 +159,7 @@ namespace coev
 		}
 		if (__is_net_error(NET_ASYNC_ERROR) == INVALID)
 		{
+			LOG_ERR("mysql connect %d error:%d %s", status, mysql_errno(m_mysql), mysql_error(m_mysql));
 			co_return INVALID;
 		}
 		co_return fd();

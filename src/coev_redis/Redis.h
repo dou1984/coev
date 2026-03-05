@@ -7,7 +7,7 @@ namespace coev::pool
     struct _Redis : RedisCli
     {
         template <class T>
-        _Redis(T &conf) : RedisCli(conf->host, conf->port, conf->auth)
+        _Redis(T &conf) : RedisCli(conf->host, conf->port, conf->password)
         {
         }
     };

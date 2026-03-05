@@ -51,7 +51,7 @@ endif()
 set(zookeeper_sources
   proto.cpp
   ZooCli.cpp
-  Zoo.cpp
+  ZooDef.cpp
   ZooOp.cpp
 )
 

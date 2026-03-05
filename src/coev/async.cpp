@@ -9,15 +9,15 @@
 #include "local.h"
 namespace coev
 {
-	co_event async::suspend()
+	co_event async::suspend() noexcept
 	{
 		return co_event(this);
 	}
-	co_event async::suspend_util_next_loop()
+	co_event async::suspend_util_next_loop() noexcept
 	{
 		return co_event(&local_async::instance());
 	}
-	bool async::resume(uint64_t value)
+	bool async::resume(uint64_t value) noexcept
 	{
 		if (auto c = static_cast<co_event *>(pop_front()); c != nullptr)
 		{
@@ -27,7 +27,7 @@ namespace coev
 		}
 		return false;
 	}
-	bool async::resume_next_loop()
+	bool async::resume_next_loop() noexcept
 	{
 		if (auto c = static_cast<co_event *>(pop_front()); c != nullptr)
 		{
@@ -36,7 +36,7 @@ namespace coev
 		}
 		return false;
 	}
-	int async::resume_all()
+	int async::resume_all() noexcept
 	{
 		int count = 0;
 		while (resume())
@@ -53,7 +53,7 @@ namespace coev
 			_set();
 			return static_cast<co_event *>(pop_front());
 		}
-		co_event *async::__ev()
+		co_event *async::__ev() noexcept
 		{
 			std::lock_guard<std::mutex> _(m_mutex);
 			return static_cast<co_event *>(pop_front());
@@ -95,7 +95,7 @@ namespace coev
 			}
 			return false;
 		}
-		bool async::resume(uint64_t value)
+		bool async::resume(uint64_t value) noexcept
 		{
 			if (auto c = __ev(); c != nullptr)
 			{
@@ -106,7 +106,7 @@ namespace coev
 			return false;
 		}
 
-		bool async::deliver(uint64_t value)
+		bool async::deliver(uint64_t value) noexcept
 		{
 			if (auto c = __ev(); c != nullptr)
 			{

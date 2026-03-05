@@ -10,6 +10,7 @@
 #include <memory>
 #include <cassert>
 #include <utility>
+#include <string>
 #include "gtid.h"
 #include "awaitable.h"
 #include "queue.h"
@@ -25,14 +26,15 @@ namespace coev
     public:
         struct Config
         {
-            uint32_t max_connections = 0;
+            uint32_t max_connections = 10;
             float retry_time = 1.0f;
             float quick_retry_time = 0.1f;
             uint32_t retry_count = 15;
             std::string host;
             uint16_t port = 0;
-            std::string auth;
-            std::string data;
+            std::string username;
+            std::string password;
+            std::map<std::string, std::string> options;
         };
         struct client : queue, CLI
         {

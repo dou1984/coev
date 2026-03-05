@@ -17,7 +17,7 @@ namespace coev
 	template <class... AWAITABLE>
 	awaitable<int> wait_for_any(AWAITABLE &&...awt)
 	{
-		guard::co_task w;
+		co_task w;
 		((w << awt), ...);
 		auto id = co_await w.wait();
 		w.destroy();
@@ -26,12 +26,36 @@ namespace coev
 	template <class... AWAITABLE>
 	awaitable<int> wait_for_all(AWAITABLE &&...awt)
 	{
-		guard::co_task w;
+		co_task w;
 		((w << awt), ...);
 		while (!w.empty())
 		{
 			co_await w.wait();
 		}
 		co_return 0;
+	}
+
+	namespace guard
+	{
+		template <class... AWAITABLE>
+		awaitable<int> wait_for_any(AWAITABLE &&...awt)
+		{
+			co_task w;
+			((w << awt), ...);
+			auto id = co_await w.wait();
+			w.destroy();
+			co_return id;
+		}
+		template <class... AWAITABLE>
+		awaitable<int> wait_for_all(AWAITABLE &&...awt)
+		{
+			co_task w;
+			((w << awt), ...);
+			while (!w.empty())
+			{
+				co_await w.wait();
+			}
+			co_return 0;
+		}
 	}
 }

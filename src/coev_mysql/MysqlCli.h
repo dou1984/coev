@@ -15,20 +15,21 @@ namespace coev
 {
 	struct MysqlConf
 	{
-		std::string m_url;
+		std::string m_host;
+		int m_port;
 		std::string m_username;
 		std::string m_password;
 		std::string m_db;
 		std::string m_charset;
-		int m_port;
 	};
-	class MysqlCli final : MysqlConf
+	class MysqlCli : MysqlConf
 	{
 	public:
 		MysqlCli() = default;
 		MysqlCli(const MysqlConf &);
 		virtual ~MysqlCli();
 		operator MYSQL *() { return m_mysql; }
+		operator MYSQL *() const { return m_mysql; }
 
 		void set(const MysqlConf &);
 		awaitable<int> connect();
@@ -49,6 +50,10 @@ namespace coev
 			}
 			return last_error;
 		}
+		int error() { return __results(); }
+
+	protected:
+		int fd() const;
 
 	private:
 		MYSQL *m_mysql = nullptr;
@@ -75,6 +80,5 @@ namespace coev
 		int __connect_remove();
 		int __query_insert();
 		int __query_remove();
-		int fd();
 	};
 }
