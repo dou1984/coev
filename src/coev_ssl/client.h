@@ -10,11 +10,33 @@
 
 namespace coev::ssl
 {
-    class client : virtual public context, protected io_connect
+    struct sclient : virtual context, io_connect
     {
-    public:
-        client() = default;
-        client(SSL_CTX *ctx);
+        sclient() = default;
+        sclient(SSL_CTX *ctx);
         awaitable<int> connect(const char *host, int port);
     };
+    namespace pool
+    {
+        struct _SSLCli : sclient
+        {
+            template <class T>
+            _SSLCli(T &conf, SSL_CTX *ctx) : sclient(ctx)
+            {
+                host = conf.host;
+                port = conf.port;
+            }
+            awaitable<int> connect()
+            {
+                return sclient::connect(host.c_str(), port);
+            }
+
+        private:
+            std::string host;
+            uint16_t port;
+        };
+
+        using client = coev::client_pool<_SSLCli>;
+    }
+
 }

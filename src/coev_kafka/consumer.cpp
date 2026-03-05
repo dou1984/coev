@@ -134,7 +134,7 @@ std::shared_ptr<BrokerConsumer> Consumer::RefBrokerConsumer(std::shared_ptr<Brok
     auto it = m_broker_consumers.find(broker->ID());
     if (it == m_broker_consumers.end())
     {
-        return m_broker_consumers[broker->ID()] = std::make_shared<BrokerConsumer>(shared_from_this(), broker);
+        it = m_broker_consumers.emplace(broker->ID(), std::make_shared<BrokerConsumer>(shared_from_this(), broker)).first;
     }
     return it->second;
 }

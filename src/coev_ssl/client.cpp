@@ -8,7 +8,7 @@
 
 namespace coev::ssl
 {
-    client::client(SSL_CTX *_ssl_ctx)
+    sclient::sclient(SSL_CTX *_ssl_ctx)
     {
         if (_ssl_ctx)
         {
@@ -22,7 +22,7 @@ namespace coev::ssl
         }
     }
 
-    awaitable<int> client::connect(const char *host, int port)
+    awaitable<int> sclient::connect(const char *host, int port)
     {
 
         int err = co_await coev::io_connect::connect(host, port);

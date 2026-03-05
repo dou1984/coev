@@ -10,9 +10,8 @@
 
 namespace coev::ssl
 {
-    class manager
+    struct manager
     {
-    public:
         enum E_METHOD
         {
             TLS_SERVER = 0,

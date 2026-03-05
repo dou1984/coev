@@ -11,9 +11,8 @@
 
 namespace coev::ssl
 {
-    class context : virtual public io_context
+    struct context : virtual io_context
     {
-    public:
         context(context &&) = delete;
         context(int fd, SSL_CTX *);
         ~context();

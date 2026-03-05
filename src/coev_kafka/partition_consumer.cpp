@@ -304,7 +304,9 @@ int PartitionConsumer::ParseRecords(std::shared_ptr<RecordBatch> &batch, std::ve
     {
         int64_t offset = batch->m_first_offset + rec->m_offset_delta;
         if (offset < m_offset)
+        {
             continue;
+        }
         auto timestamp = batch->m_first_timestamp + std::chrono::milliseconds(rec->m_timestamp_delta.count());
         if (batch->m_log_append_time)
         {

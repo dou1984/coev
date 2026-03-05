@@ -9,11 +9,6 @@
 
 using namespace coev;
 
-struct zoo_config
-{
-};
-
-
 coev::pool::Zoo zoo;
 
 int main(int argc, char **argv)
@@ -21,13 +16,13 @@ int main(int argc, char **argv)
     auto config = zoo.get_config();
     config->host = "127.0.0.1";
     config->port = 2181;
+    zoo.set(config);
 
     runnable::instance()
         .start(
             []() -> awaitable<void>
             {
                 coev::pool::Zoo::instance c;
-
                 auto err = co_await zoo.get(c);
                 if (err == INVALID)
                 {

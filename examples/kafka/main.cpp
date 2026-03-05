@@ -81,7 +81,7 @@ int main(int argc, char **argv)
                                 co_await partition_consumer->Messages().get(msg);
                                 if (msg)
                                 {
-                                    LOG_DBG("offset %ld Messages  %s %s", msg->m_offset, msg->key().c_str(), msg->value().c_str());
+                                    LOG_CORE("offset %ld Messages  %s %s", msg->m_offset, msg->key().c_str(), msg->value().c_str());
                                 }
                             }
                         }(consumer, partition);

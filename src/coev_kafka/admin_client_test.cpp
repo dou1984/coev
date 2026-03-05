@@ -41,8 +41,6 @@ TEST(AdminClientTest, CreateAndClose) {
     auto admin = ClusterAdmin::Create(client, conf);
     EXPECT_TRUE(admin != nullptr);
     
-    // Client::Close() is not virtual, so we can't mock it
-    // Just test that the method can be called without crashing
     admin->Close();
     EXPECT_TRUE(true);
 }

@@ -8,7 +8,7 @@
 
 namespace coev::nghttp2
 {
-    client::client(SSL_CTX *_ssl_ctx) : ssl::client(_ssl_ctx)
+    client::client(SSL_CTX *_ssl_ctx) : ssl::sclient(_ssl_ctx)
     {
         m_type |= IO_CLI;
         if (_ssl_ctx)
@@ -30,7 +30,7 @@ namespace coev::nghttp2
             __close();
             co_return m_fd;
         }
-        err = co_await ssl::client::connect(info.ip, info.port);
+        err = co_await ssl::sclient::connect(info.ip, info.port);
         if (err == INVALID)
         {
             LOG_ERR("ssl connect failed %s %d %s", info.ip, info.port, nghttp2_strerror(err));

@@ -64,7 +64,7 @@ awaitable<void> test_ssl_context()
 awaitable<void> test_ssl_client()
 {
 
-    ssl::client cli(g_cli_mgr.get());
+    ssl::sclient cli(g_cli_mgr.get());
     int fd = co_await cli.connect("0.0.0.0", 9998);
     if (fd == INVALID)
     {
