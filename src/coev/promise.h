@@ -13,7 +13,7 @@
 #include "gtid.h"
 #include "log.h"
 #include "queue.h"
-#include "suspend_bool.h"
+#include "suspend_ready.h"
 
 namespace coev
 {
@@ -41,7 +41,7 @@ namespace coev
 		promise();
 		~promise();
 		void unhandled_exception();
-		suspend_bool initial_suspend();
+		suspend_ready initial_suspend();
 		std::suspend_never final_suspend() noexcept;
 	};
 	struct promise_void : promise

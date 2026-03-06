@@ -54,7 +54,7 @@ namespace coev
         throw std::current_exception();
     }
 
-    suspend_bool promise::initial_suspend()
+    suspend_ready promise::initial_suspend()
     {
         struct ready
         {

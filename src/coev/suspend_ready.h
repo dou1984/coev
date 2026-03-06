@@ -1,0 +1,18 @@
+/*
+ *	coev - c++20 coroutine library
+ *
+ *	Copyright (c) 2023-2026, Zhao Yun Shan
+ *
+ */
+#pragma once
+#include <coroutine>
+namespace coev
+{
+  struct suspend_ready
+  {
+    bool m_ready = false;
+    constexpr bool await_ready() const noexcept { return m_ready; }
+    constexpr void await_suspend(std::coroutine_handle<>) const noexcept {}
+    constexpr void await_resume() const noexcept {}
+  };
+}
