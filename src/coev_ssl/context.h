@@ -17,8 +17,8 @@ namespace coev::ssl
         context(int fd, SSL_CTX *);
         ~context();
 
-        awaitable<int> send(const char *, int);
-        awaitable<int> recv(char *, int);
+        awaitable<int> send(const char *, int) noexcept;
+        awaitable<int> recv(char *, int) noexcept;
 
         awaitable<int> do_handshake();
 

@@ -18,9 +18,9 @@ namespace coev
 		int m_flag;
 
 	public:
-		awaitable<void> lock();
-		bool unlock();
-		bool try_lock();
+		awaitable<void> lock() noexcept;
+		bool unlock() noexcept;
+		bool try_lock() noexcept;
 	};
 	namespace guard
 	{
@@ -30,9 +30,9 @@ namespace coev
 			int m_flag;
 
 		public:
-			awaitable<void> lock();
-			bool unlock();
-			bool try_lock();
+			awaitable<void> lock() noexcept;
+			bool unlock() noexcept;
+			bool try_lock() noexcept;
 		};
 	}
 

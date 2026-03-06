@@ -58,7 +58,7 @@ namespace coev
 			std::lock_guard<std::mutex> _(m_mutex);
 			return static_cast<co_event *>(pop_front());
 		}
-		awaitable<uint64_t> async::suspend(const std::function<bool()> &_suspend, const std::function<void()> &_get)
+		awaitable<uint64_t> async::suspend(const std::function<bool()> &_suspend, const std::function<void()> &_get) noexcept
 		{
 			uint64_t value = 0;
 			m_mutex.lock();
@@ -74,7 +74,7 @@ namespace coev
 			m_mutex.unlock();
 			co_return value;
 		}
-		awaitable<uint64_t> async::suspend()
+		awaitable<uint64_t> async::suspend() noexcept
 		{
 			uint64_t value = 0;
 			m_mutex.lock();
@@ -86,7 +86,7 @@ namespace coev
 			m_mutex.unlock();
 			co_return value;
 		}
-		bool async::resume(const std::function<void()> &_set)
+		bool async::resume(const std::function<void()> &_set) noexcept
 		{
 			if (auto c = __ev(_set); c != nullptr)
 			{

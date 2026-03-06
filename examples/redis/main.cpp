@@ -9,7 +9,7 @@
 #include <random>
 #include <string_view>
 #include <vector>
-#include <coev_redis/Redis.h>
+#include <coev_redis/RedisCli.h>
 
 using namespace coev;
 

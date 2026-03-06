@@ -6,6 +6,7 @@
  */
 #include <unistd.h>
 #include <fcntl.h>
+#include <utility>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -15,14 +16,14 @@
 
 namespace coev
 {
-	void io_context::cb_read(struct ev_loop *loop, struct ev_io *w, int revents)
+	void io_context::cb_read(struct ev_loop *loop, struct ev_io *w, int revents) noexcept
 	{
 		auto _this = (io_context *)w->data;
 		assert(_this != NULL);
 		_this->m_r_waiter.resume();
 		local_resume();
 	}
-	void io_context::cb_write(struct ev_loop *loop, struct ev_io *w, int revents)
+	void io_context::cb_write(struct ev_loop *loop, struct ev_io *w, int revents) noexcept
 	{
 		auto _this = (io_context *)w->data;
 		assert(_this != NULL);
@@ -30,13 +31,12 @@ namespace coev
 		local_resume();
 		_this->__del_write();
 	}
-	int io_context::__close()
+	int io_context::__close() noexcept
 	{
 		if (m_fd != INVALID)
 		{
 			__finally();
-			auto _fd = m_fd;
-			m_fd = INVALID;
+			auto _fd = std::exchange(m_fd, INVALID);
 			::close(_fd);
 			while (m_r_waiter.resume())
 			{
@@ -47,30 +47,30 @@ namespace coev
 		}
 		return 0;
 	}
-	bool io_context::__valid() const
+	bool io_context::__valid() const noexcept
 	{
 		return m_fd != INVALID;
 	}
-	bool io_context::__invalid() const
+	bool io_context::__invalid() const noexcept
 	{
 		return m_fd == INVALID;
 	}
-	io_context::operator bool() const
+	io_context::operator bool() const noexcept
 	{
 		return m_fd != INVALID;
 	}
-	io_context::io_context(int fd) : m_fd(fd)
+	io_context::io_context(int fd) noexcept : m_fd(fd)
 	{
 		m_tid = gtid();
 		m_loop = cosys::data();
 		__initial();
 	}
-	io_context::io_context() : m_fd(INVALID)
+	io_context::io_context() noexcept : m_fd(INVALID)
 	{
 		m_tid = gtid();
 		m_loop = cosys::data();
 	}
-	int io_context::__initial()
+	int io_context::__initial() noexcept
 	{
 		if (m_fd != INVALID)
 		{
@@ -86,7 +86,7 @@ namespace coev
 		}
 		return 0;
 	}
-	int io_context::__finally()
+	int io_context::__finally() noexcept
 	{
 		if (m_fd != INVALID)
 		{
@@ -102,7 +102,7 @@ namespace coev
 		}
 		return 0;
 	}
-	int io_context::__del_write()
+	int io_context::__del_write() noexcept
 	{
 		if (m_w_waiter.empty())
 		{
@@ -110,11 +110,11 @@ namespace coev
 		}
 		return 0;
 	}
-	io_context::~io_context()
+	io_context::~io_context() noexcept
 	{
 		__close();
 	}
-	awaitable<int> io_context::send(const char *buffer, int size)
+	awaitable<int> io_context::send(const char *buffer, int size) noexcept
 	{
 		while (__valid())
 		{
@@ -137,7 +137,7 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	awaitable<int> io_context::recv(char *buffer, int size)
+	awaitable<int> io_context::recv(char *buffer, int size) noexcept
 	{
 		while (__valid())
 		{
@@ -161,7 +161,7 @@ namespace coev
 		co_return INVALID;
 	}
 
-	awaitable<int> io_context::recvfrom(char *buffer, int size, addrInfo &info)
+	awaitable<int> io_context::recvfrom(char *buffer, int size, addrInfo &info) noexcept
 	{
 		while (__valid())
 		{
@@ -183,7 +183,7 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	awaitable<int> io_context::sendto(const char *buffer, int size, addrInfo &info)
+	awaitable<int> io_context::sendto(const char *buffer, int size, addrInfo &info) noexcept
 	{
 		while (__valid())
 		{
@@ -204,7 +204,7 @@ namespace coev
 		}
 		co_return INVALID;
 	}
-	int io_context::close()
+	int io_context::close() noexcept
 	{
 		LOG_CORE("m_fd:%d", m_fd);
 		__close();

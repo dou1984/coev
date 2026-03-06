@@ -8,48 +8,48 @@
 
 namespace coev
 {
-	queue *queue::erase(queue *_old)
+	queue *queue::erase(queue *_old) noexcept
+{
+	__list_del(_old->m_prev, _old->m_next);
+	_old->__list_clear();
+	return _old;
+}
+bool queue::move_to(queue *_new) noexcept
+{
+	if (empty())
 	{
-		__list_del(_old->m_prev, _old->m_next);
-		_old->__list_clear();
-		return _old;
+		return false;
 	}
-	bool queue::move_to(queue *_new)
+	if (!_new->empty())
 	{
-		if (empty())
-		{
-			return false;
-		}
-		if (!_new->empty())
-		{
-			return false;
-		}
-		_new->__list_move(m_prev, m_next);
-		__list_clear();
-		return true;
+		return false;
 	}
-	void queue::__list_add(queue *_new, queue *prev, queue *next)
-	{
-		assert(prev->m_next != _new);
-		assert(next->m_prev != _new);
-		prev->m_next = next->m_prev = _new;
-		_new->m_next = next;
-		_new->m_prev = prev;
-	}
-	void queue::__list_del(queue *prev, queue *next)
-	{
-		next->m_prev = prev;
-		prev->m_next = next;
-	}
-	void queue::__list_move(queue *prev, queue *next)
-	{
-		assert(empty());
-		prev->m_next = next->m_prev = this;
-		m_next = next;
-		m_prev = prev;
-	}
-	void queue::__list_clear()
-	{
-		m_next = m_prev = this;
-	}
+	_new->__list_move(m_prev, m_next);
+	__list_clear();
+	return true;
+}
+void queue::__list_add(queue *_new, queue *prev, queue *next) noexcept
+{
+	assert(prev->m_next != _new);
+	assert(next->m_prev != _new);
+	prev->m_next = next->m_prev = _new;
+	_new->m_next = next;
+	_new->m_prev = prev;
+}
+void queue::__list_del(queue *prev, queue *next) noexcept
+{
+	next->m_prev = prev;
+	prev->m_next = next;
+}
+void queue::__list_move(queue *prev, queue *next) noexcept
+{
+	assert(empty());
+	prev->m_next = next->m_prev = this;
+	m_next = next;
+	m_prev = prev;
+}
+void queue::__list_clear() noexcept
+{
+	m_next = m_prev = this;
+}
 }

@@ -20,15 +20,15 @@ namespace coev
 		using func = std::function<awaitable<void>()>;
 		std::list<std::thread> m_list;
 
-		void __add(const func &_f);
+		void __add(const func &_f) noexcept;
 
 	public:
-		runnable();
+		runnable() noexcept;
 		runnable(const runnable &) = delete;
 		runnable(runnable &&) = delete;
-		runnable &start(const func &_f);
-		runnable &start(int count, const func &_f);
-		void wait();
-		void endless(const std::function<void()> &_f);
+		runnable &start(const func &_f) noexcept;
+		runnable &start(int count, const func &_f) noexcept;
+		void wait() noexcept;
+		void end(const std::function<void()> &_f) noexcept;
 	};
 }

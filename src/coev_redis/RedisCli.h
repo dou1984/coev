@@ -12,6 +12,7 @@
 #include <hiredis/async.h>
 #include <coev/coev.h>
 #include "RedisArray.h"
+
 namespace coev
 {
 	struct Redisconf
@@ -71,4 +72,17 @@ namespace coev
 		int fd() const;
 	};
 
+}
+
+namespace coev::pool
+{
+	struct _Redis : RedisCli
+	{
+		template <class T>
+		_Redis(T &conf) : RedisCli(conf->host, conf->port, conf->password)
+		{
+		}
+	};
+
+	using Redis = client_pool<_Redis>;
 }

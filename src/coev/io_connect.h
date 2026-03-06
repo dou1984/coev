@@ -14,15 +14,15 @@ namespace coev
     public:
         using io_context::operator bool;
         io_connect();
-        virtual awaitable<int> connect(const char *, int);
+        virtual awaitable<int> connect(const char *, int) noexcept;
 
     protected:
-        void __init_connect();
-        int __add_connect();
-        int __del_connect();
+        void __init_connect() noexcept;
+        int __add_connect() noexcept;
+        int __del_connect() noexcept;
 
-        int __connect(const char *ip, int port);
-        int __connect(int fd, const char *ip, int port);
-        static void cb_connect(struct ev_loop *loop, struct ev_io *w, int revents);
+        int __connect(const char *ip, int port) noexcept;
+        int __connect(int fd, const char *ip, int port) noexcept;
+        static void cb_connect(struct ev_loop *loop, struct ev_io *w, int revents) noexcept;
     };
 }

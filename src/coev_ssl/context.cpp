@@ -47,7 +47,7 @@ namespace coev::ssl
         }
     }
 
-    awaitable<int> context::send(const char *buf, int len)
+    awaitable<int> context::send(const char *buf, int len) noexcept
     {
         if (__is_ssl())
         {
@@ -81,7 +81,7 @@ namespace coev::ssl
             co_return co_await io_context::send(buf, len);
         }
     }
-    awaitable<int> context::recv(char *buf, int size)
+    awaitable<int> context::recv(char *buf, int size) noexcept
     {
         if (__is_ssl())
         {

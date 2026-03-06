@@ -9,6 +9,6 @@
 
 namespace coev::udp
 {
-	int bindfd(const char *ip, int port);
-	int socketfd();
+	int bindfd(const char *ip, int port) noexcept;
+	int socketfd() noexcept;
 }

@@ -34,7 +34,7 @@ namespace coev::pool
 			}
 			return srv;
 		}
-		int start(const char *ip, int port)
+		int start(const char *ip, int port) 
 		{
 			auto _tid = gtid();
 			std::lock_guard<std::mutex> _(m_mutex);
@@ -46,7 +46,7 @@ namespace coev::pool
 			}
 			return m_fd;
 		}
-		int stop()
+		int stop() 
 		{
 			std::lock_guard<std::mutex> _(m_mutex);
 			for (auto it = m_pool.begin(); it != m_pool.end(); ++it)

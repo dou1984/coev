@@ -47,7 +47,7 @@ int main(int argc, char **argv)
 
                 co_return;
             })
-        .endless([]()
+        .end([]()
                  { zoo.stop(); });
 
     return 0;

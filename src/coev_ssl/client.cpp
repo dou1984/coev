@@ -22,7 +22,7 @@ namespace coev::ssl
         }
     }
 
-    awaitable<int> sclient::connect(const char *host, int port)
+    awaitable<int> sclient::connect(const char *host, int port) noexcept
     {
 
         int err = co_await coev::io_connect::connect(host, port);

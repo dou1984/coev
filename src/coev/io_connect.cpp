@@ -8,7 +8,7 @@
 #include "local_resume.h"
 namespace coev
 {
-    void io_connect::cb_connect(struct ev_loop *loop, struct ev_io *w, int revents)
+    void io_connect::cb_connect(struct ev_loop *loop, struct ev_io *w, int revents) noexcept
     {
         if (EV_ERROR & revents)
         {
@@ -20,7 +20,7 @@ namespace coev
         _this->m_r_waiter.resume();
         local_resume();
     }
-    void io_connect::__init_connect()
+    void io_connect::__init_connect() noexcept
     {
         m_fd = ::socket(AF_INET, SOCK_STREAM, 0);
         if (m_fd == INVALID)
@@ -39,7 +39,7 @@ namespace coev
         __init_connect();
         m_type |= IO_CLI | IO_TCP;
     }
-    int io_connect::__add_connect()
+    int io_connect::__add_connect() noexcept
     {
         m_read.data = this;
         ev_io_init(&m_read, &io_connect::cb_connect, m_fd, EV_READ | EV_WRITE);
@@ -48,13 +48,13 @@ namespace coev
         ev_io_init(&m_write, &io_connect::cb_connect, m_fd, EV_READ | EV_WRITE);
         return 0;
     }
-    int io_connect::__del_connect()
+    int io_connect::__del_connect() noexcept
     {
         ev_io_stop(m_loop, &m_read);
         return 0;
     }
 
-    int io_connect::__connect(const char *ip, int port)
+    int io_connect::__connect(const char *ip, int port) noexcept
     {
         if (__connect(m_fd, ip, port) < 0)
         {
@@ -67,14 +67,14 @@ namespace coev
         __close();
         return m_fd;
     }
-    int io_connect::__connect(int fd, const char *ip, int port)
+    int io_connect::__connect(int fd, const char *ip, int port) noexcept
     {
         sockaddr_in addr = {0};
         fillAddr(addr, ip, port);
         return ::connect(fd, (sockaddr *)&addr, sizeof(addr));
     }
 
-    awaitable<int> io_connect::connect(const char *ip, int port)
+    awaitable<int> io_connect::connect(const char *ip, int port) noexcept
     {
         m_fd = __connect(ip, port);
         if (m_fd == INVALID)

@@ -13,7 +13,7 @@ namespace coev
 	const int on = 1;
 	const int off = 0;
 
-	awaitable<void> co_mutex::lock()
+	awaitable<void> co_mutex::lock() noexcept
 	{
 		if (m_flag == on)
 		{
@@ -22,13 +22,13 @@ namespace coev
 		}
 		m_flag = on;
 	}
-	bool co_mutex::unlock()
+	bool co_mutex::unlock() noexcept
 	{
 		assert(m_flag == on);
 		m_flag = off;
 		return m_waiter.resume();
 	}
-	bool co_mutex::try_lock()
+	bool co_mutex::try_lock() noexcept
 	{
 		if (m_flag == on)
 		{
@@ -40,20 +40,20 @@ namespace coev
 
 	namespace guard
 	{
-		awaitable<void> co_mutex::lock()
+		awaitable<void> co_mutex::lock() noexcept
 		{
 			co_await m_waiter.suspend(
 				[this]()
 				{ return m_flag == on; }, [this]()
 				{ m_flag = on; });
 		}
-		bool co_mutex::unlock()
+		bool co_mutex::unlock() noexcept
 		{
 			return m_waiter.resume(
 				[this]()
 				{ m_flag = off; });
 		}
-		bool co_mutex::try_lock()
+		bool co_mutex::try_lock() noexcept
 		{
 			std::lock_guard<std::mutex> lock(m_waiter.lock());
 			if (m_flag == on)

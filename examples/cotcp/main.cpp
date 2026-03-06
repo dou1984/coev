@@ -141,7 +141,7 @@ int main(int argc, char **argv)
 		_pool.start(host.c_str(), port);
 		runnable::instance()
 			.start(max_runner, co_server)
-			.endless(
+			.end(
 				[]()
 				{
 					_pool.stop();
@@ -161,7 +161,7 @@ int main(int argc, char **argv)
 
 		runnable::instance()
 			.start(max_runner, co_client)
-			.endless(
+			.end(
 				[]()
 				{
 					_cpool.stop();

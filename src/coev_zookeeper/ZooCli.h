@@ -25,7 +25,7 @@ namespace coev
         using ssl::sclient::sclient;
         using io_context::operator bool;
 
-        awaitable<int> connect(const char *host, int port);
+        awaitable<int> connect(const char *host, int port) noexcept;
 
         awaitable<int> exists(const char *path, Stat_ &data);
         awaitable<int> get(const char *path, const std::string &data);

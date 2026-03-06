@@ -17,8 +17,8 @@ namespace coev
     public:
         DNSCli(ares_socket_t _fd, ares_channel _channel);
         ~DNSCli();
-        awaitable<int> send(const char *buffer, int size);
-        awaitable<int> recv(char *buffer, int size);
+        awaitable<int> send(const char *buffer, int size) noexcept;
+        awaitable<int> recv(char *buffer, int size) noexcept;
         int close();
     };
 }

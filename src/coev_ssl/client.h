@@ -14,29 +14,30 @@ namespace coev::ssl
     {
         sclient() = default;
         sclient(SSL_CTX *ctx);
-        awaitable<int> connect(const char *host, int port);
+        awaitable<int> connect(const char *host, int port) noexcept;
     };
-    namespace pool
+
+}
+
+namespace coev::pool::ssl
+{
+    struct _SSLCli : coev::ssl::sclient
     {
-        struct _SSLCli : sclient
+        template <class T>
+        _SSLCli(T &conf, SSL_CTX *ctx) : sclient(ctx)
         {
-            template <class T>
-            _SSLCli(T &conf, SSL_CTX *ctx) : sclient(ctx)
-            {
-                host = conf.host;
-                port = conf.port;
-            }
-            awaitable<int> connect()
-            {
-                return sclient::connect(host.c_str(), port);
-            }
+            host = conf.host;
+            port = conf.port;
+        }
+        awaitable<int> connect()
+        {
+            return sclient::connect(host.c_str(), port);
+        }
 
-        private:
-            std::string host;
-            uint16_t port;
-        };
+    private:
+        std::string host;
+        uint16_t port;
+    };
 
-        using client = coev::client_pool<_SSLCli>;
-    }
-
+    using client = coev::client_pool<_SSLCli>;
 }

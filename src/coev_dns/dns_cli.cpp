@@ -21,7 +21,7 @@ namespace coev
     {
         return io_context::close();
     }
-    awaitable<int> DNSCli::send(const char *buffer, int size)
+    awaitable<int> DNSCli::send(const char *buffer, int size) noexcept
     {
         while (__valid())
         {
@@ -30,7 +30,7 @@ namespace coev
         }
         co_return INVALID;
     }
-    awaitable<int> DNSCli::recv(char *buffer, int size)
+    awaitable<int> DNSCli::recv(char *buffer, int size) noexcept
     {
         while (__valid())
         {
