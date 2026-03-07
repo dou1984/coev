@@ -37,6 +37,7 @@ namespace coev
 			return recv(msg.data(), msg.size());
 		}
 
+		virtual awaitable<int> connect(const char *, int) noexcept;
 		virtual awaitable<int> recvfrom(char *, int, addrInfo &) noexcept;
 		virtual awaitable<int> sendto(const char *, int, addrInfo &) noexcept;
 		int close() noexcept;
@@ -62,5 +63,14 @@ namespace coev
 		bool __is_ssl() const noexcept { return m_type & IO_SSL; }
 		static void cb_write(struct ev_loop *loop, struct ev_io *w, int revents) noexcept;
 		static void cb_read(struct ev_loop *loop, struct ev_io *w, int revents) noexcept;
+
+	protected:
+		void __init_connect() noexcept;
+		int __add_connect() noexcept;
+		int __del_connect() noexcept;
+
+		int __connect(const char *ip, int port) noexcept;
+		int __connect(int fd, const char *ip, int port) noexcept;
+		static void cb_connect(struct ev_loop *loop, struct ev_io *w, int revents) noexcept;
 	};
 }

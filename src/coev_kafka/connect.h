@@ -17,11 +17,10 @@ enum OpenState
     OPENED,
     POSTOPENED,
 };
-class Connect : protected io_connect
+class Connect : protected io_context
 {
-
-    using io_connect::io_connect;
-    using base = io_connect;
+    using base = io_context;
+    using base::base;
     int m_state = 0;
 
 public:

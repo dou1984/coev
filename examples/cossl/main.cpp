@@ -16,8 +16,8 @@ awaitable<void> test_ssl_context()
 {
     coev::pool::server_pool<tcp::server> pool;
     pool.start("0.0.0.0", 9998);
-    g_srv_mgr.use_certificate_file("./server.pem");
-    g_srv_mgr.use_private_key_file("./server.pem");
+    g_srv_mgr.use_certificate_file("./certs/server/server.crt");
+    g_srv_mgr.use_private_key_file("./certs/server/server.key");
 
     LOG_DBG("server started");
     while (true)

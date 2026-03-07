@@ -17,9 +17,10 @@ std::atomic_int g_count = {0};
 
 std::string host = "0.0.0.0";
 uint16_t port = 9999;
-int max_co_client = 50;
-int max_send_count = 10000;
+int max_co_client = 100;
+int max_send_count = 1000000;
 int max_runner = 4;
+int max_connections = 10;
 
 co_waitgroup wg;
 awaitable<void> dispatch(addrInfo addr, int fd)
@@ -152,7 +153,7 @@ int main(int argc, char **argv)
 	{
 
 		auto config = _cpool.get_config();
-		config->max_connections = 10;
+		config->max_connections = max_connections;
 		config->retry_time = 1.0f;
 		config->quick_retry_time = 0.1f;
 		config->host = host;

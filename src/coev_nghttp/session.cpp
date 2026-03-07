@@ -230,7 +230,7 @@ namespace coev::nghttp2
         return 0;
     }
 
-    session::session(int fd, SSL_CTX *ctx) : io_context(fd), ssl::context(fd, ctx)
+    session::session(int fd, SSL_CTX *ctx) : ssl::context(fd, ctx)
     {
         auto err = nghttp2_session_server_new(&m_session, m_callbacks, this);
         if (err != 0)

@@ -1,10 +1,10 @@
 #pragma once
-#include "io_connect.h"
+#include "io_context.h"
 #include "client_pool.h"
 
 namespace coev::pool::tcp
 {
-    struct _Connect : io_connect
+    struct _Connect : io_context
     {
         template <class T>
         _Connect(T &conf)
@@ -14,9 +14,9 @@ namespace coev::pool::tcp
         }
         awaitable<int> connect()
         {
-            return io_connect::connect(host.c_str(), port);
+            return io_context::connect(host.c_str(), port);
         }
-        using io_connect::operator bool;
+        using io_context::operator bool;
 
     private:
         std::string host;

@@ -10,7 +10,7 @@
 
 namespace coev::ssl
 {
-    struct sclient : virtual context, io_connect
+    struct sclient : virtual context
     {
         sclient() = default;
         sclient(SSL_CTX *ctx);

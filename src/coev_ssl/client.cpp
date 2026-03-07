@@ -25,7 +25,7 @@ namespace coev::ssl
     awaitable<int> sclient::connect(const char *host, int port) noexcept
     {
 
-        int err = co_await coev::io_connect::connect(host, port);
+        int err = co_await io_context::connect(host, port);
         if (err == INVALID)
         {
             LOG_ERR("connect failed %d", err);

@@ -16,7 +16,7 @@
 namespace coev::nghttp2
 {
 
-    class session : virtual protected ssl::context
+    class session : virtual public ssl::context
     {
     public:
         using router = std::function<awaitable<int>(session &, request &)>;

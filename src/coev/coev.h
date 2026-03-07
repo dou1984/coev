@@ -26,7 +26,6 @@
 #include "co_channel.h"
 #include "co_waitgroup.h"
 #include "local_resume.h"
-#include "io_connect.h"
 #include "co_timer.h"
 #include "server.h"
 #include "client.h"
