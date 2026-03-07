@@ -35,6 +35,7 @@ namespace coev
             std::string username;
             std::string password;
             std::map<std::string, std::string> options;
+            void *data;
         };
         struct client : queue, CLI
         {
@@ -221,11 +222,8 @@ namespace coev
     template <class CLI>
     void client_pool<CLI>::shared_queue::clear() noexcept
     {
-        auto tid = gtid();
-        LOG_CORE("tid:%ld clear %d", tid, m_count);
         for (auto cq = get_client(); cq; cq = get_client())
         {
-            LOG_CORE("tid:%ld delete %p", tid, cq);
             delete_client(cq);
             m_count--;
         }

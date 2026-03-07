@@ -66,32 +66,30 @@ awaitable<void> test_ssl_context()
 awaitable<void> test_ssl_client()
 {
 
-    coev::ssl::context cli(g_cli_mgr.get());
-    int fd = co_await cli.connect("0.0.0.0", 9999);
-    if (fd == INVALID)
+    coev::pool::ssl::client::instance c;
+    auto err = co_await cli.get(c);
+    if (err == INVALID)
     {
-        LOG_ERR("connect failed fd:%d error:%d", fd, errno);
         exit(INVALID);
     }
-    LOG_DBG("connect success fd:%d", fd);
     for (int i = 0; i < 10; i++)
     {
         auto buf = "hello world";
         int size = strlen(buf) + 1;
-        int r = co_await cli.send(buf, size);
+        int r = co_await c->send(buf, size);
         if (r == INVALID)
         {
-            LOG_ERR("send failed fd:%d", fd);
+            LOG_ERR("send failed %d", r);
             exit(INVALID);
         }
         char buffer[1024];
-        r = co_await cli.recv(buffer, sizeof(buffer));
+        r = co_await c->recv(buffer, sizeof(buffer));
         if (r == INVALID)
         {
-            LOG_ERR("recv failed fd:%d", fd);
+            LOG_ERR("recv failed %d", r);
             exit(INVALID);
         }
-        LOG_DBG("recv %d bytes from %d %s", r, fd, buffer);
+        LOG_DBG("recv %d bytes from %s", r, buffer);
     }
 }
 int main(int argc, char **argv)
@@ -110,6 +108,11 @@ int main(int argc, char **argv)
     }
     else if (strcmp(argv[1], "client") == 0)
     {
+        auto conf = cli.get_config();
+        conf->host = "0.0.0.0";
+        conf->port = 9999;
+        conf->data = g_cli_mgr.get();
+
         runnable::instance()
             .start(test_ssl_client)
             .wait();

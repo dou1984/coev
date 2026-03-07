@@ -13,6 +13,8 @@ ssl::manager g_srv_mgr(ssl::manager::TLS_SERVER);
 
 char hi[] = R"(helloworld)";
 
+coev::pool::nghttp2::Http2 http2;
+
 awaitable<int> echo(nghttp2::session &ctx, nghttp2::request &request)
 {
     LOG_DBG("recv data path %s request %s", request.path().c_str(), request.body().c_str());
@@ -32,8 +34,8 @@ awaitable<int> echo(nghttp2::session &ctx, nghttp2::request &request)
 };
 awaitable<void> proc_server()
 {
-    LOG_DBG("server start %s", "0.0.0.0:8090");
-    nghttp2::server server("0.0.0.0:8090");
+    LOG_DBG("server start %s", "0.0.0.0:9999");
+    nghttp2::server server("0.0.0.0:9999");
 
     server.route("/echo", echo);
     co_await server.dispatch(g_srv_mgr.get());
@@ -41,14 +43,16 @@ awaitable<void> proc_server()
 }
 awaitable<void> proc_client()
 {
-    nghttp2::session cli(g_cli_mgr.get());
-    int fd = co_await cli.connect("0.0.0.0:8090");
-    if (fd == INVALID)
+
+    coev::pool::nghttp2::Http2::instance c;
+    auto r = co_await http2.get(c);
+
+    if (r == INVALID)
     {
+        LOG_ERR("get http2 failed");
         co_return;
     }
-
-    co_start << cli.processing();
+    // c->processing();
 
     nghttp2::header ngh;
     ngh.push_back(":method", "GET");
@@ -58,7 +62,7 @@ awaitable<void> proc_client()
     ngh.push_back("accept", "*/*");
     ngh.push_back("user-agent", "nghttp2/" NGHTTP2_VERSION);
 
-    auto res = co_await cli.query(ngh, hi, sizeof(hi));
+    auto res = co_await c->query(ngh, hi, sizeof(hi));
 
     LOG_INFO("status: %s body:%s", res.header(":status").c_str(), res.body().c_str());
 
@@ -84,6 +88,11 @@ int main(int argc, char **argv)
     }
     else if (strcmp(argv[1], "client") == 0)
     {
+        auto config = http2.get_config();
+        config->host = "0.0.0.0";
+        config->port = 9999;
+        config->data = g_cli_mgr.get();
+        http2.set(config);
         runnable::instance()
             .start(proc_client)
             .wait();

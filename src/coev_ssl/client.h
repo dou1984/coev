@@ -13,10 +13,10 @@ namespace coev::pool::ssl
     struct _SSLCli : coev::ssl::context
     {
         template <class T>
-        _SSLCli(T &conf, SSL_CTX *ctx) : coev::ssl::context(ctx)
+        _SSLCli(T &conf) : coev::ssl::context((SSL_CTX *)conf->data)
         {
-            host = conf.host;
-            port = conf.port;
+            host = conf->host;
+            port = conf->port;
         }
         awaitable<int> connect() noexcept
         {

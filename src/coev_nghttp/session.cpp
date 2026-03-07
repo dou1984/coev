@@ -357,10 +357,12 @@ namespace coev::nghttp2
             LOG_CORE("__cli_settings failed %s %d %s", ip, port, nghttp2_strerror(err));
             goto __error_return__;
         }
+
+        processing();
         co_return m_fd;
     }
 
-    awaitable<int> session::processing()
+    awaitable<int> session::__processing()
     {
         while (__valid())
         {
@@ -373,7 +375,7 @@ namespace coev::nghttp2
                 __close();
                 co_return INVALID;
             }
-            LOG_CORE("sess %p recv %d %.*s", m_session, r, (int)r, body);
+            // LOG_CORE("sess %p recv %d %.*s", m_session, r, (int)r, body);
             r = nghttp2_session_mem_recv(m_session, (uint8_t *)body, r);
             if (r < 0)
             {
@@ -423,7 +425,7 @@ namespace coev::nghttp2
                         co_return INVALID;
                     }
                     LOG_CORE("stream_id %d received END_STREAM flag", req.id());
-                    m_tasks << it_r->second(*this, req);
+                    m_task << it_r->second(*this, req);
                 }
             }
         }

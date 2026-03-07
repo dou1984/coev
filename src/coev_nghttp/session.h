@@ -31,13 +31,13 @@ namespace coev::nghttp2
     public:
         awaitable<int> connect(const char *url) noexcept;
         awaitable<int> connect(const char *ip, int port) noexcept;
-        awaitable<int> processing();
         awaitable<int> on_stream(const routers &);
         awaitable<int> do_handshake();
 
         awaitable<response> query(header &h, const char *body, int length);
         int reply(int stream_id, header &h, const char *body, int length);
         int reply_error(int32_t stream_id, int error_code);
+        void processing() { m_task << __processing(); }
 
     public:
         int set_routers(const routers &);
@@ -50,6 +50,7 @@ namespace coev::nghttp2
         int send_client_settings();
 
     protected:
+        awaitable<int> __processing();
         int __push_promise(int stream_id, nghttp2_nv *, int head_size);
         int __submit_request(nghttp2_nv *, int head_size, const char *body, int length);
         int __submit_response(int stream_id, nghttp2_nv *, int head_size, const char *body, int length);
@@ -63,7 +64,7 @@ namespace coev::nghttp2
         std::unordered_map<int32_t, response> m_responses;
 
     protected:
-        co_task m_tasks;
+        co_task m_task;
         async m_trigger;
         std::unordered_map<int32_t, async> m_w_trigger;
 

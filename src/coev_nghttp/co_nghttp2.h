@@ -9,3 +9,4 @@
 #include "header.h"
 #include "session.h"
 #include "server.h"
+#include "client.h"
