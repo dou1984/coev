@@ -5,17 +5,24 @@
  *
  */
 #pragma once
+#include <coev/coev.h>
 #include <coev_ssl/ssl.h>
 #include "session.h"
-
-namespace coev::nghttp2
+namespace coev::pool::nghttp2
 {
-    class client final : public ssl::sclient, public session
+    struct _Nghttp : coev::nghttp2::session
     {
-    public:
-        using io_context::operator bool;
-        client(SSL_CTX *);
-        awaitable<int> connect(const char *url);
-        int send_client_settings();
+        template <typename T>
+        _Nghttp(T &conf) : coev::nghttp2::session(m_cli_mgr.get())
+        {
+        }
+        awaitable<int> connect();
+
+    private:
+        std::string m_host;
+        int m_port;
+        static coev::ssl::manager m_cli_mgr;
     };
+
+    using Http2 = coev::client_pool<_Nghttp>;
 }

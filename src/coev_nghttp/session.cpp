@@ -229,8 +229,11 @@ namespace coev::nghttp2
         }
         return 0;
     }
-
-    session::session(int fd, SSL_CTX *ctx) : ssl::context(fd, ctx)
+    session::session(SSL_CTX *ctx) : coev::ssl::context(ctx)
+    {
+        assert(m_type | IO_CLI);
+    }
+    session::session(int fd, SSL_CTX *ctx) : coev::ssl::context(fd, ctx)
     {
         auto err = nghttp2_session_server_new(&m_session, m_callbacks, this);
         if (err != 0)
@@ -239,7 +242,6 @@ namespace coev::nghttp2
             __close();
         }
     }
-
     session::~session()
     {
         if (m_session != nullptr)
@@ -314,6 +316,48 @@ namespace coev::nghttp2
             return INVALID;
         }
         return err;
+    }
+    awaitable<int> session::connect(const char *url) noexcept
+    {
+        if (m_fd == INVALID)
+        {
+            co_return m_fd;
+        }
+        addrInfo info;
+        int err = info.fromUrl(url);
+        if (err == INVALID)
+        {
+            __close();
+            co_return m_fd;
+        }
+        co_return co_await connect(info.ip, info.port);
+    }
+    awaitable<int> session::connect(const char *ip, int port) noexcept
+    {
+        auto err = co_await ssl::context::connect(ip, port);
+        if (err == INVALID)
+        {
+            LOG_CORE("ssl connect failed %s %d %s", ip, port, nghttp2_strerror(err));
+        __error_return__:
+            __close();
+            co_return m_fd;
+        }
+        assert(m_ssl);
+
+        auto _this = static_cast<session *>(this);
+        err = nghttp2_session_client_new(&m_session, m_callbacks, _this);
+        if (err != 0)
+        {
+            LOG_CORE("nghttp2_session_client_new failed %s %d %s", ip, port, nghttp2_strerror(err));
+            goto __error_return__;
+        }
+        err = send_client_settings();
+        if (err != 0)
+        {
+            LOG_CORE("__cli_settings failed %s %d %s", ip, port, nghttp2_strerror(err));
+            goto __error_return__;
+        }
+        co_return m_fd;
     }
 
     awaitable<int> session::processing()
@@ -431,6 +475,27 @@ namespace coev::nghttp2
             goto __error_return__;
         }
         return err;
+    }
+    int session::send_client_settings()
+    {
+        nghttp2_settings_entry iv[] = {
+            {NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, 100},
+            {NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE, 65535},
+        };
+
+        auto err = nghttp2_submit_settings(m_session, NGHTTP2_FLAG_NONE, iv, sizeof(iv) / sizeof(iv[0]));
+        if (err != 0)
+        {
+            LOG_ERR("Failed to submit SETTINGS: %s", nghttp2_strerror(err));
+            return err;
+        }
+        err = nghttp2_session_send(m_session);
+        if (err != 0)
+        {
+            LOG_ERR("Failed to send SETTINGS: %s", nghttp2_strerror(err));
+            return err;
+        }
+        return 0;
     }
     awaitable<int> session::do_handshake()
     {

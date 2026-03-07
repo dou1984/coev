@@ -55,7 +55,7 @@ namespace coev
 	{
 		return m_fd == INVALID;
 	}
-	io_context::operator bool() const noexcept
+	io_context::operator bool() const 
 	{
 		return m_fd != INVALID;
 	}

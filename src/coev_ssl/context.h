@@ -13,12 +13,14 @@ namespace coev::ssl
 {
     struct context : io_context
     {
-        context(context &&) = delete;
+        context(SSL_CTX *);
         context(int fd, SSL_CTX *);
         ~context();
+        context(context &&) = delete;
 
         awaitable<int> send(const char *, int) noexcept;
         awaitable<int> recv(char *, int) noexcept;
+        awaitable<int> connect(const char *host, int port) noexcept;
 
         awaitable<int> do_handshake();
 

@@ -41,7 +41,7 @@ awaitable<void> proc_server()
 }
 awaitable<void> proc_client()
 {
-    nghttp2::client cli(g_cli_mgr.get());
+    nghttp2::session cli(g_cli_mgr.get());
     int fd = co_await cli.connect("0.0.0.0:8090");
     if (fd == INVALID)
     {

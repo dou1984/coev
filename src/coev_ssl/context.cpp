@@ -10,6 +10,19 @@
 
 namespace coev::ssl
 {
+    context::context(SSL_CTX *_ssl_ctx)
+    {
+        if (_ssl_ctx)
+        {
+            m_ssl = SSL_new(_ssl_ctx);
+            if (m_ssl == nullptr)
+            {
+                LOG_ERR("SSL_new failed %p", m_ssl);
+                throw std::runtime_error("SSL_new failed");
+            }
+            m_type |= IO_SSL;
+        }
+    }
 
     context::context(int fd, SSL_CTX *_ssl_ctx) : io_context(fd)
     {
@@ -117,6 +130,35 @@ namespace coev::ssl
             co_return co_await io_context::recv(buf, size);
         }
     }
+    awaitable<int> context::connect(const char *host, int port) noexcept
+    {
+
+        int err = co_await io_context::connect(host, port);
+        if (err == INVALID)
+        {
+            LOG_ERR("connect failed %d", err);
+        __error__:
+            __async_finally();
+            co_return INVALID;
+        }
+        if (m_ssl)
+        {
+            err = SSL_set_fd(m_ssl, m_fd);
+            if (err != 1)
+            {
+                LOG_ERR("SSL_set_fd failed %d", err);
+                goto __error__;
+            }
+            SSL_set_connect_state(m_ssl);
+            err = co_await do_handshake();
+            if (err == INVALID)
+            {
+                LOG_ERR("handshake failed %d", err);
+                goto __error__;
+            }
+        }
+        co_return m_fd;
+    }
     awaitable<int> context::do_handshake()
     {
         if (__is_ssl())
@@ -156,6 +198,7 @@ namespace coev::ssl
         }
         co_return 0;
     }
+
     int context::__ssl_write(const char *buffer, int buffer_size)
     {
 

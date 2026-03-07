@@ -12,10 +12,12 @@ using namespace coev::ssl;
 static manager g_srv_mgr(manager::TLS_SERVER);
 static manager g_cli_mgr(manager::TLS_CLIENT);
 
+coev::pool::ssl::client cli;
+
 awaitable<void> test_ssl_context()
 {
     coev::pool::server_pool<tcp::server> pool;
-    pool.start("0.0.0.0", 9998);
+    pool.start("0.0.0.0", 9999);
     g_srv_mgr.use_certificate_file("./certs/server/server.crt");
     g_srv_mgr.use_private_key_file("./certs/server/server.key");
 
@@ -64,8 +66,8 @@ awaitable<void> test_ssl_context()
 awaitable<void> test_ssl_client()
 {
 
-    ssl::sclient cli(g_cli_mgr.get());
-    int fd = co_await cli.connect("0.0.0.0", 9998);
+    coev::ssl::context cli(g_cli_mgr.get());
+    int fd = co_await cli.connect("0.0.0.0", 9999);
     if (fd == INVALID)
     {
         LOG_ERR("connect failed fd:%d error:%d", fd, errno);

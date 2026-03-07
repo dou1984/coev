@@ -41,7 +41,8 @@ namespace coev
 		virtual awaitable<int> recvfrom(char *, int, addrInfo &) noexcept;
 		virtual awaitable<int> sendto(const char *, int, addrInfo &) noexcept;
 		int close() noexcept;
-		operator bool() const noexcept;
+		operator bool() const;
+		int fd() const { return m_fd; }
 
 	protected:
 		uint64_t m_tid = 0;

@@ -18,11 +18,11 @@
 
 namespace coev
 {
-    class ZooCli : public ssl::sclient
+    class ZooCli : public ssl::context
     {
     public:
-        using base = ssl::sclient;
-        using ssl::sclient::sclient;
+        using base = ssl::context;
+        using base::base;
         using io_context::operator bool;
 
         awaitable<int> connect(const char *host, int port) noexcept;

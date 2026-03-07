@@ -16,22 +16,24 @@
 namespace coev::nghttp2
 {
 
-    class session : virtual public ssl::context
+    class session : public coev::ssl::context
     {
     public:
         using router = std::function<awaitable<int>(session &, request &)>;
         using routers = std::unordered_map<std::string, router>;
 
-        awaitable<int> do_handshake();
-
+        session(SSL_CTX *ctx);
         session(int, SSL_CTX *);
         session(const session &) = delete;
         session &operator=(const session &) = delete;
         ~session();
 
     public:
+        awaitable<int> connect(const char *url) noexcept;
+        awaitable<int> connect(const char *ip, int port) noexcept;
         awaitable<int> processing();
         awaitable<int> on_stream(const routers &);
+        awaitable<int> do_handshake();
 
         awaitable<response> query(header &h, const char *body, int length);
         int reply(int stream_id, header &h, const char *body, int length);
@@ -45,6 +47,7 @@ namespace coev::nghttp2
         void remove_response(int32_t stream_id);
 
         int send_server_settings();
+        int send_client_settings();
 
     protected:
         int __push_promise(int stream_id, nghttp2_nv *, int head_size);
