@@ -16,7 +16,8 @@ namespace coev::nghttp2
     {
     public:
         server(const char *url);
-        int route(const std::string &path, const session::router &);
+        server() = default;
+        int set_router(const std::string &path, const session::router &);
         awaitable<void> dispatch(SSL_CTX *_mgr);
 
     protected:

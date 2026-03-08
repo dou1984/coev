@@ -22,73 +22,73 @@ namespace coev
 	guard::async g_exception;
 	std::atomic_int g_loop_count = 0;
 	runnable::runnable() noexcept
-{
-	ingore_signal(SIGPIPE);
-}
+	{
+		ignore_signal(SIGPIPE);
+	}
 
-void runnable::wait() noexcept
-{
-	for (auto &it : m_list)
+	void runnable::wait() noexcept
 	{
-		it.join();
+		for (auto &it : m_list)
+		{
+			it.join();
+		}
 	}
-}
-void runnable::end(const std::function<void()> &_cleanup) noexcept
-{
-	for (auto &it : m_list)
+	void runnable::end(const std::function<void()> &_cleanup) noexcept
 	{
-		it.detach();
+		for (auto &it : m_list)
+		{
+			it.detach();
+		}
+		intercept_singal();
+		cosys::start();
+		_cleanup();
+		LOG_CORE("main runnable is stopped by signal");
+		while (g_exception.deliver(0))
+		{
+			LOG_CORE("deliver exit message");
+		}
+		while (g_loop_count != 0)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		}
 	}
-	intercept_singal();
-	cosys::start();
-	_cleanup();
-	LOG_CORE("main runnable is stopped by signal");
-	while (g_exception.deliver(0))
-	{
-		LOG_CORE("deliver exit message");
-	}
-	while (g_loop_count != 0)
-	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(50));
-	}
-}
-runnable &runnable::start(const func &_f) noexcept
-{
-	__add(_f);
-	return *this;
-}
-runnable &runnable::start(int count, const func &_f) noexcept
-{
-	for (int i = 0; i < count; i++)
+	runnable &runnable::start(const func &_f) noexcept
 	{
 		__add(_f);
+		return *this;
 	}
-	return *this;
-}
-void runnable::__add(const func &_f) noexcept
-{
-	m_list.emplace_back(
-		[=]()
+	runnable &runnable::start(int count, const func &_f) noexcept
+	{
+		for (int i = 0; i < count; i++)
 		{
-			co_start << [=]() -> awaitable<void>
+			__add(_f);
+		}
+		return *this;
+	}
+	void runnable::__add(const func &_f) noexcept
+	{
+		m_list.emplace_back(
+			[=]()
 			{
-				auto tid = gtid();
-				co_await _f();
-				cosys::stop();
-				LOG_CORE("cosys stop tid:%ld", tid);
-			}();
-			co_start << []() -> awaitable<void>
-			{
-				auto tid = gtid();
-				co_await g_exception.suspend([]()
-													 { return true; }, []() {});
-				cosys::stop();
-				LOG_CORE("cosys stop tid:%ld", tid);
-			}();
-			++g_loop_count;
-			defer(--g_loop_count);
-			cosys::start();
-		});
-}
-
+				ignore_signal(SIGPIPE);
+				co_start << [=]() -> awaitable<void>
+				{
+					auto tid = gtid();
+					co_await _f();
+					cosys::stop();
+					LOG_CORE("cosys stop tid:%ld", tid);
+				}();
+				co_start << []() -> awaitable<void>
+				{
+					auto tid = gtid();
+					co_await g_exception.suspend([]()
+												 { return true; }, []() {});
+					cosys::stop();
+					LOG_CORE("cosys stop tid:%ld", tid);
+				}();
+				++g_loop_count;
+				defer(--g_loop_count);
+				cosys::start();
+			});
+	}
 }

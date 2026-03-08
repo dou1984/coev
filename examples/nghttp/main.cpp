@@ -12,9 +12,9 @@ ssl::manager g_cli_mgr(ssl::manager::TLS_CLIENT);
 ssl::manager g_srv_mgr(ssl::manager::TLS_SERVER);
 
 char hi[] = R"(helloworld)";
-
+int worker_num = 1;
 coev::pool::nghttp2::Http2 http2;
-
+coev::pool::server_pool<nghttp2::server> server;
 awaitable<int> echo(nghttp2::session &ctx, nghttp2::request &request)
 {
     LOG_DBG("recv data path %s request %s", request.path().c_str(), request.body().c_str());
@@ -23,7 +23,7 @@ awaitable<int> echo(nghttp2::session &ctx, nghttp2::request &request)
     ngh.push_back(":status", "200");
 
     const char data[] = "hi, everyone!";
-    auto err = ctx.reply(request.id(), ngh, data, strlen(data) + 1);
+    auto err = co_await ctx.reply(request.id(), ngh, data, strlen(data) + 1);
     if (err == INVALID)
     {
         LOG_ERR("send error %d %s", errno, strerror(errno));
@@ -35,37 +35,47 @@ awaitable<int> echo(nghttp2::session &ctx, nghttp2::request &request)
 awaitable<void> proc_server()
 {
     LOG_DBG("server start %s", "0.0.0.0:9999");
-    nghttp2::server server("0.0.0.0:9999");
-
-    server.route("/echo", echo);
-    co_await server.dispatch(g_srv_mgr.get());
+    auto &srv = server.get();
+    srv.set_router("/echo", echo);
+    co_await srv.dispatch(g_srv_mgr.get());
     co_return;
 }
 awaitable<void> proc_client()
 {
-
-    coev::pool::nghttp2::Http2::instance c;
-    auto r = co_await http2.get(c);
-
-    if (r == INVALID)
+    co_task _task;
+    for (auto w = 0; w < 10; w++)
     {
-        LOG_ERR("get http2 failed");
-        co_return;
+        _task << []() -> awaitable<void>
+        {
+            for (auto i = 0; i < 100000; i++)
+            {
+                coev::pool::nghttp2::Http2::instance c;
+                auto r = co_await http2.get(c);
+                if (r == INVALID)
+                {
+                    LOG_ERR("get http2 failed");
+                    co_return;
+                }
+
+                nghttp2::header ngh;
+                ngh.push_back(":method", "GET");
+                ngh.push_back(":path", "/echo");
+                ngh.push_back(":scheme", "https");
+                ngh.push_back(":authority", "coev");
+                ngh.push_back("accept", "*/*");
+                ngh.push_back("user-agent", "nghttp2/" NGHTTP2_VERSION);
+                nghttp2::response res;
+                auto err = co_await c->query(ngh, hi, sizeof(hi), res);
+                if (err == INVALID)
+                {
+                    co_return;
+                }
+                LOG_INFO("status: %s body:%s", res.header(":status").c_str(), res.body().c_str());
+            }
+        }();
     }
-    // c->processing();
 
-    nghttp2::header ngh;
-    ngh.push_back(":method", "GET");
-    ngh.push_back(":path", "/echo");
-    ngh.push_back(":scheme", "https");
-    ngh.push_back(":authority", "coev");
-    ngh.push_back("accept", "*/*");
-    ngh.push_back("user-agent", "nghttp2/" NGHTTP2_VERSION);
-
-    auto res = co_await c->query(ngh, hi, sizeof(hi));
-
-    LOG_INFO("status: %s body:%s", res.header(":status").c_str(), res.body().c_str());
-
+    co_await _task.wait_all();
     co_return;
 }
 int main(int argc, char **argv)
@@ -76,15 +86,17 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    set_log_level(LOG_LEVEL_CORE);
+    set_log_level(LOG_LEVEL_DEBUG);
 
     if (strcmp(argv[1], "server") == 0)
     {
+        server.start("0.0.0.0", 9999);
         g_srv_mgr.use_certificate_file("./certs/server/server.crt");
         g_srv_mgr.use_private_key_file("./certs/server/server.key");
         runnable::instance()
-            .start(proc_server)
-            .wait();
+            .start(worker_num, proc_server)
+            .end([]()
+                 { server.stop(); });
     }
     else if (strcmp(argv[1], "client") == 0)
     {
@@ -92,10 +104,12 @@ int main(int argc, char **argv)
         config->host = "0.0.0.0";
         config->port = 9999;
         config->data = g_cli_mgr.get();
+        config->max_connections = 10;
         http2.set(config);
         runnable::instance()
-            .start(proc_client)
-            .wait();
+            .start(worker_num, proc_client)
+            .end([]()
+                 { http2.stop(); });
     }
 
     return 0;

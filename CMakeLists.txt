@@ -29,4 +29,4 @@ link_directories(/usr/local/lib64/ /usr/local/lib/)
 install(TARGETS coev LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 file(GLOB_RECURSE HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h)
 
-install(FILES ${HEADERS} DESTINATION include/coev/ ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES ${HEADERS} DESTINATION include/coev/)

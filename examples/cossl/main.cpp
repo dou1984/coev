@@ -33,10 +33,10 @@ awaitable<void> test_ssl_context()
             LOG_ERR("accept failed fd:%d", fd);
             continue;
         }
-        co_start << [=]() -> awaitable<void>
+        co_start << [](auto fd) -> awaitable<void>
         {
             context ctx(fd, g_srv_mgr.get());
-            LOG_DBG("close fd:%d", fd);
+            defer(LOG_DBG("finished fd:%d", fd));
             int err = co_await ctx.do_handshake();
             if (err == INVALID)
             {
@@ -60,7 +60,7 @@ awaitable<void> test_ssl_context()
                     co_return;
                 }
             }
-        }();
+        }(fd);
     }
 }
 awaitable<void> test_ssl_client()

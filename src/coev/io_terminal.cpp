@@ -33,11 +33,12 @@ namespace coev
         LOG_CORE("signal intercepted loop %p", loop);
     }
 
-    void ingore_signal(int sign)
+    void ignore_signal(int sign)
     {
         struct sigaction s = {};
         s.sa_handler = SIG_IGN;
         s.sa_flags = 0;
         sigaction(sign, &s, NULL);
+        LOG_CORE("ignore_signal called for signal %d", sign);
     }
 }

@@ -60,8 +60,8 @@ namespace coev
 		bool __valid() const noexcept;
 		bool __invalid() const noexcept;
 		int __del_write() noexcept;
-		bool __is_client() const noexcept { return m_type & IO_CLI; }
-		bool __is_ssl() const noexcept { return m_type & IO_SSL; }
+		bool __is_client() const { return m_type & IO_CLI; }
+		bool __is_ssl() const { return m_type & IO_SSL; }
 		static void cb_write(struct ev_loop *loop, struct ev_io *w, int revents) noexcept;
 		static void cb_read(struct ev_loop *loop, struct ev_io *w, int revents) noexcept;
 

@@ -1,3 +1,0 @@
-[submodule "third-part/nghttp2"]
-	path = third-part/nghttp2
-	url = https://github.com/nghttp2/nghttp2.git

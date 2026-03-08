@@ -24,7 +24,7 @@ namespace coev::nghttp2
             LOG_ERR("start server failed");
         }
     }
-    int server::route(const std::string &path, const session::router &_route)
+    int server::set_router(const std::string &path, const session::router &_route)
     {
         m_routers.emplace(path, _route);
         return 0;
@@ -35,9 +35,11 @@ namespace coev::nghttp2
         {
             addrInfo info;
             int fd = co_await accept(info);
-
-            LOG_CORE("recv fd %d from %s:%d", fd, info.ip, info.port);
-            m_tasks << __dispatch(fd, _manager);
+            if (fd != INVALID)
+            {
+                LOG_CORE("recv fd %d from %s:%d", fd, info.ip, info.port);
+                m_tasks << __dispatch(fd, _manager);
+            }
         }
     }
     awaitable<int> server::__dispatch(int fd, SSL_CTX *_manager)
