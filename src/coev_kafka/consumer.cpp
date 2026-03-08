@@ -19,6 +19,41 @@
 #include "partition_consumer.h"
 #include "broker_consumer.h"
 
+coev::awaitable<int> Consumer::ConsumeMessage(const std::string &topic)
+{
+    std::vector<int32_t> partitions;
+    auto err = co_await Partitions(topic, partitions);
+    if (err)
+    {
+        LOG_ERR("Partitions error: %d", err);
+        co_return err;
+    }
+
+    for (auto partition : partitions)
+    {
+        m_task << [topic](auto consumer, auto partition) -> awaitable<void>
+        {
+            std::shared_ptr<PartitionConsumer> __consumer;
+            auto err = co_await consumer->ConsumePartition(topic, partition, OffsetNewest, __consumer);
+            if (err)
+            {
+                LOG_ERR("ConsumePartition error: %d", err);
+                co_return;
+            }
+            while (true)
+            {
+                std::shared_ptr<ConsumerMessage> msg;
+                co_await __consumer->Messages().get(msg);
+                if (msg)
+                {
+                    LOG_CORE("offset %ld Messages  %s %s", msg->m_offset, msg->key().c_str(), msg->value().c_str());
+                }
+            }
+        }(this->shared_from_this(), partition);
+    }
+
+    co_return 0;
+}
 coev::awaitable<int> Consumer::Close()
 {
     co_return m_client->Close();

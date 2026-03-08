@@ -1,9 +1,9 @@
 #pragma once
-#include "coev_ssl/client.h"
+#include "coev_ssl/context.h"
 
-namespace coev ::sasl
+namespace coev::sasl
 {
-    class SASLCli : ssl::sclient
+    class SASLCli : coev::ssl::context
     {
     public:
         SASLCli() = default;

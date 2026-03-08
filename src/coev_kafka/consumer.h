@@ -44,6 +44,8 @@ struct IConsumer
 struct Consumer : IConsumer, std::enable_shared_from_this<Consumer>
 {
 
+    coev::awaitable<int> ConsumeMessage(const std::string &topic);
+
     int Topics(std::vector<std::string> &out);
     coev::awaitable<int> Partitions(const std::string &topic, std::vector<int32_t> &out);
     coev::awaitable<int> Close();

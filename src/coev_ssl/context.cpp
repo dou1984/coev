@@ -260,4 +260,8 @@ namespace coev::ssl
         }
         return r;
     }
+    bool context::__ssl_valid() const
+    {
+        return __valid() && (!__is_ssl() || m_ssl);
+    }
 }

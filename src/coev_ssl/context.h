@@ -30,7 +30,7 @@ namespace coev::ssl
         void __clearup();
         int __ssl_write(const char *, int);
         int __ssl_read(char *, int);
-        bool __ssl_valid() const { return __valid() && m_ssl; }
+        bool __ssl_valid() const;
 
     protected:
         SSL *m_ssl = nullptr;
