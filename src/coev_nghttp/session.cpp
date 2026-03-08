@@ -140,7 +140,7 @@ namespace coev::nghttp2
         case NGHTTP2_RST_STREAM:
             if (_this->__is_client())
             {
-                // Don't remove response here, it will be removed in __wait_for_stream_end
+                _this->remove_response(stream_id);
             }
             else
             {
