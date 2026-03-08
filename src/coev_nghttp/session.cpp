@@ -27,7 +27,7 @@ namespace coev::nghttp2
     {
         int m_length = 0;
         int m_offset = 0;
-        const char *m_data = 0;
+        char *m_data = 0;
         __cache(const char *_data) : m_data(strdup(_data))
         {
             m_length = strlen(m_data);
@@ -36,7 +36,7 @@ namespace coev::nghttp2
         {
             if (m_data)
             {
-                delete m_data;
+                free(m_data);
             }
         }
     };
@@ -140,7 +140,7 @@ namespace coev::nghttp2
         case NGHTTP2_RST_STREAM:
             if (_this->__is_client())
             {
-                _this->remove_response(stream_id);
+                // Don't remove response here, it will be removed in __wait_for_stream_end
             }
             else
             {
@@ -476,6 +476,7 @@ namespace coev::nghttp2
         if (auto it = m_responses.find(stream_id); it != m_responses.end())
         {
             res = std::move(it->second);
+            m_responses.erase(it);
             co_return 0;
         }
         co_return INVALID;

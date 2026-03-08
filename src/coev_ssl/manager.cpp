@@ -9,20 +9,32 @@
 
 namespace coev::ssl
 {
+    struct __init_ssl
+    {
+        __init_ssl()
+        {
+            int err = SSL_load_error_strings();
+            LOG_CORE("SSL_load_error_strings");
+            if (!err)
+            {
+                throw std::runtime_error("SSL_load_error_strings failed");
+            }
+            err = SSL_library_init();
+            if (!err)
+            {
+                throw std::runtime_error("SSL_library_init failed");
+            }
+            LOG_CORE("SSL_library_init");
+        }
+        ~__init_ssl()
+        {
+            LOG_CORE("SSL cleanup");
+        }
+    };
+    static __init_ssl g_init_ssl;
+
     manager::manager(int method)
     {
-        int err = SSL_load_error_strings();
-        LOG_CORE("SSL_load_error_strings");
-        if (!err)
-        {
-            throw std::runtime_error("SSL_load_error_strings failed");
-        }
-        err = SSL_library_init();
-        if (!err)
-        {
-            throw std::runtime_error("SSL_library_init failed");
-        }
-        LOG_CORE("SSL_library_init");
         if (method == TLS_SERVER)
         {
             m_context = SSL_CTX_new(SSLv23_server_method());

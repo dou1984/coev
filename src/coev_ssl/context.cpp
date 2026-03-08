@@ -59,7 +59,6 @@ namespace coev::ssl
             m_type &= ~IO_SSL;
             auto _ssl = std::exchange(m_ssl, nullptr);
             SSL_free(_ssl);
-            LOG_ERR("SSL free %p", _ssl);
         }
     }
     void context::__clearup()
