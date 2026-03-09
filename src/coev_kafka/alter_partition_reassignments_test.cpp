@@ -8,6 +8,8 @@
 #include "alter_partition_reassignments_request.h"
 #include "alter_partition_reassignments_response.h"
 
+using namespace coev::kafka;
+
 TEST(AlterPartitionReassignmentsTest, RequestVersionCompatibility)
 {
     AlterPartitionReassignmentsRequest request;

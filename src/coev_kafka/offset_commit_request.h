@@ -16,45 +16,50 @@
 #include "version.h"
 #include "protocol_body.h"
 
-struct OffsetCommitRequestBlock : VDecoder, VEncoder
+namespace coev::kafka
 {
-    int64_t m_offset;
-    int64_t m_timestamp;
-    int32_t m_committed_leader_epoch;
-    std::string m_metadata;
-    OffsetCommitRequestBlock() = default;
-    OffsetCommitRequestBlock(int64_t _offset, int64_t _timestamp, int32_t _epoch, std::string _metadata)
-        : m_offset(_offset), m_timestamp(_timestamp), m_committed_leader_epoch(_epoch), m_metadata(_metadata)
+
+    struct OffsetCommitRequestBlock : VDecoder, VEncoder
     {
-    }
-    int encode(packet_encoder &pe, int16_t version) const;
-    int decode(packet_decoder &pd, int16_t version);
-};
+        int64_t m_offset;
+        int64_t m_timestamp;
+        int32_t m_committed_leader_epoch;
+        std::string m_metadata;
+        OffsetCommitRequestBlock() = default;
+        OffsetCommitRequestBlock(int64_t _offset, int64_t _timestamp, int32_t _epoch, std::string _metadata)
+            : m_offset(_offset), m_timestamp(_timestamp), m_committed_leader_epoch(_epoch), m_metadata(_metadata)
+        {
+        }
+        int encode(packet_encoder &pe, int16_t version) const;
+        int decode(packet_decoder &pd, int16_t version);
+    };
 
-struct OffsetCommitRequest : protocol_body
-{
-    std::string m_consumer_group;
-    int32_t m_consumer_group_generation;
-    std::string m_consumer_id;
-    std::string m_group_instance_id;
-    int64_t m_retention_time;
-    int16_t m_version;
-    std::unordered_map<std::string, std::map<int32_t, OffsetCommitRequestBlock>> m_blocks;
-
-    OffsetCommitRequest();
-    OffsetCommitRequest(int16_t v) : m_version(v)
+    struct OffsetCommitRequest : protocol_body
     {
-    }
+        std::string m_consumer_group;
+        int32_t m_consumer_group_generation;
+        std::string m_consumer_id;
+        std::string m_group_instance_id;
+        int64_t m_retention_time;
+        int16_t m_version;
+        std::unordered_map<std::string, std::map<int32_t, OffsetCommitRequestBlock>> m_blocks;
 
-    void set_version(int16_t v);
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
-    int16_t key() const;
-    int16_t version() const;
-    int16_t header_version() const;
-    bool is_valid_version() const;
-    KafkaVersion required_version() const;
-    void add_block(const std::string &topic, int32_t partitionID, int64_t offset, int64_t timestamp, const std::string &metadata);
-    void add_block_with_leader_epoch(const std::string &topic, int32_t partitionID, int64_t offset, int32_t leaderEpoch, int64_t timestamp, const std::string &metadata);
-    std::pair<int64_t, std::string> offset(const std::string &topic, int32_t partitionID) const;
-};
+        OffsetCommitRequest();
+        OffsetCommitRequest(int16_t v) : m_version(v)
+        {
+        }
+
+        void set_version(int16_t v);
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd, int16_t version);
+        int16_t key() const;
+        int16_t version() const;
+        int16_t header_version() const;
+        bool is_valid_version() const;
+        KafkaVersion required_version() const;
+        void add_block(const std::string &topic, int32_t partitionID, int64_t offset, int64_t timestamp, const std::string &metadata);
+        void add_block_with_leader_epoch(const std::string &topic, int32_t partitionID, int64_t offset, int32_t leaderEpoch, int64_t timestamp, const std::string &metadata);
+        std::pair<int64_t, std::string> offset(const std::string &topic, int32_t partitionID) const;
+    };
+
+} // namespace coev::kafka

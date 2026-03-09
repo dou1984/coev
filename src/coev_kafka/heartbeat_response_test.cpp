@@ -6,7 +6,7 @@
  */
 #include <gtest/gtest.h>
 #include "heartbeat_response.h"
-
+using namespace coev::kafka;
 TEST(HeartbeatResponseTest, VersionCompatibility) {
     HeartbeatResponse response;
     

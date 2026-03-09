@@ -8,6 +8,8 @@
 #include "delete_offsets_request.h"
 #include "delete_offsets_response.h"
 
+using namespace coev::kafka;
+
 TEST(DeleteOffsetsTest, RequestVersionCompatibility)
 {
     DeleteOffsetsRequest request;

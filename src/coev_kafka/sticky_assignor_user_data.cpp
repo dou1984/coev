@@ -9,152 +9,157 @@
 #include <vector>
 #include <map>
 
-const int defaultGeneration = 0;
-
-int StickyAssignorUserDataV0::encode(packet_encoder &pe)
+namespace coev::kafka
 {
-    if (int err = pe.putArrayLength(static_cast<int>(m_topics.size())); err != 0)
-    {
-        return err;
-    }
 
-    for (auto &kv : m_topics)
+    const int defaultGeneration = 0;
+
+    int StickyAssignorUserDataV0::encode(packet_encoder &pe)
     {
-        if (int err = pe.putString(kv.first); err != 0)
+        if (int err = pe.putArrayLength(static_cast<int>(m_topics.size())); err != 0)
         {
             return err;
         }
-        if (int err = pe.putInt32Array(kv.second); err != 0)
+
+        for (auto &kv : m_topics)
+        {
+            if (int err = pe.putString(kv.first); err != 0)
+            {
+                return err;
+            }
+            if (int err = pe.putInt32Array(kv.second); err != 0)
+            {
+                return err;
+            }
+        }
+        return 0;
+    }
+
+    int StickyAssignorUserDataV0::decode(packet_decoder &pd)
+    {
+        int topicLen = 0;
+        int err = pd.getArrayLength(topicLen);
+        if (err != 0)
         {
             return err;
         }
-    }
-    return 0;
-}
 
-int StickyAssignorUserDataV0::decode(packet_decoder &pd)
-{
-    int topicLen = 0;
-    int err = pd.getArrayLength(topicLen);
-    if (err != 0)
-    {
-        return err;
-    }
-
-    m_topics.clear();
-    for (int i = 0; i < topicLen; ++i)
-    {
-        std::string topic;
-        if (int e = pd.getString(topic); e != 0)
+        m_topics.clear();
+        for (int i = 0; i < topicLen; ++i)
         {
-            return e;
+            std::string topic;
+            if (int e = pd.getString(topic); e != 0)
+            {
+                return e;
+            }
+            std::vector<int32_t> partitions;
+            if (int e = pd.getInt32Array(partitions); e != 0)
+            {
+                return e;
+            }
+            m_topics[topic] = std::move(partitions);
         }
-        std::vector<int32_t> partitions;
-        if (int e = pd.getInt32Array(partitions); e != 0)
-        {
-            return e;
-        }
-        m_topics[topic] = std::move(partitions);
-    }
-    m_topic_partitions = PopulateTopicPartitions(m_topics);
-    return 0;
-}
-
-std::vector<topic_t> StickyAssignorUserDataV0::partitions()
-{
-    return m_topic_partitions;
-}
-
-bool StickyAssignorUserDataV0::has_generation()
-{
-    return false;
-}
-
-int StickyAssignorUserDataV0::generation()
-{
-    return defaultGeneration;
-}
-
-int StickyAssignorUserDataV1::encode(packet_encoder &pe)
-{
-    if (int err = pe.putArrayLength(static_cast<int>(m_topics.size())); err != 0)
-    {
-        return err;
+        m_topic_partitions = PopulateTopicPartitions(m_topics);
+        return 0;
     }
 
-    for (auto &kv : m_topics)
+    std::vector<topic_t> StickyAssignorUserDataV0::partitions()
     {
-        if (int err = pe.putString(kv.first); err != 0)
+        return m_topic_partitions;
+    }
+
+    bool StickyAssignorUserDataV0::has_generation()
+    {
+        return false;
+    }
+
+    int StickyAssignorUserDataV0::generation()
+    {
+        return defaultGeneration;
+    }
+
+    int StickyAssignorUserDataV1::encode(packet_encoder &pe)
+    {
+        if (int err = pe.putArrayLength(static_cast<int>(m_topics.size())); err != 0)
         {
             return err;
         }
-        if (int err = pe.putInt32Array(kv.second); err != 0)
+
+        for (auto &kv : m_topics)
+        {
+            if (int err = pe.putString(kv.first); err != 0)
+            {
+                return err;
+            }
+            if (int err = pe.putInt32Array(kv.second); err != 0)
+            {
+                return err;
+            }
+        }
+
+        pe.putInt32(m_generation);
+        return 0;
+    }
+
+    int StickyAssignorUserDataV1::decode(packet_decoder &pd)
+    {
+        int topicLen = 0;
+        int err = pd.getArrayLength(topicLen);
+        if (err != 0)
         {
             return err;
         }
-    }
 
-    pe.putInt32(m_generation);
-    return 0;
-}
+        m_topics.clear();
+        for (int i = 0; i < topicLen; ++i)
+        {
+            std::string topic;
+            if (int e = pd.getString(topic); e != 0)
+            {
+                return e;
+            }
+            std::vector<int32_t> partitions;
+            if (int e = pd.getInt32Array(partitions); e != 0)
+            {
+                return e;
+            }
+            m_topics[topic] = std::move(partitions);
+        }
 
-int StickyAssignorUserDataV1::decode(packet_decoder &pd)
-{
-    int topicLen = 0;
-    int err = pd.getArrayLength(topicLen);
-    if (err != 0)
-    {
-        return err;
-    }
-
-    m_topics.clear();
-    for (int i = 0; i < topicLen; ++i)
-    {
-        std::string topic;
-        if (int e = pd.getString(topic); e != 0)
+        if (int e = pd.getInt32(m_generation); e != 0)
         {
             return e;
         }
-        std::vector<int32_t> partitions;
-        if (int e = pd.getInt32Array(partitions); e != 0)
-        {
-            return e;
-        }
-        m_topics[topic] = std::move(partitions);
+        m_topic_partitions = PopulateTopicPartitions(m_topics);
+        return 0;
     }
 
-    if (int e = pd.getInt32(m_generation); e != 0)
+    std::vector<topic_t> StickyAssignorUserDataV1::partitions()
     {
-        return e;
+        return m_topic_partitions;
     }
-    m_topic_partitions = PopulateTopicPartitions(m_topics);
-    return 0;
-}
 
-std::vector<topic_t> StickyAssignorUserDataV1::partitions()
-{
-    return m_topic_partitions;
-}
-
-bool StickyAssignorUserDataV1::has_generation()
-{
-    return true;
-}
-
-int StickyAssignorUserDataV1::generation()
-{
-    return static_cast<int>(m_generation);
-}
-
-std::vector<topic_t> PopulateTopicPartitions(const std::map<std::string, std::vector<int32_t>> &topics)
-{
-    std::vector<topic_t> topicPartitions;
-    for (auto &[topic, partitions] : topics)
+    bool StickyAssignorUserDataV1::has_generation()
     {
-        for (int32_t partition : partitions)
-        {
-            topicPartitions.emplace_back(topic, partition);
-        }
+        return true;
     }
-    return topicPartitions;
-}
+
+    int StickyAssignorUserDataV1::generation()
+    {
+        return static_cast<int>(m_generation);
+    }
+
+    std::vector<topic_t> PopulateTopicPartitions(const std::map<std::string, std::vector<int32_t>> &topics)
+    {
+        std::vector<topic_t> topicPartitions;
+        for (auto &[topic, partitions] : topics)
+        {
+            for (int32_t partition : partitions)
+            {
+                topicPartitions.emplace_back(topic, partition);
+            }
+        }
+        return topicPartitions;
+    }
+
+} // namespace coev::kafka

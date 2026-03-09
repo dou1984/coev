@@ -15,6 +15,7 @@
 #include "consumer_group_members.h"
 #include "sticky_assignor_user_data.h"
 
+using namespace coev::kafka;
 // Test fixture for BalanceStrategy tests
 class BalanceStrategyTest : public ::testing::Test
 {

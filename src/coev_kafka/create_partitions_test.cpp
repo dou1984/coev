@@ -8,6 +8,7 @@
 #include "create_partitions_request.h"
 #include "create_partitions_response.h"
 
+using namespace coev::kafka;
 TEST(CreatePartitionsTest, RequestVersionCompatibility)
 {
     CreatePartitionsRequest request;

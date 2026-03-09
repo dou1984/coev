@@ -19,43 +19,47 @@
 #include "quota_types.h"
 #include "protocol_body.h"
 
-struct QuotaEntityComponent
+namespace coev::kafka
 {
-    std::string m_entity_type;
-    QuotaMatchType m_match_type;
-    std::string m_name;
+    struct QuotaEntityComponent
+    {
+        std::string m_entity_type;
+        QuotaMatchType m_match_type;
+        std::string m_name;
 
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
-};
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd, int16_t version);
+    };
 
-struct DescribeClientQuotasEntry
-{
-    std::vector<QuotaEntityComponent> m_entity;
-    std::map<std::string, double> m_values;
+    struct DescribeClientQuotasEntry
+    {
+        std::vector<QuotaEntityComponent> m_entity;
+        std::map<std::string, double> m_values;
 
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
-};
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd, int16_t version);
+    };
 
-struct DescribeClientQuotasResponse : protocol_body, flexible_version
-{
+    struct DescribeClientQuotasResponse : protocol_body, flexible_version
+    {
 
-    int16_t m_version;
-    std::chrono::milliseconds m_throttle_time;
-    KError m_code;
-    std::string m_message;
-    std::vector<DescribeClientQuotasEntry> m_entries;
+        int16_t m_version;
+        std::chrono::milliseconds m_throttle_time;
+        KError m_code;
+        std::string m_message;
+        std::vector<DescribeClientQuotasEntry> m_entries;
 
-    void set_version(int16_t v);
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
-    int16_t key() const;
-    int16_t version() const;
-    int16_t header_version() const;
-    bool is_valid_version() const;
-    bool is_flexible() const;
-    bool is_flexible_version(int16_t version) const;
-    KafkaVersion required_version() const;
-    std::chrono::milliseconds throttle_time() const;
-};
+        void set_version(int16_t v);
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd, int16_t version);
+        int16_t key() const;
+        int16_t version() const;
+        int16_t header_version() const;
+        bool is_valid_version() const;
+        bool is_flexible() const;
+        bool is_flexible_version(int16_t version) const;
+        KafkaVersion required_version() const;
+        std::chrono::milliseconds throttle_time() const;
+    };
+
+}

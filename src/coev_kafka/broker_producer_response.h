@@ -11,9 +11,14 @@
 #include "produce_set.h"
 #include "producer_message.h"
 
-struct BrokerProducerResponse
+namespace coev::kafka
 {
-    std::shared_ptr<ProduceSet> m_produce_set;
-    std::shared_ptr<ProduceResponse> m_produce_response;
-    KError m_err;
-};
+
+    struct BrokerProducerResponse
+    {
+        std::shared_ptr<ProduceSet> m_produce_set;
+        std::shared_ptr<ProduceResponse> m_produce_response;
+        KError m_err;
+    };
+
+} // namespace coev::kafka

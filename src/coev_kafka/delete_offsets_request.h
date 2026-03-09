@@ -16,22 +16,26 @@
 #include "version.h"
 #include "api_versions.h"
 #include "protocol_body.h"
-struct DeleteOffsetsRequest : protocol_body
+
+namespace coev::kafka
 {
-	int16_t m_version;
-	std::string m_group;
-	std::unordered_map<std::string, std::vector<int32_t>> m_partitions;
-	DeleteOffsetsRequest() = default;
-	DeleteOffsetsRequest(int16_t v) : m_version(v)
+	struct DeleteOffsetsRequest : protocol_body
 	{
-	}
-	void set_version(int16_t v);
-	int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
-	int16_t key() const;
-	int16_t version() const;
-	int16_t header_version() const;
-	bool is_valid_version() const;
-	KafkaVersion required_version() const;
-	void add_partition(const std::string &topic, int32_t partitionID);
-};
+		int16_t m_version;
+		std::string m_group;
+		std::unordered_map<std::string, std::vector<int32_t>> m_partitions;
+		DeleteOffsetsRequest() = default;
+		DeleteOffsetsRequest(int16_t v) : m_version(v)
+		{
+		}
+		void set_version(int16_t v);
+		int encode(packet_encoder &pe) const;
+		int decode(packet_decoder &pd, int16_t version);
+		int16_t key() const;
+		int16_t version() const;
+		int16_t header_version() const;
+		bool is_valid_version() const;
+		KafkaVersion required_version() const;
+		void add_partition(const std::string &topic, int32_t partitionID);
+	};
+}

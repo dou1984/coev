@@ -8,6 +8,8 @@
 #include "init_producer_id_request.h"
 #include "init_producer_id_response.h"
 
+using namespace coev::kafka;
+
 TEST(InitProducerIdTest, RequestVersionCompatibility)
 {
     InitProducerIDRequest request;

@@ -15,42 +15,45 @@
 #include "packet_decoder.h"
 #include "protocol_body.h"
 
-struct AlterUserScramCredentialsDelete
+namespace coev::kafka
 {
-    std::string m_name;
-    ScramMechanismType m_mechanism;
-};
-
-struct AlterUserScramCredentialsUpsert
-{
-    std::string m_name;
-    ScramMechanismType m_mechanism;
-    int32_t m_iterations = 0;
-    std::string m_salt;
-    std::string m_salted_password;
-    std::string m_password;
-};
-
-struct AlterUserScramCredentialsRequest : protocol_body, flexible_version
-{
-    int16_t m_version = 0;
-    std::vector<AlterUserScramCredentialsDelete> m_deletions;
-    std::vector<AlterUserScramCredentialsUpsert> m_upsertions;
-
-    AlterUserScramCredentialsRequest() = default;
-    AlterUserScramCredentialsRequest(int16_t v) : m_version(v)
+    struct AlterUserScramCredentialsDelete
     {
-    }
-    void set_version(int16_t v);
+        std::string m_name;
+        ScramMechanismType m_mechanism;
+    };
 
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
+    struct AlterUserScramCredentialsUpsert
+    {
+        std::string m_name;
+        ScramMechanismType m_mechanism;
+        int32_t m_iterations = 0;
+        std::string m_salt;
+        std::string m_salted_password;
+        std::string m_password;
+    };
 
-    int16_t key() const;
-    int16_t version() const;
-    int16_t header_version() const;
-    bool is_valid_version() const;
-    bool is_flexible() const;
-    bool is_flexible_version(int16_t version) const;
-    KafkaVersion required_version() const;
-};
+    struct AlterUserScramCredentialsRequest : protocol_body, flexible_version
+    {
+        int16_t m_version = 0;
+        std::vector<AlterUserScramCredentialsDelete> m_deletions;
+        std::vector<AlterUserScramCredentialsUpsert> m_upsertions;
+
+        AlterUserScramCredentialsRequest() = default;
+        AlterUserScramCredentialsRequest(int16_t v) : m_version(v)
+        {
+        }
+        void set_version(int16_t v);
+
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd, int16_t version);
+
+        int16_t key() const;
+        int16_t version() const;
+        int16_t header_version() const;
+        bool is_valid_version() const;
+        bool is_flexible() const;
+        bool is_flexible_version(int16_t version) const;
+        KafkaVersion required_version() const;
+    };
+}

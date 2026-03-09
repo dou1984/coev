@@ -18,8 +18,10 @@
 #include "election_type.h"
 #include "protocol_body.h"
 
-struct ElectLeadersRequest : protocol_body , flexible_version
+namespace coev::kafka
 {
+  struct ElectLeadersRequest : protocol_body, flexible_version
+  {
 
     int16_t m_version = 0;
     ElectionType m_type = ElectionType::Preferred;
@@ -38,6 +40,7 @@ struct ElectLeadersRequest : protocol_body , flexible_version
     int16_t header_version() const;
     bool is_valid_version() const;
     bool is_flexible() const;
-      bool is_flexible_version(int16_t version)const;
+    bool is_flexible_version(int16_t version) const;
     KafkaVersion required_version() const;
-};
+  };
+}

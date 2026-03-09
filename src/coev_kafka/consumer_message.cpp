@@ -6,11 +6,15 @@
  */
 #include "consumer_message.h"
 
-const std::string &ConsumerMessage::key()
+namespace coev::kafka
 {
-    return m_key;
-}
-const std::string &ConsumerMessage::value()
-{
-    return m_value;
-}
+    const std::string &ConsumerMessage::key()
+    {
+        return m_key;
+    }
+    const std::string &ConsumerMessage::value()
+    {
+        return m_value;
+    }
+
+} // namespace coev::kafka

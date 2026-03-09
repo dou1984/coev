@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 #include "init_producer_id_request.h"
 
+using namespace coev::kafka;
 TEST(InitProducerIdRequestTest, VersionCompatibility)
 {
     InitProducerIDRequest request;

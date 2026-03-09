@@ -19,32 +19,37 @@
 #include "errors.h"
 #include "protocol_body.h"
 
-struct ProduceResponseBlock : VEncoder, VDecoder
+namespace coev::kafka
 {
-    KError m_err;
-    int64_t m_offset = 0;
-    int64_t m_start_offset = 0;
-    std::chrono::system_clock::time_point m_timestamp;
 
-    int decode(packet_decoder &pd, int16_t version);
-    int encode(packet_encoder &pe, int16_t version) const;
-};
+    struct ProduceResponseBlock : VEncoder, VDecoder
+    {
+        KError m_err;
+        int64_t m_offset = 0;
+        int64_t m_start_offset = 0;
+        std::chrono::system_clock::time_point m_timestamp;
 
-struct ProduceResponse : protocol_body
-{
-    std::unordered_map<std::string, std::map<int32_t, ProduceResponseBlock>> m_blocks;
-    int16_t m_version = 0;
-    std::chrono::milliseconds m_throttle_time;
+        int decode(packet_decoder &pd, int16_t version);
+        int encode(packet_encoder &pe, int16_t version) const;
+    };
 
-    void set_version(int16_t v);
-    int decode(packet_decoder &pd, int16_t version);
-    int encode(packet_encoder &pe) const;
-    int16_t key() const;
-    int16_t version() const;
-    int16_t header_version() const;
-    bool is_valid_version() const;
-    KafkaVersion required_version() const;
-    std::chrono::milliseconds throttle_time() const;
-    ProduceResponseBlock &get_block(const std::string &topic, int32_t partition);
-    void add_topic_partition(const std::string &topic, int32_t partition, KError err);
-};
+    struct ProduceResponse : protocol_body
+    {
+        std::unordered_map<std::string, std::map<int32_t, ProduceResponseBlock>> m_blocks;
+        int16_t m_version = 0;
+        std::chrono::milliseconds m_throttle_time;
+
+        void set_version(int16_t v);
+        int decode(packet_decoder &pd, int16_t version);
+        int encode(packet_encoder &pe) const;
+        int16_t key() const;
+        int16_t version() const;
+        int16_t header_version() const;
+        bool is_valid_version() const;
+        KafkaVersion required_version() const;
+        std::chrono::milliseconds throttle_time() const;
+        ProduceResponseBlock &get_block(const std::string &topic, int32_t partition);
+        void add_topic_partition(const std::string &topic, int32_t partition, KError err);
+    };
+
+} // namespace coev::kafka

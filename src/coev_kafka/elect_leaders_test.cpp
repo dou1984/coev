@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 #include "elect_leaders_request.h"
 #include "elect_leaders_response.h"
-
+using namespace coev::kafka;
 TEST(ElectLeadersTest, RequestVersionCompatibility) {
     ElectLeadersRequest request;
     for (int16_t version = 0; version <= 1; version++) {

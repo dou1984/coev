@@ -7,145 +7,148 @@
 #include "version.h"
 #include "describe_configs_request.h"
 
-void DescribeConfigsRequest::set_version(int16_t v)
+namespace coev::kafka
 {
-    m_version = v;
-}
-
-int DescribeConfigsRequest::encode(packet_encoder &pe) const
-{
-    if (pe.putArrayLength(static_cast<int32_t>(m_resources.size())) != ErrNoError)
+    void DescribeConfigsRequest::set_version(int16_t v)
     {
-        return ErrEncodeError;
+        m_version = v;
     }
 
-    for (auto &c : m_resources)
+    int DescribeConfigsRequest::encode(packet_encoder &pe) const
     {
-        pe.putInt8(static_cast<int8_t>(c.m_type));
-        if (pe.putString(c.m_name) != ErrNoError)
+        if (pe.putArrayLength(static_cast<int32_t>(m_resources.size())) != ErrNoError)
         {
             return ErrEncodeError;
         }
 
-        if (c.m_config_names.empty())
+        for (auto &c : m_resources)
         {
-            pe.putInt32(-1);
-            continue;
+            pe.putInt8(static_cast<int8_t>(c.m_type));
+            if (pe.putString(c.m_name) != ErrNoError)
+            {
+                return ErrEncodeError;
+            }
+
+            if (c.m_config_names.empty())
+            {
+                pe.putInt32(-1);
+                continue;
+            }
+
+            if (pe.putStringArray(c.m_config_names) != ErrNoError)
+            {
+                return ErrEncodeError;
+            }
         }
 
-        if (pe.putStringArray(c.m_config_names) != ErrNoError)
+        if (m_version >= 1)
         {
-            return ErrEncodeError;
+            pe.putBool(m_include_synonyms);
         }
+
+        return ErrNoError;
     }
 
-    if (m_version >= 1)
+    int DescribeConfigsRequest::decode(packet_decoder &pd, int16_t version)
     {
-        pe.putBool(m_include_synonyms);
-    }
+        m_version = version;
 
-    return ErrNoError;
-}
-
-int DescribeConfigsRequest::decode(packet_decoder &pd, int16_t version)
-{
-    m_version = version;
-
-    int32_t n;
-    if (pd.getArrayLength(n) != ErrNoError)
-    {
-        return ErrDecodeError;
-    }
-
-    m_resources.clear();
-    m_resources.resize(n);
-
-    for (int32_t i = 0; i < n; ++i)
-    {
-
-        auto &_resource = m_resources[i];
-
-        int8_t t;
-        if (pd.getInt8(t) != ErrNoError)
-        {
-            return ErrDecodeError;
-        }
-        _resource.m_type = static_cast<ConfigResourceType>(t);
-
-        std::string name;
-        if (pd.getString(name) != ErrNoError)
-        {
-            return ErrDecodeError;
-        }
-        _resource.m_name = name;
-
-        int32_t conf_length;
-        if (pd.getArrayLength(conf_length) != ErrNoError)
+        int32_t n;
+        if (pd.getArrayLength(n) != ErrNoError)
         {
             return ErrDecodeError;
         }
 
-        if (conf_length == -1)
-        {
-            continue;
-        }
+        m_resources.clear();
+        m_resources.resize(n);
 
-        _resource.m_config_names.resize(conf_length);
-        for (int32_t j = 0; j < conf_length; ++j)
+        for (int32_t i = 0; i < n; ++i)
         {
-            std::string s;
-            if (pd.getString(s) != ErrNoError)
+
+            auto &_resource = m_resources[i];
+
+            int8_t t;
+            if (pd.getInt8(t) != ErrNoError)
             {
                 return ErrDecodeError;
             }
-            _resource.m_config_names[j] = s;
-        }
-    }
+            _resource.m_type = static_cast<ConfigResourceType>(t);
 
-    if (m_version >= 1)
-    {
-        bool b;
-        if (pd.getBool(b) != ErrNoError)
+            std::string name;
+            if (pd.getString(name) != ErrNoError)
+            {
+                return ErrDecodeError;
+            }
+            _resource.m_name = name;
+
+            int32_t conf_length;
+            if (pd.getArrayLength(conf_length) != ErrNoError)
+            {
+                return ErrDecodeError;
+            }
+
+            if (conf_length == -1)
+            {
+                continue;
+            }
+
+            _resource.m_config_names.resize(conf_length);
+            for (int32_t j = 0; j < conf_length; ++j)
+            {
+                std::string s;
+                if (pd.getString(s) != ErrNoError)
+                {
+                    return ErrDecodeError;
+                }
+                _resource.m_config_names[j] = s;
+            }
+        }
+
+        if (m_version >= 1)
         {
-            return ErrDecodeError;
+            bool b;
+            if (pd.getBool(b) != ErrNoError)
+            {
+                return ErrDecodeError;
+            }
+            m_include_synonyms = b;
         }
-        m_include_synonyms = b;
+
+        return ErrNoError;
     }
 
-    return ErrNoError;
-}
-
-int16_t DescribeConfigsRequest::key() const
-{
-    return apiKeyDescribeConfigs;
-}
-
-int16_t DescribeConfigsRequest::version() const
-{
-    return m_version;
-}
-
-int16_t DescribeConfigsRequest::header_version() const
-{
-    return 1;
-}
-
-bool DescribeConfigsRequest::is_valid_version() const
-{
-    return m_version >= 0 && m_version <= 4;
-}
-
-KafkaVersion DescribeConfigsRequest::required_version() const
-{
-    switch (m_version)
+    int16_t DescribeConfigsRequest::key() const
     {
-    case 2:
-        return V2_0_0_0;
-    case 1:
-        return V1_1_0_0;
-    case 0:
-        return V0_11_0_0;
-    default:
-        return V2_0_0_0;
+        return apiKeyDescribeConfigs;
+    }
+
+    int16_t DescribeConfigsRequest::version() const
+    {
+        return m_version;
+    }
+
+    int16_t DescribeConfigsRequest::header_version() const
+    {
+        return 1;
+    }
+
+    bool DescribeConfigsRequest::is_valid_version() const
+    {
+        return m_version >= 0 && m_version <= 4;
+    }
+
+    KafkaVersion DescribeConfigsRequest::required_version() const
+    {
+        switch (m_version)
+        {
+        case 2:
+            return V2_0_0_0;
+        case 1:
+            return V1_1_0_0;
+        case 0:
+            return V0_11_0_0;
+        default:
+            return V2_0_0_0;
+        }
     }
 }

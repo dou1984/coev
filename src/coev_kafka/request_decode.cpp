@@ -90,132 +90,135 @@
 #include "sasl_authenticate_response.h"
 #include "sasl_authenticate_request.h"
 
-coev::awaitable<int> request_decode(std::shared_ptr<Broker> &broker, Request &req, int &size)
+namespace coev::kafka
 {
-    co_await broker->RLock();
-    defer(broker->RUnlock());
-    std::string header_bytes;
-    auto read_bytes = 4;
-    int err = co_await broker->ReadFull(header_bytes, read_bytes);
-    if (err != 0)
+    awaitable<int> request_decode(std::shared_ptr<Broker> &broker, Request &req, int &size)
     {
+        co_await broker->RLock();
+        defer(broker->RUnlock());
+        std::string header_bytes;
+        auto read_bytes = 4;
+        int err = co_await broker->ReadFull(header_bytes, read_bytes);
+        if (err != 0)
+        {
+            size = read_bytes;
+            co_return err;
+        }
+        size_t length = (static_cast<uint32_t>(header_bytes[0]) << 24) | (static_cast<uint32_t>(header_bytes[1]) << 16) |
+                        (static_cast<uint32_t>(header_bytes[2]) << 8) | static_cast<uint32_t>(header_bytes[3]);
+        if (length <= 4 || length > MaxRequestSize)
+        {
+            size = read_bytes;
+            co_return -1;
+        }
+
+        std::string request_encoded;
+        err = co_await broker->ReadFull(request_encoded, length);
+        if (err != 0)
+        {
+            size = read_bytes + length;
+            co_return -1;
+        }
+        read_bytes += length;
+
+        err = coev::kafka::decode(request_encoded, req);
+        if (err != 0)
+        {
+            size = read_bytes;
+            co_return err;
+        }
         size = read_bytes;
-        co_return err;
-    }
-    size_t length = (static_cast<uint32_t>(header_bytes[0]) << 24) | (static_cast<uint32_t>(header_bytes[1]) << 16) |
-                    (static_cast<uint32_t>(header_bytes[2]) << 8) | static_cast<uint32_t>(header_bytes[3]);
-    if (length <= 4 || length > MaxRequestSize)
-    {
-        size = read_bytes;
-        co_return -1;
+        co_return 0;
     }
 
-    std::string request_encoded;
-    err = co_await broker->ReadFull(request_encoded, length);
-    if (err != 0)
+    std::shared_ptr<protocol_body> request_allocate(int16_t key, int16_t version)
     {
-        size = read_bytes + length;
-        co_return -1;
-    }
-    read_bytes += length;
-
-    err = ::decode(request_encoded, req);
-    if (err != 0)
-    {
-        size = read_bytes;
-        co_return err;
-    }
-    size = read_bytes;
-    co_return 0;
-}
-
-std::shared_ptr<protocol_body> request_allocate(int16_t key, int16_t version)
-{
-    switch (key)
-    {
-    case apiKeyProduce:
-        return std::make_shared<ProduceRequest>(version);
-    case apiKeyFetch:
-        return std::make_shared<FetchRequest>(version);
-    case apiKeyListOffsets:
-        return std::make_shared<OffsetRequest>(version);
-    case apiKeyMetadata:
-        return std::make_shared<MetadataRequest>(version);
-    case apiKeyOffsetCommit:
-        return std::make_shared<OffsetCommitRequest>(version);
-    case apiKeyOffsetFetch:
-        return std::make_shared<OffsetFetchRequest>(version);
-    case apiKeyFindCoordinator:
-        return std::make_shared<FindCoordinatorRequest>(version);
-    case apiKeyJoinGroup:
-        return std::make_shared<JoinGroupRequest>(version);
-    case apiKeyHeartbeat:
-        return std::make_shared<HeartbeatRequest>(version);
-    case apiKeyLeaveGroup:
-        return std::make_shared<LeaveGroupRequest>(version);
-    case apiKeySyncGroup:
-        return std::make_shared<SyncGroupRequest>(version);
-    case apiKeyDescribeGroups:
-        return std::make_shared<DescribeGroupsRequest>(version);
-    case apiKeyListGroups:
-        return std::make_shared<ListGroupsRequest>(version);
-    case apiKeySaslHandshake:
-        return std::make_shared<SaslHandshakeRequest>(version);
-    case apiKeyApiVersions:
-        return std::make_shared<ApiVersionsRequest>(version);
-    case apiKeyCreateTopics:
-        return std::make_shared<CreateTopicsRequest>(version);
-    case apiKeyDeleteTopics:
-        return std::make_shared<DeleteTopicsRequest>(version);
-    case apiKeyDeleteRecords:
-        return std::make_shared<DeleteRecordsRequest>(version);
-    case apiKeyInitProducerId:
-        return std::make_shared<InitProducerIDRequest>(version);
-    case apiKeyAddPartitionsToTxn:
-        return std::make_shared<AddPartitionsToTxnRequest>(version);
-    case apiKeyAddOffsetsToTxn:
-        return std::make_shared<AddOffsetsToTxnRequest>(version);
-    case apiKeyEndTxn:
-        return std::make_shared<EndTxnRequest>(version);
-    case apiKeyTxnOffsetCommit:
-        return std::make_shared<TxnOffsetCommitRequest>(version);
-    case apiKeyDescribeAcls:
-        return std::make_shared<DescribeAclsRequest>(static_cast<int>(version));
-    case apiKeyCreateAcls:
-        return std::make_shared<CreateAclsRequest>(version);
-    case apiKeyDeleteAcls:
-        return std::make_shared<DeleteAclsRequest>(static_cast<int>(version));
-    case apiKeyDescribeConfigs:
-        return std::make_shared<DescribeConfigsRequest>(version);
-    case apiKeyAlterConfigs:
-        return std::make_shared<AlterConfigsRequest>(version);
-    case apiKeyDescribeLogDirs:
-        return std::make_shared<DescribeLogDirsRequest>(version);
-    case apiKeySASLAuth:
-        return std::make_shared<SaslAuthenticateRequest>(version);
-    case apiKeyCreatePartitions:
-        return std::make_shared<CreatePartitionsRequest>(version);
-    case apiKeyDeleteGroups:
-        return std::make_shared<DeleteGroupsRequest>(version);
-    case apiKeyElectLeaders:
-        return std::make_shared<ElectLeadersRequest>(version);
-    case apiKeyIncrementalAlterConfigs:
-        return std::make_shared<IncrementalAlterConfigsRequest>(version);
-    case apiKeyAlterPartitionReassignments:
-        return std::make_shared<AlterPartitionReassignmentsRequest>(version);
-    case apiKeyListPartitionReassignments:
-        return std::make_shared<ListPartitionReassignmentsRequest>(version);
-    case apiKeyOffsetDelete:
-        return std::make_shared<DeleteOffsetsRequest>(version);
-    case apiKeyDescribeClientQuotas:
-        return std::make_shared<DescribeClientQuotasRequest>(version);
-    case apiKeyAlterClientQuotas:
-        return std::make_shared<AlterClientQuotasRequest>(version);
-    case apiKeyDescribeUserScramCredentials:
-        return std::make_shared<DescribeUserScramCredentialsRequest>(version);
-    case apiKeyAlterUserScramCredentials:
-        return std::make_shared<AlterUserScramCredentialsRequest>(version);
-    default:
-        return nullptr;
+        switch (key)
+        {
+        case apiKeyProduce:
+            return std::make_shared<ProduceRequest>(version);
+        case apiKeyFetch:
+            return std::make_shared<FetchRequest>(version);
+        case apiKeyListOffsets:
+            return std::make_shared<OffsetRequest>(version);
+        case apiKeyMetadata:
+            return std::make_shared<MetadataRequest>(version);
+        case apiKeyOffsetCommit:
+            return std::make_shared<OffsetCommitRequest>(version);
+        case apiKeyOffsetFetch:
+            return std::make_shared<OffsetFetchRequest>(version);
+        case apiKeyFindCoordinator:
+            return std::make_shared<FindCoordinatorRequest>(version);
+        case apiKeyJoinGroup:
+            return std::make_shared<JoinGroupRequest>(version);
+        case apiKeyHeartbeat:
+            return std::make_shared<HeartbeatRequest>(version);
+        case apiKeyLeaveGroup:
+            return std::make_shared<LeaveGroupRequest>(version);
+        case apiKeySyncGroup:
+            return std::make_shared<SyncGroupRequest>(version);
+        case apiKeyDescribeGroups:
+            return std::make_shared<DescribeGroupsRequest>(version);
+        case apiKeyListGroups:
+            return std::make_shared<ListGroupsRequest>(version);
+        case apiKeySaslHandshake:
+            return std::make_shared<SaslHandshakeRequest>(version);
+        case apiKeyApiVersions:
+            return std::make_shared<ApiVersionsRequest>(version);
+        case apiKeyCreateTopics:
+            return std::make_shared<CreateTopicsRequest>(version);
+        case apiKeyDeleteTopics:
+            return std::make_shared<DeleteTopicsRequest>(version);
+        case apiKeyDeleteRecords:
+            return std::make_shared<DeleteRecordsRequest>(version);
+        case apiKeyInitProducerId:
+            return std::make_shared<InitProducerIDRequest>(version);
+        case apiKeyAddPartitionsToTxn:
+            return std::make_shared<AddPartitionsToTxnRequest>(version);
+        case apiKeyAddOffsetsToTxn:
+            return std::make_shared<AddOffsetsToTxnRequest>(version);
+        case apiKeyEndTxn:
+            return std::make_shared<EndTxnRequest>(version);
+        case apiKeyTxnOffsetCommit:
+            return std::make_shared<TxnOffsetCommitRequest>(version);
+        case apiKeyDescribeAcls:
+            return std::make_shared<DescribeAclsRequest>(static_cast<int>(version));
+        case apiKeyCreateAcls:
+            return std::make_shared<CreateAclsRequest>(version);
+        case apiKeyDeleteAcls:
+            return std::make_shared<DeleteAclsRequest>(static_cast<int>(version));
+        case apiKeyDescribeConfigs:
+            return std::make_shared<DescribeConfigsRequest>(version);
+        case apiKeyAlterConfigs:
+            return std::make_shared<AlterConfigsRequest>(version);
+        case apiKeyDescribeLogDirs:
+            return std::make_shared<DescribeLogDirsRequest>(version);
+        case apiKeySASLAuth:
+            return std::make_shared<SaslAuthenticateRequest>(version);
+        case apiKeyCreatePartitions:
+            return std::make_shared<CreatePartitionsRequest>(version);
+        case apiKeyDeleteGroups:
+            return std::make_shared<DeleteGroupsRequest>(version);
+        case apiKeyElectLeaders:
+            return std::make_shared<ElectLeadersRequest>(version);
+        case apiKeyIncrementalAlterConfigs:
+            return std::make_shared<IncrementalAlterConfigsRequest>(version);
+        case apiKeyAlterPartitionReassignments:
+            return std::make_shared<AlterPartitionReassignmentsRequest>(version);
+        case apiKeyListPartitionReassignments:
+            return std::make_shared<ListPartitionReassignmentsRequest>(version);
+        case apiKeyOffsetDelete:
+            return std::make_shared<DeleteOffsetsRequest>(version);
+        case apiKeyDescribeClientQuotas:
+            return std::make_shared<DescribeClientQuotasRequest>(version);
+        case apiKeyAlterClientQuotas:
+            return std::make_shared<AlterClientQuotasRequest>(version);
+        case apiKeyDescribeUserScramCredentials:
+            return std::make_shared<DescribeUserScramCredentialsRequest>(version);
+        case apiKeyAlterUserScramCredentials:
+            return std::make_shared<AlterUserScramCredentialsRequest>(version);
+        default:
+            return nullptr;
+        }
     }
 }

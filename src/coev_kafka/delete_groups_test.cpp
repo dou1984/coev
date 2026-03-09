@@ -8,6 +8,8 @@
 #include "delete_groups_request.h"
 #include "delete_groups_response.h"
 
+using namespace coev::kafka;
+
 TEST(DeleteGroupsTest, RequestVersionCompatibility)
 {
     DeleteGroupsRequest request;

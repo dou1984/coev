@@ -18,22 +18,25 @@
 #include "version.h"
 #include "protocol_body.h"
 
-struct SaslAuthenticateResponse : protocol_body
+namespace coev::kafka
 {
-    int16_t m_version = 0;
-    KError m_err = ErrNoError;
-    std::string m_message;
-    std::string m_sasl_auth_bytes;
-    int64_t m_session_lifetime_ms = 0;
+    struct SaslAuthenticateResponse : protocol_body
+    {
+        int16_t m_version = 0;
+        KError m_err = ErrNoError;
+        std::string m_message;
+        std::string m_sasl_auth_bytes;
+        int64_t m_session_lifetime_ms = 0;
 
-    void set_version(int16_t v);
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
-    int16_t key() const;
-    int16_t version() const;
-    int16_t header_version() const;
-    bool is_valid_version() const;
-    KafkaVersion required_version() const;
-};
+        void set_version(int16_t v);
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd, int16_t version);
+        int16_t key() const;
+        int16_t version() const;
+        int16_t header_version() const;
+        bool is_valid_version() const;
+        KafkaVersion required_version() const;
+    };
 
-using AuthSendReceiver = std::function<coev::awaitable<int>(const std::string &, std::shared_ptr<SaslAuthenticateResponse> &)>;
+    using AuthSendReceiver = std::function<awaitable<int>(const std::string &, std::shared_ptr<SaslAuthenticateResponse> &)>;
+}

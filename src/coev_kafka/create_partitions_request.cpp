@@ -6,107 +6,113 @@
  */
 #include "create_partitions_request.h"
 #include "api_versions.h"
-void CreatePartitionsRequest::set_version(int16_t v)
-{
-    m_version = v;
-}
 
-int CreatePartitionsRequest::encode(packet_encoder &pe) const
+namespace coev::kafka
 {
-    if (pe.putArrayLength(static_cast<int32_t>(m_topic_partitions.size())) != ErrNoError)
+
+    void CreatePartitionsRequest::set_version(int16_t v)
     {
-        return ErrEncodeError;
+        m_version = v;
     }
 
-    for (auto &pair : m_topic_partitions)
+    int CreatePartitionsRequest::encode(packet_encoder &pe) const
     {
-        if (pe.putString(pair.first) != ErrNoError)
+        if (pe.putArrayLength(static_cast<int32_t>(m_topic_partitions.size())) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        if (pair.second->encode(pe) != ErrNoError)
+
+        for (auto &pair : m_topic_partitions)
         {
-            return ErrEncodeError;
+            if (pe.putString(pair.first) != ErrNoError)
+            {
+                return ErrEncodeError;
+            }
+            if (pair.second->encode(pe) != ErrNoError)
+            {
+                return ErrEncodeError;
+            }
         }
+
+        pe.putInt32(static_cast<int32_t>(m_timeout.count()));
+        pe.putBool(m_validate_only);
+
+        return ErrNoError;
     }
 
-    pe.putInt32(static_cast<int32_t>(m_timeout.count()));
-    pe.putBool(m_validate_only);
-
-    return ErrNoError;
-}
-
-int CreatePartitionsRequest::decode(packet_decoder &pd, int16_t version)
-{
-    int32_t n;
-    if (pd.getArrayLength(n) != ErrNoError)
+    int CreatePartitionsRequest::decode(packet_decoder &pd, int16_t version)
     {
-        return ErrDecodeError;
-    }
-
-    m_topic_partitions.clear();
-    for (int32_t i = 0; i < n; ++i)
-    {
-        std::string topic;
-        if (pd.getString(topic) != ErrNoError)
+        int32_t n;
+        if (pd.getArrayLength(n) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        auto partition = std::make_shared<TopicPartition>();
-        if (partition->decode(pd, version) != ErrNoError)
+
+        m_topic_partitions.clear();
+        for (int32_t i = 0; i < n; ++i)
+        {
+            std::string topic;
+            if (pd.getString(topic) != ErrNoError)
+            {
+                return ErrDecodeError;
+            }
+            auto partition = std::make_shared<TopicPartition>();
+            if (partition->decode(pd, version) != ErrNoError)
+            {
+                return ErrDecodeError;
+            }
+            m_topic_partitions[topic] = partition;
+        }
+
+        if (pd.getDurationMs(m_timeout) != ErrNoError)
         {
             return ErrDecodeError;
         }
-        m_topic_partitions[topic] = partition;
+
+        if (pd.getBool(m_validate_only) != ErrNoError)
+        {
+            return ErrDecodeError;
+        }
+
+        return ErrNoError;
     }
 
-    if (pd.getDurationMs(m_timeout) != ErrNoError)
+    int16_t CreatePartitionsRequest::key() const
     {
-        return ErrDecodeError;
+        return apiKeyCreatePartitions;
     }
 
-    if (pd.getBool(m_validate_only) != ErrNoError)
+    int16_t CreatePartitionsRequest::version() const
     {
-        return ErrDecodeError;
+        return m_version;
     }
 
-    return ErrNoError;
-}
-
-int16_t CreatePartitionsRequest::key() const
-{
-    return apiKeyCreatePartitions;
-}
-
-int16_t CreatePartitionsRequest::version() const
-{
-    return m_version;
-}
-
-int16_t CreatePartitionsRequest::header_version() const
-{
-    return 1;
-}
-
-bool CreatePartitionsRequest::is_valid_version() const
-{
-    return m_version >= 0 && m_version <= 3;
-}
-
-KafkaVersion CreatePartitionsRequest::required_version() const
-{
-    switch (m_version)
+    int16_t CreatePartitionsRequest::header_version() const
     {
-    case 1:
-        return V2_0_0_0;
-    case 0:
-        return V1_0_0_0;
-    default:
-        return V2_0_0_0;
+        return 1;
     }
-}
 
-std::chrono::milliseconds CreatePartitionsRequest::throttle_time() const
-{
-    return m_timeout;
-}
+    bool CreatePartitionsRequest::is_valid_version() const
+    {
+        return m_version >= 0 && m_version <= 3;
+    }
+
+    KafkaVersion CreatePartitionsRequest::required_version() const
+    {
+        switch (m_version)
+        {
+        case 1:
+            return V2_0_0_0;
+        case 0:
+            return V1_0_0_0;
+        default:
+            return V2_0_0_0;
+        }
+    }
+
+    std::chrono::milliseconds CreatePartitionsRequest::throttle_time() const
+    {
+        return m_timeout;
+    }
+
+} // namespace coev::kafka

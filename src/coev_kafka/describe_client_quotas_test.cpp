@@ -8,7 +8,7 @@
 #include "describe_client_quotas_request.h"
 #include "describe_client_quotas_response.h"
 #include "api_versions.h"
-
+using namespace coev::kafka;
 TEST(DescribeClientQuotasTest, RequestVersionCompatibility)
 {
     DescribeClientQuotasRequest request;

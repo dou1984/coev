@@ -18,29 +18,34 @@
 #include "protocol_body.h"
 #include "version.h"
 
-struct TopicPartitionError : IEncoder, VDecoder
+namespace coev::kafka
 {
-    KError m_err;
-    std::string m_err_msg;
 
-    std::string error() const;
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
-};
+    struct TopicPartitionError : IEncoder, VDecoder
+    {
+        KError m_err;
+        std::string m_err_msg;
 
-struct CreatePartitionsResponse : protocol_body
-{
-    int16_t m_version;
-    std::chrono::milliseconds m_throttle_time;
-    std::map<std::string, TopicPartitionError> m_topic_partition_errors;
+        std::string error() const;
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd, int16_t version);
+    };
 
-    void set_version(int16_t v);
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
-    int16_t key() const;
-    int16_t version() const;
-    int16_t header_version() const;
-    bool is_valid_version() const;
-    KafkaVersion required_version() const;
-    std::chrono::milliseconds throttle_time() const;
-};
+    struct CreatePartitionsResponse : protocol_body
+    {
+        int16_t m_version;
+        std::chrono::milliseconds m_throttle_time;
+        std::map<std::string, TopicPartitionError> m_topic_partition_errors;
+
+        void set_version(int16_t v);
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd, int16_t version);
+        int16_t key() const;
+        int16_t version() const;
+        int16_t header_version() const;
+        bool is_valid_version() const;
+        KafkaVersion required_version() const;
+        std::chrono::milliseconds throttle_time() const;
+    };
+
+} // namespace coev::kafka

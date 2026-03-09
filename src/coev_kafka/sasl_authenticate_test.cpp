@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 #include "sasl_authenticate_request.h"
 #include "sasl_authenticate_response.h"
-
+using namespace coev::kafka;
 TEST(SaslAuthenticateTest, RequestVersionCompatibility)
 {
     SaslAuthenticateRequest request;

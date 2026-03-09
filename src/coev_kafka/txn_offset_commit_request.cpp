@@ -9,99 +9,102 @@
 #include "packet_encoder.h"
 #include "packet_decoder.h"
 
-void TxnOffsetCommitRequest::set_version(int16_t v)
+namespace coev::kafka
 {
-    m_version = v;
-}
-
-int TxnOffsetCommitRequest::encode(packet_encoder &pe) const
-{
-    pe.putString(m_transactional_id);
-    pe.putString(m_group_id);
-    pe.putInt64(m_producer_id);
-    pe.putInt16(m_producer_epoch);
-
-    pe.putArrayLength(static_cast<int32_t>(m_topics.size()));
-    for (auto &[topic, partitions] : m_topics)
+    void TxnOffsetCommitRequest::set_version(int16_t v)
     {
-        pe.putString(topic);
-        pe.putArrayLength(static_cast<int32_t>(partitions.size()));
-        for (auto &partition : partitions)
-        {
-            partition.encode(pe, m_version);
-        }
+        m_version = v;
     }
-    return 0;
-}
 
-int TxnOffsetCommitRequest::decode(packet_decoder &pd, int16_t version)
-{
-    m_version = version;
-    pd.getString(m_transactional_id);
-    pd.getString(m_group_id);
-    pd.getInt64(m_producer_id);
-    pd.getInt16(m_producer_epoch);
-
-    int32_t n;
-    pd.getArrayLength(n);
-    m_topics.clear();
-    int err = 0;
-    for (int i = 0; i < n; ++i)
+    int TxnOffsetCommitRequest::encode(packet_encoder &pe) const
     {
-        std::string topic;
-        err = pd.getString(topic);
-        if (err)
-        {
-            return err;
-        }
-        int32_t m;
-        err = pd.getArrayLength(m);
-        if (err)
-        {
-            return err;
-        }
+        pe.putString(m_transactional_id);
+        pe.putString(m_group_id);
+        pe.putInt64(m_producer_id);
+        pe.putInt16(m_producer_epoch);
 
-        auto &_topics = m_topics[topic];
-        _topics.resize(m);
-        for (int j = 0; j < m; ++j)
+        pe.putArrayLength(static_cast<int32_t>(m_topics.size()));
+        for (auto &[topic, partitions] : m_topics)
         {
-            _topics[j].decode(pd, version);
+            pe.putString(topic);
+            pe.putArrayLength(static_cast<int32_t>(partitions.size()));
+            for (auto &partition : partitions)
+            {
+                partition.encode(pe, m_version);
+            }
         }
+        return 0;
     }
-    return 0;
-}
 
-int16_t TxnOffsetCommitRequest::key() const
-{
-    return apiKeyTxnOffsetCommit;
-}
-
-int16_t TxnOffsetCommitRequest::version() const
-{
-    return m_version;
-}
-
-int16_t TxnOffsetCommitRequest::header_version() const
-{
-    return 1;
-}
-
-bool TxnOffsetCommitRequest::is_valid_version() const
-{
-    return m_version >= 0 && m_version <= 2;
-}
-
-KafkaVersion TxnOffsetCommitRequest::required_version() const
-{
-    switch (m_version)
+    int TxnOffsetCommitRequest::decode(packet_decoder &pd, int16_t version)
     {
-    case 2:
-        return V2_1_0_0;
-    case 1:
-        return V2_0_0_0;
-    case 0:
-        return V0_11_0_0;
-    default:
-        return V2_1_0_0;
+        m_version = version;
+        pd.getString(m_transactional_id);
+        pd.getString(m_group_id);
+        pd.getInt64(m_producer_id);
+        pd.getInt16(m_producer_epoch);
+
+        int32_t n;
+        pd.getArrayLength(n);
+        m_topics.clear();
+        int err = 0;
+        for (int i = 0; i < n; ++i)
+        {
+            std::string topic;
+            err = pd.getString(topic);
+            if (err)
+            {
+                return err;
+            }
+            int32_t m;
+            err = pd.getArrayLength(m);
+            if (err)
+            {
+                return err;
+            }
+
+            auto &_topics = m_topics[topic];
+            _topics.resize(m);
+            for (int j = 0; j < m; ++j)
+            {
+                _topics[j].decode(pd, version);
+            }
+        }
+        return 0;
+    }
+
+    int16_t TxnOffsetCommitRequest::key() const
+    {
+        return apiKeyTxnOffsetCommit;
+    }
+
+    int16_t TxnOffsetCommitRequest::version() const
+    {
+        return m_version;
+    }
+
+    int16_t TxnOffsetCommitRequest::header_version() const
+    {
+        return 1;
+    }
+
+    bool TxnOffsetCommitRequest::is_valid_version() const
+    {
+        return m_version >= 0 && m_version <= 2;
+    }
+
+    KafkaVersion TxnOffsetCommitRequest::required_version() const
+    {
+        switch (m_version)
+        {
+        case 2:
+            return V2_1_0_0;
+        case 1:
+            return V2_0_0_0;
+        case 0:
+            return V0_11_0_0;
+        default:
+            return V2_1_0_0;
+        }
     }
 }

@@ -8,6 +8,7 @@
 #include "acl_delete_request.h"
 #include "acl_delete_response.h"
 
+using namespace coev::kafka;
 TEST(AclDeleteTest, RequestVersionCompatibility)
 {
     DeleteAclsRequest request;

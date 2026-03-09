@@ -7,6 +7,8 @@
 #include <gtest/gtest.h>
 #include "config.h"
 
+using namespace coev::kafka;
+
 TEST(ConfigTest, DefaultConfigValidates)
 {
     auto config = std::make_shared<Config>();

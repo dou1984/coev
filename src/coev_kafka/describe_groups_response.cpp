@@ -6,291 +6,294 @@
  */
 #include "describe_groups_response.h"
 
-void DescribeGroupsResponse::set_version(int16_t v)
+namespace coev::kafka
 {
-    m_version = v;
-}
-
-int DescribeGroupsResponse::encode(packet_encoder &pe) const
-{
-    if (m_version >= 1)
+    void DescribeGroupsResponse::set_version(int16_t v)
     {
-        pe.putDurationMs(m_throttle_time);
-    }
-    if (pe.putArrayLength(static_cast<int32_t>(m_groups.size())) != ErrNoError)
-    {
-        return ErrEncodeError;
+        m_version = v;
     }
 
-    for (auto &block : m_groups)
+    int DescribeGroupsResponse::encode(packet_encoder &pe) const
     {
-        if (block.encode(pe, m_version) != ErrNoError)
+        if (m_version >= 1)
+        {
+            pe.putDurationMs(m_throttle_time);
+        }
+        if (pe.putArrayLength(static_cast<int32_t>(m_groups.size())) != ErrNoError)
         {
             return ErrEncodeError;
         }
-    }
 
-    pe.putEmptyTaggedFieldArray();
-    return ErrNoError;
-}
-
-int DescribeGroupsResponse::decode(packet_decoder &pd, int16_t version)
-{
-    m_version = version;
-    if (m_version >= 1)
-    {
-        if (pd.getDurationMs(m_throttle_time) != ErrNoError)
+        for (auto &block : m_groups)
         {
-            return ErrEncodeError;
-        }
-    }
-
-    int32_t numGroups;
-    if (pd.getArrayLength(numGroups) != ErrNoError)
-    {
-        return ErrEncodeError;
-    }
-
-    m_groups.clear();
-    if (numGroups > 0)
-    {
-        m_groups.resize(numGroups);
-        for (int32_t i = 0; i < numGroups; ++i)
-        {
-            if (m_groups[i].decode(pd, m_version) != ErrNoError)
+            if (block.encode(pe, m_version) != ErrNoError)
             {
                 return ErrEncodeError;
             }
         }
+
+        pe.putEmptyTaggedFieldArray();
+        return ErrNoError;
     }
 
-    int32_t dummy;
-    if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
+    int DescribeGroupsResponse::decode(packet_decoder &pd, int16_t version)
     {
-        return ErrEncodeError;
-    }
-    return ErrNoError;
-}
+        m_version = version;
+        if (m_version >= 1)
+        {
+            if (pd.getDurationMs(m_throttle_time) != ErrNoError)
+            {
+                return ErrEncodeError;
+            }
+        }
 
-int16_t DescribeGroupsResponse::key() const
-{
-    return apiKeyDescribeGroups;
-}
-
-int16_t DescribeGroupsResponse::version() const
-{
-    return m_version;
-}
-
-int16_t DescribeGroupsResponse::header_version() const
-{
-    if (m_version >= 5)
-    {
-        return 1;
-    }
-    return 0;
-}
-
-bool DescribeGroupsResponse::is_valid_version() const
-{
-    return m_version >= 0 && m_version <= 5;
-}
-
-bool DescribeGroupsResponse::is_flexible() const
-{
-    return is_flexible_version(m_version);
-}
-
-bool DescribeGroupsResponse::is_flexible_version(int16_t version) const
-{
-    return version >= 5;
-}
-
-KafkaVersion DescribeGroupsResponse::required_version() const
-{
-    switch (m_version)
-    {
-    case 5:
-        return V2_4_0_0;
-    case 4:
-        return V2_4_0_0;
-    case 3:
-        return V2_3_0_0;
-    case 2:
-        return V2_0_0_0;
-    case 1:
-        return V0_11_0_0;
-    case 0:
-        return V0_9_0_0;
-    default:
-        return V2_4_0_0;
-    }
-}
-
-std::chrono::milliseconds DescribeGroupsResponse::throttle_time() const
-{
-    return m_throttle_time;
-}
-
-int GroupDescription::encode(packet_encoder &pe, int16_t version) const
-{
-    m_version = version;
-    pe.putInt16(m_code);
-
-    if (pe.putString(m_group_id) != ErrNoError)
-        return ErrEncodeError;
-    if (pe.putString(m_state) != ErrNoError)
-        return ErrEncodeError;
-    if (pe.putString(m_protocol_type) != ErrNoError)
-        return ErrEncodeError;
-    if (pe.putString(m_protocol) != ErrNoError)
-        return ErrEncodeError;
-
-    if (pe.putArrayLength(static_cast<int32_t>(m_members.size())) != ErrNoError)
-    {
-        return ErrEncodeError;
-    }
-
-    for (auto &pair : m_members)
-    {
-        if (pair.second->encode(pe, m_version) != ErrNoError)
+        int32_t numGroups;
+        if (pd.getArrayLength(numGroups) != ErrNoError)
         {
             return ErrEncodeError;
         }
-    }
 
-    if (m_version >= 3)
-    {
-        pe.putInt32(m_authorized_operations);
-    }
-
-    pe.putEmptyTaggedFieldArray();
-    return ErrNoError;
-}
-
-int GroupDescription::decode(packet_decoder &pd, int16_t version)
-{
-    m_version = version;
-    int16_t error_code;
-    if (pd.getInt16(error_code) != ErrNoError)
-        return ErrDecodeError;
-    m_code = static_cast<KError>(error_code);
-
-    if (pd.getString(m_group_id) != ErrNoError)
-        return ErrDecodeError;
-    if (pd.getString(m_state) != ErrNoError)
-        return ErrDecodeError;
-    if (pd.getString(m_protocol_type) != ErrNoError)
-        return ErrDecodeError;
-    if (pd.getString(m_protocol) != ErrNoError)
-        return ErrEncodeError;
-
-    int32_t numMembers;
-    if (pd.getArrayLength(numMembers) != ErrNoError)
-        return ErrDecodeError;
-
-    m_members.clear();
-    if (numMembers > 0)
-    {
-        for (int32_t i = 0; i < numMembers; ++i)
+        m_groups.clear();
+        if (numGroups > 0)
         {
-            auto block = std::make_shared<GroupMemberDescription>();
-            if (!block->decode(pd, m_version))
+            m_groups.resize(numGroups);
+            for (int32_t i = 0; i < numGroups; ++i)
+            {
+                if (m_groups[i].decode(pd, m_version) != ErrNoError)
+                {
+                    return ErrEncodeError;
+                }
+            }
+        }
+
+        int32_t dummy;
+        if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
+        {
+            return ErrEncodeError;
+        }
+        return ErrNoError;
+    }
+
+    int16_t DescribeGroupsResponse::key() const
+    {
+        return apiKeyDescribeGroups;
+    }
+
+    int16_t DescribeGroupsResponse::version() const
+    {
+        return m_version;
+    }
+
+    int16_t DescribeGroupsResponse::header_version() const
+    {
+        if (m_version >= 5)
+        {
+            return 1;
+        }
+        return 0;
+    }
+
+    bool DescribeGroupsResponse::is_valid_version() const
+    {
+        return m_version >= 0 && m_version <= 5;
+    }
+
+    bool DescribeGroupsResponse::is_flexible() const
+    {
+        return is_flexible_version(m_version);
+    }
+
+    bool DescribeGroupsResponse::is_flexible_version(int16_t version) const
+    {
+        return version >= 5;
+    }
+
+    KafkaVersion DescribeGroupsResponse::required_version() const
+    {
+        switch (m_version)
+        {
+        case 5:
+            return V2_4_0_0;
+        case 4:
+            return V2_4_0_0;
+        case 3:
+            return V2_3_0_0;
+        case 2:
+            return V2_0_0_0;
+        case 1:
+            return V0_11_0_0;
+        case 0:
+            return V0_9_0_0;
+        default:
+            return V2_4_0_0;
+        }
+    }
+
+    std::chrono::milliseconds DescribeGroupsResponse::throttle_time() const
+    {
+        return m_throttle_time;
+    }
+
+    int GroupDescription::encode(packet_encoder &pe, int16_t version) const
+    {
+        m_version = version;
+        pe.putInt16(m_code);
+
+        if (pe.putString(m_group_id) != ErrNoError)
+            return ErrEncodeError;
+        if (pe.putString(m_state) != ErrNoError)
+            return ErrEncodeError;
+        if (pe.putString(m_protocol_type) != ErrNoError)
+            return ErrEncodeError;
+        if (pe.putString(m_protocol) != ErrNoError)
+            return ErrEncodeError;
+
+        if (pe.putArrayLength(static_cast<int32_t>(m_members.size())) != ErrNoError)
+        {
+            return ErrEncodeError;
+        }
+
+        for (auto &pair : m_members)
+        {
+            if (pair.second->encode(pe, m_version) != ErrNoError)
+            {
+                return ErrEncodeError;
+            }
+        }
+
+        if (m_version >= 3)
+        {
+            pe.putInt32(m_authorized_operations);
+        }
+
+        pe.putEmptyTaggedFieldArray();
+        return ErrNoError;
+    }
+
+    int GroupDescription::decode(packet_decoder &pd, int16_t version)
+    {
+        m_version = version;
+        int16_t error_code;
+        if (pd.getInt16(error_code) != ErrNoError)
+            return ErrDecodeError;
+        m_code = static_cast<KError>(error_code);
+
+        if (pd.getString(m_group_id) != ErrNoError)
+            return ErrDecodeError;
+        if (pd.getString(m_state) != ErrNoError)
+            return ErrDecodeError;
+        if (pd.getString(m_protocol_type) != ErrNoError)
+            return ErrDecodeError;
+        if (pd.getString(m_protocol) != ErrNoError)
+            return ErrEncodeError;
+
+        int32_t numMembers;
+        if (pd.getArrayLength(numMembers) != ErrNoError)
+            return ErrDecodeError;
+
+        m_members.clear();
+        if (numMembers > 0)
+        {
+            for (int32_t i = 0; i < numMembers; ++i)
+            {
+                auto block = std::make_shared<GroupMemberDescription>();
+                if (!block->decode(pd, m_version))
+                {
+                    return ErrDecodeError;
+                }
+                m_members[block->m_member_id] = block;
+            }
+        }
+
+        if (m_version >= 3)
+        {
+            if (pd.getInt32(m_authorized_operations) != ErrNoError)
             {
                 return ErrDecodeError;
             }
-            m_members[block->m_member_id] = block;
         }
-    }
 
-    if (m_version >= 3)
-    {
-        if (pd.getInt32(m_authorized_operations) != ErrNoError)
+        int32_t dummy;
+        if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
         {
             return ErrDecodeError;
         }
+        return ErrNoError;
     }
 
-    int32_t dummy;
-    if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
+    int GroupMemberDescription::encode(packet_encoder &pe, int16_t version) const
     {
-        return ErrDecodeError;
-    }
-    return ErrNoError;
-}
-
-int GroupMemberDescription::encode(packet_encoder &pe, int16_t version) const
-{
-    m_version = version;
-    if (pe.putString(m_member_id) != ErrNoError)
-        return ErrEncodeError;
-
-    if (version >= 4)
-    {
-        if (pe.putNullableString(m_group_instance_id) != ErrNoError)
+        m_version = version;
+        if (pe.putString(m_member_id) != ErrNoError)
             return ErrEncodeError;
+
+        if (version >= 4)
+        {
+            if (pe.putNullableString(m_group_instance_id) != ErrNoError)
+                return ErrEncodeError;
+        }
+
+        if (pe.putString(m_client_id) != ErrNoError)
+            return ErrEncodeError;
+        if (pe.putString(m_client_host) != ErrNoError)
+            return ErrEncodeError;
+        if (pe.putBytes(m_member_metadata) != ErrNoError)
+            return ErrEncodeError;
+        if (pe.putBytes(m_member_assignment) != ErrNoError)
+            return ErrEncodeError;
+
+        pe.putEmptyTaggedFieldArray();
+        return ErrNoError;
     }
 
-    if (pe.putString(m_client_id) != ErrNoError)
-        return ErrEncodeError;
-    if (pe.putString(m_client_host) != ErrNoError)
-        return ErrEncodeError;
-    if (pe.putBytes(m_member_metadata) != ErrNoError)
-        return ErrEncodeError;
-    if (pe.putBytes(m_member_assignment) != ErrNoError)
-        return ErrEncodeError;
-
-    pe.putEmptyTaggedFieldArray();
-    return ErrNoError;
-}
-
-int GroupMemberDescription::decode(packet_decoder &pd, int16_t version)
-{
-    m_version = version;
-    if (pd.getString(m_member_id) != ErrNoError)
-        return ErrDecodeError;
-
-    if (version >= 4)
+    int GroupMemberDescription::decode(packet_decoder &pd, int16_t version)
     {
-        if (pd.getNullableString(m_group_instance_id) != ErrNoError)
+        m_version = version;
+        if (pd.getString(m_member_id) != ErrNoError)
             return ErrDecodeError;
+
+        if (version >= 4)
+        {
+            if (pd.getNullableString(m_group_instance_id) != ErrNoError)
+                return ErrDecodeError;
+        }
+
+        if (pd.getString(m_client_id) != ErrNoError)
+            return ErrDecodeError;
+        if (pd.getString(m_client_host) != ErrNoError)
+            return ErrDecodeError;
+        if (pd.getBytes(m_member_metadata) != ErrNoError)
+            return ErrDecodeError;
+        if (pd.getBytes(m_member_assignment) != ErrNoError)
+            return ErrDecodeError;
+
+        int32_t dummy;
+        if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
+        {
+            return ErrDecodeError;
+        }
+        return ErrNoError;
     }
 
-    if (pd.getString(m_client_id) != ErrNoError)
-        return ErrDecodeError;
-    if (pd.getString(m_client_host) != ErrNoError)
-        return ErrDecodeError;
-    if (pd.getBytes(m_member_metadata) != ErrNoError)
-        return ErrDecodeError;
-    if (pd.getBytes(m_member_assignment) != ErrNoError)
-        return ErrDecodeError;
-
-    int32_t dummy;
-    if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
+    std::shared_ptr<ConsumerGroupMemberAssignment> GroupMemberDescription::get_member_assignment()
     {
-        return ErrDecodeError;
+        if (m_member_assignment.empty())
+        {
+            return nullptr;
+        }
+        auto assignment = std::make_shared<ConsumerGroupMemberAssignment>();
+        coev::kafka::decode(m_member_assignment, *assignment);
+        return assignment;
     }
-    return ErrNoError;
-}
 
-std::shared_ptr<ConsumerGroupMemberAssignment> GroupMemberDescription::get_member_assignment()
-{
-    if (m_member_assignment.empty())
+    std::shared_ptr<ConsumerGroupMemberMetadata> GroupMemberDescription::get_member_metadata()
     {
-        return nullptr;
+        if (m_member_metadata.empty())
+        {
+            return nullptr;
+        }
+        auto metadata = std::make_shared<ConsumerGroupMemberMetadata>();
+        coev::kafka::decode(m_member_metadata, *metadata);
+        return metadata;
     }
-    auto assignment = std::make_shared<ConsumerGroupMemberAssignment>();
-    ::decode(m_member_assignment, *assignment);
-    return assignment;
-}
-
-std::shared_ptr<ConsumerGroupMemberMetadata> GroupMemberDescription::get_member_metadata()
-{
-    if (m_member_metadata.empty())
-    {
-        return nullptr;
-    }
-    auto metadata = std::make_shared<ConsumerGroupMemberMetadata>();
-    ::decode(m_member_metadata, *metadata);
-    return metadata;
 }

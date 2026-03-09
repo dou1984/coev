@@ -8,7 +8,10 @@
 
 #include <chrono>
 
-struct throttle_support
+namespace coev::kafka
 {
-    virtual std::chrono::milliseconds throttle_time() const = 0;
-};
+    struct throttle_support
+    {
+        virtual std::chrono::milliseconds throttle_time() const = 0;
+    };
+}

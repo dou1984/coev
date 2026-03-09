@@ -8,6 +8,7 @@
 #include "alter_user_scram_credentials_request.h"
 #include "alter_user_scram_credentials_response.h"
 
+using namespace coev::kafka;
 TEST(AlterUserScramCredentialsTest, RequestVersionCompatibility) {
     AlterUserScramCredentialsRequest request;
     

@@ -8,6 +8,7 @@
 #include "offset_commit_request.h"
 #include "offset_commit_response.h"
 
+using namespace coev::kafka;
 TEST(OffsetCommitTest, RequestVersionCompatibility)
 {
     OffsetCommitRequest request;

@@ -19,56 +19,60 @@
 #include "config_source.h"
 #include "protocol_body.h"
 
-struct ConfigSynonym : VDecoder, VEncoder
+namespace coev::kafka
 {
-    std::string m_config_name;
-    std::string m_config_value;
-    ConfigSource m_source;
+    struct ConfigSynonym : VDecoder, VEncoder
+    {
+        std::string m_config_name;
+        std::string m_config_value;
+        ConfigSource m_source;
 
-    int encode(packet_encoder &pe, int16_t version) const;
-    int decode(packet_decoder &pd, int16_t version);
-};
+        int encode(packet_encoder &pe, int16_t version) const;
+        int decode(packet_decoder &pd, int16_t version);
+    };
 
-struct ConfigEntry : VDecoder, VEncoder
-{
-    std::string m_name;
-    std::string m_value;
-    bool m_read_only;
-    bool m_default;
-    bool m_sensitive;
-    ConfigSource m_source;
-    std::vector<std::shared_ptr<ConfigSynonym>> m_synonyms;
+    struct ConfigEntry : VDecoder, VEncoder
+    {
+        std::string m_name;
+        std::string m_value;
+        bool m_read_only;
+        bool m_default;
+        bool m_sensitive;
+        ConfigSource m_source;
+        std::vector<std::shared_ptr<ConfigSynonym>> m_synonyms;
 
-    int encode(packet_encoder &pe, int16_t version) const;
-    int decode(packet_decoder &pd, int16_t version);
-};
+        int encode(packet_encoder &pe, int16_t version) const;
+        int decode(packet_decoder &pd, int16_t version);
+    };
 
-struct ResourceResponse : VDecoder, VEncoder
-{
-    int16_t m_code;
-    std::string m_message;
-    ConfigResourceType m_type;
-    std::string m_name;
-    std::vector<ConfigEntry> m_configs;
+    struct ResourceResponse : VDecoder, VEncoder
+    {
+        int16_t m_code;
+        std::string m_message;
+        ConfigResourceType m_type;
+        std::string m_name;
+        std::vector<ConfigEntry> m_configs;
 
-    int encode(packet_encoder &pe, int16_t version) const;
-    int decode(packet_decoder &pd, int16_t version);
-};
+        int encode(packet_encoder &pe, int16_t version) const;
+        int decode(packet_decoder &pd, int16_t version);
+    };
 
-struct DescribeConfigsResponse : protocol_body
-{
+    struct DescribeConfigsResponse : protocol_body
+    {
 
-    int16_t m_version;
-    std::chrono::milliseconds m_throttle_time;
-    std::vector<ResourceResponse> m_resources;
+        int16_t m_version;
+        std::chrono::milliseconds m_throttle_time;
+        std::vector<ResourceResponse> m_resources;
 
-    void set_version(int16_t v);
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
-    int16_t key() const;
-    int16_t version() const;
-    int16_t header_version() const;
-    bool is_valid_version() const;
-    KafkaVersion required_version() const;
-    std::chrono::milliseconds throttle_time() const;
-};
+        void set_version(int16_t v);
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd, int16_t version);
+        int16_t key() const;
+        int16_t version() const;
+        int16_t header_version() const;
+        bool is_valid_version() const;
+        KafkaVersion required_version() const;
+        std::chrono::milliseconds throttle_time() const;
+    };
+
+}

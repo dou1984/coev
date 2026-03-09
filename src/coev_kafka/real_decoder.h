@@ -20,46 +20,49 @@
 #include "encoder_decoder.h"
 #include "errors.h"
 
-struct real_decoder : packet_decoder
+namespace coev::kafka
 {
-    int getInt8(int8_t &result);
-    int getInt16(int16_t &result);
-    int getInt32(int32_t &result);
-    int getInt64(int64_t &result);
-    int getVariant(int64_t &result);
-    int getUVariant(uint64_t &result);
-    int getFloat64(double &result);
-    int getArrayLength(int32_t &result);
-    int getBool(bool &result);
-    int getKError(KError &result);
-    int getDurationMs(std::chrono::milliseconds &duration);
-    int getTaggedFieldArray(const taggedFieldDecoders &decoders);
-    int getEmptyTaggedFieldArray(int &result);
-    int getStringLength(int &result);
-    int getBytes(std::string_view &result);
-    int getBytes(std::string &result);
-    int getVariantBytes(std::string_view &result);
-    int getVariantBytes(std::string &result);
-    int getString(std::string_view &result);
-    int getString(std::string &result);
-    int getNullableString(std::string_view &result);
-    int getNullableString(std::string &result);
-    int getInt32Array(std::vector<int32_t> &result);
-    int getInt64Array(std::vector<int64_t> &result);
-    int getStringArray(std::vector<std::string> &result);
-    int remaining();
-    int getRawBytes(int length, std::string_view &result);
-    int getSubset(int length, std::string_view &result);
-    int peek(int offset, int length, std::string_view &result);
-    int peekInt8(int offset, int8_t &result);
-    int push(push_decoder &in);
-    int pop();
+    struct real_decoder : packet_decoder
+    {
+        int getInt8(int8_t &result);
+        int getInt16(int16_t &result);
+        int getInt32(int32_t &result);
+        int getInt64(int64_t &result);
+        int getVariant(int64_t &result);
+        int getUVariant(uint64_t &result);
+        int getFloat64(double &result);
+        int getArrayLength(int32_t &result);
+        int getBool(bool &result);
+        int getKError(KError &result);
+        int getDurationMs(std::chrono::milliseconds &duration);
+        int getTaggedFieldArray(const taggedFieldDecoders &decoders);
+        int getEmptyTaggedFieldArray(int &result);
+        int getStringLength(int &result);
+        int getBytes(std::string_view &result);
+        int getBytes(std::string &result);
+        int getVariantBytes(std::string_view &result);
+        int getVariantBytes(std::string &result);
+        int getString(std::string_view &result);
+        int getString(std::string &result);
+        int getNullableString(std::string_view &result);
+        int getNullableString(std::string &result);
+        int getInt32Array(std::vector<int32_t> &result);
+        int getInt64Array(std::vector<int64_t> &result);
+        int getStringArray(std::vector<std::string> &result);
+        int remaining();
+        int getRawBytes(int length, std::string_view &result);
+        int getSubset(int length, std::string_view &result);
+        int peek(int offset, int length, std::string_view &result);
+        int peekInt8(int offset, int8_t &result);
+        int push(push_decoder &in);
+        int pop();
 
-    real_decoder() = default;
-    real_decoder(const std::string &buf);
-    real_decoder(std::string_view buf);
+        real_decoder() = default;
+        real_decoder(const std::string &buf);
+        real_decoder(std::string_view buf);
 
-    int m_offset = 0;
-    std::string_view m_raw;
-    std::vector<push_decoder *> m_stack;
-};
+        int m_offset = 0;
+        std::string_view m_raw;
+        std::vector<push_decoder *> m_stack;
+    };
+}

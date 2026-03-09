@@ -6,9 +6,12 @@
  */
 #pragma once
 
-enum ControlRecordType
+namespace coev::kafka
 {
-    ControlRecordAbort = 0,
-    ControlRecordCommit = 1,
-    ControlRecordUnknown = 2
-};
+    enum ControlRecordType
+    {
+        ControlRecordAbort = 0,
+        ControlRecordCommit = 1,
+        ControlRecordUnknown = 2
+    };
+}

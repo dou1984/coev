@@ -18,6 +18,7 @@
 #include "access_token.h"
 #include "error.h"
 
+using namespace coev::kafka;
 // Start with basic tests
 TEST(BrokerTest, BasicConstruction)
 {

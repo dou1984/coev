@@ -8,6 +8,7 @@
 #include "consumer_metadata_request.h"
 #include "consumer_metadata_response.h"
 
+using namespace coev::kafka;
 TEST(ConsumerMetadataTest, RequestVersionCompatibility)
 {
     ConsumerMetadataRequest request;

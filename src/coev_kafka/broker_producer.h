@@ -17,33 +17,38 @@
 #include "errors.h"
 #include "async_producer.h"
 
-struct BrokerProducer
+namespace coev::kafka
 {
-    BrokerProducer(std::shared_ptr<AsyncProducer> parent, std::shared_ptr<Broker> broker);
 
-    coev::awaitable<void> run();
-    coev::awaitable<void> bridge();
-    coev::awaitable<void> shutdown();
+    struct BrokerProducer
+    {
+        BrokerProducer(std::shared_ptr<AsyncProducer> parent, std::shared_ptr<Broker> broker);
 
-    void init();
-    KError needs_retry(std::shared_ptr<ProducerMessage> msg);
-    int wait_for_space(std::shared_ptr<ProducerMessage> msg, bool force_rollover);
-    void rollover();
-    coev::awaitable<void> handle_response(std::shared_ptr<BrokerProducerResponse> response);
-    coev::awaitable<void> handle_success(std::shared_ptr<ProduceSet> sent, std::shared_ptr<ProduceResponse> response);
-    void handle_error(std::shared_ptr<ProduceSet> sent, KError err);
+        awaitable<void> run();
+        awaitable<void> bridge();
+        awaitable<void> shutdown();
 
-    bool m_timer_fired = false;
-    KError m_closing = ErrNoError;
-    std::shared_ptr<AsyncProducer> m_parent;
-    std::shared_ptr<Broker> m_broker;
-    std::shared_ptr<ProduceSet> m_buffer;
-    std::map<std::string, std::map<int32_t, KError>> m_current_retries;
+        void init();
+        KError needs_retry(std::shared_ptr<ProducerMessage> msg);
+        int wait_for_space(std::shared_ptr<ProducerMessage> msg, bool force_rollover);
+        void rollover();
+        awaitable<void> handle_response(std::shared_ptr<BrokerProducerResponse> response);
+        awaitable<void> handle_success(std::shared_ptr<ProduceSet> sent, std::shared_ptr<ProduceResponse> response);
+        void handle_error(std::shared_ptr<ProduceSet> sent, KError err);
 
-    coev::co_channel<std::shared_ptr<ProducerMessage>> m_input;
-    coev::co_channel<std::shared_ptr<ProduceSet>> m_output;
-    coev::co_channel<std::shared_ptr<BrokerProducerResponse>> m_responses;
-    coev::co_channel<bool> m_abandoned;
-    coev::co_timer m_timer;
-    coev::co_task m_task;
-};
+        bool m_timer_fired = false;
+        KError m_closing = ErrNoError;
+        std::shared_ptr<AsyncProducer> m_parent;
+        std::shared_ptr<Broker> m_broker;
+        std::shared_ptr<ProduceSet> m_buffer;
+        std::map<std::string, std::map<int32_t, KError>> m_current_retries;
+
+        coev::co_channel<std::shared_ptr<ProducerMessage>> m_input;
+        coev::co_channel<std::shared_ptr<ProduceSet>> m_output;
+        coev::co_channel<std::shared_ptr<BrokerProducerResponse>> m_responses;
+        coev::co_channel<bool> m_abandoned;
+        coev::co_timer m_timer;
+        coev::co_task m_task;
+    };
+
+} // namespace coev::kafka

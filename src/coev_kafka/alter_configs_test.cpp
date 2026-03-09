@@ -8,6 +8,8 @@
 #include "alter_configs_request.h"
 #include "alter_configs_response.h"
 
+using namespace coev::kafka;
+
 TEST(AlterConfigsTest, RequestVersionCompatibility)
 {
     AlterConfigsRequest request;

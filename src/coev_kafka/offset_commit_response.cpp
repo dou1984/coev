@@ -8,152 +8,157 @@
 #include "offset_commit_response.h"
 #include <stdexcept>
 
-OffsetCommitResponse::OffsetCommitResponse()
-    : m_version(0)
+namespace coev::kafka
 {
-}
 
-void OffsetCommitResponse::set_version(int16_t v)
-{
-    m_version = v;
-}
-
-void OffsetCommitResponse::add_error(const std::string &topic, int32_t partition, KError kerror)
-{
-    auto &partitions = m_errors[topic];
-    partitions[partition] = kerror;
-}
-
-int OffsetCommitResponse::encode(packet_encoder &pe) const
-{
-    if (m_version >= 3)
+    OffsetCommitResponse::OffsetCommitResponse()
+        : m_version(0)
     {
-        pe.putDurationMs(m_throttle_time);
     }
 
-    pe.putArrayLength(static_cast<int32_t>(m_errors.size()));
-    for (auto &topicEntry : m_errors)
+    void OffsetCommitResponse::set_version(int16_t v)
     {
-        auto &topic = topicEntry.first;
-        auto &partitions = topicEntry.second;
-        pe.putString(topic);
-        pe.putArrayLength(static_cast<int32_t>(partitions.size()));
-        for (auto &partitionEntry : partitions)
+        m_version = v;
+    }
+
+    void OffsetCommitResponse::add_error(const std::string &topic, int32_t partition, KError kerror)
+    {
+        auto &partitions = m_errors[topic];
+        partitions[partition] = kerror;
+    }
+
+    int OffsetCommitResponse::encode(packet_encoder &pe) const
+    {
+        if (m_version >= 3)
         {
-            pe.putInt32(partitionEntry.first);
-            pe.putKError(partitionEntry.second);
+            pe.putDurationMs(m_throttle_time);
         }
-    }
-    return ErrNoError;
-}
 
-int OffsetCommitResponse::decode(packet_decoder &pd, int16_t version)
-{
-    m_version = version;
-
-    int err = ErrNoError;
-    if (version >= 3)
-    {
-
-        err = pd.getDurationMs(m_throttle_time);
-        if (err != ErrNoError)
+        pe.putArrayLength(static_cast<int32_t>(m_errors.size()));
+        for (auto &topicEntry : m_errors)
         {
-            return err;
+            auto &topic = topicEntry.first;
+            auto &partitions = topicEntry.second;
+            pe.putString(topic);
+            pe.putArrayLength(static_cast<int32_t>(partitions.size()));
+            for (auto &partitionEntry : partitions)
+            {
+                pe.putInt32(partitionEntry.first);
+                pe.putKError(partitionEntry.second);
+            }
         }
-    }
-
-    int32_t num_topics;
-    err = pd.getArrayLength(num_topics);
-    if (err != ErrNoError)
-    {
-        return err;
-    }
-    if (num_topics <= 0)
-    {
         return ErrNoError;
     }
 
-    m_errors.clear();
-    m_errors.reserve(num_topics);
-    for (int i = 0; i < num_topics; ++i)
+    int OffsetCommitResponse::decode(packet_decoder &pd, int16_t version)
     {
-        std::string name;
-        err = pd.getString(name);
-        if (err != ErrNoError)
+        m_version = version;
+
+        int err = ErrNoError;
+        if (version >= 3)
         {
-            return err;
-        }
-        int32_t num_errors;
-        err = pd.getArrayLength(num_errors);
-        if (err != ErrNoError)
-        {
-            return err;
-        }
-        auto &partition_map = m_errors[name];
-        for (int j = 0; j < num_errors; ++j)
-        {
-            int32_t id;
-            err = pd.getInt32(id);
+
+            err = pd.getDurationMs(m_throttle_time);
             if (err != ErrNoError)
             {
                 return err;
             }
-            KError e;
-            err = pd.getKError(e);
+        }
+
+        int32_t num_topics;
+        err = pd.getArrayLength(num_topics);
+        if (err != ErrNoError)
+        {
+            return err;
+        }
+        if (num_topics <= 0)
+        {
+            return ErrNoError;
+        }
+
+        m_errors.clear();
+        m_errors.reserve(num_topics);
+        for (int i = 0; i < num_topics; ++i)
+        {
+            std::string name;
+            err = pd.getString(name);
             if (err != ErrNoError)
             {
                 return err;
             }
-            partition_map[id] = e;
+            int32_t num_errors;
+            err = pd.getArrayLength(num_errors);
+            if (err != ErrNoError)
+            {
+                return err;
+            }
+            auto &partition_map = m_errors[name];
+            for (int j = 0; j < num_errors; ++j)
+            {
+                int32_t id;
+                err = pd.getInt32(id);
+                if (err != ErrNoError)
+                {
+                    return err;
+                }
+                KError e;
+                err = pd.getKError(e);
+                if (err != ErrNoError)
+                {
+                    return err;
+                }
+                partition_map[id] = e;
+            }
+        }
+        return 0;
+    }
+
+    int16_t OffsetCommitResponse::key() const
+    {
+        return apiKeyOffsetCommit;
+    }
+
+    int16_t OffsetCommitResponse::version() const
+    {
+        return m_version;
+    }
+
+    int16_t OffsetCommitResponse::header_version() const
+    {
+        return 0;
+    }
+
+    bool OffsetCommitResponse::is_valid_version() const
+    {
+        return m_version >= 0 && m_version <= 7;
+    }
+
+    KafkaVersion OffsetCommitResponse::required_version() const
+    {
+        switch (m_version)
+        {
+        case 7:
+            return V2_3_0_0;
+        case 5:
+        case 6:
+            return V2_1_0_0;
+        case 4:
+            return V2_0_0_0;
+        case 3:
+            return V0_11_0_0;
+        case 2:
+            return V0_9_0_0;
+        case 0:
+        case 1:
+            return V0_8_2_0;
+        default:
+            return V2_4_0_0;
         }
     }
-    return 0;
-}
 
-int16_t OffsetCommitResponse::key() const
-{
-    return apiKeyOffsetCommit;
-}
-
-int16_t OffsetCommitResponse::version() const
-{
-    return m_version;
-}
-
-int16_t OffsetCommitResponse::header_version() const
-{
-    return 0;
-}
-
-bool OffsetCommitResponse::is_valid_version() const
-{
-    return m_version >= 0 && m_version <= 7;
-}
-
-KafkaVersion OffsetCommitResponse::required_version() const
-{
-    switch (m_version)
+    std::chrono::milliseconds OffsetCommitResponse::throttle_time() const
     {
-    case 7:
-        return V2_3_0_0;
-    case 5:
-    case 6:
-        return V2_1_0_0;
-    case 4:
-        return V2_0_0_0;
-    case 3:
-        return V0_11_0_0;
-    case 2:
-        return V0_9_0_0;
-    case 0:
-    case 1:
-        return V0_8_2_0;
-    default:
-        return V2_4_0_0;
+        return m_throttle_time;
     }
-}
 
-std::chrono::milliseconds OffsetCommitResponse::throttle_time() const
-{
-    return m_throttle_time;
-}
+} // namespace coev::kafka

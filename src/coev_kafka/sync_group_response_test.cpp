@@ -6,7 +6,7 @@
  */
 #include <gtest/gtest.h>
 #include "sync_group_response.h"
-
+using namespace coev::kafka;
 TEST(SyncGroupResponseTest, VersionCompatibility)
 {
     SyncGroupResponse response;

@@ -18,58 +18,63 @@
 #include "config_source.h"
 #include "protocol_body.h"
 
-struct CreatableTopicConfigs : VEncoder, VDecoder
+namespace coev::kafka
 {
-    std::string m_value;
-    bool m_read_only;
-    ConfigSource m_config_source;
-    bool m_is_sensitive;
 
-    int encode(packet_encoder &pe, int16_t version) const;
-    int decode(packet_decoder &pd, int16_t version);
-};
-
-struct CreatableTopicResult : VEncoder, VDecoder
-{
-    KError m_topic_config_error_code;
-    int32_t m_num_partitions;
-    int16_t m_replication_factor;
-    std::map<std::string, std::shared_ptr<CreatableTopicConfigs>> m_configs;
-
-    int encode(packet_encoder &pe, int16_t version) const;
-    int decode(packet_decoder &pd, int16_t version);
-};
-
-struct TopicError : VEncoder, VDecoder
-{
-    KError m_err;
-    std::string m_err_msg;
-
-    std::string Error() const;
-    int encode(packet_encoder &pe, int16_t version) const;
-    int decode(packet_decoder &pd, int16_t version);
-};
-
-struct CreateTopicsResponse : protocol_body, flexible_version
-{
-    int16_t m_version;
-    std::chrono::milliseconds m_throttle_time;
-    std::map<std::string, std::shared_ptr<TopicError>> m_topic_errors;
-    std::map<std::string, std::shared_ptr<CreatableTopicResult>> m_topic_results;
-    CreateTopicsResponse() = default;
-    CreateTopicsResponse(int16_t v) : m_version(v)
+    struct CreatableTopicConfigs : VEncoder, VDecoder
     {
-    }
+        std::string m_value;
+        bool m_read_only;
+        ConfigSource m_config_source;
+        bool m_is_sensitive;
 
-    void set_version(int16_t v);
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
-    int16_t key() const;
-    int16_t version() const;
-    int16_t header_version() const;
-    bool is_flexible() const;
-    bool is_flexible_version(int16_t version) const;
-    bool is_valid_version() const;
-    KafkaVersion required_version() const;
-    std::chrono::milliseconds throttle_time() const;
-};
+        int encode(packet_encoder &pe, int16_t version) const;
+        int decode(packet_decoder &pd, int16_t version);
+    };
+
+    struct CreatableTopicResult : VEncoder, VDecoder
+    {
+        KError m_topic_config_error_code;
+        int32_t m_num_partitions;
+        int16_t m_replication_factor;
+        std::map<std::string, std::shared_ptr<CreatableTopicConfigs>> m_configs;
+
+        int encode(packet_encoder &pe, int16_t version) const;
+        int decode(packet_decoder &pd, int16_t version);
+    };
+
+    struct TopicError : VEncoder, VDecoder
+    {
+        KError m_err;
+        std::string m_err_msg;
+
+        std::string Error() const;
+        int encode(packet_encoder &pe, int16_t version) const;
+        int decode(packet_decoder &pd, int16_t version);
+    };
+
+    struct CreateTopicsResponse : protocol_body, flexible_version
+    {
+        int16_t m_version;
+        std::chrono::milliseconds m_throttle_time;
+        std::map<std::string, std::shared_ptr<TopicError>> m_topic_errors;
+        std::map<std::string, std::shared_ptr<CreatableTopicResult>> m_topic_results;
+        CreateTopicsResponse() = default;
+        CreateTopicsResponse(int16_t v) : m_version(v)
+        {
+        }
+
+        void set_version(int16_t v);
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd, int16_t version);
+        int16_t key() const;
+        int16_t version() const;
+        int16_t header_version() const;
+        bool is_flexible() const;
+        bool is_flexible_version(int16_t version) const;
+        bool is_valid_version() const;
+        KafkaVersion required_version() const;
+        std::chrono::milliseconds throttle_time() const;
+    };
+
+} // namespace coev::kafka

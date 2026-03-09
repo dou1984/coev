@@ -11,35 +11,40 @@
 #include "consumer.h"
 #include "broker.h"
 
-struct BrokerConsumer : IConsumer, std::enable_shared_from_this<BrokerConsumer>
+namespace coev::kafka
 {
 
-    std::shared_ptr<Consumer> m_consumer;
-    std::shared_ptr<Broker> m_broker;
+    struct BrokerConsumer : IConsumer, std::enable_shared_from_this<BrokerConsumer>
+    {
 
-    std::unordered_set<std::shared_ptr<PartitionConsumer>> m_subscriptions;
-    std::vector<std::shared_ptr<PartitionConsumer>> m_new_subscriptions;
-    coev::co_channel<std::shared_ptr<PartitionConsumer>> m_input;
-    coev::co_task m_task;
-    BrokerConsumer();
-    BrokerConsumer(std::shared_ptr<Consumer> c, std::shared_ptr<Broker> broker);
-    virtual ~BrokerConsumer() = default;
+        std::shared_ptr<Consumer> m_consumer;
+        std::shared_ptr<Broker> m_broker;
 
-    int Topics(std::vector<std::string> &out);
-    coev::awaitable<int> Partitions(const std::string &topic, std::vector<int32_t> &out);
-    coev::awaitable<int> Close();
-    std::map<std::string, std::map<int32_t, int64_t>> HighWaterMarks();
+        std::unordered_set<std::shared_ptr<PartitionConsumer>> m_subscriptions;
+        std::vector<std::shared_ptr<PartitionConsumer>> m_new_subscriptions;
+        coev::co_channel<std::shared_ptr<PartitionConsumer>> m_input;
+        coev::co_task m_task;
+        BrokerConsumer();
+        BrokerConsumer(std::shared_ptr<Consumer> c, std::shared_ptr<Broker> broker);
+        virtual ~BrokerConsumer() = default;
 
-    void Pause(const std::map<std::string, std::vector<int32_t>> &topicPartitions);
-    void Resume(const std::map<std::string, std::vector<int32_t>> &topicPartitions);
-    void PauseAll();
-    void ResumeAll();
+        int Topics(std::vector<std::string> &out);
+        awaitable<int> Partitions(const std::string &topic, std::vector<int32_t> &out);
+        awaitable<int> Close();
+        std::map<std::string, std::map<int32_t, int64_t>> HighWaterMarks();
 
-    coev::awaitable<void> SubscriptionManager();
-    coev::awaitable<void> SubscriptionConsumer();
+        void Pause(const std::map<std::string, std::vector<int32_t>> &topicPartitions);
+        void Resume(const std::map<std::string, std::vector<int32_t>> &topicPartitions);
+        void PauseAll();
+        void ResumeAll();
 
-    void UpdateSubscriptions();
-    coev::awaitable<void> HandleResponses();
-    coev::awaitable<void> Abort(int err);
-    coev::awaitable<int> FetchNewMessages(std::shared_ptr<FetchResponse> &response);
-};
+        awaitable<void> SubscriptionManager();
+        awaitable<void> SubscriptionConsumer();
+
+        void UpdateSubscriptions();
+        awaitable<void> HandleResponses();
+        awaitable<void> Abort(int err);
+        awaitable<int> FetchNewMessages(std::shared_ptr<FetchResponse> &response);
+    };
+
+} // namespace coev::kafka

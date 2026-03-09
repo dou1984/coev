@@ -17,32 +17,36 @@
 #include "protocol_body.h"
 #include "encoder_decoder.h"
 
-struct DeleteRecordsRequestTopic : VDecoder, IEncoder
+namespace coev::kafka
 {
-
-  std::unordered_map<int32_t, int64_t> m_partition_offsets;
-  int encode(packet_encoder &pe) const;
-  int decode(packet_decoder &pd, int16_t version);
-};
-
-struct DeleteRecordsRequest : protocol_body
-{
-
-  int16_t m_version;
-  std::unordered_map<std::string, std::shared_ptr<DeleteRecordsRequestTopic>> m_topics;
-  std::chrono::milliseconds m_timeout;
-
-  DeleteRecordsRequest() = default;
-  DeleteRecordsRequest(int16_t v) : m_version(v)
+  struct DeleteRecordsRequestTopic : VDecoder, IEncoder
   {
-  }
-  ~DeleteRecordsRequest();
-  void set_version(int16_t v);
-  int encode(packet_encoder &pe) const;
-  int decode(packet_decoder &pd, int16_t version);
-  int16_t key() const;
-  int16_t version() const;
-  int16_t header_version() const;
-  bool is_valid_version() const;
-  KafkaVersion required_version() const;
-};
+
+    std::unordered_map<int32_t, int64_t> m_partition_offsets;
+    int encode(packet_encoder &pe) const;
+    int decode(packet_decoder &pd, int16_t version);
+  };
+
+  struct DeleteRecordsRequest : protocol_body
+  {
+
+    int16_t m_version;
+    std::unordered_map<std::string, std::shared_ptr<DeleteRecordsRequestTopic>> m_topics;
+    std::chrono::milliseconds m_timeout;
+
+    DeleteRecordsRequest() = default;
+    DeleteRecordsRequest(int16_t v) : m_version(v)
+    {
+    }
+    ~DeleteRecordsRequest();
+    void set_version(int16_t v);
+    int encode(packet_encoder &pe) const;
+    int decode(packet_decoder &pd, int16_t version);
+    int16_t key() const;
+    int16_t version() const;
+    int16_t header_version() const;
+    bool is_valid_version() const;
+    KafkaVersion required_version() const;
+  };
+
+}

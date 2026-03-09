@@ -16,43 +16,48 @@
 #include "errors.h"
 #include "protocol_body.h"
 
-struct AlterPartitionReassignmentsErrorBlock : IEncoder, IDecoder
+namespace coev::kafka
 {
-    KError m_code;
-    std::string m_message;
 
-    AlterPartitionReassignmentsErrorBlock() = default;
-    AlterPartitionReassignmentsErrorBlock(KError err, const std::string &msg) : m_code(err), m_message(msg)
+    struct AlterPartitionReassignmentsErrorBlock : IEncoder, IDecoder
     {
-    }
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd);
-};
+        KError m_code;
+        std::string m_message;
 
-struct AlterPartitionReassignmentsResponse : protocol_body, flexible_version
-{
-    int16_t m_version = 0;
-    std::chrono::milliseconds m_throttle_time;
-    KError m_code = ErrNoError;
-    std::string m_message;
-    std::map<std::string, std::map<int32_t, AlterPartitionReassignmentsErrorBlock>> m_errors;
+        AlterPartitionReassignmentsErrorBlock() = default;
+        AlterPartitionReassignmentsErrorBlock(KError err, const std::string &msg) : m_code(err), m_message(msg)
+        {
+        }
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd);
+    };
 
-    AlterPartitionReassignmentsResponse() = default;
-    AlterPartitionReassignmentsResponse(int16_t v) : m_version(v)
+    struct AlterPartitionReassignmentsResponse : protocol_body, flexible_version
     {
-    }
-    void set_version(int16_t v);
-    void add_error(const std::string &topic, int32_t partition, KError kerror, std::string message);
+        int16_t m_version = 0;
+        std::chrono::milliseconds m_throttle_time;
+        KError m_code = ErrNoError;
+        std::string m_message;
+        std::map<std::string, std::map<int32_t, AlterPartitionReassignmentsErrorBlock>> m_errors;
 
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
+        AlterPartitionReassignmentsResponse() = default;
+        AlterPartitionReassignmentsResponse(int16_t v) : m_version(v)
+        {
+        }
+        void set_version(int16_t v);
+        void add_error(const std::string &topic, int32_t partition, KError kerror, std::string message);
 
-    int16_t key() const;
-    int16_t version() const;
-    int16_t header_version() const;
-    bool is_valid_version() const;
-    bool is_flexible() const;
-    bool is_flexible_version(int16_t version) const;
-    KafkaVersion required_version() const;
-    std::chrono::milliseconds throttle_time() const;
-};
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd, int16_t version);
+
+        int16_t key() const;
+        int16_t version() const;
+        int16_t header_version() const;
+        bool is_valid_version() const;
+        bool is_flexible() const;
+        bool is_flexible_version(int16_t version) const;
+        KafkaVersion required_version() const;
+        std::chrono::milliseconds throttle_time() const;
+    };
+
+} // namespace coev::kafka

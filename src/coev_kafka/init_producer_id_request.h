@@ -18,27 +18,30 @@
 #include "protocol_body.h"
 #include "config.h"
 
-struct InitProducerIDRequest : protocol_body, flexible_version
+namespace coev::kafka
 {
-
-    int16_t m_version = 0;
-    std::string m_transactional_id;
-    std::chrono::milliseconds m_transaction_timeout;
-    int64_t m_producer_id = 0;
-    int16_t m_producer_epoch = 0;
-    InitProducerIDRequest() = default;
-    InitProducerIDRequest(int16_t v) : m_version(v)
+    struct InitProducerIDRequest : protocol_body, flexible_version
     {
-    }
-    InitProducerIDRequest(std::shared_ptr<Config> &conf);
-    void set_version(int16_t v);
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
-    int16_t key() const;
-    int16_t version() const;
-    int16_t header_version() const;
-    bool is_valid_version() const;
-    bool is_flexible() const;
-    bool is_flexible_version(int16_t ver) const;
-    KafkaVersion required_version() const;
-};
+
+        int16_t m_version = 0;
+        std::string m_transactional_id;
+        std::chrono::milliseconds m_transaction_timeout;
+        int64_t m_producer_id = 0;
+        int16_t m_producer_epoch = 0;
+        InitProducerIDRequest() = default;
+        InitProducerIDRequest(int16_t v) : m_version(v)
+        {
+        }
+        InitProducerIDRequest(std::shared_ptr<Config> &conf);
+        void set_version(int16_t v);
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd, int16_t version);
+        int16_t key() const;
+        int16_t version() const;
+        int16_t header_version() const;
+        bool is_valid_version() const;
+        bool is_flexible() const;
+        bool is_flexible_version(int16_t ver) const;
+        KafkaVersion required_version() const;
+    };
+}

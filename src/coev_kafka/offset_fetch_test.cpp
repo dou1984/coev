@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 #include "offset_fetch_request.h"
 #include "offset_fetch_response.h"
-
+using namespace coev::kafka;
 TEST(OffsetFetchTest, RequestVersionCompatibility)
 {
     OffsetFetchRequest request;

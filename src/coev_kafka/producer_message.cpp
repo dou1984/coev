@@ -8,46 +8,50 @@
 #include <algorithm>
 #include <cstdint>
 
-ProducerMessage::ProducerMessage() : m_offset(0), m_partition(0), m_retries(0), m_flags(static_cast<FlagSet>(0)), m_sequence_number(0), m_producer_epoch(0), m_has_sequence(false)
+namespace coev::kafka
 {
-}
-ProducerMessage::~ProducerMessage()
-{
-}
-int ProducerMessage::byte_size(int version) const
-{
-    int size = 0;
-
-    if (version >= 2)
+    ProducerMessage::ProducerMessage() : m_offset(0), m_partition(0), m_retries(0), m_flags(static_cast<FlagSet>(0)), m_sequence_number(0), m_producer_epoch(0), m_has_sequence(false)
     {
-        size = MaximumRecordOverhead;
-        for (auto &h : m_headers)
+    }
+    ProducerMessage::~ProducerMessage()
+    {
+    }
+    int ProducerMessage::byte_size(int version) const
+    {
+        int size = 0;
+
+        if (version >= 2)
         {
-            size += static_cast<int>(h.m_key.size()) + static_cast<int>(h.m_value.size()) + 2 * 5;
+            size = MaximumRecordOverhead;
+            for (auto &h : m_headers)
+            {
+                size += static_cast<int>(h.m_key.size()) + static_cast<int>(h.m_value.size()) + 2 * 5;
+            }
         }
-    }
-    else
-    {
-        size = ProducerMessageOverhead;
+        else
+        {
+            size = ProducerMessageOverhead;
+        }
+
+        if (m_key)
+        {
+            size += m_key.Length();
+        }
+        if (m_value)
+        {
+            size += m_value.Length();
+        }
+
+        return size;
     }
 
-    if (m_key)
+    void ProducerMessage::clear()
     {
-        size += m_key.Length();
-    }
-    if (m_value)
-    {
-        size += m_value.Length();
+        m_flags = static_cast<FlagSet>(0);
+        m_retries = 0;
+        m_sequence_number = 0;
+        m_producer_epoch = 0;
+        m_has_sequence = false;
     }
 
-    return size;
-}
-
-void ProducerMessage::clear()
-{
-    m_flags = static_cast<FlagSet>(0);
-    m_retries = 0;
-    m_sequence_number = 0;
-    m_producer_epoch = 0;
-    m_has_sequence = false;
 }

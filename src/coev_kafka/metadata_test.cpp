@@ -8,6 +8,7 @@
 #include "metadata_request.h"
 #include "metadata_response.h"
 
+using namespace coev::kafka;
 TEST(MetadataTest, RequestVersionCompatibility)
 {
     MetadataRequest request;

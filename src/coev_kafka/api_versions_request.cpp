@@ -8,111 +8,116 @@
 #include "api_versions_request.h"
 #include "api_versions.h"
 
-void ApiVersionsRequest::set_version(int16_t v)
+namespace coev::kafka
 {
-    m_version = v;
-    // Ensure client software fields are initialized for version >= 3
-    if (m_version >= 3)
+
+    void ApiVersionsRequest::set_version(int16_t v)
     {
-        if (m_client_software_name.empty())
+        m_version = v;
+        // Ensure client software fields are initialized for version >= 3
+        if (m_version >= 3)
         {
-            m_client_software_name = defaultClientSoftwareName;
-        }
-        if (m_client_software_version.empty())
-        {
-            m_client_software_version = defaultClientSoftwareVersion;
+            if (m_client_software_name.empty())
+            {
+                m_client_software_name = defaultClientSoftwareName;
+            }
+            if (m_client_software_version.empty())
+            {
+                m_client_software_version = defaultClientSoftwareVersion;
+            }
         }
     }
-}
 
-int ApiVersionsRequest::encode(packet_encoder &pe) const
-{
-    if (m_version >= 3)
+    int ApiVersionsRequest::encode(packet_encoder &pe) const
     {
-        if (m_client_software_name.empty())
+        if (m_version >= 3)
         {
-            m_client_software_name = defaultClientSoftwareName;
-        }
-        if (m_client_software_version.empty())
-        {
-            m_client_software_version = defaultClientSoftwareVersion;
+            if (m_client_software_name.empty())
+            {
+                m_client_software_name = defaultClientSoftwareName;
+            }
+            if (m_client_software_version.empty())
+            {
+                m_client_software_version = defaultClientSoftwareVersion;
+            }
+
+            if (pe.putString(m_client_software_name) != ErrNoError)
+            {
+                return ErrEncodeError;
+            }
+            if (pe.putString(m_client_software_version) != ErrNoError)
+            {
+                return ErrEncodeError;
+            }
+            pe.putEmptyTaggedFieldArray();
         }
 
-        if (pe.putString(m_client_software_name) != ErrNoError)
-        {
-            return ErrEncodeError;
-        }
-        if (pe.putString(m_client_software_version) != ErrNoError)
-        {
-            return ErrEncodeError;
-        }
-        pe.putEmptyTaggedFieldArray();
+        return ErrNoError;
     }
 
-    return ErrNoError;
-}
-
-int ApiVersionsRequest::decode(packet_decoder &pd, int16_t version)
-{
-    m_version = version;
-    if (m_version >= 3)
+    int ApiVersionsRequest::decode(packet_decoder &pd, int16_t version)
     {
-        if (pd.getString(m_client_software_name) != ErrNoError)
+        m_version = version;
+        if (m_version >= 3)
         {
-            return ErrDecodeError;
+            if (pd.getString(m_client_software_name) != ErrNoError)
+            {
+                return ErrDecodeError;
+            }
+            if (pd.getString(m_client_software_version) != ErrNoError)
+            {
+                return ErrDecodeError;
+            }
         }
-        if (pd.getString(m_client_software_version) != ErrNoError)
+        int32_t _;
+        return pd.getEmptyTaggedFieldArray(_);
+    }
+
+    int16_t ApiVersionsRequest::key() const
+    {
+        return apiKeyApiVersions;
+    }
+
+    int16_t ApiVersionsRequest::version() const
+    {
+        return m_version;
+    }
+
+    int16_t ApiVersionsRequest::header_version() const
+    {
+        return (m_version >= 3) ? 2 : 1;
+    }
+
+    bool ApiVersionsRequest::is_valid_version() const
+    {
+        return m_version >= 0 && m_version <= 3;
+    }
+
+    bool ApiVersionsRequest::is_flexible() const
+    {
+        return is_flexible_version(m_version);
+    }
+
+    bool ApiVersionsRequest::is_flexible_version(int16_t version) const
+    {
+        return version >= 3;
+    }
+
+    KafkaVersion ApiVersionsRequest::required_version() const
+    {
+        switch (m_version)
         {
-            return ErrDecodeError;
+        case 3:
+            return V2_4_0_0;
+        case 2:
+            return V2_0_0_0;
+        case 1:
+            return V0_11_0_0;
+        case 0:
+            return V0_10_0_0;
+        default:
+            return V2_4_0_0;
         }
     }
-    int32_t _;
-    return pd.getEmptyTaggedFieldArray(_);
-}
 
-int16_t ApiVersionsRequest::key() const
-{
-    return apiKeyApiVersions;
-}
-
-int16_t ApiVersionsRequest::version() const
-{
-    return m_version;
-}
-
-int16_t ApiVersionsRequest::header_version() const
-{
-    return (m_version >= 3) ? 2 : 1;
-}
-
-bool ApiVersionsRequest::is_valid_version() const
-{
-    return m_version >= 0 && m_version <= 3;
-}
-
-bool ApiVersionsRequest::is_flexible() const
-{
-    return is_flexible_version(m_version);
-}
-
-bool ApiVersionsRequest::is_flexible_version(int16_t version) const
-{
-    return version >= 3;
-}
-
-KafkaVersion ApiVersionsRequest::required_version() const
-{
-    switch (m_version)
-    {
-    case 3:
-        return V2_4_0_0;
-    case 2:
-        return V2_0_0_0;
-    case 1:
-        return V0_11_0_0;
-    case 0:
-        return V0_10_0_0;
-    default:
-        return V2_4_0_0;
-    }
-}
+} // namespace coev::kafka

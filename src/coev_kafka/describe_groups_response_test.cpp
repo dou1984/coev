@@ -8,7 +8,7 @@
 #include <gtest/gtest.h>
 #include "real_encoder.h"
 #include "real_decoder.h"
-
+using namespace coev::kafka;
 TEST(DescribeGroupsResponseTest, BasicFunctionality)
 {
     // Test with version 0

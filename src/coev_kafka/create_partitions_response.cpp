@@ -8,134 +8,139 @@
 #include "api_versions.h"
 #include "create_partitions_response.h"
 
-void CreatePartitionsResponse::set_version(int16_t v)
+namespace coev::kafka
 {
-    m_version = v;
-}
 
-int CreatePartitionsResponse::encode(packet_encoder &pe) const
-{
-    pe.putDurationMs(m_throttle_time);
-
-    if (pe.putArrayLength(static_cast<int32_t>(m_topic_partition_errors.size())) != ErrNoError)
+    void CreatePartitionsResponse::set_version(int16_t v)
     {
-        return ErrEncodeError;
+        m_version = v;
     }
 
-    for (auto &[topic, perr] : m_topic_partition_errors)
+    int CreatePartitionsResponse::encode(packet_encoder &pe) const
     {
-        if (pe.putString(topic) != ErrNoError)
+        pe.putDurationMs(m_throttle_time);
+
+        if (pe.putArrayLength(static_cast<int32_t>(m_topic_partition_errors.size())) != ErrNoError)
         {
             return ErrEncodeError;
         }
-        if (perr.encode(pe) != ErrNoError)
+
+        for (auto &[topic, perr] : m_topic_partition_errors)
+        {
+            if (pe.putString(topic) != ErrNoError)
+            {
+                return ErrEncodeError;
+            }
+            if (perr.encode(pe) != ErrNoError)
+            {
+                return ErrEncodeError;
+            }
+        }
+
+        return ErrNoError;
+    }
+
+    int CreatePartitionsResponse::decode(packet_decoder &pd, int16_t version)
+    {
+        if (pd.getDurationMs(m_throttle_time) != ErrNoError)
+        {
+            return ErrDecodeError;
+        }
+
+        int32_t n;
+        if (pd.getArrayLength(n) != ErrNoError)
+        {
+            return ErrDecodeError;
+        }
+
+        m_topic_partition_errors.clear();
+        for (int32_t i = 0; i < n; ++i)
+        {
+            std::string topic;
+            if (pd.getString(topic) != ErrNoError)
+            {
+                return ErrDecodeError;
+            }
+            if (m_topic_partition_errors[topic].decode(pd, version) != ErrNoError)
+            {
+                return ErrDecodeError;
+            }
+        }
+
+        return ErrNoError;
+    }
+
+    int16_t CreatePartitionsResponse::key() const
+    {
+        return apiKeyCreatePartitions;
+    }
+
+    int16_t CreatePartitionsResponse::version() const
+    {
+        return m_version;
+    }
+
+    int16_t CreatePartitionsResponse::header_version() const
+    {
+        return 0;
+    }
+
+    bool CreatePartitionsResponse::is_valid_version() const
+    {
+        return m_version >= 0 && m_version <= 3;
+    }
+
+    KafkaVersion CreatePartitionsResponse::required_version() const
+    {
+        switch (m_version)
+        {
+        case 1:
+            return V2_0_0_0;
+        case 0:
+            return V1_0_0_0;
+        default:
+            return V2_0_0_0;
+        }
+    }
+
+    std::chrono::milliseconds CreatePartitionsResponse::throttle_time() const
+    {
+        return m_throttle_time;
+    }
+
+    std::string TopicPartitionError::error() const
+    {
+        std::string text = "";
+        if (!m_err_msg.empty())
+        {
+            text += " - " + m_err_msg;
+        }
+        return text;
+    }
+
+    int TopicPartitionError::encode(packet_encoder &pe) const
+    {
+        pe.putKError(m_err);
+        if (pe.putNullableString(m_err_msg) != ErrNoError)
         {
             return ErrEncodeError;
         }
+        return ErrNoError;
     }
 
-    return ErrNoError;
-}
-
-int CreatePartitionsResponse::decode(packet_decoder &pd, int16_t version)
-{
-    if (pd.getDurationMs(m_throttle_time) != ErrNoError)
+    int TopicPartitionError::decode(packet_decoder &pd, int16_t version)
     {
-        return ErrDecodeError;
-    }
-
-    int32_t n;
-    if (pd.getArrayLength(n) != ErrNoError)
-    {
-        return ErrDecodeError;
-    }
-
-    m_topic_partition_errors.clear();
-    for (int32_t i = 0; i < n; ++i)
-    {
-        std::string topic;
-        if (pd.getString(topic) != ErrNoError)
+        if (pd.getKError(m_err) != ErrNoError)
         {
-            return ErrDecodeError;
+            return ErrEncodeError;
         }
-        if (m_topic_partition_errors[topic].decode(pd, version) != ErrNoError)
+
+        if (pd.getNullableString(m_err_msg) != ErrNoError)
         {
-            return ErrDecodeError;
+            return ErrEncodeError;
         }
+
+        return ErrNoError;
     }
 
-    return ErrNoError;
-}
-
-int16_t CreatePartitionsResponse::key() const
-{
-    return apiKeyCreatePartitions;
-}
-
-int16_t CreatePartitionsResponse::version() const
-{
-    return m_version;
-}
-
-int16_t CreatePartitionsResponse::header_version() const
-{
-    return 0;
-}
-
-bool CreatePartitionsResponse::is_valid_version() const
-{
-    return m_version >= 0 && m_version <= 3;
-}
-
-KafkaVersion CreatePartitionsResponse::required_version() const
-{
-    switch (m_version)
-    {
-    case 1:
-        return V2_0_0_0;
-    case 0:
-        return V1_0_0_0;
-    default:
-        return V2_0_0_0;
-    }
-}
-
-std::chrono::milliseconds CreatePartitionsResponse::throttle_time() const
-{
-    return m_throttle_time;
-}
-
-std::string TopicPartitionError::error() const
-{
-    std::string text = "";
-    if (!m_err_msg.empty())
-    {
-        text += " - " + m_err_msg;
-    }
-    return text;
-}
-
-int TopicPartitionError::encode(packet_encoder &pe) const
-{
-    pe.putKError(m_err);
-    if (pe.putNullableString(m_err_msg) != ErrNoError)
-    {
-        return ErrEncodeError;
-    }
-    return ErrNoError;
-}
-
-int TopicPartitionError::decode(packet_decoder &pd, int16_t version)
-{
-    if (pd.getKError(m_err) != ErrNoError)
-    {
-        return ErrEncodeError;
-    }
-
-    if (pd.getNullableString(m_err_msg) != ErrNoError)
-    {
-        return ErrEncodeError;
-    }
-
-    return ErrNoError;
-}
+} // namespace coev::kafka

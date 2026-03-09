@@ -8,9 +8,10 @@
 #include "acl_create_request.h"
 #include "acl_create_response.h"
 
+using namespace coev::kafka;
 TEST(AclCreateTest, RequestVersionCompatibility)
 {
-    CreateAclsRequest request;
+   CreateAclsRequest request;
 
     // Test all supported versions
     for (int16_t version = 0; version <= 1; version++)

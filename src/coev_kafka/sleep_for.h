@@ -8,5 +8,8 @@
 #include <chrono>
 #include <coev/coev.h>
 
-coev::awaitable<void> sleep_for(std::chrono::milliseconds);
-coev::awaitable<void> sleep_for(std::chrono::seconds);
+namespace coev::kafka
+{
+    awaitable<void> sleep_for(std::chrono::milliseconds);
+    awaitable<void> sleep_for(std::chrono::seconds);
+}

@@ -11,26 +11,29 @@
 #include "producer_message.h"
 #include "broker_producer.h"
 
-struct PartitionProducer
+namespace coev::kafka
 {
-    PartitionProducer(std::shared_ptr<AsyncProducer> parent, const std::string &topic, int32_t partition);
-    ~PartitionProducer();
+    struct PartitionProducer
+    {
+        PartitionProducer(std::shared_ptr<AsyncProducer> parent, const std::string &topic, int32_t partition);
+        ~PartitionProducer();
 
-    coev::awaitable<int> init();
-    coev::awaitable<int> dispatch();
-    coev::awaitable<void> backoff(int retries);
-    coev::awaitable<int> update_leader_if_broker_producer_is_nil(std::shared_ptr<ProducerMessage> msg);
-    coev::awaitable<void> flush_retry_buffers();
-    coev::awaitable<int> update_leader();
-    void new_high_watermark(int hwm);
+        awaitable<int> init();
+        awaitable<int> dispatch();
+        awaitable<void> backoff(int retries);
+        awaitable<int> update_leader_if_broker_producer_is_nil(std::shared_ptr<ProducerMessage> msg);
+        awaitable<void> flush_retry_buffers();
+        awaitable<int> update_leader();
+        void new_high_watermark(int hwm);
 
-    std::string m_topic;
-    int32_t m_partition;
-    std::shared_ptr<AsyncProducer> m_parent;
-    coev::co_channel<std::shared_ptr<ProducerMessage>> m_input;
-    std::vector<PartitionRetryState> m_retry_state;
-    std::shared_ptr<Broker> m_leader;
-    std::shared_ptr<BrokerProducer> m_broker_producer;
-    int m_high_watermark;
-    coev::co_task m_task;
-};
+        std::string m_topic;
+        int32_t m_partition;
+        std::shared_ptr<AsyncProducer> m_parent;
+        coev::co_channel<std::shared_ptr<ProducerMessage>> m_input;
+        std::vector<PartitionRetryState> m_retry_state;
+        std::shared_ptr<Broker> m_leader;
+        std::shared_ptr<BrokerProducer> m_broker_producer;
+        int m_high_watermark;
+        coev::co_task m_task;
+    };
+} // namespace coev::kafka

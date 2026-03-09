@@ -6,7 +6,7 @@
  */
 #include <gtest/gtest.h>
 #include "produce_response.h"
-
+using namespace coev::kafka;
 TEST(ProduceResponseTest, VersionCompatibility)
 {
     ProduceResponse response;

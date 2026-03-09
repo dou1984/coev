@@ -15,23 +15,26 @@
 #include "protocol_body.h"
 #include "errors.h"
 
-template <class Res>
-struct ResponsePromise
+namespace coev::kafka
 {
-    std::chrono::time_point<std::chrono::system_clock> m_request_time;
-    int32_t m_correlation_id = 0;
-    std::string m_packets;
-    std::shared_ptr<Res> m_response = std::make_shared<Res>();
-
-    ResponsePromise() = default;
-
-    int decode(int16_t version)
+    template <class Res>
+    struct ResponsePromise
     {
-        auto err = decode_version(m_packets, *m_response, version);
-        if (err)
+        std::chrono::time_point<std::chrono::system_clock> m_request_time;
+        int32_t m_correlation_id = 0;
+        std::string m_packets;
+        std::shared_ptr<Res> m_response = std::make_shared<Res>();
+
+        ResponsePromise() = default;
+
+        int decode(int16_t version)
         {
-            return ErrDecodeError;
+            auto err = decode_version(m_packets, *m_response, version);
+            if (err)
+            {
+                return ErrDecodeError;
+            }
+            return ErrNoError;
         }
-        return ErrNoError;
-    }
-};
+    };
+}

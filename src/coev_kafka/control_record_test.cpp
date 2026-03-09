@@ -13,6 +13,8 @@
 #include "real_decoder.h"
 #include "prep_encoder.h"
 
+using namespace coev::kafka;
+
 // Test data from Sarama's control_record_test.go
 const unsigned char abortTxCtrlRecKeyData[] = {0x00, 0x00, 0x00, 0x00}; // version 0, TX_ABORT = 0
 const std::string abortTxCtrlRecKey(reinterpret_cast<const char *>(abortTxCtrlRecKeyData), sizeof(abortTxCtrlRecKeyData));

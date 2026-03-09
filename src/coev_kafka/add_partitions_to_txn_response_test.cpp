@@ -7,6 +7,8 @@
 #include <gtest/gtest.h>
 #include "add_partitions_to_txn_response.h"
 
+using namespace coev::kafka;
+
 TEST(AddPartitionsToTxnResponseTest, VersionCompatibility)
 {
     AddPartitionsToTxnResponse response;

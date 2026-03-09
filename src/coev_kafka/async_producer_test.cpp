@@ -19,6 +19,8 @@
 #include "producer_message.h"
 #include "error.h"
 
+using namespace coev::kafka;
+
 // Mock test utilities for basic functionality testing
 class AsyncProducerTest : public ::testing::Test
 {

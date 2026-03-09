@@ -8,7 +8,7 @@
 #include <gtest/gtest.h>
 #include "real_encoder.h"
 #include "real_decoder.h"
-
+using namespace coev::kafka;
 TEST(FetchRequestTest, BasicFunctionality) {
     // Test with version 0
     FetchRequest request(0);

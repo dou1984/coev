@@ -17,37 +17,41 @@
 #include "version.h"
 #include "config.h"
 
-struct RecordBatch
+namespace coev::kafka
 {
-    int8_t m_version = 2;
-    CompressionCodec m_codec = CompressionCodec::None;
-    int64_t m_first_offset = 0;
-    int32_t m_partition_leader_epoch = 0;
-    int m_compression_level = 0;
-    int32_t m_last_offset_delta = 0;
-    std::chrono::system_clock::time_point m_first_timestamp;
-    std::chrono::system_clock::time_point m_max_timestamp;
-    int64_t m_producer_id = -1;
-    int16_t m_producer_epoch = -1;
-    int32_t m_first_sequence = -1;
-    std::vector<std::shared_ptr<Record>> m_records;
-    bool m_control = false;
-    bool m_log_append_time = false;
-    bool m_partial_trailing_record = false;
-    bool m_is_transactional = false;
+    struct RecordBatch
+    {
+        int8_t m_version = 2;
+        CompressionCodec m_codec = CompressionCodec::None;
+        int64_t m_first_offset = 0;
+        int32_t m_partition_leader_epoch = 0;
+        int m_compression_level = 0;
+        int32_t m_last_offset_delta = 0;
+        std::chrono::system_clock::time_point m_first_timestamp;
+        std::chrono::system_clock::time_point m_max_timestamp;
+        int64_t m_producer_id = -1;
+        int16_t m_producer_epoch = -1;
+        int32_t m_first_sequence = -1;
+        std::vector<std::shared_ptr<Record>> m_records;
+        bool m_control = false;
+        bool m_log_append_time = false;
+        bool m_partial_trailing_record = false;
+        bool m_is_transactional = false;
 
-    std::string m_compressed_records;
-    size_t m_records_len = 0;
+        std::string m_compressed_records;
+        size_t m_records_len = 0;
 
-    RecordBatch() = default;
-    RecordBatch(int8_t v);
-    RecordBatch(int8_t v, bool, std::chrono::system_clock::time_point &first, std::chrono::system_clock::time_point &max);
+        RecordBatch() = default;
+        RecordBatch(int8_t v);
+        RecordBatch(int8_t v, bool, std::chrono::system_clock::time_point &first, std::chrono::system_clock::time_point &max);
 
-    int64_t last_offset() const;
-    void add_record(std::shared_ptr<Record> record);
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd);
+        int64_t last_offset() const;
+        void add_record(std::shared_ptr<Record> record);
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd);
 
-    int16_t compute_attributes() const;
-    void encode_records(packet_encoder &pe);
-};
+        int16_t compute_attributes() const;
+        void encode_records(packet_encoder &pe);
+    };
+
+}

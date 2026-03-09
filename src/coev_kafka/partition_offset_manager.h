@@ -11,32 +11,37 @@
 #include "consumer.h"
 #include "consumer_error.h"
 
-struct PartitionOffsetManager
+namespace coev::kafka
 {
-    PartitionOffsetManager() = default;
-    PartitionOffsetManager(std::shared_ptr<OffsetManager> parent, const std::string &topic, int32_t partition,
-                           int32_t leader_epoch, int64_t offset, const std::string &metadata);
 
-    std::pair<int64_t, std::string> next_offset();
-    coev::awaitable<void> errors(std::shared_ptr<ConsumerError> &err);
-    void mark_offset(int64_t offset, const std::string &metadata);
-    void reset_offset(int64_t offset, const std::string &metadata);
-    void async_close();
-    void close();
+    struct PartitionOffsetManager
+    {
+        PartitionOffsetManager() = default;
+        PartitionOffsetManager(std::shared_ptr<OffsetManager> parent, const std::string &topic, int32_t partition,
+                               int32_t leader_epoch, int64_t offset, const std::string &metadata);
 
-    void handle_error(KError err);
-    void update_committed(int64_t offset, const std::string &metadata);
-    void release();
+        std::pair<int64_t, std::string> next_offset();
+        awaitable<void> errors(std::shared_ptr<ConsumerError> &err);
+        void mark_offset(int64_t offset, const std::string &metadata);
+        void reset_offset(int64_t offset, const std::string &metadata);
+        void async_close();
+        void close();
 
-    std::shared_ptr<OffsetManager> m_parent;
-    std::string m_topic;
-    int32_t m_partition;
-    int32_t m_leader_epoch;
+        void handle_error(KError err);
+        void update_committed(int64_t offset, const std::string &metadata);
+        void release();
 
-    int64_t m_offset;
-    std::string m_metadata;
-    bool m_dirty;
-    bool m_done;
+        std::shared_ptr<OffsetManager> m_parent;
+        std::string m_topic;
+        int32_t m_partition;
+        int32_t m_leader_epoch;
 
-    coev::co_channel<std::shared_ptr<ConsumerError>> m_errors;
-};
+        int64_t m_offset;
+        std::string m_metadata;
+        bool m_dirty;
+        bool m_done;
+
+        coev::co_channel<std::shared_ptr<ConsumerError>> m_errors;
+    };
+
+} // namespace coev::kafka

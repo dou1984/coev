@@ -10,12 +10,17 @@
 #include <exception>
 #include <iostream>
 
-coev::awaitable<int> safely_apply_interceptor(std::shared_ptr<ProducerMessage> &msg, std::shared_ptr<ProducerInterceptor> &interceptor)
+namespace coev::kafka
 {
-    return interceptor->OnSend(msg);
-}
 
-coev::awaitable<int> safely_apply_interceptor(std::shared_ptr<ConsumerMessage> &msg, std::shared_ptr<ConsumerInterceptor> &interceptor)
-{
-    return interceptor->OnConsume(msg);
-}
+    awaitable<int> safely_apply_interceptor(std::shared_ptr<ProducerMessage> &msg, std::shared_ptr<ProducerInterceptor> &interceptor)
+    {
+        return interceptor->OnSend(msg);
+    }
+
+    awaitable<int> safely_apply_interceptor(std::shared_ptr<ConsumerMessage> &msg, std::shared_ptr<ConsumerInterceptor> &interceptor)
+    {
+        return interceptor->OnConsume(msg);
+    }
+
+} // namespace coev::kafka

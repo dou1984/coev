@@ -17,25 +17,28 @@
 #include "version.h"
 #include "protocol_body.h"
 
-struct ListGroupsRequest : protocol_body, flexible_version
+namespace coev::kafka
 {
-
-    int16_t m_version = 0;
-    std::vector<std::string> m_states_filter;
-    std::vector<std::string> m_types_filter;
-
-    ListGroupsRequest() = default;
-    ListGroupsRequest(int16_t v) : m_version(v)
+    struct ListGroupsRequest : protocol_body, flexible_version
     {
-    }
-    void set_version(int16_t v);
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
-    int16_t key() const;
-    int16_t version() const;
-    int16_t header_version() const;
-    bool is_valid_version() const;
-    bool is_flexible() const;
-    bool is_flexible_version(int16_t ver) const;
-    KafkaVersion required_version() const;
-};
+
+        int16_t m_version = 0;
+        std::vector<std::string> m_states_filter;
+        std::vector<std::string> m_types_filter;
+
+        ListGroupsRequest() = default;
+        ListGroupsRequest(int16_t v) : m_version(v)
+        {
+        }
+        void set_version(int16_t v);
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd, int16_t version);
+        int16_t key() const;
+        int16_t version() const;
+        int16_t header_version() const;
+        bool is_valid_version() const;
+        bool is_flexible() const;
+        bool is_flexible_version(int16_t ver) const;
+        KafkaVersion required_version() const;
+    };
+}

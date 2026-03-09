@@ -9,208 +9,211 @@
 #include "api_versions.h"
 #include <utility>
 
-int SyncGroupRequestAssignment::encode(packet_encoder &pe, int16_t version) const
+namespace coev::kafka
 {
-    int err = pe.putString(m_member_id);
-    if (err != 0)
+    int SyncGroupRequestAssignment::encode(packet_encoder &pe, int16_t version) const
     {
-        return err;
-    }
-
-    err = pe.putBytes(m_assignment);
-    if (err != 0)
-    {
-        return err;
-    }
-
-    pe.putEmptyTaggedFieldArray();
-    return 0;
-}
-
-int SyncGroupRequestAssignment::decode(packet_decoder &pd, int16_t version)
-{
-    int err = pd.getString(m_member_id);
-    if (err != 0)
-    {
-        return err;
-    }
-
-    err = pd.getBytes(m_assignment);
-    if (err != 0)
-    {
-        return err;
-    }
-
-    int32_t _;
-    return pd.getEmptyTaggedFieldArray(_);
-}
-
-void SyncGroupRequest::set_version(int16_t v)
-{
-    m_version = v;
-}
-
-int SyncGroupRequest::encode(packet_encoder &pe) const
-{
-    int err = pe.putString(m_group_id);
-    if (err != 0)
-    {
-        return err;
-    }
-
-    pe.putInt32(m_generation_id);
-
-    err = pe.putString(m_member_id);
-    if (err != 0)
-    {
-        return err;
-    }
-
-    if (m_version >= 3)
-    {
-        err = pe.putNullableString(m_group_instance_id);
+        int err = pe.putString(m_member_id);
         if (err != 0)
         {
             return err;
         }
-    }
 
-    err = pe.putArrayLength(static_cast<int>(m_group_assignments.size()));
-    if (err != 0)
-    {
-        return err;
-    }
-
-    for (auto &assignment : m_group_assignments)
-    {
-        err = assignment.encode(pe, m_version);
+        err = pe.putBytes(m_assignment);
         if (err != 0)
         {
             return err;
         }
+
+        pe.putEmptyTaggedFieldArray();
+        return 0;
     }
 
-    pe.putEmptyTaggedFieldArray();
-    return 0;
-}
-
-int SyncGroupRequest::decode(packet_decoder &pd, int16_t version)
-{
-    m_version = version;
-
-    int err = pd.getString(m_group_id);
-    if (err != 0)
+    int SyncGroupRequestAssignment::decode(packet_decoder &pd, int16_t version)
     {
-        return err;
-    }
-    err = pd.getInt32(m_generation_id);
-    if (err != 0)
-    {
-        return err;
-    }
-
-    err = pd.getString(m_member_id);
-    if (err != 0)
-    {
-        return err;
-    }
-
-    if (m_version >= 3)
-    {
-
-        err = pd.getNullableString(m_group_instance_id);
+        int err = pd.getString(m_member_id);
         if (err != 0)
         {
             return err;
         }
-    }
 
-    int num_assignments = 0;
-    err = pd.getArrayLength(num_assignments);
-    if (err != 0)
-    {
-        return err;
-    }
-
-    m_group_assignments.clear();
-    if (num_assignments > 0)
-    {
-        m_group_assignments.resize(num_assignments);
-        for (int i = 0; i < num_assignments; ++i)
+        err = pd.getBytes(m_assignment);
+        if (err != 0)
         {
-            err = m_group_assignments[i].decode(pd, m_version);
+            return err;
+        }
+
+        int32_t _;
+        return pd.getEmptyTaggedFieldArray(_);
+    }
+
+    void SyncGroupRequest::set_version(int16_t v)
+    {
+        m_version = v;
+    }
+
+    int SyncGroupRequest::encode(packet_encoder &pe) const
+    {
+        int err = pe.putString(m_group_id);
+        if (err != 0)
+        {
+            return err;
+        }
+
+        pe.putInt32(m_generation_id);
+
+        err = pe.putString(m_member_id);
+        if (err != 0)
+        {
+            return err;
+        }
+
+        if (m_version >= 3)
+        {
+            err = pe.putNullableString(m_group_instance_id);
             if (err != 0)
             {
                 return err;
             }
         }
+
+        err = pe.putArrayLength(static_cast<int>(m_group_assignments.size()));
+        if (err != 0)
+        {
+            return err;
+        }
+
+        for (auto &assignment : m_group_assignments)
+        {
+            err = assignment.encode(pe, m_version);
+            if (err != 0)
+            {
+                return err;
+            }
+        }
+
+        pe.putEmptyTaggedFieldArray();
+        return 0;
     }
-    int32_t _;
-    return pd.getEmptyTaggedFieldArray(_);
-}
 
-int16_t SyncGroupRequest::key() const
-{
-    return apiKeySyncGroup;
-}
-
-int16_t SyncGroupRequest::version() const
-{
-    return m_version;
-}
-
-int16_t SyncGroupRequest::header_version() const
-{
-    return (m_version >= 4) ? 2 : 1;
-}
-
-bool SyncGroupRequest::is_valid_version() const
-{
-    return m_version >= 0 && m_version <= 5;
-}
-
-bool SyncGroupRequest::is_flexible() const
-{
-    return is_flexible_version(m_version);
-}
-
-bool SyncGroupRequest::is_flexible_version(int16_t ver) const
-{
-    return ver >= 4;
-}
-
-KafkaVersion SyncGroupRequest::required_version() const
-{
-    switch (m_version)
+    int SyncGroupRequest::decode(packet_decoder &pd, int16_t version)
     {
-    case 4:
-        return V2_4_0_0;
-    case 3:
-        return V2_3_0_0;
-    case 2:
-        return V2_0_0_0;
-    case 1:
-        return V0_11_0_0;
-    case 0:
-        return V0_9_0_0;
-    default:
-        return V2_3_0_0;
+        m_version = version;
+
+        int err = pd.getString(m_group_id);
+        if (err != 0)
+        {
+            return err;
+        }
+        err = pd.getInt32(m_generation_id);
+        if (err != 0)
+        {
+            return err;
+        }
+
+        err = pd.getString(m_member_id);
+        if (err != 0)
+        {
+            return err;
+        }
+
+        if (m_version >= 3)
+        {
+
+            err = pd.getNullableString(m_group_instance_id);
+            if (err != 0)
+            {
+                return err;
+            }
+        }
+
+        int num_assignments = 0;
+        err = pd.getArrayLength(num_assignments);
+        if (err != 0)
+        {
+            return err;
+        }
+
+        m_group_assignments.clear();
+        if (num_assignments > 0)
+        {
+            m_group_assignments.resize(num_assignments);
+            for (int i = 0; i < num_assignments; ++i)
+            {
+                err = m_group_assignments[i].decode(pd, m_version);
+                if (err != 0)
+                {
+                    return err;
+                }
+            }
+        }
+        int32_t _;
+        return pd.getEmptyTaggedFieldArray(_);
     }
-}
 
-void SyncGroupRequest::add_group_assignment(const std::string &memberId, const std::string &memberAssignment)
-{
-    m_group_assignments.emplace_back(memberId, memberAssignment);
-}
-
-int SyncGroupRequest::add_group_assignment_member(const std::string &memberId, std::shared_ptr<ConsumerGroupMemberAssignment> member_assignment)
-{
-    std::string bin;
-    int err = ::encode(*member_assignment, bin);
-    if (err)
+    int16_t SyncGroupRequest::key() const
     {
-        return err;
+        return apiKeySyncGroup;
     }
-    add_group_assignment(memberId, bin);
-    return 0;
+
+    int16_t SyncGroupRequest::version() const
+    {
+        return m_version;
+    }
+
+    int16_t SyncGroupRequest::header_version() const
+    {
+        return (m_version >= 4) ? 2 : 1;
+    }
+
+    bool SyncGroupRequest::is_valid_version() const
+    {
+        return m_version >= 0 && m_version <= 5;
+    }
+
+    bool SyncGroupRequest::is_flexible() const
+    {
+        return is_flexible_version(m_version);
+    }
+
+    bool SyncGroupRequest::is_flexible_version(int16_t ver) const
+    {
+        return ver >= 4;
+    }
+
+    KafkaVersion SyncGroupRequest::required_version() const
+    {
+        switch (m_version)
+        {
+        case 4:
+            return V2_4_0_0;
+        case 3:
+            return V2_3_0_0;
+        case 2:
+            return V2_0_0_0;
+        case 1:
+            return V0_11_0_0;
+        case 0:
+            return V0_9_0_0;
+        default:
+            return V2_3_0_0;
+        }
+    }
+
+    void SyncGroupRequest::add_group_assignment(const std::string &memberId, const std::string &memberAssignment)
+    {
+        m_group_assignments.emplace_back(memberId, memberAssignment);
+    }
+
+    int SyncGroupRequest::add_group_assignment_member(const std::string &memberId, std::shared_ptr<ConsumerGroupMemberAssignment> member_assignment)
+    {
+        std::string bin;
+        int err = coev::kafka::encode(*member_assignment, bin);
+        if (err)
+        {
+            return err;
+        }
+        add_group_assignment(memberId, bin);
+        return 0;
+    }
 }

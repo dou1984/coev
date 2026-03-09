@@ -9,7 +9,7 @@
 #include "real_encoder.h"
 #include "real_decoder.h"
 #include "api_versions.h"
-
+using namespace coev::kafka;
 TEST(OffsetFetchResponseTest, BasicFunctionality)
 {
     // Test with version 0

@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 #include "produce_request.h"
 #include "produce_response.h"
-
+using namespace coev::kafka;
 TEST(ProduceSetTest, RequestVersionCompatibility)
 {
     ProduceRequest request;

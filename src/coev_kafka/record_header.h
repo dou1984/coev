@@ -10,13 +10,16 @@
 #include "packet_decoder.h"
 #include "packet_encoder.h"
 
-struct RecordHeader : IEncoder, IDecoder
+namespace coev::kafka
 {
-    std::string m_key;
-    std::string m_value;
+    struct RecordHeader : IEncoder, IDecoder
+    {
+        std::string m_key;
+        std::string m_value;
 
-    RecordHeader() = default;
-    RecordHeader(const std::string &k, const std::string &v);
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd);
-};
+        RecordHeader() = default;
+        RecordHeader(const std::string &k, const std::string &v);
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd);
+    };
+}

@@ -8,6 +8,8 @@
 #include "api_versions_request.h"
 #include "api_versions_response.h"
 
+using namespace coev::kafka;
+
 TEST(ApiVersionsTest, RequestVersionCompatibility)
 {
     ApiVersionsRequest request;

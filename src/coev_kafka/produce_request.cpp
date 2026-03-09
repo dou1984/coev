@@ -11,218 +11,222 @@
 #include "produce_request.h"
 #include "length_field.h"
 
-void ProduceRequest::set_version(int16_t v)
+namespace coev::kafka
 {
-    m_version = v;
-}
-
-int ProduceRequest::encode(packet_encoder &pe) const
-{
-    if (m_version >= 3)
+    void ProduceRequest::set_version(int16_t v)
     {
-        if (int err = pe.putNullableString(m_transactional_id); err != 0)
-        {
-            return err;
-        }
+        m_version = v;
     }
 
-    pe.putInt16(static_cast<int16_t>(m_acks));
-    pe.putDurationMs(m_timeout);
-
-    int64_t total_record_count = 0;
-    if (int err = pe.putArrayLength(static_cast<int32_t>(m_records.size())); err != 0)
+    int ProduceRequest::encode(packet_encoder &pe) const
     {
-        return err;
-    }
-
-    for (auto &[topic, partitions] : m_records)
-    {
-
-        if (int err = pe.putString(topic); err != 0)
-            return err;
-        if (int err = pe.putArrayLength(static_cast<int32_t>(partitions.size())); err != 0)
-            return err;
-
-        int64_t topic_record_count = 0;
-        for (auto &[pid, partition] : partitions)
+        if (m_version >= 3)
         {
-
-            int start_offset = pe.offset();
-            pe.putInt32(pid);
-
-            LengthField length_field;
-            pe.push(length_field);
-            if (int err = partition.encode(pe); err != 0)
-            {
-                return err;
-            }
-            if (int err = pe.pop(); err != 0)
+            if (int err = pe.putNullableString(m_transactional_id); err != 0)
             {
                 return err;
             }
         }
-    }
 
-    return 0;
-}
+        pe.putInt16(static_cast<int16_t>(m_acks));
+        pe.putDurationMs(m_timeout);
 
-int ProduceRequest::decode(packet_decoder &pd, int16_t version)
-{
-    m_version = version;
-    if (version >= 3)
-    {
-        if (int err = pd.getNullableString(m_transactional_id); err != 0)
+        int64_t total_record_count = 0;
+        if (int err = pe.putArrayLength(static_cast<int32_t>(m_records.size())); err != 0)
         {
             return err;
         }
-    }
 
-    int16_t acks;
-    if (int err = pd.getInt16(acks); err != 0)
-    {
-        return err;
-    }
-    m_acks = static_cast<RequiredAcks>(acks);
-    if (int err = pd.getDurationMs(m_timeout); err != 0)
-    {
-        return err;
-    }
+        for (auto &[topic, partitions] : m_records)
+        {
 
-    int32_t topic_count;
-    if (int err = pd.getArrayLength(topic_count); err != 0)
-    {
-        return err;
-    }
-    if (topic_count == 0)
+            if (int err = pe.putString(topic); err != 0)
+                return err;
+            if (int err = pe.putArrayLength(static_cast<int32_t>(partitions.size())); err != 0)
+                return err;
+
+            int64_t topic_record_count = 0;
+            for (auto &[pid, partition] : partitions)
+            {
+
+                int start_offset = pe.offset();
+                pe.putInt32(pid);
+
+                LengthField length_field;
+                pe.push(length_field);
+                if (int err = partition.encode(pe); err != 0)
+                {
+                    return err;
+                }
+                if (int err = pe.pop(); err != 0)
+                {
+                    return err;
+                }
+            }
+        }
+
         return 0;
+    }
 
-    m_records.clear();
-    for (int i = 0; i < topic_count; ++i)
+    int ProduceRequest::decode(packet_decoder &pd, int16_t version)
     {
-        std::string topic;
-        if (int err = pd.getString(topic); err != 0)
+        m_version = version;
+        if (version >= 3)
+        {
+            if (int err = pd.getNullableString(m_transactional_id); err != 0)
+            {
+                return err;
+            }
+        }
+
+        int16_t acks;
+        if (int err = pd.getInt16(acks); err != 0)
+        {
+            return err;
+        }
+        m_acks = static_cast<RequiredAcks>(acks);
+        if (int err = pd.getDurationMs(m_timeout); err != 0)
         {
             return err;
         }
 
-        int32_t partition_count;
-        if (int err = pd.getArrayLength(partition_count); err != 0)
+        int32_t topic_count;
+        if (int err = pd.getArrayLength(topic_count); err != 0)
         {
             return err;
         }
+        if (topic_count == 0)
+            return 0;
 
-        auto &partition_records = m_records[topic];
-        for (int j = 0; j < partition_count; ++j)
+        m_records.clear();
+        for (int i = 0; i < topic_count; ++i)
         {
-            int32_t partition;
-            if (int err = pd.getInt32(partition); err != 0)
+            std::string topic;
+            if (int err = pd.getString(topic); err != 0)
             {
                 return err;
             }
 
-            int32_t size;
-            if (int err = pd.getInt32(size); err != 0)
+            int32_t partition_count;
+            if (int err = pd.getArrayLength(partition_count); err != 0)
             {
                 return err;
             }
-            real_decoder subset;
-            if (int err = pd.getSubset(size, subset.m_raw); err != 0)
+
+            auto &partition_records = m_records[topic];
+            for (int j = 0; j < partition_count; ++j)
             {
-                return err;
+                int32_t partition;
+                if (int err = pd.getInt32(partition); err != 0)
+                {
+                    return err;
+                }
+
+                int32_t size;
+                if (int err = pd.getInt32(size); err != 0)
+                {
+                    return err;
+                }
+                real_decoder subset;
+                if (int err = pd.getSubset(size, subset.m_raw); err != 0)
+                {
+                    return err;
+                }
+                if (int err = partition_records[partition].decode(subset); err != 0)
+                {
+                    return err;
+                }
             }
-            if (int err = partition_records[partition].decode(subset); err != 0)
-            {
-                return err;
-            }
+        }
+
+        return 0;
+    }
+
+    int16_t ProduceRequest::key() const
+    {
+        return apiKeyProduce;
+    }
+
+    int16_t ProduceRequest::version() const
+    {
+        return m_version;
+    }
+
+    int16_t ProduceRequest::header_version() const
+    {
+        return 1;
+    }
+
+    bool ProduceRequest::is_valid_version() const
+    {
+        return m_version >= 0 && m_version <= 9;
+    }
+
+    KafkaVersion ProduceRequest::required_version() const
+    {
+        switch (m_version)
+        {
+        case 7:
+            return V2_1_0_0;
+        case 6:
+            return V2_0_0_0;
+        case 5:
+        case 4:
+            return V1_0_0_0;
+        case 3:
+            return V0_11_0_0;
+        case 2:
+            return V0_10_0_0;
+        case 1:
+            return V0_9_0_0;
+        case 0:
+            return V0_8_2_0;
+        default:
+            return V2_1_0_0;
         }
     }
 
-    return 0;
-}
-
-int16_t ProduceRequest::key() const
-{
-    return apiKeyProduce;
-}
-
-int16_t ProduceRequest::version() const
-{
-    return m_version;
-}
-
-int16_t ProduceRequest::header_version() const
-{
-    return 1;
-}
-
-bool ProduceRequest::is_valid_version() const
-{
-    return m_version >= 0 && m_version <= 9;
-}
-
-KafkaVersion ProduceRequest::required_version() const
-{
-    switch (m_version)
+    void ProduceRequest::add_message(const std::string &topic, int32_t partition, std::shared_ptr<Message> msg)
     {
-    case 7:
-        return V2_1_0_0;
-    case 6:
-        return V2_0_0_0;
-    case 5:
-    case 4:
-        return V1_0_0_0;
-    case 3:
-        return V0_11_0_0;
-    case 2:
-        return V0_10_0_0;
-    case 1:
-        return V0_9_0_0;
-    case 0:
-        return V0_8_2_0;
-    default:
-        return V2_1_0_0;
+        auto &partitions = m_records[topic];
+        auto it = partitions.find(partition);
+        if (it == partitions.end())
+        {
+            it = partitions.emplace(partition, Records()).first;
+        }
+        if (!it->second.m_message_set)
+        {
+            assert(it->second.m_records_type == LegacyRecords);
+            assert(!it->second.m_record_batch);
+            it->second.m_message_set = std::make_shared<MessageSet>();
+        }
+        it->second.m_records_type = LegacyRecords;
+        it->second.m_message_set->add_message(msg);
     }
-}
 
-void ProduceRequest::add_message(const std::string &topic, int32_t partition, std::shared_ptr<Message> msg)
-{
-    auto &partitions = m_records[topic];
-    auto it = partitions.find(partition);
-    if (it == partitions.end())
+    void ProduceRequest::add_set(const std::string &topic, int32_t partition, std::shared_ptr<MessageSet> set)
     {
-        it = partitions.emplace(partition, Records()).first;
-    }
-    if (!it->second.m_message_set)
-    {
-        assert(it->second.m_records_type == LegacyRecords);
-        assert(!it->second.m_record_batch);
-        it->second.m_message_set = std::make_shared<MessageSet>();
-    }
-    it->second.m_records_type = LegacyRecords;
-    it->second.m_message_set->add_message(msg);
-}
 
-void ProduceRequest::add_set(const std::string &topic, int32_t partition, std::shared_ptr<MessageSet> set)
-{
-
-    auto &partitions = m_records[topic];
-    auto it = partitions.find(partition);
-    if (it == partitions.end())
-    {
-        it = partitions.emplace(partition, Records()).first;
+        auto &partitions = m_records[topic];
+        auto it = partitions.find(partition);
+        if (it == partitions.end())
+        {
+            it = partitions.emplace(partition, Records()).first;
+        }
+        it->second.m_records_type = LegacyRecords;
+        it->second.m_message_set = set;
     }
-    it->second.m_records_type = LegacyRecords;
-    it->second.m_message_set = set;
-}
 
-void ProduceRequest::add_batch(const std::string &topic, int32_t partition, std::shared_ptr<RecordBatch> batch)
-{
-    auto &partitions = m_records[topic];
-    auto it = partitions.find(partition);
-    if (it == partitions.end())
+    void ProduceRequest::add_batch(const std::string &topic, int32_t partition, std::shared_ptr<RecordBatch> batch)
     {
-        it = partitions.emplace(partition, Records()).first;
+        auto &partitions = m_records[topic];
+        auto it = partitions.find(partition);
+        if (it == partitions.end())
+        {
+            it = partitions.emplace(partition, Records()).first;
+        }
+        it->second.m_records_type = DefaultRecords;
+        it->second.m_record_batch = batch;
     }
-    it->second.m_records_type = DefaultRecords;
-    it->second.m_record_batch = batch;
+
 }

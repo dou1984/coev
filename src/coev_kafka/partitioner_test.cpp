@@ -13,8 +13,7 @@
 #include "partitioner.h"
 #include "producer_message.h"
 #include "utils.h"
-
-// Helper function to assert consistent partitioning
+using namespace coev::kafka;
 void assertPartitioningConsistent(Partitioner *partitioner, std::shared_ptr<ProducerMessage> message, int32_t numPartitions)
 {
     int32_t choice = 0;

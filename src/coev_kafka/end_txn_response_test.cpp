@@ -6,7 +6,7 @@
  */
 #include <gtest/gtest.h>
 #include "end_txn_response.h"
-
+using namespace coev::kafka;
 TEST(EndTxnResponseTest, VersionCompatibility) {
     EndTxnResponse response;
     

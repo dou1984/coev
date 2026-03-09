@@ -18,6 +18,8 @@
 #include "metadata_response.h"
 #include "error.h"
 
+using namespace coev::kafka;
+
 TEST(ClientTest, BasicCreation)
 {
     // Test basic client properties

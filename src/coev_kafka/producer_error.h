@@ -10,5 +10,8 @@
 #include "producer_message.h"
 #include "errors.h"
 
-using ProducerError = ProducerMessage;
-using ProducerErrors = std::vector<ProducerError>;
+namespace coev::kafka
+{
+    using ProducerError = ProducerMessage;
+    using ProducerErrors = std::vector<ProducerError>;
+}

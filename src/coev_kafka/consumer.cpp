@@ -19,230 +19,233 @@
 #include "partition_consumer.h"
 #include "broker_consumer.h"
 
-coev::awaitable<int> Consumer::ConsumeMessage(const std::string &topic)
+namespace coev::kafka
 {
-    std::vector<int32_t> partitions;
-    auto err = co_await Partitions(topic, partitions);
-    if (err)
+    awaitable<int> Consumer::ConsumeMessage(const std::string &topic)
     {
-        LOG_ERR("Partitions error: %d", err);
-        co_return err;
-    }
-
-    for (auto partition : partitions)
-    {
-        m_task << [topic](auto consumer, auto partition) -> awaitable<void>
+        std::vector<int32_t> partitions;
+        auto err = co_await Partitions(topic, partitions);
+        if (err)
         {
-            std::shared_ptr<PartitionConsumer> __consumer;
-            auto err = co_await consumer->ConsumePartition(topic, partition, OffsetNewest, __consumer);
-            if (err)
-            {
-                LOG_ERR("ConsumePartition error: %d", err);
-                co_return;
-            }
-            while (true)
-            {
-                std::shared_ptr<ConsumerMessage> msg;
-                co_await __consumer->Messages().get(msg);
-                if (msg)
-                {
-                    LOG_CORE("offset %ld Messages  %s %s", msg->m_offset, msg->key().c_str(), msg->value().c_str());
-                }
-            }
-        }(this->shared_from_this(), partition);
-    }
-
-    co_return 0;
-}
-coev::awaitable<int> Consumer::Close()
-{
-    co_return m_client->Close();
-}
-
-int Consumer::Topics(std::vector<std::string> &out_topics)
-{
-    return m_client->Topics(out_topics);
-}
-
-coev::awaitable<int> Consumer::Partitions(const std::string &topic, std::vector<int32_t> &out_partitions)
-{
-    return m_client->Partitions(topic, out_partitions);
-}
-
-std::map<std::string, std::map<int32_t, int64_t>> Consumer::HighWaterMarks()
-{
-    std::map<std::string, std::map<int32_t, int64_t>> hwms;
-    for (auto &[topic, pmap] : m_children)
-    {
-        for (auto &[partition, pc] : pmap)
-        {
-            hwms[topic][partition] = pc->HighWaterMarkOffset();
+            LOG_ERR("Partitions error: %d", err);
+            co_return err;
         }
-    }
-    return hwms;
-}
 
-void Consumer::Pause(const std::map<std::string, std::vector<int32_t>> &topic_partitions)
-{
-    for (auto &[topic, partitions] : topic_partitions)
-    {
-        auto tit = m_children.find(topic);
-        if (tit != m_children.end())
+        for (auto partition : partitions)
         {
-            auto &topic_consumers = tit->second;
-            for (int32_t partition : partitions)
+            m_task << [topic](auto consumer, auto partition) -> awaitable<void>
             {
-                auto pit = topic_consumers.find(partition);
-                if (pit != topic_consumers.end())
+                std::shared_ptr<PartitionConsumer> __consumer;
+                auto err = co_await consumer->ConsumePartition(topic, partition, OffsetNewest, __consumer);
+                if (err)
                 {
-                    pit->second->Pause();
+                    LOG_ERR("ConsumePartition error: %d", err);
+                    co_return;
                 }
+                while (true)
+                {
+                    std::shared_ptr<ConsumerMessage> msg;
+                    co_await __consumer->Messages().get(msg);
+                    if (msg)
+                    {
+                        LOG_CORE("offset %ld Messages  %s %s", msg->m_offset, msg->key().c_str(), msg->value().c_str());
+                    }
+                }
+            }(this->shared_from_this(), partition);
+        }
+
+        co_return 0;
+    }
+    awaitable<int> Consumer::Close()
+    {
+        co_return m_client->Close();
+    }
+
+    int Consumer::Topics(std::vector<std::string> &out_topics)
+    {
+        return m_client->Topics(out_topics);
+    }
+
+    awaitable<int> Consumer::Partitions(const std::string &topic, std::vector<int32_t> &out_partitions)
+    {
+        return m_client->Partitions(topic, out_partitions);
+    }
+
+    std::map<std::string, std::map<int32_t, int64_t>> Consumer::HighWaterMarks()
+    {
+        std::map<std::string, std::map<int32_t, int64_t>> hwms;
+        for (auto &[topic, pmap] : m_children)
+        {
+            for (auto &[partition, pc] : pmap)
+            {
+                hwms[topic][partition] = pc->HighWaterMarkOffset();
             }
         }
+        return hwms;
     }
-}
 
-void Consumer::Resume(const std::map<std::string, std::vector<int32_t>> &topic_partitions)
-{
-    for (auto &[topic, partitions] : topic_partitions)
+    void Consumer::Pause(const std::map<std::string, std::vector<int32_t>> &topic_partitions)
     {
-        auto tit = m_children.find(topic);
-        if (tit != m_children.end())
+        for (auto &[topic, partitions] : topic_partitions)
         {
-            auto &topic_consumers = tit->second;
-            for (int32_t partition : partitions)
+            auto tit = m_children.find(topic);
+            if (tit != m_children.end())
             {
-                auto pit = topic_consumers.find(partition);
-                if (pit != topic_consumers.end())
+                auto &topic_consumers = tit->second;
+                for (int32_t partition : partitions)
                 {
-                    pit->second->Resume();
+                    auto pit = topic_consumers.find(partition);
+                    if (pit != topic_consumers.end())
+                    {
+                        pit->second->Pause();
+                    }
                 }
             }
         }
     }
-}
 
-void Consumer::PauseAll()
-{
-    for (auto &topic_pair : m_children)
+    void Consumer::Resume(const std::map<std::string, std::vector<int32_t>> &topic_partitions)
     {
-        for (auto &pc_pair : topic_pair.second)
+        for (auto &[topic, partitions] : topic_partitions)
         {
-            pc_pair.second->Pause();
+            auto tit = m_children.find(topic);
+            if (tit != m_children.end())
+            {
+                auto &topic_consumers = tit->second;
+                for (int32_t partition : partitions)
+                {
+                    auto pit = topic_consumers.find(partition);
+                    if (pit != topic_consumers.end())
+                    {
+                        pit->second->Resume();
+                    }
+                }
+            }
         }
     }
-}
 
-void Consumer::ResumeAll()
-{
-    for (auto &topic_pair : m_children)
+    void Consumer::PauseAll()
     {
-        for (auto &pc_pair : topic_pair.second)
+        for (auto &topic_pair : m_children)
         {
-            pc_pair.second->Resume();
+            for (auto &pc_pair : topic_pair.second)
+            {
+                pc_pair.second->Pause();
+            }
         }
     }
-}
 
-int Consumer::AddChild(const std::shared_ptr<PartitionConsumer> &child)
-{
-    auto &topic_children = m_children[child->m_topic];
-    if (topic_children.find(child->m_partition) != topic_children.end())
+    void Consumer::ResumeAll()
     {
-        return ErrTopicPartitionConsumed;
-    }
-    topic_children[child->m_partition] = child;
-    return 0;
-}
-
-void Consumer::RemoveChild(const std::shared_ptr<PartitionConsumer> &child)
-{
-    auto it = m_children.find(child->m_topic);
-    if (it != m_children.end())
-    {
-        it->second.erase(child->m_partition);
-    }
-}
-
-std::shared_ptr<BrokerConsumer> Consumer::RefBrokerConsumer(std::shared_ptr<Broker> broker)
-{
-    auto it = m_broker_consumers.find(broker->ID());
-    if (it == m_broker_consumers.end())
-    {
-        it = m_broker_consumers.emplace(broker->ID(), std::make_shared<BrokerConsumer>(shared_from_this(), broker)).first;
-    }
-    return it->second;
-}
-
-coev::awaitable<int> Consumer::ConsumePartition(const std::string &topic, int32_t partition, int64_t offset, std::shared_ptr<PartitionConsumer> &child)
-{
-    child = std::make_shared<PartitionConsumer>();
-    child->m_consumer = shared_from_this();
-    child->m_conf = m_conf;
-    child->m_topic = topic;
-    child->m_partition = partition;
-
-    child->m_leader_epoch = InvalidLeaderEpoch;
-    child->m_preferred_read_replica = InvalidPreferredReplicaID;
-    child->m_fetch_size = m_conf->Consumer.Fetch.DefaultVal;
-
-    int err = co_await child->ChooseStartingOffset(offset);
-    if (err != 0)
-    {
-        co_return err;
+        for (auto &topic_pair : m_children)
+        {
+            for (auto &pc_pair : topic_pair.second)
+            {
+                pc_pair.second->Resume();
+            }
+        }
     }
 
-    std::shared_ptr<Broker> leader;
-    int32_t epoch;
-    err = co_await m_client->LeaderAndEpoch(topic, partition, leader, epoch);
-    if (err != 0)
+    int Consumer::AddChild(const std::shared_ptr<PartitionConsumer> &child)
     {
-        co_return err;
+        auto &topic_children = m_children[child->m_topic];
+        if (topic_children.find(child->m_partition) != topic_children.end())
+        {
+            return ErrTopicPartitionConsumed;
+        }
+        topic_children[child->m_partition] = child;
+        return 0;
     }
 
-    err = AddChild(child);
-    if (err != 0)
+    void Consumer::RemoveChild(const std::shared_ptr<PartitionConsumer> &child)
     {
-        co_return err;
-    }
-    m_task << child->Dispatcher();
-    m_task << child->ResponseFeeder();
-
-    child->m_leader_epoch = epoch;
-    child->m_broker = RefBrokerConsumer(leader);
-    child->m_broker->m_input.set(child);
-
-    co_return 0;
-}
-
-void Consumer::AbandonBrokerConsumer(std::shared_ptr<BrokerConsumer> worker)
-{
-    m_broker_consumers.erase(worker->m_broker->ID());
-}
-
-int NewConsumer(const std::shared_ptr<Client> &client, std::shared_ptr<Consumer> &consumer)
-{
-    if (client->Closed())
-    {
-        return ErrClosedClient;
+        auto it = m_children.find(child->m_topic);
+        if (it != m_children.end())
+        {
+            it->second.erase(child->m_partition);
+        }
     }
 
-    consumer = std::make_shared<Consumer>();
-    consumer->m_client = client;
-    consumer->m_conf = client->GetConfig();
-    return 0;
-}
-int NewConsumerFromClient(const std::shared_ptr<Client> &client, std::shared_ptr<Consumer> &consumer)
-{
-    return NewConsumer(client, consumer);
-}
-coev::awaitable<int> NewConsumer(const std::vector<std::string> &addrs, const std::shared_ptr<Config> &config, std::shared_ptr<Consumer> &consumer_)
-{
-    std::shared_ptr<Client> client;
-    auto err = co_await NewClient(addrs, config, client);
-    if (err != 0)
+    std::shared_ptr<BrokerConsumer> Consumer::RefBrokerConsumer(std::shared_ptr<Broker> broker)
     {
-        co_return err;
+        auto it = m_broker_consumers.find(broker->ID());
+        if (it == m_broker_consumers.end())
+        {
+            it = m_broker_consumers.emplace(broker->ID(), std::make_shared<BrokerConsumer>(shared_from_this(), broker)).first;
+        }
+        return it->second;
     }
-    co_return NewConsumerFromClient(client, consumer_);
-}
+
+    awaitable<int> Consumer::ConsumePartition(const std::string &topic, int32_t partition, int64_t offset, std::shared_ptr<PartitionConsumer> &child)
+    {
+        child = std::make_shared<PartitionConsumer>();
+        child->m_consumer = shared_from_this();
+        child->m_conf = m_conf;
+        child->m_topic = topic;
+        child->m_partition = partition;
+
+        child->m_leader_epoch = InvalidLeaderEpoch;
+        child->m_preferred_read_replica = InvalidPreferredReplicaID;
+        child->m_fetch_size = m_conf->Consumer.Fetch.DefaultVal;
+
+        int err = co_await child->ChooseStartingOffset(offset);
+        if (err != 0)
+        {
+            co_return err;
+        }
+
+        std::shared_ptr<Broker> leader;
+        int32_t epoch;
+        err = co_await m_client->LeaderAndEpoch(topic, partition, leader, epoch);
+        if (err != 0)
+        {
+            co_return err;
+        }
+
+        err = AddChild(child);
+        if (err != 0)
+        {
+            co_return err;
+        }
+        m_task << child->Dispatcher();
+        m_task << child->ResponseFeeder();
+
+        child->m_leader_epoch = epoch;
+        child->m_broker = RefBrokerConsumer(leader);
+        child->m_broker->m_input.set(child);
+
+        co_return 0;
+    }
+
+    void Consumer::AbandonBrokerConsumer(std::shared_ptr<BrokerConsumer> worker)
+    {
+        m_broker_consumers.erase(worker->m_broker->ID());
+    }
+
+    int NewConsumer(const std::shared_ptr<Client> &client, std::shared_ptr<Consumer> &consumer)
+    {
+        if (client->Closed())
+        {
+            return ErrClosedClient;
+        }
+
+        consumer = std::make_shared<Consumer>();
+        consumer->m_client = client;
+        consumer->m_conf = client->GetConfig();
+        return 0;
+    }
+    int NewConsumerFromClient(const std::shared_ptr<Client> &client, std::shared_ptr<Consumer> &consumer)
+    {
+        return NewConsumer(client, consumer);
+    }
+    awaitable<int> NewConsumer(const std::vector<std::string> &addrs, const std::shared_ptr<Config> &config, std::shared_ptr<Consumer> &consumer_)
+    {
+        std::shared_ptr<Client> client;
+        auto err = co_await NewClient(addrs, config, client);
+        if (err != 0)
+        {
+            co_return err;
+        }
+        co_return NewConsumerFromClient(client, consumer_);
+    }
+} // namespace coev::kafka

@@ -6,7 +6,7 @@
  */
 #include <gtest/gtest.h>
 #include "list_groups_request.h"
-
+using namespace coev::kafka;
 TEST(ListGroupsRequestTest, VersionCompatibility)
 {
     ListGroupsRequest request;

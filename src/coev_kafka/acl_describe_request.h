@@ -14,21 +14,26 @@
 #include "protocol_body.h"
 #include "acl_filter.h"
 
-struct DescribeAclsRequest : protocol_body
+namespace coev::kafka
 {
-    int m_version;
-    AclFilter m_filter;
 
-    DescribeAclsRequest() = default;
-    DescribeAclsRequest(int16_t v) : m_version(v)
+    struct DescribeAclsRequest : protocol_body
     {
-    }
-    void set_version(int16_t v);
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
-    int16_t key() const;
-    int16_t version() const;
-    int16_t header_version() const;
-    bool is_valid_version() const;
-    KafkaVersion required_version() const;
-};
+        int m_version;
+        AclFilter m_filter;
+
+        DescribeAclsRequest() = default;
+        DescribeAclsRequest(int16_t v) : m_version(v)
+        {
+        }
+        void set_version(int16_t v);
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd, int16_t version);
+        int16_t key() const;
+        int16_t version() const;
+        int16_t header_version() const;
+        bool is_valid_version() const;
+        KafkaVersion required_version() const;
+    };
+
+} // namespace coev::kafka

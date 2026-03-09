@@ -13,6 +13,8 @@
 #include "real_encoder.h"
 #include "real_decoder.h"
 
+using namespace coev::kafka;
+
 // Test data from Sarama's add_offsets_to_txn_request_test.go
 const unsigned char addOffsetsToTxnRequestData[] = {
     0x00, 0x03, 't', 'x', 'n',                      // transactional_id: "txn"

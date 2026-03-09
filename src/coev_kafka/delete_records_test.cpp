@@ -9,6 +9,8 @@
 #include "delete_records_response.h"
 #include "api_versions.h"
 
+using namespace coev::kafka;
+
 TEST(DeleteRecordsTest, RequestVersionCompatibility)
 {
     DeleteRecordsRequest request;

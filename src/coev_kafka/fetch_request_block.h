@@ -10,15 +10,19 @@
 #include "packet_decoder.h"
 #include "packet_encoder.h"
 
-struct FetchRequestBlock : VDecoder, VEncoder
+namespace coev::kafka
 {
-    int16_t m_version;
-    int32_t m_current_leader_epoch;
-    int64_t m_fetch_offset;
-    int64_t m_log_start_offset;
-    int32_t m_max_bytes;
+    struct FetchRequestBlock : VDecoder, VEncoder
+    {
+        int16_t m_version;
+        int32_t m_current_leader_epoch;
+        int64_t m_fetch_offset;
+        int64_t m_log_start_offset;
+        int32_t m_max_bytes;
 
-    FetchRequestBlock();
-    int encode(packet_encoder &pe, int16_t version) const;
-    int decode(packet_decoder &pd, int16_t version);
-};
+        FetchRequestBlock();
+        int encode(packet_encoder &pe, int16_t version) const;
+        int decode(packet_decoder &pd, int16_t version);
+    };
+
+}

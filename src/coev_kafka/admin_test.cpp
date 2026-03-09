@@ -13,6 +13,8 @@
 #include "client.h"
 #include "config.h"
 
+using namespace coev::kafka;
+
 TEST(ClusterAdminTest, CreateAndClose)
 {
     // This is a basic test structure - in practice, you'd need to mock the client and config

@@ -6,10 +6,13 @@
  */
 #pragma once
 
-enum IncrementalAlterConfigsOperation : int8_t
+namespace coev::kafka
 {
-    IncrementalAlterConfigsOperationSet = 0,
-    IncrementalAlterConfigsOperationDelete = 1,
-    IncrementalAlterConfigsOperationAppend = 2,
-    IncrementalAlterConfigsOperationSubtract = 3,
-};
+    enum IncrementalAlterConfigsOperation : int8_t
+    {
+        IncrementalAlterConfigsOperationSet = 0,
+        IncrementalAlterConfigsOperationDelete = 1,
+        IncrementalAlterConfigsOperationAppend = 2,
+        IncrementalAlterConfigsOperationSubtract = 3,
+    };
+}

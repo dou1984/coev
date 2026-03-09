@@ -14,6 +14,8 @@
 #include "real_encoder.h"
 #include "real_decoder.h"
 
+using namespace coev::kafka;
+
 // Test data from Sarama's acl_describe_request_test.go
 const unsigned char aclDescribeRequest[] = {
     0x02,                                                    // ResourceType: Topic

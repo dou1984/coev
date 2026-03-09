@@ -15,6 +15,7 @@
 #include "real_encoder.h"
 #include "real_decoder.h"
 
+using namespace coev::kafka;
 // Test data from Sarama's acl_delete_response_test.go
 const unsigned char deleteAclsResponse[] = {
     0x00, 0x00, 0x00, 0x64,                                  // Throttle time: 100 ms

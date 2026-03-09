@@ -6,7 +6,7 @@
  */
 #include <gtest/gtest.h>
 #include "find_coordinator_response.h"
-
+using namespace coev::kafka;
 TEST(FindCoordinatorResponseTest, VersionCompatibility) {
     FindCoordinatorResponse response;
     

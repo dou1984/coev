@@ -8,185 +8,190 @@
 #include "alter_partition_reassignments_response.h"
 #include "api_versions.h"
 
-int AlterPartitionReassignmentsErrorBlock::encode(packet_encoder &pe) const
+namespace coev::kafka
 {
-    pe.putKError(m_code);
-    if (pe.putNullableString(m_message) != ErrNoError)
-    {
-        return ErrEncodeError;
-    }
-    pe.putEmptyTaggedFieldArray();
-    return ErrNoError;
-}
 
-int AlterPartitionReassignmentsErrorBlock::decode(packet_decoder &pd)
-{
-    if (pd.getKError(m_code) != ErrNoError)
+    int AlterPartitionReassignmentsErrorBlock::encode(packet_encoder &pe) const
     {
-        return ErrEncodeError;
-    }
-    if (pd.getNullableString(m_message) != ErrNoError)
-    {
-        return ErrEncodeError;
-    }
-    int32_t _;
-    return pd.getEmptyTaggedFieldArray(_);
-}
-
-void AlterPartitionReassignmentsResponse::set_version(int16_t v)
-{
-    m_version = v;
-}
-
-void AlterPartitionReassignmentsResponse::add_error(const std::string &topic, int32_t partition, KError kerror, std::string message)
-{
-    m_errors[topic][partition] = AlterPartitionReassignmentsErrorBlock(kerror, message);
-}
-
-int AlterPartitionReassignmentsResponse::encode(packet_encoder &pe) const
-{
-    pe.putDurationMs(m_throttle_time);
-    pe.putKError(m_code);
-    if (pe.putNullableString(m_message) != ErrNoError)
-    {
-        return ErrEncodeError;
+        pe.putKError(m_code);
+        if (pe.putNullableString(m_message) != ErrNoError)
+        {
+            return ErrEncodeError;
+        }
+        pe.putEmptyTaggedFieldArray();
+        return ErrNoError;
     }
 
-    if (pe.putArrayLength(static_cast<int32_t>(m_errors.size())) != ErrNoError)
+    int AlterPartitionReassignmentsErrorBlock::decode(packet_decoder &pd)
     {
-        return ErrEncodeError;
+        if (pd.getKError(m_code) != ErrNoError)
+        {
+            return ErrEncodeError;
+        }
+        if (pd.getNullableString(m_message) != ErrNoError)
+        {
+            return ErrEncodeError;
+        }
+        int32_t _;
+        return pd.getEmptyTaggedFieldArray(_);
     }
 
-    for (const auto &[topic, partitions] : m_errors)
+    void AlterPartitionReassignmentsResponse::set_version(int16_t v)
     {
-        if (pe.putString(topic) != ErrNoError)
+        m_version = v;
+    }
+
+    void AlterPartitionReassignmentsResponse::add_error(const std::string &topic, int32_t partition, KError kerror, std::string message)
+    {
+        m_errors[topic][partition] = AlterPartitionReassignmentsErrorBlock(kerror, message);
+    }
+
+    int AlterPartitionReassignmentsResponse::encode(packet_encoder &pe) const
+    {
+        pe.putDurationMs(m_throttle_time);
+        pe.putKError(m_code);
+        if (pe.putNullableString(m_message) != ErrNoError)
         {
             return ErrEncodeError;
         }
 
-        if (pe.putArrayLength(static_cast<int32_t>(partitions.size())) != ErrNoError)
+        if (pe.putArrayLength(static_cast<int32_t>(m_errors.size())) != ErrNoError)
         {
             return ErrEncodeError;
         }
 
-        for (const auto &[partition, block] : partitions)
+        for (const auto &[topic, partitions] : m_errors)
         {
-            pe.putInt32(partition);
-            if (block.encode(pe) != ErrNoError)
+            if (pe.putString(topic) != ErrNoError)
             {
                 return ErrEncodeError;
             }
+
+            if (pe.putArrayLength(static_cast<int32_t>(partitions.size())) != ErrNoError)
+            {
+                return ErrEncodeError;
+            }
+
+            for (const auto &[partition, block] : partitions)
+            {
+                pe.putInt32(partition);
+                if (block.encode(pe) != ErrNoError)
+                {
+                    return ErrEncodeError;
+                }
+            }
+
+            pe.putEmptyTaggedFieldArray();
         }
 
         pe.putEmptyTaggedFieldArray();
+        return ErrNoError;
     }
 
-    pe.putEmptyTaggedFieldArray();
-    return ErrNoError;
-}
-
-int AlterPartitionReassignmentsResponse::decode(packet_decoder &pd, int16_t version)
-{
-    m_version = version;
-
-    if (pd.getDurationMs(m_throttle_time) != ErrNoError)
+    int AlterPartitionReassignmentsResponse::decode(packet_decoder &pd, int16_t version)
     {
-        return ErrDecodeError;
-    }
+        m_version = version;
 
-    if (pd.getKError(m_code) != ErrNoError)
-    {
-        return ErrDecodeError;
-    }
-
-    if (pd.getNullableString(m_message) != ErrNoError)
-    {
-        return ErrDecodeError;
-    }
-
-    int32_t numTopics;
-    if (pd.getArrayLength(numTopics) != ErrNoError)
-    {
-        return ErrDecodeError;
-    }
-
-    if (numTopics > 0)
-    {
-        for (int32_t i = 0; i < numTopics; ++i)
+        if (pd.getDurationMs(m_throttle_time) != ErrNoError)
         {
-            std::string topic;
-            if (pd.getString(topic) != ErrNoError)
-            {
-                return ErrDecodeError;
-            }
+            return ErrDecodeError;
+        }
 
-            int32_t ongoing_partition_reassignments;
-            if (pd.getArrayLength(ongoing_partition_reassignments) != ErrNoError)
-            {
-                return ErrDecodeError;
-            }
+        if (pd.getKError(m_code) != ErrNoError)
+        {
+            return ErrDecodeError;
+        }
 
-            auto &partition_map = m_errors[topic];
-            for (int32_t j = 0; j < ongoing_partition_reassignments; ++j)
+        if (pd.getNullableString(m_message) != ErrNoError)
+        {
+            return ErrDecodeError;
+        }
+
+        int32_t numTopics;
+        if (pd.getArrayLength(numTopics) != ErrNoError)
+        {
+            return ErrDecodeError;
+        }
+
+        if (numTopics > 0)
+        {
+            for (int32_t i = 0; i < numTopics; ++i)
             {
-                int32_t partition;
-                if (pd.getInt32(partition) != ErrNoError)
+                std::string topic;
+                if (pd.getString(topic) != ErrNoError)
                 {
                     return ErrDecodeError;
                 }
 
-                if (partition_map[partition].decode(pd) != ErrNoError)
+                int32_t ongoing_partition_reassignments;
+                if (pd.getArrayLength(ongoing_partition_reassignments) != ErrNoError)
                 {
                     return ErrDecodeError;
                 }
-            }
-            int32_t _;
-            if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
-            {
-                return ErrDecodeError;
+
+                auto &partition_map = m_errors[topic];
+                for (int32_t j = 0; j < ongoing_partition_reassignments; ++j)
+                {
+                    int32_t partition;
+                    if (pd.getInt32(partition) != ErrNoError)
+                    {
+                        return ErrDecodeError;
+                    }
+
+                    if (partition_map[partition].decode(pd) != ErrNoError)
+                    {
+                        return ErrDecodeError;
+                    }
+                }
+                int32_t _;
+                if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
+                {
+                    return ErrDecodeError;
+                }
             }
         }
+        int32_t _;
+        return pd.getEmptyTaggedFieldArray(_);
     }
-    int32_t _;
-    return pd.getEmptyTaggedFieldArray(_);
-}
 
-int16_t AlterPartitionReassignmentsResponse::key() const
-{
-    return apiKeyAlterPartitionReassignments;
-}
+    int16_t AlterPartitionReassignmentsResponse::key() const
+    {
+        return apiKeyAlterPartitionReassignments;
+    }
 
-int16_t AlterPartitionReassignmentsResponse::version() const
-{
-    return m_version;
-}
+    int16_t AlterPartitionReassignmentsResponse::version() const
+    {
+        return m_version;
+    }
 
-int16_t AlterPartitionReassignmentsResponse::header_version() const
-{
-    return 1;
-}
+    int16_t AlterPartitionReassignmentsResponse::header_version() const
+    {
+        return 1;
+    }
 
-bool AlterPartitionReassignmentsResponse::is_valid_version() const
-{
-    return m_version == 0;
-}
+    bool AlterPartitionReassignmentsResponse::is_valid_version() const
+    {
+        return m_version == 0;
+    }
 
-bool AlterPartitionReassignmentsResponse::is_flexible() const
-{
-    return is_flexible_version(m_version);
-}
+    bool AlterPartitionReassignmentsResponse::is_flexible() const
+    {
+        return is_flexible_version(m_version);
+    }
 
-bool AlterPartitionReassignmentsResponse::is_flexible_version(int16_t version) const
-{
-    return version >= 0;
-}
+    bool AlterPartitionReassignmentsResponse::is_flexible_version(int16_t version) const
+    {
+        return version >= 0;
+    }
 
-KafkaVersion AlterPartitionReassignmentsResponse::required_version() const
-{
-    return V2_4_0_0;
-}
+    KafkaVersion AlterPartitionReassignmentsResponse::required_version() const
+    {
+        return V2_4_0_0;
+    }
 
-std::chrono::milliseconds AlterPartitionReassignmentsResponse::throttle_time() const
-{
-    return std::chrono::milliseconds(m_throttle_time);
-}
+    std::chrono::milliseconds AlterPartitionReassignmentsResponse::throttle_time() const
+    {
+        return std::chrono::milliseconds(m_throttle_time);
+    }
+
+} // namespace coev::kafka

@@ -19,23 +19,28 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
-struct OffsetCommitResponse : protocol_body
+namespace coev::kafka
 {
 
-    int16_t m_version;
-    std::chrono::milliseconds m_throttle_time;
-    std::unordered_map<std::string, std::map<int32_t, KError>> m_errors;
+    struct OffsetCommitResponse : protocol_body
+    {
 
-    OffsetCommitResponse();
+        int16_t m_version;
+        std::chrono::milliseconds m_throttle_time;
+        std::unordered_map<std::string, std::map<int32_t, KError>> m_errors;
 
-    void set_version(int16_t v);
-    void add_error(const std::string &topic, int32_t partition, KError kerror);
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
-    int16_t key() const;
-    int16_t version() const;
-    int16_t header_version() const;
-    bool is_valid_version() const;
-    KafkaVersion required_version() const;
-    std::chrono::milliseconds throttle_time() const;
-};
+        OffsetCommitResponse();
+
+        void set_version(int16_t v);
+        void add_error(const std::string &topic, int32_t partition, KError kerror);
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd, int16_t version);
+        int16_t key() const;
+        int16_t version() const;
+        int16_t header_version() const;
+        bool is_valid_version() const;
+        KafkaVersion required_version() const;
+        std::chrono::milliseconds throttle_time() const;
+    };
+
+} // namespace coev::kafka

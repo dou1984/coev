@@ -12,7 +12,7 @@
 #include "real_encoder.h"
 #include "real_decoder.h"
 #include "prep_encoder.h"
-
+using namespace coev::kafka;
 // Test data from Sarama's message_test.go
 const unsigned char emptyMessage[] = {
     39, 146, 9, 38,         // CRC (Castagnoli) - 0x27920926 in big-endian

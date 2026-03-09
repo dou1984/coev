@@ -8,7 +8,7 @@
 #include <gtest/gtest.h>
 #include "real_encoder.h"
 #include "packet_decoder.h"
-
+using namespace coev::kafka;
 TEST(SaslAuthenticateRequestTest, BasicFunctionality)
 {
     // Test with version 0

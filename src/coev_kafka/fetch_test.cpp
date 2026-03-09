@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 #include "fetch_request.h"
 #include "fetch_response.h"
-
+using namespace coev::kafka;
 TEST(FetchTest, RequestVersionCompatibility) {
     FetchRequest request;
     

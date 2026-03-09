@@ -9,6 +9,8 @@
 
 #include "acl_types.h"
 
+using namespace coev::kafka;
+
 TEST(AclTypesTest, AclOperationTextMarshal)
 {
     for (int i = static_cast<int>(AclOperationUnknown); i <= static_cast<int>(AclOperationIdempotentWrite); ++i)

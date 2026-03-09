@@ -8,7 +8,7 @@
 #include "describe_configs_request.h"
 #include "describe_configs_response.h"
 #include "api_versions.h"
-
+using namespace coev::kafka;
 TEST(DescribeConfigsTest, RequestVersionCompatibility)
 {
     DescribeConfigsRequest request;

@@ -6,8 +6,13 @@
  */
 #pragma once
 
-enum IsolationLevel
+namespace coev::kafka
 {
-    ReadUncommitted = 0,
-    ReadCommitted = 1
-};
+
+    enum IsolationLevel
+    {
+        ReadUncommitted = 0,
+        ReadCommitted = 1
+    };
+
+} // namespace coev::kafka

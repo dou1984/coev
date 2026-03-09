@@ -8,6 +8,8 @@
 #include "add_partitions_to_txn_request.h"
 #include "add_partitions_to_txn_response.h"
 
+using namespace coev::kafka;
+
 TEST(AddPartitionsToTxnTest, RequestVersionCompatibility)
 {
     AddPartitionsToTxnRequest request;

@@ -8,44 +8,47 @@
 #include <string>
 #include "real_decoder.h"
 
-template <class T>
-int decode(T &pd, int32_t &length, int32_t &correlationID)
+namespace coev::kafka
 {
-    int err = pd.getInt32(length);
-    if (err != 0)
+    template <class T>
+    int decode(T &pd, int32_t &length, int32_t &correlationID)
     {
-        return err;
-    }
-
-    if (length <= 4 || length > MaxResponseSize)
-    {
-        return -1;
-    }
-
-    err = pd.getInt32(correlationID);
-    if (err != 0)
-    {
-        return err;
-    }
-    int32_t _;
-    return pd.getEmptyTaggedFieldArray(_);
-}
-int ResponseHeader::decode(packet_decoder &pd, int16_t version)
-{
-    if (version >= 1)
-    {
-        auto decoder = static_cast<real_decoder *>(&pd);
-        if (decoder != nullptr)
+        int err = pd.getInt32(length);
+        if (err != 0)
         {
-            decoder->__push_flexible();
-            defer(decoder->__pop_flexible());
-            return ::decode(*decoder, m_length, m_correlation_id);
+            return err;
         }
-        else
+
+        if (length <= 4 || length > MaxResponseSize)
         {
-            LOG_CORE("[ResponseHeader] decoder is nullptr");
             return -1;
         }
+
+        err = pd.getInt32(correlationID);
+        if (err != 0)
+        {
+            return err;
+        }
+        int32_t _;
+        return pd.getEmptyTaggedFieldArray(_);
     }
-    return ::decode(pd, m_length, m_correlation_id);
+    int ResponseHeader::decode(packet_decoder &pd, int16_t version)
+    {
+        if (version >= 1)
+        {
+            auto decoder = static_cast<real_decoder *>(&pd);
+            if (decoder != nullptr)
+            {
+                decoder->__push_flexible();
+                defer(decoder->__pop_flexible());
+                return coev::kafka::decode(*decoder, m_length, m_correlation_id);
+            }
+            else
+            {
+                LOG_CORE("[ResponseHeader] decoder is nullptr");
+                return -1;
+            }
+        }
+        return coev::kafka::decode(pd, m_length, m_correlation_id);
+    }
 }

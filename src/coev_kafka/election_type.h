@@ -8,8 +8,11 @@
 
 #include <cstdint>
 
-enum ElectionType : int8_t
+namespace coev::kafka
 {
-    Preferred = 0,
-    Unclean = 1
-};
+    enum ElectionType : int8_t
+    {
+        Preferred = 0,
+        Unclean = 1
+    };
+}

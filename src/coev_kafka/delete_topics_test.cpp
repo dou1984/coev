@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 #include "delete_topics_request.h"
 #include "delete_topics_response.h"
-
+using namespace coev::kafka;
 TEST(DeleteTopicsTest, RequestVersionCompatibility)
 {
     DeleteTopicsRequest request;

@@ -8,6 +8,7 @@
 #include "txn_offset_commit_request.h"
 #include "txn_offset_commit_response.h"
 
+using namespace coev::kafka;
 TEST(TxnOffsetCommitTest, RequestVersionCompatibility)
 {
     TxnOffsetCommitRequest request;

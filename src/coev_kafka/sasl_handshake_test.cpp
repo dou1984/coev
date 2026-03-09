@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 #include "sasl_handshake_request.h"
 #include "sasl_handshake_response.h"
-
+using namespace coev::kafka;
 TEST(SaslHandshakeTest, RequestVersionCompatibility)
 {
     SaslHandshakeRequest request;

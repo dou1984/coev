@@ -12,137 +12,140 @@
 #include "crc32_field.h"
 #include "undefined.h"
 
-static std::mutex pool_mutex;
-static std::queue<std::shared_ptr<crc32_field>> crc32_field_pool;
-
-std::shared_ptr<crc32_field> acquire_crc32_field(CrcPolynomial polynomial)
+namespace coev::kafka
 {
-    std::lock_guard<std::mutex> lock(pool_mutex);
-    if (!crc32_field_pool.empty())
+    static std::mutex pool_mutex;
+    static std::queue<std::shared_ptr<crc32_field>> crc32_field_pool;
+
+    std::shared_ptr<crc32_field> acquire_crc32_field(CrcPolynomial polynomial)
     {
-        auto c = crc32_field_pool.front();
-        crc32_field_pool.pop();
-        c->m_polynomial = polynomial;
-        return c;
-    }
-    return std::make_shared<crc32_field>(polynomial);
-}
-
-void release_crc32_field(std::shared_ptr<crc32_field> c)
-{
-    std::lock_guard<std::mutex> lock(pool_mutex);
-    crc32_field_pool.push(c);
-}
-
-static const uint32_t *castagnoliTable = []()
-{
-    static uint32_t table[256];
-    for (int i = 0; i < 256; ++i)
-    {
-        uint32_t crc = i;
-        for (int j = 0; j < 8; ++j)
+        std::lock_guard<std::mutex> lock(pool_mutex);
+        if (!crc32_field_pool.empty())
         {
-            if (crc & 1)
-            {
-                crc = (crc >> 1) ^ 0x82F63B78;
-            }
-            else
-            {
-                crc >>= 1;
-            }
+            auto c = crc32_field_pool.front();
+            crc32_field_pool.pop();
+            c->m_polynomial = polynomial;
+            return c;
         }
-        table[i] = crc;
-    }
-    return table;
-}();
-
-crc32_field::crc32_field(CrcPolynomial polynomial) : m_start_offset(0), m_polynomial(polynomial) {}
-
-void crc32_field::save_offset(int in)
-{
-    m_start_offset = in;
-}
-
-int crc32_field::reserve_length()
-{
-    return 4;
-}
-
-int crc32_field::run(int cur_offset, std::string &buf)
-{
-    uint32_t crc_val;
-    int err = crc(cur_offset, buf, crc_val);
-    if (err != ErrNoError)
-    {
-        LOG_ERR("crc32_field::run: crc calculation failed with error %d", err);
-        return err;
-    }
-    uint32_t network_crc = htonl(crc_val);
-    uint8_t *ptr = reinterpret_cast<uint8_t *>(&network_crc);
-    buf[m_start_offset] = ptr[0];
-    buf[m_start_offset + 1] = ptr[1];
-    buf[m_start_offset + 2] = ptr[2];
-    buf[m_start_offset + 3] = ptr[3];
-    return 0;
-}
-
-int crc32_field::check(int cur_offset, const std::string_view &buf)
-{
-    LOG_CORE("crc32_field::check start_offset: %d, cur_offset: %d", m_start_offset, cur_offset);
-    uint32_t crc_val;
-    int err = crc(cur_offset, buf, crc_val);
-    if (err != ErrNoError)
-    {
-        LOG_ERR("crc32_field::check: crc calculation failed with error %d", err);
-        return err;
+        return std::make_shared<crc32_field>(polynomial);
     }
 
-    uint32_t network_expected;
-    uint8_t *ptr = reinterpret_cast<uint8_t *>(&network_expected);
-    ptr[0] = buf[m_start_offset];
-    ptr[1] = buf[m_start_offset + 1];
-    ptr[2] = buf[m_start_offset + 2];
-    ptr[3] = buf[m_start_offset + 3];
-    uint32_t expected = ntohl(network_expected);
-
-    if (crc_val != expected)
+    void release_crc32_field(std::shared_ptr<crc32_field> c)
     {
-        return ErrCRCMismatch;
+        std::lock_guard<std::mutex> lock(pool_mutex);
+        crc32_field_pool.push(c);
     }
 
-    return ErrNoError;
-}
-
-int crc32_field::crc(int cur_offset, const std::string_view &buf, uint32_t &out_crc)
-{
-    uint32_t crc = 0xFFFFFFFF;
-    if (m_polynomial == CrcCastagnoli)
+    static const uint32_t *castagnoliTable = []()
     {
-        for (int i = m_start_offset + 4; i < cur_offset; ++i)
+        static uint32_t table[256];
+        for (int i = 0; i < 256; ++i)
         {
-            uint8_t byte = buf[i];
-            crc = (crc >> 8) ^ castagnoliTable[(crc & 0xFF) ^ byte];
-        }
-    }
-    else
-    {
-        for (int i = m_start_offset + 4; i < cur_offset; ++i)
-        {
-            uint8_t byte = buf[i];
-            crc ^= static_cast<uint32_t>(byte);
+            uint32_t crc = i;
             for (int j = 0; j < 8; ++j)
             {
                 if (crc & 1)
                 {
-                    crc = (crc >> 1) ^ 0xEDB88320;
+                    crc = (crc >> 1) ^ 0x82F63B78;
                 }
                 else
                 {
                     crc >>= 1;
                 }
             }
+            table[i] = crc;
         }
+        return table;
+    }();
+
+    crc32_field::crc32_field(CrcPolynomial polynomial) : m_start_offset(0), m_polynomial(polynomial) {}
+
+    void crc32_field::save_offset(int in)
+    {
+        m_start_offset = in;
     }
-    out_crc = crc ^ 0xFFFFFFFF;
-    return ErrNoError;
+
+    int crc32_field::reserve_length()
+    {
+        return 4;
+    }
+
+    int crc32_field::run(int cur_offset, std::string &buf)
+    {
+        uint32_t crc_val;
+        int err = crc(cur_offset, buf, crc_val);
+        if (err != ErrNoError)
+        {
+            LOG_ERR("crc32_field::run: crc calculation failed with error %d", err);
+            return err;
+        }
+        uint32_t network_crc = htonl(crc_val);
+        uint8_t *ptr = reinterpret_cast<uint8_t *>(&network_crc);
+        buf[m_start_offset] = ptr[0];
+        buf[m_start_offset + 1] = ptr[1];
+        buf[m_start_offset + 2] = ptr[2];
+        buf[m_start_offset + 3] = ptr[3];
+        return 0;
+    }
+
+    int crc32_field::check(int cur_offset, const std::string_view &buf)
+    {
+        LOG_CORE("crc32_field::check start_offset: %d, cur_offset: %d", m_start_offset, cur_offset);
+        uint32_t crc_val;
+        int err = crc(cur_offset, buf, crc_val);
+        if (err != ErrNoError)
+        {
+            LOG_ERR("crc32_field::check: crc calculation failed with error %d", err);
+            return err;
+        }
+
+        uint32_t network_expected;
+        uint8_t *ptr = reinterpret_cast<uint8_t *>(&network_expected);
+        ptr[0] = buf[m_start_offset];
+        ptr[1] = buf[m_start_offset + 1];
+        ptr[2] = buf[m_start_offset + 2];
+        ptr[3] = buf[m_start_offset + 3];
+        uint32_t expected = ntohl(network_expected);
+
+        if (crc_val != expected)
+        {
+            return ErrCRCMismatch;
+        }
+
+        return ErrNoError;
+    }
+
+    int crc32_field::crc(int cur_offset, const std::string_view &buf, uint32_t &out_crc)
+    {
+        uint32_t crc = 0xFFFFFFFF;
+        if (m_polynomial == CrcCastagnoli)
+        {
+            for (int i = m_start_offset + 4; i < cur_offset; ++i)
+            {
+                uint8_t byte = buf[i];
+                crc = (crc >> 8) ^ castagnoliTable[(crc & 0xFF) ^ byte];
+            }
+        }
+        else
+        {
+            for (int i = m_start_offset + 4; i < cur_offset; ++i)
+            {
+                uint8_t byte = buf[i];
+                crc ^= static_cast<uint32_t>(byte);
+                for (int j = 0; j < 8; ++j)
+                {
+                    if (crc & 1)
+                    {
+                        crc = (crc >> 1) ^ 0xEDB88320;
+                    }
+                    else
+                    {
+                        crc >>= 1;
+                    }
+                }
+            }
+        }
+        out_crc = crc ^ 0xFFFFFFFF;
+        return ErrNoError;
+    }
 }

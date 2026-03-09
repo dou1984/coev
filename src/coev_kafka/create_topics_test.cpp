@@ -8,6 +8,8 @@
 #include "create_topics_request.h"
 #include "create_topics_response.h"
 
+using namespace coev::kafka;
+
 TEST(CreateTopicsTest, RequestVersionCompatibility)
 {
     CreateTopicsRequest request;

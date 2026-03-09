@@ -6,7 +6,7 @@
  */
 #include <gtest/gtest.h>
 #include "offset_commit_response.h"
-
+using namespace coev::kafka;
 TEST(OffsetCommitResponseTest, VersionCompatibility)
 {
     OffsetCommitResponse response;

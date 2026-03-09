@@ -15,42 +15,47 @@
 #include "packet_encoder.h"
 #include "topic_type.h"
 
-struct StickyAssignorUserData
+namespace coev::kafka
 {
 
-    virtual ~StickyAssignorUserData() = default;
-    virtual std::vector<topic_t> partitions() = 0;
-    virtual bool has_generation() = 0;
-    virtual int generation() = 0;
-};
+    struct StickyAssignorUserData
+    {
 
-struct StickyAssignorUserDataV0 : StickyAssignorUserData
-{
+        virtual ~StickyAssignorUserData() = default;
+        virtual std::vector<topic_t> partitions() = 0;
+        virtual bool has_generation() = 0;
+        virtual int generation() = 0;
+    };
 
-    std::map<std::string, std::vector<int32_t>> m_topics;
-    std::vector<topic_t> m_topic_partitions;
+    struct StickyAssignorUserDataV0 : StickyAssignorUserData
+    {
 
-    int encode(packet_encoder &pe);
-    int decode(packet_decoder &pd);
+        std::map<std::string, std::vector<int32_t>> m_topics;
+        std::vector<topic_t> m_topic_partitions;
 
-    std::vector<topic_t> partitions();
-    bool has_generation();
-    int generation();
-};
+        int encode(packet_encoder &pe);
+        int decode(packet_decoder &pd);
 
-struct StickyAssignorUserDataV1 : StickyAssignorUserData
-{
+        std::vector<topic_t> partitions();
+        bool has_generation();
+        int generation();
+    };
 
-    std::map<std::string, std::vector<int32_t>> m_topics;
-    int32_t m_generation = 0;
-    std::vector<topic_t> m_topic_partitions;
+    struct StickyAssignorUserDataV1 : StickyAssignorUserData
+    {
 
-    int encode(packet_encoder &pe);
-    int decode(packet_decoder &pd);
+        std::map<std::string, std::vector<int32_t>> m_topics;
+        int32_t m_generation = 0;
+        std::vector<topic_t> m_topic_partitions;
 
-    std::vector<topic_t> partitions();
-    bool has_generation();
-    int generation();
-};
+        int encode(packet_encoder &pe);
+        int decode(packet_decoder &pd);
 
-std::vector<topic_t> PopulateTopicPartitions(const std::map<std::string, std::vector<int32_t>> &topics);
+        std::vector<topic_t> partitions();
+        bool has_generation();
+        int generation();
+    };
+
+    std::vector<topic_t> PopulateTopicPartitions(const std::map<std::string, std::vector<int32_t>> &topics);
+
+} // namespace coev::kafka

@@ -16,30 +16,33 @@
 #include "version.h"
 #include "protocol_body.h"
 
-struct DescribeLogDirsRequestTopic
+namespace coev::kafka
 {
-    std::string m_topic;
-    std::vector<int32_t> m_partition_ids;
-};
-
-struct DescribeLogDirsRequest : protocol_body, flexible_version
-{
-
-    int16_t m_version;
-    std::vector<DescribeLogDirsRequestTopic> m_describe_topics;
-    DescribeLogDirsRequest() = default;
-    DescribeLogDirsRequest(int16_t v) : m_version(v)
+    struct DescribeLogDirsRequestTopic
     {
-    }
+        std::string m_topic;
+        std::vector<int32_t> m_partition_ids;
+    };
 
-    void set_version(int16_t v);
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
-    int16_t key() const;
-    int16_t version() const;
-    int16_t header_version() const;
-    bool is_valid_version() const;
-    bool is_flexible() const;
-    bool is_flexible_version(int16_t version) const;
-    KafkaVersion required_version() const;
-};
+    struct DescribeLogDirsRequest : protocol_body, flexible_version
+    {
+
+        int16_t m_version;
+        std::vector<DescribeLogDirsRequestTopic> m_describe_topics;
+        DescribeLogDirsRequest() = default;
+        DescribeLogDirsRequest(int16_t v) : m_version(v)
+        {
+        }
+
+        void set_version(int16_t v);
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd, int16_t version);
+        int16_t key() const;
+        int16_t version() const;
+        int16_t header_version() const;
+        bool is_valid_version() const;
+        bool is_flexible() const;
+        bool is_flexible_version(int16_t version) const;
+        KafkaVersion required_version() const;
+    };
+}

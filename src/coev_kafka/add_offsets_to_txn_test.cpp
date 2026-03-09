@@ -8,6 +8,8 @@
 #include "add_offsets_to_txn_request.h"
 #include "add_offsets_to_txn_response.h"
 
+using namespace coev::kafka;
+
 TEST(AddOffsetsToTxnTest, RequestVersionCompatibility)
 {
     AddOffsetsToTxnRequest request;

@@ -14,6 +14,7 @@
 #include "leave_group_request.h"
 #include "leave_group_response.h"
 
+using namespace coev::kafka;
 TEST(ConsumerGroupTest, JoinGroupRequestVersionCompatibility)
 {
     JoinGroupRequest request;

@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 #include "real_encoder.h"
 #include "real_decoder.h"
-
+using namespace coev::kafka;
 TEST(EncoderDecoderTest, TestInt8) {
     int8_t test_value = 42;
     int8_t result_value = 0;

@@ -18,24 +18,27 @@
 #include "protocol_body.h"
 #include "config.h"
 
-struct FindCoordinatorRequest : protocol_body
+namespace coev::kafka
 {
-
-    int16_t m_version;
-    std::string m_coordinator_key;
-    CoordinatorType m_coordinator_type;
-
-    FindCoordinatorRequest();
-    FindCoordinatorRequest(int16_t v) : m_version(v)
+    struct FindCoordinatorRequest : protocol_body
     {
-    }
-    FindCoordinatorRequest(std::shared_ptr<Config> &conf);
-    void set_version(int16_t v);
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
-    int16_t key() const;
-    int16_t version() const;
-    int16_t header_version() const;
-    bool is_valid_version() const;
-    KafkaVersion required_version() const;
-};
+
+        int16_t m_version;
+        std::string m_coordinator_key;
+        CoordinatorType m_coordinator_type;
+
+        FindCoordinatorRequest();
+        FindCoordinatorRequest(int16_t v) : m_version(v)
+        {
+        }
+        FindCoordinatorRequest(std::shared_ptr<Config> &conf);
+        void set_version(int16_t v);
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd, int16_t version);
+        int16_t key() const;
+        int16_t version() const;
+        int16_t header_version() const;
+        bool is_valid_version() const;
+        KafkaVersion required_version() const;
+    };
+}

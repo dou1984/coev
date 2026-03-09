@@ -13,201 +13,206 @@
 #include "partitioner.h"
 #include "undefined.h"
 
-int ManualPartitioner::partition(std::shared_ptr<ProducerMessage> message, int32_t num_partitions, int32_t &result)
+namespace coev::kafka
 {
-    result = message->m_partition;
-    return 0;
-}
 
-bool ManualPartitioner::requires_consistency()
-{
-    return true;
-}
-
-std::shared_ptr<Partitioner> NewRandomPartitioner(const std::string &topic)
-{
-    return std::make_shared<RandomPartitioner>();
-}
-
-RandomPartitioner::RandomPartitioner() : m_generator(std::chrono::system_clock::now().time_since_epoch().count())
-{
-}
-
-int RandomPartitioner::partition(std::shared_ptr<ProducerMessage> message, int32_t num_partitions, int32_t &result)
-{
-    std::uniform_int_distribution<int32_t> dist(0, num_partitions - 1);
-    result = dist(m_generator);
-    return 0;
-}
-
-bool RandomPartitioner::requires_consistency()
-{
-    return false;
-}
-
-std::shared_ptr<Partitioner> NewRoundRobinPartitioner(const std::string &topic)
-{
-    return std::make_shared<RoundRobinPartitioner>();
-}
-
-RoundRobinPartitioner::RoundRobinPartitioner() : m_partition(0)
-{
-}
-
-int RoundRobinPartitioner::partition(std::shared_ptr<ProducerMessage> message, int32_t num_partitions, int32_t &result)
-{
-    if (m_partition >= num_partitions)
+    int ManualPartitioner::partition(std::shared_ptr<ProducerMessage> message, int32_t num_partitions, int32_t &result)
     {
-        m_partition = 0;
-    }
-    result = m_partition;
-    m_partition++;
-    return 0;
-}
-
-bool RoundRobinPartitioner::requires_consistency()
-{
-    return false;
-}
-
-HashPartitioner::HashPartitioner() : m_reference_abs(false), m_hash_unsigned(false)
-{
-}
-
-int HashPartitioner::partition(std::shared_ptr<ProducerMessage> message, int32_t num_partitions, int32_t &result)
-{
-    if (message->m_key.Empty())
-    {
-        return m_random_partitioner->partition(message, num_partitions, result);
-    }
-    std::string bytes;
-    int err = message->m_key.Encode(bytes);
-    if (err != 0)
-    {
-        return -1;
+        result = message->m_partition;
+        return 0;
     }
 
-    m_hasher->Reset();
-    m_hasher->Update(bytes.data(), bytes.size());
-    uint32_t hash_value = m_hasher->Final();
+    bool ManualPartitioner::requires_consistency()
+    {
+        return true;
+    }
 
-    if (m_reference_abs)
+    std::shared_ptr<Partitioner> NewRandomPartitioner(const std::string &topic)
     {
-        result = (static_cast<int32_t>(hash_value) & 0x7fffffff) % num_partitions;
+        return std::make_shared<RandomPartitioner>();
     }
-    else if (m_hash_unsigned)
+
+    RandomPartitioner::RandomPartitioner() : m_generator(std::chrono::system_clock::now().time_since_epoch().count())
     {
-        result = static_cast<int32_t>(hash_value % static_cast<uint32_t>(num_partitions));
     }
-    else
+
+    int RandomPartitioner::partition(std::shared_ptr<ProducerMessage> message, int32_t num_partitions, int32_t &result)
     {
-        result = static_cast<int32_t>(hash_value) % num_partitions;
-        if (result < 0)
+        std::uniform_int_distribution<int32_t> dist(0, num_partitions - 1);
+        result = dist(m_generator);
+        return 0;
+    }
+
+    bool RandomPartitioner::requires_consistency()
+    {
+        return false;
+    }
+
+    std::shared_ptr<Partitioner> NewRoundRobinPartitioner(const std::string &topic)
+    {
+        return std::make_shared<RoundRobinPartitioner>();
+    }
+
+    RoundRobinPartitioner::RoundRobinPartitioner() : m_partition(0)
+    {
+    }
+
+    int RoundRobinPartitioner::partition(std::shared_ptr<ProducerMessage> message, int32_t num_partitions, int32_t &result)
+    {
+        if (m_partition >= num_partitions)
         {
-            result = -result;
+            m_partition = 0;
         }
+        result = m_partition;
+        m_partition++;
+        return 0;
     }
 
-    return 0;
-}
-
-bool HashPartitioner::requires_consistency()
-{
-    return true;
-}
-
-bool HashPartitioner::message_requires_consistency(std::shared_ptr<ProducerMessage> message)
-{
-    return !message->m_key.Empty();
-}
-
-void WithAbsFirstOption::apply(HashPartitioner *hp)
-{
-    hp->m_reference_abs = true;
-}
-
-void WithHashUnsignedOption::apply(HashPartitioner *hp)
-{
-    hp->m_hash_unsigned = true;
-}
-
-WithCustomHashFunctionOption::WithCustomHashFunctionOption(std::function<std::shared_ptr<Hash32>()> hasher) : m_hasher(hasher)
-{
-}
-
-void WithCustomHashFunctionOption::apply(HashPartitioner *hp)
-{
-    hp->m_hasher = m_hasher();
-}
-
-WithCustomFallbackPartitionerOption::WithCustomFallbackPartitionerOption(std::shared_ptr<Partitioner> randomHP) : m_random(randomHP)
-{
-}
-
-void WithCustomFallbackPartitionerOption::apply(HashPartitioner *hp)
-{
-    hp->m_random_partitioner = m_random;
-}
-
-std::shared_ptr<Partitioner> NewHashPartitioner(const std::string &topic)
-{
-    auto p = std::make_shared<HashPartitioner>();
-    p->m_random_partitioner = NewRandomPartitioner(topic);
-    p->m_hasher = coev::fnv::New32a();
-
-    p->m_reference_abs = false;
-    p->m_hash_unsigned = false;
-    return p;
-}
-
-std::shared_ptr<Partitioner> NewReferenceHashPartitioner(const std::string &topic)
-{
-    auto p = std::make_shared<HashPartitioner>();
-    p->m_random_partitioner = NewRandomPartitioner(topic);
-    p->m_hasher = coev::fnv::New32a();
-    p->m_reference_abs = true;
-    p->m_hash_unsigned = false;
-    return p;
-}
-
-std::shared_ptr<Partitioner> NewConsistentCRCHashPartitioner(const std::string &topic)
-{
-    auto p = std::make_shared<HashPartitioner>();
-    p->m_random_partitioner = NewRandomPartitioner(topic);
-    p->m_hasher = coev::crc32::NewIEEE();
-    p->m_reference_abs = false;
-    p->m_hash_unsigned = true;
-    return p;
-}
-
-PartitionerConstructor NewCustomHashPartitioner(std::function<std::shared_ptr<Hash32>()> hasher)
-{
-    return [hasher](const std::string &topic) -> std::shared_ptr<Partitioner>
+    bool RoundRobinPartitioner::requires_consistency()
     {
-        auto p = std::make_shared<HashPartitioner>();
-        p->m_random_partitioner = NewRandomPartitioner(topic);
-        p->m_hasher = hasher();
-        p->m_reference_abs = false;
-        p->m_hash_unsigned = false;
-        return p;
-    };
-}
+        return false;
+    }
 
-PartitionerConstructor NewCustomPartitioner(const std::vector<std::shared_ptr<HashPartitionerOption>> &options)
-{
-    return [options](const std::string &topic) -> std::shared_ptr<Partitioner>
+    HashPartitioner::HashPartitioner() : m_reference_abs(false), m_hash_unsigned(false)
+    {
+    }
+
+    int HashPartitioner::partition(std::shared_ptr<ProducerMessage> message, int32_t num_partitions, int32_t &result)
+    {
+        if (message->m_key.Empty())
+        {
+            return m_random_partitioner->partition(message, num_partitions, result);
+        }
+        std::string bytes;
+        int err = message->m_key.Encode(bytes);
+        if (err != 0)
+        {
+            return -1;
+        }
+
+        m_hasher->Reset();
+        m_hasher->Update(bytes.data(), bytes.size());
+        uint32_t hash_value = m_hasher->Final();
+
+        if (m_reference_abs)
+        {
+            result = (static_cast<int32_t>(hash_value) & 0x7fffffff) % num_partitions;
+        }
+        else if (m_hash_unsigned)
+        {
+            result = static_cast<int32_t>(hash_value % static_cast<uint32_t>(num_partitions));
+        }
+        else
+        {
+            result = static_cast<int32_t>(hash_value) % num_partitions;
+            if (result < 0)
+            {
+                result = -result;
+            }
+        }
+
+        return 0;
+    }
+
+    bool HashPartitioner::requires_consistency()
+    {
+        return true;
+    }
+
+    bool HashPartitioner::message_requires_consistency(std::shared_ptr<ProducerMessage> message)
+    {
+        return !message->m_key.Empty();
+    }
+
+    void WithAbsFirstOption::apply(HashPartitioner *hp)
+    {
+        hp->m_reference_abs = true;
+    }
+
+    void WithHashUnsignedOption::apply(HashPartitioner *hp)
+    {
+        hp->m_hash_unsigned = true;
+    }
+
+    WithCustomHashFunctionOption::WithCustomHashFunctionOption(std::function<std::shared_ptr<Hash32>()> hasher) : m_hasher(hasher)
+    {
+    }
+
+    void WithCustomHashFunctionOption::apply(HashPartitioner *hp)
+    {
+        hp->m_hasher = m_hasher();
+    }
+
+    WithCustomFallbackPartitionerOption::WithCustomFallbackPartitionerOption(std::shared_ptr<Partitioner> randomHP) : m_random(randomHP)
+    {
+    }
+
+    void WithCustomFallbackPartitionerOption::apply(HashPartitioner *hp)
+    {
+        hp->m_random_partitioner = m_random;
+    }
+
+    std::shared_ptr<Partitioner> NewHashPartitioner(const std::string &topic)
     {
         auto p = std::make_shared<HashPartitioner>();
         p->m_random_partitioner = NewRandomPartitioner(topic);
         p->m_hasher = coev::fnv::New32a();
+
         p->m_reference_abs = false;
         p->m_hash_unsigned = false;
-
-        for (auto &option : options)
-        {
-            option->apply(p.get());
-        }
-
         return p;
-    };
-}
+    }
+
+    std::shared_ptr<Partitioner> NewReferenceHashPartitioner(const std::string &topic)
+    {
+        auto p = std::make_shared<HashPartitioner>();
+        p->m_random_partitioner = NewRandomPartitioner(topic);
+        p->m_hasher = coev::fnv::New32a();
+        p->m_reference_abs = true;
+        p->m_hash_unsigned = false;
+        return p;
+    }
+
+    std::shared_ptr<Partitioner> NewConsistentCRCHashPartitioner(const std::string &topic)
+    {
+        auto p = std::make_shared<HashPartitioner>();
+        p->m_random_partitioner = NewRandomPartitioner(topic);
+        p->m_hasher = coev::crc32::NewIEEE();
+        p->m_reference_abs = false;
+        p->m_hash_unsigned = true;
+        return p;
+    }
+
+    PartitionerConstructor NewCustomHashPartitioner(std::function<std::shared_ptr<Hash32>()> hasher)
+    {
+        return [hasher](const std::string &topic) -> std::shared_ptr<Partitioner>
+        {
+            auto p = std::make_shared<HashPartitioner>();
+            p->m_random_partitioner = NewRandomPartitioner(topic);
+            p->m_hasher = hasher();
+            p->m_reference_abs = false;
+            p->m_hash_unsigned = false;
+            return p;
+        };
+    }
+
+    PartitionerConstructor NewCustomPartitioner(const std::vector<std::shared_ptr<HashPartitionerOption>> &options)
+    {
+        return [options](const std::string &topic) -> std::shared_ptr<Partitioner>
+        {
+            auto p = std::make_shared<HashPartitioner>();
+            p->m_random_partitioner = NewRandomPartitioner(topic);
+            p->m_hasher = coev::fnv::New32a();
+            p->m_reference_abs = false;
+            p->m_hash_unsigned = false;
+
+            for (auto &option : options)
+            {
+                option->apply(p.get());
+            }
+
+            return p;
+        };
+    }
+
+} // namespace coev::kafka

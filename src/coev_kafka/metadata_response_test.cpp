@@ -6,7 +6,7 @@
  */
 #include <gtest/gtest.h>
 #include "metadata_response.h"
-
+using namespace coev::kafka;
 TEST(MetadataResponseTest, VersionCompatibility)
 {
     MetadataResponse response;

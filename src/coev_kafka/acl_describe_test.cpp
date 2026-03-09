@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 #include "acl_describe_request.h"
 #include "acl_describe_response.h"
-
+using namespace coev::kafka;
 TEST(AclDescribeTest, RequestVersionCompatibility)
 {
     DescribeAclsRequest request;

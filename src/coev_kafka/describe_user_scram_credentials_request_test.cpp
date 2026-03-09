@@ -6,7 +6,7 @@
  */
 #include <gtest/gtest.h>
 #include "describe_user_scram_credentials_request.h"
-
+using namespace coev::kafka;
 TEST(DescribeUserScramCredentialsRequestTest, VersionCompatibility)
 {
     DescribeUserScramCredentialsRequest request;

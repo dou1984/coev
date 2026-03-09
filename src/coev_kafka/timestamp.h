@@ -14,17 +14,20 @@
 #include "packet_encoder.h"
 #include "packet_decoder.h"
 
-struct Timestamp
+namespace coev::kafka
 {
+    struct Timestamp
+    {
 
-    Timestamp();
-    Timestamp(const std::chrono::system_clock::time_point &t);
+        Timestamp();
+        Timestamp(const std::chrono::system_clock::time_point &t);
 
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd);
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd);
 
-    std::chrono::system_clock::time_point get_time() const;
-    void set_time(const std::chrono::system_clock::time_point &t);
+        std::chrono::system_clock::time_point get_time() const;
+        void set_time(const std::chrono::system_clock::time_point &t);
 
-    std::chrono::system_clock::time_point m_time;
-};
+        std::chrono::system_clock::time_point m_time;
+    };
+}

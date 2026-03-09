@@ -6,25 +6,30 @@
  */
 #include "partition_error.h"
 
-int PartitionError::encode(packet_encoder &pe) const
+namespace coev::kafka
 {
-    pe.putInt32(m_partition);
-    pe.putKError(m_err);
-    return 0;
-}
 
-int PartitionError::decode(packet_decoder &pd, int16_t version)
-{
-    int err;
-    if ((err = pd.getInt32(m_partition)) != 0)
+    int PartitionError::encode(packet_encoder &pe) const
     {
-        return err;
+        pe.putInt32(m_partition);
+        pe.putKError(m_err);
+        return 0;
     }
 
-    if ((err = pd.getKError(m_err)) != 0)
+    int PartitionError::decode(packet_decoder &pd, int16_t version)
     {
-        return err;
+        int err;
+        if ((err = pd.getInt32(m_partition)) != 0)
+        {
+            return err;
+        }
+
+        if ((err = pd.getKError(m_err)) != 0)
+        {
+            return err;
+        }
+
+        return 0;
     }
 
-    return 0;
-}
+} // namespace coev::kafka

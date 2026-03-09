@@ -6,6 +6,8 @@
  */
 #include "describe_user_scram_credentials_request.h"
 
+namespace coev::kafka
+{
 void DescribeUserScramCredentialsRequest::set_version(int16_t v)
 {
     m_version = v;
@@ -101,4 +103,5 @@ bool DescribeUserScramCredentialsRequest::is_flexible_version(int16_t version) c
 KafkaVersion DescribeUserScramCredentialsRequest::required_version() const
 {
     return V2_7_0_0;
+}
 }

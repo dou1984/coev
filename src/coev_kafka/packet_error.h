@@ -8,9 +8,14 @@
 #include <string>
 #include <stdexcept>
 
-struct PacketError : std::exception
+namespace coev::kafka
 {
-    std::string m_message;
-    PacketError(const std::string &msg);
-    const char *what() const noexcept override;
-};
+
+    struct PacketError : std::exception
+    {
+        std::string m_message;
+        PacketError(const std::string &msg);
+        const char *what() const noexcept override;
+    };
+
+} // namespace coev::kafka

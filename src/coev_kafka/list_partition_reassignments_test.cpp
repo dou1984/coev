@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 #include "list_partition_reassignments_request.h"
 #include "list_partition_reassignments_response.h"
-
+using namespace coev::kafka;
 TEST(ListPartitionReassignmentsTest, RequestVersionCompatibility)
 {
     ListPartitionReassignmentsRequest request;

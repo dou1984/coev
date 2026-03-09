@@ -11,6 +11,9 @@
 #include "consumer.h"
 #include "partition_consumer.h"
 
+namespace coev::kafka
+{ 
+
 struct ConsumerGroupClaim final
 {
     std::string m_topic;
@@ -27,6 +30,7 @@ struct ConsumerGroupClaim final
     int64_t initial_offset();
     int64_t high_water_mark_offset();
 
-    coev::awaitable<int> messages(std::shared_ptr<ConsumerMessage> &);
-    coev::awaitable<int> wait_closed(std::shared_ptr<ConsumerError> &);
+    awaitable<int> messages(std::shared_ptr<ConsumerMessage> &);
+    awaitable<int> wait_closed(std::shared_ptr<ConsumerError> &);
 };
+}

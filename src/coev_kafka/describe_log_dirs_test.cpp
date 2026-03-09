@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 #include "describe_log_dirs_request.h"
 #include "describe_log_dirs_response.h"
-
+using namespace coev::kafka;
 TEST(DescribeLogDirsTest, RequestVersionCompatibility)
 {
     DescribeLogDirsRequest request;

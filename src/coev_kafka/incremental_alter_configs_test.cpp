@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 #include "incremental_alter_configs_request.h"
 #include "incremental_alter_configs_response.h"
-
+using namespace coev::kafka;
 TEST(IncrementalAlterConfigsTest, RequestVersionCompatibility)
 {
     IncrementalAlterConfigsRequest request;

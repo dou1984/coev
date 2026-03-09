@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 #include "join_group_request.h"
 #include "join_group_response.h"
-
+using namespace coev::kafka;
 TEST(JoinGroupTest, RequestVersionCompatibility)
 {
     JoinGroupRequest request;

@@ -15,41 +15,46 @@
 #include "packet_decoder.h"
 #include "request.h"
 
-struct ApiVersionsResponseKey : VEncoder, VDecoder
+namespace coev::kafka
 {
-    int16_t m_version = 0;
-    int16_t m_api_key = 0;
-    int16_t m_min_version = 0;
-    int16_t m_max_version = 0;
 
-    int encode(packet_encoder &pe, int16_t version) const;
-    int decode(packet_decoder &pd, int16_t version);
-};
-
-struct ApiVersionsResponse : protocol_body, flexible_version
-{
-    int16_t m_version = 0;
-    int16_t m_code = 0;
-    std::vector<ApiVersionsResponseKey> m_api_keys;
-    std::chrono::milliseconds m_throttle_time;
-    ApiVersionsResponse() = default;
-    ApiVersionsResponse(int16_t v) : m_version(v)
+    struct ApiVersionsResponseKey : VEncoder, VDecoder
     {
-    }
+        int16_t m_version = 0;
+        int16_t m_api_key = 0;
+        int16_t m_min_version = 0;
+        int16_t m_max_version = 0;
 
-    void set_version(int16_t v);
+        int encode(packet_encoder &pe, int16_t version) const;
+        int decode(packet_decoder &pd, int16_t version);
+    };
 
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
+    struct ApiVersionsResponse : protocol_body, flexible_version
+    {
+        int16_t m_version = 0;
+        int16_t m_code = 0;
+        std::vector<ApiVersionsResponseKey> m_api_keys;
+        std::chrono::milliseconds m_throttle_time;
+        ApiVersionsResponse() = default;
+        ApiVersionsResponse(int16_t v) : m_version(v)
+        {
+        }
 
-    int16_t key() const;
-    int16_t version() const;
-    int16_t header_version() const;
-    bool is_valid_version() const;
-    bool is_flexible() const;
-    bool is_flexible_version(int16_t version) const;
-    KafkaVersion required_version() const;
-    std::chrono::milliseconds throttle_time() const;
+        void set_version(int16_t v);
 
-    static packet_decoder &downgrade_flexible_decoder(packet_decoder &pd);
-};
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd, int16_t version);
+
+        int16_t key() const;
+        int16_t version() const;
+        int16_t header_version() const;
+        bool is_valid_version() const;
+        bool is_flexible() const;
+        bool is_flexible_version(int16_t version) const;
+        KafkaVersion required_version() const;
+        std::chrono::milliseconds throttle_time() const;
+
+        static packet_decoder &downgrade_flexible_decoder(packet_decoder &pd);
+    };
+
+} // namespace coev::kafka

@@ -17,29 +17,34 @@
 #include "api_versions.h"
 #include "protocol_body.h"
 
-struct AclCreationResponse : IEncoder, VDecoder
+namespace coev::kafka
 {
-    KError m_err = ErrNoError;
-    std::string m_err_msg;
 
-    AclCreationResponse() = default;
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
-};
+    struct AclCreationResponse : IEncoder, VDecoder
+    {
+        KError m_err = ErrNoError;
+        std::string m_err_msg;
 
-struct CreateAclsResponse : protocol_body
-{
-    int16_t m_version = 0;
-    std::chrono::milliseconds m_throttle_time;
-    std::vector<AclCreationResponse> m_acl_creation_responses;
+        AclCreationResponse() = default;
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd, int16_t version);
+    };
 
-    void set_version(int16_t v);
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
-    int16_t key() const;
-    int16_t version() const;
-    int16_t header_version() const;
-    bool is_valid_version() const;
-    KafkaVersion required_version() const;
-    std::chrono::milliseconds throttle_time() const;
-};
+    struct CreateAclsResponse : protocol_body
+    {
+        int16_t m_version = 0;
+        std::chrono::milliseconds m_throttle_time;
+        std::vector<AclCreationResponse> m_acl_creation_responses;
+
+        void set_version(int16_t v);
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd, int16_t version);
+        int16_t key() const;
+        int16_t version() const;
+        int16_t header_version() const;
+        bool is_valid_version() const;
+        KafkaVersion required_version() const;
+        std::chrono::milliseconds throttle_time() const;
+    };
+
+} // namespace coev::kafka

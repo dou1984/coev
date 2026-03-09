@@ -7,6 +7,8 @@
 #include <gtest/gtest.h>
 #include "create_topics_response.h"
 
+using namespace coev::kafka;
+
 TEST(CreateTopicsResponseTest, VersionCompatibility)
 {
     CreateTopicsResponse response;

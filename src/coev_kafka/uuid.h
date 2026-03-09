@@ -9,8 +9,13 @@
 #include <string>
 #include <cstdint>
 
-struct Uuid
+namespace coev::kafka
 {
-    std::array<uint8_t, 16> data;
-    std::string String() const;
-};
+
+    struct Uuid
+    {
+        std::array<uint8_t, 16> data;
+        std::string String() const;
+    };
+
+} // namespace coev::kafka

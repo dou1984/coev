@@ -9,89 +9,92 @@
 #include "api_versions.h"
 #include "config.h"
 
-FindCoordinatorRequest::FindCoordinatorRequest(std::shared_ptr<Config> &conf)
-    : m_coordinator_type(CoordinatorGroup)
+namespace coev::kafka
 {
-    if (conf->Version.IsAtLeast(V0_11_0_0))
+    FindCoordinatorRequest::FindCoordinatorRequest(std::shared_ptr<Config> &conf)
+        : m_coordinator_type(CoordinatorGroup)
     {
-        m_version = 1;
-    }
-    else
-    {
-        m_version = 0;
-    }
-}
-
-FindCoordinatorRequest::FindCoordinatorRequest()
-    : m_version(0), m_coordinator_type(CoordinatorGroup) {}
-
-void FindCoordinatorRequest::set_version(int16_t v)
-{
-    m_version = v;
-}
-
-int FindCoordinatorRequest::encode(packet_encoder &pe) const
-{
-    int err = pe.putString(m_coordinator_key);
-    if (err != 0)
-        return err;
-
-    if (m_version >= 1)
-    {
-        pe.putInt8(static_cast<int8_t>(m_coordinator_type));
+        if (conf->Version.IsAtLeast(V0_11_0_0))
+        {
+            m_version = 1;
+        }
+        else
+        {
+            m_version = 0;
+        }
     }
 
-    return 0;
-}
+    FindCoordinatorRequest::FindCoordinatorRequest()
+        : m_version(0), m_coordinator_type(CoordinatorGroup) {}
 
-int FindCoordinatorRequest::decode(packet_decoder &pd, int16_t version)
-{
-    int err = pd.getString(m_coordinator_key);
-    if (err != 0)
-        return err;
-
-    if (version >= 1)
+    void FindCoordinatorRequest::set_version(int16_t v)
     {
-        m_version = version;
-        int8_t coordinatorType;
-        err = pd.getInt8(coordinatorType);
+        m_version = v;
+    }
+
+    int FindCoordinatorRequest::encode(packet_encoder &pe) const
+    {
+        int err = pe.putString(m_coordinator_key);
         if (err != 0)
             return err;
-        m_coordinator_type = static_cast<CoordinatorType>(coordinatorType);
+
+        if (m_version >= 1)
+        {
+            pe.putInt8(static_cast<int8_t>(m_coordinator_type));
+        }
+
+        return 0;
     }
 
-    return 0;
-}
-
-int16_t FindCoordinatorRequest::key() const
-{
-    return apiKeyFindCoordinator;
-}
-
-int16_t FindCoordinatorRequest::version() const
-{
-    return m_version;
-}
-
-int16_t FindCoordinatorRequest::header_version() const
-{
-    return 1;
-}
-
-bool FindCoordinatorRequest::is_valid_version() const
-{
-    return m_version >= 0 && m_version <= 3;
-}
-
-KafkaVersion FindCoordinatorRequest::required_version() const
-{
-    switch (m_version)
+    int FindCoordinatorRequest::decode(packet_decoder &pd, int16_t version)
     {
-    case 2:
-        return V2_0_0_0;
-    case 1:
-        return V0_11_0_0;
-    default:
-        return V0_8_2_0;
+        int err = pd.getString(m_coordinator_key);
+        if (err != 0)
+            return err;
+
+        if (version >= 1)
+        {
+            m_version = version;
+            int8_t coordinatorType;
+            err = pd.getInt8(coordinatorType);
+            if (err != 0)
+                return err;
+            m_coordinator_type = static_cast<CoordinatorType>(coordinatorType);
+        }
+
+        return 0;
+    }
+
+    int16_t FindCoordinatorRequest::key() const
+    {
+        return apiKeyFindCoordinator;
+    }
+
+    int16_t FindCoordinatorRequest::version() const
+    {
+        return m_version;
+    }
+
+    int16_t FindCoordinatorRequest::header_version() const
+    {
+        return 1;
+    }
+
+    bool FindCoordinatorRequest::is_valid_version() const
+    {
+        return m_version >= 0 && m_version <= 3;
+    }
+
+    KafkaVersion FindCoordinatorRequest::required_version() const
+    {
+        switch (m_version)
+        {
+        case 2:
+            return V2_0_0_0;
+        case 1:
+            return V0_11_0_0;
+        default:
+            return V0_8_2_0;
+        }
     }
 }

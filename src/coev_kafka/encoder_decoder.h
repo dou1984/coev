@@ -12,70 +12,73 @@
 #include <cassert>
 #include <string>
 
-struct packet_decoder;
-struct packet_encoder;
-
-struct packet_type
+namespace coev::kafka
 {
-    uint16_t m_flexible = 0;
-    bool __is_fixed()
+    struct packet_decoder;
+    struct packet_encoder;
+
+    struct packet_type
     {
-        return m_flexible == 0;
-    }
-    bool __is_flexible()
+        uint16_t m_flexible = 0;
+        bool __is_fixed()
+        {
+            return m_flexible == 0;
+        }
+        bool __is_flexible()
+        {
+            return m_flexible > 0;
+        }
+        void __push_flexible()
+        {
+            m_flexible++;
+        }
+        void __pop_flexible()
+        {
+            assert(m_flexible > 0);
+            m_flexible--;
+        }
+    };
+
+    struct flexible_version
     {
-        return m_flexible > 0;
-    }
-    void __push_flexible()
+        virtual ~flexible_version() = default;
+        virtual bool is_flexible_version(int16_t version) const = 0;
+        virtual bool is_flexible() const = 0;
+    };
+    struct IEncoder
     {
-        m_flexible++;
-    }
-    void __pop_flexible()
+        virtual ~IEncoder() = default;
+        virtual int encode(packet_encoder &pe) const = 0;
+    };
+
+    struct HEncoder : IEncoder
     {
-        assert(m_flexible > 0);
-        m_flexible--;
-    }
-};
+        virtual int16_t header_version() const = 0;
+    };
+    struct VEncoder
+    {
+        virtual ~VEncoder() = default;
+        virtual int encode(packet_encoder &pe, int16_t version) const = 0;
+    };
 
-struct flexible_version
-{
-    virtual ~flexible_version() = default;
-    virtual bool is_flexible_version(int16_t version) const = 0;
-    virtual bool is_flexible() const = 0;
-};
-struct IEncoder
-{
-    virtual ~IEncoder() = default;
-    virtual int encode(packet_encoder &pe) const = 0;
-};
+    struct IDecoder
+    {
+        virtual ~IDecoder() = default;
+        virtual int decode(packet_decoder &pd) = 0;
+    };
 
-struct HEncoder : IEncoder
-{
-    virtual int16_t header_version() const = 0;
-};
-struct VEncoder
-{
-    virtual ~VEncoder() = default;
-    virtual int encode(packet_encoder &pe, int16_t version) const = 0;
-};
+    struct VDecoder
+    {
+        virtual ~VDecoder() = default;
+        virtual int decode(packet_decoder &pd, int16_t version) = 0;
+    };
 
-struct IDecoder
-{
-    virtual ~IDecoder() = default;
-    virtual int decode(packet_decoder &pd) = 0;
-};
+    int encode(IEncoder &e, std::string &out);
+    int decode(const std::string &buf, IDecoder &in);
+    int decode_version(const std::string &buf, VDecoder &in, int16_t version);
+    int magic_value(packet_decoder &pd, int8_t &magic);
 
-struct VDecoder
-{
-    virtual ~VDecoder() = default;
-    virtual int decode(packet_decoder &pd, int16_t version) = 0;
-};
+    int prepare_flexible_decoder(packet_decoder &pd, VDecoder &req, int16_t version);
+    int prepare_flexible_encoder(packet_encoder &pe, IEncoder &req);
 
-int encode(IEncoder &e, std::string &out);
-int decode(const std::string &buf, IDecoder &in);
-int decode_version(const std::string &buf, VDecoder &in, int16_t version);
-int magic_value(packet_decoder &pd, int8_t &magic);
-
-int prepare_flexible_decoder(packet_decoder &pd, VDecoder &req, int16_t version);
-int prepare_flexible_encoder(packet_encoder &pe, IEncoder &req);
-
+}

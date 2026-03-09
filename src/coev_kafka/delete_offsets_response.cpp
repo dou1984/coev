@@ -7,141 +7,144 @@
 #include "version.h"
 #include "delete_offsets_response.h"
 
-void DeleteOffsetsResponse::set_version(int16_t v)
+namespace coev::kafka
 {
-    m_version = v;
-}
-
-void DeleteOffsetsResponse::AddError(const std::string &topic, int32_t partition, KError errorCode)
-{
-    auto &partitions = m_errors[topic];
-    partitions[partition] = errorCode;
-}
-
-int DeleteOffsetsResponse::encode(packet_encoder &pe) const
-{
-    pe.putInt16(static_cast<int16_t>(m_code));
-    pe.putDurationMs(m_throttle_time);
-
-    if (pe.putArrayLength(static_cast<int32_t>(m_errors.size())) != ErrNoError)
+    void DeleteOffsetsResponse::set_version(int16_t v)
     {
-        return ErrEncodeError;
+        m_version = v;
     }
 
-    for (auto &[topic, partitions] : m_errors)
+    void DeleteOffsetsResponse::AddError(const std::string &topic, int32_t partition, KError errorCode)
     {
-        if (pe.putString(topic) != ErrNoError)
-        {
-            return ErrEncodeError;
-        }
-        if (pe.putArrayLength(static_cast<int32_t>(partitions.size())) != ErrNoError)
+        auto &partitions = m_errors[topic];
+        partitions[partition] = errorCode;
+    }
+
+    int DeleteOffsetsResponse::encode(packet_encoder &pe) const
+    {
+        pe.putInt16(static_cast<int16_t>(m_code));
+        pe.putDurationMs(m_throttle_time);
+
+        if (pe.putArrayLength(static_cast<int32_t>(m_errors.size())) != ErrNoError)
         {
             return ErrEncodeError;
         }
 
-        for (auto &[partition, err] : partitions)
+        for (auto &[topic, partitions] : m_errors)
         {
-            pe.putInt32(partition);
-            pe.putInt16(static_cast<int16_t>(err));
+            if (pe.putString(topic) != ErrNoError)
+            {
+                return ErrEncodeError;
+            }
+            if (pe.putArrayLength(static_cast<int32_t>(partitions.size())) != ErrNoError)
+            {
+                return ErrEncodeError;
+            }
+
+            for (auto &[partition, err] : partitions)
+            {
+                pe.putInt32(partition);
+                pe.putInt16(static_cast<int16_t>(err));
+            }
         }
-    }
 
-    return ErrNoError;
-}
-
-int DeleteOffsetsResponse::decode(packet_decoder &pd, int16_t version)
-{
-    m_version = version;
-
-    int16_t errCode;
-    if (pd.getInt16(errCode) != ErrNoError)
-    {
-        return ErrDecodeError;
-    }
-    m_code = static_cast<KError>(errCode);
-
-    if (pd.getDurationMs(m_throttle_time) != ErrNoError)
-    {
-        return ErrDecodeError;
-    }
-
-    int32_t numTopics;
-    if (pd.getArrayLength(numTopics) != ErrNoError)
-    {
-        return ErrDecodeError;
-    }
-
-    if (numTopics <= 0)
-    {
-        m_errors.clear();
         return ErrNoError;
     }
 
-    m_errors.clear();
-
-    for (int32_t i = 0; i < numTopics; ++i)
+    int DeleteOffsetsResponse::decode(packet_decoder &pd, int16_t version)
     {
-        std::string topic;
-        if (pd.getString(topic) != ErrNoError)
+        m_version = version;
+
+        int16_t errCode;
+        if (pd.getInt16(errCode) != ErrNoError)
+        {
+            return ErrDecodeError;
+        }
+        m_code = static_cast<KError>(errCode);
+
+        if (pd.getDurationMs(m_throttle_time) != ErrNoError)
         {
             return ErrDecodeError;
         }
 
-        int32_t numPartitions;
-        if (pd.getArrayLength(numPartitions) != ErrNoError)
+        int32_t numTopics;
+        if (pd.getArrayLength(numTopics) != ErrNoError)
         {
             return ErrDecodeError;
         }
 
-        auto &partition_map = m_errors[topic];
-        partition_map.clear();
-
-        for (int32_t j = 0; j < numPartitions; ++j)
+        if (numTopics <= 0)
         {
-            int32_t partition;
-            if (pd.getInt32(partition) != ErrNoError)
+            m_errors.clear();
+            return ErrNoError;
+        }
+
+        m_errors.clear();
+
+        for (int32_t i = 0; i < numTopics; ++i)
+        {
+            std::string topic;
+            if (pd.getString(topic) != ErrNoError)
             {
                 return ErrDecodeError;
             }
 
-            int16_t partErr;
-            if (pd.getInt16(partErr) != ErrNoError)
+            int32_t numPartitions;
+            if (pd.getArrayLength(numPartitions) != ErrNoError)
             {
                 return ErrDecodeError;
             }
-            partition_map[partition] = static_cast<KError>(partErr);
+
+            auto &partition_map = m_errors[topic];
+            partition_map.clear();
+
+            for (int32_t j = 0; j < numPartitions; ++j)
+            {
+                int32_t partition;
+                if (pd.getInt32(partition) != ErrNoError)
+                {
+                    return ErrDecodeError;
+                }
+
+                int16_t partErr;
+                if (pd.getInt16(partErr) != ErrNoError)
+                {
+                    return ErrDecodeError;
+                }
+                partition_map[partition] = static_cast<KError>(partErr);
+            }
         }
+
+        return ErrNoError;
     }
 
-    return ErrNoError;
-}
+    int16_t DeleteOffsetsResponse::key() const
+    {
+        return 47; // apiKeyOffsetDelete
+    }
 
-int16_t DeleteOffsetsResponse::key() const
-{
-    return 47; // apiKeyOffsetDelete
-}
+    int16_t DeleteOffsetsResponse::version() const
+    {
+        return m_version;
+    }
 
-int16_t DeleteOffsetsResponse::version() const
-{
-    return m_version;
-}
+    int16_t DeleteOffsetsResponse::header_version() const
+    {
+        return 0;
+    }
 
-int16_t DeleteOffsetsResponse::header_version() const
-{
-    return 0;
-}
+    bool DeleteOffsetsResponse::is_valid_version() const
+    {
+        return m_version >= 0 && m_version <= 2;
+    }
 
-bool DeleteOffsetsResponse::is_valid_version() const
-{
-    return m_version >= 0 && m_version <= 2;
-}
+    KafkaVersion DeleteOffsetsResponse::required_version() const
+    {
+        return V2_4_0_0;
+    }
 
-KafkaVersion DeleteOffsetsResponse::required_version() const
-{
-    return V2_4_0_0;
-}
-
-std::chrono::milliseconds DeleteOffsetsResponse::throttle_time() const
-{
-    return m_throttle_time;
+    std::chrono::milliseconds DeleteOffsetsResponse::throttle_time() const
+    {
+        return m_throttle_time;
+    }
 }

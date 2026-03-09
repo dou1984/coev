@@ -18,39 +18,42 @@
 #include "errors.h"
 #include "interceptors.h"
 
-inline constexpr int ProducerMessageOverhead = 26;
-inline constexpr int MaximumRecordOverhead = 77; // 5 * 5 + 10 + 1; // binary.MaxVarintLen32=5, binary.MaxVarintLen64=10
-
-enum FlagSet : int16_t
+namespace coev::kafka
 {
-    Syn = 1 << 0,
-    Fin = 1 << 1,
-    Shutdown = 1 << 2,
-    Endtxn = 1 << 3,
-    Committxn = 1 << 4,
-    Aborttxn = 1 << 5
-};
+    inline constexpr int ProducerMessageOverhead = 26;
+    inline constexpr int MaximumRecordOverhead = 77; // 5 * 5 + 10 + 1; // binary.MaxVarintLen32=5, binary.MaxVarintLen64=10
 
-struct ProducerMessage : std::enable_shared_from_this<ProducerMessage>
-{
-    std::string m_topic;
-    StringEncoder m_key;
-    ByteEncoder m_value;
-    std::vector<RecordHeader> m_headers;
+    enum FlagSet : int16_t
+    {
+        Syn = 1 << 0,
+        Fin = 1 << 1,
+        Shutdown = 1 << 2,
+        Endtxn = 1 << 3,
+        Committxn = 1 << 4,
+        Aborttxn = 1 << 5
+    };
 
-    int64_t m_offset;
-    int32_t m_partition;
-    std::chrono::system_clock::time_point m_timestamp;
+    struct ProducerMessage : std::enable_shared_from_this<ProducerMessage>
+    {
+        std::string m_topic;
+        StringEncoder m_key;
+        ByteEncoder m_value;
+        std::vector<RecordHeader> m_headers;
 
-    int m_retries;
-    FlagSet m_flags;
-    int32_t m_sequence_number;
-    int16_t m_producer_epoch;
-    bool m_has_sequence;
-    KError m_err = ErrNoError;
+        int64_t m_offset;
+        int32_t m_partition;
+        std::chrono::system_clock::time_point m_timestamp;
 
-    ProducerMessage();
-    ~ProducerMessage();
-    int byte_size(int version) const;
-    void clear();
-};
+        int m_retries;
+        FlagSet m_flags;
+        int32_t m_sequence_number;
+        int16_t m_producer_epoch;
+        bool m_has_sequence;
+        KError m_err = ErrNoError;
+
+        ProducerMessage();
+        ~ProducerMessage();
+        int byte_size(int version) const;
+        void clear();
+    };
+}

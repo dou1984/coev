@@ -14,42 +14,46 @@
 #include "errors.h"
 #include "protocol_body.h"
 
-struct AlterConfigError
+namespace coev::kafka
 {
-    KError m_err;
-    std::string m_err_msg;
-    std::string Error() const;
-};
-
-struct AlterConfigsResourceResponse : VDecoder, IEncoder
-{
-    int16_t m_code = 0;
-    std::string m_message;
-    ConfigResourceType m_type;
-    std::string m_name;
-
-    int encode(class packet_encoder &pe) const;
-    int decode(class packet_decoder &pd, int16_t version);
-};
-
-struct AlterConfigsResponse : protocol_body
-{
-    int16_t m_version = 0;
-    std::chrono::milliseconds m_throttle_time;
-    std::vector<AlterConfigsResourceResponse> m_resources;
-
-    AlterConfigsResponse() = default;
-    AlterConfigsResponse(int16_t v) : m_version(v)
+    struct AlterConfigError
     {
-    }
-    void set_version(int16_t v);
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
+        KError m_err;
+        std::string m_err_msg;
+        std::string Error() const;
+    };
 
-    int16_t key() const;
-    int16_t version() const;
-    int16_t header_version() const;
-    bool is_valid_version() const;
-    KafkaVersion required_version() const;
-    std::chrono::milliseconds throttle_time() const;
-};
+    struct AlterConfigsResourceResponse : VDecoder, IEncoder
+    {
+        int16_t m_code = 0;
+        std::string m_message;
+        ConfigResourceType m_type;
+        std::string m_name;
+
+        int encode(class packet_encoder &pe) const;
+        int decode(class packet_decoder &pd, int16_t version);
+    };
+
+    struct AlterConfigsResponse : protocol_body
+    {
+        int16_t m_version = 0;
+        std::chrono::milliseconds m_throttle_time;
+        std::vector<AlterConfigsResourceResponse> m_resources;
+
+        AlterConfigsResponse() = default;
+        AlterConfigsResponse(int16_t v) : m_version(v)
+        {
+        }
+        void set_version(int16_t v);
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd, int16_t version);
+
+        int16_t key() const;
+        int16_t version() const;
+        int16_t header_version() const;
+        bool is_valid_version() const;
+        KafkaVersion required_version() const;
+        std::chrono::milliseconds throttle_time() const;
+    };
+
+}

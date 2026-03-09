@@ -17,22 +17,25 @@
 #include "protocol_body.h"
 #include "config_resource_type.h"
 
-struct DescribeConfigsRequest : protocol_body
+namespace coev::kafka
 {
-    int16_t m_version;
-    std::vector<ConfigResource> m_resources;
-    bool m_include_synonyms;
-
-    DescribeConfigsRequest() = default;
-    DescribeConfigsRequest(int16_t v) : m_version(v)
+    struct DescribeConfigsRequest : protocol_body
     {
-    }
-    void set_version(int16_t v);
-    int encode(packet_encoder &pe) const;
-    int decode(packet_decoder &pd, int16_t version);
-    int16_t key() const;
-    int16_t version() const;
-    int16_t header_version() const;
-    bool is_valid_version() const;
-    KafkaVersion required_version() const;
-};
+        int16_t m_version;
+        std::vector<ConfigResource> m_resources;
+        bool m_include_synonyms;
+
+        DescribeConfigsRequest() = default;
+        DescribeConfigsRequest(int16_t v) : m_version(v)
+        {
+        }
+        void set_version(int16_t v);
+        int encode(packet_encoder &pe) const;
+        int decode(packet_decoder &pd, int16_t version);
+        int16_t key() const;
+        int16_t version() const;
+        int16_t header_version() const;
+        bool is_valid_version() const;
+        KafkaVersion required_version() const;
+    };
+}

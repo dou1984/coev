@@ -15,6 +15,8 @@
 #include "real_encoder.h"
 #include "real_decoder.h"
 
+using namespace coev::kafka;
+
 // Test data from Sarama's acl_create_response_test.go
 const unsigned char createResponseWithError[] = {
     0x00, 0x00, 0x00, 0x64,             // Throttle time: 100 ms
@@ -32,7 +34,8 @@ const unsigned char createResponseArray[] = {
     0xFF, 0xFF                           // No error message
 };
 
-TEST(CreateAclsResponseTest, DecodeWithError) {
+TEST(CreateAclsResponseTest, DecodeWithError)
+{
     std::string rawData(reinterpret_cast<const char *>(createResponseWithError), sizeof(createResponseWithError));
     real_decoder decoder(rawData);
 
@@ -47,7 +50,8 @@ TEST(CreateAclsResponseTest, DecodeWithError) {
     EXPECT_EQ(aclResp.m_err_msg, "error") << "ACL creation response error message mismatch";
 }
 
-TEST(CreateAclsResponseTest, DecodeResponseArray) {
+TEST(CreateAclsResponseTest, DecodeResponseArray)
+{
     std::string rawData(reinterpret_cast<const char *>(createResponseArray), sizeof(createResponseArray));
     real_decoder decoder(rawData);
 

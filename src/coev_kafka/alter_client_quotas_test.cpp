@@ -8,6 +8,8 @@
 #include "alter_client_quotas_request.h"
 #include "alter_client_quotas_response.h"
 
+using namespace coev::kafka;
+
 TEST(AlterClientQuotasTest, RequestVersionCompatibility)
 {
     AlterClientQuotasRequest request;

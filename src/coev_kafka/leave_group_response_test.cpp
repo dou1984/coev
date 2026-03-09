@@ -6,7 +6,7 @@
  */
 #include <gtest/gtest.h>
 #include "leave_group_response.h"
-
+using namespace coev::kafka;
 TEST(LeaveGroupResponseTest, VersionCompatibility)
 {
     LeaveGroupResponse response;

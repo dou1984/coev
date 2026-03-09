@@ -7,6 +7,8 @@
 #include <gtest/gtest.h>
 #include "add_offsets_to_txn_response.h"
 
+using namespace coev::kafka;
+
 TEST(AddOffsetsToTxnResponseTest, VersionCompatibility)
 {
     AddOffsetsToTxnResponse response;

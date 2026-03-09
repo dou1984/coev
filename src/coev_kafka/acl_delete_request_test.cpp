@@ -14,6 +14,8 @@
 #include "real_encoder.h"
 #include "real_decoder.h"
 
+using namespace coev::kafka;
+
 // Test data from Sarama's acl_delete_request_test.go
 const unsigned char aclDeleteRequestNulls[] = {
     0x00, 0x00, 0x00, 0x01,  // Number of filters

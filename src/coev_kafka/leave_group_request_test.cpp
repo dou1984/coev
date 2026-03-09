@@ -6,7 +6,7 @@
  */
 #include <gtest/gtest.h>
 #include "leave_group_request.h"
-
+using namespace coev::kafka;
 TEST(LeaveGroupRequestTest, VersionCompatibility)
 {
     LeaveGroupRequest request;

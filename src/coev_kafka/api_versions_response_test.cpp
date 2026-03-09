@@ -7,6 +7,8 @@
 #include <gtest/gtest.h>
 #include "api_versions_response.h"
 
+using namespace coev::kafka;
+
 TEST(ApiVersionsResponseTest, VersionCompatibility)
 {
     ApiVersionsResponse response;
