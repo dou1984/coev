@@ -5,23 +5,12 @@
  *
  */
 #include "connect.h"
+#include <utils/convert.h>
 
 namespace coev::kafka
 {
 
-    static const char *LOG_HEX = "0123456789abcdef";
-    static std::string to_hex(const std::string &data)
-    {
-        std::string res;
-        res.reserve(data.size() * 2);
-        for (unsigned char c : data)
-        {
-            res += LOG_HEX[c >> 4];
-            res += LOG_HEX[c & 0xf];
-        }
-        return res;
-    }
-    Connect::Connect() : m_state(CLOSED)
+      Connect::Connect() : m_state(CLOSED)
     {
     }
 

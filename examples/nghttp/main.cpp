@@ -12,7 +12,9 @@ ssl::manager g_cli_mgr(ssl::manager::TLS_CLIENT);
 ssl::manager g_srv_mgr(ssl::manager::TLS_SERVER);
 
 char hi[] = R"(helloworld)";
-int worker_num = 1;
+int worker_num = 4;
+int coroutine_num = 10;
+int max_connection = 50;
 coev::pool::nghttp2::Http2 http2;
 coev::pool::server_pool<nghttp2::server> server;
 awaitable<int> echo(nghttp2::session &ctx, nghttp2::request &request)
@@ -22,14 +24,13 @@ awaitable<int> echo(nghttp2::session &ctx, nghttp2::request &request)
     nghttp2::header ngh;
     ngh.push_back(":status", "200");
 
-    const char data[] = "hi, everyone!";
-    auto err = co_await ctx.reply(request.id(), ngh, data, strlen(data) + 1);
+    auto err = co_await ctx.reply(request.id(), ngh, request.body().c_str(), request.body().size());
     if (err == INVALID)
     {
         LOG_ERR("send error %d %s", errno, strerror(errno));
         co_return INVALID;
     }
-    LOG_DBG("send data %s %ld", data, strlen(data) + 1);
+    LOG_DBG("stream_id:%d send data %s %ld", request.id(), request.body().c_str(), request.body().size());
     co_return 0;
 };
 awaitable<void> proc_server()
@@ -43,11 +44,11 @@ awaitable<void> proc_server()
 awaitable<void> proc_client()
 {
     co_task _task;
-    for (auto w = 0; w < 10; w++)
+    for (auto w = 0; w < coroutine_num; w++)
     {
         _task << []() -> awaitable<void>
         {
-            for (auto i = 0; i < 100000; i++)
+            for (auto i = 0; i < 1000000; i++)
             {
                 coev::pool::nghttp2::Http2::instance c;
                 auto r = co_await http2.get(c);
@@ -65,12 +66,13 @@ awaitable<void> proc_client()
                 ngh.push_back("accept", "*/*");
                 ngh.push_back("user-agent", "nghttp2/" NGHTTP2_VERSION);
                 nghttp2::response res;
-                auto err = co_await c->query(ngh, hi, sizeof(hi), res);
+                std::string hi = std::to_string(i);
+                auto err = co_await c->query(ngh, hi.data(), hi.size(), res);
                 if (err == INVALID)
                 {
                     co_return;
                 }
-                LOG_INFO("status: %s body:%s", res.header(":status").c_str(), res.body().c_str());
+                LOG_DBG("status: %s body:%s", res.header(":status").c_str(), res.body().c_str());
             }
         }();
     }
@@ -86,7 +88,9 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    set_log_level(LOG_LEVEL_DEBUG);
+    // set_log_level(LOG_LEVEL_CORE);
+    // set_log_level(LOG_LEVEL_DEBUG);
+    set_log_level(LOG_LEVEL_ERROR);
 
     if (strcmp(argv[1], "server") == 0)
     {
@@ -104,7 +108,7 @@ int main(int argc, char **argv)
         config->host = "0.0.0.0";
         config->port = 9999;
         config->data = g_cli_mgr.get();
-        config->max_connections = 10;
+        config->max_connections = max_connection;
         http2.set(config);
         runnable::instance()
             .start(worker_num, proc_client)

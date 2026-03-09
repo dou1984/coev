@@ -12,6 +12,7 @@
 #include <coev_kafka/partitioner.h>
 
 using namespace coev;
+using namespace coev::kafka;
 
 std::string method;
 std::string host;
@@ -27,8 +28,8 @@ int main(int argc, char **argv)
         std::cout << "Usage: " << argv[0] << "(pull|push) host port topic" << std::endl;
         return -1;
     }
-    // set_log_level(LOG_LEVEL_CORE);
-    set_log_level(LOG_LEVEL_DEBUG);
+    set_log_level(LOG_LEVEL_CORE);
+    // set_log_level(LOG_LEVEL_DEBUG);
     method = argv[1];
     host = argv[2];
     port = std::stoi(argv[3]);
@@ -88,6 +89,7 @@ int main(int argc, char **argv)
                     }
                     co_await task.wait_all();
                     LOG_DBG("all task done");
+                    co_return;
                 })
             .wait();
     }

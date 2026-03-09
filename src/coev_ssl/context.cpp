@@ -6,6 +6,7 @@
  */
 #include <utility>
 #include <coev/coev.h>
+#include <utils/convert.h>
 #include "context.h"
 #include "manager.h"
 
@@ -131,7 +132,9 @@ namespace coev::ssl
                 }
                 else
                 {
-                    LOG_CORE("read %d bytes", r);
+                    auto data = to_hex(std::string(buf, r));
+                    LOG_CORE("read %.*s bytes", (int)data.size(), data.data());
+
                     co_return r;
                 }
             }
@@ -221,6 +224,8 @@ namespace coev::ssl
         {
             return INVALID;
         }
+        std::string data = to_hex(std::string(buffer, buffer_size));
+        LOG_CORE("send %.*s", (int)data.size(), data.data());
         int r = SSL_write(m_ssl, buffer, buffer_size);
         if (r == INVALID)
         {
@@ -232,6 +237,7 @@ namespace coev::ssl
                 return INVALID;
             }
             ev_io_start(m_loop, &m_write);
+            return INVALID; // Return negative error code for temporary failure
         }
         else if (r == 0)
         {

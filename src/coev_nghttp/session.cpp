@@ -178,7 +178,7 @@ namespace coev::nghttp2
     {
         auto _this = static_cast<session *>(user_data);
         LOG_CORE("begin header %d type %d flags %d", frame->hd.stream_id, frame->hd.type, frame->hd.flags);
-        if (frame->hd.type != NGHTTP2_HEADERS || frame->headers.cat != NGHTTP2_HCAT_REQUEST)
+        if (frame->hd.type != NGHTTP2_HEADERS)
         {
             return 0;
         }
@@ -199,10 +199,6 @@ namespace coev::nghttp2
     {
         auto _this = static_cast<session *>(user_data);
         LOG_CORE("header stream_id %d flags %d type %d length %.*s: %.*s", frame->hd.stream_id, frame->hd.flags, frame->hd.type, (int)namelen, name, (int)valuelen, value);
-        if (frame->headers.cat != NGHTTP2_HCAT_REQUEST)
-        {
-            return 0;
-        }
         auto stream_id = frame->hd.stream_id;
         if (_this->__is_client())
         {
@@ -369,11 +365,13 @@ namespace coev::nghttp2
 
     awaitable<int> session::__processing()
     {
+        std::string recv_buffer;
+        recv_buffer.resize(4096);
+        int recv_offset = 0;
         defer(__clearup());
         while (__ssl_valid())
         {
-            char body[1024 * 4];
-            auto r = co_await ssl::context::recv(body, sizeof(body));
+            auto r = co_await ssl::context::recv(recv_buffer.data() + recv_offset, recv_buffer.size() - recv_offset);
             if (r < 0)
             {
                 LOG_CORE("recv failed %d %d %s", r, errno, strerror(errno));
@@ -383,13 +381,18 @@ namespace coev::nghttp2
             {
                 co_return INVALID;
             }
-            r = nghttp2_session_mem_recv(m_session, (uint8_t *)body, r);
+            recv_offset += r;
+            r = nghttp2_session_mem_recv(m_session, (uint8_t *)recv_buffer.data(), recv_offset);
             if (r < 0)
             {
                 LOG_CORE("recv failed %d %d %s", errno, r, nghttp2_strerror(r));
                 co_return INVALID;
             }
-
+            if (r > 0)
+            {
+                recv_offset -= r;
+                memmove(recv_buffer.data(), recv_buffer.data() + r, recv_offset);
+            }
             if (nghttp2_session_want_write(m_session))
             {
                 auto err = __send();
@@ -426,13 +429,6 @@ namespace coev::nghttp2
                 m_requests.erase(it);
                 if (auto it_r = routers.find(req.path()); it_r != routers.end())
                 {
-                    auto err = __push_promise(stream_id, nullptr, 0);
-                    if (err < 0)
-                    {
-                        LOG_CORE("push promise failed %d %s", err, nghttp2_strerror(err));
-                        __clearup();
-                        co_return INVALID;
-                    }
                     LOG_CORE("stream_id %d received END_STREAM flag", req.id());
                     m_task << it_r->second(*this, req);
                 }
@@ -506,7 +502,7 @@ namespace coev::nghttp2
     {
         nghttp2_settings_entry iv[] = {
             {NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, 100},
-            {NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE, 65535},
+            {NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE, 65535 * 16},
         };
 
         auto err = nghttp2_submit_settings(m_session, NGHTTP2_FLAG_NONE, iv, sizeof(iv) / sizeof(iv[0]));
