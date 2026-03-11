@@ -29,6 +29,7 @@ namespace coev::ssl
         ~__init_ssl()
         {
             LOG_CORE("SSL cleanup");
+            OPENSSL_cleanup();
         }
     };
     static __init_ssl g_init_ssl;

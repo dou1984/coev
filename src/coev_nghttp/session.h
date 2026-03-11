@@ -37,7 +37,7 @@ namespace coev::nghttp2
         awaitable<int> query(header &h, const char *body, int length, response &);
         awaitable<int> reply(int stream_id, header &h, const char *body, int length);
         int reply_error(int32_t stream_id, int error_code);
-        void processing() { m_task << __processing(); }
+        void processing() { co_start << __processing(); }
 
     public:
         int set_routers(const routers &);

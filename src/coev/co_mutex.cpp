@@ -47,11 +47,18 @@ namespace coev
 				{ return m_flag == on; }, [this]()
 				{ m_flag = on; });
 		}
-		bool co_mutex::unlock() noexcept
+		bool co_mutex::unlock(bool deliver) noexcept
 		{
-			return m_waiter.resume(
-				[this]()
-				{ m_flag = off; });
+			if (deliver)
+			{
+				return m_waiter.deliver([this]()
+										{ m_flag = off; });
+			}
+			else
+			{
+				return m_waiter.resume([this]()
+									   { m_flag = off; });
+			}
 		}
 		bool co_mutex::try_lock() noexcept
 		{

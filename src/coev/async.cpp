@@ -105,7 +105,22 @@ namespace coev
 			}
 			return false;
 		}
-
+		bool async::deliver(const std::function<void()> &_set) noexcept
+		{
+			if (auto c = __ev(_set); c != nullptr)
+			{
+				if (c->id() == gtid())
+				{
+					c->resume();
+				}
+				else
+				{
+					co_deliver::resume(c);
+				}
+				return true;
+			}
+			return false;
+		}
 		bool async::deliver(uint64_t value) noexcept
 		{
 			if (auto c = __ev(); c != nullptr)

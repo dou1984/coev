@@ -33,10 +33,8 @@ namespace coev
 		{
 			if (m_loop)
 			{
-				LOG_CORE("ev_loop_destroy %p", m_loop);
 				co_start.destroy();
 				auto _loop = std::exchange(m_loop, nullptr);
-				LOG_CORE("ev_loop_destroy %p", _loop);
 				ev_loop_destroy(_loop);
 				LOG_CORE("ev_loop_destroy %p", _loop);
 			}
@@ -52,14 +50,15 @@ namespace coev
 		auto _loop = g_loop.get();
 		auto id = local<co_deliver>::instance().id();
 		ev_run(_loop, 0);
+		LOG_CORE("loop run stop %p", _loop);
 	}
 	void cosys::stop()
 	{
 		local<co_deliver>::instance().stop();
 		auto tid = gtid();
 		auto _loop = g_loop.get();
-		defer(LOG_CORE("tid %ld stop loop %p", tid, _loop));
 		ev_break(_loop, EVBREAK_ALL);
+		LOG_CORE("loop stop %p", _loop);
 	}
 	struct ev_loop *cosys::data()
 	{

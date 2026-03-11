@@ -9,23 +9,21 @@
 
 using namespace coev;
 using namespace coev::ssl;
+
 static manager g_srv_mgr(manager::TLS_SERVER);
 static manager g_cli_mgr(manager::TLS_CLIENT);
 
 coev::pool::ssl::client cli;
+coev::pool::server_pool<tcp::server> _pool;
 
 awaitable<void> test_ssl_context()
 {
-    coev::pool::server_pool<tcp::server> pool;
-    pool.start("0.0.0.0", 9999);
-    g_srv_mgr.use_certificate_file("./certs/server/server.crt");
-    g_srv_mgr.use_private_key_file("./certs/server/server.key");
 
     LOG_DBG("server started");
     while (true)
     {
         addrInfo addr;
-        auto fd = co_await pool.get().accept(addr);
+        auto fd = co_await _pool.get().accept(addr);
         LOG_DBG("accepted %d from %s:%d", fd, addr.ip, addr.port);
 
         if (fd == INVALID)
@@ -52,7 +50,7 @@ awaitable<void> test_ssl_context()
                     LOG_ERR("recv failed fd:%d", fd);
                     co_return;
                 }
-                LOG_DBG("recv %d bytes from fd:%d %s", r, fd, buffer);
+                LOG_DBG("recv from fd:%d %.*s", fd, r, buffer);
                 r = co_await ctx.send("hello world", strlen("hello world") + 1);
                 if (r == INVALID)
                 {
@@ -102,6 +100,9 @@ int main(int argc, char **argv)
     }
     if (strcmp(argv[1], "server") == 0)
     {
+        g_srv_mgr.use_certificate_file("./certs/server/server.crt");
+        g_srv_mgr.use_private_key_file("./certs/server/server.key");
+        _pool.start("0.0.0.0", 9999);
         runnable::instance()
             .start(test_ssl_context)
             .wait();

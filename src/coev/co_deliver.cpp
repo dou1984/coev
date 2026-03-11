@@ -6,6 +6,7 @@
  */
 #include <unordered_map>
 #include <mutex>
+#include <utility>
 #include "co_deliver.h"
 #include "cosys.h"
 #include "local_resume.h"
@@ -49,8 +50,8 @@ namespace coev
 	{
 		if (m_loop)
 		{
-			ev_async_stop(m_loop, &m_deliver);
-			m_loop = nullptr;
+			auto _loop = std::exchange(m_loop, nullptr);
+			ev_async_stop(_loop, &m_deliver);
 		}
 	}
 	int co_deliver::__done()

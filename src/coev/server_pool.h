@@ -49,18 +49,17 @@ namespace coev::pool
 		int stop()
 		{
 			std::lock_guard<std::mutex> _(m_mutex);
-			for (auto it = m_pool.begin(); it != m_pool.end(); ++it)
+			for (auto &[_, srv] : m_pool)
 			{
-				auto &srv = it->second;
 				if (srv.valid())
 				{
-					srv.__remove();
+					srv.stop();
 				}
 			}
 			if (m_fd != INVALID)
 			{
-				::close(m_fd);
-				m_fd = INVALID;
+				auto _fd = std::exchange(m_fd, INVALID);
+				::close(_fd);
 			}
 			return 0;
 		}

@@ -32,11 +32,13 @@ namespace coev
             awaitable<uint64_t> suspend() noexcept;
             bool resume(const std::function<void()> &) noexcept;
             bool resume(uint64_t value = 0) noexcept;
+            bool deliver(const std::function<void()> &) noexcept;
             bool deliver(uint64_t value = 0) noexcept;
+
             std::mutex &lock() noexcept { return m_mutex; }
 
         private:
-            co_event *__ev(const std::function<void()> &_set) ;
+            co_event *__ev(const std::function<void()> &_set);
             co_event *__ev() noexcept;
             std::mutex m_mutex;
         };

@@ -88,9 +88,9 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    // set_log_level(LOG_LEVEL_CORE);
+    set_log_level(LOG_LEVEL_CORE);
     // set_log_level(LOG_LEVEL_DEBUG);
-    set_log_level(LOG_LEVEL_ERROR);
+    // set_log_level(LOG_LEVEL_ERROR);
 
     if (strcmp(argv[1], "server") == 0)
     {

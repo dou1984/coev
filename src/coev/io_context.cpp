@@ -93,7 +93,7 @@ namespace coev
 	{
 		if (m_fd != INVALID)
 		{
-			LOG_CORE("fd:%d", m_fd);
+			LOG_CORE("fd %d", m_fd);
 			if (ev_is_active(&m_read))
 			{
 				ev_io_stop(m_loop, &m_read);
@@ -107,7 +107,7 @@ namespace coev
 	}
 	int io_context::__del_write() noexcept
 	{
-		if (m_w_waiter.empty())
+		if (m_w_waiter.empty() && ev_is_active(&m_write))
 		{
 			ev_io_stop(m_loop, &m_write);
 		}

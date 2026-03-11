@@ -14,25 +14,27 @@ namespace coev
 {
 	class co_mutex final
 	{
-		async m_waiter;
-		int m_flag;
-
 	public:
 		awaitable<void> lock() noexcept;
 		bool unlock() noexcept;
 		bool try_lock() noexcept;
+
+	private:
+		async m_waiter;
+		int m_flag = 0;
 	};
 	namespace guard
 	{
 		class co_mutex final
 		{
-			async m_waiter;
-			int m_flag;
-
 		public:
 			awaitable<void> lock() noexcept;
-			bool unlock() noexcept;
+			bool unlock(bool deliver = false) noexcept;
 			bool try_lock() noexcept;
+
+		private:
+			async m_waiter;
+			int m_flag = 0;
 		};
 	}
 

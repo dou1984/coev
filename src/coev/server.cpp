@@ -7,6 +7,7 @@
 #include "server.h"
 #include "coev.h"
 #include "cosys.h"
+#include "co_task.h"
 #include "local_resume.h"
 
 namespace coev::tcp
@@ -37,10 +38,15 @@ namespace coev::tcp
 	server::server()
 	{
 		m_loop = cosys::data();
+		co_start << [this]() -> awaitable<void>
+		{
+			co_await m_finished.lock();
+			__stop();
+		}();
 	}
 	server::~server()
 	{
-		stop();
+		m_finished.unlock();
 	}
 	int server::start(const char *ip, int port)
 	{
@@ -53,35 +59,25 @@ namespace coev::tcp
 		int on = 1;
 		if (setReuseAddr(m_fd, on) < 0)
 		{
-		__error_return__:
-			::close(m_fd);
-			m_fd = INVALID;
+		__error__:
+			auto _fd = std::exchange(m_fd, INVALID);
+			::close(_fd);
 			return m_fd;
 		}
 		if (bindAddr(m_fd, ip, port) < 0)
 		{
-			goto __error_return__;
+			goto __error__;
 		}
 		if (setNoBlock(m_fd, true) < 0)
 		{
-			goto __error_return__;
+			goto __error__;
 		}
 		if (listen(m_fd, 1000) < 0)
 		{
-			goto __error_return__;
+			goto __error__;
 		}
 		__insert();
 		return m_fd;
-	}
-	int server::stop()
-	{
-		if (m_fd != INVALID)
-		{
-			__remove();
-			::close(m_fd);
-			m_fd = INVALID;
-		}
-		return 0;
 	}
 	int server::bind(int fd)
 	{
@@ -101,7 +97,16 @@ namespace coev::tcp
 		ev_io_stop(m_loop, &m_recv);
 		return m_fd;
 	}
-
+	int server::__stop()
+	{
+		if (m_fd != INVALID)
+		{
+			auto _fd = std::exchange(m_fd, INVALID);
+			__remove();
+			::close(_fd);
+		}
+		return 0;
+	}
 	awaitable<int> server::accept(addrInfo &peer)
 	{
 		if (!valid())

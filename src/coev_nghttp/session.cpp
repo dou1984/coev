@@ -391,7 +391,10 @@ namespace coev::nghttp2
             if (r > 0)
             {
                 recv_offset -= r;
-                memmove(recv_buffer.data(), recv_buffer.data() + r, recv_offset);
+                if (recv_offset > 0)
+                {
+                    memmove(recv_buffer.data(), recv_buffer.data() + r, recv_offset);
+                }
             }
             if (nghttp2_session_want_write(m_session))
             {
@@ -479,14 +482,13 @@ namespace coev::nghttp2
     }
     int session::send_server_settings()
     {
-        nghttp2_settings_entry iv[] = {
-            {NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, 100}};
+        nghttp2_settings_entry iv[] = {{NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, 100}};
 
         auto err = nghttp2_submit_settings(m_session, NGHTTP2_FLAG_NONE, iv, sizeof(iv) / sizeof(iv[0]));
         if (err != 0)
         {
             LOG_ERR("Failed to submit SETTINGS: %s", nghttp2_strerror(err));
-        __error_return__:
+        __error__:
             __clearup();
             return INVALID;
         }
@@ -494,7 +496,7 @@ namespace coev::nghttp2
         if (err < 0)
         {
             LOG_ERR("send message failed %d %d %s", errno, err, strerror(errno));
-            goto __error_return__;
+            goto __error__;
         }
         return err;
     }
