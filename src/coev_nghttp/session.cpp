@@ -28,15 +28,23 @@ namespace coev::nghttp2
         int m_length = 0;
         int m_offset = 0;
         char *m_data = 0;
-        __cache(const char *_data) : m_data(strdup(_data))
+        __cache(const char *_data, int length)
         {
-            m_length = strlen(m_data);
+            m_data = (char *)malloc(length);
+            if (m_data == nullptr)
+            {
+                LOG_ERR("malloc failed");
+                return;
+            }
+            m_length = length;
+            memcpy(m_data, _data, length);
         }
         ~__cache()
         {
             if (m_data)
             {
-                free(m_data);
+                auto _data = std::exchange(m_data, nullptr);
+                free(_data);
             }
         }
     };
@@ -101,6 +109,7 @@ namespace coev::nghttp2
             LOG_CORE("send failed: length %ld exceeds INT_MAX", length);
             return INVALID;
         }
+        LOG_CORE("send %ld bytes stream_id flags %d", length, flags);
         auto r = _this->__ssl_write((const char *)data, static_cast<int>(length));
         if (r == INVALID)
         {
@@ -113,7 +122,7 @@ namespace coev::nghttp2
         LOG_CORE("recv %ld bytes stream_id flags %d", length, flags);
         auto _this = static_cast<session *>(user_data);
         _this->m_r_waiter.resume();
-        return length;
+        return static_cast<ssize_t>(length);
     }
 
     int session::__error_callback(nghttp2_session *sess, const char *msg, size_t len, void *user_data)
@@ -268,7 +277,7 @@ namespace coev::nghttp2
     int session::__submit_request(nghttp2_nv *nva, int head_size, const char *body, int length)
     {
         nghttp2_data_provider data_provider{
-            .source = {.ptr = new __cache(body)},
+            .source = {.ptr = new __cache(body, length)},
             .read_callback = session::__read_callback};
         auto stream_id = nghttp2_submit_request(m_session, NULL, nva, head_size, &data_provider, this);
         if (stream_id < 0)
@@ -286,7 +295,7 @@ namespace coev::nghttp2
     int session::__submit_response(int stream_id, nghttp2_nv *nva, int head_size, const char *body, int length)
     {
         nghttp2_data_provider data_provider{
-            .source = {.ptr = new __cache(body)},
+            .source = {.ptr = new __cache(body, length)},
             .read_callback = session::__read_callback};
         auto err = nghttp2_submit_response(m_session, stream_id, nva, head_size, &data_provider);
         if (err < 0)
@@ -362,11 +371,10 @@ namespace coev::nghttp2
         processing();
         co_return m_fd;
     }
-
     awaitable<int> session::__processing()
     {
         std::string recv_buffer;
-        recv_buffer.resize(4096);
+        recv_buffer.resize(65535);
         int recv_offset = 0;
         defer(__clearup());
         while (__ssl_valid())
@@ -382,28 +390,29 @@ namespace coev::nghttp2
                 co_return INVALID;
             }
             recv_offset += r;
-            r = nghttp2_session_mem_recv(m_session, (uint8_t *)recv_buffer.data(), recv_offset);
-            if (r < 0)
+            while (recv_offset > 0)
             {
-                LOG_CORE("recv failed %d %d %s", errno, r, nghttp2_strerror(r));
-                co_return INVALID;
-            }
-            if (r > 0)
-            {
+                r = nghttp2_session_mem_recv(m_session, (uint8_t *)recv_buffer.data(), recv_offset);
+                if (r < 0)
+                {
+                    LOG_CORE("recv failed %d %d %s", errno, r, nghttp2_strerror(r));
+                    co_return INVALID;
+                }
+                if (r == 0)
+                {
+                    break;
+                }
                 recv_offset -= r;
                 if (recv_offset > 0)
                 {
                     memmove(recv_buffer.data(), recv_buffer.data() + r, recv_offset);
                 }
             }
-            if (nghttp2_session_want_write(m_session))
+            auto err = __send();
+            if (err < 0)
             {
-                auto err = __send();
-                if (err < 0)
-                {
-                    LOG_CORE("send failed %d %s", err, nghttp2_strerror(err));
-                    co_return INVALID;
-                }
+                LOG_CORE("send failed %d %s", err, nghttp2_strerror(err));
+                co_return INVALID;
             }
         }
     }
@@ -422,18 +431,24 @@ namespace coev::nghttp2
     }
     awaitable<int> session::on_stream(const routers &routers)
     {
-        while (*this)
+        while (__valid())
         {
             co_await m_trigger.suspend();
+            if (__invalid())
+            {
+                break;
+            }
             auto stream_id = nghttp2_session_get_last_proc_stream_id(m_session);
             if (auto it = m_requests.find(stream_id); it != m_requests.end())
             {
-                auto req = std::move(it->second);
-                m_requests.erase(it);
-                if (auto it_r = routers.find(req.path()); it_r != routers.end())
+                defer(m_requests.erase(it));
+                if (auto it_f = routers.find(it->second.path()); it_f != routers.end())
                 {
-                    LOG_CORE("stream_id %d received END_STREAM flag", req.id());
-                    m_task << it_r->second(*this, req);
+                    LOG_CORE("stream_id %d received END_STREAM flag", it->second.id());
+                    m_task << [](auto &_this, auto &f, auto &&request) -> awaitable<void>
+                    {
+                        return f(_this, request);
+                    }(*this, it_f->second, std::move(it->second));
                 }
             }
         }
@@ -543,7 +558,7 @@ namespace coev::nghttp2
         {
             LOG_ERR("send failed %d %d %s", errno, err, nghttp2_strerror(err));
             return INVALID;
-        }
+        }       
         return err;
     }
     request &session::get_request(int32_t stream_id)

@@ -15,7 +15,7 @@ static manager g_cli_mgr(manager::TLS_CLIENT);
 
 coev::pool::ssl::client cli;
 coev::pool::server_pool<tcp::server> _pool;
-
+auto send_times = 1000000000;
 awaitable<void> test_ssl_context()
 {
 
@@ -63,36 +63,70 @@ awaitable<void> test_ssl_context()
 }
 awaitable<void> test_ssl_client()
 {
-
-    coev::pool::ssl::client::instance c;
-    auto err = co_await cli.get(c);
-    if (err == INVALID)
+    // 性能统计
+    auto start = std::chrono::steady_clock::now();      
+    
+ 
+    const int TASK_COUNT = 20; 
+    const int REQUESTS_PER_TASK = send_times / TASK_COUNT;
+    
+    LOG_ERR("Starting %d concurrent tasks, %d requests each...", TASK_COUNT, REQUESTS_PER_TASK);
+    
+    co_task _task;
+    // 启动多个并发任务
+    for (int t = 0; t < TASK_COUNT; t++)
     {
-        exit(INVALID);
+        _task << [REQUESTS_PER_TASK](auto t) -> awaitable<void> {
+            coev::pool::ssl::client::instance c;
+            auto err = co_await cli.get(c);
+            if (err == INVALID)
+            {
+                LOG_ERR("Task %d: get connection failed", t);            
+                co_return;
+            }
+            
+            for (int i = 0; i < REQUESTS_PER_TASK; i++)
+            {
+                auto buf = "hello worldhello worldhello worldhello worldhello worldhello worldhello worldhelloworldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello world";
+                int size = strlen(buf) + 1;
+                int r = co_await c->send(buf, size);
+                if (r == INVALID)
+                {
+                    LOG_ERR("Task %d: send failed", t);                 
+                    co_return;
+                }             
+                
+                char buffer[4096];
+                r = co_await c->recv(buffer, sizeof(buffer));
+                if (r == INVALID)
+                {
+                    LOG_ERR("Task %d: recv failed", t);                 
+                    co_return;
+                }               
+            }    
+      
+        }(t);
     }
-    for (int i = 0; i < 10; i++)
-    {
-        auto buf = "hello world";
-        int size = strlen(buf) + 1;
-        int r = co_await c->send(buf, size);
-        if (r == INVALID)
-        {
-            LOG_ERR("send failed %d", r);
-            exit(INVALID);
-        }
-        char buffer[1024];
-        r = co_await c->recv(buffer, sizeof(buffer));
-        if (r == INVALID)
-        {
-            LOG_ERR("recv failed %d", r);
-            exit(INVALID);
-        }
-        LOG_DBG("recv %d bytes from %s", r, buffer);
-    }
+  
+    co_await _task.wait_all();
+    
+    auto end = std::chrono::steady_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    double seconds = duration.count() / 1000.0;
+    double qps = send_times / seconds;
+   
+    
+    LOG_ERR("=== Performance Report ===");
+    LOG_ERR("Total requests: %d", send_times);
+    LOG_ERR("Duration: %.2f seconds", seconds);
+    LOG_ERR("QPS: %.2f", qps);
+    LOG_ERR("========================");
 }
 int main(int argc, char **argv)
 {
-    set_log_level(LOG_LEVEL_DEBUG);
+    // set_log_level(LOG_LEVEL_DEBUG);
+    set_log_level(LOG_LEVEL_ERROR);
+    // set_log_level(LOG_LEVEL_CORE);
     if (argc < 2)
     {
         LOG_ERR("usage: %s [server|client]", argv[0]);
@@ -105,18 +139,21 @@ int main(int argc, char **argv)
         _pool.start("0.0.0.0", 9999);
         runnable::instance()
             .start(test_ssl_context)
-            .wait();
+            .end([]()
+                 { _pool.stop(); });
     }
     else if (strcmp(argv[1], "client") == 0)
     {
         auto conf = cli.get_config();
         conf->host = "0.0.0.0";
         conf->port = 9999;
+        conf->max_connections = 40;
         conf->data = g_cli_mgr.get();
 
         runnable::instance()
             .start(test_ssl_client)
-            .wait();
+            .end([]()
+                 { cli.stop(); });
     }
     else
     {

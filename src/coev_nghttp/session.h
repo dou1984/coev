@@ -19,7 +19,7 @@ namespace coev::nghttp2
     class session : public coev::ssl::context
     {
     public:
-        using router = std::function<awaitable<int>(session &, request &)>;
+        using router = std::function<awaitable<void>(session &, request &)>;
         using routers = std::unordered_map<std::string, router>;
 
         session(SSL_CTX *ctx);

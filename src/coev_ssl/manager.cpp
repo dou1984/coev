@@ -39,10 +39,15 @@ namespace coev::ssl
         if (method == TLS_SERVER)
         {
             m_context = SSL_CTX_new(SSLv23_server_method());
+            SSL_CTX_set_session_cache_mode(m_context, SSL_SESS_CACHE_SERVER);
+            SSL_CTX_sess_set_cache_size(m_context, 10240); // 设置缓存大小为10240
+            SSL_CTX_set_timeout(m_context, 300);
         }
         else if (method == TLS_CLIENT)
         {
             m_context = SSL_CTX_new(SSLv23_client_method());
+            SSL_CTX_set_session_cache_mode(m_context, SSL_SESS_CACHE_CLIENT);
+            SSL_CTX_sess_set_cache_size(m_context, 10240);
         }
         if (m_context == nullptr)
         {

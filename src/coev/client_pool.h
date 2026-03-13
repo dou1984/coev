@@ -56,7 +56,8 @@ namespace coev
             auto get_client() noexcept { return static_cast<client *>(pop_front()); }
 
             std::shared_ptr<Config> m_config;
-            uint32_t m_count = 0;
+            uint32_t m_connected = 0;
+            uint32_t m_connecting = 0;
             uint32_t m_used = 0;
             async m_waiter;
             async m_closed;
@@ -162,21 +163,22 @@ namespace coev
             {
                 co_return INVALID;
             }
-            if (m_used == m_count && m_count == m_config->max_connections)
+            if (m_used == m_connected && (m_config->max_connections == (m_connected + m_connecting)))
             {
                 co_await m_waiter.suspend();
                 continue;
-            }
-            if (m_count < m_config->max_connections)
+            }           
+            if ((m_connected + m_connecting) < m_config->max_connections)
             {
+                m_connecting++;
+                defer(m_connecting--);
                 for (auto i = 0; i < m_config->retry_count; i++)
                 {
-                    auto cq = co_await create_client();
-                    if (cq)
+                    if (auto cq = co_await create_client())
                     {
                         if (*cq)
                         {
-                            m_count++;
+                            m_connected++;
                             m_used++;
                             ptr.m_pool = this->shared_from_this();
                             ptr.m_client = cq;
@@ -191,8 +193,11 @@ namespace coev
                 }
                 co_return INVALID;
             }
-
             auto cq = get_client();
+            if (cq == nullptr)
+            {
+                continue;
+            }
             if (*cq)
             {
                 m_used++;
@@ -203,7 +208,6 @@ namespace coev
             else
             {
                 delete_client(cq);
-                m_count--;
                 co_await sleep_for(m_config->quick_retry_time);
             }
         }
@@ -225,7 +229,6 @@ namespace coev
         for (auto cq = get_client(); cq; cq = get_client())
         {
             delete_client(cq);
-            m_count--;
         }
     }
     template <class CLI>
@@ -242,8 +245,16 @@ namespace coev
     template <class CLI>
     void client_pool<CLI>::shared_queue::delete_client(client *cq) noexcept
     {
-        std::lock_guard<is_deleting> _(local<is_deleting>::instance());
-        delete cq;
+        try
+        {
+            m_connected--;
+            std::lock_guard<is_deleting> _(local<is_deleting>::instance());
+            delete cq;
+        }
+        catch (...)
+        {
+            LOG_CORE("delete client error");
+        }
     }
     template <class CLI>
     awaitable<typename client_pool<CLI>::client *> client_pool<CLI>::shared_queue::create_client() noexcept

@@ -12,14 +12,15 @@ ssl::manager g_cli_mgr(ssl::manager::TLS_CLIENT);
 ssl::manager g_srv_mgr(ssl::manager::TLS_SERVER);
 
 char hi[] = R"(helloworld)";
-int worker_num = 4;
+int worker_num = 1;
 int coroutine_num = 10;
-int max_connection = 50;
+int max_connection = 2;
 coev::pool::nghttp2::Http2 http2;
 coev::pool::server_pool<nghttp2::server> server;
-awaitable<int> echo(nghttp2::session &ctx, nghttp2::request &request)
+
+awaitable<void> echo(nghttp2::session &ctx, nghttp2::request &request)
 {
-    LOG_DBG("recv data path %s request %s", request.path().c_str(), request.body().c_str());
+    LOG_DBG("get tid:%ld path %s request %s", gtid(), request.path().c_str(), request.body().c_str());
 
     nghttp2::header ngh;
     ngh.push_back(":status", "200");
@@ -28,10 +29,9 @@ awaitable<int> echo(nghttp2::session &ctx, nghttp2::request &request)
     if (err == INVALID)
     {
         LOG_ERR("send error %d %s", errno, strerror(errno));
-        co_return INVALID;
+        co_return;
     }
-    LOG_DBG("stream_id:%d send data %s %ld", request.id(), request.body().c_str(), request.body().size());
-    co_return 0;
+    LOG_DBG("reply tid:%ld stream_id:%d send data %s %ld", gtid(), request.id(), request.body().c_str(), request.body().size());
 };
 awaitable<void> proc_server()
 {
@@ -43,10 +43,10 @@ awaitable<void> proc_server()
 }
 awaitable<void> proc_client()
 {
-    co_task _task;
+    co_task task;
     for (auto w = 0; w < coroutine_num; w++)
     {
-        _task << []() -> awaitable<void>
+        task << []() -> awaitable<void>
         {
             for (auto i = 0; i < 1000000; i++)
             {
@@ -67,17 +67,17 @@ awaitable<void> proc_client()
                 ngh.push_back("user-agent", "nghttp2/" NGHTTP2_VERSION);
                 nghttp2::response res;
                 std::string hi = std::to_string(i);
+                LOG_DBG("sending tid: %ld %s", gtid(), hi.c_str());
                 auto err = co_await c->query(ngh, hi.data(), hi.size(), res);
                 if (err == INVALID)
                 {
                     co_return;
                 }
-                LOG_DBG("status: %s body:%s", res.header(":status").c_str(), res.body().c_str());
+                LOG_DBG("response tid: %ld status: %s body:%s", gtid(), res.header(":status").c_str(), res.body().c_str());
             }
         }();
     }
-
-    co_await _task.wait_all();
+    co_await task.wait();
     co_return;
 }
 int main(int argc, char **argv)
