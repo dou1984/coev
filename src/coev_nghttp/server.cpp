@@ -42,7 +42,7 @@ namespace coev::nghttp2
     }
     awaitable<int> server::__dispatch(int fd, SSL_CTX *_manager)
     {
-        LOG_ERR("[SERVER] client connected fd:%d", fd);
+        LOG_DBG("[SERVER] client connected fd:%d", fd);
         session ctx(fd, _manager);
         auto err = co_await ctx.do_handshake();
         if (err == INVALID)

@@ -47,14 +47,14 @@ awaitable<void> test_ssl_context()
                 int r = co_await ctx.recv(buffer, sizeof(buffer));
                 if (r == INVALID)
                 {
-                    LOG_ERR("recv failed fd %d", fd);
+                    LOG_DBG("recv failed fd %d", fd);
                     co_return;
                 }
                 LOG_DBG("recv from fd %d %.*s", fd, r, buffer);
                 r = co_await ctx.send("hello world", strlen("hello world") + 1);
                 if (r == INVALID)
                 {
-                    LOG_ERR("send failed fd %d", fd);
+                    LOG_DBG("send failed fd %d", fd);
                     co_return;
                 }
             }
@@ -69,7 +69,7 @@ awaitable<void> test_ssl_client()
     const int TASK_COUNT = 20;
     const int REQUESTS_PER_TASK = send_times / TASK_COUNT;
 
-    LOG_ERR("Starting %d concurrent tasks, %d requests each...", TASK_COUNT, REQUESTS_PER_TASK);
+    LOG_INFO("Starting %d concurrent tasks, %d requests each...", TASK_COUNT, REQUESTS_PER_TASK);
 
     co_task _task;
     // 启动多个并发任务
@@ -114,11 +114,11 @@ awaitable<void> test_ssl_client()
     double seconds = duration.count() / 1000.0;
     double qps = send_times / seconds;
 
-    LOG_ERR("=== Performance Report ===");
-    LOG_ERR("Total requests: %d", send_times);
-    LOG_ERR("Duration: %.2f seconds", seconds);
-    LOG_ERR("QPS: %.2f", qps);
-    LOG_ERR("========================");
+    LOG_INFO("=== Performance Report ===");
+    LOG_INFO("Total requests: %d", send_times);
+    LOG_INFO("Duration: %.2f seconds", seconds);
+    LOG_INFO("QPS: %.2f", qps);
+    LOG_INFO("========================");
 }
 int main(int argc, char **argv)
 {

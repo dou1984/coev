@@ -72,7 +72,7 @@ awaitable<void> proc_client()
             {
                 if (i % 100 == 0)
                 {
-                    LOG_ERR("[CLIENT] worker %d, iteration %d", w, i);
+                    LOG_DBG("[CLIENT] worker %d, iteration %d", w, i);
                 }
                 auto get_start = std::chrono::steady_clock::now();
                 coev::pool::nghttp2::Http2::instance c;
