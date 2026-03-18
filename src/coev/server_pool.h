@@ -26,7 +26,6 @@ namespace coev::pool
 			auto &srv = m_pool[_tid];
 			if (m_fd == INVALID)
 			{
-				LOG_ERR("server is not running");
 			}
 			else if (!srv.valid())
 			{
@@ -42,7 +41,6 @@ namespace coev::pool
 			if (m_fd == INVALID)
 			{
 				m_fd = srv.start(ip, port);
-				LOG_CORE("server_pool start fd=%d ip=%s port=%d", m_fd, ip, port);
 			}
 			return m_fd;
 		}

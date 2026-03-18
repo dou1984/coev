@@ -69,7 +69,6 @@ namespace coev
 		}
 		void await_suspend(std::coroutine_handle<> caller) // co_await调用， 传入上层coroutine_handle
 		{
-			// LOG_CORE("await_suspend this:%p caller:%p", this, caller.address());
 			m_callee.promise().m_that = caller;
 			if (m_callee.promise().m_status == CORO_SUSPEND)
 			{

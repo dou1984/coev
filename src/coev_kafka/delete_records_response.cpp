@@ -80,7 +80,7 @@ namespace coev::kafka
                     return ErrEncodeError;
                 }
 
-                auto details = std::shared_ptr<DeleteRecordsResponsePartition>();
+                auto details = std::make_shared<DeleteRecordsResponsePartition>();
                 if (details->decode(pd, version) != ErrNoError)
                 {
                     return ErrEncodeError;

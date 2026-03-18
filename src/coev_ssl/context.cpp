@@ -4,6 +4,8 @@
  *	Copyright (c) 2023-2026, Zhao Yun Shan
  *
  */
+#include <sys/ioctl.h>
+#include <linux/sockios.h>
 #include <utility>
 #include <coev/coev.h>
 #include <utils/convert.h>
@@ -19,7 +21,7 @@ namespace coev::ssl
             m_ssl = SSL_new(_ctx);
             if (m_ssl == nullptr)
             {
-                LOG_ERR("SSL_new failed %p", m_ssl);
+                LOG_ERR("fd %d SSL_new failed %p", m_fd, m_ssl);
                 throw std::runtime_error("SSL_new failed");
             }
             m_type |= IO_SSL;
@@ -34,18 +36,21 @@ namespace coev::ssl
             m_ssl = SSL_new(_ctx);
             if (m_ssl == nullptr)
             {
-                LOG_ERR("SSL_new failed %p", m_ssl);
+                LOG_ERR("fd %d SSL_new failed %p", m_fd, m_ssl);
                 throw std::runtime_error("SSL_new failed");
             }
             int err = SSL_set_fd(m_ssl, m_fd);
             if (err != 1)
             {
-                LOG_ERR("SSL_set_fd failed %d", err);
+                LOG_ERR("fd %d SSL_set_fd failed %d", m_fd, err);
                 __async_finally();
                 throw std::runtime_error("SSL_set_mode failed");
             }
             SSL_set_accept_state(m_ssl);
             m_type |= IO_SSL;
+
+            // 启用 TCP_NODELAY 禁用 Nagle 算法，减少延迟
+            setNoDelay(m_fd, 1);
         }
     }
     context::~context()
@@ -57,9 +62,9 @@ namespace coev::ssl
     {
         if (m_ssl)
         {
-            m_type &= ~IO_SSL;
             auto _ssl = std::exchange(m_ssl, nullptr);
             SSL_free(_ssl);
+            m_type &= ~IO_SSL;
         }
     }
     void context::__clearup()
@@ -79,25 +84,15 @@ namespace coev::ssl
                     r = SSL_get_error(m_ssl, r);
                     if (r == SSL_ERROR_WANT_WRITE)
                     {
-                        if (isInprocess())
-                        {
-                            ev_io_start(m_loop, &m_write);
-                            defer(ev_io_stop(m_loop, &m_write));
-                            co_await m_w_waiter.suspend();
-                        }
-                        else
-                        {
-                            co_await m_w_waiter.suspend();
-                        }
+                        co_await __w_waiter();
                     }
                     else if (r == SSL_ERROR_WANT_READ)
                     {
-                        co_await m_r_waiter.suspend();
+                        co_await __r_waiter();
                     }
                     else
                     {
                         __clearup();
-                        LOG_CORE("SSL_get_error %d", r);
                         errno = -r;
                         co_return INVALID;
                     }
@@ -108,7 +103,6 @@ namespace coev::ssl
                 }
                 else
                 {
-                    LOG_CORE("write %d bytes", r);
                     co_return r;
                 }
             }
@@ -131,7 +125,7 @@ namespace coev::ssl
                     r = SSL_get_error(m_ssl, r);
                     if (r == SSL_ERROR_WANT_READ)
                     {
-                        co_await m_r_waiter.suspend();
+                        co_await __r_waiter();
                         if (!__ssl_valid())
                         {
                             co_return INVALID;
@@ -139,22 +133,11 @@ namespace coev::ssl
                     }
                     else if (r == SSL_ERROR_WANT_WRITE)
                     {
-                        if (isInprocess())
-                        {
-                            ev_io_start(m_loop, &m_write);
-                            defer(ev_io_stop(m_loop, &m_write));
-                            co_await m_w_waiter.suspend();
-                        }
-                        else
-                        {
-                            co_await m_w_waiter.suspend();
-                        }
-                        continue;
+                        co_await __w_waiter();
                     }
                     else
                     {
                         __clearup();
-                        LOG_CORE("SSL_get_error %d", r);
                         co_return INVALID;
                     }
                 }
@@ -164,8 +147,6 @@ namespace coev::ssl
                 }
                 else
                 {
-                    auto data = to_hex(std::string(buffer, r));
-                    LOG_CORE("read %.*s bytes", (int)data.size(), data.data());
                     co_return r;
                 }
             }
@@ -181,7 +162,7 @@ namespace coev::ssl
         int err = co_await io_context::connect(host, port);
         if (err == INVALID)
         {
-            LOG_ERR("connect failed %d", err);
+            LOG_ERR("connect fd %d failed %d", m_fd, err);
         __error__:
             __clearup();
             co_return INVALID;
@@ -191,14 +172,14 @@ namespace coev::ssl
             err = SSL_set_fd(m_ssl, m_fd);
             if (err != 1)
             {
-                LOG_ERR("SSL_set_fd failed %d", err);
+                LOG_ERR("SSL_set_fd fd %d failed %d", m_fd, err);
                 goto __error__;
             }
             SSL_set_connect_state(m_ssl);
             err = co_await do_handshake();
             if (err == INVALID)
             {
-                LOG_ERR("handshake failed %d", err);
+                LOG_ERR("handshake fd %d failed %d", m_fd, err);
                 goto __error__;
             }
         }
@@ -211,35 +192,22 @@ namespace coev::ssl
             int err = 0;
             while (__ssl_valid() && (err = SSL_do_handshake(m_ssl)) != 1)
             {
-                LOG_CORE("SSL_do_handshake %d", err);
                 err = SSL_get_error(m_ssl, err);
                 if (err == SSL_ERROR_WANT_READ)
                 {
-                    co_await m_r_waiter.suspend();
-                    continue;
+                    co_await __r_waiter();
                 }
                 else if (err == SSL_ERROR_WANT_WRITE)
                 {
-                    if (isInprocess())
-                    {
-                        ev_io_start(m_loop, &m_write);
-                        defer(ev_io_stop(m_loop, &m_write));
-                        co_await m_w_waiter.suspend();
-                    }
-                    else
-                    {
-                        co_await m_w_waiter.suspend();
-                    }
-                    continue;
+                    co_await __w_waiter();
                 }
                 else if (err == SSL_ERROR_NONE)
                 {
-                    // 握手成功，直接返回
                     break;
                 }
                 else
                 {
-                    LOG_ERR("do_handshake failed %d errno:%d %s", err, errno, strerror(errno));
+                    LOG_ERR("do_handshake fd %d failed ssl_err:%d errno:%d %s", m_fd, err, errno, strerror(errno));
                     errno = -err;
                     co_return INVALID;
                 }
@@ -258,29 +226,104 @@ namespace coev::ssl
         {
             return INVALID;
         }
-        std::string data = to_hex(std::string(buffer, buffer_size));
-        LOG_CORE("send %.*s", (int)data.size(), data.data());
         int r = SSL_write(m_ssl, buffer, buffer_size);
         if (r == INVALID)
         {
             r = SSL_get_error(m_ssl, r);
-            if (r != SSL_ERROR_WANT_WRITE)
+            if (r == SSL_ERROR_WANT_WRITE)
             {
-                LOG_CORE("SSL_write error %d", r);
+                m_want_write = true;
+                return 0;
+            }
+            else if (r == SSL_ERROR_WANT_READ)
+            {
+                m_want_read = true;
+                return 0;
+            }
+            else
+            {
                 errno = -r;
                 return INVALID;
             }
-            return INVALID;
         }
-        else if (r == 0)
-        {
-            errno = 0;
-            return INVALID;
-        }
+
+        assert(r != 0);
         return r;
     }
+    int context::__ssl_recv(char *buffer, int size)
+    {
+        if (!__ssl_valid())
+        {
+            return INVALID;
+        }
+        m_want_read = false;
+        int r = SSL_read(m_ssl, buffer, size);
+        if (r > 0)
+        {
+            return r;
+        }
+
+        r = SSL_get_error(m_ssl, r);
+        if (r == SSL_ERROR_WANT_READ)
+        {
+            m_want_read = true;
+            return 0;
+        }
+        if (r == SSL_ERROR_WANT_WRITE)
+        {
+            m_want_write = true;
+            return 0;
+        }
+        if (r == SSL_ERROR_ZERO_RETURN)
+        {
+            m_want_terminal = true;
+            return 0;
+        }
+
+        if (r == SSL_ERROR_SSL)
+        {
+            errno = ECONNRESET;
+            return INVALID;
+        }
+
+        errno = ECONNRESET;
+        return INVALID;
+    }
+
     bool context::__ssl_valid() const
     {
         return __valid() && (!__is_ssl() || m_ssl);
+    }
+    awaitable<void> context::__w_waiter()
+    {
+        int send_buffer_size = 0;
+        socklen_t len = sizeof(send_buffer_size);
+        if (getsockopt(m_fd, SOL_SOCKET, SO_SNDBUF, &send_buffer_size, &len) == 0)
+        {
+            int bytes_queued = 0;
+            if (ioctl(m_fd, TIOCOUTQ, &bytes_queued) == 0)
+            {
+                if (bytes_queued < send_buffer_size)
+                {
+                    co_return;
+                }
+            }
+        }
+        if (isInprocess())
+        {
+            co_await m_w_waiter.suspend();
+        }
+    }
+    awaitable<void> context::__r_waiter()
+    {
+        int bytes_available = 0;
+        if (ioctl(m_fd, FIONREAD, &bytes_available) == 0 && bytes_available > 0)
+        {
+            co_return;
+        }
+        if (isInprocess())
+        {
+            co_await m_r_waiter.suspend();
+        }
     }
 }

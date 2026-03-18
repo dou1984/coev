@@ -160,11 +160,11 @@ namespace coev
 		auto _this = __get(ac);
 		if (status == REDIS_OK)
 		{
-			LOG_DBG("connected fd:%d", _this->fd());
+			LOG_DBG("connected fd %d", _this->fd());
 		}
 		else
 		{
-			LOG_CORE("connected error fd:%d", _this->fd());
+			LOG_CORE("connected error fd %d", _this->fd());
 			_this->__process_remove();
 			_this->m_waiter.resume();
 		}
@@ -174,11 +174,11 @@ namespace coev
 		auto _this = __get(ac);
 		if (status == REDIS_OK)
 		{
-			LOG_CORE("disconnect fd:%d", _this->fd());
+			LOG_CORE("disconnect fd %d", _this->fd());
 		}
 		else
 		{
-			LOG_CORE("disconnect fd:%d %d %s", _this->fd(), ac->err, ac->errstr);
+			LOG_CORE("disconnect fd %d %d %s", _this->fd(), ac->err, ac->errstr);
 			_this->__process_remove();
 			_this->m_waiter.resume();
 		}

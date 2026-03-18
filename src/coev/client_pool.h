@@ -88,7 +88,6 @@ namespace coev
                 {
                     if (m_pool && m_client)
                     {
-                        LOG_CORE("delete client %p", m_client);
                         auto _client = std::exchange(m_client, nullptr);
                         m_pool->release(_client);
                     }
@@ -104,6 +103,7 @@ namespace coev
 
     public:
         client_pool() noexcept = default;
+        ~client_pool() noexcept { stop(); }
         awaitable<int> get(instance &ptr) noexcept { return __get_sq()->get(ptr); }
         void set(std::shared_ptr<Config> _conf) noexcept
         {
@@ -155,8 +155,7 @@ namespace coev
     template <class CLI>
     awaitable<int> client_pool<CLI>::shared_queue::get(client_pool<CLI>::instance &ptr) noexcept
     {
-        ptr.m_pool = nullptr;
-        ptr.m_client = nullptr;
+        assert(!ptr); // 需要传入空instance
         while (true)
         {
             if (m_config->max_connections == 0)
@@ -167,7 +166,7 @@ namespace coev
             {
                 co_await m_waiter.suspend();
                 continue;
-            }           
+            }
             if ((m_connected + m_connecting) < m_config->max_connections)
             {
                 m_connecting++;
@@ -238,7 +237,7 @@ namespace coev
         {
             auto tid = gtid();
             defer(_qs->clear());
-            defer(LOG_CORE("auto_release_task tid:%ld", tid));
+            defer();
             co_await _qs->m_closed.suspend();
         }(this->shared_from_this());
     }
@@ -253,7 +252,6 @@ namespace coev
         }
         catch (...)
         {
-            LOG_CORE("delete client error");
         }
     }
     template <class CLI>
@@ -272,7 +270,6 @@ namespace coev
         }
         catch (...)
         {
-            LOG_CORE("client_pool connect error");
             co_return nullptr;
         }
     }

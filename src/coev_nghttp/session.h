@@ -6,6 +6,8 @@
  */
 #pragma once
 #include <unordered_map>
+#include <queue>
+#include <memory>
 #include <nghttp2/nghttp2.h>
 #include <openssl/ssl.h>
 #include <coev/coev.h>
@@ -31,13 +33,12 @@ namespace coev::nghttp2
     public:
         awaitable<int> connect(const char *url) noexcept;
         awaitable<int> connect(const char *ip, int port) noexcept;
-        awaitable<int> on_stream(const routers &);
         awaitable<int> do_handshake();
 
         awaitable<int> query(header &h, const char *body, int length, response &);
-        awaitable<int> reply(int stream_id, header &h, const char *body, int length);
+        int reply(int stream_id, header &h, const char *body, int length);
         int reply_error(int32_t stream_id, int error_code);
-        void processing() { co_start << __processing(); }
+        operator bool() const noexcept { return __ssl_valid(); }
 
     public:
         int set_routers(const routers &);
@@ -49,8 +50,10 @@ namespace coev::nghttp2
         int send_server_settings();
         int send_client_settings();
 
+        awaitable<void> __processing_write();
+        awaitable<void> __processing_read();
+
     protected:
-        awaitable<int> __processing();
         int __push_promise(int stream_id, nghttp2_nv *, int head_size);
         int __submit_request(nghttp2_nv *, int head_size, const char *body, int length);
         int __submit_response(int stream_id, nghttp2_nv *, int head_size, const char *body, int length);
@@ -66,11 +69,15 @@ namespace coev::nghttp2
 
     protected:
         co_task m_task;
-        async m_trigger;
+        async m_waiting_write;
+        int32_t m_current_stream_id = 0;
+        routers m_routers;
 
-    private:
         int __send();
         int __processing(int stream_id);
+        int __resume_process();
+        bool __is_processing() const;
+        void __clearup() { coev::ssl::context::__clearup(); }
 
         static ssize_t __send_callback(nghttp2_session *sess, const uint8_t *data, size_t length, int flags, void *user_data);
         static ssize_t __recv_callback(nghttp2_session *sess, uint8_t *buf, size_t length, int flags, void *user_data);

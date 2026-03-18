@@ -15,13 +15,11 @@ namespace coev::nghttp2
         int err = info.fromUrl(url);
         if (err == INVALID)
         {
-            LOG_ERR("invalid url %s", url);
             return;
         }
         err = tcp::server::start(info.ip, info.port);
         if (err == INVALID)
         {
-            LOG_ERR("start server failed");
         }
     }
     int server::set_router(const std::string &path, const session::router &_route)
@@ -44,17 +42,21 @@ namespace coev::nghttp2
     }
     awaitable<int> server::__dispatch(int fd, SSL_CTX *_manager)
     {
-        LOG_CORE("client start %d", fd);
+        LOG_ERR("[SERVER] client connected fd:%d", fd);
         session ctx(fd, _manager);
         auto err = co_await ctx.do_handshake();
         if (err == INVALID)
         {
-            LOG_ERR("handshake error %d %s", errno, strerror(errno));
             co_return INVALID;
         }
-        ctx.send_server_settings();
-        ctx.processing();
-        co_await ctx.on_stream(m_routers);
+
+        err = ctx.send_server_settings();
+        ctx.set_routers(m_routers);
+
+        co_task _task;
+        _task << ctx.__processing_write();
+        _task << ctx.__processing_read();
+        co_await _task.wait_all();
         co_return 0;
     }
 

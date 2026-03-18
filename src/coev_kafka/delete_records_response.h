@@ -18,7 +18,7 @@
 
 namespace coev::kafka
 {
-    struct DeleteRecordsResponsePartition : IEncoder, VEncoder
+    struct DeleteRecordsResponsePartition : IEncoder, VDecoder
     {
         int64_t m_low_watermark;
         KError m_err;

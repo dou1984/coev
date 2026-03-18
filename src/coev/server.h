@@ -29,7 +29,7 @@ namespace coev::tcp
 		int __remove();
 		int __stop();
 
-	private:
+	protected:
 		int m_fd = INVALID;
 		struct ev_loop *m_loop = nullptr;
 		ev_io m_recv;

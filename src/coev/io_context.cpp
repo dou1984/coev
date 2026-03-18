@@ -19,7 +19,7 @@ namespace coev
 	void io_context::cb_read(struct ev_loop *loop, struct ev_io *w, int revents) noexcept
 	{
 		auto _this = (io_context *)w->data;
-		assert(_this != NULL);
+		assert(_this != nullptr);
 		_this->m_r_waiter.resume();
 		local_resume();
 	}
@@ -35,15 +35,8 @@ namespace coev
 	{
 		if (m_fd != INVALID)
 		{
-			__finally();
 			auto _fd = std::exchange(m_fd, INVALID);
 			::close(_fd);
-			while (m_r_waiter.resume())
-			{
-			}
-			while (m_w_waiter.resume())
-			{
-			}
 		}
 		return 0;
 	}
@@ -77,6 +70,15 @@ namespace coev
 	{
 		if (m_fd != INVALID)
 		{
+			// 清零 watcher 结构体，避免未初始化内存导致的问题
+			memset(&m_read, 0, sizeof(m_read));
+			memset(&m_write, 0, sizeof(m_write));
+			
+			// 检查 watcher 是否已经初始化
+			if (ev_is_active(&m_read) || ev_is_active(&m_write))
+			{
+				return 0;
+			}
 			setNoBlock(m_fd, true);
 
 			m_read.data = this;
@@ -85,21 +87,26 @@ namespace coev
 
 			m_write.data = this;
 			ev_io_init(&m_write, io_context::cb_write, m_fd, EV_WRITE);
-			LOG_CORE("fd:%d", m_fd);
+			ev_io_start(m_loop, &m_write);
 		}
 		return 0;
 	}
 	int io_context::__finally() noexcept
 	{
+		LOG_ERR("__finally called, fd: %d, ev_is_active(m_read): %d, ev_is_active(m_write): %d", m_fd, ev_is_active(&m_read), ev_is_active(&m_write));
+		LOG_ERR("  m_read.fd: %d, m_write.fd: %d", m_read.fd, m_write.fd);
+		LOG_ERR("  m_read.data: %p, m_write.data: %p", m_read.data, m_write.data);
 		if (m_fd != INVALID)
 		{
-			LOG_CORE("fd %d", m_fd);
+			LOG_ERR("fd %d, ev_is_active(m_read): %d, ev_is_active(m_write): %d", m_fd, ev_is_active(&m_read), ev_is_active(&m_write));
 			if (ev_is_active(&m_read))
 			{
+				LOG_ERR("stopping m_read, fd: %d, m_read.fd: %d", m_fd, m_read.fd);
 				ev_io_stop(m_loop, &m_read);
 			}
 			if (ev_is_active(&m_write))
 			{
+				LOG_ERR("stopping m_write, fd: %d, m_write.fd: %d", m_fd, m_write.fd);
 				ev_io_stop(m_loop, &m_write);
 			}
 		}
@@ -128,15 +135,13 @@ namespace coev
 				co_await m_w_waiter.suspend();
 			}
 			else if (r == 0)
-			{
-				LOG_CORE("fd:%d closed", m_fd);
-				co_return INVALID;
-			}
-			else
-			{
-				LOG_CORE("fd:%d send %d bytes", m_fd, r);
-				co_return r;
-			}
+		{
+			co_return INVALID;
+		}
+		else
+		{
+			co_return r;
+		}
 		}
 		co_return INVALID;
 	}
@@ -151,13 +156,12 @@ namespace coev
 				continue;
 			}
 			else if (r == 0)
-			{
-				LOG_CORE("fd:%d closed", m_fd);
-				co_return INVALID;
-			}
+		{
+			co_return INVALID;
+		}
 			else
 			{
-				LOG_CORE("fd:%d recv %d bytes", m_fd, r);
+				LOG_CORE("fd %d recv %d bytes", m_fd, r);
 				co_return r;
 			}
 		}
@@ -178,7 +182,7 @@ namespace coev
 			}
 			else if (r == 0)
 			{
-				LOG_CORE("fd:%d closed", m_fd);
+				LOG_CORE("fd %d closed", m_fd);
 				co_return INVALID;
 			}
 			parseAddr(addr, info);
@@ -199,17 +203,15 @@ namespace coev
 				co_await m_w_waiter.suspend();
 			}
 			else if (r == 0)
-			{
-				LOG_CORE("sendto return m_fd:%d", m_fd);
-				co_return INVALID;
-			}
+		{
+			co_return INVALID;
+		}
 			co_return r;
 		}
 		co_return INVALID;
 	}
 	int io_context::close() noexcept
 	{
-		LOG_CORE("m_fd:%d", m_fd);
 		__close();
 		return 0;
 	}
@@ -252,7 +254,14 @@ namespace coev
 	}
 	int io_context::__del_connect() noexcept
 	{
-		ev_io_stop(m_loop, &m_read);
+		if (ev_is_active(&m_read))
+		{
+			ev_io_stop(m_loop, &m_read);
+		}
+		if (ev_is_active(&m_write))
+		{
+			ev_io_stop(m_loop, &m_write);
+		}
 		return 0;
 	}
 
@@ -287,7 +296,6 @@ namespace coev
 		auto err = getSocketError(m_fd);
 		if (err != 0)
 		{
-			LOG_ERR("connect error: %s", strerror(err));
 			__close();
 			co_return INVALID;
 		}

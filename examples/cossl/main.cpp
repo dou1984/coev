@@ -28,17 +28,17 @@ awaitable<void> test_ssl_context()
 
         if (fd == INVALID)
         {
-            LOG_ERR("accept failed fd:%d", fd);
+            LOG_ERR("accept failed fd %d", fd);
             continue;
         }
         co_start << [](auto fd) -> awaitable<void>
         {
             context ctx(fd, g_srv_mgr.get());
-            defer(LOG_DBG("finished fd:%d", fd));
+            defer(LOG_DBG("finished fd %d", fd));
             int err = co_await ctx.do_handshake();
             if (err == INVALID)
             {
-                LOG_ERR("handshake failed fd:%d", fd);
+                LOG_ERR("handshake failed fd %d", fd);
                 co_return;
             }
             while (true)
@@ -47,14 +47,14 @@ awaitable<void> test_ssl_context()
                 int r = co_await ctx.recv(buffer, sizeof(buffer));
                 if (r == INVALID)
                 {
-                    LOG_ERR("recv failed fd:%d", fd);
+                    LOG_ERR("recv failed fd %d", fd);
                     co_return;
                 }
-                LOG_DBG("recv from fd:%d %.*s", fd, r, buffer);
+                LOG_DBG("recv from fd %d %.*s", fd, r, buffer);
                 r = co_await ctx.send("hello world", strlen("hello world") + 1);
                 if (r == INVALID)
                 {
-                    LOG_ERR("send failed fd:%d", fd);
+                    LOG_ERR("send failed fd %d", fd);
                     co_return;
                 }
             }
@@ -64,58 +64,56 @@ awaitable<void> test_ssl_context()
 awaitable<void> test_ssl_client()
 {
     // 性能统计
-    auto start = std::chrono::steady_clock::now();      
-    
- 
-    const int TASK_COUNT = 20; 
+    auto start = std::chrono::steady_clock::now();
+
+    const int TASK_COUNT = 20;
     const int REQUESTS_PER_TASK = send_times / TASK_COUNT;
-    
+
     LOG_ERR("Starting %d concurrent tasks, %d requests each...", TASK_COUNT, REQUESTS_PER_TASK);
-    
+
     co_task _task;
     // 启动多个并发任务
     for (int t = 0; t < TASK_COUNT; t++)
     {
-        _task << [REQUESTS_PER_TASK](auto t) -> awaitable<void> {
+        _task << [REQUESTS_PER_TASK](auto t) -> awaitable<void>
+        {
             coev::pool::ssl::client::instance c;
             auto err = co_await cli.get(c);
             if (err == INVALID)
             {
-                LOG_ERR("Task %d: get connection failed", t);            
+                LOG_ERR("Task %d: get connection failed", t);
                 co_return;
             }
-            
+
             for (int i = 0; i < REQUESTS_PER_TASK; i++)
             {
-                auto buf = "hello worldhello worldhello worldhello worldhello worldhello worldhello worldhelloworldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello worldhello world";
+                auto buf = "hello world";
                 int size = strlen(buf) + 1;
                 int r = co_await c->send(buf, size);
                 if (r == INVALID)
                 {
-                    LOG_ERR("Task %d: send failed", t);                 
+                    LOG_ERR("Task %d: send failed", t);
                     co_return;
-                }             
-                
+                }
+
                 char buffer[4096];
                 r = co_await c->recv(buffer, sizeof(buffer));
                 if (r == INVALID)
                 {
-                    LOG_ERR("Task %d: recv failed", t);                 
+                    LOG_ERR("Task %d: recv failed", t);
                     co_return;
-                }               
-            }    
-      
+                }
+            }
         }(t);
     }
-  
+
     co_await _task.wait_all();
-    
+
     auto end = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     double seconds = duration.count() / 1000.0;
     double qps = send_times / seconds;
-   
-    
+
     LOG_ERR("=== Performance Report ===");
     LOG_ERR("Total requests: %d", send_times);
     LOG_ERR("Duration: %.2f seconds", seconds);
@@ -134,8 +132,8 @@ int main(int argc, char **argv)
     }
     if (strcmp(argv[1], "server") == 0)
     {
-        g_srv_mgr.use_certificate_file("./certs/server/server.crt");
-        g_srv_mgr.use_private_key_file("./certs/server/server.key");
+        g_srv_mgr.use_certificate_file("./certs/server.crt");
+        g_srv_mgr.use_private_key_file("./certs/server.key");
         _pool.start("0.0.0.0", 9999);
         runnable::instance()
             .start(test_ssl_context)
