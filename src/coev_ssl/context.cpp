@@ -48,8 +48,6 @@ namespace coev::ssl
             }
             SSL_set_accept_state(m_ssl);
             m_type |= IO_SSL;
-
-          
         }
     }
     context::~context()
@@ -219,8 +217,9 @@ namespace coev::ssl
         }
 
         int send_offset = 0;
-        if (m_ssl == nullptr)
+        if (!__is_ssl())
         {
+            assert(m_ssl == nullptr);
             while (send_offset < buffer_size)
             {
                 int r = ::send(m_fd, buffer + send_offset, buffer_size - send_offset, MSG_NOSIGNAL);

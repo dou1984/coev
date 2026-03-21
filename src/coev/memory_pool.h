@@ -47,6 +47,13 @@ namespace coev
     template <class T, int M>
     struct memory_pool<T, M> : queue
     {
+        ~memory_pool()
+        {
+            while (auto q = pop_front())
+            {
+                free(q);
+            }
+        }
         T *create(int size)
         {
             if (size <= M)
@@ -87,6 +94,13 @@ namespace coev
     struct memory_pool<T, M, N...> : queue
     {
         memory_pool<T, N...> m_next;
+        ~memory_pool()
+        {
+            while (auto q = pop_front())
+            {
+                free(q);
+            }
+        }
         T *create(int size)
         {
             if (size <= M)

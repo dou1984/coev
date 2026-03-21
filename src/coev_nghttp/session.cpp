@@ -294,12 +294,14 @@ namespace coev::nghttp2
 
     int session::__submit_request(nghttp2_nv *nva, int head_size, const char *body, int length)
     {
+        auto cache = new __cache(body, length);
         nghttp2_data_provider data_provider{
-            .source = {.ptr = new __cache(body, length)},
+            .source = {.ptr = cache},
             .read_callback = session::__read_callback};
         auto stream_id = nghttp2_submit_request(m_session, NULL, nva, head_size, length > 0 ? &data_provider : nullptr, this);
         if (stream_id < 0)
         {
+            delete cache;
             return INVALID;
         }
         auto err = __send();
@@ -316,12 +318,14 @@ namespace coev::nghttp2
 
     int session::__submit_response(int stream_id, nghttp2_nv *nva, int head_size, const char *body, int length)
     {
+        auto cache = new __cache(body, length);
         nghttp2_data_provider data_provider{
-            .source = {.ptr = new __cache(body, length)},
+            .source = {.ptr = cache},
             .read_callback = session::__read_callback};
         auto err = nghttp2_submit_response(m_session, stream_id, nva, head_size, &data_provider);
         if (err < 0)
         {
+            delete cache;
             return INVALID;
         }
         err = __send();

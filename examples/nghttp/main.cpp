@@ -15,10 +15,10 @@ ssl::manager g_srv_mgr(ssl::manager::TLS_SERVER);
 
 char hi[] = R"(helloworld)";
 
-int worker_num = 4;      // 单核测试
-int coroutine_num = 1000;  // 单协程测试瓶颈
-int max_connection = 200; // 单连接
-int max_query = 10000;  // 增加请求数以便统计
+int worker_num = 4;
+int coroutine_num = 20;
+int max_connection = 10;
+int max_query = 10000;
 
 coev::pool::nghttp2::Http2 http2;
 coev::pool::server_pool<nghttp2::server> server;
@@ -59,7 +59,7 @@ awaitable<void> proc_client()
     co_task task;
     for (auto w = 0; w < coroutine_num; w++)
     {
-        task << [w]() -> awaitable<void>
+        task << []() -> awaitable<void>
         {
             int local_errors = 0;
 
