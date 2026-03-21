@@ -44,13 +44,17 @@ namespace coev::nghttp2
     {
         LOG_DBG("[SERVER] client connected fd:%d", fd);
         session ctx(fd, _manager);
-        auto err = co_await ctx.do_handshake();
-        if (err == INVALID)
+        bool is_ssl = _manager != nullptr;
+        if (is_ssl)
         {
-            co_return INVALID;
+            auto err = co_await ctx.do_handshake();
+            if (err == INVALID)
+            {
+                co_return INVALID;
+            }
         }
 
-        err = ctx.send_server_settings();
+        auto err = ctx.send_server_settings();
         ctx.set_routers(m_routers);
 
         co_task _task;

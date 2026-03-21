@@ -29,6 +29,7 @@
 #include "co_timer.h"
 #include "server.h"
 #include "client.h"
+#include "defer.h"
 #include "server_pool.h"
 #include "client_pool.h"
-#include "defer.h"
+#include "memory_pool.h"

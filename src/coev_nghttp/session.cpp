@@ -5,6 +5,7 @@
  *
  */
 #include <climits>
+#include <sys/ioctl.h>
 #include <coev/coev.h>
 #include "session.h"
 
@@ -25,12 +26,13 @@ namespace coev::nghttp2
     static __init_this g_init_this;
     struct __cache
     {
+        using lmp = local<memory_pool<char, 256 - 20, 1024 - 20, 4096 - 20>>;
         int m_length = 0;
         int m_offset = 0;
         char *m_data = 0;
         __cache(const char *_data, int length)
         {
-            m_data = (char *)malloc(length);
+            m_data = lmp::instance().create(length);
             if (m_data == nullptr)
             {
                 LOG_ERR("malloc failed");
@@ -43,7 +45,7 @@ namespace coev::nghttp2
         {
             if (m_data)
             {
-                free(m_data);
+                lmp::instance().release(m_data);
             }
         }
     };
@@ -110,7 +112,8 @@ namespace coev::nghttp2
         {
             return NGHTTP2_ERR_CALLBACK_FAILURE;
         }
-        auto r = _this->__ssl_write((const char *)data, static_cast<int>(length));
+        
+        int r = _this->__ssl_write((const char *)data, static_cast<int>(length));
         if (r == INVALID)
         {
             return NGHTTP2_ERR_CALLBACK_FAILURE;
@@ -376,9 +379,7 @@ namespace coev::nghttp2
             __close();
             co_return m_fd;
         }
-        assert(m_ssl);
-        auto _this = static_cast<session *>(this);
-        err = nghttp2_session_client_new(&m_session, m_callbacks, _this);
+        err = nghttp2_session_client_new(&m_session, m_callbacks, this);
         if (err != 0)
         {
             goto __error__;
@@ -428,7 +429,7 @@ namespace coev::nghttp2
     awaitable<void> session::__processing_read()
     {
         std::string recv_buffer;
-        recv_buffer.resize(64 * 1024);
+        recv_buffer.resize(4 * 1024);
         int recv_offset = 0;
         while (__is_processing())
         {
@@ -436,7 +437,9 @@ namespace coev::nghttp2
             {
                 recv_buffer.resize(recv_buffer.size() * 2);
             }
-            auto r = __ssl_recv(recv_buffer.data() + recv_offset, recv_buffer.size() - recv_offset);
+
+            int r;
+            r = __ssl_read(recv_buffer.data() + recv_offset, recv_buffer.size() - recv_offset);
             if (r > 0)
             {
                 recv_offset += r;
@@ -531,13 +534,14 @@ namespace coev::nghttp2
     }
     int session::__resume_process()
     {
+        assert(m_session);
         if (m_want_write)
         {
-            m_waiting_write.resume();
+            m_waiting_write.resume_next_loop();
         }
-        if (m_session && nghttp2_session_want_write(m_session))
+        if (nghttp2_session_want_write(m_session))
         {
-            m_waiting_write.resume();
+            m_waiting_write.resume_next_loop();
         }
         return 0;
     }
@@ -656,10 +660,14 @@ namespace coev::nghttp2
         {
             return INVALID;
         }
-        auto err = nghttp2_session_send(m_session);
-        if (err != 0)
+        int err = 0;
+        while (nghttp2_session_want_write(m_session))
         {
-            return INVALID;
+            err = nghttp2_session_send(m_session);
+            if (err != 0)
+            {
+                return INVALID;
+            }
         }
         return err;
     }

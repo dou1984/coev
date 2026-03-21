@@ -29,8 +29,8 @@ namespace coev::ssl
         void __async_finally();
         void __clearup();
         int __ssl_write(const char *, int);
-        int __ssl_recv(char *buffer, int size);
-        bool __ssl_valid() const;        
+        int __ssl_read(char *buffer, int size);
+        bool __ssl_valid() const;
         awaitable<void> __w_waiter();
         awaitable<void> __r_waiter();
 

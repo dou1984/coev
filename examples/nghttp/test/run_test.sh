@@ -46,7 +46,7 @@ echo ""
 # 启动服务器 (带 perf 分析)
 echo "3. 启动服务器 (带 perf 分析) ..."
 cd "$BIN_DIR"
-./co_nghttp server > server.log 2>&1 &
+perf record -F 99 -a -g --call-graph dwarf -e cpu-clock,cycles,instructions,cache-misses,branches,branch-misses -o perf.server.data ./co_nghttp server > server.log 2>&1 &
 SERVER_PID=$!
 echo "✓ 服务器已启动 (PID: $SERVER_PID)"
 sleep 2
@@ -61,49 +61,41 @@ fi
 
 # 启动客户端 (带 perf 分析)
 echo "4. 启动客户端 (带 perf 分析) ..."
-./co_nghttp client > client.log 2>&1 &
+perf record -F 99 -a -g --call-graph dwarf -e cpu-clock,cycles,instructions,cache-misses,branches,branch-misses -o perf.client.data ./co_nghttp client > client.log 2>&1 &
 CLIENT_PID=$!
 echo "✓ 客户端已启动 (PID: $CLIENT_PID)"
 echo ""
 
 # 监控
 echo "5. 监控测试进度..."
-TIMEOUT=60
-for i in $(seq 1 $TIMEOUT); do
+for i in {1..30}; do
     sleep 1
     if ! kill -0 $CLIENT_PID 2>/dev/null; then
-        echo "   客户端已完成，耗时 ${i}s"
         break
     fi
-    if [ $((i % 10)) -eq 0 ]; then
-        echo "   测试进行中... ${i}s"
-    fi
+    echo "   测试进行中... ${i}s"
 done
 
-# 检查是否超时
-if kill -0 $CLIENT_PID 2>/dev/null; then
-    echo ""
-    echo "   测试已达到最大时间 ${TIMEOUT}s，停止客户端..."
-fi
-
-# 优雅停止
-echo ""
-echo "6. 停止进程和分析..."
-# 先发送 SIGTERM 让客户端优雅退出
-kill -TERM $CLIENT_PID 2>/dev/null || true
-sleep 2
-# 如果还没退出，再强制杀死
-if kill -0 $CLIENT_PID 2>/dev/null; then
-    kill -9 $CLIENT_PID 2>/dev/null || true
-fi
-kill $SERVER_PID 2>/dev/null || true
+# 停止
+kill $SERVER_PID $CLIENT_PID 2>/dev/null || true
 sleep 1
 
-# 分析性能数据
+# 生成 perf 报告
 echo ""
-echo "================================================================================"
-echo "性能统计"
-echo "================================================================================"
+echo "6. 生成 perf 报告..."
+perf report -i perf.server.data --stdio --sort=overhead -n > perf.server.report 2>&1
+perf report -i perf.client.data --stdio --sort=overhead -n > perf.client.report 2>&1
+
+# 生成热点函数分析
+perf report -i perf.server.data --stdio -g graph,0.5 --sort=overhead > perf.server.hotspot 2>&1
+perf report -i perf.client.data --stdio -g graph,0.5 --sort=overhead > perf.client.hotspot 2>&1
+
+# 生成事件统计
+perf stat -i perf.server.data > perf.server.stats 2>&1
+perf stat -i perf.client.data > perf.client.stats 2>&1
+
+echo ""
+echo "=== 测试结果 ==="
 echo ""
 
 # 统计请求和错误
@@ -136,6 +128,8 @@ if [ -f client.log ]; then
     fi
 fi
 
+echo ""
+echo "错误统计:"
 if [ -f client.log ]; then
     CLIENT_ERRORS=$(grep -c "ERROR" client.log 2>/dev/null || echo "0")
     echo "  客户端 ERROR 日志数：$CLIENT_ERRORS"
@@ -146,11 +140,62 @@ if [ -f server.log ]; then
     echo "  服务器 ERROR 日志数：$SERVER_ERRORS"
 fi
 
+echo ""
+echo "=== CPU 利用率分析 ==="
+echo ""
+echo "服务器 CPU 利用率分析:"
 if [ -f perf.server.stats ]; then
     grep -E "CPU|cycles|instructions|cache-misses" perf.server.stats | head -10
 fi
+echo ""
+echo "客户端 CPU 利用率分析:"
 if [ -f perf.client.stats ]; then
     grep -E "CPU|cycles|instructions|cache-misses" perf.client.stats | head -10
 fi
-
+echo ""
+echo "=== 可能导致 CPU 利用率低的原因分析 ==="
+echo ""
+echo "1. I/O 等待 (主要原因):"
+echo "   - 网络 I/O 等待: 检查 epoll_wait、select、poll 等系统调用"
+echo "   - 磁盘 I/O 等待: 检查 read、write、fsync 等系统调用"
+echo ""
+echo "2. 协程调度开销:"
+echo "   - 协程切换频繁: 检查 co_yield、co_await 相关函数"
+echo "   - 调度器负载: 检查 runnable、cosys 相关函数"
+echo ""
+echo "3. 锁竞争:"
+echo "   - 互斥锁: 检查 pthread_mutex_* 相关函数"
+echo "   - 条件变量: 检查 pthread_cond_* 相关函数"
+echo ""
+echo "4. 系统调用过多:"
+echo "   - 频繁的系统调用导致上下文切换"
+echo "   - 检查 gettimeofday、clock_gettime 等高频调用"
+echo ""
+echo "5. 空闲等待:"
+echo "   - 事件循环在等待事件时处于空闲状态"
+echo "   - 检查 epoll_wait 时间占比"
+echo ""
+echo "6. SSL/TLS 握手开销:"
+echo "   - TLS 握手过程耗时较长"
+echo "   - 检查 SSL_do_handshake 等函数"
+echo ""
+echo "7. 内存管理:"
+echo "   - 频繁的内存分配/释放"
+echo "   - 检查 malloc、free、new、delete 等函数"
+echo ""
+echo "详细分析请查看热点函数报告:"
+echo "  - $BIN_DIR/perf.server.hotspot"
+echo "  - $BIN_DIR/perf.client.hotspot"
+echo ""
+echo "✓ 测试完成！"
+echo ""
+echo "详细的 perf 报告已保存到:"
+echo "  - $BIN_DIR/perf.server.report"
+echo "  - $BIN_DIR/perf.client.report"
+echo "  - $BIN_DIR/perf.server.hotspot"
+echo "  - $BIN_DIR/perf.client.hotspot"
+echo "  - $BIN_DIR/perf.server.stats"
+echo "  - $BIN_DIR/perf.client.stats"
+echo "  - $BIN_DIR/perf.server.data"
+echo "  - $BIN_DIR/perf.client.data"
 

@@ -35,8 +35,15 @@ namespace coev
 	{
 		if (m_fd != INVALID)
 		{
+			__finally();
 			auto _fd = std::exchange(m_fd, INVALID);
 			::close(_fd);
+			while (m_r_waiter.resume())
+			{
+			}
+			while (m_w_waiter.resume())
+			{
+			}
 		}
 		return 0;
 	}
@@ -73,13 +80,14 @@ namespace coev
 			// 清零 watcher 结构体，避免未初始化内存导致的问题
 			memset(&m_read, 0, sizeof(m_read));
 			memset(&m_write, 0, sizeof(m_write));
-			
+
 			// 检查 watcher 是否已经初始化
 			if (ev_is_active(&m_read) || ev_is_active(&m_write))
 			{
 				return 0;
 			}
 			setNoBlock(m_fd, true);
+			setNoDelay(m_fd, 1);
 
 			m_read.data = this;
 			ev_io_init(&m_read, io_context::cb_read, m_fd, EV_READ);
@@ -129,19 +137,20 @@ namespace coev
 		while (__valid())
 		{
 			int r = ::send(m_fd, buffer, size, 0);
+
 			if (r == INVALID && isInprocess())
 			{
 				ev_io_start(m_loop, &m_write);
 				co_await m_w_waiter.suspend();
 			}
 			else if (r == 0)
-		{
-			co_return INVALID;
-		}
-		else
-		{
-			co_return r;
-		}
+			{
+				co_return INVALID;
+			}
+			else
+			{
+				co_return r;
+			}
 		}
 		co_return INVALID;
 	}
@@ -156,9 +165,9 @@ namespace coev
 				continue;
 			}
 			else if (r == 0)
-		{
-			co_return INVALID;
-		}
+			{
+				co_return INVALID;
+			}
 			else
 			{
 				LOG_CORE("fd %d recv %d bytes", m_fd, r);
@@ -203,9 +212,9 @@ namespace coev
 				co_await m_w_waiter.suspend();
 			}
 			else if (r == 0)
-		{
-			co_return INVALID;
-		}
+			{
+				co_return INVALID;
+			}
 			co_return r;
 		}
 		co_return INVALID;
@@ -296,6 +305,7 @@ namespace coev
 		auto err = getSocketError(m_fd);
 		if (err != 0)
 		{
+			LOG_ERR("[CONNECT] connection error %d %s", err, strerror(err));
 			__close();
 			co_return INVALID;
 		}

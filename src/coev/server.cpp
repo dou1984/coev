@@ -21,6 +21,10 @@ namespace coev::tcp
 		{
 			parseAddr(addr, info);
 		}
+		else if (isInprocess())
+		{
+			return INVALID;
+		}
 		return rfd;
 	}
 	void server::cb_accept(struct ev_loop *loop, struct ev_io *w, int revents)
