@@ -21,19 +21,19 @@ namespace coev::kafka
         prep_encoder enc;
         if (prepare_flexible_encoder(enc, e) != ErrNoError)
         {
-            throw PacketError{"encoding failed"};
+            return ErrEncodeError;
         }
 
         if (enc.m_length < 0 || enc.m_length > static_cast<int>(MaxRequestSize))
         {
-            throw PacketError{"invalid request size (" + std::to_string(enc.m_length) + ")"};
+            return ErrEncodeError;
         }
 
         real_encoder real_enc;
         real_enc.m_raw.resize(enc.m_length);
         if (prepare_flexible_encoder(real_enc, e) != ErrNoError)
         {
-            throw PacketError{"encoding failed"};
+            return ErrEncodeError;
         }
 
         if (out.empty())
@@ -85,7 +85,7 @@ namespace coev::kafka
         int remaining = helper.remaining();
         if (remaining != 0)
         {
-            throw PacketError{"invalid length len=" + std::to_string(buf.size()) + " remaining=" + std::to_string(remaining)};
+            return ErrDecodeError;
         }
 
         return ErrNoError;

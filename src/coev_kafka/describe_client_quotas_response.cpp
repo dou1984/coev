@@ -78,16 +78,19 @@ namespace coev::kafka
             m_entries.resize(entryCount);
             for (int32_t i = 0; i < entryCount; ++i)
             {
-                if (!m_entries[i].decode(pd, version))
+                if (m_entries[i].decode(pd, version) != ErrNoError)
                 {
                     return ErrDecodeError;
                 }
             }
         }
-        int32_t _;
-        if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
+        if (version >= 1)
         {
-            return ErrDecodeError;
+            int32_t _;
+            if (pd.getEmptyTaggedFieldArray(_) != ErrNoError)
+            {
+                return ErrDecodeError;
+            }
         }
         return ErrNoError;
     }
@@ -138,7 +141,7 @@ namespace coev::kafka
             m_entity.resize(component_count);
             for (int32_t i = 0; i < component_count; ++i)
             {
-                if (!m_entity[i].decode(pd, version))
+                if (m_entity[i].decode(pd, version) != ErrNoError)
                 {
                     return ErrDecodeError;
                 }

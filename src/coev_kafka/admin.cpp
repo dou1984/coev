@@ -129,6 +129,10 @@ namespace coev::kafka
         {
             co_return err;
         }
+        if (!rsp.m_response)
+        {
+            co_return ErrIncompleteResponse;
+        }
         auto it = rsp.m_response->m_topic_errors.find(topic);
         if (it == rsp.m_response->m_topic_errors.end())
         {
@@ -181,6 +185,10 @@ namespace coev::kafka
         {
             co_return err;
         }
+        if (!response.m_response)
+        {
+            co_return ErrIncompleteResponse;
+        }
         out = std::move(response.m_response->m_topics);
         co_return 0;
     }
@@ -208,6 +216,10 @@ namespace coev::kafka
         if (err != 0)
         {
             co_return err;
+        }
+        if (!response.m_response)
+        {
+            co_return ErrIncompleteResponse;
         }
         out = std::move(response.m_response->m_brokers);
         out_controller_id = response.m_response->m_controller_id;
@@ -240,6 +252,10 @@ namespace coev::kafka
         if (err != 0)
         {
             co_return err;
+        }
+        if (!response.m_response)
+        {
+            co_return ErrIncompleteResponse;
         }
 
         std::vector<ConfigResource> describe_configs_resources;
@@ -277,6 +293,10 @@ namespace coev::kafka
         {
             co_return err;
         }
+        if (!describeConfigsResp.m_response)
+        {
+            co_return ErrIncompleteResponse;
+        }
 
         for (auto &resource : describeConfigsResp.m_response->m_resources)
         {
@@ -309,6 +329,10 @@ namespace coev::kafka
         if (err != 0)
         {
             co_return err;
+        }
+        if (!rsp.m_response)
+        {
+            co_return ErrIncompleteResponse;
         }
         auto it = rsp.m_response->m_topic_error_codes.find(topic);
         if (it == rsp.m_response->m_topic_error_codes.end())
@@ -349,6 +373,10 @@ namespace coev::kafka
         if (err != 0)
         {
             co_return err;
+        }
+        if (!rsp.m_response)
+        {
+            co_return ErrIncompleteResponse;
         }
         auto it = rsp.m_response->m_topic_partition_errors.find(topic);
         if (it == rsp.m_response->m_topic_partition_errors.end())
@@ -405,17 +433,24 @@ namespace coev::kafka
         }
         else
         {
-            if (response.m_response->m_code > 0)
+            if (!response.m_response)
             {
-                errs.push_back(response.m_response->m_code);
+                errs.push_back(ErrIncompleteResponse);
             }
-            for (auto &[topic, partitions] : response.m_response->m_errors)
+            else
             {
-                for (auto &[partition, error_block] : partitions)
+                if (response.m_response->m_code > 0)
                 {
-                    if (error_block.m_code != ErrNoError)
+                    errs.push_back(response.m_response->m_code);
+                }
+                for (auto &[topic, partitions] : response.m_response->m_errors)
+                {
+                    for (auto &[partition, error_block] : partitions)
                     {
-                        errs.push_back(error_block.m_code);
+                        if (error_block.m_code != ErrNoError)
+                        {
+                            errs.push_back(error_block.m_code);
+                        }
                     }
                 }
             }
@@ -469,6 +504,10 @@ namespace coev::kafka
         }
         if (err == 0)
         {
+            if (!response.m_response)
+            {
+                co_return ErrIncompleteResponse;
+            }
             output = std::move(response.m_response->m_topic_status);
         }
         co_return err;
@@ -537,6 +576,11 @@ namespace coev::kafka
             if (err != 0)
             {
                 errs.emplace_back(err);
+                continue;
+            }
+            if (!response.m_response)
+            {
+                errs.emplace_back(ErrIncompleteResponse);
                 continue;
             }
 
@@ -608,6 +652,10 @@ namespace coev::kafka
         {
             co_return err;
         }
+        if (!response.m_response)
+        {
+            co_return ErrIncompleteResponse;
+        }
 
         out.clear();
         for (auto &resource : response.m_response->m_resources)
@@ -676,6 +724,10 @@ namespace coev::kafka
         {
             co_return err;
         }
+        if (!response.m_response)
+        {
+            co_return ErrIncompleteResponse;
+        }
 
         for (auto &resource : response.m_response->m_resources)
         {
@@ -722,12 +774,19 @@ namespace coev::kafka
             co_return err;
         }
         err = co_await broker->Open(m_client->GetConfig());
-
+        if (err != 0)
+        {
+            co_return err;
+        }
         ResponsePromise<IncrementalAlterConfigsResponse> response;
         err = co_await broker->IncrementalAlterConfigs(request, response);
         if (err != 0)
         {
             co_return err;
+        }
+        if (!response.m_response)
+        {
+            co_return ErrIncompleteResponse;
         }
 
         for (auto &resource : response.m_response->m_resources)
@@ -763,7 +822,16 @@ namespace coev::kafka
             co_return err;
         }
         ResponsePromise<CreateAclsResponse> rsp;
-        co_return co_await broker->CreateAcls(request, rsp);
+        err = co_await broker->CreateAcls(request, rsp);
+        if (err != 0)
+        {
+            co_return err;
+        }
+        if (!rsp.m_response)
+        {
+            co_return ErrIncompleteResponse;
+        }
+        co_return 0;
     }
 
     awaitable<int> ClusterAdmin::CreateACLs(const std::vector<ResourceAcls> &resource_acks)
@@ -789,17 +857,27 @@ namespace coev::kafka
             co_return err;
         }
         ResponsePromise<CreateAclsResponse> response;
-        co_return co_await broker->CreateAcls(request, response);
+        err = co_await broker->CreateAcls(request, response);
+        if (err != 0)
+        {
+            co_return err;
+        }
+        if (!response.m_response)
+        {
+            co_return ErrIncompleteResponse;
+        }
+        co_return 0;
     }
 
     awaitable<int> ClusterAdmin::ListAcls(const AclFilter &filter, std::vector<ResourceAcls> &out_results)
     {
-        auto request = std::make_shared<DescribeAclsRequest>();
-        request->m_filter = filter;
+        int16_t version = 0;
         if (m_conf->Version.IsAtLeast(V2_0_0_0))
         {
-            request->m_version = 1;
+            version = 1;
         }
+        auto request = std::make_shared<DescribeAclsRequest>(version);
+        request->m_filter = filter;
 
         std::shared_ptr<Broker> broker;
         int err = co_await GetController(broker);
@@ -812,6 +890,10 @@ namespace coev::kafka
         if (err != 0)
         {
             co_return err;
+        }
+        if (!response.m_response)
+        {
+            co_return ErrIncompleteResponse;
         }
 
         out_results = std::move(response.m_response->m_resource_acls);
@@ -839,6 +921,10 @@ namespace coev::kafka
         {
             co_return err;
         }
+        if (!rsp.m_response)
+        {
+            co_return ErrIncompleteResponse;
+        }
 
         out.clear();
         for (auto &fr : rsp.m_response->m_filter_responses)
@@ -865,6 +951,10 @@ namespace coev::kafka
         if (err != 0)
         {
             co_return err;
+        }
+        if (!res.m_response)
+        {
+            co_return ErrIncompleteResponse;
         }
         if (res.m_response->m_code != ErrNoError)
         {
@@ -946,6 +1036,10 @@ namespace coev::kafka
             {
                 co_return err;
             }
+            if (!response.m_response)
+            {
+                co_return ErrIncompleteResponse;
+            }
             for (auto &group_desc : response.m_response->m_groups)
             {
                 out.push_back(group_desc);
@@ -999,6 +1093,11 @@ namespace coev::kafka
             err_chan.push_back(err);
             co_return err;
         }
+        if (!response.m_response)
+        {
+            err_chan.push_back(ErrIncompleteResponse);
+            co_return ErrIncompleteResponse;
+        }
         out.insert(response.m_response->m_groups.begin(), response.m_response->m_groups.end());
         co_return 0;
     }
@@ -1019,6 +1118,10 @@ namespace coev::kafka
                 m_client->RefreshCoordinator(group);
             }
             co_return err;
+        }
+        if (!local_out.m_response)
+        {
+            co_return ErrIncompleteResponse;
         }
         if (local_out.m_response->m_err != ErrNoError)
         {
@@ -1056,6 +1159,10 @@ namespace coev::kafka
                 m_client->RefreshCoordinator(group);
             }
             co_return err;
+        }
+        if (!response.m_response)
+        {
+            co_return ErrIncompleteResponse;
         }
         if (response.m_response->m_code != ErrNoError)
         {
@@ -1103,6 +1210,10 @@ namespace coev::kafka
                 m_client->RefreshCoordinator(group);
             }
             co_return err;
+        }
+        if (!response.m_response)
+        {
+            co_return ErrIncompleteResponse;
         }
         auto it = response.m_response->m_group_error_codes.find(group);
         if (it == response.m_response->m_group_error_codes.end())
@@ -1195,6 +1306,11 @@ namespace coev::kafka
                     err_chan.push_back(err);
                     co_return;
                 }
+                if (!response.m_response)
+                {
+                    err_chan.push_back(ErrIncompleteResponse);
+                    co_return;
+                }
                 if (response.m_response->m_code != ErrNoError)
                 {
                     err_chan.push_back(response.m_response->m_code);
@@ -1236,6 +1352,10 @@ namespace coev::kafka
         {
             co_return err;
         }
+        if (!rsp.m_response)
+        {
+            co_return ErrIncompleteResponse;
+        }
         out_results = std::move(rsp.m_response->m_results);
         co_return 0;
     }
@@ -1259,7 +1379,15 @@ namespace coev::kafka
             co_return err;
         }
         err = co_await broker->AlterUserScramCredentials(req, rsp);
-        co_return err;
+        if (err != 0)
+        {
+            co_return err;
+        }
+        if (!rsp.m_response)
+        {
+            co_return ErrIncompleteResponse;
+        }
+        co_return 0;
     }
 
     awaitable<int> ClusterAdmin::AlterUserScramCredentials(const std::vector<AlterUserScramCredentialsUpsert> &u, const std::vector<AlterUserScramCredentialsDelete> &d, std::vector<AlterUserScramCredentialsResult> &out_results)
@@ -1296,6 +1424,10 @@ namespace coev::kafka
         {
             co_return err;
         }
+        if (!rsp.m_response)
+        {
+            co_return ErrIncompleteResponse;
+        }
         if (!rsp.m_response->m_message.empty())
         {
             co_return ErrDescribeClientQuotas;
@@ -1330,6 +1462,10 @@ namespace coev::kafka
         {
             co_return err;
         }
+        if (!rsp.m_response)
+        {
+            co_return ErrIncompleteResponse;
+        }
 
         for (auto &entry : rsp.m_response->m_entries)
         {
@@ -1362,6 +1498,10 @@ namespace coev::kafka
                 m_client->RefreshCoordinator(groupId);
             }
             co_return err;
+        }
+        if (!out.m_response)
+        {
+            co_return ErrIncompleteResponse;
         }
         if (out.m_response->m_err != ErrNoError)
         {

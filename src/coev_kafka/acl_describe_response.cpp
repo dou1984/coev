@@ -54,7 +54,7 @@ namespace coev::kafka
         }
 
         std::string err_msg;
-        if (pd.getString(err_msg) != 0)
+        if (pd.getNullableString(err_msg) != 0)
         {
             return -1;
         }
@@ -73,6 +73,15 @@ namespace coev::kafka
         for (int32_t i = 0; i < n; ++i)
         {
             if (m_resource_acls[i].decode(pd, version) != 0)
+            {
+                return -1;
+            }
+        }
+
+        if (version >= 1)
+        {
+            int32_t _;
+            if (pd.getEmptyTaggedFieldArray(_) != 0)
             {
                 return -1;
             }
@@ -99,6 +108,16 @@ namespace coev::kafka
     bool DescribeAclsResponse::is_valid_version() const
     {
         return m_version >= 0 && m_version <= 1;
+    }
+
+    bool DescribeAclsResponse::is_flexible() const
+    {
+        return is_flexible_version(m_version);
+    }
+
+    bool DescribeAclsResponse::is_flexible_version(int16_t version) const
+    {
+        return version >= 1;
     }
 
     KafkaVersion DescribeAclsResponse::required_version() const

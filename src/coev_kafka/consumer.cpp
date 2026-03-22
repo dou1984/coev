@@ -33,7 +33,7 @@ namespace coev::kafka
 
         for (auto partition : partitions)
         {
-            m_task << [topic](auto consumer, auto partition) -> awaitable<void>
+            m_task << [](auto consumer, auto  topic, auto partition) -> awaitable<void>
             {
                 std::shared_ptr<PartitionConsumer> __consumer;
                 auto err = co_await consumer->ConsumePartition(topic, partition, OffsetNewest, __consumer);
@@ -51,7 +51,7 @@ namespace coev::kafka
                         LOG_CORE("offset %ld Messages  %s %s", msg->m_offset, msg->key().c_str(), msg->value().c_str());
                     }
                 }
-            }(this->shared_from_this(), partition);
+            }(this->shared_from_this(), topic, partition);
         }
 
         co_return 0;
@@ -216,6 +216,47 @@ namespace coev::kafka
 
         co_return 0;
     }
+    awaitable<void> Consumer::Consume(const std::string &topic, MessageChannel &ch)
+    {
+        std::vector<int32_t> partitions;
+        auto err = co_await Partitions(topic, partitions);
+        if (err)
+        {
+            LOG_ERR("Partitions error: %d", err);
+            co_return;
+        }
+
+        co_task task;
+        for (auto partition : partitions)
+        {
+            task << [](auto _this, auto& partition, auto &topic,auto &ch) -> awaitable<void>
+            {
+                std::shared_ptr<PartitionConsumer> partition_consumer;
+                auto err = co_await _this->ConsumePartition(topic, partition, OffsetOldest, partition_consumer);
+                if (err)
+                {
+                    LOG_ERR("ConsumePartition error: %d", err);
+                    co_return;
+                }
+
+                while (true)
+                {
+                    std::shared_ptr<ConsumerMessage> msg;
+                    co_await partition_consumer->Messages().get(msg);
+                    if (msg)
+                    {
+                        ch.set(msg);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                co_return;
+            }(shared_from_this(), partition, topic, ch);
+        }
+        co_await task.wait_all();
+    }
 
     void Consumer::AbandonBrokerConsumer(std::shared_ptr<BrokerConsumer> worker)
     {
@@ -248,4 +289,5 @@ namespace coev::kafka
         }
         co_return NewConsumerFromClient(client, consumer_);
     }
+
 } // namespace coev::kafka

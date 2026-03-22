@@ -75,6 +75,7 @@ namespace coev::kafka
         int FindBroker(int32_t id, std::shared_ptr<Broker> &out);
         int FindAnyBroker(std::shared_ptr<Broker> &out);
 
+    private:
         awaitable<int> _CreateTopic(const std::string &topic, std::shared_ptr<CreateTopicsRequest> request);
         awaitable<int> _DescribeTopics(const std::vector<std::string> &topics, std::vector<TopicMetadata> &out);
         awaitable<int> _DeleteTopic(const std::string &topic, std::shared_ptr<DeleteTopicsRequest> request);

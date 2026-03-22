@@ -19,6 +19,7 @@
 #include "record.h"
 #include "consumer_error.h"
 #include "fetch_response.h"
+#include "consumer_message.h"
 
 namespace coev::kafka
 {
@@ -45,10 +46,11 @@ namespace coev::kafka
 
     struct Consumer : IConsumer, std::enable_shared_from_this<Consumer>
     {
-
+        using MessageChannel = co_channel<std::shared_ptr<ConsumerMessage>>;
         awaitable<int> ConsumeMessage(const std::string &topic);
 
         int Topics(std::vector<std::string> &out);
+        awaitable<void> Consume(const std::string &topic, MessageChannel &ch);
         awaitable<int> Partitions(const std::string &topic, std::vector<int32_t> &out);
         awaitable<int> Close();
         awaitable<int> ConsumePartition(const std::string &topic, int32_t partition, int64_t offset, std::shared_ptr<PartitionConsumer> &child);
