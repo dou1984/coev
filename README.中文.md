@@ -10,27 +10,33 @@ c++20 coroutine libev
 
   最重要的是，coev 将协程（coroutines）与网络（network）逻辑彻底解耦，使开发者能够将任意异步操作无缝转化为协程形式，并**手动或自动触发协程恢复**，从而获得极大的灵活性与控制自由度。
 
-  在任务调度方面，coev 提供了强大的并发原语:
-1. 支持 wait_for_all（等待所有任务完成）
-2. 支持 wait_for_any（任一任务完成即返回）
-3. 可任意组合嵌套使用，灵活构建复杂的并发逻辑
-   
-  所有任务在完成后会自动释放资源，无需手动管理生命周期。
+  coev的目标是支持常用的第三方client库，现在已经支持mysql-client、hiredis、http_parser、nghttp2等库，后期还会继续支持更多的库。
+  1. TCP / UDP
+  2. MySQL 基于 mysqlclient
+  3. Redis 基于 hiredis
+  4. HTTP  基于http_parser
+  5. HTTP/2 基于nghttp
+  6. zookeeper
+  7. kafka
 
-  此外，coev 内置了类型安全、线程安全的 Channel 机制，可用于在协程或线程间高效传递任意类型的数据，极大提升了多协程协作的表达能力。
-  为提升开发效率，coev 已对常用组件进行了协程化封装，包括：
-1. TCP / UDP
-2. MySQL 客户端（基于 mysqlclient）
-3. Redis 客户端（基于 hiredis）
-4. HTTP / HTTP/2（基于http_parser/libnghttp2）
+  客户端支持同线程并发，互不干扰。利用协程的高效切换，替代了昂贵的线程间数据搬运，大幅提升执行效率。
+  相对于Actor模型：解决了同步调用阻塞线程的问题，无需依赖多线程池。Coev 利用协程实现高并发等待，极大提高了处理效率。
+  相对于Preactor模型：消除了复杂的“回调地狱”。Coev采用类同步的线性代码风格，代码整洁度与维护性远超传统异步架构。
+
+
+  在任务调度方面，coev 提供了强大的并发原语:
+1. 支持 wait_for_all 等待所有任务完成，相当于c++26里的WhenAll。
+2. 支持 wait_for_any 任一任务完成即返回，也可根据task_id使用不同处理方式。
+3. 可任意组合嵌套使用，灵活构建复杂的并发逻辑。
    
+  所有任务在完成后会自动释放资源，无需手动管理生命周期。实现早于c++26 标准，已实现Task的功能。
 
 # 示例
 
 调用co_await g_trigger.suppend()等待一个指令回复，调用g_trigger.resume()恢复到等待的协程。临时变量可通过参数传递，并且整个过程是线程安全的，调用就是如此的简单，轻松实现复杂的控制流。
 ```cpp
 using namespace coev;
-async g_trigger;
+guard::async g_trigger;
 awaitable<int> co_waiting()
 { 
  co_await g_trigger.suppend(); // 等待事件触发
@@ -58,7 +64,7 @@ co_channel用于数据传输，这也是协程中比较重要的用法，co_chan
 
 ```cpp
 using namespace coev;
-co_channel<int> ch;
+guard::co_channel<int> ch;
 awaitable<int> co_channel_input()
 {
   int x = 1;

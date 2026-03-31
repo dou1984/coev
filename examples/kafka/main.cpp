@@ -24,7 +24,6 @@ int test_port;
 std::string test_topic;
 std::string test_data;
 
-void run_admin_test(const std::string &h, int p, const std::string &t);
 void run_consumer_test();
 void run_producer_test();
 
@@ -32,7 +31,7 @@ int main(int argc, char **argv)
 {
     if (argc < 5)
     {
-        LOG_DBG("Usage: %s (pull|push|admin) host port topic", argv[0]);
+        LOG_DBG("Usage: %s (pull|push) host port topic", argv[0]);
         return -1;
     }
     set_log_level(LOG_LEVEL_DEBUG);
@@ -45,11 +44,7 @@ int main(int argc, char **argv)
         test_data = argv[5];
     }
 
-    if (method == "admin")
-    {
-        run_admin_test(test_host, test_port, test_topic);
-    }
-    else if (method == "pull")
+    if (method == "pull")
     {
         run_consumer_test();
     }
