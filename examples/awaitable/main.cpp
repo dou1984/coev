@@ -10,8 +10,8 @@ using namespace coev;
 
 #define g singleton<co_waitgroup>::instance()
 
-async g_waiter;
-async g_t_waiter;
+co_async g_waiter;
+co_async g_t_waiter;
 
 awaitable<int> co_awaitable()
 {

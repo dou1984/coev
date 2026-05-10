@@ -18,7 +18,7 @@ namespace coev
         {
             CURLM *m_multi = nullptr;
             CURL *m_curl = nullptr;
-            async m_done;
+            co_async m_done;
 
         public:
             instance();

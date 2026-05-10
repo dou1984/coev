@@ -82,7 +82,7 @@ namespace coev
 
 	int co_deliver::__resume_ev()
 	{
-		async _waiter;
+		co_async _waiter;
 		{
 			std::lock_guard<std::mutex> _(m_lock);
 			m_waiter.move_to(&_waiter);

@@ -35,11 +35,11 @@ namespace coev::http
 		int parse(const char *, int);
 		std::string_view m_key;
 		std::string_view m_value;
-		async m_url_waiter;
-		async m_body_waiter;
-		async m_header_waiter;
-		async m_status_waiter;
-		async m_finish_waiter;
+		co_async m_url_waiter;
+		co_async m_body_waiter;
+		co_async m_header_waiter;
+		co_async m_status_waiter;
+		co_async m_finish_waiter;
 
 		static http_parser_settings m_settings;
 		void clear();

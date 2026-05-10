@@ -8,7 +8,7 @@
 #include <memory>
 #include <functional>
 #include "queue.h"
-#include "async.h"
+#include "co_async.h"
 #include "co_event.h"
 #include "is_destroying.h"
 
@@ -18,7 +18,7 @@ namespace coev
 
 	class co_task final
 	{
-		async m_waiter;
+		co_async m_waiter;
 		std::unordered_map<promise *, uint64_t> m_promises;
 		uint64_t m_id = 0;
 
@@ -40,7 +40,7 @@ namespace coev
 	{
 		class co_task final
 		{
-			guard::async m_waiter;
+			guard::co_async m_waiter;
 			std::unordered_map<promise *, uint64_t> m_promises;
 			uint64_t m_id = 0;
 

@@ -59,8 +59,8 @@ namespace coev
             uint32_t m_connected = 0;
             uint32_t m_connecting = 0;
             uint32_t m_used = 0;
-            async m_waiter;
-            async m_closed;
+            co_async m_waiter;
+            co_async m_closed;
         };
         struct instance
         {

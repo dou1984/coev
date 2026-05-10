@@ -6,7 +6,7 @@
  */
 #pragma once
 #include <ev.h>
-#include "async.h"
+#include "co_async.h"
 
 namespace coev
 {
@@ -15,7 +15,7 @@ namespace coev
 		ev_timer m_data;
 		uint64_t m_tid = 0;
 		struct ev_loop *m_loop = nullptr;
-		async m_waiter;
+		co_async m_waiter;
 		static void cb_timer(struct ev_loop *loop, struct ev_timer *w, int revents);
 
 	public:

@@ -65,11 +65,11 @@ namespace coev::nghttp2
         static nghttp2_session_callbacks *m_callbacks;
         std::unordered_map<int32_t, request> m_requests;
         std::unordered_map<int32_t, response> m_responses;
-        std::unordered_map<int32_t, async> m_w_trigger;
+        std::unordered_map<int32_t, co_async> m_w_trigger;
 
     protected:
         co_task m_task;
-        async m_waiting_write;
+        co_async m_waiting_write;
         int32_t m_current_stream_id = 0;
         routers m_routers;
 

@@ -6,14 +6,14 @@
  */
 #pragma once
 #include <atomic>
-#include "async.h"
+#include "co_async.h"
 #include "awaitable.h"
 
 namespace coev
 {
 	class co_waitgroup final
 	{
-		guard::async m_waiter;
+		guard::co_async m_waiter;
 		std::atomic_int m_count{0};
 
 	public:

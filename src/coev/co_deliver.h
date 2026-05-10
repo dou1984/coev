@@ -8,7 +8,7 @@
 #include <ev.h>
 #include <mutex>
 #include <functional>
-#include "async.h"
+#include "co_async.h"
 #include "co_event.h"
 namespace coev
 {
@@ -29,7 +29,7 @@ namespace coev
 	private:
 		ev_async m_deliver;
 		std::mutex m_lock;
-		async m_waiter;
+		co_async m_waiter;
 		uint64_t m_tid = 0;
 		struct ev_loop *m_loop = nullptr;
 		static void cb_async(struct ev_loop *loop, ev_async *w, int revents);

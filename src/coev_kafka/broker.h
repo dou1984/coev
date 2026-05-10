@@ -192,7 +192,7 @@ namespace coev::kafka
         int64_t m_session_reauthentication_time;
         ApiVersionMap m_broker_api_versions;
 
-        coev::async m_opened;
+        coev::co_async m_opened;
         coev::co_task m_task;
         coev::co_channel<bool> m_done;
 

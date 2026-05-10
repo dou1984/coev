@@ -8,7 +8,7 @@
 #include <queue>
 #include "awaitable.h"
 #include "wait_for.h"
-#include "async.h"
+#include "co_async.h"
 
 namespace coev
 {
@@ -55,7 +55,7 @@ namespace coev
 			return d;
 		}
 		std::queue<TYPE> m_data;
-		async m_waiter;
+		co_async m_waiter;
 	};
 
 	namespace guard
@@ -98,7 +98,7 @@ namespace coev
 
 		private:
 			std::queue<TYPE> m_data;
-			async m_waiter;
+			co_async m_waiter;
 			bool __invalid() const { return m_data.empty(); }
 			TYPE __pop_front()
 			{

@@ -20,7 +20,7 @@
 #include "sleep_for.h"
 #include "udp.h"
 #include "cosys.h"
-#include "async.h"
+#include "co_async.h"
 #include "co_task.h"
 #include "co_mutex.h"
 #include "co_channel.h"

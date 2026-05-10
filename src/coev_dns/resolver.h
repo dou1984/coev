@@ -17,7 +17,7 @@ namespace coev
         ares_channel m_channel;
         std::string m_ip;
         co_task m_task;
-        async m_done;
+        co_async m_done;
         std::unordered_map<ares_socket_t, std::shared_ptr<DNSCli>> m_clients;
 
         std::shared_ptr<DNSCli> __find(ares_socket_t _fd);

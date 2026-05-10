@@ -8,7 +8,7 @@
 #include <atomic>
 #include <mutex>
 #include "awaitable.h"
-#include "async.h"
+#include "co_async.h"
 
 namespace coev
 {
@@ -20,7 +20,7 @@ namespace coev
 		bool try_lock() noexcept;
 
 	private:
-		async m_waiter;
+		co_async m_waiter;
 		int m_flag = 0;
 	};
 	namespace guard
@@ -33,7 +33,7 @@ namespace coev
 			bool try_lock() noexcept;
 
 		private:
-			async m_waiter;
+			co_async m_waiter;
 			int m_flag = 0;
 		};
 	}

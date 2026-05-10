@@ -33,7 +33,7 @@ namespace coev::tcp
 		int m_fd = INVALID;
 		struct ev_loop *m_loop = nullptr;
 		ev_io m_recv;
-		async m_waiter;
+		co_async m_waiter;
 		guard::co_mutex m_finished;
 		static void cb_accept(struct ev_loop *loop, struct ev_io *w, int revents);
 	};

@@ -19,7 +19,7 @@
 
 namespace coev
 {
-	guard::async g_exception;
+	guard::co_async g_exception;
 	std::atomic_int g_loop_count = 0;
 	runnable::runnable() noexcept
 	{

@@ -75,7 +75,7 @@ namespace coev
         bool m_seen_rw_server_before;
 
         std::list<std::string> m_completion_list;
-        async m_completion;
-        async m_watcher;
+        co_async m_completion;
+        co_async m_watcher;
     };
 }

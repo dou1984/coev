@@ -7,7 +7,7 @@
 #pragma once
 #include <ev.h>
 #include <memory>
-#include "async.h"
+#include "co_async.h"
 #include "socket.h"
 
 namespace coev
@@ -52,8 +52,8 @@ namespace coev
 		ev_io m_read;
 		ev_io m_write;
 
-		async m_r_waiter;
-		async m_w_waiter;
+		co_async m_r_waiter;
+		co_async m_w_waiter;
 		int __finally() noexcept;
 		int __initial() noexcept;
 		int __close() noexcept;
