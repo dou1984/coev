@@ -23,6 +23,7 @@ namespace coev
 		io_context() noexcept;
 		io_context(int fd) noexcept;
 		io_context(io_context &&) = delete;
+		io_context(const io_context &) = delete;
 		virtual ~io_context() noexcept;
 		virtual awaitable<int> send(const char *, int) noexcept;
 		virtual awaitable<int> recv(char *, int) noexcept;

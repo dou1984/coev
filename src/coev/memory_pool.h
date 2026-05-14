@@ -34,7 +34,7 @@ namespace coev
             throw std::bad_alloc();
         }
 
-        inline void release(node *ptr)
+        inline void release(queue *ptr)
         {
             std::free(ptr);
         }
@@ -51,7 +51,7 @@ namespace coev
         {
             while (auto q = pop_front())
             {
-                free(q);
+                details::release(q);
             }
         }
         T *create(int size)
@@ -86,7 +86,7 @@ namespace coev
             }
             else
             {
-                free(q);
+                details::release(q);
             }
         }
     };
@@ -98,7 +98,7 @@ namespace coev
         {
             while (auto q = pop_front())
             {
-                free(q);
+                details::release(q);
             }
         }
         T *create(int size)

@@ -98,16 +98,17 @@ namespace coev::kafka
         awaitable<int> RetryOnError(std::function<bool(int)> retryable, const Func &func, Args &&...args)
         {
             int attempts = m_conf->Admin.Retry.Max + 1;
-            while (true)
+            int err = 0;
+            for (; attempts > 0; --attempts)
             {
-                int err = co_await (this->*func)(std::forward<Args>(args)...);
-                attempts--;
-                if (err == 0 || attempts <= 0 || !retryable(err))
+                err = co_await std::invoke(func, this, std::forward<Args>(args)...);
+                if (err == 0 || !retryable(err))
                 {
-                    co_return err;
+                    break;
                 }
                 co_await sleep_for(m_conf->Admin.Retry.Backoff);
             }
+            co_return err;
         }
     };
 

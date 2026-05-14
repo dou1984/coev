@@ -9,7 +9,6 @@
 #include <iostream>
 #include <string.h>
 #include <atomic>
-#include <variant>
 #include "gtid.h"
 #include "log.h"
 #include "queue.h"
@@ -18,15 +17,26 @@
 namespace coev
 {
 
-	enum status : int
+	namespace details
 	{
-		CORO_INIT,
-		CORO_SUSPEND,
-		CORO_RUNNING,
-		CORO_RESUMED,
-		CORO_FINISHED,
+		enum status : int16_t
+		{
+			CORO_INIT,
+			CORO_SUSPEND,
+			CORO_RUNNING,
+			CORO_RESUMED,
+			CORO_FINISHED,
 
-	};
+		};
+		enum type : int16_t
+		{
+			CORO_NONE,
+			CORO_TASK,
+			CORO_GUARD_TASK,
+			CORO_COROUTINE_HANDLE,
+
+		};
+	}
 	class co_task;
 	namespace guard
 	{
@@ -35,9 +45,15 @@ namespace coev
 	struct promise : queue
 	{
 		std::coroutine_handle<> m_this = nullptr;
-		std::variant<co_task *, guard::co_task *, std::coroutine_handle<>, nullptr_t> m_that = nullptr;
-		int m_status = CORO_INIT;
+		union
+		{
+			std::coroutine_handle<> m_caller;
+			co_task *m_task;
+			guard::co_task *m_g_task;
+		};
 		uint64_t m_tid = gtid();
+		int16_t m_status = details::CORO_INIT;
+		int16_t m_type = details::CORO_NONE;
 		promise();
 		~promise();
 		void unhandled_exception();

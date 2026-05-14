@@ -72,16 +72,17 @@ namespace coev
 		auto __insert = [this](promise *_promise) -> int
 		{
 			assert(_promise->m_tid == gtid());
-			_promise->m_that = this;
+			_promise->m_task = this;
+			_promise->m_type = details::CORO_TASK;
 			auto id = ++m_id;
 			m_promises.emplace(_promise, id);
 			return id;
 		};
 		auto __finally = [](promise *_promise)
 		{
-			if (_promise->m_status == CORO_SUSPEND)
+			if (_promise->m_status == details::CORO_SUSPEND)
 			{
-				_promise->m_status = CORO_RUNNING;
+				_promise->m_status = details::CORO_RUNNING;
 				assert(!_promise->m_this.done());
 				_promise->m_this.resume();
 			}
@@ -184,16 +185,17 @@ namespace coev
 			{
 				assert(_promise->m_tid == gtid());
 				std::lock_guard<std::mutex> _(m_waiter.lock());
-				_promise->m_that = this;
+				_promise->m_g_task = this;
+				_promise->m_type = details::CORO_GUARD_TASK;
 				auto id = ++m_id;
 				m_promises.emplace(_promise, id);
 				return id;
 			};
 			auto __finally = [](promise *_promise)
 			{
-				if (_promise->m_status == CORO_SUSPEND)
+				if (_promise->m_status == details::CORO_SUSPEND)
 				{
-					_promise->m_status = CORO_RUNNING;
+					_promise->m_status = details::CORO_RUNNING;
 					assert(!_promise->m_this.done());
 					_promise->m_this.resume();
 				}

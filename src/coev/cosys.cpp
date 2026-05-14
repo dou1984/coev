@@ -14,7 +14,7 @@
 #include "co_deliver.h"
 #include "co_task.h"
 #include "io_terminal.h"
-#include "defer.h"
+#include "finally.h"
 
 #define g_loop local<__ev_loop>::instance()
 namespace coev

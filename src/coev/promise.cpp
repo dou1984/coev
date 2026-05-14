@@ -17,37 +17,30 @@ namespace coev
     }
     promise::~promise()
     {
-        struct release
+        m_status = details::CORO_FINISHED;
+        if (m_type == details::CORO_COROUTINE_HANDLE)
         {
-            promise *m_this;
-            release(promise *_this) : m_this(_this) {}
-            void operator()(guard::co_task *_task)
-            {
-                // LOG_CORE("promise release this:%p tid:%ld", m_this, m_this->m_tid);
-                assert(_task != nullptr);
-                _task->unload(m_this);
-            }
-            void operator()(co_task *_task)
-            {
-                // LOG_CORE("promise release this:%p tid:%ld", m_this, m_this->m_tid);
-                assert(_task != nullptr);
-                _task->unload(m_this);
-            }
-            void operator()(std::coroutine_handle<> _caller)
-            {
-                // LOG_CORE("promise release this:%p tid:%ld", m_this, m_this->m_tid);
-                assert(!_caller.done());
-                _caller.resume();
-            }
-            void operator()(nullptr_t)
-            {
-                // LOG_CORE("promise release this:%p nullptr_t", m_this);
-            }
-        } _(this);
-
-        m_status = CORO_FINISHED;
-        auto _that = std::exchange(m_that, nullptr);
-        std::visit(_, _that);
+            auto _caller = std::exchange(m_caller, nullptr);
+            _caller.resume();
+        }
+        else if (m_type == details::CORO_TASK)
+        {
+            auto _caller = std::exchange(m_task, nullptr);
+            auto _task = static_cast<co_task *>(_caller);
+            assert(_task != nullptr);
+            _task->unload(this);
+        }
+        else if (m_type == details::CORO_GUARD_TASK)
+        {
+            auto _caller = std::exchange(m_g_task, nullptr);
+            auto _task = static_cast<guard::co_task *>(_caller);
+            assert(_task != nullptr);
+            _task->unload(this);
+        }
+        else
+        {
+            assert(false);
+        }
     }
     void promise::unhandled_exception()
     {
@@ -56,27 +49,8 @@ namespace coev
 
     suspend_ready promise::initial_suspend()
     {
-        struct ready
-        {
-            promise *m_this;
-            ready(promise *_this) : m_this(_this) {}
-            bool operator()(guard::co_task *_task)
-            {
-                return _task != nullptr;
-            }
-            bool operator()(co_task *_task)
-            {
-                return _task != nullptr;
-            }
-            bool operator()(std::coroutine_handle<> _caller)
-            {
-                return _caller.address() != nullptr;
-            }
-            bool operator()(nullptr_t) { return false; }
-
-        } _(this);
-        auto _ready = std::visit(_, m_that);
-        m_status = _ready ? CORO_RUNNING : CORO_SUSPEND;
+        auto _ready = m_type != details::CORO_NONE;
+        m_status = _ready ? details::CORO_RUNNING : details::CORO_SUSPEND;
         return {.m_ready = _ready};
     }
 

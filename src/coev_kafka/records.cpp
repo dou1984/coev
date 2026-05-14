@@ -9,7 +9,6 @@
 #include <utility>
 #include <vector>
 #include <cassert>
-#include <variant>
 #include "errors.h"
 
 namespace coev::kafka

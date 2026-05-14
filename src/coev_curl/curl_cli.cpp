@@ -22,23 +22,15 @@ namespace coev
             curl_global_cleanup();
         }
     };
-    struct CurlCli::Context : io_context
-    {
 
-        using io_context::io_context;
-        auto read_waiter() { return m_r_waiter.suspend(); }
-        auto write_waiter() { return m_w_waiter.suspend(); }
-        auto id() { return m_fd; }
-    };
-
-    CurlCli::instance::instance()
+    CurlCli::Instance::Instance()
     {
     }
-    CurlCli::instance::instance(CURLM *m, CURL *c) : m_multi(m), m_curl(c)
+    CurlCli::Instance::Instance(CURLM *m, CURL *c) : m_multi(m), m_curl(c)
     {
     }
 
-    CurlCli::instance::~instance()
+    CurlCli::Instance::~Instance()
     {
         if (m_multi && m_curl)
         {
@@ -51,16 +43,16 @@ namespace coev
             m_curl = nullptr;
         }
     }
-    CurlCli::instance::operator CURL *()
+    CurlCli::Instance::operator CURL *()
     {
         return m_curl;
     }
-    CurlCli::instance::operator bool() const
+    CurlCli::Instance::operator bool() const
     {
         return m_curl && m_multi;
     }
 
-    awaitable<int> CurlCli::instance::action()
+    awaitable<int> CurlCli::Instance::action()
     {
         curl_easy_setopt(m_curl, CURLOPT_PRIVATE, this);
         auto r = curl_multi_add_handle(m_multi, m_curl);
@@ -76,11 +68,11 @@ namespace coev
         co_await m_done.suspend();
         co_return 0;
     }
-    void CurlCli::instance::done()
+    void CurlCli::Instance::done()
     {
         m_done.resume_next_loop();
     }
-    void CurlCli::instance::clear()
+    void CurlCli::Instance::clear()
     {
         m_multi = nullptr;
         m_curl = nullptr;
@@ -104,14 +96,7 @@ namespace coev
             LOG_ERR("curl_multi_init error ");
         }
 
-        m_task << [](auto _this) -> awaitable<void>
-        {
-            while (true)
-            {
-                co_await _this->m_timer.suspend();
-                _this->action(CURL_SOCKET_TIMEOUT, 0);
-            }
-        }(this);
+        m_task << __time_waiter();
     }
     CurlCli::~CurlCli()
     {
@@ -135,7 +120,7 @@ namespace coev
                 curl_easy_getinfo(curl, CURLINFO_EFFECTIVE_URL, &done_url);
                 LOG_CORE("%s done", done_url);
 
-                CurlCli::instance *o = nullptr;
+                CurlCli::Instance *o = nullptr;
                 curl_easy_getinfo(curl, CURLINFO_PRIVATE, &o);
                 o->clear();
                 o->done();
@@ -152,46 +137,58 @@ namespace coev
     }
     void CurlCli::init_socket(curl_socket_t fd, int action)
     {
-        auto __get_or_create = [this](auto fd) -> auto
-        {
-            auto it = m_clients.find(fd);
-            if (it == m_clients.end())
-            {
-                auto context = m_clients[fd] = std::make_shared<Context>(fd);
-                return context;
-            }
-            return it->second;
-        };
-        auto context = __get_or_create(fd);
+
         if (action == CURL_POLL_IN)
         {
-            m_task << [](auto _this, auto context) -> coev::awaitable<void>
-            {
-                while (*context)
-                {
-                    co_await context->read_waiter();
-                    if (context)
-                    {
-                        _this->action(context->id(), CURL_CSELECT_IN);
-                    }
-                }
-            }(this, context);
+            m_task << __read_waiter(fd);
         }
         if (action == CURL_POLL_OUT)
         {
-            m_task << [](auto _this, auto context) -> coev::awaitable<void>
-            {
-                while (*context)
-                {
-                    co_await context->write_waiter();
-                    if (context)
-                    {
-                        _this->action(context->id(), CURL_CSELECT_OUT);
-                    }
-                }
-            }(this, context);
+            m_task << __write_waiter(fd);
         }
     }
+    coev::awaitable<void> CurlCli::__read_waiter(curl_socket_t fd)
+    {
+        auto &context = __get_or_create(fd);
+        while (context)
+        {
+            co_await context.__r_waiter().suspend();
+            if (context)
+            {
+                action(context.fd(), CURL_CSELECT_IN);
+            }
+        }
+    }
+    coev::awaitable<void> CurlCli::__write_waiter(curl_socket_t fd)
+    {
+        auto &context = __get_or_create(fd);
+        while (context)
+        {
+            co_await context.__w_waiter().suspend();
+            if (context)
+            {
+                action(context.fd(), CURL_CSELECT_OUT);
+            }
+        }
+    }
+    coev::awaitable<void> CurlCli::__time_waiter()
+    {
+        while (true)
+        {
+            co_await m_timer.suspend();
+            action(CURL_SOCKET_TIMEOUT, 0);
+        }
+    }
+    CurlCli::Context &CurlCli::__get_or_create(int fd)
+    {
+        auto it = m_clients.find(fd);
+        if (it == m_clients.end())
+        {
+            return m_clients.emplace(fd, fd).first->second;
+        }
+        return it->second;
+    };
+
     int CurlCli::cb_socket_event(CURL *curl, curl_socket_t fd, int action, void *data, void *socketp)
     {
         LOG_CORE("cb_socket %d action %d data:%p %p", fd, action, data, socketp)
@@ -236,7 +233,7 @@ namespace coev
         return 0;
     }
 
-    CurlCli::instance CurlCli::get()
+    CurlCli::Instance CurlCli::get()
     {
         auto curl = curl_easy_init();
         return {m_multi, curl};

@@ -80,20 +80,21 @@ namespace coev::kafka
         awaitable<Result> _init_producer_id(bool is_epoch_bump, std::shared_ptr<InitProducerIDRequest> request, int64_t &producer_id, int16_t &producer_epoch);
 
         template <class Func, class... Args>
-        awaitable<int> Retry(int attempts_remaining, const Func &func, Args &&...args)
+        awaitable<int> Retry(int attempts_remaining, Func func, Args &&...args)
         {
+            int err = 0;
             while (attempts_remaining >= 0)
             {
-                auto r = co_await (this->*func)(std::forward<Args>(args)...);
+                Result r = co_await std::invoke(func, this, std::forward<Args>(args)...);
                 if (!r.Retry)
                 {
                     co_return r.Error;
                 }
                 auto backoff = compute_backoff(attempts_remaining);
                 co_await sleep_for(backoff);
-                attempts_remaining--;
+                --attempts_remaining;
             }
-            co_return 0;
+            co_return err;
         }
 
         ProducerTxnStatusFlag m_status = ProducerTxnFlagUninitialized;

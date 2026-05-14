@@ -17,7 +17,7 @@ namespace coev
 	class co_event final : public queue
 	{
 		std::coroutine_handle<> m_caller = nullptr;
-		std::atomic_int m_status = {CORO_INIT};
+		std::atomic_int m_status = {details::CORO_INIT};
 		uint64_t m_tid;
 		uint64_t m_reserved;
 		void __resume();

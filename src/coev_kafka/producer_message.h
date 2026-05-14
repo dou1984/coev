@@ -11,8 +11,6 @@
 #include <vector>
 #include <chrono>
 #include <cstdint>
-#include <variant>
-
 #include "utils.h"
 #include "record.h"
 #include "errors.h"

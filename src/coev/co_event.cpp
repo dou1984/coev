@@ -43,12 +43,12 @@ namespace coev
 	void co_event::await_suspend(std::coroutine_handle<> _caller)
 	{
 		m_caller = _caller;
-		int e0 = CORO_INIT;
-		int e1 = CORO_RESUMED;
-		if (m_status.compare_exchange_strong(e0, CORO_SUSPEND, std::memory_order_acquire, std::memory_order_acquire))
+		int e0 = details::CORO_INIT;
+		int e1 = details::CORO_RESUMED;
+		if (m_status.compare_exchange_strong(e0, details::CORO_SUSPEND, std::memory_order_acquire, std::memory_order_acquire))
 		{
 		}
-		else if (m_status.compare_exchange_strong(e1, CORO_FINISHED, std::memory_order_acquire, std::memory_order_acquire))
+		else if (m_status.compare_exchange_strong(e1, details::CORO_FINISHED, std::memory_order_acquire, std::memory_order_acquire))
 		{
 			__resume();
 		}
@@ -59,13 +59,12 @@ namespace coev
 	}
 	void co_event::resume()
 	{
-		// LOG_CORE("co_event resume m_caller:%p", m_caller ? m_caller.address() : 0);
-		int e0 = CORO_INIT;
-		int e1 = CORO_SUSPEND;
-		if (m_status.compare_exchange_strong(e0, CORO_RESUMED, std::memory_order_acquire, std::memory_order_acquire))
+		int e0 = details::CORO_INIT;
+		int e1 = details::CORO_SUSPEND;
+		if (m_status.compare_exchange_strong(e0, details::CORO_RESUMED, std::memory_order_acquire, std::memory_order_acquire))
 		{
 		}
-		else if (m_status.compare_exchange_strong(e1, CORO_FINISHED, std::memory_order_acquire, std::memory_order_acquire))
+		else if (m_status.compare_exchange_strong(e1, details::CORO_FINISHED, std::memory_order_acquire, std::memory_order_acquire))
 		{
 			__resume();
 		}

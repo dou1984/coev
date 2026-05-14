@@ -48,7 +48,7 @@ namespace coev
 		}
 		bool done()
 		{
-			return m_callee && m_callee.address() && (m_callee.done() || m_callee.promise().m_status == CORO_FINISHED);
+			return m_callee && m_callee.address() && (m_callee.done() || m_callee.promise().m_status == details::CORO_FINISHED);
 		}
 		auto await_resume() // 返回协程的返回值
 		{
@@ -62,19 +62,21 @@ namespace coev
 			if (!done())
 			{
 				auto &_promise = m_callee.promise();
-				_promise.m_that = nullptr;
+				_promise.m_caller = nullptr;
+				_promise.m_type = details::CORO_NONE;
 				std::lock_guard<is_destroying> _(local<is_destroying>::instance());
 				m_callee.destroy();
 			}
 		}
-		void await_suspend(std::coroutine_handle<> caller) // co_await调用， 传入上层coroutine_handle
+		void await_suspend(std::coroutine_handle<> caller) // co_await 调用， 传入上层 coroutine_handle
 		{
-			m_callee.promise().m_that = caller;
-			if (m_callee.promise().m_status == CORO_SUSPEND)
+			m_callee.promise().m_caller = caller;
+			m_callee.promise().m_type = details::CORO_COROUTINE_HANDLE;
+			if (m_callee.promise().m_status == details::CORO_SUSPEND)
 			{
 				m_callee.resume();
 			}
-			else if (m_callee.promise().m_status == CORO_INIT)
+			else if (m_callee.promise().m_status == details::CORO_INIT)
 			{
 			}
 			else
