@@ -185,7 +185,7 @@ namespace coev
 			{
 				assert(_promise->m_tid == gtid());
 				std::lock_guard<std::mutex> _(m_waiter.lock());
-				_promise->m_g_task = this;
+				_promise->m_task = this;
 				_promise->m_type = details::CORO_GUARD_TASK;
 				auto id = ++m_id;
 				m_promises.emplace(_promise, id);

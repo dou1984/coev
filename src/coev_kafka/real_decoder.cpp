@@ -291,7 +291,7 @@ namespace coev::kafka
                 }
                 auto decoder = it->second;
                 __push_flexible();
-                defer(__pop_flexible());
+                finally(__pop_flexible());
                 err = decoder(*this);
                 if (err != 0)
                 {

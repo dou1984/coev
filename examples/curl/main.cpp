@@ -18,7 +18,7 @@ awaitable<void> co_download()
         LOG_ERR("error opening %s", filename);
         co_return;
     }
-    defer(fclose(file));
+    finally(fclose(file));
 
     CurlCli cli;
     auto curl = cli.get();
@@ -45,7 +45,7 @@ awaitable<void> co_upload()
         LOG_ERR("error opening %s for upload", filename);
         co_return;
     }
-    defer(fclose(file));
+    finally(fclose(file));
     if (fseek(file, 0, SEEK_END) != 0)
     {
         LOG_ERR("fseek failed");

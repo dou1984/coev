@@ -54,7 +54,7 @@ namespace coev::kafka
         if (is_flexible)
         {
             pe.__push_flexible();
-            defer(pe.__pop_flexible());
+            finally(pe.__pop_flexible());
 
             err = const_cast<protocol_body *>(m_body)->encode(pe);
             if (err != 0)

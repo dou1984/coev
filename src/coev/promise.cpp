@@ -13,7 +13,6 @@ namespace coev
 {
     promise::promise()
     {
-        // LOG_CORE("promise this:%p tid:%ld", this, m_tid);
     }
     promise::~promise()
     {
@@ -25,15 +24,14 @@ namespace coev
         }
         else if (m_type == details::CORO_TASK)
         {
-            auto _caller = std::exchange(m_task, nullptr);
-            auto _task = static_cast<co_task *>(_caller);
+            auto _task = static_cast<co_task *>(std::exchange(m_task, nullptr));
             assert(_task != nullptr);
             _task->unload(this);
         }
         else if (m_type == details::CORO_GUARD_TASK)
         {
-            auto _caller = std::exchange(m_g_task, nullptr);
-            auto _task = static_cast<guard::co_task *>(_caller);
+
+            auto _task = static_cast<guard::co_task *>(std::exchange(m_task, nullptr));
             assert(_task != nullptr);
             _task->unload(this);
         }

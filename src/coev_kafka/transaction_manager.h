@@ -14,6 +14,8 @@
 #include <mutex>
 #include <shared_mutex>
 #include <functional>
+#include <unordered_map>
+#include <variant>
 #include "broker.h"
 #include "version.h"
 #include "topic_partition.h"

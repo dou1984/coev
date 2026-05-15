@@ -34,7 +34,7 @@ awaitable<void> test_ssl_context()
         co_start << [](auto fd) -> awaitable<void>
         {
             context ctx(fd, g_srv_mgr.get());
-            defer(LOG_DBG("finished fd %d", fd));
+            finally(LOG_DBG("finished fd %d", fd));
             int err = co_await ctx.do_handshake();
             if (err == INVALID)
             {

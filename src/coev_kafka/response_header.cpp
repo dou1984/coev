@@ -40,7 +40,7 @@ namespace coev::kafka
             if (decoder != nullptr)
             {
                 decoder->__push_flexible();
-                defer(decoder->__pop_flexible());
+                finally(decoder->__pop_flexible());
                 return coev::kafka::decode(*decoder, m_length, m_correlation_id);
             }
             else

@@ -94,7 +94,7 @@ namespace coev::kafka
     {
         crc32_field field(CrcCastagnoli);
         pe.push(field);
-        defer(pe.pop());
+        finally(pe.pop());
 
         pe.putInt8(m_version);
 
@@ -152,7 +152,7 @@ namespace coev::kafka
         if (err != 0)
             return err;
 
-        defer(pd.pop());
+        finally(pd.pop());
         err = pd.getInt8(m_version);
         if (err != 0)
         {

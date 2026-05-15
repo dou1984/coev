@@ -65,7 +65,7 @@ awaitable<void> co_await_destroy()
 
 	auto id = co_start << []() -> awaitable<void>
 	{
-		defer(g.done());
+		finally(g.done());
 		co_await sleep_for(5);
 		std::runtime_error("error called !!!\n");
 	}();

@@ -112,7 +112,7 @@ namespace coev::nghttp2
         {
             return NGHTTP2_ERR_CALLBACK_FAILURE;
         }
-        
+
         int r = _this->__ssl_write((const char *)data, static_cast<int>(length));
         if (r == INVALID)
         {
@@ -595,7 +595,7 @@ namespace coev::nghttp2
     }
     awaitable<int> session::__wait_for_stream_end(int stream_id, response &res)
     {
-        defer(m_w_trigger.erase(stream_id););
+        finally(m_w_trigger.erase(stream_id));
         co_await m_w_trigger[stream_id].suspend();
         if (auto it = m_responses.find(stream_id); it != m_responses.end())
         {

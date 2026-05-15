@@ -865,7 +865,7 @@ namespace coev::kafka
     };
     awaitable<int> Client::TryRefreshMetadata(const std::vector<std::string> &topics, int attempts_remaining, std::chrono::steady_clock::time_point deadline)
     {
-        defer(LOG_CORE("metadata refesh finished"));
+        finally(LOG_CORE("metadata refesh finished"));
         int err = ErrNoError;
         std::vector<int> broker_errors;
         std::shared_ptr<Broker> broker;

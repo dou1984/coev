@@ -37,19 +37,13 @@ namespace coev
 
 		};
 	}
-	class co_task;
-	namespace guard
-	{
-		class co_task;
-	}
 	struct promise : queue
 	{
 		std::coroutine_handle<> m_this = nullptr;
 		union
 		{
 			std::coroutine_handle<> m_caller;
-			co_task *m_task;
-			guard::co_task *m_g_task;
+			void *m_task;
 		};
 		uint64_t m_tid = gtid();
 		int16_t m_status = details::CORO_INIT;

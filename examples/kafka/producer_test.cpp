@@ -40,7 +40,7 @@ void run_producer_test()
                     LOG_ERR("NewAsyncProducer error: %d", err);
                     co_return;
                 }
-                defer(producer->async_close());
+                finally(producer->async_close());
 
                 uint64_t index = 0;
                 uint64_t max_messages = 2000;

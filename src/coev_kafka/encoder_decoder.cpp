@@ -99,7 +99,7 @@ namespace coev::kafka
             if (f->is_flexible_version(version))
             {
                 pd.__push_flexible();
-                defer(pd.__pop_flexible());
+                finally(pd.__pop_flexible());
                 return req.decode(pd, version);
             }
         }
@@ -114,7 +114,7 @@ namespace coev::kafka
             if (f->is_flexible())
             {
                 pe.__push_flexible();
-                defer(pe.__pop_flexible());
+                finally(pe.__pop_flexible());
                 return req.encode(pe);
             }
         }

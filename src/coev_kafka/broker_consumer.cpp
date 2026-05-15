@@ -82,7 +82,7 @@ namespace coev::kafka
                     }
                 }
             }
-            defer(LOG_CORE("BrokerConsumer::SubscriptionConsumer exiting"));
+            finally(LOG_CORE("BrokerConsumer::SubscriptionConsumer exiting"));
             auto response = std::make_shared<FetchResponse>();
             int err = co_await FetchNewMessages(response);
             if (err != 0)

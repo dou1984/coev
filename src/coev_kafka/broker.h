@@ -264,7 +264,7 @@ namespace coev::kafka
             coev::kafka::encode(_request, buf);
 
             co_await WLock();
-            defer(WUnlock());
+            finally(WUnlock());
             auto request_time = std::chrono::system_clock::now();
             auto err = co_await Write(buf);
             if (err)
@@ -283,7 +283,7 @@ namespace coev::kafka
         awaitable<int> ResponseReceiver(std::shared_ptr<Req> request, ResponsePromise<Res> &promise)
         {
             co_await RLock();
-            defer(RUnlock());
+            finally(RUnlock());
             std::string header;
             auto header_bytes = GetHeaderLength(promise.m_response->header_version());
             auto err = co_await ReadFull(header, header_bytes);

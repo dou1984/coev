@@ -27,7 +27,7 @@ awaitable<void> dispatch(addrInfo addr, int fd)
 {
 	LOG_DBG("dispatch start %s %d", addr.ip, addr.port);
 	io_context io(fd);
-	defer(io.close(););
+	finally(io.close(););
 	while (io)
 	{
 		char buffer[0x1000];
@@ -65,7 +65,7 @@ awaitable<void> co_server()
 
 awaitable<int> co_dail()
 {
-	defer(wg.done());
+	finally(wg.done());
 
 	char sayhi[64] = "helloworld";
 	int count = 0;

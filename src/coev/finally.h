@@ -7,26 +7,20 @@
 #pragma once
 #include <functional>
 
-namespace coev
+class Finally final
 {
-    class Finally final
-    {
-    public:
-        Finally(std::function<void()> f) : m_finally(f) {}
-        ~Finally() { m_finally(); }
+public:
+    Finally(std::function<void()> f) : m_finally(f) {}
+    ~Finally() { m_finally(); }
+    Finally(const Finally &) = delete;
+    Finally &operator=(const Finally &) = delete;
+    Finally(Finally &&) = delete;
+    Finally &operator=(Finally &&) = delete;
 
-        // 禁止拷贝和移动
-        Finally(const Finally &) = delete;
-        Finally &operator=(const Finally &) = delete;
-        Finally(Finally &&) = delete;
-        Finally &operator=(Finally &&) = delete;
+private:
+    std::function<void()> m_finally;
+};
 
-    private:
-        std::function<void()> m_finally;
-    };
-
-}
-// 宏定义简化使用
 #define CONCAT_(a, b) a##b
 #define CONCAT(a, b) CONCAT_(a, b)
-#define defer(body) coev::Finally CONCAT(_defer_, __LINE__)([&]() { body; })
+#define finally(body) Finally CONCAT(_finally_, __LINE__)([&]() { body; })

@@ -170,7 +170,8 @@ namespace coev
             if ((m_connected + m_connecting) < m_config->max_connections)
             {
                 m_connecting++;
-                defer(m_connecting--);
+                finally(m_connecting--);
+
                 for (auto i = 0; i < m_config->retry_count; i++)
                 {
                     if (auto cq = co_await create_client())
@@ -236,8 +237,8 @@ namespace coev
         local<auto_release_task>::instance() << [](auto _qs) -> awaitable<void>
         {
             auto tid = gtid();
-            defer(_qs->clear());
-            defer();
+            finally(_qs->clear());
+            finally();
             co_await _qs->m_closed.suspend();
         }(this->shared_from_this());
     }

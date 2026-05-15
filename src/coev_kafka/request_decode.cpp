@@ -95,7 +95,7 @@ namespace coev::kafka
     awaitable<int> request_decode(std::shared_ptr<Broker> &broker, Request &req, int &size)
     {
         co_await broker->RLock();
-        defer(broker->RUnlock());
+        finally(broker->RUnlock());
         std::string header_bytes;
         auto read_bytes = 4;
         int err = co_await broker->ReadFull(header_bytes, read_bytes);

@@ -695,7 +695,7 @@ namespace coev::kafka
         }
 
         co_await RLock();
-        defer(RUnlock());
+        finally(RUnlock());
 
         m_correlation_id++;
         std::string header;
@@ -867,7 +867,7 @@ namespace coev::kafka
             auth_bytes[3] = len & 0xFF;
             {
                 co_await WLock();
-                defer(WUnlock());
+                finally(WUnlock());
                 err = co_await Write(auth_bytes);
                 if (err)
                 {
@@ -882,7 +882,7 @@ namespace coev::kafka
             }
 
             co_await RLock();
-            defer(RUnlock());
+            finally(RUnlock());
 
             m_correlation_id++;
             std::string header;

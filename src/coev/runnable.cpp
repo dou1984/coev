@@ -87,7 +87,7 @@ namespace coev
 					LOG_CORE("cosys stop tid:%ld", tid);
 				}();
 				++g_loop_count;
-				defer(--g_loop_count);
+				finally(--g_loop_count);
 				cosys::start();
 			});
 	}
