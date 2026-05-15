@@ -30,7 +30,6 @@ namespace coev
         }
         else if (m_type == details::CORO_GUARD_TASK)
         {
-
             auto _task = static_cast<guard::co_task *>(std::exchange(m_task, nullptr));
             assert(_task != nullptr);
             _task->unload(this);
