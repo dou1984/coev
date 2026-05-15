@@ -24,6 +24,7 @@ namespace coev
     class client_pool
     {
     public:
+        using is_deleting = is_destroying;
         struct Config
         {
             uint32_t max_connections = 10;
@@ -42,69 +43,13 @@ namespace coev
             using CLI::CLI;
             using CLI::operator bool;
         };
-        using is_deleting = is_destroying;
-        struct instance;
-        struct shared_queue : queue, std::enable_shared_from_this<shared_queue>
-        {
-            awaitable<int> get(instance &) noexcept;
-            awaitable<client *> create_client() noexcept;
-            void delete_client(client *) noexcept;
-            void release(queue *cq) noexcept;
-            ~shared_queue() noexcept { clear(); }
-            void clear() noexcept;
-            void init() noexcept;
-            auto get_client() noexcept { return static_cast<client *>(pop_front()); }
-
-            std::shared_ptr<Config> m_config;
-            uint32_t m_connected = 0;
-            uint32_t m_connecting = 0;
-            uint32_t m_used = 0;
-            co_async m_waiter;
-            co_async m_closed;
-        };
-        struct instance
-        {
-            instance() noexcept = default;
-            instance(std::shared_ptr<shared_queue> _pool, client *_client) noexcept : m_pool(_pool), m_client(_client) {}
-            instance(instance &&o) noexcept
-            {
-                m_pool = o.m_pool;
-                m_client = std::exchange(o.m_client, nullptr);
-            }
-            instance &operator=(instance &&o) noexcept
-            {
-                if (this != &o)
-                {
-                    m_pool = o.m_pool;
-                    m_client = std::exchange(o.m_client, nullptr);
-                }
-                return *this;
-            }
-            instance(const instance &) = delete;
-            instance &operator=(const instance &) = delete;
-            ~instance() noexcept
-            {
-                if (!local<is_deleting>::instance())
-                {
-                    if (m_pool && m_client)
-                    {
-                        auto _client = std::exchange(m_client, nullptr);
-                        m_pool->release(_client);
-                    }
-                }
-            }
-            operator bool() const noexcept { return m_client != nullptr && *m_client; }
-            client *operator->() noexcept { return m_client; }
-
-            client *m_client = nullptr;
-            std::shared_ptr<shared_queue> m_pool = nullptr;
-        };
-        using auto_release_task = guard::co_task;
+        struct Instance;
+        struct SQueue;
 
     public:
         client_pool() noexcept = default;
         ~client_pool() noexcept { stop(); }
-        awaitable<int> get(instance &ptr) noexcept { return __get_sq()->get(ptr); }
+        awaitable<int> get(Instance &ptr) noexcept { return __get_sq()->get_cli(ptr); }
         void set(std::shared_ptr<Config> _conf) noexcept
         {
             m_config = _conf;
@@ -133,14 +78,14 @@ namespace coev
         }
 
     protected:
-        std::shared_ptr<shared_queue> __get_sq() noexcept
+        std::shared_ptr<SQueue> __get_sq() noexcept
         {
             std::lock_guard<std::mutex> _(m_mutex);
             auto tid = gtid();
             auto it = m_pool.find(tid);
             if (it == m_pool.end())
             {
-                auto sq = std::make_shared<shared_queue>();
+                auto sq = std::make_shared<SQueue>();
                 sq->m_config = m_config;
                 sq->init();
                 it = m_pool.emplace(tid, sq).first;
@@ -148,12 +93,85 @@ namespace coev
             return it->second;
         }
         std::mutex m_mutex;
-        std::unordered_map<uint64_t, std::shared_ptr<shared_queue>> m_pool;
+        std::unordered_map<uint64_t, std::shared_ptr<SQueue>> m_pool;
         std::shared_ptr<Config> m_config;
+
+    public:
+        struct SQueue : queue, std::enable_shared_from_this<SQueue>
+        {
+            friend class client_pool;
+
+            awaitable<int> get_cli(Instance &) noexcept;
+            awaitable<client *> create() noexcept;
+            void del(client *) noexcept;
+            void release(queue *cq) noexcept;
+            ~SQueue() noexcept
+            {
+                while (m_waiter.resume())
+                {
+                }
+                while (m_closed.resume())
+                {
+                }
+                clear();
+            }
+            void clear() noexcept;
+            void init() noexcept;
+            auto get() noexcept
+            {
+                return static_cast<client *>(pop_front());
+            }
+
+        private:
+            std::shared_ptr<Config> m_config;
+            uint32_t m_connected = 0;
+            uint32_t m_connecting = 0;
+            uint32_t m_used = 0;
+            co_async m_waiter;
+            co_async m_closed;
+        };
+        struct Instance
+        {
+            Instance() noexcept = default;
+            Instance(std::shared_ptr<SQueue> _pool, client *_client) noexcept : m_pool(_pool), m_client(_client) {}
+            Instance(Instance &&o) noexcept
+            {
+                m_pool = o.m_pool;
+                m_client = std::exchange(o.m_client, nullptr);
+            }
+            Instance &operator=(Instance &&o) noexcept
+            {
+                if (this != &o)
+                {
+                    m_pool = o.m_pool;
+                    m_client = std::exchange(o.m_client, nullptr);
+                }
+                return *this;
+            }
+            Instance(const Instance &) = delete;
+            Instance &operator=(const Instance &) = delete;
+            ~Instance() noexcept
+            {
+                if (!local<is_deleting>::instance())
+                {
+                    if (m_pool && m_client)
+                    {
+                        auto _client = std::exchange(m_client, nullptr);
+                        auto pool = std::move(m_pool);
+                        pool->release(_client);
+                    }
+                }
+            }
+            operator bool() const noexcept { return m_client != nullptr && *m_client; }
+            client *operator->() noexcept { return m_client; }
+
+            client *m_client = nullptr;
+            std::shared_ptr<SQueue> m_pool = nullptr;
+        };
     };
 
     template <class CLI>
-    awaitable<int> client_pool<CLI>::shared_queue::get(client_pool<CLI>::instance &ptr) noexcept
+    awaitable<int> client_pool<CLI>::SQueue::get_cli(client_pool<CLI>::Instance &ptr) noexcept
     {
         assert(!ptr); // 需要传入空instance
         while (true)
@@ -174,7 +192,7 @@ namespace coev
 
                 for (auto i = 0; i < m_config->retry_count; i++)
                 {
-                    if (auto cq = co_await create_client())
+                    if (auto cq = co_await create())
                     {
                         if (*cq)
                         {
@@ -186,14 +204,14 @@ namespace coev
                         }
                         else
                         {
-                            delete_client(cq);
+                            del(cq);
                         }
                     }
                     co_await sleep_for(m_config->retry_time);
                 }
                 co_return INVALID;
             }
-            auto cq = get_client();
+            auto cq = get();
             if (cq == nullptr)
             {
                 continue;
@@ -207,13 +225,13 @@ namespace coev
             }
             else
             {
-                delete_client(cq);
+                del(cq);
                 co_await sleep_for(m_config->quick_retry_time);
             }
         }
     }
     template <class CLI>
-    void client_pool<CLI>::shared_queue::release(queue *cq) noexcept
+    void client_pool<CLI>::SQueue::release(queue *cq) noexcept
     {
         if (cq)
         {
@@ -224,26 +242,26 @@ namespace coev
         m_waiter.resume();
     }
     template <class CLI>
-    void client_pool<CLI>::shared_queue::clear() noexcept
+    void client_pool<CLI>::SQueue::clear() noexcept
     {
-        for (auto cq = get_client(); cq; cq = get_client())
+        for (auto cq = get(); cq; cq = get())
         {
-            delete_client(cq);
+            del(cq);
         }
     }
     template <class CLI>
-    void client_pool<CLI>::shared_queue::init() noexcept
+    void client_pool<CLI>::SQueue::init() noexcept
     {
-        local<auto_release_task>::instance() << [](auto _qs) -> awaitable<void>
+        co_start << [](auto _qs) -> awaitable<void>
         {
             auto tid = gtid();
             finally(_qs->clear());
-            finally();
+            // finally();
             co_await _qs->m_closed.suspend();
         }(this->shared_from_this());
     }
     template <class CLI>
-    void client_pool<CLI>::shared_queue::delete_client(client *cq) noexcept
+    void client_pool<CLI>::SQueue::del(client *cq) noexcept
     {
         try
         {
@@ -256,7 +274,7 @@ namespace coev
         }
     }
     template <class CLI>
-    awaitable<typename client_pool<CLI>::client *> client_pool<CLI>::shared_queue::create_client() noexcept
+    awaitable<typename client_pool<CLI>::client *> client_pool<CLI>::SQueue::create() noexcept
     {
         try
         {
@@ -264,7 +282,7 @@ namespace coev
             auto err = co_await cq->connect();
             if (err == INVALID)
             {
-                delete_client(cq);
+                del(cq);
                 co_return nullptr;
             }
             co_return cq;

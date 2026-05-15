@@ -153,6 +153,8 @@ namespace coev
 			std::lock_guard<is_destroying> _(local<is_destroying>::instance());
 			if (p)
 			{
+				p->m_task = nullptr;
+				p->m_type = details::CORO_NONE;
 				p->m_this.destroy();
 			}
 		}

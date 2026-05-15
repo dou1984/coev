@@ -20,7 +20,10 @@ namespace coev
         if (m_type == details::CORO_COROUTINE_HANDLE)
         {
             auto _caller = std::exchange(m_caller, nullptr);
-            _caller.resume();
+            if (_caller != nullptr)
+            {
+                _caller.resume();
+            }            
         }
         else if (m_type == details::CORO_TASK)
         {
@@ -36,7 +39,7 @@ namespace coev
         }
         else
         {
-            assert(false);
+            // 没有初始化，可能程序已经退出
         }
     }
     void promise::unhandled_exception()

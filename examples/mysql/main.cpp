@@ -39,7 +39,7 @@ awaitable<void> create()
     INDEX idx_mobile (f_mobile)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '用户测试表';)";
 
-	Mysql::instance c;
+	Mysql::Instance c;
 	auto err = co_await mysql.get(c);
 	if (err == INVALID)
 	{
@@ -53,7 +53,7 @@ awaitable<void> create()
 }
 awaitable<void> go()
 {
-	Mysql::instance c;
+	Mysql::Instance c;
 	auto err = co_await mysql.get(c);
 	if (err == INVALID)
 	{
@@ -121,7 +121,7 @@ awaitable<void> go()
 }
 awaitable<void> clear()
 {
-	Mysql::instance c;
+	Mysql::Instance c;
 	auto err = co_await mysql.get(c);
 	if (err == INVALID)
 	{

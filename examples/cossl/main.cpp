@@ -77,7 +77,7 @@ awaitable<void> test_ssl_client()
     {
         _task << [REQUESTS_PER_TASK](auto t) -> awaitable<void>
         {
-            coev::pool::ssl::client::instance c;
+            coev::pool::ssl::client::Instance c;
             auto err = co_await cli.get(c);
             if (err == INVALID)
             {

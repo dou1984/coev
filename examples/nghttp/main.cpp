@@ -65,7 +65,7 @@ awaitable<void> proc_client()
 
             for (auto i = 0; i < max_query; i++)
             {
-                coev::pool::nghttp2::Http2::instance c;
+                coev::pool::nghttp2::Http2::Instance c;
                 auto r = co_await http2.get(c);
                 if (r == INVALID)
                 {

@@ -101,20 +101,19 @@ namespace coev
 	}
 	int io_context::__finally() noexcept
 	{
-		LOG_ERR("__finally called, fd: %d, ev_is_active(m_read): %d, ev_is_active(m_write): %d", m_fd, ev_is_active(&m_read), ev_is_active(&m_write));
-		LOG_ERR("  m_read.fd: %d, m_write.fd: %d", m_read.fd, m_write.fd);
-		LOG_ERR("  m_read.data: %p, m_write.data: %p", m_read.data, m_write.data);
+		LOG_CORE("__finally called, fd: %d, ev_is_active(m_read): %d, ev_is_active(m_write): %d", m_fd, ev_is_active(&m_read), ev_is_active(&m_write));
+		LOG_CORE("m_read.fd: %d, m_write.fd: %d", m_read.fd, m_write.fd);
 		if (m_fd != INVALID)
 		{
-			LOG_ERR("fd %d, ev_is_active(m_read): %d, ev_is_active(m_write): %d", m_fd, ev_is_active(&m_read), ev_is_active(&m_write));
+			LOG_CORE("fd %d, ev_is_active(m_read): %d, ev_is_active(m_write): %d", m_fd, ev_is_active(&m_read), ev_is_active(&m_write));
 			if (ev_is_active(&m_read))
 			{
-				LOG_ERR("stopping m_read, fd: %d, m_read.fd: %d", m_fd, m_read.fd);
+				LOG_CORE("stopping m_read, fd: %d, m_read.fd: %d", m_fd, m_read.fd);
 				ev_io_stop(m_loop, &m_read);
 			}
 			if (ev_is_active(&m_write))
 			{
-				LOG_ERR("stopping m_write, fd: %d, m_write.fd: %d", m_fd, m_write.fd);
+				LOG_CORE("stopping m_write, fd: %d, m_write.fd: %d", m_fd, m_write.fd);
 				ev_io_stop(m_loop, &m_write);
 			}
 		}
