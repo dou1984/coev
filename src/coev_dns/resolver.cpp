@@ -78,11 +78,9 @@ namespace coev
     }
     void Resolver::__close(int fd)
     {
-
         auto it = m_clients.find(fd);
         if (it != m_clients.end())
         {
-
             it->second.close();
         }
     }
@@ -120,16 +118,11 @@ namespace coev
                     {
                         addr_in6 = (struct sockaddr_in6 *)node->ai_addr;
                         inet_ntop(AF_INET6, &addr_in6->sin6_addr, _this->m_ip.data(), INET6_ADDRSTRLEN);
-                    }
-                    LOG_CORE("inet_ntop %s family:%d", _this->m_ip.c_str(), node->ai_family);
+                    }                   
                     break;
                 }
                 node = node->ai_next;
             }
-        }
-        else
-        {
-            LOG_ERR("ares_getaddrinfo failed: status=%d, error=%s", status, ares_strerror(status));
         }
         _this->m_done.resume_next_loop();
     }
@@ -142,7 +135,6 @@ namespace coev
 
         ares_getaddrinfo(m_channel, hostname.c_str(), nullptr, &hints, callback, this);
         co_await m_done.suspend();
-        LOG_CORE("resolve return");
         co_return 0;
     }
     const std::string &Resolver::get_ip()
