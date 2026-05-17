@@ -50,10 +50,9 @@ namespace coev
             }
         }
         {
-            auto [it, ok] = m_clients.try_emplace(_fd, _fd, m_channel);
+            auto [it, ok] = m_clients.try_emplace(_fd, _fd, m_channel, this);
             if (!ok)
             {
-                LOG_ERR("try_emplace failed");
                 throw std::runtime_error("try_emplace failed");
             }
             return it->second;
@@ -70,7 +69,6 @@ namespace coev
         {
             _this->__close(_fd);
         }
-        LOG_CORE("handler %d %d:%d", _fd, readable, writable);
     }
     void Resolver::__init(int fd)
     {
@@ -80,34 +78,72 @@ namespace coev
     }
     void Resolver::__close(int fd)
     {
+
         auto it = m_clients.find(fd);
         if (it != m_clients.end())
         {
+
             it->second.close();
+        }
+    }
+
+    void Resolver::release(ares_socket_t fd)
+    {
+        auto it = m_clients.find(fd);
+        if (it != m_clients.end())
+        {
             m_clients.erase(it);
         }
     }
-    void Resolver::callback(void *arg, int status, int, struct hostent *host)
+
+    void Resolver::callback(void *arg, int status, int, struct ares_addrinfo *res)
     {
+        finally(ares_freeaddrinfo(res));
         auto _this = static_cast<Resolver *>(arg);
-        if (status == ARES_SUCCESS && host && host->h_addr_list[0])
+        if (status == ARES_SUCCESS && res)
         {
-            _this->m_ip.resize(INET6_ADDRSTRLEN);
-            inet_ntop(host->h_addrtype, host->h_addr_list[0], _this->m_ip.data(), INET6_ADDRSTRLEN);
-            LOG_CORE("inet_ntop %s", _this->m_ip.c_str());
-            _this->m_done.resume_next_loop();
+            auto node = res->nodes;
+            while (node)
+            {
+                if (node->ai_family == AF_INET || node->ai_family == AF_INET6)
+                {
+                    _this->m_ip.resize(INET6_ADDRSTRLEN);
+                    struct sockaddr_in *addr_in = nullptr;
+                    struct sockaddr_in6 *addr_in6 = nullptr;
+
+                    if (node->ai_family == AF_INET)
+                    {
+                        addr_in = (struct sockaddr_in *)node->ai_addr;
+                        inet_ntop(AF_INET, &addr_in->sin_addr, _this->m_ip.data(), INET6_ADDRSTRLEN);
+                    }
+                    else
+                    {
+                        addr_in6 = (struct sockaddr_in6 *)node->ai_addr;
+                        inet_ntop(AF_INET6, &addr_in6->sin6_addr, _this->m_ip.data(), INET6_ADDRSTRLEN);
+                    }
+                    LOG_CORE("inet_ntop %s family:%d", _this->m_ip.c_str(), node->ai_family);
+                    break;
+                }
+                node = node->ai_next;
+            }
         }
         else
         {
-            LOG_ERR("ares_query failed: status=%d, error=%s", status, ares_strerror(status));
+            LOG_ERR("ares_getaddrinfo failed: status=%d, error=%s", status, ares_strerror(status));
         }
+        _this->m_done.resume_next_loop();
     }
 
     coev::awaitable<int> Resolver::resolve(const std::string &hostname)
     {
-        ares_gethostbyname(m_channel, hostname.c_str(), AF_INET, callback, this);
-        auto r = co_await m_done.suspend();
-        co_return r;
+        struct ares_addrinfo_hints hints = {};
+        hints.ai_family = AF_UNSPEC;
+        hints.ai_socktype = SOCK_STREAM;
+
+        ares_getaddrinfo(m_channel, hostname.c_str(), nullptr, &hints, callback, this);
+        co_await m_done.suspend();
+        LOG_CORE("resolve return");
+        co_return 0;
     }
     const std::string &Resolver::get_ip()
     {

@@ -18,10 +18,14 @@ namespace coev
 {
 	void io_context::cb_read(struct ev_loop *loop, struct ev_io *w, int revents) noexcept
 	{
+		LOG_CORE("io_context::cb_read ENTER, w=%p, revents=%d", w, revents);
 		auto _this = (io_context *)w->data;
 		assert(_this != nullptr);
+		LOG_CORE("io_context::cb_read this=%p, fd=%d", _this, _this->m_fd);
 		_this->m_r_waiter.resume();
+		LOG_CORE("io_context::cb_read m_r_waiter resumed");
 		local_resume();
+		LOG_CORE("io_context::cb_read EXIT");
 	}
 	void io_context::cb_write(struct ev_loop *loop, struct ev_io *w, int revents) noexcept
 	{

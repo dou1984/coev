@@ -10,9 +10,11 @@
 
 using namespace coev;
 
+std::string g_url;
 awaitable<void> co_parse_dns()
 {
-    std::string url = "www.baidu.com";
+    // std::string url = "www.baidu.com";
+    std::string url = g_url;
     std::string addr = "";
     auto r = co_await parse_dns(url, addr);
     if (r != 0)
@@ -20,13 +22,21 @@ awaitable<void> co_parse_dns()
         LOG_ERR("parse_dns error ");
         co_return;
     }
-    LOG_INFO("baidu -> %s", addr.c_str());
+    LOG_INFO("%s -> %s", url.c_str(), addr.c_str());
 
     co_return;
 }
 
-int main()
+int main(int argc, char **argv)
 {
+    if (argc > 1)
+    {
+        g_url = argv[1];
+    }
+    else
+    {
+        g_url = "www.baidu.com";
+    }
 
     set_log_level(LOG_LEVEL_CORE);
 

@@ -23,7 +23,7 @@ namespace coev
 
         DNSCli &__find(ares_socket_t _fd);
         static void handler(void *data, ares_socket_t _fd, int readable, int writable);
-        static void callback(void *arg, int status, int, struct hostent *host);
+        static void callback(void *arg, int status, int timeouts, struct ares_addrinfo *res);
         void __init(int);
         void __close(int);
 
@@ -32,5 +32,6 @@ namespace coev
         virtual ~Resolver();
         coev::awaitable<int> resolve(const std::string &hostname);
         const std::string &get_ip();
+        void release(ares_socket_t fd);
     };
 }

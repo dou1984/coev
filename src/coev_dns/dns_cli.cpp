@@ -5,18 +5,22 @@
  *
  */
 #include "dns_cli.h"
+#include "resolver.h"
 
 namespace coev
 {
-    DNSCli::DNSCli(ares_socket_t _fd, ares_channel _channel) : io_context(_fd), m_channel(_channel)
+    DNSCli::DNSCli(ares_socket_t _fd, ares_channel _channel, Resolver *resolver)
+        : io_context(_fd), m_channel(_channel), m_resolver(resolver)
     {
         m_type = IO_CLI;
     }
     DNSCli::~DNSCli()
     {
         m_channel = nullptr;
-        // 是否要置为INVALID?
-        // m_fd = INVALID;
+        if (m_resolver)
+        {
+            m_resolver->release(m_fd);
+        }
     }
     int DNSCli::close()
     {
@@ -26,16 +30,25 @@ namespace coev
     {
         while (__valid())
         {
-            co_await m_r_waiter.suspend();
+            co_await m_w_waiter.suspend();
+            if (m_channel == nullptr)
+            {
+                co_return INVALID;
+            }
             ares_process_fd(m_channel, ARES_SOCKET_BAD, m_fd);
         }
         co_return INVALID;
     }
     awaitable<int> DNSCli::recv(char *buffer, int size) noexcept
     {
+
         while (__valid())
         {
             co_await m_r_waiter.suspend();
+            if (m_channel == nullptr)
+            {
+                co_return INVALID;
+            }
             ares_process_fd(m_channel, m_fd, ARES_SOCKET_BAD);
         }
         co_return INVALID;
