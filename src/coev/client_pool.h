@@ -107,10 +107,8 @@ namespace coev
             void release(queue *cq) noexcept;
             ~SQueue() noexcept
             {
+                m_config->max_connections = 0;
                 while (m_waiter.resume())
-                {
-                }
-                while (m_closed.resume())
                 {
                 }
                 clear();
@@ -237,8 +235,8 @@ namespace coev
         {
             push_back(cq);
         }
+        assert(m_used > 0);
         m_used--;
-        assert(m_used >= 0);
         m_waiter.resume();
     }
     template <class CLI>
@@ -256,7 +254,6 @@ namespace coev
         {
             auto tid = gtid();
             finally(_qs->clear());
-            // finally();
             co_await _qs->m_closed.suspend();
         }(this->shared_from_this());
     }
@@ -265,6 +262,7 @@ namespace coev
     {
         try
         {
+            assert(m_connected > 0);
             m_connected--;
             std::lock_guard<is_deleting> _(local<is_deleting>::instance());
             delete cq;

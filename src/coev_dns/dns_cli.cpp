@@ -14,6 +14,7 @@ namespace coev
     }
     DNSCli::~DNSCli()
     {
+        m_channel = nullptr;
         // 是否要置为INVALID?
         // m_fd = INVALID;
     }
