@@ -15,10 +15,9 @@ namespace coev
     class DNSCli final : io_context
     {
         ares_channel m_channel;
-        Resolver* m_resolver;  // back pointer to resolver for cleanup notification
 
     public:
-        DNSCli(ares_socket_t _fd, ares_channel _channel, Resolver* resolver);
+        DNSCli(ares_socket_t _fd, ares_channel _channel);
         ~DNSCli();
         DNSCli(const DNSCli &) = delete;
         DNSCli(DNSCli &&) = delete;

@@ -9,18 +9,13 @@
 
 namespace coev
 {
-    DNSCli::DNSCli(ares_socket_t _fd, ares_channel _channel, Resolver *resolver)
-        : io_context(_fd), m_channel(_channel), m_resolver(resolver)
+    DNSCli::DNSCli(ares_socket_t _fd, ares_channel _channel) : io_context(_fd), m_channel(_channel)
     {
         m_type = IO_CLI;
     }
     DNSCli::~DNSCli()
     {
         m_channel = nullptr;
-        if (m_resolver)
-        {
-            m_resolver->release(m_fd);
-        }
     }
     int DNSCli::close()
     {

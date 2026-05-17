@@ -50,7 +50,7 @@ namespace coev
             }
         }
         {
-            auto [it, ok] = m_clients.try_emplace(_fd, _fd, m_channel, this);
+            auto [it, ok] = m_clients.try_emplace(_fd, _fd, m_channel);
             if (!ok)
             {
                 throw std::runtime_error("try_emplace failed");
@@ -70,11 +70,21 @@ namespace coev
             _this->__close(_fd);
         }
     }
-    void Resolver::__init(int fd)
+    awaitable<void> Resolver::__send(int fd)
     {
         auto &cli = __find(fd);
-        m_task << cli.send(nullptr, 0);
-        m_task << cli.recv(nullptr, 0);
+        co_await cli.send(nullptr, 0);
+    }
+    awaitable<void> Resolver::__recv(int fd)
+    {
+        auto &cli = __find(fd);
+        co_await cli.recv(nullptr, 0);
+        m_clients.erase(fd);
+    }
+    void Resolver::__init(int _fd)
+    {
+        m_task << __send(_fd);
+        m_task << __recv(_fd);
     }
     void Resolver::__close(int fd)
     {
@@ -82,15 +92,7 @@ namespace coev
         if (it != m_clients.end())
         {
             it->second.close();
-        }
-    }
-
-    void Resolver::release(ares_socket_t fd)
-    {
-        auto it = m_clients.find(fd);
-        if (it != m_clients.end())
-        {
-            m_clients.erase(it);
+            // m_clients.erase(it);
         }
     }
 
@@ -118,7 +120,7 @@ namespace coev
                     {
                         addr_in6 = (struct sockaddr_in6 *)node->ai_addr;
                         inet_ntop(AF_INET6, &addr_in6->sin6_addr, _this->m_ip.data(), INET6_ADDRSTRLEN);
-                    }                   
+                    }
                     break;
                 }
                 node = node->ai_next;
