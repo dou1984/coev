@@ -21,10 +21,10 @@ namespace coev::kafka
         m_records_type = LegacyRecords;
         m_message_set = message_set;
     }
-    Records::Records(std::shared_ptr<RecordBatch> &batch)
+    Records::Records(std::shared_ptr<RecordBatch> &record_batch)
     {
         m_records_type = DefaultRecords;
-        m_record_batch = batch;
+        m_record_batch = record_batch;
     }
     Records::~Records()
     {
@@ -179,9 +179,9 @@ namespace coev::kafka
             return -1;
         }
 
-        auto record = m_record_batch->m_records[0];
-        real_decoder key(record->m_key);
-        real_decoder value(record->m_value);
+        const auto &record = m_record_batch->m_records[0];
+        real_decoder key(record.m_key);
+        real_decoder value(record.m_value);
 
         int err = out.decode(key, value);
         if (err != 0)

@@ -24,6 +24,8 @@ namespace coev
         using base = ssl::context;
         using base::base;
         using io_context::operator bool;
+        using ssl::context::send;
+        using ssl::context::recv;
 
         awaitable<int> connect(const char *host, int port) noexcept;
 

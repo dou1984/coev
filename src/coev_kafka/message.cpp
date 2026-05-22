@@ -222,20 +222,22 @@ namespace coev::kafka
     {
         if (m_value.empty())
         {
-            m_message_set.clear();
+            m_message_set.reset();
             return 0;
         }
 
+        m_message_set = std::make_shared<MessageSet>();
         real_decoder inner_decoder(m_value);
-        m_message_set.clear();
-        return m_message_set.decode(inner_decoder);
+        return m_message_set->decode(inner_decoder);
     }
 
     void Message::clear()
     {
         m_key.clear();
         m_value.clear();
-        m_message_set.m_messages.clear();
+        m_message_set->m_messages.clear();
+        m_compressed_cache.clear();
+        m_compressed_size = 0;
     }
 
 } // namespace coev::kafka

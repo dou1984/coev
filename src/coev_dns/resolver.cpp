@@ -92,7 +92,6 @@ namespace coev
         if (it != m_clients.end())
         {
             it->second.close();
-            // m_clients.erase(it);
         }
     }
 

@@ -44,7 +44,7 @@ namespace coev::kafka
         KafkaVersion required_version() const;
 
         void ensure_records(const std::string &topic, int32_t partition);
-        void add_message(const std::string &topic, int32_t partition, std::shared_ptr<Message> msg);
+        MessageBlock &emplace_message(const std::string &topic, int32_t partition);
         void add_set(const std::string &topic, int32_t partition, std::shared_ptr<MessageSet> set);
         void add_batch(const std::string &topic, int32_t partition, std::shared_ptr<RecordBatch> batch);
     };

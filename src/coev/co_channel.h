@@ -35,6 +35,15 @@ namespace coev
 			}
 			d = __pop_front();
 		}
+		// awaitable<TYPE> get()
+		// {
+		// 	if (m_data.empty())
+		// 	{
+		// 		co_await m_waiter.suspend();
+		// 	}
+		// 	auto d = __pop_front();
+		// 	co_return std::move(d);
+		// }
 		bool try_get(TYPE &d)
 		{
 			if (m_data.empty())
@@ -84,6 +93,16 @@ namespace coev
 					[this, &d]()
 					{ d = __pop_front(); });
 			}
+			// awaitable<TYPE> get()
+			// {
+			// 	TYPE d;
+			// 	co_await m_waiter.suspend(
+			// 		[this]()
+			// 		{ return __invalid(); },
+			// 		[this, &d]()
+			// 		{ d = __pop_front(); });
+			// 	co_return d;
+			// }
 			bool try_get(TYPE &d)
 			{
 				std::lock_guard<std::mutex> _(m_waiter.lock());

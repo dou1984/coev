@@ -25,9 +25,9 @@ namespace coev::kafka
         }
 
         real_decoder helper(buf);
-        for (auto &in : inputs)
+        for (auto &rec : inputs)
         {
-            if (in.decode(helper) != ErrNoError)
+            if (rec.decode(helper) != ErrNoError)
             {
                 return ErrDecodeError;
             }
@@ -110,10 +110,9 @@ namespace coev::kafka
         else
         {
             std::string raw;
-            for (auto record : m_records)
+            for (const auto &record : m_records)
             {
-                assert(record);
-                coev::kafka::encode(*record, raw);
+                coev::kafka::encode(record, raw);
             }
             std::string compressed;
             auto err = compress(m_codec, m_compression_level, raw, compressed);
@@ -203,7 +202,7 @@ namespace coev::kafka
             for (auto i = 0; i < num_record; ++i)
             {
                 coev::kafka::decode(decompressed, m_records);
-                offset += m_records[i]->m_length.m_length;
+                offset += m_records[i].m_length.m_length;
             }
         }
         catch (const std::runtime_error &e)
@@ -233,21 +232,18 @@ namespace coev::kafka
     {
 
         std::string raw;
-        for (auto record : m_records)
+        for (const auto &record : m_records)
         {
-            assert(record);
-            coev::kafka::encode(*record, raw);
+            coev::kafka::encode(record, raw);
         }
 
         m_records_len = raw.size();
         compress(m_codec, m_compression_level, raw, m_compressed_records);
     }
+
     int64_t RecordBatch::last_offset() const
     {
         return m_first_offset + static_cast<int64_t>(m_last_offset_delta);
     }
-    void RecordBatch::add_record(std::shared_ptr<Record> record)
-    {
-        m_records.push_back(record);
-    }
+
 }

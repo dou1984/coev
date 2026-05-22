@@ -15,12 +15,11 @@
 namespace coev::kafka
 {
 
-    MessageBlock::MessageBlock(std::shared_ptr<Message> msg, int64_t offset) : m_message(msg), m_offset(offset)
+    MessageBlock::MessageBlock(const Message &msg, int64_t offset)
+        : m_offset(offset), m_message(msg)
     {
     }
-    MessageBlock::MessageBlock(std::shared_ptr<Message> msg) : m_message(msg), m_offset(0)
-    {
-    }
+
     MessageSet::MessageSet(const MessageSet &o) : m_partial_trailing_message(o.m_partial_trailing_message), m_overflow_message(o.m_overflow_message)
     {
         m_messages = o.m_messages;
@@ -28,9 +27,9 @@ namespace coev::kafka
 
     std::vector<MessageBlock> MessageBlock::Messages()
     {
-        if (m_message)
+        if (m_message.m_message_set)
         {
-            return std::move(m_message->m_message_set.m_messages);
+            return std::move(m_message.m_message_set->m_messages);
         }
 
         std::vector<MessageBlock> single;
@@ -43,7 +42,7 @@ namespace coev::kafka
         pe.putInt64(m_offset);
         LengthField length_field;
         pe.push(length_field);
-        int err = m_message->encode(pe);
+        int err = m_message.encode(pe);
         if (err != 0)
         {
             pe.pop();
@@ -64,8 +63,8 @@ namespace coev::kafka
         {
             return err;
         }
-        m_message = std::make_shared<Message>();
-        err = m_message->decode(pd);
+        m_message.clear();
+        err = m_message.decode(pd);
         if (err != 0)
         {
             return err;
@@ -120,7 +119,7 @@ namespace coev::kafka
             err = msb.decode(pd);
             if (err == 0)
             {
-                m_messages.emplace_back(msb.m_message);
+                m_messages.emplace_back(msb.m_message, msb.m_offset);
             }
             else if (err == ErrInsufficientData)
             {
@@ -141,11 +140,6 @@ namespace coev::kafka
         }
 
         return 0;
-    }
-
-    void MessageSet::add_message(std::shared_ptr<Message> msg)
-    {
-        m_messages.emplace_back(msg);
     }
 
     void MessageSet::clear()

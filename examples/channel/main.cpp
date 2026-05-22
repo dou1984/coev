@@ -43,12 +43,46 @@ awaitable<void> task_02()
 	total += x;
 	LOG_DBG("total:%d", total.load());
 }
+
+struct Message
+{
+	int id;
+	std::string name;
+	std::string body;
+};
+
+co_channel<std::shared_ptr<Message>> sch;
+
+awaitable<void> task_producer()
+{
+	for (int i = 0; i < 1; i++)
+	{
+		auto msg = std::make_shared<Message>();
+		msg->id = i;
+		msg->name = "admin";
+		msg->body = "hello world";
+		sch.set(msg);
+
+		co_await sleep_for(1);
+	}
+}
+
+// awaitable<void> task_consumer()
+// {
+// 	for (int i = 0; i < 1; i++)
+// 	{
+// 		auto msg = co_await sch.get();
+// 		LOG_DBG("id:%d, name:%s, body:%s", msg->id, msg->name.c_str(), msg->body.c_str());
+// 	}
+// }
 int main()
 {
 	set_log_level(LOG_LEVEL_CORE);
 	runnable::instance()
 		.start(2, task_01)
 		.start(2, task_02)
+		// .start([]() -> awaitable<void>
+		// 	   { co_await wait_for_all(task_producer(), task_consumer()); })
 		.wait();
 	return 0;
 }

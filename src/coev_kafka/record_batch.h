@@ -32,7 +32,7 @@ namespace coev::kafka
         int64_t m_producer_id = -1;
         int16_t m_producer_epoch = -1;
         int32_t m_first_sequence = -1;
-        std::vector<std::shared_ptr<Record>> m_records;
+
         bool m_control = false;
         bool m_log_append_time = false;
         bool m_partial_trailing_record = false;
@@ -41,12 +41,18 @@ namespace coev::kafka
         std::string m_compressed_records;
         size_t m_records_len = 0;
 
+        std::vector<Record> m_records;
         RecordBatch() = default;
         RecordBatch(int8_t v);
         RecordBatch(int8_t v, bool, std::chrono::system_clock::time_point &first, std::chrono::system_clock::time_point &max);
 
         int64_t last_offset() const;
-        void add_record(std::shared_ptr<Record> record);
+
+        template <class... Args>
+        auto &emplace(Args &&...args)
+        {
+            return m_records.emplace_back(std::forward<Args>(args)...);
+        }
         int encode(packet_encoder &pe) const;
         int decode(packet_decoder &pd);
 

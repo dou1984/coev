@@ -16,7 +16,7 @@
 namespace coev::kafka
 {
     inline constexpr int magic_offset = 16;
-    int encode(IEncoder &e, std::string &out)
+    int encode(const IEncoder &e, std::string &out)
     {
         prep_encoder enc;
         if (prepare_flexible_encoder(enc, e) != ErrNoError)
@@ -106,9 +106,9 @@ namespace coev::kafka
         return req.decode(pd, version);
     }
 
-    int prepare_flexible_encoder(packet_encoder &pe, IEncoder &req)
+    int prepare_flexible_encoder(packet_encoder &pe, const IEncoder &req)
     {
-        auto f = dynamic_cast<flexible_version *>(&req);
+        auto f = dynamic_cast<const flexible_version *>(&req);
         if (f != nullptr)
         {
             if (f->is_flexible())
