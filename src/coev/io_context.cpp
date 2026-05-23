@@ -140,7 +140,6 @@ namespace coev
 		while (__valid())
 		{
 			int r = ::send(m_fd, buffer, size, 0);
-
 			if (r == INVALID && isInprocess())
 			{
 				ev_io_start(m_loop, &m_write);

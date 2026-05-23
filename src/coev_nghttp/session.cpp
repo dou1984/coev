@@ -113,7 +113,10 @@ namespace coev::nghttp2
             return NGHTTP2_ERR_CALLBACK_FAILURE;
         }
 
-        int r = _this->__ssl_write((const char *)data, static_cast<int>(length));
+        _this->m_ssl_write_buffer = (const char *)data;
+        _this->m_ssl_write_buffer_size = static_cast<int>(length);
+        _this->m_ssl_write_waiter.resume();
+        int r = _this->m_ssl_write_result;
         if (r == INVALID)
         {
             return NGHTTP2_ERR_CALLBACK_FAILURE;
@@ -264,9 +267,11 @@ namespace coev::nghttp2
     {
         // 判断是否是客户端
         assert(m_type | IO_CLI);
+        m_task << __processing_ssl_write();
     }
     session::session(int fd, SSL_CTX *ctx) : coev::ssl::context(fd, ctx)
     {
+        m_task << __processing_ssl_write();
         auto err = nghttp2_session_server_new(&m_session, m_callbacks, this);
         if (err != 0)
         {
@@ -277,7 +282,7 @@ namespace coev::nghttp2
     {
         __clearup();
         auto _session = std::exchange(m_session, nullptr);
-        while (m_waiting_write.resume())
+        while (m_write_waiter.resume())
         {
         }
         for (auto &[_, waiter] : m_w_trigger)
@@ -395,6 +400,7 @@ namespace coev::nghttp2
         }
         m_task << __processing_read();
         m_task << __processing_write();
+
         co_return m_fd;
     }
 
@@ -405,20 +411,7 @@ namespace coev::nghttp2
             if (nghttp2_session_want_write(m_session))
             {
                 auto r = __send();
-                if (r > 0)
-                {
-                }
-                else if (r == 0)
-                {
-                    if (m_want_read)
-                    {
-                    }
-                    else if (m_want_write)
-                    {
-                        co_await __w_waiter();
-                    }
-                }
-                else
+                if (r < 0)
                 {
                     __clearup();
                     break;
@@ -426,7 +419,7 @@ namespace coev::nghttp2
             }
             else
             {
-                co_await m_waiting_write.suspend();
+                co_await m_write_waiter.suspend();
             }
         }
     }
@@ -443,7 +436,7 @@ namespace coev::nghttp2
             }
 
             int r;
-            r = __ssl_read(recv_buffer.data() + recv_offset, recv_buffer.size() - recv_offset);
+            r = co_await recv(recv_buffer.data() + recv_offset, recv_buffer.size() - recv_offset);
             if (r > 0)
             {
                 recv_offset += r;
@@ -476,30 +469,23 @@ namespace coev::nghttp2
             }
             else if (r == 0)
             {
-                if (m_want_terminal)
-                {
-                    m_want_read = false;
-                    m_want_write = false;
-                    __clearup();
-                    break;
-                }
-                else if (m_want_read)
-                {
-                    co_await m_r_waiter.suspend();
-                    m_want_read = false;
-                }
-                else if (m_want_write)
-                {
-                    m_waiting_write.resume_next_loop();
-                }
-            }
-            else if (r == INVALID)
-            {
-                m_want_read = false;
-                m_want_write = false;
                 __clearup();
                 break;
             }
+            else if (r == INVALID)
+            {
+                __clearup();
+                break;
+            }
+        }
+    }
+    awaitable<void> session::__processing_ssl_write()
+    {
+        while (__is_processing())
+        {
+            co_await m_ssl_write_waiter.suspend();
+            auto r = co_await coev::ssl::context::send(m_ssl_write_buffer, m_ssl_write_buffer_size);
+            m_ssl_write_result = r;
         }
     }
     int session::__processing(int stream_id)
@@ -539,13 +525,9 @@ namespace coev::nghttp2
     int session::__resume_process()
     {
         assert(m_session);
-        if (m_want_write)
-        {
-            m_waiting_write.resume_next_loop();
-        }
         if (nghttp2_session_want_write(m_session))
         {
-            m_waiting_write.resume_next_loop();
+            m_write_waiter.resume_next_loop();
         }
         return 0;
     }

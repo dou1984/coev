@@ -28,19 +28,13 @@ namespace coev::ssl
         context() = default;
         void __async_finally();
         void __clearup();
-        int __ssl_write(const char *, int);
-        int __ssl_read(char *buffer, int size);
         bool __ssl_valid() const;
         awaitable<void> __w_waiter();
         awaitable<void> __r_waiter();
 
     protected:
         SSL *m_ssl = nullptr;
-        struct
-        {
-            bool m_want_read = false;
-            bool m_want_write = false;
-            bool m_want_terminal = false;
-        };
+
+        bool m_want_terminal = false;
     };
 }

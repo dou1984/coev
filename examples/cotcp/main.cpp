@@ -136,7 +136,8 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	set_log_level(LOG_LEVEL_ERROR);
+	// set_log_level(LOG_LEVEL_ERROR);
+	set_log_level(LOG_LEVEL_CORE);
 	if (method == "server")
 	{
 		_pool.start(host.c_str(), port);

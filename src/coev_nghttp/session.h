@@ -52,6 +52,7 @@ namespace coev::nghttp2
 
         awaitable<void> __processing_write();
         awaitable<void> __processing_read();
+        awaitable<void> __processing_ssl_write();
 
     protected:
         int __push_promise(int stream_id, nghttp2_nv *, int head_size);
@@ -63,16 +64,24 @@ namespace coev::nghttp2
         session() = default;
         nghttp2_session *m_session = nullptr;
         static nghttp2_session_callbacks *m_callbacks;
-        std::unordered_map<int32_t, request> m_requests;
-        std::unordered_map<int32_t, response> m_responses;
-        std::unordered_map<int32_t, co_async> m_w_trigger;
+        std::map<int32_t, request> m_requests;
+        std::map<int32_t, response> m_responses;
+        std::map<int32_t, co_async> m_w_trigger;
 
     protected:
         co_task m_task;
-        co_async m_waiting_write;
+        co_async m_write_waiter;
+
         int32_t m_current_stream_id = 0;
         routers m_routers;
 
+    protected:
+        co_async m_ssl_write_waiter;
+        const char *m_ssl_write_buffer = nullptr;
+        int m_ssl_write_buffer_size = 0;
+        int m_ssl_write_result = 0;
+
+    protected:
         int __send();
         int __processing(int stream_id);
         int __resume_process();
