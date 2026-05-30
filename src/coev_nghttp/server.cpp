@@ -29,6 +29,7 @@ namespace coev::nghttp2
     }
     awaitable<void> server::dispatch(SSL_CTX *_manager)
     {
+        finally(LOG_CORE("server dispatch"));
         while (valid())
         {
             addrInfo info;

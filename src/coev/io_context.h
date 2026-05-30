@@ -24,9 +24,9 @@ namespace coev
 		io_context(int fd) noexcept;
 		io_context(io_context &&) = delete;
 		io_context(const io_context &) = delete;
-		virtual ~io_context() noexcept;
-		virtual awaitable<int> send(const char *, int) noexcept;
-		virtual awaitable<int> recv(char *, int) noexcept;
+		~io_context() noexcept;
+		awaitable<int> send(const char *, int) noexcept;
+		awaitable<int> recv(char *, int) noexcept;
 		template <class T = std::string>
 		awaitable<int> send(const T &msg) noexcept
 		{
@@ -38,9 +38,9 @@ namespace coev
 			return recv(msg.data(), msg.size());
 		}
 
-		virtual awaitable<int> connect(const char *, int) noexcept;
-		virtual awaitable<int> recvfrom(char *, int, addrInfo &) noexcept;
-		virtual awaitable<int> sendto(const char *, int, addrInfo &) noexcept;
+		awaitable<int> connect(const char *, int) noexcept;
+		awaitable<int> recvfrom(char *, int, addrInfo &) noexcept;
+		awaitable<int> sendto(const char *, int, addrInfo &) noexcept;
 		int close() noexcept;
 		operator bool() const;
 		int fd() const { return m_fd; }

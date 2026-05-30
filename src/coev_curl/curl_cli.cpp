@@ -138,37 +138,49 @@ namespace coev
     void CurlCli::init_socket(curl_socket_t fd, int action)
     {
 
-        if (action == CURL_POLL_IN)
-        {
-            m_task << __read_waiter(fd);
-        }
         if (action == CURL_POLL_OUT)
         {
-            m_task << __write_waiter(fd);
+            auto context = __get_or_create(fd);
+            if (!context->m_r_task)
+            {
+                context->m_r_task = true;
+                m_task << __read_waiter(fd);
+            }
+        }
+        if (action == CURL_POLL_IN)
+        {
+            auto context = __get_or_create(fd);
+            if (!context->m_w_task)
+            {
+                context->m_w_task = true;
+                m_task << __write_waiter(fd);
+            }
         }
     }
     coev::awaitable<void> CurlCli::__read_waiter(curl_socket_t fd)
     {
-        auto &context = __get_or_create(fd);
-        while (context)
+        auto context = __get_or_create(fd);
+        while (*context)
         {
-            co_await context.__r_waiter().suspend();
-            if (context)
+            auto r = co_await context->__r_waiter().suspend();
+            if (r == INVALID)
             {
-                action(context.fd(), CURL_CSELECT_IN);
+                break;
             }
+            action(fd, CURL_CSELECT_IN);
         }
     }
     coev::awaitable<void> CurlCli::__write_waiter(curl_socket_t fd)
     {
-        auto &context = __get_or_create(fd);
-        while (context)
+        auto context = __get_or_create(fd);
+        while (*context)
         {
-            co_await context.__w_waiter().suspend();
-            if (context)
+            auto r = co_await context->__w_waiter().suspend();
+            if (r == INVALID)
             {
-                action(context.fd(), CURL_CSELECT_OUT);
+                break;
             }
+            action(fd, CURL_CSELECT_OUT);
         }
     }
     coev::awaitable<void> CurlCli::__time_waiter()
@@ -179,15 +191,29 @@ namespace coev
             action(CURL_SOCKET_TIMEOUT, 0);
         }
     }
-    CurlCli::Context &CurlCli::__get_or_create(int fd)
+    std::shared_ptr<CurlCli::Context> &CurlCli::__get_or_create(int fd)
     {
         auto it = m_clients.find(fd);
         if (it == m_clients.end())
         {
-            return m_clients.emplace(fd, fd).first->second;
+            auto result = m_clients.emplace(fd, std::make_shared<Context>(fd));
+            return result.first->second;
         }
         return it->second;
-    };
+    }
+    bool CurlCli::__exists(int fd) const
+    {
+        return m_clients.find(fd) != m_clients.end();
+    }
+    void CurlCli::__remove(int fd)
+    {
+        auto it = m_clients.find(fd);
+        if (it != m_clients.end())
+        {
+            it->second->close();
+            m_clients.erase(fd);
+        }
+    }
 
     int CurlCli::cb_socket_event(CURL *curl, curl_socket_t fd, int action, void *data, void *socketp)
     {
@@ -206,7 +232,7 @@ namespace coev
             _this->init_socket(fd, CURL_POLL_OUT);
             break;
         case CURL_POLL_REMOVE:
-            _this->m_clients.erase(fd);
+            _this->__remove(fd);
             break;
         default:
             LOG_ERR("cb_socket error %d", action);

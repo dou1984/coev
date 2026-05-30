@@ -262,8 +262,10 @@ namespace coev
     {
         try
         {
-            assert(m_connected > 0);
-            m_connected--;
+            if (m_connected > 0)
+            {
+                m_connected--;
+            }
             std::lock_guard<is_deleting> _(local<is_deleting>::instance());
             delete cq;
         }

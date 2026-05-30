@@ -136,7 +136,7 @@ namespace coev::kafka
 
     void ListPartitionReassignmentsRequest::add_block(const std::string &topic, const std::vector<int32_t> &partitionIDs)
     {
-        m_blocks[topic] = partitionIDs; // overwrite if exists, matching Go semantics
+        m_blocks[topic] = partitionIDs; 
     }
 
 } // namespace coev::kafka

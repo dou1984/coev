@@ -4,8 +4,9 @@
 
 namespace coev::pool::tcp
 {
-    struct _Connect : io_context
+    class _Connect : protected io_context
     {
+    public:
         template <class T>
         _Connect(T &conf)
         {
@@ -17,6 +18,10 @@ namespace coev::pool::tcp
             return io_context::connect(host.c_str(), port);
         }
         using io_context::operator bool;
+        using io_context::send;
+        using io_context::recv;
+        using io_context::close;
+        using io_context::fd;
 
     private:
         std::string host;

@@ -68,6 +68,7 @@ namespace coev
 
 		int __results();
 		void __clear();
+		int __del_write() noexcept;
 
 		static void cb_connect(struct ev_loop *loop, struct ev_io *w, int revents);
 		static void cb_write(struct ev_loop *loop, struct ev_io *w, int revents);

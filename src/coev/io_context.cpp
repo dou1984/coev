@@ -13,6 +13,7 @@
 #include "cosys.h"
 #include "io_context.h"
 #include "local_resume.h"
+#include "finally.h"
 
 namespace coev
 {
@@ -21,11 +22,8 @@ namespace coev
 		LOG_CORE("io_context::cb_read ENTER, w=%p, revents=%d", w, revents);
 		auto _this = (io_context *)w->data;
 		assert(_this != nullptr);
-		LOG_CORE("io_context::cb_read this=%p, fd=%d", _this, _this->m_fd);
 		_this->m_r_waiter.resume();
-		LOG_CORE("io_context::cb_read m_r_waiter resumed");
 		local_resume();
-		LOG_CORE("io_context::cb_read EXIT");
 	}
 	void io_context::cb_write(struct ev_loop *loop, struct ev_io *w, int revents) noexcept
 	{
@@ -33,7 +31,6 @@ namespace coev
 		assert(_this != NULL);
 		_this->m_w_waiter.resume();
 		local_resume();
-		_this->__del_write();
 	}
 	int io_context::__close() noexcept
 	{
@@ -105,19 +102,15 @@ namespace coev
 	}
 	int io_context::__finally() noexcept
 	{
-		LOG_CORE("__finally called, fd: %d, ev_is_active(m_read): %d, ev_is_active(m_write): %d", m_fd, ev_is_active(&m_read), ev_is_active(&m_write));
-		LOG_CORE("m_read.fd: %d, m_write.fd: %d", m_read.fd, m_write.fd);
 		if (m_fd != INVALID)
 		{
-			LOG_CORE("fd %d, ev_is_active(m_read): %d, ev_is_active(m_write): %d", m_fd, ev_is_active(&m_read), ev_is_active(&m_write));
+			LOG_CORE("__finally called, fd: %d, ev_is_active(m_read): %d, ev_is_active(m_write): %d", m_fd, ev_is_active(&m_read), ev_is_active(&m_write));
 			if (ev_is_active(&m_read))
 			{
-				LOG_CORE("stopping m_read, fd: %d, m_read.fd: %d", m_fd, m_read.fd);
 				ev_io_stop(m_loop, &m_read);
 			}
 			if (ev_is_active(&m_write))
 			{
-				LOG_CORE("stopping m_write, fd: %d, m_write.fd: %d", m_fd, m_write.fd);
 				ev_io_stop(m_loop, &m_write);
 			}
 		}
@@ -143,7 +136,12 @@ namespace coev
 			if (r == INVALID && isInprocess())
 			{
 				ev_io_start(m_loop, &m_write);
-				co_await m_w_waiter.suspend();
+				finally(__del_write());
+				r = co_await m_w_waiter.suspend();
+				if (r == INVALID)
+				{
+					co_return INVALID;
+				}
 			}
 			else if (r == 0)
 			{
@@ -211,7 +209,12 @@ namespace coev
 			if (r == INVALID && isInprocess())
 			{
 				ev_io_start(m_loop, &m_write);
-				co_await m_w_waiter.suspend();
+				finally(__del_write());
+				r = co_await m_w_waiter.suspend();
+				if (r == INVALID)
+				{
+					co_return INVALID;
+				}
 			}
 			else if (r == 0)
 			{

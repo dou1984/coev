@@ -122,9 +122,9 @@ awaitable<void> test_ssl_client()
 }
 int main(int argc, char **argv)
 {
-    // set_log_level(LOG_LEVEL_DEBUG);
+    set_log_level(LOG_LEVEL_DEBUG);
     // set_log_level(LOG_LEVEL_ERROR);
-    set_log_level(LOG_LEVEL_CORE);
+    // set_log_level(LOG_LEVEL_CORE);
     if (argc < 2)
     {
         LOG_ERR("usage: %s [server|client]", argv[0]);

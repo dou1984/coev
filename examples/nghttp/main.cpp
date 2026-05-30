@@ -15,10 +15,10 @@ ssl::manager g_srv_mgr(ssl::manager::TLS_SERVER);
 
 char hi[] = R"(helloworld)";
 
-int worker_num = 4;
-int coroutine_num = 4;
-int max_connection = 4;
-int max_query = 100000000;
+int worker_num = 2;
+int coroutine_num = 20;
+int max_connection = 10;
+int max_query = 10000;
 
 coev::pool::nghttp2::Http2 http2;
 coev::pool::server_pool<nghttp2::server> server;
@@ -120,8 +120,8 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    // set_log_level(LOG_LEVEL_CORE);
-    set_log_level(LOG_LEVEL_DEBUG);
+    set_log_level(LOG_LEVEL_CORE);
+    // set_log_level(LOG_LEVEL_DEBUG);
     // set_log_level(LOG_LEVEL_ERROR);
     // set_log_level(LOG_LEVEL_INFO);
 

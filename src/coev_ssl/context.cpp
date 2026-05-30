@@ -249,7 +249,13 @@ namespace coev::ssl
         }
         if (isInprocess())
         {
-            co_await m_w_waiter.suspend();
+            ev_io_start(m_loop, &m_write);
+            finally(ev_io_stop(m_loop, &m_write));
+            auto r = co_await m_w_waiter.suspend();
+            if (r == INVALID)
+            {
+                co_return;
+            }
         }
     }
     awaitable<void> context::__r_waiter()
