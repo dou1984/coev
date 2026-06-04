@@ -36,10 +36,10 @@ namespace coev
 		}
 		return false;
 	}
-	int co_async::resume_all() noexcept
+	int co_async::resume_all(uint64_t e) noexcept
 	{
 		int count = 0;
-		while (resume())
+		while (resume(e))
 		{
 			count += 1;
 		}

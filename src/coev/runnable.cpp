@@ -25,14 +25,6 @@ namespace coev
 	{
 		ignore_signal(SIGPIPE);
 	}
-
-	void runnable::wait() noexcept
-	{
-		for (auto &it : m_list)
-		{
-			it.join();
-		}
-	}
 	void runnable::end(const std::function<void()> &_cleanup) noexcept
 	{
 		for (auto &it : m_list)
@@ -81,14 +73,16 @@ namespace coev
 				co_start << []() -> awaitable<void>
 				{
 					auto tid = gtid();
-					co_await g_exception.suspend([]()
-												 { return true; }, []() {});
+					co_await g_exception.suspend(
+						[]()
+						{ return true; }, []() {});
 					cosys::stop();
 					LOG_CORE("cosys stop tid:%ld", tid);
 				}();
 				++g_loop_count;
-				finally(--g_loop_count);
-				cosys::start();
+				finally(--g_loop_count);	
+				finally(co_start.destroy());	
+				cosys::start();			
 			});
 	}
 }

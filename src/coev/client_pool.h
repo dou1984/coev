@@ -17,6 +17,7 @@
 #include "sleep_for.h"
 #include "co_deliver.h"
 #include "finally.h"
+#include "log.h"
 
 namespace coev
 {
@@ -49,7 +50,11 @@ namespace coev
     public:
         client_pool() noexcept = default;
         ~client_pool() noexcept { stop(); }
-        awaitable<int> get(Instance &ptr) noexcept { return __get_sq()->get_cli(ptr); }
+        awaitable<int> get(Instance &ptr) noexcept
+        {
+            auto sq = __get_sq();
+            co_return co_await sq->get_cli(ptr);
+        }
         void set(std::shared_ptr<Config> _conf) noexcept
         {
             m_config = _conf;
@@ -61,9 +66,8 @@ namespace coev
             for (auto [tid, qs] : m_pool)
             {
                 qs->m_config->max_connections = 0;
-                while (auto c = qs->m_closed.pop_front())
+                while (qs->m_closed.resume())
                 {
-                    co_deliver::resume(static_cast<co_event *>(c));
                 }
             }
             m_pool.clear();
@@ -134,14 +138,14 @@ namespace coev
             Instance(std::shared_ptr<SQueue> _pool, client *_client) noexcept : m_pool(_pool), m_client(_client) {}
             Instance(Instance &&o) noexcept
             {
-                m_pool = o.m_pool;
+                m_pool = std::move(o.m_pool);
                 m_client = std::exchange(o.m_client, nullptr);
             }
             Instance &operator=(Instance &&o) noexcept
             {
                 if (this != &o)
                 {
-                    m_pool = o.m_pool;
+                    m_pool = std::move(o.m_pool);
                     m_client = std::exchange(o.m_client, nullptr);
                 }
                 return *this;
@@ -152,11 +156,22 @@ namespace coev
             {
                 if (!local<is_deleting>::instance())
                 {
-                    if (m_pool && m_client)
+                    if (m_pool)
                     {
-                        auto _client = std::exchange(m_client, nullptr);
-                        auto pool = std::move(m_pool);
-                        pool->release(_client);
+                        if (m_pool->m_config->max_connections > 0)
+                        {
+                            auto _client = std::exchange(m_client, nullptr);
+                            auto pool = std::move(m_pool);
+                            if (_client)
+                            {
+                                pool->release(_client);
+                            }
+                        }
+                        else
+                        {
+                            auto _client = std::exchange(m_client, nullptr);
+                            delete _client;
+                        }
                     }
                 }
             }
@@ -187,7 +202,6 @@ namespace coev
             {
                 m_connecting++;
                 finally(m_connecting--);
-
                 for (auto i = 0; i < m_config->retry_count; i++)
                 {
                     if (auto cq = co_await create())

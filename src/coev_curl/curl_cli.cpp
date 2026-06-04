@@ -137,7 +137,6 @@ namespace coev
     }
     void CurlCli::init_socket(curl_socket_t fd, int action)
     {
-
         if (action == CURL_POLL_OUT)
         {
             auto context = __get_or_create(fd);

@@ -40,7 +40,9 @@ int main(int argc, char **argv)
 
     set_log_level(LOG_LEVEL_CORE);
 
-    runnable::instance().start(co_parse_dns).wait();
+    runnable::instance()
+        .start(co_parse_dns)
+        .end();
 
     return 0;
 }

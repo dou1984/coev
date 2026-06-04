@@ -87,7 +87,7 @@ namespace coev
 			std::lock_guard<std::mutex> _(m_lock);
 			m_waiter.move_to(&_waiter);
 		}
-		_waiter.resume_all();
+		_waiter.resume_all(0);
 		return 0;
 	}
 	bool co_deliver::resume(co_event *ev)

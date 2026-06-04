@@ -36,6 +36,6 @@ int main()
 {
     coev::runnable::instance()
         .start(co_nocopy)
-        .wait();
+        .end();
     return 0;
 }

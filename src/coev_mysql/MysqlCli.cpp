@@ -177,7 +177,7 @@ namespace coev
 			if (isInprocess())
 			{
 				ev_io_start(m_loop, &m_write);
-				finally(__del_write());
+				finally(__ev_stop_write());
 				co_await m_w_waiter.suspend();
 			}
 		}
@@ -233,7 +233,7 @@ namespace coev
 		m_row = nullptr;
 		m_results = nullptr;
 	}
-	int MysqlCli::__del_write() noexcept
+	int MysqlCli::__ev_stop_write() noexcept
 	{
 		if (m_w_waiter.empty() && ev_is_active(&m_write))
 		{

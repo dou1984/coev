@@ -90,20 +90,19 @@ awaitable<void> co_three_task4()
 
 auto g_unreachable = []() -> awaitable<int>
 {
-	co_await sleep_for(5);
+	co_await sleep_for(10);
 	LOG_DBG("arrived error 2");
 	throw std::runtime_error("test exception");
 	co_return 0;
 };
 auto g_reachable = []() -> awaitable<int>
 {
-	co_await sleep_for(1);
+	co_await sleep_for(5);
 	LOG_DBG("arrived co_task5_task3");
 	co_return 0;
 };
 awaitable<void> co_task5()
 {
-
 	auto f1 = g_unreachable();
 	auto f2 = g_unreachable();
 	auto f3 = g_reachable();
@@ -162,6 +161,6 @@ int main()
 		.start(co_task6)
 		.start(co_task7)
 		.start(co_task8)
-		.wait();
+		.end();
 	return 0;
 }

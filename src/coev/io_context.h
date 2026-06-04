@@ -7,6 +7,7 @@
 #pragma once
 #include <ev.h>
 #include <memory>
+#include <atomic>
 #include "co_async.h"
 #include "socket.h"
 
@@ -50,17 +51,18 @@ namespace coev
 		struct ev_loop *m_loop = nullptr;
 		int m_fd = INVALID;
 		int m_type = 0;
-		ev_io m_read;
-		ev_io m_write;
+		ev_io m_read = {};
+		ev_io m_write = {};
 
 		co_async m_r_waiter;
 		co_async m_w_waiter;
+
 		int __finally() noexcept;
 		int __initial() noexcept;
 		int __close() noexcept;
 		bool __valid() const noexcept;
 		bool __invalid() const noexcept;
-		int __del_write() noexcept;
+		int __ev_stop_write() noexcept;
 		bool __is_client() const { return m_type & IO_CLI; }
 		bool __is_ssl() const { return m_type & IO_SSL; }
 		static void cb_write(struct ev_loop *loop, struct ev_io *w, int revents) noexcept;

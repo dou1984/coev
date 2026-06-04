@@ -36,12 +36,10 @@ namespace coev::ssl
         void __async_finally();
         void __clearup();
         bool __ssl_valid() const;
-        awaitable<void> __w_waiter();
-        awaitable<void> __r_waiter();
+        awaitable<int> __w_waiter();
+        awaitable<int> __r_waiter();
 
     protected:
         SSL *m_ssl = nullptr;
-
-        bool m_want_terminal = false;
     };
 }

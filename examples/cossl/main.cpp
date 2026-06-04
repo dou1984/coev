@@ -15,7 +15,8 @@ static manager g_cli_mgr(manager::TLS_CLIENT);
 
 coev::pool::ssl::client cli;
 coev::pool::server_pool<tcp::server> _pool;
-auto send_times = 1000000000;
+const int TASK_COUNT = 100;
+auto send_times = 10000000;
 awaitable<void> test_ssl_context()
 {
 
@@ -50,7 +51,7 @@ awaitable<void> test_ssl_context()
                     LOG_DBG("recv failed fd %d", fd);
                     co_return;
                 }
-                LOG_DBG("recv from fd %d %.*s", fd, r, buffer);
+                // LOG_DBG("recv from fd %d %.*s", fd, r, buffer);
                 r = co_await ctx.send("hello world", strlen("hello world") + 1);
                 if (r == INVALID)
                 {
@@ -66,8 +67,7 @@ awaitable<void> test_ssl_client()
     // 性能统计
     auto start = std::chrono::steady_clock::now();
 
-    const int TASK_COUNT = 20;
-    const int REQUESTS_PER_TASK = send_times / TASK_COUNT;
+    const int REQUESTS_PER_TASK = send_times ;
 
     LOG_INFO("Starting %d concurrent tasks, %d requests each...", TASK_COUNT, REQUESTS_PER_TASK);
 
@@ -112,7 +112,7 @@ awaitable<void> test_ssl_client()
     auto end = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     double seconds = duration.count() / 1000.0;
-    double qps = send_times / seconds;
+    double qps = send_times  * TASK_COUNT / seconds;
 
     LOG_INFO("=== Performance Report ===");
     LOG_INFO("Total requests: %d", send_times);

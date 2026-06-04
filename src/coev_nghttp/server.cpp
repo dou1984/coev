@@ -24,7 +24,7 @@ namespace coev::nghttp2
     }
     int server::set_router(const std::string &path, const session::router &_route)
     {
-        m_routers.emplace(path, _route);
+        m_routers->emplace(path, _route);
         return 0;
     }
     awaitable<void> server::dispatch(SSL_CTX *_manager)
@@ -43,7 +43,7 @@ namespace coev::nghttp2
     }
     awaitable<int> server::__dispatch(int fd, SSL_CTX *_manager)
     {
-        LOG_DBG("[SERVER] client connected fd:%d", fd);
+        LOG_CORE("[SERVER] client connected fd:%d", fd);
         session ctx(fd, _manager);
         bool is_ssl = _manager != nullptr;
         if (is_ssl)
@@ -54,13 +54,12 @@ namespace coev::nghttp2
                 co_return INVALID;
             }
         }
-
-        auto err = ctx.send_server_settings();
         ctx.set_routers(m_routers);
+        auto err = co_await ctx.send_server_settings();
 
         co_task _task;
-        _task << ctx.__processing_write();
         _task << ctx.__processing_read();
+        _task << ctx.__processing_write();
         co_await _task.wait_all();
         co_return 0;
     }

@@ -21,16 +21,27 @@ namespace coev
 	{
 		LOG_CORE("io_context::cb_read ENTER, w=%p, revents=%d", w, revents);
 		auto _this = (io_context *)w->data;
-		assert(_this != nullptr);
-		_this->m_r_waiter.resume();
-		local_resume();
+		if (_this)
+		{
+			LOG_CORE("fd %d cb_read about to resume waiter", _this->m_fd);
+			if (!_this->m_r_waiter.resume())
+			{
+				LOG_ERR("io_context::cb_read resume failed, fd=%d, w=%p, revents=%d", _this->m_fd, w, revents);
+			}
+			local_resume();
+		}
 	}
 	void io_context::cb_write(struct ev_loop *loop, struct ev_io *w, int revents) noexcept
 	{
 		auto _this = (io_context *)w->data;
-		assert(_this != NULL);
-		_this->m_w_waiter.resume();
-		local_resume();
+		if (_this)
+		{
+			if (!_this->m_w_waiter.resume())
+			{
+				LOG_CORE("io_context::cb_write resume failed, w=%p, revents=%d", w, revents);
+			}
+			local_resume();
+		}
 	}
 	int io_context::__close() noexcept
 	{
@@ -39,10 +50,10 @@ namespace coev
 			__finally();
 			auto _fd = std::exchange(m_fd, INVALID);
 			::close(_fd);
-			while (m_r_waiter.resume())
+			while (m_r_waiter.resume(INVALID))
 			{
 			}
-			while (m_w_waiter.resume())
+			while (m_w_waiter.resume(INVALID))
 			{
 			}
 		}
@@ -76,13 +87,8 @@ namespace coev
 
 	int io_context::__initial() noexcept
 	{
-		if (m_fd != INVALID)
+		if (m_fd != INVALID && m_loop)
 		{
-			// 清零 watcher 结构体，避免未初始化内存导致的问题
-			memset(&m_read, 0, sizeof(m_read));
-			memset(&m_write, 0, sizeof(m_write));
-
-			// 检查 watcher 是否已经初始化
 			if (ev_is_active(&m_read) || ev_is_active(&m_write))
 			{
 				return 0;
@@ -96,27 +102,24 @@ namespace coev
 
 			m_write.data = this;
 			ev_io_init(&m_write, io_context::cb_write, m_fd, EV_WRITE);
-			ev_io_start(m_loop, &m_write);
+			// ev_io_start(m_loop, &m_write);
 		}
 		return 0;
 	}
 	int io_context::__finally() noexcept
 	{
-		if (m_fd != INVALID)
+		if (m_fd != INVALID && m_loop)
 		{
 			LOG_CORE("__finally called, fd: %d, ev_is_active(m_read): %d, ev_is_active(m_write): %d", m_fd, ev_is_active(&m_read), ev_is_active(&m_write));
-			if (ev_is_active(&m_read))
-			{
-				ev_io_stop(m_loop, &m_read);
-			}
-			if (ev_is_active(&m_write))
-			{
-				ev_io_stop(m_loop, &m_write);
-			}
+
+			ev_io_stop(m_loop, &m_read);
+			m_read.data = nullptr;
+			ev_io_stop(m_loop, &m_write);
+			m_write.data = nullptr;
 		}
 		return 0;
 	}
-	int io_context::__del_write() noexcept
+	int io_context::__ev_stop_write() noexcept
 	{
 		if (m_w_waiter.empty() && ev_is_active(&m_write))
 		{
@@ -136,7 +139,7 @@ namespace coev
 			if (r == INVALID && isInprocess())
 			{
 				ev_io_start(m_loop, &m_write);
-				finally(__del_write());
+				finally(__ev_stop_write());
 				r = co_await m_w_waiter.suspend();
 				if (r == INVALID)
 				{
@@ -158,8 +161,12 @@ namespace coev
 	{
 		while (__valid())
 		{
-			co_await m_r_waiter.suspend();
-			int r = ::recv(m_fd, buffer, size, 0);
+			auto r = co_await m_r_waiter.suspend();
+			if (r == INVALID)
+			{
+				co_return 0;
+			}
+			r = ::recv(m_fd, buffer, size, 0);
 			if (r == INVALID && isInprocess())
 			{
 				continue;
@@ -170,7 +177,7 @@ namespace coev
 			}
 			else
 			{
-				LOG_CORE("fd %d recv %d bytes", m_fd, r);
+				LOG_CORE("fd %d recv %ld bytes", m_fd, r);
 				co_return r;
 			}
 		}
@@ -181,10 +188,14 @@ namespace coev
 	{
 		while (__valid())
 		{
-			co_await m_r_waiter.suspend();
+			auto r = co_await m_r_waiter.suspend();
+			if (r == INVALID)
+			{
+				co_return r;
+			}
 			sockaddr_in addr;
 			socklen_t addrsize = sizeof(addr);
-			int r = ::recvfrom(m_fd, buffer, size, 0, (struct sockaddr *)&addr, &addrsize);
+			r = ::recvfrom(m_fd, buffer, size, 0, (struct sockaddr *)&addr, &addrsize);
 			if (r == INVALID && isInprocess())
 			{
 				continue;
@@ -209,7 +220,7 @@ namespace coev
 			if (r == INVALID && isInprocess())
 			{
 				ev_io_start(m_loop, &m_write);
-				finally(__del_write());
+				finally(__ev_stop_write());
 				r = co_await m_w_waiter.suspend();
 				if (r == INVALID)
 				{
@@ -306,11 +317,17 @@ namespace coev
 		{
 			co_return m_fd;
 		}
-		co_await m_r_waiter.suspend();
-		auto err = getSocketError(m_fd);
-		if (err != 0)
+		auto r = co_await m_r_waiter.suspend();
+		if (r == INVALID)
 		{
-			LOG_ERR("[CONNECT] connection error %d %s", err, strerror(err));
+			LOG_ERR("connection error %ld %s", r, strerror(r));
+			__close();
+			co_return m_fd;
+		}
+		r = getSocketError(m_fd);
+		if (r != 0)
+		{
+			LOG_ERR("connection error %ld %s", r, strerror(r));
 			__close();
 			co_return INVALID;
 		}

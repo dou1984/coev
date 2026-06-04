@@ -83,6 +83,6 @@ int main()
 		.start(2, task_02)
 		// .start([]() -> awaitable<void>
 		// 	   { co_await wait_for_all(task_producer(), task_consumer()); })
-		.wait();
+		.end();
 	return 0;
 }
