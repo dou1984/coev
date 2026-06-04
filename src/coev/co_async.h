@@ -18,9 +18,9 @@ namespace coev
     {
         co_event suspend() noexcept;
         co_event suspend_util_next_loop() noexcept;
-        bool resume(uint64_t value = 0) noexcept;
+        bool resume(int64_t value = 0) noexcept;
         bool resume_next_loop() noexcept;
-        int resume_all(uint64_t) noexcept;
+        int resume_all(int64_t) noexcept;
     };
 
     namespace guard

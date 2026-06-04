@@ -17,7 +17,7 @@ namespace coev
 	{
 		return co_event(&local_async::instance());
 	}
-	bool co_async::resume(uint64_t value) noexcept
+	bool co_async::resume(int64_t value) noexcept
 	{
 		if (auto c = static_cast<co_event *>(pop_front()); c != nullptr)
 		{
@@ -36,7 +36,7 @@ namespace coev
 		}
 		return false;
 	}
-	int co_async::resume_all(uint64_t e) noexcept
+	int co_async::resume_all(int64_t e) noexcept
 	{
 		int count = 0;
 		while (resume(e))
