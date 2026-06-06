@@ -272,7 +272,7 @@ namespace coev::nghttp2
     session::~session()
     {
         auto _session = std::exchange(m_session, nullptr);
-        while (m_write_waiter.resume())
+        while (m_write_waiter.resume(INVALID))
         {
         }
         for (auto &[_, waiter] : m_end_trigger)

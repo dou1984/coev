@@ -9,6 +9,10 @@
 
 namespace coev::ssl
 {
+    static void openssl_cleanup()
+    {
+        OPENSSL_cleanup();
+    }
     struct __init_ssl
     {
         __init_ssl()
@@ -25,6 +29,7 @@ namespace coev::ssl
                 throw std::runtime_error("SSL_library_init failed");
             }
             LOG_CORE("SSL_library_init");
+            atexit(openssl_cleanup);
         }
         ~__init_ssl()
         {

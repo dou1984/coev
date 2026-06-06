@@ -237,7 +237,11 @@ namespace coev::ssl
                 {
                     LOG_CORE("fd %d read waiter", m_fd);
                     finally(LOG_CORE("fd %d read waiter end", m_fd));
-                    co_await __r_waiter();
+                    r = co_await __r_waiter();
+                    if (r == INVALID)
+                    {
+                        co_return r;
+                    }
                 }
                 else if (r == SSL_ERROR_WANT_WRITE)
                 {

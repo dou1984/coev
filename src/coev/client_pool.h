@@ -55,6 +55,7 @@ namespace coev
             auto sq = __get_sq();
             co_return co_await sq->get_cli(ptr);
         }
+        Instance instance() { return {}; }
         void set(std::shared_ptr<Config> _conf) noexcept
         {
             m_config = _conf;
@@ -112,7 +113,7 @@ namespace coev
             ~SQueue() noexcept
             {
                 m_config->max_connections = 0;
-                while (m_waiter.resume())
+                while (m_waiter.resume(INVALID))
                 {
                 }
                 clear();
@@ -154,25 +155,21 @@ namespace coev
             Instance &operator=(const Instance &) = delete;
             ~Instance() noexcept
             {
-                if (!local<is_deleting>::instance())
+                auto _client = std::exchange(m_client, nullptr);
+                if (_client)
                 {
-                    if (m_pool)
+                    if (!local<is_deleting>::instance())
                     {
-                        if (m_pool->m_config->max_connections > 0)
+                        if (m_pool)
                         {
-                            auto _client = std::exchange(m_client, nullptr);
-                            auto pool = std::move(m_pool);
-                            if (_client)
+                            if (m_pool->m_config->max_connections > 0)
                             {
-                                pool->release(_client);
+                                m_pool->release(_client);
+                                return;
                             }
                         }
-                        else
-                        {
-                            auto _client = std::exchange(m_client, nullptr);
-                            delete _client;
-                        }
                     }
+                    delete _client;
                 }
             }
             operator bool() const noexcept { return m_client != nullptr && *m_client; }
@@ -195,7 +192,11 @@ namespace coev
             }
             if (m_used == m_connected && (m_config->max_connections == (m_connected + m_connecting)))
             {
-                co_await m_waiter.suspend();
+                auto r = co_await m_waiter.suspend();
+                if (r == INVALID)
+                {
+                    co_return r;
+                }
                 continue;
             }
             if ((m_connected + m_connecting) < m_config->max_connections)
@@ -290,13 +291,21 @@ namespace coev
     template <class CLI>
     awaitable<typename client_pool<CLI>::client *> client_pool<CLI>::SQueue::create() noexcept
     {
+        client_pool<CLI>::client *cq = nullptr;
+        int r = INVALID;
         try
         {
-            auto cq = new client_pool<CLI>::client(m_config);
-            auto err = co_await cq->connect();
-            if (err == INVALID)
+            cq = new client_pool<CLI>::client(m_config);
+            finally(
+                {
+                    if (cq && r == INVALID)
+                    {
+                        delete cq;
+                    }
+                });
+            r = co_await cq->connect();
+            if (r == INVALID)
             {
-                del(cq);
                 co_return nullptr;
             }
             co_return cq;
