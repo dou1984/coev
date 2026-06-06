@@ -564,11 +564,12 @@ namespace coev::nghttp2
         {
             return it->second(*this, _request);
         }
-        auto dummy = [](auto &, auto &) -> awaitable<void>
+        auto _ = [&](auto &, auto &) -> awaitable<void>
         {
+            LOG_CORE("session::__router: no router for %s", _request.path().c_str());
             co_return;
         };
-        return dummy(*this, _request);
+        return _(*this, _request);
     }
 
     int session::__resume_process()
