@@ -28,7 +28,7 @@ namespace coev
         static int cb_timer(CURLM *multi, long timeout_ms, void *userp);
         void action(curl_socket_t fd, int flags);
         void check_multi_finished();
-        void init_socket(curl_socket_t, int);
+        void init_socket(curl_socket_t);
 
     private:
         std::shared_ptr<Context> &__get_or_create(int fd);

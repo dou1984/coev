@@ -122,8 +122,11 @@ namespace coev
 
                 CurlCli::Instance *o = nullptr;
                 curl_easy_getinfo(curl, CURLINFO_PRIVATE, &o);
-                o->clear();
-                o->done();
+                if (o)
+                {
+                    o->clear();
+                    o->done();
+                }
                 curl_multi_remove_handle(m_multi, curl);
                 curl_easy_cleanup(curl);
             }
@@ -135,25 +138,18 @@ namespace coev
         curl_multi_socket_action(m_multi, fd, flags, &running_handles);
         check_multi_finished();
     }
-    void CurlCli::init_socket(curl_socket_t fd, int action)
+    void CurlCli::init_socket(curl_socket_t fd)
     {
-        if (action == CURL_POLL_OUT)
+        auto context = __get_or_create(fd);
+        if (!context->m_r_task)
         {
-            auto context = __get_or_create(fd);
-            if (!context->m_r_task)
-            {
-                context->m_r_task = true;
-                m_task << __read_waiter(fd);
-            }
+            context->m_r_task = true;
+            m_task << __read_waiter(fd);
         }
-        if (action == CURL_POLL_IN)
+        if (!context->m_w_task)
         {
-            auto context = __get_or_create(fd);
-            if (!context->m_w_task)
-            {
-                context->m_w_task = true;
-                m_task << __write_waiter(fd);
-            }
+            context->m_w_task = true;
+            m_task << __write_waiter(fd);
         }
     }
     coev::awaitable<void> CurlCli::__read_waiter(curl_socket_t fd)
@@ -186,7 +182,11 @@ namespace coev
     {
         while (true)
         {
-            co_await m_timer.suspend();
+            auto r = co_await m_timer.suspend();
+            if (r == INVALID)
+            {
+                break;
+            }
             action(CURL_SOCKET_TIMEOUT, 0);
         }
     }
@@ -221,14 +221,13 @@ namespace coev
         switch (action)
         {
         case CURL_POLL_IN:
-            _this->init_socket(fd, CURL_POLL_IN);
+            _this->init_socket(fd);
             break;
         case CURL_POLL_OUT:
-            _this->init_socket(fd, CURL_POLL_OUT);
+            _this->init_socket(fd);
             break;
         case CURL_POLL_INOUT:
-            _this->init_socket(fd, CURL_POLL_IN);
-            _this->init_socket(fd, CURL_POLL_OUT);
+            _this->init_socket(fd);
             break;
         case CURL_POLL_REMOVE:
             _this->__remove(fd);
