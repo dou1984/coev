@@ -186,7 +186,7 @@ namespace coev::kafka
         }
     }
 
-    void ProduceRequest::add_message(const std::string &topic, int32_t partition, std::shared_ptr<Message> msg)
+    MessageBlock& ProduceRequest::emplace_message(const std::string &topic, int32_t partition)
     {
         auto &partitions = m_records[topic];
         auto it = partitions.find(partition);
@@ -201,7 +201,8 @@ namespace coev::kafka
             it->second.m_message_set = std::make_shared<MessageSet>();
         }
         it->second.m_records_type = LegacyRecords;
-        it->second.m_message_set->add_message(msg);
+        auto &msg_block = it->second.m_message_set->emplace_message();
+        return msg_block;
     }
 
     void ProduceRequest::add_set(const std::string &topic, int32_t partition, std::shared_ptr<MessageSet> set)

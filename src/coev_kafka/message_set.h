@@ -12,18 +12,19 @@
 
 #include "packet_encoder.h"
 #include "packet_decoder.h"
-#include "version.h"
+// #include "version.h"
+#include "message.h"
 
 namespace coev::kafka
 {
     struct Message;
+
     struct MessageBlock : IEncoder, IDecoder
     {
         int64_t m_offset = 0;
-        std::shared_ptr<Message> m_message;
+        Message m_message;
         MessageBlock() = default;
-        MessageBlock(std::shared_ptr<Message> msg, int64_t offset);
-        MessageBlock(std::shared_ptr<Message> msg);
+        MessageBlock(const Message &msg, int64_t offset);
         std::vector<MessageBlock> Messages();
         int encode(packet_encoder &pe) const;
         int decode(packet_decoder &pd);
@@ -37,7 +38,12 @@ namespace coev::kafka
         MessageSet(const MessageSet &o);
         int encode(packet_encoder &pe) const;
         int decode(packet_decoder &pd);
-        void add_message(std::shared_ptr<Message> msg);
+
+        auto &emplace_message()
+        {
+            m_messages.emplace_back();
+            return m_messages.back();
+        }
         void clear();
     };
 

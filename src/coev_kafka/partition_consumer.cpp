@@ -265,14 +265,14 @@ namespace coev::kafka
             for (auto &msg : msgs)
             {
                 int64_t offset = msg.m_offset;
-                auto timestamp = msg.m_message->m_timestamp;
-                if (msg.m_message->m_version >= 1)
+                auto timestamp = msg.m_message.m_timestamp;
+                if (msg.m_message.m_version >= 1)
                 {
                     int64_t base_offset = block.m_offset - msgs.back().m_offset;
                     offset += base_offset;
-                    if (msg.m_message->m_log_append_time)
+                    if (msg.m_message.m_log_append_time)
                     {
-                        timestamp = block.m_message->m_timestamp;
+                        timestamp = block.m_message.m_timestamp;
                     }
                 }
                 if (offset < m_offset)
@@ -282,11 +282,11 @@ namespace coev::kafka
                 auto cm = std::make_shared<ConsumerMessage>();
                 cm->m_topic = m_topic;
                 cm->m_partition = m_partition;
-                cm->m_key = msg.m_message->m_key;
-                cm->m_value = msg.m_message->m_value;
+                cm->m_key = msg.m_message.m_key;
+                cm->m_value = msg.m_message.m_value;
                 cm->m_offset = offset;
                 cm->m_timestamp = timestamp.get_time();
-                cm->m_block_timestamp = block.m_message->m_timestamp.get_time();
+                cm->m_block_timestamp = block.m_message.m_timestamp.get_time();
                 messages.push_back(cm);
                 m_offset = offset + 1;
             }
@@ -302,14 +302,14 @@ namespace coev::kafka
     {
 
         messages.reserve(batch->m_records.size());
-        for (auto rec : batch->m_records)
+        for (const auto &rec : batch->m_records)
         {
-            int64_t offset = batch->m_first_offset + rec->m_offset_delta;
+            int64_t offset = batch->m_first_offset + rec.m_offset_delta;
             if (offset < m_offset)
             {
                 continue;
             }
-            auto timestamp = batch->m_first_timestamp + std::chrono::milliseconds(rec->m_timestamp_delta.count());
+            auto timestamp = batch->m_first_timestamp + std::chrono::milliseconds(rec.m_timestamp_delta.count());
             if (batch->m_log_append_time)
             {
                 timestamp = batch->m_max_timestamp;
@@ -317,11 +317,11 @@ namespace coev::kafka
             auto cm = std::make_shared<ConsumerMessage>();
             cm->m_topic = m_topic;
             cm->m_partition = m_partition;
-            cm->m_key = rec->m_key;
-            cm->m_value = rec->m_value;
+            cm->m_key = rec.m_key;
+            cm->m_value = rec.m_value;
             cm->m_offset = offset;
             cm->m_timestamp = timestamp;
-            cm->m_headers = rec->m_headers;
+            cm->m_headers = rec.m_headers;
             messages.push_back(cm);
             m_offset = offset + 1;
         }

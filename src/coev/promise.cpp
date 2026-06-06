@@ -23,19 +23,23 @@ namespace coev
             if (_caller != nullptr)
             {
                 _caller.resume();
-            }            
+            }
         }
         else if (m_type == details::CORO_TASK)
         {
             auto _task = static_cast<co_task *>(std::exchange(m_task, nullptr));
-            assert(_task != nullptr);
-            _task->unload(this);
+            if (_task != nullptr)
+            {
+                _task->unload(this);
+            }
         }
         else if (m_type == details::CORO_GUARD_TASK)
         {
             auto _task = static_cast<guard::co_task *>(std::exchange(m_task, nullptr));
-            assert(_task != nullptr);
-            _task->unload(this);
+            if (_task != nullptr)
+            {
+                _task->unload(this);
+            }
         }
         else
         {

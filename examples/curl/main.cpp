@@ -78,6 +78,6 @@ int main()
     set_log_level(LOG_LEVEL_CORE);
     runnable::instance()
         .start(co_download)
-        .wait();
+        .end();
     return 0;
 }

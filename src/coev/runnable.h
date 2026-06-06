@@ -28,7 +28,6 @@ namespace coev
 		runnable(runnable &&) = delete;
 		runnable &start(const func &_f) noexcept;
 		runnable &start(int count, const func &_f) noexcept;
-		void wait() noexcept;
-		void end(const std::function<void()> &_f) noexcept;
+		void end(const std::function<void()> &_f = []() {}) noexcept;
 	};
 }

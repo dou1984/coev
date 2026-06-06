@@ -15,10 +15,12 @@ namespace coev
 		if (EV_ERROR & revents)
 			return;
 		co_timer *_this = (co_timer *)(w->data);
-		assert(_this != NULL);
-		LOG_CORE("co_timer::cb_timer %p", _this);
-		_this->m_waiter.resume();
-		local_resume();
+		if (_this)
+		{
+			LOG_CORE("co_timer::cb_timer %p", _this);
+			_this->m_waiter.resume();
+			local_resume();
+		}
 	}
 	co_timer::co_timer(ev_tstamp itimer, ev_tstamp rtimer)
 	{
@@ -29,8 +31,12 @@ namespace coev
 	}
 	co_timer::~co_timer()
 	{
-		LOG_CORE("timer stop ");
-		ev_timer_stop(m_loop, &m_data);
+		LOG_CORE("timer stop");
+		if (m_loop)
+		{
+			ev_timer_stop(m_loop, &m_data);
+		}
+		m_data.data = nullptr;
 	}
 	int co_timer::stop()
 	{

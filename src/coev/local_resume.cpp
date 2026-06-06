@@ -14,7 +14,7 @@ namespace coev
     bool local_resume()
     {
         bool ok = false;
-        while (local_async::instance().resume_all())
+        while (local_async::instance().resume_all(0))
         {
             ok = true;
         }

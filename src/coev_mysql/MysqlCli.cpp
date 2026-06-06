@@ -177,8 +177,8 @@ namespace coev
 			if (isInprocess())
 			{
 				ev_io_start(m_loop, &m_write);
+				finally(__ev_stop_write());
 				co_await m_w_waiter.suspend();
-				ev_io_stop(m_loop, &m_write);
 			}
 		}
 		if (__is_net_error(status) == INVALID)
@@ -232,5 +232,13 @@ namespace coev
 		}
 		m_row = nullptr;
 		m_results = nullptr;
+	}
+	int MysqlCli::__ev_stop_write() noexcept
+	{
+		if (m_w_waiter.empty() && ev_is_active(&m_write))
+		{
+			ev_io_stop(m_loop, &m_write);
+		}
+		return 0;
 	}
 }

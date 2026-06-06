@@ -32,6 +32,8 @@ awaitable<void> test()
 int main()
 {
     set_log_level(LOG_LEVEL_DEBUG);
-    runnable::instance().start(test).wait();
+    runnable::instance()
+        .start(test)
+        .end();
     return 0;
 }

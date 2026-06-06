@@ -11,8 +11,9 @@
 
 namespace coev::ssl
 {
-    struct context : io_context
+    class context : protected io_context
     {
+    public:
         context(SSL_CTX *);
         context(int fd, SSL_CTX *);
         ~context();
@@ -24,23 +25,21 @@ namespace coev::ssl
 
         awaitable<int> do_handshake();
 
+        using io_context::close;
+        using io_context::fd;
+        using io_context::operator bool;
+        using io_context::recvfrom;
+        using io_context::sendto;
+
     protected:
         context() = default;
         void __async_finally();
         void __clearup();
-        int __ssl_write(const char *, int);
-        int __ssl_read(char *buffer, int size);
         bool __ssl_valid() const;
-        awaitable<void> __w_waiter();
-        awaitable<void> __r_waiter();
+        awaitable<int> __w_waiter();
+        awaitable<int> __r_waiter();
 
     protected:
         SSL *m_ssl = nullptr;
-        struct
-        {
-            bool m_want_read = false;
-            bool m_want_write = false;
-            bool m_want_terminal = false;
-        };
     };
 }

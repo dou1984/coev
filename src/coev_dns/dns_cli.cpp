@@ -25,7 +25,11 @@ namespace coev
     {
         while (__valid())
         {
-            co_await m_w_waiter.suspend();
+            auto r = co_await m_w_waiter.suspend();
+            if (r == INVALID)
+            {
+                co_return INVALID;
+            }
             if (m_channel == nullptr)
             {
                 co_return INVALID;
@@ -39,7 +43,11 @@ namespace coev
 
         while (__valid())
         {
-            co_await m_r_waiter.suspend();
+            auto r = co_await m_r_waiter.suspend();
+            if (r == INVALID)
+            {
+                co_return INVALID;
+            }
             if (m_channel == nullptr)
             {
                 co_return INVALID;

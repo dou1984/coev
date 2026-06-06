@@ -20,6 +20,8 @@ namespace coev::nghttp2
 
     class session : public coev::ssl::context
     {
+        using base = coev::ssl::context;
+
     public:
         using router = std::function<awaitable<void>(session &, request &)>;
         using routers = std::unordered_map<std::string, router>;
@@ -36,28 +38,34 @@ namespace coev::nghttp2
         awaitable<int> do_handshake();
 
         awaitable<int> query(header &h, const char *body, int length, response &);
-        int reply(int stream_id, header &h, const char *body, int length);
+        awaitable<int> reply(int stream_id, header &h, const char *body, int length);
         int reply_error(int32_t stream_id, int error_code);
         operator bool() const noexcept { return __ssl_valid(); }
 
     public:
-        int set_routers(const routers &);
+        int set_routers(std::shared_ptr<routers> &);
         request &get_request(int32_t stream_id);
         void remove_request(int32_t stream_id);
         response &get_response(int32_t stream_id);
         void remove_response(int32_t stream_id);
 
-        int send_server_settings();
-        int send_client_settings();
+        awaitable<int> send_server_settings();
+        awaitable<int> send_client_settings();
 
         awaitable<void> __processing_write();
         awaitable<void> __processing_read();
 
+        int __ssl_write(const char *buffer, int buffer_size);
+        int __ssl_read(char *buffer, int size);
+
     protected:
-        int __push_promise(int stream_id, nghttp2_nv *, int head_size);
-        int __submit_request(nghttp2_nv *, int head_size, const char *body, int length);
-        int __submit_response(int stream_id, nghttp2_nv *, int head_size, const char *body, int length);
+        // awaitable<int> __push_promise(int stream_id, nghttp2_nv *, int head_size);
+        awaitable<int> __submit_request(nghttp2_nv *, int head_size, const char *body, int length);
+        awaitable<int> __submit_response(int stream_id, nghttp2_nv *, int head_size, const char *body, int length);
         awaitable<int> __wait_for_stream_end(int stream_id, response &req);
+        awaitable<int> __send();
+        awaitable<void> __router(request &&);
+        int __sync_send();
 
     protected:
         session() = default;
@@ -65,19 +73,28 @@ namespace coev::nghttp2
         static nghttp2_session_callbacks *m_callbacks;
         std::unordered_map<int32_t, request> m_requests;
         std::unordered_map<int32_t, response> m_responses;
-        std::unordered_map<int32_t, co_async> m_w_trigger;
+        std::unordered_map<int32_t, co_async> m_end_trigger;
 
     protected:
         co_task m_task;
-        co_async m_waiting_write;
-        int32_t m_current_stream_id = 0;
-        routers m_routers;
+        co_async m_write_waiter;
 
-        int __send();
+        int32_t m_current_stream_id = 0;
+        std::shared_ptr<routers> m_routers;
+
+    protected:
+        struct
+        {
+            bool m_want_read = false;
+            bool m_want_write = false;
+            bool m_want_terminal = false;
+        };
+
+    protected:
         int __processing(int stream_id);
         int __resume_process();
         bool __is_processing() const;
-        void __clearup() { coev::ssl::context::__clearup(); }
+        void __clearup() { base::__clearup(); }
 
         static ssize_t __send_callback(nghttp2_session *sess, const uint8_t *data, size_t length, int flags, void *user_data);
         static ssize_t __recv_callback(nghttp2_session *sess, uint8_t *buf, size_t length, int flags, void *user_data);

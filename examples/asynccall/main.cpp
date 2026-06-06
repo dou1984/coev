@@ -50,6 +50,6 @@ int main()
 				co_await __call();
 				LOG_DBG("__call %d", g_trigger.x);
 			})
-		.wait();
+		.end();
 	return 0;
 }

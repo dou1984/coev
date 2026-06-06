@@ -154,6 +154,6 @@ int main()
 		.start(test_sync)
 		.start(go)
 		.start(test_array)
-		.wait();
+		.end();
 	return 0;
 }

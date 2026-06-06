@@ -29,8 +29,13 @@ namespace coev
 		{
 			auto p = it->first;
 			std::lock_guard<is_destroying> _(local<is_destroying>::instance());
-			LOG_CORE("promise tid:%ld %p", p->m_tid, p->m_this.address());
-			p->m_this.destroy();
+			if (p)
+			{
+				LOG_CORE("promise tid:%ld %p", p->m_tid, p->m_this.address());
+				p->m_task = nullptr;
+				p->m_type = details::CORO_NONE;
+				p->m_this.destroy();
+			}
 		}
 	}
 	void co_task::destroy(uint64_t id)
@@ -42,7 +47,13 @@ namespace coev
 				auto p = it->first;
 				m_promises.erase(it);
 				std::lock_guard<is_destroying> _(local<is_destroying>::instance());
-				p->m_this.destroy();
+
+				if (p)
+				{
+					p->m_task = nullptr;
+					p->m_type = details::CORO_NONE;
+					p->m_this.destroy();
+				}
 				break;
 			}
 		}
@@ -131,8 +142,14 @@ namespace coev
 			{
 				auto p = it->first;
 				std::lock_guard<is_destroying> _(local<is_destroying>::instance());
-				LOG_CORE("promise tid:%ld %p", p->m_tid, p->m_this.address());
-				p->m_this.destroy();
+
+				if (p)
+				{
+					LOG_CORE("promise tid:%ld %p", p->m_tid, p->m_this.address());
+					p->m_task = nullptr;
+					p->m_type = details::CORO_NONE;
+					p->m_this.destroy();
+				}
 			}
 		}
 		void co_task::destroy(uint64_t id)

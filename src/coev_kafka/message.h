@@ -18,10 +18,12 @@
 #include "packet_encoder.h"
 #include "packet_decoder.h"
 #include "version.h"
-#include "message_set.h"
+// #include "message_set.h"
 
 namespace coev::kafka
 {
+
+    struct MessageSet;
 
     std::string ToString(CompressionCodec codec);
     bool FromString(const std::string &s, CompressionCodec &out);
@@ -33,7 +35,7 @@ namespace coev::kafka
         bool m_log_append_time = false;
         std::string m_key;
         std::string m_value;
-        MessageSet m_message_set;
+        std::shared_ptr<MessageSet> m_message_set;
         int8_t m_version = 0;
         Timestamp m_timestamp;
 

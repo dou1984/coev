@@ -15,17 +15,13 @@ ssl::manager g_srv_mgr(ssl::manager::TLS_SERVER);
 
 char hi[] = R"(helloworld)";
 
-int worker_num = 4;
-int coroutine_num = 20;
-int max_connection = 10;
-int max_query = 10000;
+int worker_num = 1;
+int coroutine_num = 2;
+int max_connection = 2;
+int max_query = 100000;
 
 coev::pool::nghttp2::Http2 http2;
 coev::pool::server_pool<nghttp2::server> server;
-
-std::atomic<uint64_t> g_request_count{0};
-std::atomic<uint64_t> g_error_count{0};
-std::atomic<uint64_t> g_total_bytes{0};
 
 awaitable<void> echo(nghttp2::session &ctx, nghttp2::request &request)
 {
@@ -35,41 +31,43 @@ awaitable<void> echo(nghttp2::session &ctx, nghttp2::request &request)
     char large_payload[512];
     memset(large_payload, 'A', sizeof(large_payload));
 
-    auto err = ctx.reply(request.id(), ngh, large_payload, sizeof(large_payload));
-
+    auto err = co_await ctx.reply(request.id(), ngh, large_payload, sizeof(large_payload));
     if (err == INVALID)
     {
-        g_error_count++;
         co_return;
     }
-
-    g_request_count++;
 };
 awaitable<void> proc_server()
 {
     auto &srv = server.get();
     srv.set_router("/echo", echo);
-    co_await srv.dispatch(nullptr);
+    co_await srv.dispatch(g_srv_mgr.get());
     co_return;
 }
+
 awaitable<void> proc_client()
 {
     auto start_time = std::chrono::steady_clock::now();
 
+    std::atomic<uint64_t> request_count{0};
+    std::atomic<uint64_t> error_count{0};
+    std::atomic<uint64_t> total_bytes{0};
     co_task task;
     for (auto w = 0; w < coroutine_num; w++)
     {
-        task << []() -> awaitable<void>
+        task << [w](auto &request_count, auto &error_count, auto &total_bytes) -> awaitable<void>
         {
             int local_errors = 0;
-
+            LOG_CORE("start [%ld]", gtid());
+            finally(LOG_CORE("end [%ld]", gtid()));
             for (auto i = 0; i < max_query; i++)
             {
                 coev::pool::nghttp2::Http2::Instance c;
                 auto r = co_await http2.get(c);
                 if (r == INVALID)
                 {
-                    g_error_count++;
+                    LOG_ERR("get error [%ld]", gtid());
+                    error_count++;
                     local_errors++;
                     co_return;
                 }
@@ -86,26 +84,26 @@ awaitable<void> proc_client()
                 auto err = co_await c->query(ngh, hi.data(), hi.size(), res);
                 if (err == INVALID)
                 {
-                    g_error_count++;
+                    error_count++;
                     local_errors++;
                     co_return;
                 }
 
-                g_request_count++;
-                g_total_bytes += res.body().size();
+                request_count++;
+                total_bytes += res.body().size();
             }
-        }();
+        }(request_count, error_count, total_bytes);
     }
     co_await task.wait();
 
     auto end_time = std::chrono::steady_clock::now();
     auto total_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-    auto qps = g_request_count.load() * 1000.0 / (total_ms + 1);
+    auto qps = request_count.load() * 1000.0 / (total_ms + 1);
     LOG_INFO("==========================================");
     LOG_INFO("压力测试完成");
-    LOG_INFO("总请求数：%lu", g_request_count.load());
-    LOG_INFO("错误数：%lu", g_error_count.load());
-    LOG_INFO("总数据量：%lu bytes (%.2f MB)", g_total_bytes.load(), g_total_bytes.load() / 1024.0 / 1024.0);
+    LOG_INFO("总请求数：%lu", request_count.load());
+    LOG_INFO("错误数：%lu", error_count.load());
+    LOG_INFO("总数据量：%lu bytes (%.2f MB)", total_bytes.load(), total_bytes.load() / 1024.0 / 1024.0);
     LOG_INFO("总耗时：%ld ms", total_ms);
     LOG_INFO("QPS: %.2f", qps);
     LOG_INFO("==========================================");
@@ -120,16 +118,16 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    set_log_level(LOG_LEVEL_CORE);
+    // set_log_level(LOG_LEVEL_CORE);
     // set_log_level(LOG_LEVEL_DEBUG);
-    // set_log_level(LOG_LEVEL_ERROR);
+    set_log_level(LOG_LEVEL_ERROR);
     // set_log_level(LOG_LEVEL_INFO);
 
     if (strcmp(argv[1], "server") == 0)
     {
         server.start("0.0.0.0", 9999);
-        // g_srv_mgr.use_certificate_file("./certs/server.crt");
-        // g_srv_mgr.use_private_key_file("./certs/server.key");
+        g_srv_mgr.use_certificate_file("./certs/server.crt");
+        g_srv_mgr.use_private_key_file("./certs/server.key");
         runnable::instance()
             .start(worker_num, proc_server)
             .end([]()
@@ -140,7 +138,7 @@ int main(int argc, char **argv)
         auto config = http2.get_config();
         config->host = "127.0.0.1";
         config->port = 9999;
-        // config->data = g_cli_mgr.get();
+        config->data = g_cli_mgr.get();
         config->max_connections = max_connection;
         http2.set(config);
         runnable::instance()

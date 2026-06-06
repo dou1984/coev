@@ -11,11 +11,11 @@
 
 namespace coev
 {
-	void co_event::__set_reserved(uint64_t x)
+	void co_event::__set_reserved(int64_t x)
 	{
 		m_reserved = x;
 	}
-	uint64_t co_event::__get_reserved()
+	int64_t co_event::__get_reserved()
 	{
 		return m_reserved;
 	}
@@ -32,7 +32,7 @@ namespace coev
 		}
 		m_caller = nullptr;
 	}
-	uint64_t co_event::await_resume()
+	int64_t co_event::await_resume()
 	{
 		return __get_reserved();
 	}

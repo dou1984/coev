@@ -7,6 +7,7 @@
 #pragma once
 #include <ev.h>
 #include <memory>
+#include <atomic>
 #include "co_async.h"
 #include "socket.h"
 
@@ -24,9 +25,9 @@ namespace coev
 		io_context(int fd) noexcept;
 		io_context(io_context &&) = delete;
 		io_context(const io_context &) = delete;
-		virtual ~io_context() noexcept;
-		virtual awaitable<int> send(const char *, int) noexcept;
-		virtual awaitable<int> recv(char *, int) noexcept;
+		~io_context() noexcept;
+		awaitable<int> send(const char *, int) noexcept;
+		awaitable<int> recv(char *, int) noexcept;
 		template <class T = std::string>
 		awaitable<int> send(const T &msg) noexcept
 		{
@@ -38,9 +39,9 @@ namespace coev
 			return recv(msg.data(), msg.size());
 		}
 
-		virtual awaitable<int> connect(const char *, int) noexcept;
-		virtual awaitable<int> recvfrom(char *, int, addrInfo &) noexcept;
-		virtual awaitable<int> sendto(const char *, int, addrInfo &) noexcept;
+		awaitable<int> connect(const char *, int) noexcept;
+		awaitable<int> recvfrom(char *, int, addrInfo &) noexcept;
+		awaitable<int> sendto(const char *, int, addrInfo &) noexcept;
 		int close() noexcept;
 		operator bool() const;
 		int fd() const { return m_fd; }
@@ -50,17 +51,18 @@ namespace coev
 		struct ev_loop *m_loop = nullptr;
 		int m_fd = INVALID;
 		int m_type = 0;
-		ev_io m_read;
-		ev_io m_write;
+		ev_io m_read = {};
+		ev_io m_write = {};
 
 		co_async m_r_waiter;
 		co_async m_w_waiter;
+
 		int __finally() noexcept;
 		int __initial() noexcept;
 		int __close() noexcept;
 		bool __valid() const noexcept;
 		bool __invalid() const noexcept;
-		int __del_write() noexcept;
+		int __ev_stop_write() noexcept;
 		bool __is_client() const { return m_type & IO_CLI; }
 		bool __is_ssl() const { return m_type & IO_SSL; }
 		static void cb_write(struct ev_loop *loop, struct ev_io *w, int revents) noexcept;

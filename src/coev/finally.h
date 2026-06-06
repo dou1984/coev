@@ -24,3 +24,4 @@ private:
 #define CONCAT_(a, b) a##b
 #define CONCAT(a, b) CONCAT_(a, b)
 #define finally(body) Finally CONCAT(_finally_, __LINE__)([&]() { body; })
+// #define finally Finally CONCAT(_finally_, __LINE__) = [&]()

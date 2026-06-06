@@ -73,12 +73,12 @@ namespace coev::kafka
         virtual int decode(packet_decoder &pd, int16_t version) = 0;
     };
 
-    int encode(IEncoder &e, std::string &out);
+    int encode(const IEncoder &e, std::string &out);
     int decode(const std::string &buf, IDecoder &in);
     int decode_version(const std::string &buf, VDecoder &in, int16_t version);
     int magic_value(packet_decoder &pd, int8_t &magic);
 
     int prepare_flexible_decoder(packet_decoder &pd, VDecoder &req, int16_t version);
-    int prepare_flexible_encoder(packet_encoder &pe, IEncoder &req);
+    int prepare_flexible_encoder(packet_encoder &pe, const IEncoder &req);
 
 }

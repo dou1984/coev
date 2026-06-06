@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # sudo sysctl -w kernel.perf_event_paranoid=0
-# nghttp 压力测试脚本 (带 perf 分析)
+# nghttp 压力测试脚本 (带 CPU 分析)
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$(dirname "$(dirname "$SCRIPT_DIR")")")"
@@ -69,14 +69,40 @@ echo ""
 # 监控
 echo "5. 监控测试进度..."
 TIMEOUT=60
+SAMPLE_TIME=$((TIMEOUT - 5))
+if [ "$SAMPLE_TIME" -lt 5 ]; then
+    SAMPLE_TIME=5
+fi
+
+# 启动 CPU 利用率监控（在主循环中通过 ps 采样）
+echo "   启动 CPU 利用率监控..."
+CPU_LOG_S="$BIN_DIR/perf.server.cpu.log"
+CPU_LOG_C="$BIN_DIR/perf.client.cpu.log"
+echo "# CPU monitoring for server PID $SERVER_PID" > "$CPU_LOG_S"
+echo "# CPU monitoring for client PID $CLIENT_PID" > "$CPU_LOG_C"
+echo "   CPU 监控已启动 (每秒采样)"
+
+# perf record 采样分析
+echo "   启动 perf 采样分析 (perf record)..."
+perf record -g -p $CLIENT_PID -o "$BIN_DIR/perf.client.data" -- sleep $SAMPLE_TIME 2>/dev/null &
+PERF_CLIENT_PID=$!
+perf record -g -p $SERVER_PID -o "$BIN_DIR/perf.server.data" -- sleep $SAMPLE_TIME 2>/dev/null &
+PERF_SERVER_PID=$!
+echo "   perf 采样已启动 (采样时长 ${SAMPLE_TIME}s)"
+echo ""
 for i in $(seq 1 $TIMEOUT); do
     sleep 1
+    # CPU 采样 (通过 ps)
+    srv_cpu=$(ps -p $SERVER_PID -o %cpu= 2>/dev/null | tr -d ' ')
+    cli_cpu=$(ps -p $CLIENT_PID -o %cpu= 2>/dev/null | tr -d ' ')
+    [ -n "$srv_cpu" ] && echo "$(date +%H:%M:%S) CPU: ${srv_cpu}%" >> "$CPU_LOG_S"
+    [ -n "$cli_cpu" ] && echo "$(date +%H:%M:%S) CPU: ${cli_cpu}%" >> "$CPU_LOG_C"
     if ! kill -0 $CLIENT_PID 2>/dev/null; then
         echo "   客户端已完成，耗时 ${i}s"
         break
     fi
     if [ $((i % 10)) -eq 0 ]; then
-        echo "   测试进行中... ${i}s"
+        echo "   测试进行中... ${i}s  (服务端CPU:${srv_cpu:-0}%, 客户端CPU:${cli_cpu:-0}%)"
     fi
 done
 
@@ -85,6 +111,10 @@ if kill -0 $CLIENT_PID 2>/dev/null; then
     echo ""
     echo "   测试已达到最大时间 ${TIMEOUT}s，停止客户端..."
 fi
+
+# 停止监控进程
+kill $PERF_CLIENT_PID $PERF_SERVER_PID 2>/dev/null || true
+wait $PERF_CLIENT_PID $PERF_SERVER_PID 2>/dev/null || true
 
 # 优雅停止
 echo ""
@@ -151,6 +181,57 @@ if [ -f perf.server.stats ]; then
 fi
 if [ -f perf.client.stats ]; then
     grep -E "CPU|cycles|instructions|cache-misses" perf.client.stats | head -10
+fi
+
+echo ""
+echo "================================================================================"
+echo "CPU 利用率分析"
+echo "================================================================================"
+echo ""
+
+echo "服务端:"
+if [ -f perf.server.cpu.log ]; then
+    # 提取 CPU% 数值并计算平均值、最小值、最大值
+    awk '/^#/ {next} {gsub(/.*CPU: /,""); gsub(/%/,""); if($1+0>=0){sum+=$1; count++; if(count==1||$1<min) min=$1; if(count==1||$1>max) max=$1}} END {if(count>0) printf "  平均 CPU 利用率: %.1f%%  (最小: %.1f%%, 最大: %.1f%%, 采样次数: %d)\n", sum/count, min, max, count; else print "  无数据"}' perf.server.cpu.log
+    echo "  CPU 利用率时序:"
+    tail -20 perf.server.cpu.log | sed 's/^/    /'
+    echo "  ... (完整数据: perf.server.cpu.log)"
+else
+    echo "  无数据"
+fi
+echo ""
+
+echo "客户端:"
+if [ -f perf.client.cpu.log ]; then
+    awk '/^#/ {next} {gsub(/.*CPU: /,""); gsub(/%/,""); if($1+0>=0){sum+=$1; count++; if(count==1||$1<min) min=$1; if(count==1||$1>max) max=$1}} END {if(count>0) printf "  平均 CPU 利用率: %.1f%%  (最小: %.1f%%, 最大: %.1f%%, 采样次数: %d)\n", sum/count, min, max, count; else print "  无数据"}' perf.client.cpu.log
+    echo "  CPU 利用率时序:"
+    tail -20 perf.client.cpu.log | sed 's/^/    /'
+    echo "  ... (完整数据: perf.client.cpu.log)"
+else
+    echo "  无数据"
+fi
+
+echo ""
+echo "================================================================================"
+echo "perf 调用栈热点分析"
+echo "================================================================================"
+echo ""
+
+if [ -f perf.client.data ]; then
+    echo "客户端热点函数 (top 20):"
+    perf report --stdio -i perf.client.data --sort comm,dso,symbol --no-children -n 2>/dev/null | head -30
+    echo ""
+else
+    echo "  perf.client.data 未生成（可能因权限/容器限制），perf record 不可用"
+    echo ""
+fi
+if [ -f perf.server.data ]; then
+    echo "服务端热点函数 (top 20):"
+    perf report --stdio -i perf.server.data --sort comm,dso,symbol --no-children -n 2>/dev/null | head -30
+    echo ""
+else
+    echo "  perf.server.data 未生成（可能因权限/容器限制），perf record 不可用"
+    echo ""
 fi
 
 

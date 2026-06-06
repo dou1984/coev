@@ -71,83 +71,129 @@ namespace coev::ssl
     }
     awaitable<int> context::send(const char *buffer, int buffer_size) noexcept
     {
-        if (__is_ssl() && m_ssl)
+        if (buffer_size <= 0)
         {
-            while (__ssl_valid())
+            co_return INVALID;
+        }
+
+        if (!__is_ssl())
+        {
+            assert(m_ssl == nullptr);
+            co_return co_await io_context::send(buffer, buffer_size);
+        }
+
+        if (!__ssl_valid())
+        {
+            co_return INVALID;
+        }
+
+        int send_offset = 0;
+        while (send_offset < buffer_size)
+        {
+            int r = SSL_write(m_ssl, buffer + send_offset, buffer_size - send_offset);
+            if (r > 0)
             {
-                int r = SSL_write(m_ssl, buffer, buffer_size);
+                send_offset += r;
+                continue;
+            }
+
+            r = SSL_get_error(m_ssl, r);
+            if (r == SSL_ERROR_WANT_WRITE)
+            {
+                LOG_CORE("fd %d write waiter", m_fd);
+                finally(LOG_CORE("fd %d write waiter end", m_fd));
+                r = co_await __w_waiter();
                 if (r == INVALID)
-                {
-                    r = SSL_get_error(m_ssl, r);
-                    if (r == SSL_ERROR_WANT_WRITE)
-                    {
-                        co_await __w_waiter();
-                    }
-                    else if (r == SSL_ERROR_WANT_READ)
-                    {
-                        co_await __r_waiter();
-                    }
-                    else
-                    {
-                        __clearup();
-                        errno = -r;
-                        co_return INVALID;
-                    }
-                }
-                else if (r == 0)
                 {
                     co_return INVALID;
                 }
-                else
+            }
+            else if (r == SSL_ERROR_WANT_READ)
+            {
+                LOG_CORE("fd %d read waiter", m_fd);
+                finally(LOG_CORE("fd %d read waiter end", m_fd));
+                r = co_await __r_waiter();
+                if (r == INVALID)
                 {
-                    co_return r;
+                    co_return INVALID;
                 }
             }
-            co_return INVALID;
+            else
+            {
+                errno = -r;
+                co_return INVALID;
+            }
         }
-        else
-        {
-            co_return co_await io_context::send(buffer, buffer_size);
-        }
+
+        co_return send_offset;
     }
     awaitable<int> context::recv(char *buffer, int buffer_size) noexcept
     {
-        if (__is_ssl() && m_ssl)
+        LOG_CORE("fd %d recv ENTER, buffer_size=%d", m_fd, buffer_size);
+        if (m_ssl == nullptr)
         {
-            while (__ssl_valid())
+            co_return co_await io_context::recv(buffer, buffer_size);
+        }
+
+        if (!__ssl_valid())
+        {
+            co_return INVALID;
+        }
+
+        while (true)
+        {
+            int r = SSL_read(m_ssl, buffer, buffer_size);
+            LOG_CORE("fd %d SSL_read returned %d, ssl_error=%d, ssl_pending=%d", m_fd, r, r <= 0 ? SSL_get_error(m_ssl, r) : 0, r > 0 ? SSL_pending(m_ssl) : 0);
+            if (r > 0)
             {
-                int r = SSL_read(m_ssl, buffer, buffer_size);
+                LOG_CORE("fd %d recv %d", m_fd, r);
+                co_return r;
+            }
+
+            r = SSL_get_error(m_ssl, r);
+            if (r == SSL_ERROR_WANT_READ)
+            {
+                int bytes_available = 0;
+                if (ioctl(m_fd, FIONREAD, &bytes_available) == 0 && bytes_available > 0)
+                {
+                    LOG_CORE("fd %d SSL_ERROR_WANT_READ but ioctl bytes_available=%d, continue", m_fd, bytes_available);
+                    continue;
+                }
+                LOG_CORE("fd %d SSL_ERROR_WANT_READ, ioctl bytes_available=0, ssl_pending=%d, ssl_shutdown=0x%x", m_fd, SSL_pending(m_ssl), SSL_get_shutdown(m_ssl));
+                LOG_CORE("fd %d read waiter", m_fd);
+                finally(LOG_CORE("fd %d read waiter end", m_fd));
+                co_await __r_waiter();
+            }
+            else if (r == SSL_ERROR_WANT_WRITE)
+            {
+                LOG_CORE("fd %d write waiter", m_fd);
+                finally(LOG_CORE("fd %d write waiter end", m_fd));
+                r = co_await __w_waiter();
                 if (r == INVALID)
-                {
-                    r = SSL_get_error(m_ssl, r);
-                    if (r == SSL_ERROR_WANT_READ)
-                    {
-                        co_await __r_waiter();
-                    }
-                    else if (r == SSL_ERROR_WANT_WRITE)
-                    {
-                        co_await __w_waiter();
-                    }
-                    else
-                    {
-                        __clearup();
-                        co_return INVALID;
-                    }
-                }
-                else if (r == 0)
-                {
-                    co_return INVALID;
-                }
-                else
                 {
                     co_return r;
                 }
             }
-            co_return INVALID;
-        }
-        else
-        {
-            co_return co_await io_context::recv(buffer, buffer_size);
+            else if (r == SSL_ERROR_ZERO_RETURN)
+            {
+                LOG_CORE("fd %d connection closed", m_fd);
+                co_return 0;
+            }
+            else if (r == SSL_ERROR_SSL)
+            {
+                char errbuf[256];
+                unsigned long ssl_err_code = ERR_get_error();
+                ERR_error_string_n(ssl_err_code, errbuf, sizeof(errbuf));
+                LOG_ERR("fd %d SSL_read failed ssl_error=%d openssl_err=%lu %s", m_fd, r, ssl_err_code, errbuf);
+                errno = ECONNRESET;
+                co_return INVALID;
+            }
+            else
+            {
+                LOG_ERR("fd %d SSL_read failed ssl_error=%d", m_fd, r);
+                errno = ECONNRESET;
+                co_return INVALID;
+            }
         }
     }
     awaitable<int> context::connect(const char *host, int port) noexcept
@@ -175,6 +221,7 @@ namespace coev::ssl
                 LOG_ERR("handshake fd %d failed %d", m_fd, err);
                 goto __error__;
             }
+            LOG_INFO("fd %d handshake success", m_fd);
         }
         co_return m_fd;
     }
@@ -182,26 +229,41 @@ namespace coev::ssl
     {
         if (__is_ssl())
         {
-            int err = 0;
-            while (__ssl_valid() && (err = SSL_do_handshake(m_ssl)) != 1)
+            int r = 0;
+            while (__ssl_valid() && (r = SSL_do_handshake(m_ssl)) != 1)
             {
-                err = SSL_get_error(m_ssl, err);
-                if (err == SSL_ERROR_WANT_READ)
+                r = SSL_get_error(m_ssl, r);
+                if (r == SSL_ERROR_WANT_READ)
                 {
-                    co_await __r_waiter();
+                    LOG_CORE("fd %d read waiter", m_fd);
+                    finally(LOG_CORE("fd %d read waiter end", m_fd));
+                    r = co_await __r_waiter();
+                    if (r == INVALID)
+                    {
+                        co_return r;
+                    }
                 }
-                else if (err == SSL_ERROR_WANT_WRITE)
+                else if (r == SSL_ERROR_WANT_WRITE)
                 {
-                    co_await __w_waiter();
+                    LOG_CORE("fd %d write waiter", m_fd);
+                    finally(LOG_CORE("fd %d write waiter end", m_fd));
+                    r = co_await __w_waiter();
+                    if (r == INVALID)
+                    {
+                        co_return r;
+                    }
                 }
-                else if (err == SSL_ERROR_NONE)
+                else if (r == SSL_ERROR_NONE)
                 {
                     break;
                 }
                 else
                 {
-                    LOG_ERR("do_handshake fd %d failed ssl_err:%d errno:%d %s", m_fd, err, errno, strerror(errno));
-                    errno = -err;
+                    char errbuf[256];
+                    unsigned long ssl_err_code = ERR_get_error();
+                    ERR_error_string_n(ssl_err_code, errbuf, sizeof(errbuf));
+                    LOG_ERR("do_handshake fd %d failed ssl_err:%d openssl_err:%lu %s", m_fd, r, ssl_err_code, errbuf);
+                    errno = -r;
                     co_return INVALID;
                 }
             }
@@ -209,193 +271,33 @@ namespace coev::ssl
         co_return 0;
     }
 
-    int context::__ssl_write(const char *buffer, int buffer_size)
-    {
-        if (buffer_size <= 0)
-        {
-            return INVALID;
-        }
-
-        int send_offset = 0;
-        if (!__is_ssl())
-        {
-            assert(m_ssl == nullptr);
-            while (send_offset < buffer_size)
-            {
-                int r = ::send(m_fd, buffer + send_offset, buffer_size - send_offset, MSG_NOSIGNAL);
-                if (r > 0)
-                {
-                    send_offset += r;
-                    continue;
-                }
-                else if (r == INVALID && (errno == EAGAIN || errno == EWOULDBLOCK))
-                {
-                    m_want_write = true;
-                    return send_offset > 0 ? send_offset : 0;
-                }
-                else
-                {
-                    return INVALID;
-                }
-            }
-            return send_offset;
-        }
-
-        if (!__ssl_valid())
-        {
-            return INVALID;
-        }
-
-        while (send_offset < buffer_size)
-        {
-            m_want_write = false;
-            int r = SSL_write(m_ssl, buffer + send_offset, buffer_size - send_offset);
-
-            if (r > 0)
-            {
-                send_offset += r;
-                continue;
-            }
-
-            r = SSL_get_error(m_ssl, r);
-            if (r == SSL_ERROR_WANT_WRITE)
-            {
-                m_want_write = true;
-                return send_offset > 0 ? send_offset : 0;
-            }
-            else if (r == SSL_ERROR_WANT_READ)
-            {
-                m_want_read = true;
-                return send_offset > 0 ? send_offset : 0;
-            }
-            else
-            {
-                errno = -r;
-                return INVALID;
-            }
-        }
-
-        return send_offset;
-    }
-    int context::__ssl_read(char *buffer, int size)
-    {
-        if (m_ssl == nullptr)
-        {
-            while (true)
-            {
-                m_want_read = false;
-                int r = ::recv(m_fd, buffer, size, 0);
-                if (r > 0)
-                {
-                    return r;
-                }
-                else if (r == INVALID && (errno == EAGAIN || errno == EWOULDBLOCK))
-                {
-                    int bytes_available = 0;
-                    if (ioctl(m_fd, FIONREAD, &bytes_available) == 0 && bytes_available > 0)
-                    {
-                        continue;
-                    }
-
-                    m_want_read = true;
-                    return 0;
-                }
-                else if (r == 0)
-                {
-                    m_want_terminal = true;
-                    return 0;
-                }
-                else
-                {
-                    errno = ECONNRESET;
-                    return INVALID;
-                }
-            }
-        }
-
-        if (!__ssl_valid())
-        {
-            return INVALID;
-        }
-
-        while (true)
-        {
-            m_want_read = false;
-            int r = SSL_read(m_ssl, buffer, size);
-            if (r > 0)
-            {
-                return r;
-            }
-
-            r = SSL_get_error(m_ssl, r);
-            if (r == SSL_ERROR_WANT_READ)
-            {
-                int bytes_available = 0;
-                if (ioctl(m_fd, FIONREAD, &bytes_available) == 0 && bytes_available > 0)
-                {
-                    continue;
-                }
-
-                m_want_read = true;
-                return 0;
-            }
-            else if (r == SSL_ERROR_WANT_WRITE)
-            {
-                m_want_write = true;
-                return 0;
-            }
-            else if (r == SSL_ERROR_ZERO_RETURN)
-            {
-                m_want_terminal = true;
-                return 0;
-            }
-            else if (r == SSL_ERROR_SSL)
-            {
-                errno = ECONNRESET;
-                return INVALID;
-            }
-            else
-            {
-                errno = ECONNRESET;
-                return INVALID;
-            }
-        }
-    }
-
     bool context::__ssl_valid() const
     {
         return __valid() && (!__is_ssl() || m_ssl);
     }
-    awaitable<void> context::__w_waiter()
+    awaitable<int> context::__w_waiter()
     {
-        int send_buffer_size = 0;
-        socklen_t len = sizeof(send_buffer_size);
-        if (getsockopt(m_fd, SOL_SOCKET, SO_SNDBUF, &send_buffer_size, &len) == 0)
+        if (isInprocess())
         {
-            int bytes_queued = 0;
-            if (ioctl(m_fd, TIOCOUTQ, &bytes_queued) == 0)
+            ev_io_start(m_loop, &m_write);
+            finally(__ev_stop_write());
+            LOG_CORE("fd %d write waiter", m_fd);
+            finally(LOG_CORE("fd %d write waiter end", m_fd));
+            auto r = co_await m_w_waiter.suspend();
+            if (r == INVALID)
             {
-                if (bytes_queued < send_buffer_size)
-                {
-                    co_return;
-                }
+                co_return r;
             }
         }
-        if (isInprocess())
-        {
-            co_await m_w_waiter.suspend();
-        }
+        co_return 0;
     }
-    awaitable<void> context::__r_waiter()
+    awaitable<int> context::__r_waiter()
     {
-        int bytes_available = 0;
-        if (ioctl(m_fd, FIONREAD, &bytes_available) == 0 && bytes_available > 0)
-        {
-            co_return;
-        }
-        if (isInprocess())
-        {
-            co_await m_r_waiter.suspend();
-        }
+        LOG_CORE("fd %d __r_waiter ioctl bytes_available=0, ssl_pending=%d", m_fd, m_ssl ? SSL_pending(m_ssl) : 0);
+        finally(LOG_CORE("fd %d read waiter end", m_fd));
+        auto r = co_await m_r_waiter.suspend();
+        LOG_CORE("fd %d __r_waiter resumed with r=%lu", m_fd, r);
+        co_return r;
     }
+
 }

@@ -24,7 +24,7 @@ namespace coev::nghttp2
         awaitable<int> __dispatch(int fd, SSL_CTX *_mgr);
 
     private:
-        session::routers m_routers;
+        std::shared_ptr<session::routers> m_routers = std::make_shared<session::routers>();
         co_task m_tasks;
     };
 }

@@ -17,6 +17,7 @@
 #include "sleep_for.h"
 #include "co_deliver.h"
 #include "finally.h"
+#include "log.h"
 
 namespace coev
 {
@@ -49,7 +50,12 @@ namespace coev
     public:
         client_pool() noexcept = default;
         ~client_pool() noexcept { stop(); }
-        awaitable<int> get(Instance &ptr) noexcept { return __get_sq()->get_cli(ptr); }
+        awaitable<int> get(Instance &ptr) noexcept
+        {
+            auto sq = __get_sq();
+            co_return co_await sq->get_cli(ptr);
+        }
+        Instance instance() { return {}; }
         void set(std::shared_ptr<Config> _conf) noexcept
         {
             m_config = _conf;
@@ -61,9 +67,8 @@ namespace coev
             for (auto [tid, qs] : m_pool)
             {
                 qs->m_config->max_connections = 0;
-                while (auto c = qs->m_closed.pop_front())
+                while (qs->m_closed.resume())
                 {
-                    co_deliver::resume(static_cast<co_event *>(c));
                 }
             }
             m_pool.clear();
@@ -108,7 +113,7 @@ namespace coev
             ~SQueue() noexcept
             {
                 m_config->max_connections = 0;
-                while (m_waiter.resume())
+                while (m_waiter.resume(INVALID))
                 {
                 }
                 clear();
@@ -134,14 +139,14 @@ namespace coev
             Instance(std::shared_ptr<SQueue> _pool, client *_client) noexcept : m_pool(_pool), m_client(_client) {}
             Instance(Instance &&o) noexcept
             {
-                m_pool = o.m_pool;
+                m_pool = std::move(o.m_pool);
                 m_client = std::exchange(o.m_client, nullptr);
             }
             Instance &operator=(Instance &&o) noexcept
             {
                 if (this != &o)
                 {
-                    m_pool = o.m_pool;
+                    m_pool = std::move(o.m_pool);
                     m_client = std::exchange(o.m_client, nullptr);
                 }
                 return *this;
@@ -150,14 +155,21 @@ namespace coev
             Instance &operator=(const Instance &) = delete;
             ~Instance() noexcept
             {
-                if (!local<is_deleting>::instance())
+                auto _client = std::exchange(m_client, nullptr);
+                if (_client)
                 {
-                    if (m_pool && m_client)
+                    if (!local<is_deleting>::instance())
                     {
-                        auto _client = std::exchange(m_client, nullptr);
-                        auto pool = std::move(m_pool);
-                        pool->release(_client);
+                        if (m_pool)
+                        {
+                            if (m_pool->m_config->max_connections > 0)
+                            {
+                                m_pool->release(_client);
+                                return;
+                            }
+                        }
                     }
+                    delete _client;
                 }
             }
             operator bool() const noexcept { return m_client != nullptr && *m_client; }
@@ -180,14 +192,17 @@ namespace coev
             }
             if (m_used == m_connected && (m_config->max_connections == (m_connected + m_connecting)))
             {
-                co_await m_waiter.suspend();
+                auto r = co_await m_waiter.suspend();
+                if (r == INVALID)
+                {
+                    co_return r;
+                }
                 continue;
             }
             if ((m_connected + m_connecting) < m_config->max_connections)
             {
                 m_connecting++;
                 finally(m_connecting--);
-
                 for (auto i = 0; i < m_config->retry_count; i++)
                 {
                     if (auto cq = co_await create())
@@ -262,8 +277,10 @@ namespace coev
     {
         try
         {
-            assert(m_connected > 0);
-            m_connected--;
+            if (m_connected > 0)
+            {
+                m_connected--;
+            }
             std::lock_guard<is_deleting> _(local<is_deleting>::instance());
             delete cq;
         }
@@ -274,13 +291,21 @@ namespace coev
     template <class CLI>
     awaitable<typename client_pool<CLI>::client *> client_pool<CLI>::SQueue::create() noexcept
     {
+        client_pool<CLI>::client *cq = nullptr;
+        int r = INVALID;
         try
         {
-            auto cq = new client_pool<CLI>::client(m_config);
-            auto err = co_await cq->connect();
-            if (err == INVALID)
+            cq = new client_pool<CLI>::client(m_config);
+            finally(
+                {
+                    if (cq && r == INVALID)
+                    {
+                        delete cq;
+                    }
+                });
+            r = co_await cq->connect();
+            if (r == INVALID)
             {
-                del(cq);
                 co_return nullptr;
             }
             co_return cq;

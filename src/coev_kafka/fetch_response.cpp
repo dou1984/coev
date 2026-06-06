@@ -524,7 +524,6 @@ namespace coev::kafka
         auto &frb = m_blocks[topic][partition];
         auto kv = encodeKV(key, value);
         auto msg_timestamp = m_log_append_time ? m_timestamp : timestamp;
-        auto msg = std::make_shared<Message>(kv.first, kv.second, m_log_append_time, msg_timestamp, version);
 
         if (frb.m_records_set.empty())
         {
@@ -535,8 +534,13 @@ namespace coev::kafka
         // 确保m_records_type是LegacyRecords类型
         if (frb.m_records_set[0].m_records_type == LegacyRecords && frb.m_records_set[0].m_message_set)
         {
-            auto &message_set = *frb.m_records_set[0].m_message_set;
-            message_set.m_messages.emplace_back(msg, offset);
+            auto &msg = frb.m_records_set[0].m_message_set->emplace_message();
+            msg.m_offset = offset;
+            msg.m_message.m_key = kv.first;
+            msg.m_message.m_value = kv.second;
+            msg.m_message.m_log_append_time = m_log_append_time;
+            msg.m_message.m_timestamp = msg_timestamp;
+            msg.m_message.m_version = version;
         }
     }
 
@@ -555,9 +559,8 @@ namespace coev::kafka
         // 确保m_records_type是DefaultRecords类型
         if (frb.m_records_set[0].m_records_type == DefaultRecords && frb.m_records_set[0].m_record_batch)
         {
-            auto &batch = *frb.m_records_set[0].m_record_batch;
-            auto rec = std::make_shared<Record>(kv.first, kv.second, offset, std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - batch.m_first_timestamp));
-            batch.add_record(rec);
+            auto batch = frb.m_records_set[0].m_record_batch;
+            batch->emplace(kv.first, kv.second, 0, std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - batch->m_first_timestamp));
         }
     }
 
@@ -578,8 +581,7 @@ namespace coev::kafka
         batch->m_producer_id = producer_id;
         batch->m_is_transactional = is_transactional;
 
-        auto rec = std::make_shared<Record>(kv.first, kv.second, 0, std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - batch->m_first_timestamp));
-        batch->add_record(rec);
+        batch->emplace(kv.first, kv.second, 0, std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - batch->m_first_timestamp));
         frb.m_records_set.emplace_back(batch);
     }
 
@@ -604,8 +606,7 @@ namespace coev::kafka
         real_encoder _value;
         _abort.encode(_key, _value);
 
-        auto rec = std::make_shared<Record>(_key.m_raw, _value.m_raw, 0, std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - batch->m_first_timestamp));
-        batch->add_record(rec);
+        batch->emplace(_key.m_raw, _value.m_raw, 0, std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - batch->m_first_timestamp));
         frb.m_records_set.emplace_back(batch);
     }
 

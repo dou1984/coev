@@ -194,38 +194,35 @@ namespace coev::kafka
             {
                 auto record_batch = pset->m_records->m_record_batch;
                 size += MaximumRecordOverhead;
-                auto rec = std::make_shared<Record>();
-                rec->m_key = key;
-                rec->m_value = val;
-                rec->m_timestamp_delta = std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - record_batch->m_first_timestamp);
-
                 size += key.size() + val.size();
+
+                auto &rec = record_batch->emplace(key, val, 0,
+                                                  std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - record_batch->m_first_timestamp));
+
                 if (!msg->m_headers.empty())
                 {
-                    rec->m_headers.reserve(msg->m_headers.size());
+                    rec.m_headers.reserve(msg->m_headers.size());
                     for (auto &h : msg->m_headers)
                     {
-                        rec->m_headers.emplace_back(h.m_key, h.m_value);
+                        rec.m_headers.emplace_back(h.m_key, h.m_value);
                         size += h.m_key.size() + h.m_value.size() + 2 * 5; // MaxVarintLen32 ~5
                     }
                 }
-                record_batch->add_record(rec);
             }
         }
         else
         {
             if (pset->m_records->m_message_set)
             {
-                auto msg_to_send = std::make_shared<Message>();
-                msg_to_send->m_codec = CompressionCodec::None;
-                msg_to_send->m_key = key;
-                msg_to_send->m_value = val;
+                auto &msg = pset->m_records->m_message_set->emplace_message();
+                msg.m_message.m_codec = CompressionCodec::None;
+                msg.m_message.m_key = key;
+                msg.m_message.m_value = val;
                 if (m_parent->m_conf->Version.IsAtLeast(V0_10_0_0))
                 {
-                    msg_to_send->m_timestamp.set_time(timestamp);
-                    msg_to_send->m_version = 1;
+                    msg.m_message.m_timestamp.set_time(timestamp);
+                    msg.m_message.m_version = 1;
                 }
-                pset->m_records->m_message_set->add_message(msg_to_send);
                 size = ProducerMessageOverhead + key.size() + val.size();
             }
         }
@@ -274,8 +271,8 @@ namespace coev::kafka
                             std::chrono::milliseconds MaxTimestampDelta(0);
                             for (size_t i = 0; i < record_batch->m_records.size(); ++i)
                             {
-                                record_batch->m_records[i]->m_offset_delta = static_cast<int64_t>(i);
-                                MaxTimestampDelta = std::max(MaxTimestampDelta, std::chrono::duration_cast<std::chrono::milliseconds>(record_batch->m_records[i]->m_timestamp_delta));
+                                record_batch->m_records[i].m_offset_delta = static_cast<int64_t>(i);
+                                MaxTimestampDelta = std::max(MaxTimestampDelta, std::chrono::duration_cast<std::chrono::milliseconds>(record_batch->m_records[i].m_timestamp_delta));
                             }
                             record_batch->m_max_timestamp = record_batch->m_first_timestamp + MaxTimestampDelta;
                         }
@@ -287,7 +284,7 @@ namespace coev::kafka
 
                 if (pset->m_records->m_message_set)
                 {
-                    auto &message_set = *pset->m_records->m_message_set;
+                    auto message_set = pset->m_records->m_message_set;
                     if (m_parent->m_conf->Producer.Compression == CompressionCodec::None)
                     {
                         req->add_set(topic, partition, pset->m_records->m_message_set);
@@ -296,14 +293,14 @@ namespace coev::kafka
                     {
                         if (m_parent->m_conf->Version.IsAtLeast(V0_10_0_0))
                         {
-                            for (size_t i = 0; i < message_set.m_messages.size(); ++i)
+                            for (size_t i = 0; i < message_set->m_messages.size(); ++i)
                             {
-                                message_set.m_messages[i].m_offset = static_cast<int64_t>(i);
+                                message_set->m_messages[i].m_offset = static_cast<int64_t>(i);
                             }
                         }
 
                         std::string payload;
-                        coev::kafka::encode(message_set, payload);
+                        coev::kafka::encode(*message_set, payload);
 
                         auto comp_msg = std::make_shared<Message>();
                         comp_msg->m_codec = m_parent->m_conf->Producer.Compression;
@@ -315,12 +312,19 @@ namespace coev::kafka
                         if (m_parent->m_conf->Version.IsAtLeast(V0_10_0_0))
                         {
                             comp_msg->m_version = 1;
-                            if (!message_set.m_messages.empty())
+                            if (!message_set->m_messages.empty())
                             {
-                                comp_msg->m_timestamp = message_set.m_messages[0].m_message->m_timestamp;
+                                comp_msg->m_timestamp = message_set->m_messages[0].m_message.m_timestamp;
                             }
                         }
-                        req->add_message(topic, partition, comp_msg);
+                        auto &msg_block = req->emplace_message(topic, partition);
+                        msg_block.m_message.m_codec = comp_msg->m_codec;
+                        msg_block.m_message.m_compression_level = comp_msg->m_compression_level;
+                        msg_block.m_message.m_key = comp_msg->m_key;
+                        msg_block.m_message.m_value = std::move(payload);
+                        msg_block.m_message.m_message_set = comp_msg->m_message_set;
+                        msg_block.m_message.m_version = comp_msg->m_version;
+                        msg_block.m_message.m_timestamp = comp_msg->m_timestamp;
                     }
                 }
             }

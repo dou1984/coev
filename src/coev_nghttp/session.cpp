@@ -112,15 +112,10 @@ namespace coev::nghttp2
         {
             return NGHTTP2_ERR_CALLBACK_FAILURE;
         }
-
-        int r = _this->__ssl_write((const char *)data, static_cast<int>(length));
+        auto r = _this->__ssl_write((const char *)data, (int)length);
         if (r == INVALID)
         {
             return NGHTTP2_ERR_CALLBACK_FAILURE;
-        }
-        else if (r == 0)
-        {
-            return r;
         }
         return r;
     }
@@ -180,6 +175,7 @@ namespace coev::nghttp2
             }
             break;
         default:
+            LOG_CORE("session::__on_frame_recv_callback: %d", frame->hd.type)
             break;
         }
         return 0;
@@ -260,12 +256,12 @@ namespace coev::nghttp2
         }
         return 0;
     }
-    session::session(SSL_CTX *ctx) : coev::ssl::context(ctx)
+    session::session(SSL_CTX *ctx) : base(ctx)
     {
         // 判断是否是客户端
         assert(m_type | IO_CLI);
     }
-    session::session(int fd, SSL_CTX *ctx) : coev::ssl::context(fd, ctx)
+    session::session(int fd, SSL_CTX *ctx) : base(fd, ctx)
     {
         auto err = nghttp2_session_server_new(&m_session, m_callbacks, this);
         if (err != 0)
@@ -275,14 +271,13 @@ namespace coev::nghttp2
     }
     session::~session()
     {
-        __clearup();
         auto _session = std::exchange(m_session, nullptr);
-        while (m_waiting_write.resume())
+        while (m_write_waiter.resume(INVALID))
         {
         }
-        for (auto &[_, waiter] : m_w_trigger)
+        for (auto &[_, waiter] : m_end_trigger)
         {
-            while (waiter.resume())
+            while (waiter.resume(INVALID))
             {
             }
         }
@@ -290,9 +285,10 @@ namespace coev::nghttp2
         {
             nghttp2_session_del(_session);
         }
+        __clearup();
     }
 
-    int session::__submit_request(nghttp2_nv *nva, int head_size, const char *body, int length)
+    awaitable<int> session::__submit_request(nghttp2_nv *nva, int head_size, const char *body, int length)
     {
         auto cache = new __cache(body, length);
         nghttp2_data_provider data_provider{
@@ -302,21 +298,18 @@ namespace coev::nghttp2
         if (stream_id < 0)
         {
             delete cache;
-            return INVALID;
+            co_return INVALID;
         }
-        auto err = __send();
+
+        auto err = co_await __send();
         if (err < 0)
         {
-            return INVALID;
+            co_return INVALID;
         }
-        if (err == 0)
-        {
-            __resume_process();
-        }
-        return stream_id;
+        co_return stream_id;
     }
 
-    int session::__submit_response(int stream_id, nghttp2_nv *nva, int head_size, const char *body, int length)
+    awaitable<int> session::__submit_response(int stream_id, nghttp2_nv *nva, int head_size, const char *body, int length)
     {
         auto cache = new __cache(body, length);
         nghttp2_data_provider data_provider{
@@ -326,37 +319,29 @@ namespace coev::nghttp2
         if (err < 0)
         {
             delete cache;
-            return INVALID;
+            co_return INVALID;
         }
-        err = __send();
+        err = co_await __send();
         if (err < 0)
         {
-            return INVALID;
+            co_return INVALID;
         }
-        if (err == 0)
-        {
-            __resume_process();
-        }
-        return 0;
+        co_return 0;
     }
-    int session::__push_promise(int stream_id, nghttp2_nv *nva, int head_size)
-    {
-        auto r = nghttp2_submit_push_promise(m_session, NGHTTP2_FLAG_NONE, stream_id, nva, head_size, this);
-        if (r < 0)
-        {
-            return INVALID;
-        }
-        r = __send();
-        if (r < 0)
-        {
-            return INVALID;
-        }
-        if (r == 0)
-        {
-            __resume_process();
-        }
-        return r;
-    }
+    // awaitable<int> session::__push_promise(int stream_id, nghttp2_nv *nva, int head_size)
+    // {
+    //     auto r = nghttp2_submit_push_promise(m_session, NGHTTP2_FLAG_NONE, stream_id, nva, head_size, this);
+    //     if (r < 0)
+    //     {
+    //         co_return INVALID;
+    //     }
+    //     r = co_await __send();
+    //     if (r < 0)
+    //     {
+    //         return INVALID;
+    //     }
+    //     return r;
+    // }
 
     awaitable<int> session::connect(const char *url) noexcept
     {
@@ -388,50 +373,77 @@ namespace coev::nghttp2
         {
             goto __error__;
         }
-        err = send_client_settings();
+        err = co_await send_client_settings();
         if (err != 0)
         {
             goto __error__;
         }
         m_task << __processing_read();
         m_task << __processing_write();
+
         co_return m_fd;
     }
 
     awaitable<void> session::__processing_write()
     {
+        LOG_CORE("processing write session %p", this);
+        finally(LOG_CORE("end processing write session %p", this));
+        int loop_count = 0;
+        int zero_count = 0;
         while (__is_processing())
         {
+            loop_count++;
+            if (loop_count % 1000 == 0)
+            {
+                LOG_ERR("[DBG] session %p processing_write loop %d, zero_count=%d, m_want_read=%d, m_want_write=%d", this, loop_count, zero_count, m_want_read, m_want_write);
+            }
             if (nghttp2_session_want_write(m_session))
             {
-                auto r = __send();
+                LOG_CORE("[DBG] session %p before __send, m_want_read=%d, m_want_write=%d", this, m_want_read, m_want_write);
+                auto r = co_await __send();
+                LOG_CORE("[DBG] session %p after __send, r=%d, m_want_read=%d, m_want_write=%d", this, r, m_want_read, m_want_write);
                 if (r > 0)
                 {
+                    LOG_CORE("session %p send %d bytes", this, r);
                 }
                 else if (r == 0)
                 {
-                    if (m_want_read)
+                    zero_count++;
+                    if (zero_count % 100 == 0)
                     {
+                        LOG_ERR("[DBG] session %p send returned 0, zero_count=%d, m_want_read=%d, m_want_write=%d", this, zero_count, m_want_read, m_want_write);
                     }
-                    else if (m_want_write)
+
+                    r = co_await __w_waiter();
+                    if (r == INVALID)
                     {
-                        co_await __w_waiter();
+                        co_return;
                     }
                 }
                 else
                 {
+                    LOG_CORE("send error %d break", r);
                     __clearup();
                     break;
                 }
             }
             else
             {
-                co_await m_waiting_write.suspend();
+
+                LOG_CORE("fd %d write waiter 2", m_fd);
+                finally(LOG_CORE("fd %d write waiter 2 end", m_fd));
+                auto r = co_await m_write_waiter.suspend();
+                if (r == INVALID)
+                {
+                    co_return;
+                }
             }
         }
     }
     awaitable<void> session::__processing_read()
     {
+        LOG_CORE("processing read session %p", this);
+        finally(LOG_CORE("finished processing read session %p", this));
         std::string recv_buffer;
         recv_buffer.resize(4 * 1024);
         int recv_offset = 0;
@@ -442,8 +454,7 @@ namespace coev::nghttp2
                 recv_buffer.resize(recv_buffer.size() * 2);
             }
 
-            int r;
-            r = __ssl_read(recv_buffer.data() + recv_offset, recv_buffer.size() - recv_offset);
+            int r = __ssl_read(recv_buffer.data() + recv_offset, recv_buffer.size() - recv_offset);
             if (r > 0)
             {
                 recv_offset += r;
@@ -457,10 +468,12 @@ namespace coev::nghttp2
                     }
                     else if (r == 0)
                     {
+                        LOG_CORE("session::parse: nghttp2_session_mem_recv: break");
                         break;
                     }
                     else if (r < 0)
                     {
+                        LOG_CORE("ssl_read error %d", r);
                         co_return;
                     }
                 }
@@ -481,16 +494,30 @@ namespace coev::nghttp2
                     m_want_read = false;
                     m_want_write = false;
                     __clearup();
+                    LOG_CORE("session::__processing_read() break");
                     break;
                 }
                 else if (m_want_read)
                 {
-                    co_await m_r_waiter.suspend();
-                    m_want_read = false;
+                    LOG_CORE("session %p want read", this);
+                    finally(LOG_CORE("end session %p want read", this));
+                    r = co_await __r_waiter();
+                    if (r == INVALID)
+                    {
+                        __clearup();
+                        co_return;
+                    }
                 }
                 else if (m_want_write)
                 {
-                    m_waiting_write.resume_next_loop();
+                    LOG_CORE("session %p want write", this);
+                    finally(LOG_CORE("end session %p want write", this));
+                    r = co_await __w_waiter();
+                    if (r == INVALID)
+                    {
+                        __clearup();
+                        co_return;
+                    }
                 }
             }
             else if (r == INVALID)
@@ -498,10 +525,12 @@ namespace coev::nghttp2
                 m_want_read = false;
                 m_want_write = false;
                 __clearup();
+                LOG_CORE("session::__processing_ssl_write() break");
                 break;
             }
         }
     }
+
     int session::__processing(int stream_id)
     {
         if (stream_id == 0)
@@ -512,40 +541,43 @@ namespace coev::nghttp2
         {
             if (auto it = m_requests.find(stream_id); it != m_requests.end())
             {
-                auto request = std::move(it->second);
+                m_task << __router(std::move(it->second));
                 m_requests.erase(it);
-                if (auto it_f = m_routers.find(request.path()); it_f != m_routers.end())
-                {
-                    m_task << [/* g++12 bug 使用 lambda 捕获参数时可能会崩溃 */](auto &_this, auto &f, auto &&_request) -> awaitable<void>
-                    {
-                        return f(_this, _request);
-                    }(*this, it_f->second, std::move(request));
-                }
             }
-            if (auto it = m_w_trigger.find(stream_id); it != m_w_trigger.end())
+            if (auto it = m_end_trigger.find(stream_id); it != m_end_trigger.end())
             {
-                it->second.resume();
+                it->second.resume_next_loop();
             }
         }
         else
         {
-            if (auto it = m_w_trigger.find(stream_id); it != m_w_trigger.end())
+            if (auto it = m_end_trigger.find(stream_id); it != m_end_trigger.end())
             {
-                it->second.resume();
+                it->second.resume_next_loop();
             }
         }
         return 0;
     }
+    awaitable<void> session::__router(request &&_request)
+    {
+        if (auto it = m_routers->find(_request.path()); it != m_routers->end())
+        {
+            return it->second(*this, _request);
+        }
+        auto _ = [&](auto &, auto &) -> awaitable<void>
+        {
+            LOG_CORE("session::__router: no router for %s", _request.path().c_str());
+            co_return;
+        };
+        return _(*this, _request);
+    }
+
     int session::__resume_process()
     {
         assert(m_session);
-        if (m_want_write)
-        {
-            m_waiting_write.resume_next_loop();
-        }
         if (nghttp2_session_want_write(m_session))
         {
-            m_waiting_write.resume_next_loop();
+            m_write_waiter.resume_next_loop();
         }
         return 0;
     }
@@ -559,30 +591,30 @@ namespace coev::nghttp2
         {
             co_return INVALID;
         }
-        auto stream_id = __submit_request(h, h.size(), body, length);
+        auto stream_id = co_await __submit_request(h, h.size(), body, length);
         if (stream_id < 0)
         {
             co_return INVALID;
         }
         co_return co_await __wait_for_stream_end(stream_id, res);
     }
-    int session::reply(int stream_id, header &h, const char *body, int length)
+    awaitable<int> session::reply(int stream_id, header &h, const char *body, int length)
     {
         if (!__is_processing())
         {
-            return INVALID;
+            co_return INVALID;
         }
-        auto err = __submit_response(stream_id, h, h.size(), body, length);
+        auto err = co_await __submit_response(stream_id, h, h.size(), body, length);
         if (err < 0)
         {
-            return INVALID;
+            co_return INVALID;
         }
-        err = __send();
+        err = co_await __send();
         if (err < 0)
         {
-            return INVALID;
+            co_return INVALID;
         }
-        return 0;
+        co_return 0;
     }
     int session::reply_error(int32_t stream_id, int error_code)
     {
@@ -595,8 +627,8 @@ namespace coev::nghttp2
     }
     awaitable<int> session::__wait_for_stream_end(int stream_id, response &res)
     {
-        finally(m_w_trigger.erase(stream_id));
-        co_await m_w_trigger[stream_id].suspend();
+        finally(m_end_trigger.erase(stream_id));
+        co_await m_end_trigger[stream_id].suspend();
         if (auto it = m_responses.find(stream_id); it != m_responses.end())
         {
             res = std::move(it->second);
@@ -605,7 +637,13 @@ namespace coev::nghttp2
         }
         co_return INVALID;
     }
-    int session::send_server_settings()
+    int session::set_routers(std::shared_ptr<routers> &routers)
+    {
+        m_routers = routers;
+        return 0;
+    }
+
+    awaitable<int> session::send_server_settings()
     {
         nghttp2_settings_entry iv[] = {{NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, 100}};
         auto err = nghttp2_submit_settings(m_session, NGHTTP2_FLAG_NONE, iv, sizeof(iv) / sizeof(iv[0]));
@@ -613,23 +651,18 @@ namespace coev::nghttp2
         {
             LOG_ERR("Failed to submit SETTINGS: %s fd %d", nghttp2_strerror(err), m_fd);
             __clearup();
-            return INVALID;
+            co_return INVALID;
         }
-        err = __send();
+        err = co_await __send();
         if (err == INVALID)
         {
             LOG_ERR("send message failed %d %d %s fd %d", errno, err, strerror(errno), m_fd);
             __clearup();
-            return INVALID;
+            co_return INVALID;
         }
-        return err;
+        co_return err;
     }
-    int session::set_routers(const routers &routers)
-    {
-        m_routers = routers;
-        return 0;
-    }
-    int session::send_client_settings()
+    awaitable<int> session::send_client_settings()
     {
         nghttp2_settings_entry settings[] = {
             {NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS, 100},
@@ -639,14 +672,14 @@ namespace coev::nghttp2
         auto err = nghttp2_submit_settings(m_session, NGHTTP2_FLAG_NONE, settings, 3);
         if (err != 0)
         {
-            return INVALID;
+            co_return INVALID;
         }
-        err = __send();
+        err = co_await __send();
         if (err < 0)
         {
-            return INVALID;
+            co_return INVALID;
         }
-        return 0;
+        co_return 0;
     }
     awaitable<int> session::do_handshake()
     {
@@ -658,27 +691,68 @@ namespace coev::nghttp2
         }
         co_return 0;
     }
-    int session::__send()
+    awaitable<int> session::__send()
+    {
+        if (!__is_processing())
+        {
+            co_return INVALID;
+        }
+        LOG_CORE("[DBG] session %p __send ENTER, m_want_read=%d, m_want_write=%d", this, m_want_read, m_want_write);
+        while (nghttp2_session_want_write(m_session))
+        {
+            LOG_CORE("[DBG] session %p __send nghttp2_session_send, m_want_read=%d, m_want_write=%d", this, m_want_read, m_want_write);
+            auto r = nghttp2_session_send(m_session);
+            LOG_CORE("[DBG] session %p __send nghttp2_session_send returned %d, m_want_read=%d, m_want_write=%d", this, r, m_want_read, m_want_write);
+            if (r > 0)
+            {
+                LOG_CORE("[DBG] session %p __send returned %d (success)", this, r);
+                co_return r;
+            }
+            else if (r == 0)
+            {
+                LOG_CORE("[DBG] session %p __send r==0, m_want_read=%d, m_want_write=%d", this, m_want_read, m_want_write);
+                if (m_want_read)
+                {
+                    LOG_CORE("[DBG] session %p __send resuming m_r_waiter", this);
+                    if (!m_r_waiter.resume())
+                    {
+                        LOG_CORE("session::__send m_r_waiter resume failed");
+                    }
+                }
+                if (m_want_write)
+                {
+                    LOG_CORE("[DBG] session %p __send waiting for writable", this);
+                    r = co_await __w_waiter();
+                    LOG_CORE("[DBG] session %p __send after __w_waiter, r=%d", this, r);
+                    if (r == INVALID)
+                    {
+                        co_return r;
+                    }
+                }
+            }
+            else
+            {
+                LOG_CORE("[DBG] session %p __send returned %d (error)", this, r);
+                co_return r;
+            }
+        }
+        LOG_CORE("[DBG] session %p __send returned 0 (complete)", this);
+        co_return 0;
+    }
+    int session::__sync_send()
     {
         if (!__is_processing())
         {
             return INVALID;
         }
-        int err = 0;
-        while (nghttp2_session_want_write(m_session))
+        if (nghttp2_session_want_write(m_session))
         {
-            err = nghttp2_session_send(m_session);
-            if (err != 0)
-            {
-                return INVALID;
-            }
+            return nghttp2_session_send(m_session);
         }
-        return err;
+        return 0;
     }
-
     request &session::get_request(int32_t stream_id)
     {
-
         return m_requests[stream_id];
     }
     void session::remove_request(int32_t stream_id)
@@ -692,5 +766,157 @@ namespace coev::nghttp2
     void session::remove_response(int32_t stream_id)
     {
         m_responses.erase(stream_id);
+    }
+
+    int session::__ssl_write(const char *buffer, int buffer_size)
+    {
+        if (buffer_size <= 0)
+        {
+            return INVALID;
+        }
+
+        int send_offset = 0;
+        if (!__is_ssl())
+        {
+            assert(m_ssl == nullptr);
+            while (send_offset < buffer_size)
+            {
+                int r = ::send(m_fd, buffer + send_offset, buffer_size - send_offset, MSG_NOSIGNAL);
+                if (r > 0)
+                {
+                    send_offset += r;
+                    continue;
+                }
+                else if (r == INVALID && (errno == EAGAIN || errno == EWOULDBLOCK))
+                {
+                    m_want_write = true;
+                    return send_offset > 0 ? send_offset : 0;
+                }
+                else
+                {
+                    return INVALID;
+                }
+            }
+            return send_offset;
+        }
+
+        if (!__ssl_valid())
+        {
+            return INVALID;
+        }
+
+        while (send_offset < buffer_size)
+        {
+            m_want_write = false;
+            m_want_read = false;
+            int r = SSL_write(m_ssl, buffer + send_offset, buffer_size - send_offset);
+            LOG_CORE("[DBG] session %p __ssl_write SSL_write returned %d, send_offset=%d/%d", this, r, send_offset, buffer_size);
+
+            if (r > 0)
+            {
+                send_offset += r;
+                continue;
+            }
+
+            r = SSL_get_error(m_ssl, r);
+            LOG_CORE("[DBG] session %p __ssl_write SSL_get_error returned %d", this, r);
+            if (r == SSL_ERROR_WANT_WRITE)
+            {
+                m_want_write = true;
+                LOG_CORE("[DBG] session %p __ssl_write WANT_WRITE, returning %d", this, send_offset > 0 ? send_offset : 0);
+                return send_offset > 0 ? send_offset : 0;
+            }
+            else if (r == SSL_ERROR_WANT_READ)
+            {
+                m_want_read = true;
+                LOG_CORE("[DBG] session %p __ssl_write WANT_READ, returning %d", this, send_offset > 0 ? send_offset : 0);
+                return send_offset > 0 ? send_offset : 0;
+            }
+            else
+            {
+                LOG_CORE("[DBG] session %p __ssl_write error %d, returning INVALID", this, r);
+                errno = -r;
+                return INVALID;
+            }
+        }
+
+        return send_offset;
+    }
+    int session::__ssl_read(char *buffer, int size)
+    {
+        if (m_ssl == nullptr)
+        {
+            while (true)
+            {
+                m_want_read = false;
+                int r = ::recv(m_fd, buffer, size, 0);
+                if (r > 0)
+                {
+                    return r;
+                }
+                else if (r == INVALID && (errno == EAGAIN || errno == EWOULDBLOCK))
+                {
+                    m_want_read = true;
+                    return 0;
+                }
+                else if (r == 0)
+                {
+                    m_want_terminal = true;
+                    return 0;
+                }
+                else
+                {
+                    errno = ECONNRESET;
+                    return INVALID;
+                }
+            }
+        }
+
+        if (!__ssl_valid())
+        {
+            return INVALID;
+        }
+
+        while (true)
+        {
+            m_want_read = false;
+            m_want_write = false;
+            int r = SSL_read(m_ssl, buffer, size);
+            LOG_CORE("[DBG] session %p __ssl_read SSL_read returned %d", this, r);
+            if (r > 0)
+            {
+                return r;
+            }
+
+            r = SSL_get_error(m_ssl, r);
+            LOG_CORE("[DBG] session %p __ssl_read SSL_get_error returned %d", this, r);
+            if (r == SSL_ERROR_WANT_READ)
+            {
+                m_want_read = true;
+                LOG_CORE("[DBG] __ssl_read WANT_READ, returning 0 %p", this);
+                return 0;
+            }
+            else if (r == SSL_ERROR_WANT_WRITE)
+            {
+                m_want_write = true;
+                LOG_CORE("[DBG] __ssl_read WANT_WRITE, returning 0 %p", this);
+                return 0;
+            }
+            else if (r == SSL_ERROR_ZERO_RETURN)
+            {
+                m_want_terminal = true;
+                return 0;
+            }
+            else if (r == SSL_ERROR_SSL)
+            {
+                errno = ECONNRESET;
+                return INVALID;
+            }
+            else
+            {
+                errno = ECONNRESET;
+                return INVALID;
+            }
+        }
     }
 }

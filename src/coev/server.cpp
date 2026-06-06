@@ -34,7 +34,6 @@ namespace coev::tcp
 			return;
 		}
 		server *_this = (server *)(w->data);
-		assert(_this != nullptr);
 		LOG_CORE("server::cb_accept %p", _this);
 		_this->m_waiter.resume();
 		local_resume();

@@ -110,7 +110,7 @@ awaitable<void> go()
 			break;
 		}
 		LOG_DBG("%d %s %s %s %s %s", t.id, t.username.data(), t.password.data(),
-			t.mobile.data(), t.create_time.data(), t.update_time.data());
+				t.mobile.data(), t.create_time.data(), t.update_time.data());
 	}
 	if (err == INVALID)
 	{
@@ -165,7 +165,7 @@ int main()
 
 				co_await clear();
 			})
-		.wait();
+		.end();
 
 	return 0;
 }

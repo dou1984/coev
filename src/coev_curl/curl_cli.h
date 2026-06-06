@@ -6,6 +6,7 @@
  */
 #pragma once
 #include <unordered_map>
+#include <memory>
 #include <coev/coev.h>
 #include <curl/curl.h>
 
@@ -22,7 +23,7 @@ namespace coev
         Instance get();
 
     protected:
-        std::unordered_map<curl_socket_t, Context> m_clients;
+        std::unordered_map<curl_socket_t, std::shared_ptr<Context>> m_clients;
         static int cb_socket_event(CURL *curl, curl_socket_t s, int action, void *userp, void *socketp);
         static int cb_timer(CURLM *multi, long timeout_ms, void *userp);
         void action(curl_socket_t fd, int flags);
@@ -30,10 +31,12 @@ namespace coev
         void init_socket(curl_socket_t, int);
 
     private:
-        Context &__get_or_create(int fd);
+        std::shared_ptr<Context> &__get_or_create(int fd);
+        bool __exists(int fd) const;
+        void __remove(int fd);
+        awaitable<void> __time_waiter();
         awaitable<void> __read_waiter(curl_socket_t fd);
         awaitable<void> __write_waiter(curl_socket_t fd);
-        awaitable<void> __time_waiter();
 
     private:
         CURLM *m_multi = nullptr;
@@ -61,11 +64,19 @@ namespace coev
                 return m_curl ? curl_easy_setopt(m_curl, opt, std::forward<T>(ptr)) : CURLE_FAILED_INIT;
             }
         };
-        struct Context : io_context
+        class Context : protected io_context
         {
+        public:
             using io_context::io_context;
-            auto &__w_waiter() { return m_w_waiter; }
+            using io_context::operator bool;
+            using io_context::close;
+            using io_context::fd;
+
             auto &__r_waiter() { return m_r_waiter; }
+            auto &__w_waiter() { return m_w_waiter; }
+
+            bool m_r_task = false;
+            bool m_w_task = false;
         };
     };
 }
