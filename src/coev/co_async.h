@@ -28,18 +28,19 @@ namespace coev
         class co_async : queue
         {
         public:
-            awaitable<uint64_t> suspend(const std::function<bool()> &, const std::function<void()> &) noexcept;
-            awaitable<uint64_t> suspend() noexcept;
+            ~co_async();
+            awaitable<int64_t> suspend(const std::function<bool()> &, const std::function<void()> &) noexcept;
+            awaitable<int64_t> suspend() noexcept;
             bool resume(const std::function<void()> &) noexcept;
             bool resume(uint64_t value = 0) noexcept;
             bool deliver(const std::function<void()> &) noexcept;
             bool deliver(uint64_t value = 0) noexcept;
-
             std::mutex &lock() noexcept { return m_mutex; }
 
         private:
             co_event *__ev(const std::function<void()> &_set);
-            co_event *__ev() noexcept;
+            co_event *__ev() noexcept;            
+
             std::mutex m_mutex;
         };
     }

@@ -71,8 +71,8 @@ awaitable<int> co_dail()
 	int count = 0;
 	LOG_DBG("co_dail start %s %d", sayhi, port);
 	while (true)
-	{
-		coev::pool::tcp::client::Instance c;
+	{		
+		auto c = _cpool.instance();
 		auto err = co_await _cpool.get(c);
 		if (err != 0)
 		{

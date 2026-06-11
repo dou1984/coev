@@ -32,7 +32,6 @@ namespace coev
         ev_signal_start(loop, &m_sigterm);
         LOG_CORE("signal intercepted loop %p", loop);
     }
-
     void ignore_signal(int sign)
     {
         struct sigaction s = {};

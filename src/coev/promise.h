@@ -42,7 +42,7 @@ namespace coev
 		std::coroutine_handle<> m_this = nullptr;
 		union
 		{
-			std::coroutine_handle<> m_caller;
+			std::coroutine_handle<> m_caller = nullptr;
 			void *m_task;
 		};
 		uint64_t m_tid = gtid();

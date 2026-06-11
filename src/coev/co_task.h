@@ -7,6 +7,8 @@
 #pragma once
 #include <memory>
 #include <functional>
+#include <map>
+#include <set>
 #include "queue.h"
 #include "co_async.h"
 #include "co_event.h"
@@ -19,21 +21,26 @@ namespace coev
 	class co_task final
 	{
 		co_async m_waiter;
-		std::unordered_map<promise *, uint64_t> m_promises;
-		uint64_t m_id = 0;
+		std::map<promise *, int64_t> m_promises;
+		std::set<int64_t> m_ids;
+		int64_t m_id = 0;
 
 	public:
 		virtual ~co_task();
 		void destroy();
-		void destroy(uint64_t id);
+		void destroy(int64_t id);
 
-		int operator<<(promise *);
-		int operator>>(promise *);
+		template <typename T>
+		int operator<<(T &&t)
+		{
+			auto p = t.move();
+			return load(p);
+		}
 		int load(promise *);
 		int unload(promise *);
 		bool empty();
 		awaitable<void> wait_all();
-		awaitable<uint64_t> wait();
+		awaitable<int64_t> wait();
 	};
 
 	namespace guard
@@ -41,21 +48,26 @@ namespace coev
 		class co_task final
 		{
 			guard::co_async m_waiter;
-			std::unordered_map<promise *, uint64_t> m_promises;
-			uint64_t m_id = 0;
+			std::map<promise *, int64_t> m_promises;
+			std::set<int64_t> m_ids;
+			int64_t m_id = 0;
 
 		public:
 			virtual ~co_task();
 			void destroy();
-			void destroy(uint64_t id);
+			void destroy(int64_t id);
 
-			int operator<<(promise *);
-			int operator>>(promise *);
+			template <typename T>
+			int operator<<(T &&t)
+			{
+				auto p = t.move();
+				return load(p);
+			}
 			int load(promise *);
 			int unload(promise *);
 			bool empty();
 			awaitable<void> wait_all();
-			awaitable<uint64_t> wait();
+			awaitable<int64_t> wait();
 		};
 	}
 }

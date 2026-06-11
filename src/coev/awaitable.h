@@ -9,6 +9,7 @@
 #include <atomic>
 #include <memory>
 #include <iostream>
+#include <utility>
 #include "queue.h"
 #include "promise.h"
 #include "log.h"
@@ -33,7 +34,8 @@ namespace coev
 		awaitable() = default;
 		awaitable(std::coroutine_handle<promise_type> h) : m_callee(h)
 		{
-			m_callee.promise().m_this = m_callee;
+			auto &_promise = m_callee.promise();
+			_promise.m_this = m_callee;
 		}
 		awaitable(awaitable &&o) = delete;
 		awaitable(const awaitable &) = delete;
@@ -59,7 +61,7 @@ namespace coev
 		}
 		void destroy()
 		{
-			if (!done())
+			if (m_callee && !done())
 			{
 				auto &_promise = m_callee.promise();
 				_promise.m_caller = nullptr;
@@ -70,27 +72,30 @@ namespace coev
 		}
 		void await_suspend(std::coroutine_handle<> caller) // co_await 调用， 传入上层 coroutine_handle
 		{
-			m_callee.promise().m_caller = caller;
-			m_callee.promise().m_type = details::CORO_COROUTINE_HANDLE;
-			if (m_callee.promise().m_status == details::CORO_SUSPEND)
+			auto &_promise = m_callee.promise();
+			assert(_promise.m_type == details::CORO_NONE);
+			_promise.m_caller = caller;
+			_promise.m_type = details::CORO_COROUTINE_HANDLE;
+			if (_promise.m_status == details::CORO_SUSPEND)
 			{
 				m_callee.resume();
 			}
-			else if (m_callee.promise().m_status == details::CORO_INIT)
+			else if (_promise.m_status == details::CORO_INIT)
 			{
 			}
 			else
 			{
-				throw std::runtime_error("await_suspend error m_callee.promise().m_status");
+				throw std::runtime_error("await_suspend error _promise.m_status");
 			}
 		}
 		bool await_ready() // 是否挂起,正常情况需要挂起,返回false
 		{
 			return done();
 		}
-		operator promise_type *()
+		promise_type *move() // 传递给co_task
 		{
-			return m_callee ? (&m_callee.promise()) : nullptr;
+			auto _callee = std::exchange(m_callee, nullptr);
+			return _callee ? (&_callee.promise()) : nullptr;
 		}
 
 	private:

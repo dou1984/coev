@@ -11,9 +11,47 @@
 #include "local_resume.h"
 #include "socket.h"
 
+#define TASK_ID_MAX (1000000000000000000)
+
 namespace coev
 {
+	void __destroy(promise *_promise)
+	{
+		if (_promise)
+		{
+			LOG_CORE("promise tid:%ld %p", _promise->m_tid, _promise->m_this.address());
+			_promise->m_task = nullptr;
+			_promise->m_type = details::CORO_NONE;
+			_promise->m_this.destroy();
+		}
+	}
 
+	int64_t __increase(int64_t &id, std::set<int64_t> &ids)
+	{
+		assert(ids.size() < (TASK_ID_MAX / 2));
+		while (true)
+		{
+			++id;
+			if (id > TASK_ID_MAX)
+			{
+				id = 0;
+			}
+			if (ids.find(id) == ids.end())
+			{
+				ids.insert(id);
+				return id;
+			}
+		}
+	}
+	void __finally(promise *_promise)
+	{
+		if (_promise->m_status == details::CORO_SUSPEND)
+		{
+			_promise->m_status = details::CORO_RUNNING;
+			assert(!_promise->m_this.done());
+			_promise->m_this.resume();
+		}
+	}
 	co_task::~co_task()
 	{
 		destroy();
@@ -29,16 +67,10 @@ namespace coev
 		{
 			auto p = it->first;
 			std::lock_guard<is_destroying> _(local<is_destroying>::instance());
-			if (p)
-			{
-				LOG_CORE("promise tid:%ld %p", p->m_tid, p->m_this.address());
-				p->m_task = nullptr;
-				p->m_type = details::CORO_NONE;
-				p->m_this.destroy();
-			}
+			__destroy(p);
 		}
 	}
-	void co_task::destroy(uint64_t id)
+	void co_task::destroy(int64_t id)
 	{
 		for (auto it = m_promises.begin(); it != m_promises.end(); ++it)
 		{
@@ -47,18 +79,12 @@ namespace coev
 				auto p = it->first;
 				m_promises.erase(it);
 				std::lock_guard<is_destroying> _(local<is_destroying>::instance());
-
-				if (p)
-				{
-					p->m_task = nullptr;
-					p->m_type = details::CORO_NONE;
-					p->m_this.destroy();
-				}
+				__destroy(p);
 				break;
 			}
 		}
 	}
-	awaitable<uint64_t> co_task::wait()
+	awaitable<int64_t> co_task::wait()
 	{
 		if (m_promises.size() > 0)
 		{
@@ -73,46 +99,32 @@ namespace coev
 			co_await m_waiter.suspend();
 		}
 	}
-	int co_task::operator<<(promise *_promise)
-	{
-		return load(_promise);
-	}
 	int co_task::load(promise *_promise)
 	{
 		assert(_promise != nullptr);
 		auto __insert = [this](promise *_promise) -> int
 		{
 			assert(_promise->m_tid == gtid());
+			assert(_promise->m_caller == nullptr);
 			_promise->m_task = this;
 			_promise->m_type = details::CORO_TASK;
-			auto id = ++m_id;
+
+			auto id = __increase(m_id, m_ids);
 			m_promises.emplace(_promise, id);
 			return id;
-		};
-		auto __finally = [](promise *_promise)
-		{
-			if (_promise->m_status == details::CORO_SUSPEND)
-			{
-				_promise->m_status = details::CORO_RUNNING;
-				assert(!_promise->m_this.done());
-				_promise->m_this.resume();
-			}
 		};
 		auto id = __insert(_promise);
 		__finally(_promise);
 		return id;
 	}
 
-	int co_task::operator>>(promise *_promise)
-	{
-		return unload(_promise);
-	}
 	int co_task::unload(promise *_promise)
 	{
 		if (auto it = m_promises.find(_promise); it != m_promises.end())
 		{
 			auto id = it->second;
 			m_promises.erase(it);
+			m_ids.erase(id);
 			LOG_CORE("co_task: done gtid:%ld index:%ld", _promise->m_tid, id);
 			m_waiter.resume(id);
 			return id;
@@ -142,17 +154,10 @@ namespace coev
 			{
 				auto p = it->first;
 				std::lock_guard<is_destroying> _(local<is_destroying>::instance());
-
-				if (p)
-				{
-					LOG_CORE("promise tid:%ld %p", p->m_tid, p->m_this.address());
-					p->m_task = nullptr;
-					p->m_type = details::CORO_NONE;
-					p->m_this.destroy();
-				}
+				__destroy(p);
 			}
 		}
-		void co_task::destroy(uint64_t id)
+		void co_task::destroy(int64_t id)
 		{
 			promise *p = nullptr;
 			{
@@ -168,14 +173,9 @@ namespace coev
 				}
 			}
 			std::lock_guard<is_destroying> _(local<is_destroying>::instance());
-			if (p)
-			{
-				p->m_task = nullptr;
-				p->m_type = details::CORO_NONE;
-				p->m_this.destroy();
-			}
+			__destroy(p);
 		}
-		awaitable<uint64_t> co_task::wait()
+		awaitable<int64_t> co_task::wait()
 		{
 			auto id = co_await m_waiter.suspend(
 				[this]() -> bool
@@ -193,41 +193,25 @@ namespace coev
 					[]() {});
 			}
 		}
-		int co_task::operator<<(promise *_promise)
-		{
-			return load(_promise);
-		}
 		int co_task::load(promise *_promise)
 		{
 			assert(_promise != nullptr);
 			auto __insert = [this](promise *_promise) -> int
 			{
 				assert(_promise->m_tid == gtid());
+				assert(_promise->m_caller == nullptr);
 				std::lock_guard<std::mutex> _(m_waiter.lock());
 				_promise->m_task = this;
 				_promise->m_type = details::CORO_GUARD_TASK;
-				auto id = ++m_id;
+				auto id = __increase(m_id, m_ids);
 				m_promises.emplace(_promise, id);
 				return id;
-			};
-			auto __finally = [](promise *_promise)
-			{
-				if (_promise->m_status == details::CORO_SUSPEND)
-				{
-					_promise->m_status = details::CORO_RUNNING;
-					assert(!_promise->m_this.done());
-					_promise->m_this.resume();
-				}
 			};
 			auto id = __insert(_promise);
 			__finally(_promise);
 			return id;
 		}
 
-		int co_task::operator>>(promise *_promise)
-		{
-			return unload(_promise);
-		}
 		int co_task::unload(promise *_promise)
 		{
 			auto id = [this, _promise]() -> uint64_t
@@ -237,6 +221,7 @@ namespace coev
 				{
 					auto id = it->second;
 					m_promises.erase(it);
+					m_ids.erase(id);
 					LOG_CORE("co_task: done gtid:%ld index:%ld", _promise->m_tid, id);
 					return id;
 				}

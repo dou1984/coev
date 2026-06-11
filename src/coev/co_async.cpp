@@ -4,6 +4,7 @@
  *	Copyright (c) 2023-2026, Zhao Yun Shan
  *
  */
+#include "invalid.h"
 #include "co_async.h"
 #include "co_deliver.h"
 #include "local.h"
@@ -57,10 +58,13 @@ namespace coev
 		{
 			std::lock_guard<std::mutex> _(m_mutex);
 			return static_cast<co_event *>(pop_front());
-		}
-		awaitable<uint64_t> co_async::suspend(const std::function<bool()> &_suspend, const std::function<void()> &_get) noexcept
+		}		
+		co_async::~co_async()
 		{
-			uint64_t value = 0;
+		}
+		awaitable<int64_t> co_async::suspend(const std::function<bool()> &_suspend, const std::function<void()> &_get) noexcept
+		{
+			int64_t value = 0;
 			m_mutex.lock();
 			if (_suspend())
 			{
@@ -74,9 +78,9 @@ namespace coev
 			m_mutex.unlock();
 			co_return value;
 		}
-		awaitable<uint64_t> co_async::suspend() noexcept
+		awaitable<int64_t> co_async::suspend() noexcept
 		{
-			uint64_t value = 0;
+			int64_t value = 0;
 			m_mutex.lock();
 			co_event ev(this);
 			m_mutex.unlock();
@@ -85,7 +89,7 @@ namespace coev
 			value = ev.__get_reserved();
 			m_mutex.unlock();
 			co_return value;
-		}
+		}	
 		bool co_async::resume(const std::function<void()> &_set) noexcept
 		{
 			if (auto c = __ev(_set); c != nullptr)

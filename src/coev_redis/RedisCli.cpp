@@ -241,7 +241,11 @@ namespace coev
 	awaitable<int> RedisCli::connect()
 	{
 		__connect();
-		co_await m_waiter.suspend();
+		auto r = co_await m_waiter.suspend();
+		if (r == INVALID)
+		{
+			co_return r;
+		}
 		__connect_remove();
 		__process_insert();
 		co_return 0;

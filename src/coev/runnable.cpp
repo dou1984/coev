@@ -21,28 +21,44 @@ namespace coev
 {
 	guard::co_async g_exception;
 	std::atomic_int g_loop_count = 0;
+	guard::co_async g_exit;
+
 	runnable::runnable() noexcept
 	{
 		ignore_signal(SIGPIPE);
 	}
 	void runnable::end(const std::function<void()> &_cleanup) noexcept
 	{
+		bool terminated = false;
+		co_start << [](auto &terminated) -> awaitable<void>
+		{
+			co_await g_exit.suspend(
+				[]()
+				{ return true; }, []() {});
+			if (!terminated)
+			{
+				cosys::stop();
+			}
+		}(terminated);
+
 		for (auto &it : m_list)
 		{
 			it.detach();
 		}
 		intercept_singal();
 		cosys::start();
+		terminated = true;
 		_cleanup();
 		LOG_CORE("main runnable is stopped by signal");
-		while (g_exception.deliver(0))
+		while (g_exception.deliver())
 		{
 			LOG_CORE("deliver exit message");
 		}
 		while (g_loop_count != 0)
 		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
+		m_list.clear();
 	}
 	runnable &runnable::start(const func &_f) noexcept
 	{
@@ -63,13 +79,13 @@ namespace coev
 			[=]()
 			{
 				ignore_signal(SIGPIPE);
-				co_start << [=]() -> awaitable<void>
+				co_start << [](auto &_f) -> awaitable<void>
 				{
 					auto tid = gtid();
 					co_await _f();
 					cosys::stop();
 					LOG_CORE("cosys stop tid:%ld", tid);
-				}();
+				}(_f);
 				co_start << []() -> awaitable<void>
 				{
 					auto tid = gtid();
@@ -80,9 +96,15 @@ namespace coev
 					LOG_CORE("cosys stop tid:%ld", tid);
 				}();
 				++g_loop_count;
-				finally(--g_loop_count);	
-				finally(co_start.destroy());	
-				cosys::start();			
+				finally(
+					{
+						if (--g_loop_count == 0)
+						{
+							g_exit.deliver(0);
+						}
+					});
+				finally(co_start.destroy());
+				cosys::start();
 			});
 	}
 }

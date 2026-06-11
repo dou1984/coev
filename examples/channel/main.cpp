@@ -13,35 +13,38 @@ using namespace coev;
 guard::co_channel<int> ch;
 
 std::atomic<int> total = 0;
+int total_max = 10000;
+
 awaitable<void> task_01()
 {
 	LOG_DBG("task_01");
 	int x = 0;
-	for (int i = 0; i < 1000; i++)
+	for (int i = 0; i < total_max; i++)
 	{
 		x++;
 		ch.set(x);
-
-		co_await ch.get(x);
-		LOG_DBG("x=%d", x);
 	}
 	total += x;
-	LOG_DBG("total:%d", total.load());
+	LOG_DBG("set total:%d", total.load());
+	co_await sleep_for(1);
 }
 
 awaitable<void> task_02()
 {
 	LOG_DBG("task_02");
 	int x = 0;
-	for (int i = 0; i < 1000; i++)
+	for (int i = 0; i < total_max; i++)
 	{
 		x++;
-		ch.set(x);
-		co_await ch.get(x);
-		LOG_DBG("x=%d", x);
+		auto r = co_await ch.get(x);
+		if (r == INVALID)
+		{
+			break;
+		}
+		// LOG_DBG("x=%d", x);
 	}
 	total += x;
-	LOG_DBG("total:%d", total.load());
+	LOG_DBG("get total:%d", total.load());
 }
 
 struct Message
@@ -67,20 +70,25 @@ awaitable<void> task_producer()
 	}
 }
 
-// awaitable<void> task_consumer()
-// {
-// 	for (int i = 0; i < 1; i++)
-// 	{
-// 		auto msg = co_await sch.get();
-// 		LOG_DBG("id:%d, name:%s, body:%s", msg->id, msg->name.c_str(), msg->body.c_str());
-// 	}
-// }
+awaitable<void> task_consumer()
+{
+	for (int i = 0; i < 1; i++)
+	{
+		std::shared_ptr<Message> msg;
+		auto r = co_await sch.get(msg);
+		if (r == INVALID)
+		{
+			break;
+		}
+		LOG_DBG("id:%d, name:%s, body:%s", msg->id, msg->name.c_str(), msg->body.c_str());
+	}
+}
 int main()
 {
 	set_log_level(LOG_LEVEL_CORE);
 	runnable::instance()
-		.start(2, task_01)
-		.start(2, task_02)
+		.start(20, task_01)
+		.start(20, task_02)
 		// .start([]() -> awaitable<void>
 		// 	   { co_await wait_for_all(task_producer(), task_consumer()); })
 		.end();

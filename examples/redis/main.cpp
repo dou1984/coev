@@ -19,7 +19,7 @@ awaitable<void> go()
 {
 	set_log_level(LOG_LEVEL_DEBUG);
 
-	coev::pool::Redis::Instance c;
+	auto c = _pool.instance();
 	auto err = co_await _pool.get(c);
 	if (err != INVALID)
 	{
@@ -69,7 +69,7 @@ awaitable<void> go()
 awaitable<void> test_sync()
 {
 
-	coev::pool::Redis::Instance c;
+	auto c = _pool.instance();
 	auto err = co_await _pool.get(c);
 	if (err != INVALID)
 	{
@@ -85,7 +85,7 @@ awaitable<void> test_sync()
 awaitable<void> test_array()
 {
 
-	coev::pool::Redis::Instance c;
+	auto c = _pool.instance();
 	auto err = co_await _pool.get(c);
 	if (err != INVALID)
 	{

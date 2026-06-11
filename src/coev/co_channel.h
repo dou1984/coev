@@ -27,23 +27,19 @@ namespace coev
 			m_data.push(d);
 			m_waiter.resume_next_loop();
 		}
-		awaitable<void> get(TYPE &d)
+		awaitable<int64_t> get(TYPE &d)
 		{
 			if (m_data.empty())
 			{
-				co_await m_waiter.suspend();
+				auto r = co_await m_waiter.suspend();
+				if (r == INVALID)
+				{
+					co_return r;
+				}
 			}
 			d = __pop_front();
+			co_return 0;
 		}
-		// awaitable<TYPE> get()
-		// {
-		// 	if (m_data.empty())
-		// 	{
-		// 		co_await m_waiter.suspend();
-		// 	}
-		// 	auto d = __pop_front();
-		// 	co_return std::move(d);
-		// }
 		bool try_get(TYPE &d)
 		{
 			if (m_data.empty())
@@ -75,34 +71,24 @@ namespace coev
 		public:
 			void set(TYPE &&d)
 			{
-				m_waiter.resume(
+				m_waiter.deliver(
 					[this, d = std::move(d)]()
 					{ m_data.emplace(std::move(d)); });
 			}
 			void set(const TYPE &d)
 			{
-				m_waiter.resume(
+				m_waiter.deliver(
 					[this, &d]()
 					{ m_data.push(d); });
 			}
-			awaitable<void> get(TYPE &d)
+			awaitable<int64_t> get(TYPE &d)
 			{
-				co_await m_waiter.suspend(
+				co_return co_await m_waiter.suspend(
 					[this]()
 					{ return __invalid(); },
 					[this, &d]()
 					{ d = __pop_front(); });
 			}
-			// awaitable<TYPE> get()
-			// {
-			// 	TYPE d;
-			// 	co_await m_waiter.suspend(
-			// 		[this]()
-			// 		{ return __invalid(); },
-			// 		[this, &d]()
-			// 		{ d = __pop_front(); });
-			// 	co_return d;
-			// }
 			bool try_get(TYPE &d)
 			{
 				std::lock_guard<std::mutex> _(m_waiter.lock());

@@ -67,7 +67,7 @@ awaitable<void> test_ssl_client()
     // 性能统计
     auto start = std::chrono::steady_clock::now();
 
-    const int REQUESTS_PER_TASK = send_times ;
+    const int REQUESTS_PER_TASK = send_times;
 
     LOG_INFO("Starting %d concurrent tasks, %d requests each...", TASK_COUNT, REQUESTS_PER_TASK);
 
@@ -76,8 +76,8 @@ awaitable<void> test_ssl_client()
     for (int t = 0; t < TASK_COUNT; t++)
     {
         _task << [REQUESTS_PER_TASK](auto t) -> awaitable<void>
-        {
-            coev::pool::ssl::client::Instance c;
+        {            
+            auto c = cli.instance();
             auto err = co_await cli.get(c);
             if (err == INVALID)
             {
@@ -112,7 +112,7 @@ awaitable<void> test_ssl_client()
     auto end = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     double seconds = duration.count() / 1000.0;
-    double qps = send_times  * TASK_COUNT / seconds;
+    double qps = send_times * TASK_COUNT / seconds;
 
     LOG_INFO("=== Performance Report ===");
     LOG_INFO("Total requests: %d", send_times);

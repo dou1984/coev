@@ -62,7 +62,7 @@ awaitable<void> proc_client()
             finally(LOG_CORE("end [%ld]", gtid()));
             for (auto i = 0; i < max_query; i++)
             {
-                coev::pool::nghttp2::Http2::Instance c;
+                auto c = http2.instance();
                 auto r = co_await http2.get(c);
                 if (r == INVALID)
                 {

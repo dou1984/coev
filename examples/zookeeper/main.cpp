@@ -22,7 +22,7 @@ int main(int argc, char **argv)
         .start(
             []() -> awaitable<void>
             {
-                coev::pool::Zoo::Instance c;
+                auto c = zoo.instance();
                 auto err = co_await zoo.get(c);
                 if (err == INVALID)
                 {
@@ -48,7 +48,7 @@ int main(int argc, char **argv)
                 co_return;
             })
         .end([]()
-                 { zoo.stop(); });
+             { zoo.stop(); });
 
     return 0;
 }
