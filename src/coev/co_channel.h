@@ -9,11 +9,12 @@
 #include "awaitable.h"
 #include "wait_for.h"
 #include "co_async.h"
+#include "co_deliver.h"
 
 namespace coev
 {
 	template <class TYPE>
-	class co_channel
+	class co_channel : queue
 	{
 	public:
 		co_channel() = default;
@@ -52,7 +53,7 @@ namespace coev
 		auto size() const { return m_data.size(); }
 
 	private:
-		bool __invalid() const { return m_data.empty(); }
+		bool __empty() const { return m_data.empty(); }
 		TYPE __pop_front()
 		{
 			auto d = std::move(m_data.front());
@@ -85,14 +86,14 @@ namespace coev
 			{
 				co_return co_await m_waiter.suspend(
 					[this]()
-					{ return __invalid(); },
+					{ return __empty(); },
 					[this, &d]()
 					{ d = __pop_front(); });
 			}
 			bool try_get(TYPE &d)
 			{
 				std::lock_guard<std::mutex> _(m_waiter.lock());
-				if (!__invalid())
+				if (!__empty())
 				{
 					d = __pop_front();
 					return true;
@@ -104,7 +105,7 @@ namespace coev
 		private:
 			std::queue<TYPE> m_data;
 			co_async m_waiter;
-			bool __invalid() const { return m_data.empty(); }
+			bool __empty() const { return m_data.empty(); }
 			TYPE __pop_front()
 			{
 				auto d = std::move(m_data.front());

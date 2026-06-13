@@ -47,7 +47,7 @@ namespace coev
 	{
 		class co_task final
 		{
-			guard::co_async m_waiter;
+			co_async m_waiter;
 			std::map<promise *, int64_t> m_promises;
 			std::set<int64_t> m_ids;
 			int64_t m_id = 0;

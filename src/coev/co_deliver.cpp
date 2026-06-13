@@ -37,6 +37,7 @@ namespace coev
 	{
 		__fini();
 		__fini_local();
+		LOG_CORE("co_deliver::~co_deliver %ld", gtid());
 	}
 	void co_deliver::__init()
 	{

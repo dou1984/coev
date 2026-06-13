@@ -18,6 +18,7 @@ namespace coev
     {
         co_event suspend() noexcept;
         co_event suspend_util_next_loop() noexcept;
+        awaitable<int64_t> suspend(const std::function<bool()> &) noexcept;
         bool resume(int64_t value = 0) noexcept;
         bool resume_next_loop() noexcept;
         int resume_all(int64_t) noexcept;
@@ -25,22 +26,21 @@ namespace coev
 
     namespace guard
     {
+        struct co_event_f;
         class co_async : queue
         {
         public:
             ~co_async();
-            awaitable<int64_t> suspend(const std::function<bool()> &, const std::function<void()> &) noexcept;
-            awaitable<int64_t> suspend() noexcept;
+
+            awaitable<int64_t> suspend(const std::function<bool()> &_suspend, const std::function<void()> &_getter = []() {}) noexcept;
             bool resume(const std::function<void()> &) noexcept;
-            bool resume(uint64_t value = 0) noexcept;
             bool deliver(const std::function<void()> &) noexcept;
             bool deliver(uint64_t value = 0) noexcept;
+
             std::mutex &lock() noexcept { return m_mutex; }
 
         private:
-            co_event *__ev(const std::function<void()> &_set);
-            co_event *__ev() noexcept;            
-
+            co_event_f *__ev(const std::function<void()> &_set);
             std::mutex m_mutex;
         };
     }

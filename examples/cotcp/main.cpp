@@ -17,12 +17,13 @@ std::atomic_int g_count = {0};
 
 std::string host = "0.0.0.0";
 uint16_t port = 9999;
-int max_co_client = 100;
-int max_send_count = 1000000;
+int max_co_client = 10;
+int max_send_count = 10000;
 int max_runner = 4;
-int max_connections = 10;
+int max_connections = 5;
 
 co_waitgroup wg;
+
 awaitable<void> dispatch(addrInfo addr, int fd)
 {
 	LOG_DBG("dispatch start %s %d", addr.ip, addr.port);
@@ -71,7 +72,7 @@ awaitable<int> co_dail()
 	int count = 0;
 	LOG_DBG("co_dail start %s %d", sayhi, port);
 	while (true)
-	{		
+	{
 		auto c = _cpool.instance();
 		auto err = co_await _cpool.get(c);
 		if (err != 0)
@@ -105,12 +106,25 @@ awaitable<int> co_dail()
 
 awaitable<void> co_client()
 {
+	auto start = std::chrono::steady_clock::now();
 	wg.add(max_co_client);
 	for (int i = 0; i < max_co_client; i++)
 	{
 		co_start << co_dail();
 	}
 	co_await wg.wait();
+	auto end = std::chrono::steady_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+	double seconds = duration.count() / 1000.0;
+	int total = g_count.load();
+	double qps = total / seconds;
+
+	LOG_INFO("=== Performance Report ===");
+	LOG_INFO("Total requests: %d", total);
+	LOG_INFO("Duration: %.2f seconds", seconds);
+	LOG_INFO("QPS: %.2f", qps);
+	LOG_INFO("========================");
+
 	LOG_DBG("co_client exit");
 	co_return;
 }
@@ -136,8 +150,9 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	// set_log_level(LOG_LEVEL_ERROR);
-	set_log_level(LOG_LEVEL_CORE);
+	set_log_level(LOG_LEVEL_ERROR);
+	// set_log_level(LOG_LEVEL_CORE);
+
 	if (method == "server")
 	{
 		_pool.start(host.c_str(), port);

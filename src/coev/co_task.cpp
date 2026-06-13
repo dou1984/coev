@@ -108,7 +108,6 @@ namespace coev
 			assert(_promise->m_caller == nullptr);
 			_promise->m_task = this;
 			_promise->m_type = details::CORO_TASK;
-
 			auto id = __increase(m_id, m_ids);
 			m_promises.emplace(_promise, id);
 			return id;
@@ -177,11 +176,9 @@ namespace coev
 		}
 		awaitable<int64_t> co_task::wait()
 		{
-			auto id = co_await m_waiter.suspend(
+			co_return co_await m_waiter.suspend(
 				[this]() -> bool
-				{ return m_promises.size() > 0; },
-				[]() {});
-			co_return id;
+				{ return m_promises.size() > 0; });
 		}
 		awaitable<void> co_task::wait_all()
 		{
@@ -189,8 +186,7 @@ namespace coev
 			{
 				co_await m_waiter.suspend(
 					[this]() -> bool
-					{ return m_promises.size() > 0; },
-					[]() {});
+					{ return m_promises.size() > 0; });
 			}
 		}
 		int co_task::load(promise *_promise)

@@ -29,7 +29,7 @@ namespace coev
 		{
 		public:
 			awaitable<void> lock() noexcept;
-			bool unlock(bool deliver = false) noexcept;
+			bool unlock(bool deliver = true) noexcept;
 			bool try_lock() noexcept;
 
 		private:

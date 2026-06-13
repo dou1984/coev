@@ -57,8 +57,9 @@ namespace coev
 			assert(false);
 		}
 	}
-	void co_event::resume()
+	void co_event::resume(int64_t x)
 	{
+		__set_reserved(x);
 		int e0 = details::CORO_INIT;
 		int e1 = details::CORO_SUSPEND;
 		if (m_status.compare_exchange_strong(e0, details::CORO_RESUMED, std::memory_order_acquire, std::memory_order_acquire))

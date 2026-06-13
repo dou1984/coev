@@ -14,7 +14,7 @@
 
 namespace coev
 {
-	class co_event final : public queue
+	class co_event : public queue
 	{
 		std::coroutine_handle<> m_caller = nullptr;
 		std::atomic_int m_status = {details::CORO_INIT};
@@ -30,7 +30,7 @@ namespace coev
 		int64_t await_resume();
 		bool await_ready();
 		void await_suspend(std::coroutine_handle<> caller);
-		void resume();
+		void resume(int64_t x = 0);
 		auto id() const { return m_tid; }
 
 	public:

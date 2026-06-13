@@ -10,6 +10,7 @@
 #include "local.h"
 namespace coev
 {
+
 	co_event co_async::suspend() noexcept
 	{
 		return co_event(this);
@@ -46,21 +47,42 @@ namespace coev
 		}
 		return count;
 	}
+
 	namespace guard
 	{
-		co_event *co_async::__ev(const std::function<void()> &_set)
+		struct co_event_f : co_event
+		{
+			const std::function<void()> &m_getter;
+			co_event_f(queue *__ev, const std::function<void()> &getter) : co_event(__ev), m_getter(getter)
+			{
+			}
+		};
+		co_event_f *co_async::__ev(const std::function<void()> &_set)
 		{
 			std::lock_guard<std::mutex> _(m_mutex);
 			_set();
-			return static_cast<co_event *>(pop_front());
+			auto c = static_cast<co_event_f *>(pop_front());
+			if (c && c->m_getter)
+			{
+				c->m_getter();
+			}
+			return c;
 		}
-		co_event *co_async::__ev() noexcept
-		{
-			std::lock_guard<std::mutex> _(m_mutex);
-			return static_cast<co_event *>(pop_front());
-		}		
 		co_async::~co_async()
 		{
+			if (local<is_destroying>::instance())
+			{
+				std::lock_guard<std::mutex> _(m_mutex);
+				while (true)
+				{
+					auto c = static_cast<co_event_f *>(pop_front());
+					if (c == nullptr)
+					{
+						break;
+					}
+					c->resume(INVALID);
+				}
+			}
 		}
 		awaitable<int64_t> co_async::suspend(const std::function<bool()> &_suspend, const std::function<void()> &_get) noexcept
 		{
@@ -68,46 +90,22 @@ namespace coev
 			m_mutex.lock();
 			if (_suspend())
 			{
-				co_event ev(this);
+				co_event_f ev(this, _get);
 				m_mutex.unlock();
-				co_await ev;
+				auto r = co_await ev;
+				if (r == INVALID)
+				{
+					co_return r;
+				}
 				m_mutex.lock();
 				value = ev.__get_reserved();
 			}
-			_get();
+			else if (_get)
+			{
+				_get();
+			}
 			m_mutex.unlock();
 			co_return value;
-		}
-		awaitable<int64_t> co_async::suspend() noexcept
-		{
-			int64_t value = 0;
-			m_mutex.lock();
-			co_event ev(this);
-			m_mutex.unlock();
-			co_await ev;
-			m_mutex.lock();
-			value = ev.__get_reserved();
-			m_mutex.unlock();
-			co_return value;
-		}	
-		bool co_async::resume(const std::function<void()> &_set) noexcept
-		{
-			if (auto c = __ev(_set); c != nullptr)
-			{
-				c->resume();
-				return true;
-			}
-			return false;
-		}
-		bool co_async::resume(uint64_t value) noexcept
-		{
-			if (auto c = __ev(); c != nullptr)
-			{
-				c->__set_reserved(value);
-				c->resume();
-				return true;
-			}
-			return false;
 		}
 		bool co_async::deliver(const std::function<void()> &_set) noexcept
 		{
@@ -125,9 +123,20 @@ namespace coev
 			}
 			return false;
 		}
+		bool co_async::resume(const std::function<void()> &_set) noexcept
+		{
+			if (auto c = __ev(_set); c != nullptr)
+			{
+				c->resume();
+				return true;
+			}
+			return false;
+		}
 		bool co_async::deliver(uint64_t value) noexcept
 		{
-			if (auto c = __ev(); c != nullptr)
+			auto _set = []() -> bool
+			{ return false; };
+			if (auto c = __ev(_set); c != nullptr)
 			{
 				c->__set_reserved(value);
 				if (c->id() == gtid())
@@ -142,5 +151,6 @@ namespace coev
 			}
 			return false;
 		}
+
 	}
 }
