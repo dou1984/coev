@@ -21,14 +21,15 @@ void run_admin_test(const std::string &h, int p, const std::string &t);
 
 int main(int argc, char *argv[])
 {
-    if (argc != 4) {
+    if (argc != 4)
+    {
         LOG_ERR("Usage: admin_test <host> <port> <topic>");
         return 1;
     }
     test_host = argv[1];
     test_port = std::stoi(argv[2]);
     test_topic = argv[3];
-    
+
     run_admin_test(test_host, test_port, test_topic);
     return 0;
 }
@@ -100,7 +101,8 @@ void run_admin_test(const std::string &h, int p, const std::string &t)
 
                 // Test 8: DescribeConsumerGroups
                 std::vector<std::string> groups_to_describe;
-                if (!groups.empty()) {
+                if (!groups.empty())
+                {
                     groups_to_describe.push_back(groups.begin()->first);
                 }
                 std::vector<GroupDescription> group_descriptions;
@@ -312,11 +314,12 @@ void run_admin_test(const std::string &h, int p, const std::string &t)
                 quota_entity.push_back(entity_component);
                 ClientQuotasOp quota_op;
                 quota_op.m_key = "producer_byte_rate";
-                quota_op.m_value = 1024 * 1024; // 1MB/s
+                quota_op.m_value = 1024 * 1024;                                        // 1MB/s
                 err = co_await admin->AlterClientQuotas(quota_entity, quota_op, true); // validate only
                 LOG_DBG("[Test 40] AlterClientQuotas (validate): err=%d", err);
 
                 LOG_DBG("=== Admin Test Completed ===");
                 co_return;
-            }).wait();
+            })
+        .end();
 }

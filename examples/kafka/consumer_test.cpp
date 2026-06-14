@@ -46,6 +46,7 @@ void run_consumer_test()
                         message_count++;
                         if (message_count % 500 == 0)
                         {
+                            LOG_DBG("Message: %s", msg->m_value.c_str());
                             LOG_DBG("Consumed %lu messages", message_count);
                         }
                     }
@@ -57,5 +58,6 @@ void run_consumer_test()
 
                 LOG_DBG("Consumer finished, consumed %lu messages", message_count);
                 co_return;
-            }).wait();
+            })
+        .end();
 }

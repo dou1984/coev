@@ -620,7 +620,6 @@ namespace coev::kafka
 
     void Client::DeregisterBroker(std::shared_ptr<Broker> broker)
     {
-
         auto it = m_brokers.find(broker->ID());
         if (it != m_brokers.end())
         {
@@ -1130,7 +1129,7 @@ namespace coev::kafka
                 }
                 if (coordinatorType == CoordinatorTransaction)
                 {
-                    if (Leader("__transaction_state", 0, leader) != 0)
+                    if (co_await Leader("__transaction_state", 0, leader) != 0)
                     {
                         LOG_CORE("the __transaction_state topic is not initialized completely yet. Waiting 2 seconds...");
                         co_await sleep_for(std::chrono::seconds(2));

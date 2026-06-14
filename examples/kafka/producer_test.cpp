@@ -79,5 +79,6 @@ void run_producer_test()
                 LOG_DBG("Total time: %lu ms", total_time);
                 LOG_DBG("Average QPS: %.2f", final_qps);
                 co_return;
-            }).wait();
+            })
+        .end();
 }

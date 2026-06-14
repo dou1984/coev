@@ -186,79 +186,73 @@ namespace coev::kafka
         return m_high_water_mark_offset;
     }
 
-    awaitable<void> PartitionConsumer::ResponseFeeder()
+    awaitable<void> PartitionConsumer::ResponseFeeder(std::shared_ptr<FetchResponse> &response)
     {
-        while (true)
+        LOG_CORE("PartitionConsumer::ResponseFeeder %s:%d waiting for response", m_topic.c_str(), m_partition);
+        std::vector<std::shared_ptr<ConsumerMessage>> messages;
+        auto expiry_time = m_conf->Consumer.MaxProcessingTime;
+        auto last_expiry = std::chrono::steady_clock::now();
+        bool first_attempt = true;
+
+        m_response_result = (KError)ParseResponse(response, messages);
+        if (m_response_result != ErrNoError)
         {
-            std::shared_ptr<FetchResponse> response;
-            co_await m_feeder.get(response);
-
-            std::vector<std::shared_ptr<ConsumerMessage>> messages;
-            auto expiry_time = m_conf->Consumer.MaxProcessingTime;
-            auto last_expiry = std::chrono::steady_clock::now();
-            bool first_attempt = true;
-
-            m_response_result = (KError)ParseResponse(response, messages);
-            if (m_response_result != ErrNoError)
+            m_retries = 0;
+        }
+        for (size_t i = 0; i < messages.size(); ++i)
+        {
+            auto msg = messages[i];
+            auto err = co_await Interceptors(msg);
+            if (err)
             {
-                m_retries = 0;
+                LOG_CORE("interceptor error: %d", err);
             }
-            for (size_t i = 0; i < messages.size(); ++i)
+
+            bool sent = false;
+            bool died = false;
+            auto now = std::chrono::steady_clock::now();
+            if (now - last_expiry >= expiry_time)
             {
-                auto msg = messages[i];
-                auto err = co_await Interceptors(msg);
-                if (err)
+                if (!first_attempt)
                 {
-                    LOG_CORE("interceptor error: %d", err);
-                }
-
-                bool sent = false;
-                bool died = false;
-                auto now = std::chrono::steady_clock::now();
-                if (now - last_expiry >= expiry_time)
-                {
-                    if (!first_attempt)
+                    m_response_result = ErrTimedOut;
+                    for (size_t j = i; j < messages.size(); ++j)
                     {
-                        m_response_result = ErrTimedOut;
-
-                        for (size_t j = i; j < messages.size(); ++j)
+                        auto err = co_await Interceptors(messages[j]);
+                        if (err)
                         {
-                            auto err = co_await Interceptors(messages[j]);
-                            if (err)
-                            {
-                                LOG_CORE("interceptor error: %d", err);
-                            }
-                            m_messages.set(messages[j]);
-
-                            if (m_dying.try_get(died) && died)
-                            {
-                                continue;
-                            }
+                            LOG_CORE("interceptor error: %d", err);
                         }
-                        m_broker->m_input.set(shared_from_this());
-                        continue;
+                        m_messages.set(messages[j]);
+                        if (m_dying.try_get(died) && died)
+                        {
+                            continue;
+                        }
                     }
-                    else
-                    {
-                        first_attempt = false;
-                        --i;
-                        continue;
-                    }
+                    m_broker->m_input.set(shared_from_this());
+                    continue;
                 }
-
-                if (m_dying.try_get(died) && died)
+                else
                 {
-                    co_return;
+                    first_attempt = false;
+                    --i;
+                    continue;
                 }
-
-                m_messages.set(msg);
-                first_attempt = true;
             }
+
+            if (m_dying.try_get(died) && died)
+            {
+                co_return;
+            }
+
+            m_messages.set(msg);
+            first_attempt = true;
         }
     }
 
     int PartitionConsumer::ParseMessages(std::shared_ptr<MessageSet> message_set, std::vector<std::shared_ptr<ConsumerMessage>> &messages)
     {
+        messages.reserve(messages.size() + message_set->m_messages.size());
         for (auto &block : message_set->m_messages)
         {
             auto msgs = block.Messages();
@@ -282,8 +276,8 @@ namespace coev::kafka
                 auto cm = std::make_shared<ConsumerMessage>();
                 cm->m_topic = m_topic;
                 cm->m_partition = m_partition;
-                cm->m_key = msg.m_message.m_key;
-                cm->m_value = msg.m_message.m_value;
+                cm->m_key = std::move(msg.m_message.m_key);
+                cm->m_value = std::move(msg.m_message.m_value);
                 cm->m_offset = offset;
                 cm->m_timestamp = timestamp.get_time();
                 cm->m_block_timestamp = block.m_message.m_timestamp.get_time();
@@ -300,7 +294,6 @@ namespace coev::kafka
 
     int PartitionConsumer::ParseRecords(std::shared_ptr<RecordBatch> &batch, std::vector<std::shared_ptr<ConsumerMessage>> &messages)
     {
-
         messages.reserve(batch->m_records.size());
         for (const auto &rec : batch->m_records)
         {
@@ -317,11 +310,11 @@ namespace coev::kafka
             auto cm = std::make_shared<ConsumerMessage>();
             cm->m_topic = m_topic;
             cm->m_partition = m_partition;
-            cm->m_key = rec.m_key;
-            cm->m_value = rec.m_value;
+            cm->m_key = std::move(rec.m_key);
+            cm->m_value = std::move(rec.m_value);
             cm->m_offset = offset;
             cm->m_timestamp = timestamp;
-            cm->m_headers = rec.m_headers;
+            cm->m_headers = std::move(rec.m_headers);
             messages.push_back(cm);
             m_offset = offset + 1;
         }
@@ -406,13 +399,11 @@ namespace coev::kafka
         {
             if (records.m_records_type == LegacyRecords && records.m_message_set)
             {
-                std::vector<std::shared_ptr<ConsumerMessage>> consumer_messages;
-                auto err = ParseMessages(records.m_message_set, consumer_messages);
+                auto err = ParseMessages(records.m_message_set, messages);
                 if (err)
                 {
                     return err;
                 }
-                messages.insert(messages.end(), consumer_messages.begin(), consumer_messages.end());
             }
             else if (records.m_records_type == DefaultRecords && records.m_record_batch)
             {

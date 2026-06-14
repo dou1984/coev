@@ -674,7 +674,7 @@ namespace coev::kafka
     }
 
     awaitable<int> ClusterAdmin::AlterConfig(ConfigResourceType resource_type, const std::string &name,
-                                                   const std::map<std::string, std::string> &entries, bool validate_only)
+                                             const std::map<std::string, std::string> &entries, bool validate_only)
     {
         std::vector<AlterConfigsResource> resources;
         AlterConfigsResource res;
@@ -1135,8 +1135,8 @@ namespace coev::kafka
         co_return 0;
     }
     awaitable<int> ClusterAdmin::ListConsumerGroupOffsets(const std::string &group,
-                                                                const std::map<std::string, std::vector<int32_t>> &topicPartitions,
-                                                                std::shared_ptr<OffsetFetchResponse> &out)
+                                                          const std::map<std::string, std::vector<int32_t>> &topicPartitions,
+                                                          std::shared_ptr<OffsetFetchResponse> &out)
     {
         auto request = std::make_shared<OffsetFetchRequest>(m_conf->Version, group, topicPartitions);
         co_return co_await RetryOnError(isRetriableGroupCoordinatorError, &ClusterAdmin::_ListConsumerGroupOffsets, group, request, out);
@@ -1252,7 +1252,7 @@ namespace coev::kafka
     }
 
     awaitable<int> ClusterAdmin::DescribeLogDirs(const std::vector<int32_t> &broker_ids,
-                                                       std::map<int32_t, std::vector<DescribeLogDirsResponseDirMetadata>> &out)
+                                                 std::map<int32_t, std::vector<DescribeLogDirsResponseDirMetadata>> &out)
     {
         struct result
         {

@@ -242,7 +242,7 @@ TEST(AdminClientIntegrationTest, TestAdminWithRunnable)
                 std::cout << "Admin created with null client: " << (admin != nullptr ? "yes" : "no") << std::endl;
                 
                 co_return; })
-            .wait();
+            .end();
 
         std::cout << "Test completed" << std::endl;
     }

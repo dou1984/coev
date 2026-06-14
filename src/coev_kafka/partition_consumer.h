@@ -23,8 +23,6 @@ namespace coev::kafka
         std::shared_ptr<BrokerConsumer> m_broker;
         co_channel<std::shared_ptr<ConsumerMessage>> m_messages;
         co_channel<std::shared_ptr<ConsumerError>> m_errors;
-        co_channel<std::shared_ptr<FetchResponse>> m_feeder;
-
         int32_t m_leader_epoch = 0;
         int32_t m_preferred_read_replica = InvalidPreferredReplicaID;
 
@@ -56,7 +54,7 @@ namespace coev::kafka
 
         int64_t HighWaterMarkOffset();
 
-        awaitable<void> ResponseFeeder();
+        awaitable<void> ResponseFeeder(std::shared_ptr<FetchResponse> &response);
         int ParseMessages(std::shared_ptr<MessageSet> msg_set, std::vector<std::shared_ptr<ConsumerMessage>> &messages);
         int ParseRecords(std::shared_ptr<RecordBatch> &batch, std::vector<std::shared_ptr<ConsumerMessage>> &messages);
         int ParseResponse(std::shared_ptr<FetchResponse> response, std::vector<std::shared_ptr<ConsumerMessage>> &messages);

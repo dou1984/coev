@@ -64,6 +64,7 @@ namespace coev::kafka
         auto next_wakeup = std::chrono::system_clock::now();
         while (true)
         {
+            LOG_CORE("BrokerConsumer::SubscriptionConsumer loop start: %zu subscriptions", m_subscriptions.size());
             UpdateSubscriptions();
             if (m_subscriptions.empty())
             {
@@ -85,6 +86,7 @@ namespace coev::kafka
             finally(LOG_CORE("BrokerConsumer::SubscriptionConsumer exiting"));
             auto response = std::make_shared<FetchResponse>();
             int err = co_await FetchNewMessages(response);
+            LOG_CORE("BrokerConsumer::SubscriptionConsumer FetchNewMessages returned err=%d, response blocks=%zu", err, response->m_blocks.size());
             if (err != 0)
             {
                 LOG_CORE("BrokerConsumer::SubscriptionConsumer FetchNewMessages failed with error %d, aborting", err);
@@ -92,6 +94,7 @@ namespace coev::kafka
                 co_return;
             }
 
+            co_task tasks;
             for (auto &child : m_subscriptions)
             {
                 auto tit = response->m_blocks.find(child->m_topic);
@@ -104,8 +107,10 @@ namespace coev::kafka
                 {
                     continue;
                 }
-                child->m_feeder.set(response);
+                LOG_CORE("BrokerConsumer::SubscriptionConsumer sending response to %s:%d", child->m_topic.c_str(), child->m_partition);
+                tasks << child->ResponseFeeder(response);
             }
+            co_await tasks.wait_all();
             co_await HandleResponses();
         }
     }
@@ -141,6 +146,7 @@ namespace coev::kafka
         {
             auto child = *it;
             auto result = child->m_response_result;
+            LOG_CORE("BrokerConsumer::HandleResponses %s:%d m_response_result=%d", child->m_topic.c_str(), child->m_partition, result);
             child->m_response_result = ErrNoError;
 
             if (result == ErrNoError)
@@ -150,7 +156,7 @@ namespace coev::kafka
                 auto err_code = co_await child->PreferredBroker(_broker, _);
                 if (err_code == 0 && m_broker->ID() != _broker->ID())
                 {
-                    LOG_CORE("preferred broker changed for %s:%d, removing subscription", child->m_topic.c_str(), child->m_partition);
+                    LOG_CORE("BrokerConsumer::HandleResponses preferred broker changed for %s:%d, removing subscription", child->m_topic.c_str(), child->m_partition);
                     child->m_trigger.set(true);
                     it = m_subscriptions.erase(it);
                     continue;
@@ -163,7 +169,7 @@ namespace coev::kafka
 
             if (result == ErrTimedOut)
             {
-                LOG_CORE("received timeout for %s:%d, removing subscription", child->m_topic.c_str(), child->m_partition);
+                LOG_CORE("BrokerConsumer::HandleResponses received timeout for %s:%d, removing subscription", child->m_topic.c_str(), child->m_partition);
                 it = m_subscriptions.erase(it);
             }
             else if (result == ErrOffsetOutOfRange)
@@ -185,7 +191,7 @@ namespace coev::kafka
             }
             else if (result == ErrUnknownTopicOrPartition || result == ErrNotLeaderForPartition || result == ErrLeaderNotAvailable || result == ErrReplicaNotAvailable || result == ErrFencedLeaderEpoch || result == ErrUnknownLeaderEpoch)
             {
-                LOG_CORE("received broker error %d for %s:%d, removing subscription", result, child->m_topic.c_str(), child->m_partition);
+                LOG_CORE("BrokerConsumer::HandleResponses received broker error %d for %s:%d, removing subscription", result, child->m_topic.c_str(), child->m_partition);
                 child->m_trigger.set(true);
                 it = m_subscriptions.erase(it);
             }
@@ -281,6 +287,8 @@ namespace coev::kafka
                 request->add_block(child->m_topic, child->m_partition, child->m_offset, child->m_fetch_size, child->m_leader_epoch);
             }
         }
+
+        LOG_CORE("BrokerConsumer::FetchNewMessages: %zu blocks in request", request->m_blocks.size());
 
         if (request->m_blocks.empty())
         {

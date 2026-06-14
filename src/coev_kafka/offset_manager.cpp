@@ -198,10 +198,8 @@ namespace coev::kafka
                 auto backoff = compute_backoff(retries);
 
                 m_closing = true;
-                if (sleep_for(std::chrono::milliseconds(backoff)))
-                {
-                    m_closed.set(true);
-                }
+                co_await sleep_for(std::chrono::milliseconds(backoff));
+                m_closed.set(true);
             }
             co_return co_await fetch_initial_offset(topic, partition, retries - 1, offset, leaderEpoch, metadata);
         default:

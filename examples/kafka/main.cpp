@@ -35,6 +35,7 @@ int main(int argc, char **argv)
         return -1;
     }
     set_log_level(LOG_LEVEL_DEBUG);
+    // set_log_level(LOG_LEVEL_CORE);
     std::string method = argv[1];
     test_host = argv[2];
     test_port = std::stoi(argv[3]);

@@ -33,7 +33,7 @@ namespace coev::kafka
 
         for (auto partition : partitions)
         {
-            m_task << [](auto consumer, auto  topic, auto partition) -> awaitable<void>
+            m_task << [](auto consumer, auto topic, auto partition) -> awaitable<void>
             {
                 std::shared_ptr<PartitionConsumer> __consumer;
                 auto err = co_await consumer->ConsumePartition(topic, partition, OffsetNewest, __consumer);
@@ -208,7 +208,6 @@ namespace coev::kafka
             co_return err;
         }
         m_task << child->Dispatcher();
-        m_task << child->ResponseFeeder();
 
         child->m_leader_epoch = epoch;
         child->m_broker = RefBrokerConsumer(leader);
@@ -229,7 +228,7 @@ namespace coev::kafka
         co_task task;
         for (auto partition : partitions)
         {
-            task << [](auto _this, auto& partition, auto &topic,auto &ch) -> awaitable<void>
+            task << [](auto _this, auto &partition, auto &topic, auto &ch) -> awaitable<void>
             {
                 std::shared_ptr<PartitionConsumer> partition_consumer;
                 auto err = co_await _this->ConsumePartition(topic, partition, OffsetOldest, partition_consumer);
@@ -249,6 +248,7 @@ namespace coev::kafka
                     }
                     else
                     {
+                        // LOG_DBG("ConsumePartition exit %d %d", partition, offset);
                         break;
                     }
                 }
