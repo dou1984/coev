@@ -18,7 +18,7 @@ std::atomic_int g_count = {0};
 std::string host = "0.0.0.0";
 uint16_t port = 9999;
 int max_co_client = 10;
-int max_send_count = 10000;
+int max_send_count = 100000;
 int max_runner = 4;
 int max_connections = 5;
 

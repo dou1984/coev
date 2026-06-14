@@ -16,7 +16,7 @@ static manager g_cli_mgr(manager::TLS_CLIENT);
 coev::pool::ssl::client cli;
 coev::pool::server_pool<tcp::server> _pool;
 const int TASK_COUNT = 100;
-auto send_times = 10000000;
+auto SEND_TIMES = 100000;
 awaitable<void> test_ssl_context()
 {
 
@@ -48,14 +48,14 @@ awaitable<void> test_ssl_context()
                 int r = co_await ctx.recv(buffer, sizeof(buffer));
                 if (r == INVALID)
                 {
-                    LOG_DBG("recv failed fd %d", fd);
+                    LOG_ERR("recv failed fd %d", fd);
                     co_return;
                 }
-                // LOG_DBG("recv from fd %d %.*s", fd, r, buffer);
+                // LOG_CORE("recv from fd %d %.*s", fd, r, buffer);
                 r = co_await ctx.send("hello world", strlen("hello world") + 1);
                 if (r == INVALID)
                 {
-                    LOG_DBG("send failed fd %d", fd);
+                    LOG_ERR("send failed fd %d", fd);
                     co_return;
                 }
             }
@@ -67,16 +67,14 @@ awaitable<void> test_ssl_client()
     // 性能统计
     auto start = std::chrono::steady_clock::now();
 
-    const int REQUESTS_PER_TASK = send_times;
-
-    LOG_INFO("Starting %d concurrent tasks, %d requests each...", TASK_COUNT, REQUESTS_PER_TASK);
+    LOG_INFO("Starting %d concurrent tasks, %d requests each...", TASK_COUNT, SEND_TIMES);
 
     co_task _task;
     // 启动多个并发任务
     for (int t = 0; t < TASK_COUNT; t++)
     {
-        _task << [REQUESTS_PER_TASK](auto t) -> awaitable<void>
-        {            
+        _task << [](auto t) -> awaitable<void>
+        {
             auto c = cli.instance();
             auto err = co_await cli.get(c);
             if (err == INVALID)
@@ -85,7 +83,7 @@ awaitable<void> test_ssl_client()
                 co_return;
             }
 
-            for (int i = 0; i < REQUESTS_PER_TASK; i++)
+            for (int i = 0; i < SEND_TIMES; i++)
             {
                 auto buf = "hello world";
                 int size = strlen(buf) + 1;
@@ -112,10 +110,11 @@ awaitable<void> test_ssl_client()
     auto end = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     double seconds = duration.count() / 1000.0;
-    double qps = send_times * TASK_COUNT / seconds;
+    int total_requests = SEND_TIMES * TASK_COUNT;
+    double qps = total_requests / seconds;
 
     LOG_INFO("=== Performance Report ===");
-    LOG_INFO("Total requests: %d", send_times);
+    LOG_INFO("Total requests: %d", total_requests);
     LOG_INFO("Duration: %.2f seconds", seconds);
     LOG_INFO("QPS: %.2f", qps);
     LOG_INFO("========================");
