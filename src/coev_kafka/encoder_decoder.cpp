@@ -100,7 +100,8 @@ namespace coev::kafka
             {
                 pd.__push_flexible();
                 finally(pd.__pop_flexible());
-                return req.decode(pd, version);
+                int err = req.decode(pd, version);
+                return err;
             }
         }
         return req.decode(pd, version);

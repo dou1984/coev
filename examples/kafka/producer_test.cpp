@@ -9,7 +9,10 @@
 #include <coev_kafka/message.h>
 #include <coev_kafka/partitioner.h>
 #include <coev_kafka/config.h>
+#include <coev_kafka/version.h>
 #include <chrono>
+#include <iostream>
+#include <iomanip>
 
 using namespace coev;
 using namespace coev::kafka;
@@ -18,66 +21,240 @@ extern std::string test_host;
 extern int test_port;
 extern std::string test_topic;
 
+const std::vector<KafkaVersion> SupportedVersions = {
+    // V0_8_2_0,
+    // V0_8_2_1,
+    // V0_8_2_2,
+    // V0_9_0_0,
+    // V0_9_0_1,
+    // V0_10_0_0,
+    // V0_10_0_1,
+    // V0_10_1_0,
+    // V0_10_1_1,
+    // V0_10_2_0,
+    // V0_10_2_1,
+    // V0_10_2_2,
+    // V0_11_0_0,
+    // V0_11_0_1,
+    // V0_11_0_2,
+    V1_0_0_0,
+    V1_0_1_0,
+    V1_0_2_0,
+    V1_1_0_0,
+    V1_1_1_0,
+    V2_0_0_0,
+    V2_0_1_0,
+    V2_1_0_0,
+    V2_1_1_0,
+    V2_2_0_0,
+    V2_2_1_0,
+    V2_2_2_0,
+    V2_3_0_0,
+    V2_3_1_0,
+    V2_4_0_0,
+    V2_4_1_0,
+    V2_5_0_0,
+    V2_5_1_0,
+    V2_6_0_0,
+    V2_6_1_0,
+    V2_6_2_0,
+    V2_6_3_0,
+    V2_7_0_0,
+    V2_7_1_0,
+    V2_7_2_0,
+    V2_8_0_0,
+    V2_8_1_0,
+    V2_8_2_0,
+    V3_0_0_0,
+    V3_0_1_0,
+    V3_0_2_0,
+    V3_1_0_0,
+    V3_1_1_0,
+    V3_1_2_0,
+    V3_2_0_0,
+    V3_2_1_0,
+    V3_2_2_0,
+    V3_2_3_0,
+    V3_3_0_0,
+    V3_3_1_0,
+    V3_3_2_0,
+    V3_4_0_0,
+    V3_4_1_0,
+    V3_5_0_0,
+    V3_5_1_0,
+    V3_5_2_0,
+    V3_6_0_0,
+    V3_6_1_0,
+    V3_6_2_0,
+    V3_7_0_0,
+    V3_7_1_0,
+    V3_7_2_0,
+    V3_8_0_0,
+    V3_8_1_0,
+    V3_9_0_0,
+    V3_9_1_0,
+    V4_0_0_0,
+    V4_1_0_0,
+};
+struct ProducerVersionResult
+{
+    KafkaVersion version;
+    bool ok = false;
+    uint64_t messages = 0;
+    uint64_t successes = 0;
+    uint64_t failures = 0;
+    uint64_t time_ms = 0;
+    double qps = 0;
+    int err = 0;
+};
+
+static awaitable<ProducerVersionResult> test_producer_version(const KafkaVersion &ver)
+{
+    ProducerVersionResult result;
+    result.version = ver;
+
+    std::shared_ptr<Config> conf = std::make_shared<Config>();
+    conf->Version = ver;
+    conf->Producer.Acks = WaitForAll;
+    conf->Producer.Return.Successes = true;
+    conf->Producer.Return.Errors = true;
+    conf->Producer.Partitioner = NewRandomPartitioner;
+
+    std::vector<std::string> addrs = {test_host + ":" + std::to_string(test_port)};
+
+    std::shared_ptr<AsyncProducer> producer;
+    auto err = co_await NewAsyncProducer(addrs, conf, producer);
+    if (err)
+    {
+        result.err = err;
+        co_return result;
+    }
+    finally(producer->async_close());
+
+    uint64_t max_messages = 1000;
+    result.messages = max_messages;
+    auto start_time = std::chrono::steady_clock::now();
+
+    for (uint64_t i = 0; i < max_messages; i++)
+    {
+        auto msg = std::make_shared<ProducerMessage>();
+        msg->m_topic = test_topic;
+        msg->m_key.m_data = "version-test-key";
+        msg->m_value.m_data = "version-test-value-" + ver.String() + "-" + std::to_string(i);
+
+        std::shared_ptr<ProducerMessage> reply;
+        err = co_await producer->producer(msg, reply);
+        if (err == 0 && reply && reply->m_err == ErrNoError)
+        {
+            result.successes++;
+        }
+        else
+        {
+            result.failures++;
+            // Record the first error code
+            if (result.err == 0 && reply)
+            {
+                result.err = reply->m_err;
+            }
+        }
+    }
+
+    auto end_time = std::chrono::steady_clock::now();
+    result.time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+    result.qps = result.time_ms > 0 ? result.successes * 1000.0 / result.time_ms : 0;
+    result.ok = result.failures == 0;
+
+    co_return result;
+}
+
 void run_producer_test()
 {
     runnable::instance()
         .start(
             []() -> awaitable<void>
             {
-                std::shared_ptr<Config> conf = std::make_shared<Config>();
-                conf->Producer.Acks = WaitForAll;
-                conf->Producer.Partitioner = NewRandomPartitioner;
-                conf->Producer.Return.Successes = true;
-                conf->Producer.Return.Errors = true;
-                conf->Version = V0_11_0_2;
+                std::cout << "=== Kafka Producer Version Test ===" << std::endl;
+                std::cout << "Broker: " << test_host << ":" << test_port << std::endl;
+                std::cout << "Topic: " << test_topic << std::endl;
+                std::cout << "Total versions to test: " << SupportedVersions.size() << std::endl;
+                std::cout << "========================================" << std::endl;
 
-                std::vector<std::string> addrs = {test_host + ":" + std::to_string(test_port)};
+                std::vector<ProducerVersionResult> results;
+                results.reserve(SupportedVersions.size());
 
-                std::shared_ptr<AsyncProducer> producer;
-                auto err = co_await NewAsyncProducer(addrs, conf, producer);
-                if (err)
+                for (size_t i = 0; i < SupportedVersions.size(); ++i)
                 {
-                    LOG_ERR("NewAsyncProducer error: %d", err);
-                    co_return;
-                }
-                finally(producer->async_close());
+                    const auto &ver = SupportedVersions[i];
+                    std::cout << "[" << i + 1 << "/" << SupportedVersions.size()
+                              << "] Testing version: " << ver.String() << std::endl;
 
-                uint64_t index = 0;
-                uint64_t max_messages = 2000;
-                auto start_time = std::chrono::steady_clock::now();
+                    auto result = co_await test_producer_version(ver);
+                    results.push_back(result);
 
-                while (index < max_messages)
-                {
-                    auto msg = std::make_shared<ProducerMessage>();
-                    msg->m_topic = test_topic;
-                    msg->m_key.m_data = "key-" + std::to_string(index);
-                    msg->m_value.m_data = "message-" + std::to_string(index);
-
-                    std::shared_ptr<ProducerMessage> reply;
-                    co_await producer->producer(msg, reply);
-                    if (reply->m_err != ErrNoError)
+                    if (result.ok)
                     {
-                        LOG_ERR("produced message %lu failed: %d", index, reply->m_err);
+                        std::cout << "  [PASS] Producer: " << result.successes
+                                  << " messages, " << result.time_ms
+                                  << " ms, QPS: " << std::fixed << std::setprecision(2) << result.qps << std::endl;
                     }
                     else
                     {
-                        if ((index + 1) % 10000 == 0)
-                        {
-                            auto now = std::chrono::steady_clock::now();
-                            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time).count();
-                            double qps = (elapsed > 0) ? (index + 1) * 1000.0 / elapsed : 0;
-                            LOG_DBG("produced %lu messages, QPS: %.2f", index + 1, qps);
-                        }
+                        std::cout << "  [FAIL] Producer: error code " << result.err << std::endl;
                     }
-                    index++;
                 }
 
-                auto end_time = std::chrono::steady_clock::now();
-                auto total_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-                double final_qps = (total_time > 0) ? max_messages * 1000.0 / total_time : 0;
-                LOG_DBG("Producer finished producing %lu messages", max_messages);
-                LOG_DBG("Total time: %lu ms", total_time);
-                LOG_DBG("Average QPS: %.2f", final_qps);
+                // Print summary
+                int total = results.size();
+                int passed = 0;
+                std::vector<std::string> failed_versions;
+
+                for (const auto &r : results)
+                {
+                    if (r.ok)
+                        passed++;
+                    else
+                        failed_versions.push_back(r.version.String());
+                }
+
+                std::cout << "\n=== Test Summary ===" << std::endl;
+                std::cout << "Total versions tested: " << total << std::endl;
+                std::cout << "Producer passed: " << passed << " (" << std::fixed << std::setprecision(1)
+                          << (total > 0 ? 100.0 * passed / total : 0) << "%)" << std::endl;
+
+                if (!failed_versions.empty())
+                {
+                    std::cout << "\nFailed versions (" << failed_versions.size() << "):" << std::endl;
+                    for (size_t i = 0; i < failed_versions.size(); ++i)
+                    {
+                        if (i > 0)
+                            std::cout << ", ";
+                        std::cout << failed_versions[i];
+                    }
+                    std::cout << std::endl;
+                }
+                else
+                {
+                    std::cout << "\nAll versions passed!" << std::endl;
+                }
+
+                // Print detailed QPS table
+                std::cout << "\n=== Detailed Results ===" << std::endl;
+                std::cout << std::left << std::setw(12) << "Version"
+                          << " | " << std::right << std::setw(8) << "Msgs"
+                          << " | " << std::right << std::setw(10) << "Time(ms)"
+                          << " | " << std::right << std::setw(10) << "QPS"
+                          << " | " << std::right << std::setw(6) << "Status" << std::endl;
+                std::cout << std::string(60, '-') << std::endl;
+
+                for (const auto &r : results)
+                {
+                    std::cout << std::left << std::setw(12) << r.version.String()
+                              << " | " << std::right << std::setw(8) << r.successes
+                              << " | " << std::right << std::setw(10) << r.time_ms
+                              << " | " << std::right << std::setw(10) << std::fixed << std::setprecision(2) << r.qps
+                              << " | " << std::right << std::setw(6) << (r.ok ? "PASS" : "FAIL") << std::endl;
+                }
+
                 co_return;
             })
         .end();

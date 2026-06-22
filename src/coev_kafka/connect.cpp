@@ -27,10 +27,14 @@ namespace coev::kafka
             auto r = co_await recv(buf.data() + (n - res), res);
             if (r == INVALID)
             {
+                LOG_ERR("ReadFull failed %d %s", errno, strerror(errno));
+                Close();
                 co_return ErrIOEOF;
             }
             else if (r == 0)
             {
+                LOG_ERR("ReadFull connection closed");
+                Close();
                 co_return ErrIOEOF;
             }
             res -= r;
@@ -51,11 +55,13 @@ namespace coev::kafka
             if (r == INVALID)
             {
                 LOG_ERR("Write failed %d %s", errno, strerror(errno));
+                Close();
                 co_return ErrIOEOF;
             }
             else if (r == 0)
             {
                 LOG_ERR("Write connection closed");
+                Close();
                 co_return ErrIOEOF;
             }
             res -= r;

@@ -25,18 +25,6 @@
 
 namespace coev::kafka
 {
-    int8_t GetHeaderLength(int16_t header_version)
-    {
-        if (header_version < 1)
-        {
-            return 8;
-        }
-        else
-        {
-            return 9;
-        }
-    }
-
     Broker::Broker(const std::string &addr) : m_id(-1), m_addr(addr), m_rack(""), m_correlation_id(0), m_session_reauthentication_time(0)
     {
     }
@@ -219,14 +207,24 @@ namespace coev::kafka
                 if (err)
                 {
                     m_conn->Close();
-                    LOG_CORE("connect to %s:%d failed due to ApiVersionsRequest failure", host.data(), port);
                     co_return INVALID;
                 }
+                else
+                {
+                    m_broker_api_versions.clear();
+                    for (auto &key : apiVersionsResponse.m_response->m_api_keys)
+                    {
+                        m_broker_api_versions.emplace(key.m_api_key, ApiVersionRange(key.m_min_version, key.m_max_version));
+                    }
+                }
             }
-            m_broker_api_versions.clear();
-            for (auto &key : apiVersionsResponse.m_response->m_api_keys)
+            else
             {
-                m_broker_api_versions.emplace(key.m_api_key, ApiVersionRange(key.m_min_version, key.m_max_version));
+                m_broker_api_versions.clear();
+                for (auto &key : apiVersionsResponse.m_response->m_api_keys)
+                {
+                    m_broker_api_versions.emplace(key.m_api_key, ApiVersionRange(key.m_min_version, key.m_max_version));
+                                }
             }
         }
 

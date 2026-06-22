@@ -29,21 +29,6 @@ namespace coev::kafka
         pe.putInt16(m_body->version());
         pe.putInt32(m_correlation_id);
 
-        int err = 0;
-        if (m_body->header_version() >= 1)
-        {
-            err = pe.putString(m_client_id);
-            if (err != 0)
-            {
-                return err;
-            }
-        }
-
-        if (m_body->header_version() >= 2)
-        {
-            pe.putUVarint(0);
-        }
-
         bool is_flexible = false;
         auto f = dynamic_cast<const flexible_version *>(m_body);
         if (f != nullptr)
@@ -51,11 +36,22 @@ namespace coev::kafka
             is_flexible = f->is_flexible_version(m_body->version());
         }
 
+        if (m_body->header_version() >= 1)
+        {
+            pe.putInt16(static_cast<int16_t>(m_client_id.size()));
+            pe.putRawBytes(m_client_id);
+        }
+
+        if (m_body->header_version() >= 2)
+        {
+            pe.putUVarint(0); // header tagged field count
+        }
+
+        int err = 0;
         if (is_flexible)
         {
             pe.__push_flexible();
             finally(pe.__pop_flexible());
-
             err = const_cast<protocol_body *>(m_body)->encode(pe);
             if (err != 0)
             {

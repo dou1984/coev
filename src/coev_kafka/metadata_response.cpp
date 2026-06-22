@@ -152,7 +152,7 @@ namespace coev::kafka
             }
         }
 
-        int err;
+        int32_t err;
         pd.getEmptyTaggedFieldArray(err);
         return err;
     }
@@ -210,6 +210,7 @@ namespace coev::kafka
     int MetadataResponse::decode(packet_decoder &pd, int16_t version)
     {
         m_version = version;
+
         if (m_version >= 3)
         {
             if (int err = pd.getDurationMs(m_throttle_time); err != 0)
@@ -254,7 +255,6 @@ namespace coev::kafka
         int32_t topic_array_len;
         if (int err = pd.getArrayLength(topic_array_len); err != 0)
         {
-            LOG_CORE("Failed to get topic array length: %d", err);
             return err;
         }
 
@@ -263,7 +263,6 @@ namespace coev::kafka
         {
             if (int err = m_topics[i].decode(pd, version); err != 0)
             {
-                LOG_CORE("Failed to decode TopicMetadata %d: %d", i + 1, err);
                 return err;
             }
         }

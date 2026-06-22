@@ -117,8 +117,6 @@
 namespace coev::kafka
 {
 
-    int8_t GetHeaderLength(int16_t header_version);
-
     struct GSSAPIKerberosAuth;
 
     struct Broker : VEncoder, VDecoder, std::enable_shared_from_this<Broker>
@@ -199,6 +197,7 @@ namespace coev::kafka
         awaitable<int> Ready();
         awaitable<int> ReadFull(std::string &buf, size_t n);
         awaitable<int> Write(const std::string &buf);
+        awaitable<int> ReceiveResponse(int32_t expected_correlation_id, int16_t header_version, std::string &body);
 
         awaitable<int> AuthenticateViaSASLv0();
         awaitable<int> AuthenticateViaSASLv1();
@@ -284,35 +283,106 @@ namespace coev::kafka
         {
             co_await RLock();
             finally(RUnlock());
-            std::string header;
-            auto header_bytes = GetHeaderLength(promise.m_response->header_version());
-            auto err = co_await ReadFull(header, header_bytes);
+
+            std::string fixed_header;
+            auto err = co_await ReadFull(fixed_header, 8);
             if (err)
             {
-                LOG_CORE("Failed to read header %d", err);
+                LOG_CORE("Failed to read fixed header %d", err);
                 co_return err;
             }
+            real_decoder hd(fixed_header);
             ResponseHeader decoded_header;
-            err = decode_version(header, decoded_header, promise.m_response->header_version());
-            if (err)
+            if (err = hd.getInt32(decoded_header.m_length); err != 0)
             {
                 co_return err;
             }
+            if (int e = hd.getInt32(decoded_header.m_correlation_id); e != 0)
+            {
+                co_return e;
+            }
+
             if (decoded_header.m_correlation_id != promise.m_correlation_id)
             {
                 co_return ErrCorrelationID;
             }
 
-            auto read_bytes = decoded_header.m_length - header_bytes + 4;
-            err = co_await ReadFull(promise.m_packets, read_bytes);
+            size_t remaining_bytes = decoded_header.m_length - 4;
+            std::string header_and_body;
+            err = co_await ReadFull(header_and_body, remaining_bytes);
             if (err)
             {
                 co_return err;
             }
-            if (promise.m_packets.size() != read_bytes)
+
+            promise.m_response->set_version(request->version());
+            size_t body_offset = 0;
+            if (promise.m_response->header_version() >= 1)
             {
-                co_return err;
+                real_decoder tag_decoder(header_and_body);
+                uint64_t tag_count = 0;
+                int shift = 0;
+                while (true)
+                {
+                    if (tag_decoder.m_offset >= static_cast<int>(header_and_body.size()))
+                    {
+                        co_return ErrDecodeError;
+                    }
+                    uint8_t b = static_cast<uint8_t>(header_and_body[tag_decoder.m_offset]);
+                    tag_decoder.m_offset++;
+                    tag_count |= static_cast<uint64_t>(b & 0x7F) << shift;
+                    if ((b & 0x80) == 0)
+                        break;
+                    shift += 7;
+                }
+
+                for (uint64_t i = 0; i < tag_count; i++)
+                {
+                    uint64_t tag_id = 0;
+                    int tag_shift = 0;
+                    while (true)
+                    {
+                        if (tag_decoder.m_offset >= static_cast<int>(header_and_body.size()))
+                        {
+                            co_return ErrDecodeError;
+                        }
+                        uint8_t b = static_cast<uint8_t>(header_and_body[tag_decoder.m_offset]);
+                        tag_decoder.m_offset++;
+                        tag_id |= static_cast<uint64_t>(b & 0x7F) << tag_shift;
+                        if ((b & 0x80) == 0)
+                            break;
+                        tag_shift += 7;
+                    }
+                    uint64_t tag_length = 0;
+                    int len_shift = 0;
+                    while (true)
+                    {
+                        if (tag_decoder.m_offset >= static_cast<int>(header_and_body.size()))
+                        {
+                            co_return ErrDecodeError;
+                        }
+                        uint8_t b = static_cast<uint8_t>(header_and_body[tag_decoder.m_offset]);
+                        tag_decoder.m_offset++;
+                        tag_length |= static_cast<uint64_t>(b & 0x7F) << len_shift;
+                        if ((b & 0x80) == 0)
+                            break;
+                        len_shift += 7;
+                    }
+                    tag_decoder.m_offset += tag_length;
+                    if (tag_decoder.m_offset > static_cast<int>(header_and_body.size()))
+                    {
+                        co_return ErrDecodeError;
+                    }
+                }
+                body_offset = tag_decoder.m_offset;
             }
+
+            if (body_offset > header_and_body.size())
+            {
+                co_return ErrDecodeError;
+            }
+            promise.m_packets = header_and_body.substr(body_offset);
+
             err = promise.decode(request->version());
             if (err)
             {

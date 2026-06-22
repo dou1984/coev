@@ -277,7 +277,7 @@ namespace coev::kafka
         {
             m_version = 9;
         }
-        else if (version.IsAtLeast(V2_4_0_0))
+        else if (version.IsAtLeast(V2_3_0_0))
         {
             m_version = 8;
         }
@@ -326,7 +326,7 @@ namespace coev::kafka
         {
             m_version = 9;
         }
-        else if (conf->Version.IsAtLeast(V2_4_0_0))
+        else if (conf->Version.IsAtLeast(V2_3_0_0))
         {
             m_version = 8;
         }

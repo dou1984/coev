@@ -123,7 +123,18 @@ namespace coev::kafka
             auto err = co_await m_broker->SyncProduce(request, response);
             auto broker_response = std::make_shared<BrokerProducerResponse>();
             broker_response->m_produce_set = produce_set;
-            broker_response->m_err = ErrNoError;
+            if (err == ErrNoError)
+            {
+                broker_response->m_err = ErrNoError;
+            }
+            else if (err == ErrIOEOF)
+            {
+                broker_response->m_err = ErrIOEOF;
+            }
+            else
+            {
+                broker_response->m_err = ErrIOEOF;
+            }
             broker_response->m_produce_response = response.m_response;
             co_await handle_response(broker_response);
         }

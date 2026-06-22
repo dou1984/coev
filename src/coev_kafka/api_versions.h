@@ -8,6 +8,7 @@
 
 #include <map>
 #include <cstdint>
+#include <coev/coev.h>
 #include "request.h"
 
 namespace coev::kafka
