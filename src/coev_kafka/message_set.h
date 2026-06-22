@@ -45,6 +45,7 @@ namespace coev::kafka
             return m_messages.back();
         }
         void clear();
+        int64_t last_offset() const;
     };
 
 } // namespace coev::kafka

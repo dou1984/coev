@@ -169,6 +169,11 @@ namespace coev::kafka
             offset = m_record_batch->last_offset() + 1;
             return 0;
         }
+        if (m_records_type == LegacyRecords && m_message_set)
+        {
+            offset = m_message_set->last_offset() + 1;
+            return 0;
+        }
         return -1;
     }
 

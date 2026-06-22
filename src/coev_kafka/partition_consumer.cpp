@@ -195,6 +195,8 @@ namespace coev::kafka
         bool first_attempt = true;
 
         m_response_result = (KError)ParseResponse(response, messages);
+        LOG_CORE("PartitionConsumer::ResponseFeeder %s:%d ParseResponse result=%d, messages=%zu, current_offset=%ld",
+                 m_topic.c_str(), m_partition, m_response_result, messages.size(), m_offset);
         if (m_response_result != ErrNoError)
         {
             m_retries = 0;
@@ -202,35 +204,34 @@ namespace coev::kafka
         for (size_t i = 0; i < messages.size(); ++i)
         {
             auto msg = messages[i];
+            if (!msg)
+            {
+                LOG_CORE("ResponseFeeder: null message at index %zu", i);
+                continue;
+            }
+
             auto err = co_await Interceptors(msg);
             if (err)
             {
                 LOG_CORE("interceptor error: %d", err);
             }
 
-            bool sent = false;
-            bool died = false;
             auto now = std::chrono::steady_clock::now();
             if (now - last_expiry >= expiry_time)
             {
                 if (!first_attempt)
                 {
+                    // 超时后，将剩余消息直接放入队列，不再调用拦截器
                     m_response_result = ErrTimedOut;
                     for (size_t j = i; j < messages.size(); ++j)
                     {
-                        auto err = co_await Interceptors(messages[j]);
-                        if (err)
+                        if (messages[j])
                         {
-                            LOG_CORE("interceptor error: %d", err);
-                        }
-                        m_messages.set(messages[j]);
-                        if (m_dying.try_get(died) && died)
-                        {
-                            continue;
+                            m_messages.set(messages[j]);
                         }
                     }
                     m_broker->m_input.set(shared_from_this());
-                    continue;
+                    co_return;
                 }
                 else
                 {
@@ -240,6 +241,7 @@ namespace coev::kafka
                 }
             }
 
+            bool died = false;
             if (m_dying.try_get(died) && died)
             {
                 co_return;
@@ -247,11 +249,14 @@ namespace coev::kafka
 
             m_messages.set(msg);
             first_attempt = true;
+            last_expiry = now; // 更新超时计时器
         }
     }
 
     int PartitionConsumer::ParseMessages(std::shared_ptr<MessageSet> message_set, std::vector<std::shared_ptr<ConsumerMessage>> &messages)
     {
+        LOG_CORE("PartitionConsumer::ParseMessages %s:%d message_set messages=%zu, current_offset=%ld",
+                 m_topic.c_str(), m_partition, message_set->m_messages.size(), m_offset);
         messages.reserve(messages.size() + message_set->m_messages.size());
         for (auto &block : message_set->m_messages)
         {
@@ -287,6 +292,8 @@ namespace coev::kafka
         }
         if (messages.empty())
         {
+            LOG_CORE("PartitionConsumer::ParseMessages %s:%d no messages parsed, incrementing offset",
+                     m_topic.c_str(), m_partition);
             m_offset++;
         }
         return ErrNoError;
@@ -294,6 +301,8 @@ namespace coev::kafka
 
     int PartitionConsumer::ParseRecords(std::shared_ptr<RecordBatch> &batch, std::vector<std::shared_ptr<ConsumerMessage>> &messages)
     {
+        // LOG_CORE("PartitionConsumer::ParseRecords %s:%d batch first_offset=%ld, records=%zu, current_offset=%ld",
+        //          m_topic.c_str(), m_partition, batch->m_first_offset, batch->m_records.size(), m_offset);
         messages.reserve(batch->m_records.size());
         for (const auto &rec : batch->m_records)
         {
@@ -320,6 +329,7 @@ namespace coev::kafka
         }
         if (messages.empty())
         {
+            // LOG_CORE("PartitionConsumer::ParseRecords %s:%d no messages parsed, incrementing offset", m_topic.c_str(), m_partition);
             m_offset++;
         }
         return 0;
@@ -344,6 +354,9 @@ namespace coev::kafka
         }
 
         auto nRecs = block.num_records();
+        LOG_CORE("PartitionConsumer::ParseResponse %s:%d nRecs=%d, high_watermark=%ld, next_offset=%ld, current_offset=%ld",
+                 m_topic.c_str(), m_partition, nRecs, block.m_high_water_mark_offset,
+                 block.m_records_next_offset, m_offset);
 
         if (block.m_preferred_read_replica != InvalidPreferredReplicaID)
         {
@@ -355,6 +368,8 @@ namespace coev::kafka
             std::shared_ptr<ConsumerMessage> partial_trailing_message;
             bool is_partial;
             auto err = block.is_partial(is_partial);
+            LOG_CORE("PartitionConsumer::ParseResponse %s:%d nRecs=0, is_partial=%d, err=%d",
+                     m_topic.c_str(), m_partition, is_partial, err);
             if (!is_partial)
             {
                 return err;
@@ -472,13 +487,26 @@ namespace coev::kafka
 
     awaitable<int> PartitionConsumer::Interceptors(std::shared_ptr<ConsumerMessage> &msg)
     {
-        for (auto &interceptor : m_conf->Consumer.Interceptors)
+        try
         {
-            auto err = co_await safely_apply_interceptor(msg, interceptor);
-            if (err)
-                co_return err;
+            for (auto &interceptor : m_conf->Consumer.Interceptors)
+            {
+                auto err = co_await safely_apply_interceptor(msg, interceptor);
+                if (err)
+                    co_return err;
+            }
+            co_return ErrNoError;
         }
-        co_return ErrNoError;
+        catch (const std::exception &e)
+        {
+            LOG_CORE("Interceptors exception: %s", e.what());
+            co_return ErrUnknown;
+        }
+        catch (...)
+        {
+            LOG_CORE("Interceptors unknown exception");
+            co_return ErrUnknown;
+        }
     }
 
     void PartitionConsumer::Pause()

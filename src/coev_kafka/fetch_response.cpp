@@ -37,7 +37,7 @@ namespace coev::kafka
 
     FetchResponseBlock::FetchResponseBlock()
         : m_err(static_cast<KError>(0)), m_high_water_mark_offset(0), m_last_stable_offset(0), m_log_start_offset(0),
-          m_preferred_read_replica(-1), m_partial(false)
+          m_preferred_read_replica(-1), m_partial(false), m_records_next_offset(0)
     {
     }
 
@@ -129,10 +129,10 @@ namespace coev::kafka
                 return err;
             }
 
-            if (is_insufficient_data && m_records_set.empty())
+            if (is_insufficient_data)
             {
                 m_partial = true;
-                LOG_CORE("FetchResponseBlock::decode %d", err);
+                LOG_CORE("FetchResponseBlock::decode insufficient data, m_records_set.size()=%zu", m_records_set.size());
                 break;
             }
 

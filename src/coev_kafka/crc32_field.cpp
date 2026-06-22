@@ -90,7 +90,7 @@ namespace coev::kafka
 
     int crc32_field::check(int cur_offset, const std::string_view &buf)
     {
-        LOG_CORE("crc32_field::check start_offset: %d, cur_offset: %d", m_start_offset, cur_offset);
+        // LOG_CORE("crc32_field::check start_offset: %d, cur_offset: %d", m_start_offset, cur_offset);
         uint32_t crc_val;
         int err = crc(cur_offset, buf, crc_val);
         if (err != ErrNoError)

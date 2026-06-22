@@ -100,14 +100,19 @@ namespace coev::kafka
                 auto tit = response->m_blocks.find(child->m_topic);
                 if (tit == response->m_blocks.end())
                 {
+                    LOG_CORE("BrokerConsumer::SubscriptionConsumer topic %s not in response", child->m_topic.c_str());
                     continue;
                 }
                 auto pit = tit->second.find(child->m_partition);
                 if (pit == tit->second.end())
                 {
+                    LOG_CORE("BrokerConsumer::SubscriptionConsumer partition %s:%d not in response", child->m_topic.c_str(), child->m_partition);
                     continue;
                 }
-                LOG_CORE("BrokerConsumer::SubscriptionConsumer sending response to %s:%d", child->m_topic.c_str(), child->m_partition);
+                auto &block = pit->second;
+                LOG_CORE("BrokerConsumer::SubscriptionConsumer sending response to %s:%d, nRecs=%d, high_watermark=%ld, next_offset=%ld",
+                         child->m_topic.c_str(), child->m_partition, block.num_records(),
+                         block.m_high_water_mark_offset, block.m_records_next_offset);
                 tasks << child->ResponseFeeder(response);
             }
             co_await tasks.wait_all();
@@ -284,6 +289,8 @@ namespace coev::kafka
         {
             if (!child->IsPaused())
             {
+                LOG_CORE("BrokerConsumer::FetchNewMessages adding block %s:%d offset=%ld fetch_size=%d",
+                         child->m_topic.c_str(), child->m_partition, child->m_offset, child->m_fetch_size);
                 request->add_block(child->m_topic, child->m_partition, child->m_offset, child->m_fetch_size, child->m_leader_epoch);
             }
         }

@@ -149,4 +149,13 @@ namespace coev::kafka
         m_messages.clear();
     }
 
+    int64_t MessageSet::last_offset() const
+    {
+        if (m_messages.empty())
+        {
+            return -1;
+        }
+        return m_messages.back().m_offset;
+    }
+
 } // namespace coev::kafka
