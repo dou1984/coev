@@ -29,7 +29,7 @@ namespace coev::kafka
         int decode(packet_decoder &pd, int16_t version);
     };
 
-    struct ApiVersionsResponse : protocol_body, flexible_version
+    struct ApiVersionsResponse : protocol_body
     {
         int16_t m_version = 0;
         int16_t m_code = 0;

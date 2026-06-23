@@ -18,11 +18,10 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "supported_versions.h"
 
 using namespace coev;
 using namespace coev::kafka;
-
-extern const std::vector<KafkaVersion> SupportedVersions;
 
 std::string test_host;
 int test_port;
@@ -142,7 +141,7 @@ static awaitable<void> test_single_version(const KafkaVersion &ver, VersionTestR
 void run_version_test()
 {
     std::vector<VersionTestResult> results;
-    results.resize(SupportedVersions.size());
+    results.resize(SupportedVersions().size());
 
     runnable::instance()
         .start(
@@ -151,11 +150,11 @@ void run_version_test()
                 LOG_DBG("=== Kafka Version Compatibility Test ===");
                 LOG_DBG("Broker: %s:%d", test_host.c_str(), test_port);
                 LOG_DBG("Topic: %s", test_topic.c_str());
-                LOG_DBG("Total versions to test: %zu", SupportedVersions.size());
+                LOG_DBG("Total versions to test: %zu", SupportedVersions().size());
 
-                for (size_t i = 0; i < SupportedVersions.size(); ++i)
+                for (size_t i = 0; i < SupportedVersions().size(); ++i)
                 {
-                    co_await test_single_version(SupportedVersions[i], results[i]);
+                    co_await test_single_version(SupportedVersions()[i], results[i]);
                     LOG_DBG("\n");
                 }
 

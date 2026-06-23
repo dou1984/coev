@@ -24,6 +24,8 @@ namespace coev::kafka
         virtual void set_version(int16_t version) = 0;
         virtual bool is_valid_version() const = 0;
         virtual KafkaVersion required_version() const = 0;
+        virtual bool is_flexible() const { return false; }
+        virtual bool is_flexible_version(int16_t version) const { return false; }
     };
 
 } // namespace coev::kafka

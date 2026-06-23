@@ -24,7 +24,7 @@ namespace coev::kafka
         std::vector<int32_t> m_partition_ids;
     };
 
-    struct DescribeLogDirsRequest : protocol_body, flexible_version
+    struct DescribeLogDirsRequest : protocol_body
     {
 
         int16_t m_version;

@@ -50,7 +50,7 @@ namespace coev::kafka
         int decode(packet_decoder &pd, int16_t version);
     };
 
-    struct DescribeLogDirsResponse : protocol_body, flexible_version
+    struct DescribeLogDirsResponse : protocol_body
     {
 
         std::chrono::milliseconds m_throttle_time;

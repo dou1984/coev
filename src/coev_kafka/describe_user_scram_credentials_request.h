@@ -22,7 +22,7 @@ namespace coev::kafka
         std::string m_name;
     };
 
-    struct DescribeUserScramCredentialsRequest : protocol_body, flexible_version
+    struct DescribeUserScramCredentialsRequest : protocol_body
     {
         int16_t m_version;
         std::vector<DescribeUserScramCredentialsRequestUser> m_describe_users;

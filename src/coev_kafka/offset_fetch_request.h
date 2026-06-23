@@ -21,7 +21,7 @@
 namespace coev::kafka
 {
 
-    struct OffsetFetchRequest : protocol_body, flexible_version
+    struct OffsetFetchRequest : protocol_body
     {
         int16_t m_version;
         std::string m_consumer_group;

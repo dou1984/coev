@@ -53,7 +53,7 @@ namespace coev::kafka
         int decode(packet_decoder &pd, int16_t version);
     };
 
-    struct CreateTopicsResponse : protocol_body, flexible_version
+    struct CreateTopicsResponse : protocol_body
     {
         int16_t m_version;
         std::chrono::milliseconds m_throttle_time;

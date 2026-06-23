@@ -19,7 +19,7 @@
 
 namespace coev::kafka
 {
-    struct ListGroupsRequest : protocol_body, flexible_version
+    struct ListGroupsRequest : protocol_body
     {
 
         int16_t m_version = 0;

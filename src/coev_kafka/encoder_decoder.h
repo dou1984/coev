@@ -39,12 +39,6 @@ namespace coev::kafka
         }
     };
 
-    struct flexible_version
-    {
-        virtual ~flexible_version() = default;
-        virtual bool is_flexible_version(int16_t version) const = 0;
-        virtual bool is_flexible() const = 0;
-    };
     struct IEncoder
     {
         virtual ~IEncoder() = default;

@@ -59,7 +59,7 @@ namespace coev::kafka
         int encode(packet_encoder &pe, int16_t version) const;
     };
 
-    struct MetadataResponse : protocol_body, flexible_version
+    struct MetadataResponse : protocol_body
     {
         int16_t m_version;
         std::chrono::milliseconds m_throttle_time;

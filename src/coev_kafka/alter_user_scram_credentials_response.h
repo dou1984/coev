@@ -26,7 +26,7 @@ namespace coev::kafka
         std::string m_message;
     };
 
-    struct AlterUserScramCredentialsResponse : protocol_body, flexible_version
+    struct AlterUserScramCredentialsResponse : protocol_body
     {
         int16_t m_version = 0;
         std::chrono::milliseconds m_throttle_time;

@@ -30,7 +30,7 @@ namespace coev::kafka
         int decode(packet_decoder &pd, int16_t version);
     };
 
-    struct DescribeClientQuotasRequest : protocol_body, flexible_version
+    struct DescribeClientQuotasRequest : protocol_body
     {
         int16_t m_version;
         std::vector<QuotaFilterComponent> m_components;

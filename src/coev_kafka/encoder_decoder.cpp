@@ -93,31 +93,25 @@ namespace coev::kafka
 
     int prepare_flexible_decoder(packet_decoder &pd, VDecoder &req, int16_t version)
     {
-        auto f = dynamic_cast<flexible_version *>(&req);
-        if (f != nullptr)
+        auto body = dynamic_cast<protocol_body *>(&req);
+        if (body != nullptr && body->is_flexible_version(version))
         {
-            if (f->is_flexible_version(version))
-            {
-                pd.__push_flexible();
-                finally(pd.__pop_flexible());
-                int err = req.decode(pd, version);
-                return err;
-            }
+            pd.__push_flexible();
+            finally(pd.__pop_flexible());
+            int err = req.decode(pd, version);
+            return err;
         }
         return req.decode(pd, version);
     }
 
     int prepare_flexible_encoder(packet_encoder &pe, const IEncoder &req)
     {
-        auto f = dynamic_cast<const flexible_version *>(&req);
-        if (f != nullptr)
+        auto body = dynamic_cast<const protocol_body *>(&req);
+        if (body != nullptr && body->is_flexible())
         {
-            if (f->is_flexible())
-            {
-                pe.__push_flexible();
-                finally(pe.__pop_flexible());
-                return req.encode(pe);
-            }
+            pe.__push_flexible();
+            finally(pe.__pop_flexible());
+            return req.encode(pe);
         }
         return req.encode(pe);
     }

@@ -26,7 +26,7 @@ namespace coev::kafka
         std::string m_group_instance_id;
     };
 
-    struct LeaveGroupRequest : protocol_body, flexible_version
+    struct LeaveGroupRequest : protocol_body
     {
         int16_t m_version = 0;
         std::string m_group_id;

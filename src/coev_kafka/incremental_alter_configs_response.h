@@ -21,7 +21,7 @@
 namespace coev::kafka
 {
 
-    struct IncrementalAlterConfigsResponse : protocol_body, flexible_version
+    struct IncrementalAlterConfigsResponse : protocol_body
     {
         int16_t m_version = 0;
         std::chrono::milliseconds m_throttle_time;

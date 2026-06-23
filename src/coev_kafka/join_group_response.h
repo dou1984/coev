@@ -31,7 +31,7 @@ namespace coev::kafka
         std::string m_metadata;
     };
 
-    struct JoinGroupResponse : protocol_body, flexible_version
+    struct JoinGroupResponse : protocol_body
     {
 
         int16_t m_version = 0;

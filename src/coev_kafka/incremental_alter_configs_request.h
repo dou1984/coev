@@ -42,7 +42,7 @@ namespace coev::kafka
         int decode(packet_decoder &pd, int16_t version);
     };
 
-    struct IncrementalAlterConfigsRequest : protocol_body, flexible_version
+    struct IncrementalAlterConfigsRequest : protocol_body
     {
 
         int16_t m_version = 0;

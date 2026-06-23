@@ -20,7 +20,7 @@
 namespace coev::kafka
 {
 
-	struct DeleteTopicsResponse : protocol_body, flexible_version
+	struct DeleteTopicsResponse : protocol_body
 	{
 		int16_t m_version;
 		std::chrono::milliseconds m_throttle_time;

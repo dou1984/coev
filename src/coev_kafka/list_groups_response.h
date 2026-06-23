@@ -25,7 +25,7 @@ namespace coev::kafka
         std::string m_group_type;
     };
 
-    struct ListGroupsResponse : protocol_body, flexible_version
+    struct ListGroupsResponse : protocol_body
     {
 
         int16_t m_version = 0;

@@ -17,7 +17,7 @@
 namespace coev::kafka
 {
 
-    struct ApiVersionsRequest : protocol_body, flexible_version
+    struct ApiVersionsRequest : protocol_body
     {
         int16_t m_version = 0;
         mutable std::string m_client_software_name = defaultClientSoftwareName;

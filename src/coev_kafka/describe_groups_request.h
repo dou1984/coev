@@ -17,7 +17,7 @@
 
 namespace coev::kafka
 {
-    struct DescribeGroupsRequest : protocol_body, flexible_version
+    struct DescribeGroupsRequest : protocol_body
     {
         int16_t m_version;
         std::vector<std::string> m_groups;

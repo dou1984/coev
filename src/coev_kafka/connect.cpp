@@ -10,7 +10,7 @@
 namespace coev::kafka
 {
 
-      Connect::Connect() : m_state(CLOSED)
+    Connect::Connect() : m_state(CLOSED)
     {
     }
 
@@ -39,8 +39,7 @@ namespace coev::kafka
             }
             res -= r;
         }
-        auto hex = to_hex(buf);
-        LOG_CORE("fd:%d buf_size:%ld ReadFull received: %.*s", m_fd, buf.size(), (int)hex.size(), hex.data());
+        LOG_CORE("fd:%d buf_size:%ld ReadFull received: %.*s", m_fd, buf.size(), (int)to_hex(buf).size(), to_hex(buf).data());
         co_return ErrNoError;
     }
 
@@ -49,8 +48,8 @@ namespace coev::kafka
         auto res = buf.size();
         while (__valid() && res > 0)
         {
-            auto hex = to_hex(buf);
-            LOG_CORE("Write sending: %.*s", (int)hex.size(), hex.data());
+
+            LOG_CORE("Write sending: %.*s", (int)to_hex(buf).size(), to_hex(buf).data());
             auto r = co_await send(buf.data() + (buf.size() - res), res);
             if (r == INVALID)
             {

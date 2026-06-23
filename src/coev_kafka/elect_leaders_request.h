@@ -20,7 +20,7 @@
 
 namespace coev::kafka
 {
-  struct ElectLeadersRequest : protocol_body, flexible_version
+  struct ElectLeadersRequest : protocol_body
   {
 
     int16_t m_version = 0;

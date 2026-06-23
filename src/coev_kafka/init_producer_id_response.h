@@ -19,7 +19,7 @@
 namespace coev::kafka
 {
 
-    struct InitProducerIDResponse : protocol_body, flexible_version
+    struct InitProducerIDResponse : protocol_body
     {
         std::chrono::milliseconds m_throttle_time;
         KError m_err = ErrNoError;

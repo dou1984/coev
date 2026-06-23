@@ -18,7 +18,7 @@
 
 namespace coev::kafka
 {
-    struct HeartbeatRequest : protocol_body, flexible_version
+    struct HeartbeatRequest : protocol_body
     {
 
         int16_t m_version = 0;

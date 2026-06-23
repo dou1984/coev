@@ -29,7 +29,7 @@ namespace coev::kafka
         int decode(packet_decoder &pd);
     };
 
-    struct AlterPartitionReassignmentsRequest : protocol_body, throttle_support, flexible_version
+    struct AlterPartitionReassignmentsRequest : protocol_body, throttle_support
     {
         std::chrono::milliseconds m_timeout;
         std::map<std::string, std::map<int32_t, AlterPartitionReassignmentsBlock>> m_blocks;

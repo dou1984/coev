@@ -20,7 +20,7 @@
 namespace coev::kafka
 {
 
-    struct ListPartitionReassignmentsRequest : protocol_body, flexible_version
+    struct ListPartitionReassignmentsRequest : protocol_body
     {
         std::chrono::milliseconds m_timeout;
         std::unordered_map<std::string, std::vector<int32_t>> m_blocks;

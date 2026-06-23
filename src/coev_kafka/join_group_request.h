@@ -37,7 +37,7 @@ namespace coev::kafka
         int encode(packet_encoder &pe) const;
     };
 
-    struct JoinGroupRequest : protocol_body, flexible_version
+    struct JoinGroupRequest : protocol_body
     {
 
         int16_t m_version = 0;

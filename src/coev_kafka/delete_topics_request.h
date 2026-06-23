@@ -16,7 +16,7 @@
 
 namespace coev::kafka
 {
-	struct DeleteTopicsRequest : protocol_body, flexible_version
+	struct DeleteTopicsRequest : protocol_body
 	{
 		int16_t m_version;
 		std::vector<std::string> m_topics;

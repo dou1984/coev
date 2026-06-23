@@ -13,89 +13,13 @@
 #include <chrono>
 #include <iostream>
 #include <iomanip>
-
+#include "supported_versions.h"
 using namespace coev;
 using namespace coev::kafka;
 
 extern std::string test_host;
 extern int test_port;
 extern std::string test_topic;
-
-const std::vector<KafkaVersion> SupportedVersions = {
-    // V0_8_2_0,
-    // V0_8_2_1,
-    // V0_8_2_2,
-    // V0_9_0_0,
-    // V0_9_0_1,
-    // V0_10_0_0,
-    // V0_10_0_1,
-    // V0_10_1_0,
-    // V0_10_1_1,
-    // V0_10_2_0,
-    // V0_10_2_1,
-    // V0_10_2_2,
-    // V0_11_0_0,
-    // V0_11_0_1,
-    // V0_11_0_2,
-    V1_0_0_0,
-    V1_0_1_0,
-    V1_0_2_0,
-    V1_1_0_0,
-    V1_1_1_0,
-    V2_0_0_0,
-    V2_0_1_0,
-    V2_1_0_0,
-    V2_1_1_0,
-    V2_2_0_0,
-    V2_2_1_0,
-    V2_2_2_0,
-    V2_3_0_0,
-    V2_3_1_0,
-    V2_4_0_0,
-    V2_4_1_0,
-    V2_5_0_0,
-    V2_5_1_0,
-    V2_6_0_0,
-    V2_6_1_0,
-    V2_6_2_0,
-    V2_6_3_0,
-    V2_7_0_0,
-    V2_7_1_0,
-    V2_7_2_0,
-    V2_8_0_0,
-    V2_8_1_0,
-    V2_8_2_0,
-    V3_0_0_0,
-    V3_0_1_0,
-    V3_0_2_0,
-    V3_1_0_0,
-    V3_1_1_0,
-    V3_1_2_0,
-    V3_2_0_0,
-    V3_2_1_0,
-    V3_2_2_0,
-    V3_2_3_0,
-    V3_3_0_0,
-    V3_3_1_0,
-    V3_3_2_0,
-    V3_4_0_0,
-    V3_4_1_0,
-    V3_5_0_0,
-    V3_5_1_0,
-    V3_5_2_0,
-    V3_6_0_0,
-    V3_6_1_0,
-    V3_6_2_0,
-    V3_7_0_0,
-    V3_7_1_0,
-    V3_7_2_0,
-    V3_8_0_0,
-    V3_8_1_0,
-    V3_9_0_0,
-    V3_9_1_0,
-    V4_0_0_0,
-    V4_1_0_0,
-};
 struct ProducerVersionResult
 {
     KafkaVersion version;
@@ -176,16 +100,16 @@ void run_producer_test()
                 std::cout << "=== Kafka Producer Version Test ===" << std::endl;
                 std::cout << "Broker: " << test_host << ":" << test_port << std::endl;
                 std::cout << "Topic: " << test_topic << std::endl;
-                std::cout << "Total versions to test: " << SupportedVersions.size() << std::endl;
+                std::cout << "Total versions to test: " << SupportedVersions().size() << std::endl;
                 std::cout << "========================================" << std::endl;
 
                 std::vector<ProducerVersionResult> results;
-                results.reserve(SupportedVersions.size());
+                results.reserve(SupportedVersions().size());
 
-                for (size_t i = 0; i < SupportedVersions.size(); ++i)
+                for (size_t i = 0; i < SupportedVersions().size(); ++i)
                 {
-                    const auto &ver = SupportedVersions[i];
-                    std::cout << "[" << i + 1 << "/" << SupportedVersions.size()
+                    const auto &ver = SupportedVersions()[i];
+                    std::cout << "[" << i + 1 << "/" << SupportedVersions().size()
                               << "] Testing version: " << ver.String() << std::endl;
 
                     auto result = co_await test_producer_version(ver);

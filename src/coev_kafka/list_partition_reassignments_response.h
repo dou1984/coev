@@ -33,7 +33,7 @@ namespace coev::kafka
         int decode(packet_decoder &pd);
     };
 
-    struct ListPartitionReassignmentsResponse : protocol_body, flexible_version
+    struct ListPartitionReassignmentsResponse : protocol_body
     {
 
         int16_t m_version = 0;

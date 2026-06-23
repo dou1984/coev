@@ -29,12 +29,7 @@ namespace coev::kafka
         pe.putInt16(m_body->version());
         pe.putInt32(m_correlation_id);
 
-        bool is_flexible = false;
-        auto f = dynamic_cast<const flexible_version *>(m_body);
-        if (f != nullptr)
-        {
-            is_flexible = f->is_flexible_version(m_body->version());
-        }
+        bool is_flexible = m_body->is_flexible_version(m_body->version());
 
         if (m_body->header_version() >= 1)
         {
@@ -119,14 +114,9 @@ namespace coev::kafka
 
     bool Request::is_flexible() const
     {
-
         if (m_body)
         {
-            auto f = dynamic_cast<const flexible_version *>(m_body);
-            if (f != nullptr)
-            {
-                return f->is_flexible();
-            }
+            return m_body->is_flexible();
         }
         return false;
     }

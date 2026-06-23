@@ -35,7 +35,7 @@ namespace coev::kafka
         std::vector<UserScramCredentialsResponseInfo> m_credential_infos;
     };
 
-    struct DescribeUserScramCredentialsResponse : protocol_body, flexible_version
+    struct DescribeUserScramCredentialsResponse : protocol_body
     {
         int16_t m_version = 0;
         std::chrono::milliseconds m_throttle_time;
