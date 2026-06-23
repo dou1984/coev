@@ -308,8 +308,8 @@ namespace coev::kafka
             }
 
             size_t remaining_bytes = decoded_header.m_length - 4;
-            std::string header_and_body;
-            err = co_await ReadFull(header_and_body, remaining_bytes);
+            promise.m_body.clear();
+            err = co_await ReadFull(promise.m_body, remaining_bytes);
             if (err)
             {
                 co_return err;
@@ -319,69 +319,21 @@ namespace coev::kafka
             size_t body_offset = 0;
             if (promise.m_response->header_version() >= 1)
             {
-                real_decoder tag_decoder(header_and_body);
-                uint64_t tag_count = 0;
-                int shift = 0;
-                while (true)
-                {
-                    if (tag_decoder.m_offset >= static_cast<int>(header_and_body.size()))
-                    {
-                        co_return ErrDecodeError;
-                    }
-                    uint8_t b = static_cast<uint8_t>(header_and_body[tag_decoder.m_offset]);
-                    tag_decoder.m_offset++;
-                    tag_count |= static_cast<uint64_t>(b & 0x7F) << shift;
-                    if ((b & 0x80) == 0)
-                        break;
-                    shift += 7;
-                }
+                real_decoder tag_decoder(promise.m_body);
+                tag_decoder.__push_flexible();
+                finally(tag_decoder.__pop_flexible());
+                int32_t dummy = 0;
+                tag_decoder.getEmptyTaggedFieldArray(dummy);
 
-                for (uint64_t i = 0; i < tag_count; i++)
-                {
-                    uint64_t tag_id = 0;
-                    int tag_shift = 0;
-                    while (true)
-                    {
-                        if (tag_decoder.m_offset >= static_cast<int>(header_and_body.size()))
-                        {
-                            co_return ErrDecodeError;
-                        }
-                        uint8_t b = static_cast<uint8_t>(header_and_body[tag_decoder.m_offset]);
-                        tag_decoder.m_offset++;
-                        tag_id |= static_cast<uint64_t>(b & 0x7F) << tag_shift;
-                        if ((b & 0x80) == 0)
-                            break;
-                        tag_shift += 7;
-                    }
-                    uint64_t tag_length = 0;
-                    int len_shift = 0;
-                    while (true)
-                    {
-                        if (tag_decoder.m_offset >= static_cast<int>(header_and_body.size()))
-                        {
-                            co_return ErrDecodeError;
-                        }
-                        uint8_t b = static_cast<uint8_t>(header_and_body[tag_decoder.m_offset]);
-                        tag_decoder.m_offset++;
-                        tag_length |= static_cast<uint64_t>(b & 0x7F) << len_shift;
-                        if ((b & 0x80) == 0)
-                            break;
-                        len_shift += 7;
-                    }
-                    tag_decoder.m_offset += tag_length;
-                    if (tag_decoder.m_offset > static_cast<int>(header_and_body.size()))
-                    {
-                        co_return ErrDecodeError;
-                    }
-                }
                 body_offset = tag_decoder.m_offset;
             }
 
-            if (body_offset > header_and_body.size())
+            if (body_offset > promise.m_body.size())
             {
                 co_return ErrDecodeError;
             }
-            promise.m_packets = header_and_body.substr(body_offset);
+
+            promise.m_packets = std::string_view(promise.m_body).substr(body_offset);
 
             err = promise.decode(request->version());
             if (err)

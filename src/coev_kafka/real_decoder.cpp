@@ -469,11 +469,11 @@ namespace coev::kafka
             int n;
             if (length == 0)
             {
-                n = -1;  // null string
+                n = -1; // null string
             }
             else
             {
-                n = static_cast<int>(length - 1);  // compact encoding: UVarint = actual_length + 1
+                n = static_cast<int>(length - 1); // compact encoding: UVarint = actual_length + 1
             }
             if (n < -1)
             {

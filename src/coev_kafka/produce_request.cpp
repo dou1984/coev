@@ -154,7 +154,17 @@ namespace coev::kafka
 
     int16_t ProduceRequest::header_version() const
     {
-        return 1;
+        return (m_version >= 8) ? 2 : 1;
+    }
+
+    bool ProduceRequest::is_flexible() const
+    {
+        return m_version >= 8;
+    }
+
+    bool ProduceRequest::is_flexible_version(int16_t version) const
+    {
+        return version >= 8;
     }
 
     bool ProduceRequest::is_valid_version() const
@@ -166,6 +176,10 @@ namespace coev::kafka
     {
         switch (m_version)
         {
+        case 9:
+            return V3_0_0_0;
+        case 8:
+            return V2_8_0_0;
         case 7:
             return V2_1_0_0;
         case 6:
@@ -182,7 +196,7 @@ namespace coev::kafka
         case 0:
             return V0_8_2_0;
         default:
-            return V2_1_0_0;
+            return V3_0_0_0;
         }
     }
 

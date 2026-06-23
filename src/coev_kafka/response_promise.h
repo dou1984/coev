@@ -9,6 +9,7 @@
 #include <chrono>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <cstdint>
 #include <coev/coev.h>
@@ -22,7 +23,8 @@ namespace coev::kafka
     {
         std::chrono::time_point<std::chrono::system_clock> m_request_time;
         int32_t m_correlation_id = 0;
-        std::string m_packets;
+        std::string m_body;         // stores complete response header + body
+        std::string_view m_packets; // view into m_body, points to body section
         std::shared_ptr<Res> m_response = std::make_shared<Res>();
 
         ResponsePromise() = default;

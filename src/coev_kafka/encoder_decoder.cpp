@@ -67,7 +67,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int decode_version(const std::string &buf, VDecoder &in, int16_t version)
+    int decode_version(std::string_view buf, VDecoder &in, int16_t version)
     {
         if (buf.empty())
         {
