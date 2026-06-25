@@ -92,7 +92,7 @@ namespace coev::kafka
     }
     int Message::encode(packet_encoder &pe) const
     {
-        crc32_field field(CrcCastagnoli);
+        Crc32Field field(CrcCastagnoli);
         pe.push(field);
         finally(pe.pop());
 

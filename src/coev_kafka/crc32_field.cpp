@@ -15,9 +15,9 @@
 namespace coev::kafka
 {
     static std::mutex pool_mutex;
-    static std::queue<std::shared_ptr<crc32_field>> crc32_field_pool;
+    static std::queue<std::shared_ptr<Crc32Field>> crc32_field_pool;
 
-    std::shared_ptr<crc32_field> acquire_crc32_field(CrcPolynomial polynomial)
+    std::shared_ptr<Crc32Field> acquire_crc32_field(CrcPolynomial polynomial)
     {
         std::lock_guard<std::mutex> lock(pool_mutex);
         if (!crc32_field_pool.empty())
@@ -27,10 +27,10 @@ namespace coev::kafka
             c->m_polynomial = polynomial;
             return c;
         }
-        return std::make_shared<crc32_field>(polynomial);
+        return std::make_shared<Crc32Field>(polynomial);
     }
 
-    void release_crc32_field(std::shared_ptr<crc32_field> c)
+    void release_crc32_field(std::shared_ptr<Crc32Field> c)
     {
         std::lock_guard<std::mutex> lock(pool_mutex);
         crc32_field_pool.push(c);
@@ -58,25 +58,25 @@ namespace coev::kafka
         return table;
     }();
 
-    crc32_field::crc32_field(CrcPolynomial polynomial) : m_start_offset(0), m_polynomial(polynomial) {}
+    Crc32Field::Crc32Field(CrcPolynomial polynomial) : m_start_offset(0), m_polynomial(polynomial) {}
 
-    void crc32_field::save_offset(int in)
+    void Crc32Field::save_offset(int in)
     {
         m_start_offset = in;
     }
 
-    int crc32_field::reserve_length()
+    int Crc32Field::reserve_length()
     {
         return 4;
     }
 
-    int crc32_field::run(int cur_offset, std::string &buf)
+    int Crc32Field::run(int cur_offset, std::string &buf)
     {
         uint32_t crc_val;
         int err = crc(cur_offset, buf, crc_val);
         if (err != ErrNoError)
         {
-            LOG_ERR("crc32_field::run: crc calculation failed with error %d", err);
+            LOG_ERR("Crc32Field::run: crc calculation failed with error %d", err);
             return err;
         }
         uint32_t network_crc = htonl(crc_val);
@@ -88,14 +88,14 @@ namespace coev::kafka
         return 0;
     }
 
-    int crc32_field::check(int cur_offset, const std::string_view &buf)
+    int Crc32Field::check(int cur_offset, const std::string_view &buf)
     {
-        // LOG_CORE("crc32_field::check start_offset: %d, cur_offset: %d", m_start_offset, cur_offset);
+        // LOG_CORE("Crc32Field::check start_offset: %d, cur_offset: %d", m_start_offset, cur_offset);
         uint32_t crc_val;
         int err = crc(cur_offset, buf, crc_val);
         if (err != ErrNoError)
         {
-            LOG_ERR("crc32_field::check: crc calculation failed with error %d", err);
+            LOG_ERR("Crc32Field::check: crc calculation failed with error %d", err);
             return err;
         }
 
@@ -115,7 +115,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int crc32_field::crc(int cur_offset, const std::string_view &buf, uint32_t &out_crc)
+    int Crc32Field::crc(int cur_offset, const std::string_view &buf, uint32_t &out_crc)
     {
         uint32_t crc = 0xFFFFFFFF;
         if (m_polynomial == CrcCastagnoli)

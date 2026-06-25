@@ -22,9 +22,9 @@ namespace coev::kafka
         CrcCastagnoli = 1
     };
 
-    struct crc32_field : push_encoder, push_decoder
+    struct Crc32Field : push_encoder, push_decoder
     {
-        crc32_field(CrcPolynomial polynomial);
+        Crc32Field(CrcPolynomial polynomial);
 
         void save_offset(int in);
         int reserve_length();
@@ -35,6 +35,6 @@ namespace coev::kafka
         int m_start_offset;
         CrcPolynomial m_polynomial;
     };
-    std::shared_ptr<crc32_field> acquire_crc32_field(CrcPolynomial polynomial);
-    void release_crc32_field(std::shared_ptr<crc32_field> c);
+    std::shared_ptr<Crc32Field> acquire_crc32_field(CrcPolynomial polynomial);
+    void release_crc32_field(std::shared_ptr<Crc32Field> c);
 }

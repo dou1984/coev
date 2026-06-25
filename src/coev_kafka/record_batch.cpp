@@ -85,7 +85,7 @@ namespace coev::kafka
         pe.putInt32(m_partition_leader_epoch);
         pe.putInt8(m_version);
 
-        crc32_field cf(CrcPolynomial::CrcCastagnoli);
+        Crc32Field cf(CrcPolynomial::CrcCastagnoli);
         pe.push(cf);
 
         pe.putInt16(compute_attributes());
@@ -154,7 +154,7 @@ namespace coev::kafka
             throw std::runtime_error("unsupported record batch version (" + std::to_string(m_version) + ")");
         }
 
-        crc32_field cf(CrcPolynomial::CrcCastagnoli);
+        Crc32Field cf(CrcPolynomial::CrcCastagnoli);
         pd.push(cf);
 
         int16_t attributes;
