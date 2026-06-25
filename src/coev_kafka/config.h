@@ -166,7 +166,7 @@ namespace coev::kafka
         int MaxMessageBytes = 1024 * 1024;
         RequiredAcks Acks = RequiredAcks::WaitForLocal;
         std::chrono::milliseconds Timeout = std::chrono::milliseconds(10000);
-        CompressionCodec Compression;
+        CompressionCodec Compression = CompressionCodec::None;
         int CompressionLevel = 0;
         PartitionerConstructor Partitioner;
         bool Idempotent = false;

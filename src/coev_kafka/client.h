@@ -92,6 +92,7 @@ namespace coev::kafka
         std::atomic<int64_t> m_update_metadata_ms;
         std::shared_ptr<Config> m_conf;
         int32_t m_controller_id = INVALID;
+        int32_t m_dummy_epoch = 0;
         std::deque<std::shared_ptr<Broker>> m_seed_brokers;
         std::deque<std::shared_ptr<Broker>> m_dead_seeds;
         std::map<int32_t, std::shared_ptr<Broker>> m_brokers;

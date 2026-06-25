@@ -23,7 +23,7 @@ namespace coev::kafka
     struct Record : IEncoder, IDecoder
     {
         std::vector<RecordHeader> m_headers;
-        int8_t m_attributes;
+        int8_t m_attributes = 0;
         std::chrono::milliseconds m_timestamp_delta;
         int64_t m_offset_delta;
         std::string m_key;

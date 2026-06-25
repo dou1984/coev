@@ -306,12 +306,11 @@ namespace coev::kafka
         co_return 0;
     }
 
-    awaitable<int> Client::Leader(const std::string &topic, int32_t partition_id, std::shared_ptr<Broker> &leader)
+    awaitable<int> Client::Leader(const std::string &topic, int32_t partitionID, std::shared_ptr<Broker> &leader)
     {
-        int32_t epoch;
-        return LeaderAndEpoch(topic, partition_id, leader, epoch);
+        m_dummy_epoch = 0;
+        return LeaderAndEpoch(topic, partitionID, leader, m_dummy_epoch);
     }
-
     awaitable<int> Client::LeaderAndEpoch(const std::string &topic, int32_t partition_id, std::shared_ptr<Broker> &leader, int32_t &epoch)
     {
 
@@ -732,11 +731,11 @@ namespace coev::kafka
     awaitable<int> Client::_CachedLeader(const std::string &topic, int32_t partition_id, std::shared_ptr<Broker> &broker_, int32_t &leader_epoch)
     {
         leader_epoch = -1;
-        auto tit = m_metadata.find(topic);
-        if (tit != m_metadata.end())
+        auto it = m_metadata.find(topic);
+        if (it != m_metadata.end())
         {
-            auto pit = tit->second.find(partition_id);
-            if (pit != tit->second.end())
+            auto pit = it->second.find(partition_id);
+            if (pit != it->second.end())
             {
                 auto &_metadata = pit->second;
                 if (_metadata.m_err == ErrLeaderNotAvailable)
