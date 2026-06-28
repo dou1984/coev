@@ -43,7 +43,7 @@ TEST(IncrementalAlterConfigsResponseTest, EncodeEmptyResponse)
     IncrementalAlterConfigsResponse response;
     response.set_version(0);
 
-    real_encoder encoder(1024);
+    packet_encoder encoder(packet_encoder::REAL, 1024);
     EXPECT_EQ(response.encode(encoder), 0);
 }
 
@@ -53,7 +53,7 @@ TEST(IncrementalAlterConfigsResponseTest, EncodeWithVersion0)
     response.set_version(0);
     response.m_throttle_time = std::chrono::milliseconds(100);
 
-    real_encoder encoder(1024);
+    packet_encoder encoder(packet_encoder::REAL, 1024);
     EXPECT_EQ(response.encode(encoder), 0);
 }
 
@@ -63,6 +63,6 @@ TEST(IncrementalAlterConfigsResponseTest, EncodeWithVersion1)
     response.set_version(1);
     response.m_throttle_time = std::chrono::milliseconds(100);
 
-    real_encoder encoder(1024);
+    packet_encoder encoder(packet_encoder::REAL, 1024);
     EXPECT_EQ(response.encode(encoder), 0);
 }

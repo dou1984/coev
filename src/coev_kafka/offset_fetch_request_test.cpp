@@ -7,7 +7,7 @@
 #include "offset_fetch_request.h"
 #include <gtest/gtest.h>
 #include "real_encoder.h"
-#include "real_decoder.h"
+#include "packet_decoder.h"
 using namespace coev::kafka;
 TEST(OffsetFetchRequestTest, BasicFunctionality)
 {
@@ -44,7 +44,7 @@ TEST(OffsetFetchRequestTest, EncodeEmptyRequest)
     request.set_version(0);
     request.m_consumer_group = "test-group";
 
-    real_encoder encoder(1024);
+    packet_encoder encoder(packet_encoder::REAL, 1024);
     EXPECT_EQ(request.encode(encoder), 0);
 }
 
@@ -58,7 +58,7 @@ TEST(OffsetFetchRequestTest, EncodeWithPartitions)
     request.add_partition("test-topic", 0);
     request.add_partition("test-topic", 1);
 
-    real_encoder encoder(1024);
+    packet_encoder encoder(packet_encoder::REAL, 1024);
     EXPECT_EQ(request.encode(encoder), 0);
 }
 
@@ -70,6 +70,6 @@ TEST(OffsetFetchRequestTest, EncodeWithRequireStable)
     request.m_consumer_group = "test-group";
     request.m_require_stable = true;
 
-    real_encoder encoder(1024);
+    packet_encoder encoder(packet_encoder::REAL, 1024);
     EXPECT_EQ(request.encode(encoder), 0);
 }

@@ -128,13 +128,13 @@ struct VersionTestResult
 
 // 测试消息编解码的辅助函数
 template<typename RequestType, typename ResponseType>
-static awaitable<MessageTestResult> test_message_encode_decode(
+static awaitable<int> test_message_encode_decode(
+    MessageTestResult &result,
     const std::string &name,
     int api_key,
     int16_t version,
     std::function<void(RequestType&)> setup_request = nullptr)
 {
-    MessageTestResult result;
     result.message_name = name;
     result.api_key = api_key;
     result.encode_ok = false;
@@ -160,7 +160,7 @@ static awaitable<MessageTestResult> test_message_encode_decode(
         {
             result.error_code = err;
             result.error_msg = "Encode failed";
-            co_return result;
+            co_return err;
         }
         result.encode_ok = true;
 
@@ -171,21 +171,21 @@ static awaitable<MessageTestResult> test_message_encode_decode(
         {
             result.error_code = err;
             result.error_msg = "Decode request failed";
-            co_return result;
+            co_return err;
         }
         result.decode_ok = true;
 
-        co_return result;
+        co_return 0;
     }
     catch (const std::exception &e)
     {
         result.error_msg = std::string("Exception: ") + e.what();
-        co_return result;
+        co_return 0;
     }
     catch (...)
     {
         result.error_msg = "Unknown exception";
-        co_return result;
+        co_return 0;
     }
 }
 
@@ -201,61 +201,139 @@ static awaitable<VersionTestResult> test_all_messages_version(
 
     int16_t version = 0; // 使用版本 0 进行基础测试
 
-    // 测试所有消息类型
-    auto test_cases = std::vector<std::pair<std::string, std::function<awaitable<MessageTestResult>()>>>{
-        {"ApiVersions", [&]() { return test_message_encode_decode<ApiVersionsRequest, ApiVersionsResponse>("ApiVersions", 18, version); }},
-        {"Metadata", [&]() { return test_message_encode_decode<MetadataRequest, MetadataResponse>("Metadata", 3, version); }},
-        {"Produce", [&]() { return test_message_encode_decode<ProduceRequest, ProduceResponse>("Produce", 0, version); }},
-        {"Fetch", [&]() { return test_message_encode_decode<FetchRequest, FetchResponse>("Fetch", 1, version); }},
-        {"ListOffsets", [&]() { return test_message_encode_decode<OffsetRequest, OffsetResponse>("ListOffsets", 2, version); }},
-        {"OffsetCommit", [&]() { return test_message_encode_decode<OffsetCommitRequest, OffsetCommitResponse>("OffsetCommit", 8, version); }},
-        {"OffsetFetch", [&]() { return test_message_encode_decode<OffsetFetchRequest, OffsetFetchResponse>("OffsetFetch", 9, version); }},
-        {"FindCoordinator", [&]() { return test_message_encode_decode<FindCoordinatorRequest, FindCoordinatorResponse>("FindCoordinator", 10, version); }},
-        {"JoinGroup", [&]() { return test_message_encode_decode<JoinGroupRequest, JoinGroupResponse>("JoinGroup", 11, version); }},
-        {"Heartbeat", [&]() { return test_message_encode_decode<HeartbeatRequest, HeartbeatResponse>("Heartbeat", 12, version); }},
-        {"LeaveGroup", [&]() { return test_message_encode_decode<LeaveGroupRequest, LeaveGroupResponse>("LeaveGroup", 13, version); }},
-        {"SyncGroup", [&]() { return test_message_encode_decode<SyncGroupRequest, SyncGroupResponse>("SyncGroup", 14, version); }},
-        {"DescribeGroups", [&]() { return test_message_encode_decode<DescribeGroupsRequest, DescribeGroupsResponse>("DescribeGroups", 15, version); }},
-        {"ListGroups", [&]() { return test_message_encode_decode<ListGroupsRequest, ListGroupsResponse>("ListGroups", 16, version); }},
-        {"SaslHandshake", [&]() { return test_message_encode_decode<SaslHandshakeRequest, SaslHandshakeResponse>("SaslHandshake", 17, version); }},
-        {"SaslAuthenticate", [&]() { return test_message_encode_decode<SaslAuthenticateRequest, SaslAuthenticateResponse>("SaslAuthenticate", 36, version); }},
-        {"CreateTopics", [&]() { return test_message_encode_decode<CreateTopicsRequest, CreateTopicsResponse>("CreateTopics", 19, version); }},
-        {"DeleteTopics", [&]() { return test_message_encode_decode<DeleteTopicsRequest, DeleteTopicsResponse>("DeleteTopics", 20, version); }},
-        {"DeleteRecords", [&]() { return test_message_encode_decode<DeleteRecordsRequest, DeleteRecordsResponse>("DeleteRecords", 21, version); }},
-        {"InitProducerId", [&]() { return test_message_encode_decode<InitProducerIDRequest, InitProducerIDResponse>("InitProducerId", 22, version); }},
-        {"AddPartitionsToTxn", [&]() { return test_message_encode_decode<AddPartitionsToTxnRequest, AddPartitionsToTxnResponse>("AddPartitionsToTxn", 24, version); }},
-        {"AddOffsetsToTxn", [&]() { return test_message_encode_decode<AddOffsetsToTxnRequest, AddOffsetsToTxnResponse>("AddOffsetsToTxn", 25, version); }},
-        {"EndTxn", [&]() { return test_message_encode_decode<EndTxnRequest, EndTxnResponse>("EndTxn", 26, version); }},
-        {"TxnOffsetCommit", [&]() { return test_message_encode_decode<TxnOffsetCommitRequest, TxnOffsetCommitResponse>("TxnOffsetCommit", 28, version); }},
-        {"DescribeConfigs", [&]() { return test_message_encode_decode<DescribeConfigsRequest, DescribeConfigsResponse>("DescribeConfigs", 32, version); }},
-        {"AlterConfigs", [&]() { return test_message_encode_decode<AlterConfigsRequest, AlterConfigsResponse>("AlterConfigs", 33, version); }},
-        {"DescribeLogDirs", [&]() { return test_message_encode_decode<DescribeLogDirsRequest, DescribeLogDirsResponse>("DescribeLogDirs", 35, version); }},
-        {"CreatePartitions", [&]() { return test_message_encode_decode<CreatePartitionsRequest, CreatePartitionsResponse>("CreatePartitions", 37, version); }},
-        {"DeleteGroups", [&]() { return test_message_encode_decode<DeleteGroupsRequest, DeleteGroupsResponse>("DeleteGroups", 42, version); }},
-        {"ElectLeaders", [&]() { return test_message_encode_decode<ElectLeadersRequest, ElectLeadersResponse>("ElectLeaders", 43, version); }},
-        {"IncrementalAlterConfigs", [&]() { return test_message_encode_decode<IncrementalAlterConfigsRequest, IncrementalAlterConfigsResponse>("IncrementalAlterConfigs", 44, version); }},
-        {"AlterPartitionReassignments", [&]() { return test_message_encode_decode<AlterPartitionReassignmentsRequest, AlterPartitionReassignmentsResponse>("AlterPartitionReassignments", 45, version); }},
-        {"ListPartitionReassignments", [&]() { return test_message_encode_decode<ListPartitionReassignmentsRequest, ListPartitionReassignmentsResponse>("ListPartitionReassignments", 46, version); }},
-        {"OffsetDelete", [&]() { return test_message_encode_decode<DeleteOffsetsRequest, DeleteOffsetsResponse>("OffsetDelete", 47, version); }},
-        {"DescribeClientQuotas", [&]() { return test_message_encode_decode<DescribeClientQuotasRequest, DescribeClientQuotasResponse>("DescribeClientQuotas", 48, version); }},
-        {"AlterClientQuotas", [&]() { return test_message_encode_decode<AlterClientQuotasRequest, AlterClientQuotasResponse>("AlterClientQuotas", 49, version); }},
-        {"DescribeUserScramCredentials", [&]() { return test_message_encode_decode<DescribeUserScramCredentialsRequest, DescribeUserScramCredentialsResponse>("DescribeUserScramCredentials", 50, version); }},
-        {"AlterUserScramCredentials", [&]() { return test_message_encode_decode<AlterUserScramCredentialsRequest, AlterUserScramCredentialsResponse>("AlterUserScramCredentials", 51, version); }},
-        {"DescribeAcls", [&]() { return test_message_encode_decode<DescribeAclsRequest, DescribeAclsResponse>("DescribeAcls", 29, version); }},
-        {"CreateAcls", [&]() { return test_message_encode_decode<CreateAclsRequest, CreateAclsResponse>("CreateAcls", 30, version); }},
-        {"DeleteAcls", [&]() { return test_message_encode_decode<DeleteAclsRequest, DeleteAclsResponse>("DeleteAcls", 31, version); }},
+  
+    auto run_test = [](VersionTestResult& result, const std::string& name, auto test_fn) -> awaitable<void> {
+        MessageTestResult r;
+        r.message_name = name;
+        int err = co_await test_fn(r);
+        result.messages.push_back(std::move(r));
+        result.total_msgs++;
+        if (err == 0) result.passed_msgs++;
     };
 
-    for (const auto &[msg_name, test_func] : test_cases)
-    {
-        auto msg_result = co_await test_func();
-        result.messages.push_back(msg_result);
-        result.total_msgs++;
-        if (msg_result.encode_ok && msg_result.decode_ok)
-        {
-            result.passed_msgs++;
-        }
-    }
+    co_await run_test(result, "ApiVersions", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<ApiVersionsRequest, ApiVersionsResponse>(r, "ApiVersions", 18, version);
+    });
+    co_await run_test(result, "Metadata", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<MetadataRequest, MetadataResponse>(r, "Metadata", 3, version);
+    });
+    co_await run_test(result, "Produce", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<ProduceRequest, ProduceResponse>(r, "Produce", 0, version);
+    });
+    co_await run_test(result, "Fetch", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<FetchRequest, FetchResponse>(r, "Fetch", 1, version);
+    });
+    co_await run_test(result, "ListOffsets", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<OffsetRequest, OffsetResponse>(r, "ListOffsets", 2, version);
+    });
+    co_await run_test(result, "OffsetCommit", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<OffsetCommitRequest, OffsetCommitResponse>(r, "OffsetCommit", 8, version);
+    });
+    co_await run_test(result, "OffsetFetch", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<OffsetFetchRequest, OffsetFetchResponse>(r, "OffsetFetch", 9, version);
+    });
+    co_await run_test(result, "FindCoordinator", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<FindCoordinatorRequest, FindCoordinatorResponse>(r, "FindCoordinator", 10, version);
+    });
+    co_await run_test(result, "JoinGroup", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<JoinGroupRequest, JoinGroupResponse>(r, "JoinGroup", 11, version);
+    });
+    co_await run_test(result, "Heartbeat", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<HeartbeatRequest, HeartbeatResponse>(r, "Heartbeat", 12, version);
+    });
+    co_await run_test(result, "LeaveGroup", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<LeaveGroupRequest, LeaveGroupResponse>(r, "LeaveGroup", 13, version);
+    });
+    co_await run_test(result, "SyncGroup", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<SyncGroupRequest, SyncGroupResponse>(r, "SyncGroup", 14, version);
+    });
+    co_await run_test(result, "DescribeGroups", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<DescribeGroupsRequest, DescribeGroupsResponse>(r, "DescribeGroups", 15, version);
+    });
+    co_await run_test(result, "ListGroups", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<ListGroupsRequest, ListGroupsResponse>(r, "ListGroups", 16, version);
+    });
+    co_await run_test(result, "SaslHandshake", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<SaslHandshakeRequest, SaslHandshakeResponse>(r, "SaslHandshake", 17, version);
+    });
+    co_await run_test(result, "SaslAuthenticate", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<SaslAuthenticateRequest, SaslAuthenticateResponse>(r, "SaslAuthenticate", 36, version);
+    });
+    co_await run_test(result, "CreateTopics", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<CreateTopicsRequest, CreateTopicsResponse>(r, "CreateTopics", 19, version);
+    });
+    co_await run_test(result, "DeleteTopics", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<DeleteTopicsRequest, DeleteTopicsResponse>(r, "DeleteTopics", 20, version);
+    });
+    co_await run_test(result, "DeleteRecords", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<DeleteRecordsRequest, DeleteRecordsResponse>(r, "DeleteRecords", 21, version);
+    });
+    co_await run_test(result, "InitProducerId", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<InitProducerIDRequest, InitProducerIDResponse>(r, "InitProducerId", 22, version);
+    });
+    co_await run_test(result, "AddPartitionsToTxn", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<AddPartitionsToTxnRequest, AddPartitionsToTxnResponse>(r, "AddPartitionsToTxn", 24, version);
+    });
+    co_await run_test(result, "AddOffsetsToTxn", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<AddOffsetsToTxnRequest, AddOffsetsToTxnResponse>(r, "AddOffsetsToTxn", 25, version);
+    });
+    co_await run_test(result, "EndTxn", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<EndTxnRequest, EndTxnResponse>(r, "EndTxn", 26, version);
+    });
+    co_await run_test(result, "TxnOffsetCommit", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<TxnOffsetCommitRequest, TxnOffsetCommitResponse>(r, "TxnOffsetCommit", 28, version);
+    });
+    co_await run_test(result, "DescribeConfigs", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<DescribeConfigsRequest, DescribeConfigsResponse>(r, "DescribeConfigs", 32, version);
+    });
+    co_await run_test(result, "AlterConfigs", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<AlterConfigsRequest, AlterConfigsResponse>(r, "AlterConfigs", 33, version);
+    });
+    co_await run_test(result, "DescribeLogDirs", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<DescribeLogDirsRequest, DescribeLogDirsResponse>(r, "DescribeLogDirs", 35, version);
+    });
+    co_await run_test(result, "CreatePartitions", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<CreatePartitionsRequest, CreatePartitionsResponse>(r, "CreatePartitions", 37, version);
+    });
+    co_await run_test(result, "DeleteGroups", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<DeleteGroupsRequest, DeleteGroupsResponse>(r, "DeleteGroups", 42, version);
+    });
+    co_await run_test(result, "ElectLeaders", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<ElectLeadersRequest, ElectLeadersResponse>(r, "ElectLeaders", 43, version);
+    });
+    co_await run_test(result, "IncrementalAlterConfigs", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<IncrementalAlterConfigsRequest, IncrementalAlterConfigsResponse>(r, "IncrementalAlterConfigs", 44, version);
+    });
+    co_await run_test(result, "AlterPartitionReassignments", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<AlterPartitionReassignmentsRequest, AlterPartitionReassignmentsResponse>(r, "AlterPartitionReassignments", 45, version);
+    });
+    co_await run_test(result, "ListPartitionReassignments", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<ListPartitionReassignmentsRequest, ListPartitionReassignmentsResponse>(r, "ListPartitionReassignments", 46, version);
+    });
+    co_await run_test(result, "OffsetDelete", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<DeleteOffsetsRequest, DeleteOffsetsResponse>(r, "OffsetDelete", 47, version);
+    });
+    co_await run_test(result, "DescribeClientQuotas", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<DescribeClientQuotasRequest, DescribeClientQuotasResponse>(r, "DescribeClientQuotas", 48, version);
+    });
+    co_await run_test(result, "AlterClientQuotas", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<AlterClientQuotasRequest, AlterClientQuotasResponse>(r, "AlterClientQuotas", 49, version);
+    });
+    co_await run_test(result, "DescribeUserScramCredentials", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<DescribeUserScramCredentialsRequest, DescribeUserScramCredentialsResponse>(r, "DescribeUserScramCredentials", 50, version);
+    });
+    co_await run_test(result, "AlterUserScramCredentials", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<AlterUserScramCredentialsRequest, AlterUserScramCredentialsResponse>(r, "AlterUserScramCredentials", 51, version);
+    });
+    co_await run_test(result, "DescribeAcls", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<DescribeAclsRequest, DescribeAclsResponse>(r, "DescribeAcls", 29, version);
+    });
+    co_await run_test(result, "CreateAcls", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<CreateAclsRequest, CreateAclsResponse>(r, "CreateAcls", 30, version);
+    });
+    co_await run_test(result, "DeleteAcls", [version](MessageTestResult& r) -> awaitable<int> {
+        return test_message_encode_decode<DeleteAclsRequest, DeleteAclsResponse>(r, "DeleteAcls", 31, version);
+    });
 
     co_return result;
 }

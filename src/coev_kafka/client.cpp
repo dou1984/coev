@@ -154,7 +154,6 @@ namespace coev::kafka
             LOG_CORE("Client::Close called on already closed client");
             return ErrClosedClient;
         }
-        LOG_CORE("Client::Close Closing Client");
         for (auto &kv : m_brokers)
         {
             kv.second->SafeAsyncClose();
@@ -798,16 +797,25 @@ namespace coev::kafka
     {
         if (m_conf->Metadata.RefreshFrequency == std::chrono::milliseconds::zero())
         {
+            LOG_DBG("BackgroundMetadataUpdater refresh frequency is zero, exiting");
             co_return 0;
         }
-        while (true)
+        LOG_DBG("BackgroundMetadataUpdater started, refresh frequency: %ld ms", m_conf->Metadata.RefreshFrequency.count());
+        while (!Closed())
         {
             co_await sleep_for(m_conf->Metadata.RefreshFrequency);
+            if (Closed())
+            {
+                break;
+            }
             if (int err = co_await RefreshMetadata(); err != 0)
             {
                 LOG_CORE("background metadata update: %d", err);
+                if (Closed())
+                    break;
             }
         }
+        LOG_DBG("BackgroundMetadataUpdater exiting, Closed=%d", Closed());
         co_return 0;
     }
 
@@ -867,9 +875,19 @@ namespace coev::kafka
         int err = ErrNoError;
         std::vector<int> broker_errors;
         std::shared_ptr<Broker> broker;
-        co_await LeastLoadedBroker(broker);
-        for (; broker && !PastDeadline(deadline, std::chrono::milliseconds(0)); co_await LeastLoadedBroker(broker))
+        do
         {
+            err = co_await LeastLoadedBroker(broker);
+            if (err == INVALID)
+            {
+                co_return err;
+            }
+            if (!broker || PastDeadline(deadline, std::chrono::milliseconds(0)))
+            {
+                LOG_CORE("no more brokers to try (%d attempts remaining)", attempts_remaining);
+                co_return ErrBrokerNotAvailable;
+            }
+
             bool allow_auto_topic_creation = m_conf->Metadata.AllowAutoTopicCreation;
             if (!topics.empty())
             {
@@ -929,7 +947,7 @@ namespace coev::kafka
                 broker->Close();
                 DeregisterBroker(broker);
             }
-        }
+        } while (true);
 
         ResurrectDeadBrokers();
         co_return co_await RetryRefreshMetadata(topics, attempts_remaining, deadline, err);

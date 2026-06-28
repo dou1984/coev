@@ -21,7 +21,7 @@ namespace coev::kafka
     template <class Res>
     struct ResponsePromise
     {
-        std::chrono::time_point<std::chrono::system_clock> m_request_time;
+        std::chrono::time_point<std::chrono::system_clock> m_request_time{};
         int32_t m_correlation_id = 0;
         std::string m_body;         // stores complete response header + body
         std::string_view m_packets; // view into m_body, points to body section

@@ -19,13 +19,13 @@ namespace coev::kafka
     struct AclFilter : IEncoder, VDecoder
     {
         int16_t m_version = 0;
-        AclResourceType m_resource_type = AclResourceTypeUnknown;
+        AclResourceType m_resource_type = AclResourceTypeAny;
         std::string m_resource_name;
         AclResourcePatternType m_resource_pattern_type_filter = AclResourcePatternTypeLiteral;
         std::string m_principal;
         std::string m_host;
-        AclOperation m_operation = AclOperationUnknown;
-        AclPermissionType m_permission_type = AclPermissionTypeUnknown;
+        AclOperation m_operation = AclOperationAny;
+        AclPermissionType m_permission_type = AclPermissionTypeAny;
 
         AclFilter() = default;
         AclFilter(int16_t v) : m_version(v)

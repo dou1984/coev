@@ -12,7 +12,7 @@
 
 #include "acl_describe_request.h"
 #include "real_encoder.h"
-#include "real_decoder.h"
+#include "packet_decoder.h"
 
 using namespace coev::kafka;
 
@@ -36,9 +36,10 @@ const unsigned char aclDescribeRequestV1[] = {
     0x03                                                     // PermissionType: Allow
 };
 
-TEST(DescribeAclsRequestTest, DecodeRequest) {
+TEST(DescribeAclsRequestTest, DecodeRequest)
+{
     std::string rawData(reinterpret_cast<const char *>(aclDescribeRequest), sizeof(aclDescribeRequest));
-    real_decoder decoder(rawData);
+    packet_decoder decoder(rawData);
 
     DescribeAclsRequest request;
     int result = request.decode(decoder, 0);
@@ -51,9 +52,10 @@ TEST(DescribeAclsRequestTest, DecodeRequest) {
     EXPECT_EQ(request.m_filter.m_permission_type, AclPermissionTypeAllow) << "PermissionType mismatch";
 }
 
-TEST(DescribeAclsRequestTest, DecodeRequestv1) {
+TEST(DescribeAclsRequestTest, DecodeRequestv1)
+{
     std::string rawData(reinterpret_cast<const char *>(aclDescribeRequestV1), sizeof(aclDescribeRequestV1));
-    real_decoder decoder(rawData);
+    packet_decoder decoder(rawData);
 
     DescribeAclsRequest request;
     int result = request.decode(decoder, 1);
@@ -78,7 +80,7 @@ TEST(DescribeAclsRequestTest, EncodeRequest)
     request.m_filter.m_operation = AclOperationCreate;
     request.m_filter.m_permission_type = AclPermissionTypeAllow;
 
-    real_encoder encoder(1024);
+    packet_encoder encoder(packet_encoder::REAL, 1024);
     int result = request.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode ACL describe request";
 
@@ -99,7 +101,7 @@ TEST(DescribeAclsRequestTest, EncodeRequestv1)
     request.m_filter.m_operation = AclOperationCreate;
     request.m_filter.m_permission_type = AclPermissionTypeAllow;
 
-    real_encoder encoder(1024);
+    packet_encoder encoder(packet_encoder::REAL, 1024);
     int result = request.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode ACL describe request v1";
 
@@ -145,13 +147,13 @@ TEST(DescribeAclsRequestTest, RoundTripEncodingDecoding)
     originalRequest.m_filter.m_permission_type = AclPermissionTypeDeny;
 
     // Encode the request
-    real_encoder encoder(1024);
+    packet_encoder encoder(packet_encoder::REAL, 1024);
     int result = originalRequest.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode request for round-trip test";
 
     // Decode the request
     std::string rawData = encoder.m_raw.substr(0, encoder.m_offset);
-    real_decoder decoder(rawData);
+    packet_decoder decoder(rawData);
 
     DescribeAclsRequest decodedRequest;
     result = decodedRequest.decode(decoder, 0);
@@ -176,12 +178,12 @@ TEST(DescribeAclsRequestTest, RoundTripEncodingDecoding)
     originalRequestV1.m_filter.m_operation = AclOperationRead;
     originalRequestV1.m_filter.m_permission_type = AclPermissionTypeAllow;
 
-    real_encoder encoderV1(1024);
+    packet_encoder encoderV1(packet_encoder::REAL, 1024);
     result = originalRequestV1.encode(encoderV1);
     ASSERT_EQ(result, 0) << "Failed to encode V1 request for round-trip test";
 
     std::string rawDataV1 = encoderV1.m_raw.substr(0, encoderV1.m_offset);
-    real_decoder decoderV1(rawDataV1);
+    packet_decoder decoderV1(rawDataV1);
 
     DescribeAclsRequest decodedRequestV1;
     result = decodedRequestV1.decode(decoderV1, 1);

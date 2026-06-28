@@ -109,7 +109,7 @@ namespace coev::kafka
             return err;
         }
 
-        real_decoder records_decoder;
+        packet_decoder records_decoder;
         if ((err = pd.getSubset(records_size, records_decoder.m_raw)) != 0)
         {
             LOG_CORE("FetchResponseBlock::decode %d", err);
@@ -602,8 +602,8 @@ namespace coev::kafka
         batch->m_control = true;
 
         ControlRecord _abort(0, producer_id, record_type);
-        real_encoder _key;
-        real_encoder _value;
+        packet_encoder _key(packet_encoder::REAL);
+        packet_encoder _value(packet_encoder::REAL);
         _abort.encode(_key, _value);
 
         batch->emplace(_key.m_raw, _value.m_raw, 0, std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - batch->m_first_timestamp));

@@ -15,39 +15,60 @@
 #include "errors.h"
 #include "encoder_decoder.h"
 #include "dynamic_push_encoder.h"
+#include "prep_encoder.h"
+#include "real_encoder.h"
 
 namespace coev::kafka
 {
-    struct packet_encoder : packet_type
+    struct packet_encoder : flexible_type
     {
-        virtual ~packet_encoder() = default;
+        enum Type : uint8_t
+        {
+            NONE,
+            PREP,
+            REAL,
+        };
 
-        virtual void putInt8(int8_t in) = 0;
-        virtual void putInt16(int16_t in) = 0;
-        virtual void putInt32(int32_t in) = 0;
-        virtual void putInt64(int64_t in) = 0;
-        virtual void putVariant(int64_t in) = 0;
-        virtual void putUVarint(uint64_t in) = 0;
-        virtual void putFloat64(double in) = 0;
-        virtual void putBool(bool in) = 0;
-        virtual void putKError(KError in) = 0;
-        virtual void putDurationMs(std::chrono::milliseconds in) = 0;
+        int m_type = NONE;
+        union
+        {
+            size_t m_offset = 0;
+            size_t m_length;
+        };
+        std::vector<push_encoder *> m_stack;
+        std::string m_raw;
 
-        virtual int putArrayLength(int32_t in) = 0;
-        virtual int putBytes(const std::string_view &in) = 0;
-        virtual int putVariantBytes(const std::string_view &in) = 0;
-        virtual int putRawBytes(const std::string_view &in) = 0;
-        virtual int putString(const std::string_view &in) = 0;
-        virtual int putNullableString(const std::string_view &in) = 0;
-        virtual int putStringArray(const std::vector<std::string> &in) = 0;
-        virtual int putInt32Array(const std::vector<int32_t> &in) = 0;
-        virtual int putInt64Array(const std::vector<int64_t> &in) = 0;
-        virtual int putNullableInt32Array(const std::vector<int32_t> &in) = 0;
-        virtual void putEmptyTaggedFieldArray() = 0;
+        packet_encoder(Type type);
+        packet_encoder(Type type, size_t l);
+        packet_encoder(std::string_view buf);
+        virtual ~packet_encoder();
 
-        virtual int offset() const = 0;
-        virtual void push(push_encoder &in) = 0;
-
-        virtual int pop() = 0;
+        void putInt8(int8_t in);
+        void putInt16(int16_t in);
+        void putInt32(int32_t in);
+        void putInt64(int64_t in);
+        void putVariant(int64_t in);
+        void putUVarint(uint64_t in);
+        void putFloat64(double in);
+        void putBool(bool in);
+        void putKError(KError in);
+        void putDurationMs(std::chrono::milliseconds in);
+        int putArrayLength(int32_t in);
+        int putBytes(const std::string_view &in);
+        int putVariantBytes(const std::string_view &in);
+        int putRawBytes(const std::string_view &in);
+        int putString(const std::string_view &in);
+        int putNullableString(const std::string_view &in);
+        int putStringArray(const std::vector<std::string> &in);
+        int putInt32Array(const std::vector<int32_t> &in);
+        int putInt64Array(const std::vector<int64_t> &in);
+        int putNullableInt32Array(const std::vector<int32_t> &in);
+        void putEmptyTaggedFieldArray();
+        int offset() const;
+        void push(push_encoder &in);
+        int pop();
     };
+
+    int encodeUVariant(uint8_t *buf, uint64_t x);
+    int encodeVariant(uint8_t *buf, int64_t x);
 }

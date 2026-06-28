@@ -21,8 +21,8 @@ namespace coev::kafka
         const std::string &value();
 
         std::vector<RecordHeader> m_headers;
-        std::chrono::system_clock::time_point m_timestamp;
-        std::chrono::system_clock::time_point m_block_timestamp;
+        std::chrono::system_clock::time_point m_timestamp{};
+        std::chrono::system_clock::time_point m_block_timestamp{};
 
         std::string m_key;
         std::string m_value;

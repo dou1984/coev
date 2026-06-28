@@ -10,7 +10,7 @@
 #include "message.h"
 #include "message_set.h"
 #include "timestamp.h"
-#include "real_decoder.h"
+#include "packet_decoder.h"
 #include "undefined.h"
 #include "crc32_field.h"
 
@@ -227,7 +227,7 @@ namespace coev::kafka
         }
 
         m_message_set = std::make_shared<MessageSet>();
-        real_decoder inner_decoder(m_value);
+        packet_decoder inner_decoder(m_value);
         return m_message_set->decode(inner_decoder);
     }
 

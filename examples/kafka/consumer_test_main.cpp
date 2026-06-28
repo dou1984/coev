@@ -23,6 +23,8 @@ int main(int argc, char *argv[])
         LOG_ERR("Usage: consumer_test <host> <port> <topic>");
         return 1;
     }
+    set_log_level(LOG_LEVEL_DEBUG);
+    // set_log_level(LOG_LEVEL_CORE);
     test_host = argv[1];
     test_port = std::stoi(argv[2]);
     test_topic = argv[3];

@@ -127,7 +127,7 @@ namespace coev::kafka
                 {
                     return err;
                 }
-                real_decoder subset;
+                packet_decoder subset;
                 if (int err = pd.getSubset(size, subset.m_raw); err != 0)
                 {
                     return err;
@@ -200,7 +200,7 @@ namespace coev::kafka
         }
     }
 
-    MessageBlock& ProduceRequest::emplace_message(const std::string &topic, int32_t partition)
+    MessageBlock &ProduceRequest::emplace_message(const std::string &topic, int32_t partition)
     {
         auto &partitions = m_records[topic];
         auto it = partitions.find(partition);

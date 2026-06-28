@@ -36,8 +36,8 @@ namespace coev::kafka
     struct AlterUserScramCredentialsRequest : protocol_body
     {
         int16_t m_version = 0;
-        std::vector<AlterUserScramCredentialsDelete> m_deletions;
-        std::vector<AlterUserScramCredentialsUpsert> m_upsertions;
+        std::vector<AlterUserScramCredentialsDelete> m_deletions{};
+        std::vector<AlterUserScramCredentialsUpsert> m_upsertions{};
 
         AlterUserScramCredentialsRequest() = default;
         AlterUserScramCredentialsRequest(int16_t v) : m_version(v)

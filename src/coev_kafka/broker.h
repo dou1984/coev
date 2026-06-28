@@ -14,6 +14,7 @@
 #include <mutex>
 #include <string>
 #include <functional>
+#include <utils/convert.h>
 #include "client.h"
 #include "config.h"
 #include "connect.h"
@@ -241,11 +242,14 @@ namespace coev::kafka
             err = co_await SendInternal(request, promise);
             if (err != ErrNoError)
             {
+                LOG_DBG("SendAndReceive SendInternal failed apiKey:%d err:%d", request->key(), err);
                 co_return err;
             }
+
             err = co_await ResponseReceiver(request, promise);
             if (err != ErrNoError)
             {
+                LOG_DBG("SendAndReceive ResponseReceiver failed apiKey:%d err:%d", request->key(), err);
                 co_return err;
             }
             co_return ErrNoError;
@@ -281,7 +285,11 @@ namespace coev::kafka
         template <class Req, class Res>
         awaitable<int> ResponseReceiver(std::shared_ptr<Req> request, ResponsePromise<Res> &promise)
         {
+            LOG_DBG("ResponseReceiver trying RLock apiKey:%d correlation:%d",
+                    request->key(), promise.m_correlation_id);
             co_await RLock();
+            LOG_DBG("ResponseReceiver RLock acquired apiKey:%d correlation:%d",
+                    request->key(), promise.m_correlation_id);
             finally(RUnlock());
 
             std::string fixed_header;
@@ -291,7 +299,7 @@ namespace coev::kafka
                 LOG_CORE("Failed to read fixed header %d", err);
                 co_return err;
             }
-            real_decoder hd(fixed_header);
+            packet_decoder hd(fixed_header);
             ResponseHeader decoded_header;
             if (err = hd.getInt32(decoded_header.m_length); err != 0)
             {
@@ -308,10 +316,15 @@ namespace coev::kafka
             }
 
             size_t remaining_bytes = decoded_header.m_length - 4;
-            promise.m_body.clear();
+            LOG_DBG("ResponseReceiver apiKey:%d correlation:%d remaining:%zu m_body.size:%zu m_body.cap:%zu",
+                    request->key(), promise.m_correlation_id, remaining_bytes,
+                    promise.m_body.size(), promise.m_body.capacity());
+            promise.m_body.resize(remaining_bytes);
             err = co_await ReadFull(promise.m_body, remaining_bytes);
             if (err)
             {
+                LOG_DBG("ResponseReceiver ReadFull body failed apiKey:%d correlation:%d err:%d remaining:%zu",
+                        request->key(), promise.m_correlation_id, err, remaining_bytes);
                 co_return err;
             }
 
@@ -319,7 +332,7 @@ namespace coev::kafka
             size_t body_offset = 0;
             if (promise.m_response->header_version() >= 1)
             {
-                real_decoder tag_decoder(promise.m_body);
+                packet_decoder tag_decoder(promise.m_body);
                 tag_decoder.__push_flexible();
                 finally(tag_decoder.__pop_flexible());
                 int32_t dummy = 0;
@@ -330,6 +343,8 @@ namespace coev::kafka
 
             if (body_offset > promise.m_body.size())
             {
+                LOG_DBG("ResponseReceiver body_offset overflow body_offset:%zu m_body.size:%zu",
+                        body_offset, promise.m_body.size());
                 co_return ErrDecodeError;
             }
 
@@ -338,6 +353,9 @@ namespace coev::kafka
             err = promise.decode(request->version());
             if (err)
             {
+                LOG_ERR("ResponseReceiver decode failed apiKey:%d correlation:%d err:%d m_packets.size:%zu body_hex:%.*s",
+                        request->key(), promise.m_correlation_id, err, promise.m_packets.size(),
+                        (int)to_hex(promise.m_body).size(), to_hex(promise.m_body).data());
                 co_return err;
             }
             co_return ErrNoError;

@@ -4,9 +4,10 @@
  *	Copyright (c) 2023-2026, Zhao Yun Shan
  *
  */
+#include <coev/coev.h>
+#include <stdexcept>
 #include "version.h"
 #include "offset_fetch_request.h"
-#include <stdexcept>
 #include "api_versions.h"
 
 namespace coev::kafka
@@ -82,9 +83,13 @@ namespace coev::kafka
 
         for (const auto &entry : m_partitions)
         {
+
             pe.putString(entry.first);
             pe.putInt32Array(entry.second);
-            pe.putEmptyTaggedFieldArray();
+            if (is_flexible())
+            {
+                pe.putEmptyTaggedFieldArray();
+            }
         }
 
         if (m_require_stable && m_version < 7)
@@ -97,7 +102,10 @@ namespace coev::kafka
             pe.putBool(m_require_stable);
         }
 
-        pe.putEmptyTaggedFieldArray();
+        if (is_flexible())
+        {
+            pe.putEmptyTaggedFieldArray();
+        }
         return 0;
     }
 

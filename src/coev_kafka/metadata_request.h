@@ -25,11 +25,11 @@ namespace coev::kafka
 
     struct MetadataRequest : protocol_body
     {
-        int16_t m_version;
+        int16_t m_version = 0;
         std::vector<std::string> m_topics;
-        bool m_allow_auto_topic_creation;
-        bool m_include_cluster_authorized_operations;
-        bool m_include_topic_authorized_operations;
+        bool m_allow_auto_topic_creation = false;
+        bool m_include_cluster_authorized_operations = false;
+        bool m_include_topic_authorized_operations = false;
 
         MetadataRequest() = default;
         MetadataRequest(int16_t v) : m_version(v)

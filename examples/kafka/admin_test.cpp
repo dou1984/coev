@@ -26,6 +26,7 @@ int main(int argc, char *argv[])
         LOG_ERR("Usage: admin_test <host> <port> <topic>");
         return 1;
     }
+    set_log_level(LOG_LEVEL_CORE);
     test_host = argv[1];
     test_port = std::stoi(argv[2]);
     test_topic = argv[3];
@@ -145,27 +146,31 @@ void run_admin_test(const std::string &h, int p, const std::string &t)
                 LOG_DBG("[Test 14] DescribeConfig (broker): %zu entries, err=%d", config_entries.size(), err);
 
                 // Test 15: DescribeConfig (query topic config)
+                LOG_DBG("[Test 15 BEGIN] DescribeConfig (topic)");
                 ConfigResource topic_resource(ConfigResourceType::TopicResource, test_topic);
                 std::vector<ConfigEntry> topic_config_entries;
                 err = co_await admin->DescribeConfig(topic_resource, topic_config_entries);
-                LOG_DBG("[Test 15] DescribeConfig (topic): %zu entries, err=%d", topic_config_entries.size(), err);
+                LOG_DBG("[Test 15 END] DescribeConfig (topic): %zu entries, err=%d", topic_config_entries.size(), err);
 
                 // Test 16: ListAcls (query only, no modification)
+                LOG_DBG("[Test 16 BEGIN] ListAcls");
                 AclFilter acl_filter;
                 std::vector<ResourceAcls> acls;
                 err = co_await admin->ListAcls(acl_filter, acls);
-                LOG_DBG("[Test 16] ListAcls: %zu acls, err=%d", acls.size(), err);
+                LOG_DBG("[Test 16 END] ListAcls: %zu acls, err=%d", acls.size(), err);
 
                 // Test 17: DescribeClientQuotas (query only, no modification)
+                LOG_DBG("[Test 17 BEGIN] DescribeClientQuotas");
                 std::vector<QuotaFilterComponent> quota_components;
                 std::vector<DescribeClientQuotasEntry> quota_entries;
                 err = co_await admin->DescribeClientQuotas(quota_components, false, quota_entries);
-                LOG_DBG("[Test 17] DescribeClientQuotas: %zu quotas, err=%d", quota_entries.size(), err);
+                LOG_DBG("[Test 17 END] DescribeClientQuotas: %zu quotas, err=%d", quota_entries.size(), err);
 
                 // Test 18: ListPartitionReassignments (query only, no modification)
+                LOG_DBG("[Test 18 BEGIN] ListPartitionReassignments");
                 std::map<std::string, std::map<int32_t, PartitionReplicaReassignmentsStatus>> reassignments;
                 err = co_await admin->ListPartitionReassignments(test_topic, {}, reassignments);
-                LOG_DBG("[Test 18] ListPartitionReassignments: err=%d", err);
+                LOG_DBG("[Test 18 END] ListPartitionReassignments: err=%d", err);
 
                 // Test 19: DescribeUserScramCredentials (query only, no modification)
                 std::vector<std::string> users;
@@ -237,30 +242,36 @@ void run_admin_test(const std::string &h, int p, const std::string &t)
                 // Test 31: AlterPartitionReassignments (validate only)
                 std::vector<std::vector<int32_t>> assignment;
                 assignment.push_back({1}); // replica for partition 0
+                LOG_DBG("=== Test 31: AlterPartitionReassignments ===");
                 err = co_await admin->AlterPartitionReassignments(test_topic, assignment);
                 LOG_DBG("[Test 31] AlterPartitionReassignments: err=%d", err);
 
                 // Test 32: DeleteUserScramCredentials
-                std::vector<AlterUserScramCredentialsDelete> delete_ops;
-                std::vector<AlterUserScramCredentialsResult> delete_results;
+                LOG_DBG("=== Test 32: DeleteUserScramCredentials ===");
+                std::vector<AlterUserScramCredentialsDelete> delete_ops{};
+                std::vector<AlterUserScramCredentialsResult> delete_results{};
                 err = co_await admin->DeleteUserScramCredentials(delete_ops, delete_results);
-                LOG_DBG("[Test 32] DeleteUserScramCredentials: err=%d", err);
+                LOG_DBG("[Test 32] DeleteUserScramCredentials: err=%d, upsert_ops=%zu, delete_ops=%zu",
+                        err, delete_ops.size(), delete_results.size());
+                for (auto &r : delete_results) {
+                    LOG_DBG("[Test 32] result: user=%s, code=%d, message=%s",
+                            r.m_user.c_str(), r.m_code, r.m_message.c_str());
+                }
 
                 // Test 33: UpsertUserScramCredentials
+                LOG_DBG("=== Test 33: UpsertUserScramCredentials ===");
                 std::vector<AlterUserScramCredentialsUpsert> upsert_ops;
                 std::vector<AlterUserScramCredentialsResult> upsert_results;
                 err = co_await admin->UpsertUserScramCredentials(upsert_ops, upsert_results);
                 LOG_DBG("[Test 33] UpsertUserScramCredentials: err=%d", err);
 
                 // Test 34: AlterUserScramCredentials
+                LOG_DBG("=== Test 34: AlterUserScramCredentials ===");
                 std::vector<AlterUserScramCredentialsResult> alter_results;
                 err = co_await admin->AlterUserScramCredentials(upsert_ops, delete_ops, alter_results);
                 LOG_DBG("[Test 34] AlterUserScramCredentials: err=%d", err);
 
-                // Test 35: Close
-                err = admin->Close();
-                LOG_DBG("[Test 35] Close: err=%d", err);
-
+                LOG_DBG("=== Test 35: Close ===");
                 // Test 36: IncrementalAlterConfig (validate only)
                 std::map<std::string, IncrementalAlterConfigsEntry> incremental_entries;
                 IncrementalAlterConfigsEntry entry;
@@ -317,6 +328,10 @@ void run_admin_test(const std::string &h, int p, const std::string &t)
                 quota_op.m_value = 1024 * 1024;                                        // 1MB/s
                 err = co_await admin->AlterClientQuotas(quota_entity, quota_op, true); // validate only
                 LOG_DBG("[Test 40] AlterClientQuotas (validate): err=%d", err);
+
+                // Test 35: Close
+                err = admin->Close();
+                LOG_DBG("[Test 35] Close: err=%d", err);
 
                 LOG_DBG("=== Admin Test Completed ===");
                 co_return;

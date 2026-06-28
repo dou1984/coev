@@ -13,7 +13,7 @@
 
 #include "acl_delete_response.h"
 #include "real_encoder.h"
-#include "real_decoder.h"
+#include "packet_decoder.h"
 
 using namespace coev::kafka;
 // Test data from Sarama's acl_delete_response_test.go
@@ -33,9 +33,10 @@ const unsigned char deleteAclsResponse[] = {
     0x03                                                     // PermissionType: Allow
 };
 
-TEST(DeleteAclsResponseTest, DecodeResponse) {
+TEST(DeleteAclsResponseTest, DecodeResponse)
+{
     std::string rawData(reinterpret_cast<const char *>(deleteAclsResponse), sizeof(deleteAclsResponse));
-    real_decoder decoder(rawData);
+    packet_decoder decoder(rawData);
 
     DeleteAclsResponse response;
     int result = response.decode(decoder, 0);
@@ -79,7 +80,7 @@ TEST(DeleteAclsResponseTest, EncodeResponse)
     matchingAcl.m_acl.m_permission_type = AclPermissionTypeAllow;
     response.m_filter_responses[0].m_matching_acls.push_back(matchingAcl);
 
-    real_encoder encoder(1024);
+    packet_encoder encoder(packet_encoder::REAL, 1024);
     int result = response.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode delete acls response";
 
@@ -149,13 +150,13 @@ TEST(DeleteAclsResponseTest, RoundTripEncodingDecoding)
     originalResponse.m_filter_responses.push_back(filterResp2);
 
     // Encode the response
-    real_encoder encoder(1024);
+    packet_encoder encoder(packet_encoder::REAL, 1024);
     int result = originalResponse.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode response for round-trip test";
 
     // Decode the response
     std::string encodedData = encoder.m_raw.substr(0, encoder.m_offset);
-    real_decoder decoder(encodedData);
+    packet_decoder decoder(encodedData);
 
     DeleteAclsResponse decodedResponse;
     result = decodedResponse.decode(decoder, 0);
@@ -203,7 +204,7 @@ TEST(DeleteAclsResponseTest, DecodeWithError)
     };
 
     std::string rawData(reinterpret_cast<const char *>(errorResponse), sizeof(errorResponse));
-    real_decoder decoder(rawData);
+    packet_decoder decoder(rawData);
 
     DeleteAclsResponse response;
     int result = response.decode(decoder, 0);

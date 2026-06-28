@@ -29,10 +29,10 @@ namespace coev::kafka
     struct AlterUserScramCredentialsResponse : protocol_body
     {
         int16_t m_version = 0;
-        std::chrono::milliseconds m_throttle_time;
+        std::chrono::milliseconds m_throttle_time = std::chrono::milliseconds(0);
         std::vector<AlterUserScramCredentialsResult> m_results;
 
-        AlterUserScramCredentialsResponse() = default;
+        AlterUserScramCredentialsResponse() : m_version(0), m_throttle_time(0) {}
         AlterUserScramCredentialsResponse(int16_t v) : m_version(v)
         {
         }

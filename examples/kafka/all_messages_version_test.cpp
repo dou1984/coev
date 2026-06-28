@@ -126,6 +126,13 @@ static MessageTestResult test_message_encode_decode(
         {
             result.error_code = err;
             result.error_msg = "Decode request failed";
+            // 调试输出：打印详细错误信息
+            std::cout << "  [DEBUG] " << name << " v" << version << " err=" << err
+                      << " encoded_size=" << encoded.size() << " hex:";
+            for (auto c : encoded)
+                std::cout << std::hex << std::setw(2) << std::setfill('0')
+                          << (int)(unsigned char)c;
+            std::cout << std::dec << std::endl;
             return result;
         }
         result.decode_ok = true;

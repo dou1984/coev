@@ -12,8 +12,8 @@
 #include <chrono>
 
 #include "acl_create_response.h"
-#include "real_encoder.h"
-#include "real_decoder.h"
+#include "packet_encoder.h"
+#include "packet_decoder.h"
 
 using namespace coev::kafka;
 
@@ -37,7 +37,7 @@ const unsigned char createResponseArray[] = {
 TEST(CreateAclsResponseTest, DecodeWithError)
 {
     std::string rawData(reinterpret_cast<const char *>(createResponseWithError), sizeof(createResponseWithError));
-    real_decoder decoder(rawData);
+    packet_decoder decoder(rawData);
 
     CreateAclsResponse response;
     int result = response.decode(decoder, 0);
@@ -53,7 +53,7 @@ TEST(CreateAclsResponseTest, DecodeWithError)
 TEST(CreateAclsResponseTest, DecodeResponseArray)
 {
     std::string rawData(reinterpret_cast<const char *>(createResponseArray), sizeof(createResponseArray));
-    real_decoder decoder(rawData);
+    packet_decoder decoder(rawData);
 
     CreateAclsResponse response;
     int result = response.decode(decoder, 0);
@@ -83,7 +83,7 @@ TEST(CreateAclsResponseTest, EncodeWithError)
     aclResp.m_err_msg = "error";
     response.m_acl_creation_responses.push_back(aclResp);
 
-    real_encoder encoder(1024);
+    packet_encoder encoder(packet_encoder::REAL, 1024);
     int result = response.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode create acls response with error";
 
@@ -109,7 +109,7 @@ TEST(CreateAclsResponseTest, EncodeResponseArray)
     aclResp2.m_err = KError::ErrNoError;
     response.m_acl_creation_responses.push_back(aclResp2);
 
-    real_encoder encoder(1024);
+    packet_encoder encoder(packet_encoder::REAL, 1024);
     int result = response.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode create acls response array";
 
@@ -167,13 +167,13 @@ TEST(CreateAclsResponseTest, RoundTripEncodingDecoding)
     originalResponse.m_acl_creation_responses.push_back(aclResp3);
 
     // Encode the response
-    real_encoder encoder(1024);
+    packet_encoder encoder(packet_encoder::REAL, 1024);
     int result = originalResponse.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode response for round-trip test";
 
     // Decode the response
     std::string encodedData = encoder.m_raw.substr(0, encoder.m_offset);
-    real_decoder decoder(encodedData);
+    packet_decoder decoder(encodedData);
 
     CreateAclsResponse decodedResponse;
     result = decodedResponse.decode(decoder, 0);

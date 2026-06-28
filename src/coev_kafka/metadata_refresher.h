@@ -23,8 +23,8 @@ namespace coev::kafka
     {
         struct RefreshTime
         {
-            std::chrono::time_point<std::chrono::system_clock> m_last_request_time;
-            std::chrono::time_point<std::chrono::system_clock> m_last_response_time;
+            std::chrono::time_point<std::chrono::system_clock> m_last_request_time{};
+            std::chrono::time_point<std::chrono::system_clock> m_last_response_time{};
         };
         MetadataRefresher();
 

@@ -4,7 +4,7 @@
  *	Copyright (c) 2023-2026, Zhao Yun Shan
  *
  */
-#include "real_decoder.h"
+#include "packet_decoder.h"
 #include "records.h"
 #include <utility>
 #include <vector>
@@ -185,8 +185,8 @@ namespace coev::kafka
         }
 
         const auto &record = m_record_batch->m_records[0];
-        real_decoder key(record.m_key);
-        real_decoder value(record.m_value);
+        packet_decoder key(record.m_key);
+        packet_decoder value(record.m_value);
 
         int err = out.decode(key, value);
         if (err != 0)

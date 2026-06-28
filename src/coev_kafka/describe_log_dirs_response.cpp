@@ -45,13 +45,17 @@ namespace coev::kafka
         m_version = version;
         if (pd.getDurationMs(m_throttle_time) != ErrNoError)
         {
+            LOG_DBG("DescribeLogDirsResponse::decode failed throttle_time offset:%d", pd.m_offset);
             return ErrDecodeError;
         }
+        LOG_DBG("DescribeLogDirsResponse::decode throttle_time:%lldms version:%d offset:%d",
+                (long long)m_throttle_time.count(), version, pd.m_offset);
 
         if (version >= 3)
         {
             if (pd.getKError(m_code) != ErrNoError)
             {
+                LOG_DBG("DescribeLogDirsResponse::decode failed code offset:%d", pd.m_offset);
                 return ErrDecodeError;
             }
         }
@@ -59,14 +63,17 @@ namespace coev::kafka
         int32_t n;
         if (pd.getArrayLength(n) != ErrNoError)
         {
+            LOG_DBG("DescribeLogDirsResponse::decode failed dirs array length offset:%d", pd.m_offset);
             return ErrDecodeError;
         }
+        LOG_DBG("DescribeLogDirsResponse::decode dirs_count:%d offset:%d", n, pd.m_offset);
 
         m_log_dirs.resize(n);
         for (int32_t i = 0; i < n; ++i)
         {
-            if (!m_log_dirs[i].decode(pd, version))
+            if (m_log_dirs[i].decode(pd, version) != ErrNoError)
             {
+                LOG_DBG("DescribeLogDirsResponse::decode failed dir idx:%d offset:%d", i, pd.m_offset);
                 return ErrDecodeError;
             }
         }
@@ -74,8 +81,10 @@ namespace coev::kafka
         int32_t dummy;
         if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
         {
+            LOG_DBG("DescribeLogDirsResponse::decode failed tagged fields offset:%d", pd.m_offset);
             return ErrDecodeError;
         }
+        LOG_CORE("DescribeLogDirsResponse::decode done dirs:%d offset:%d remaining:%d", n, pd.m_offset, pd.remaining());
         return ErrNoError;
     }
 
@@ -171,25 +180,31 @@ namespace coev::kafka
     {
         if (pd.getKError(m_code) != ErrNoError)
         {
+            LOG_DBG("DescribeLogDirsDir::decode failed error_code offset:%d", pd.m_offset);
             return ErrDecodeError;
         }
 
         if (pd.getString(m_path) != ErrNoError)
         {
+            LOG_DBG("DescribeLogDirsDir::decode failed path offset:%d", pd.m_offset);
             return ErrDecodeError;
         }
+        LOG_DBG("DescribeLogDirsDir::decode path:%s offset:%d", m_path.c_str(), pd.m_offset);
 
         int32_t n;
         if (pd.getArrayLength(n) != ErrNoError)
         {
+            LOG_DBG("DescribeLogDirsDir::decode failed topics count offset:%d", pd.m_offset);
             return ErrDecodeError;
         }
+        LOG_DBG("DescribeLogDirsDir::decode topics_count:%d offset:%d", n, pd.m_offset);
 
         m_topics.resize(n);
         for (int32_t i = 0; i < n; ++i)
         {
-            if (!m_topics[i].decode(pd, version))
+            if (m_topics[i].decode(pd, version) != ErrNoError)
             {
+                LOG_DBG("DescribeLogDirsDir::decode failed topic idx:%d offset:%d", i, pd.m_offset);
                 return ErrDecodeError;
             }
         }
@@ -205,8 +220,11 @@ namespace coev::kafka
         int32_t dummy;
         if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
         {
+            LOG_DBG("DescribeLogDirsDir::decode failed tagged fields offset:%d", pd.m_offset);
             return ErrDecodeError;
         }
+        LOG_DBG("DescribeLogDirsDir::decode done path:%s topics:%d offset:%d remaining:%d",
+                m_path.c_str(), n, pd.m_offset, pd.remaining());
         return ErrNoError;
     }
 
@@ -238,20 +256,25 @@ namespace coev::kafka
     {
         if (pd.getString(m_topic) != ErrNoError)
         {
+            LOG_DBG("DescribeLogDirsTopic::decode failed name offset:%d", pd.m_offset);
             return ErrDecodeError;
         }
+        LOG_DBG("DescribeLogDirsTopic::decode topic:%s offset:%d", m_topic.c_str(), pd.m_offset);
 
         int32_t n;
         if (pd.getArrayLength(n) != ErrNoError)
         {
+            LOG_DBG("DescribeLogDirsTopic::decode failed partitions count topic:%s offset:%d", m_topic.c_str(), pd.m_offset);
             return ErrDecodeError;
         }
+        LOG_DBG("DescribeLogDirsTopic::decode topic:%s partitions:%d offset:%d", m_topic.c_str(), n, pd.m_offset);
 
         m_partitions.resize(n);
         for (int32_t i = 0; i < n; ++i)
         {
-            if (!m_partitions[i].decode(pd, version))
+            if (m_partitions[i].decode(pd, version) != ErrNoError)
             {
+                LOG_DBG("DescribeLogDirsTopic::decode failed partition idx:%d topic:%s offset:%d", i, m_topic.c_str(), pd.m_offset);
                 return ErrDecodeError;
             }
         }
@@ -259,8 +282,11 @@ namespace coev::kafka
         int32_t dummy;
         if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
         {
+            LOG_DBG("DescribeLogDirsTopic::decode failed tagged fields topic:%s offset:%d", m_topic.c_str(), pd.m_offset);
             return ErrDecodeError;
         }
+        LOG_DBG("DescribeLogDirsTopic::decode done topic:%s partitions:%d offset:%d remaining:%d",
+                m_topic.c_str(), n, pd.m_offset, pd.remaining());
         return ErrNoError;
     }
 
@@ -282,19 +308,34 @@ namespace coev::kafka
     int DescribeLogDirsResponsePartition::decode(packet_decoder &pd, int16_t version)
     {
         if (pd.getInt32(m_partition_id) != ErrNoError)
+        {
+            LOG_DBG("DescribeLogDirsPartition::decode failed partition_id offset:%d", pd.m_offset);
             return ErrDecodeError;
+        }
         if (pd.getInt64(m_size) != ErrNoError)
+        {
+            LOG_DBG("DescribeLogDirsPartition::decode failed size partition:%d offset:%d", m_partition_id, pd.m_offset);
             return ErrDecodeError;
+        }
         if (pd.getInt64(m_offset_lag) != ErrNoError)
+        {
+            LOG_DBG("DescribeLogDirsPartition::decode failed offset_lag partition:%d offset:%d", m_partition_id, pd.m_offset);
             return ErrDecodeError;
+        }
         if (pd.getBool(m_is_temporary) != ErrNoError)
+        {
+            LOG_DBG("DescribeLogDirsPartition::decode failed is_temporary partition:%d offset:%d", m_partition_id, pd.m_offset);
             return ErrDecodeError;
+        }
 
         int32_t dummy;
         if (pd.getEmptyTaggedFieldArray(dummy) != ErrNoError)
         {
+            LOG_DBG("DescribeLogDirsPartition::decode failed tagged fields partition:%d offset:%d", m_partition_id, pd.m_offset);
             return ErrDecodeError;
         }
+        LOG_DBG("DescribeLogDirsPartition::decode done partition:%d size:%ld lag:%ld temp:%d offset:%d",
+                m_partition_id, (long)m_size, (long)m_offset_lag, m_is_temporary, pd.m_offset);
         return ErrNoError;
     }
 }

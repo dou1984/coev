@@ -37,7 +37,7 @@ namespace coev::kafka
     struct AlterConfigsResponse : protocol_body
     {
         int16_t m_version = 0;
-        std::chrono::milliseconds m_throttle_time;
+        std::chrono::milliseconds m_throttle_time{0};
         std::vector<AlterConfigsResourceResponse> m_resources;
 
         AlterConfigsResponse() = default;

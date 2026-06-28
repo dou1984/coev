@@ -48,8 +48,6 @@ namespace coev::kafka
         auto res = buf.size();
         while (__valid() && res > 0)
         {
-
-            LOG_CORE("Write sending: %.*s", (int)to_hex(buf).size(), to_hex(buf).data());
             auto r = co_await send(buf.data() + (buf.size() - res), res);
             if (r == INVALID)
             {
@@ -83,6 +81,7 @@ namespace coev::kafka
     }
     int Connect::Close()
     {
+        LOG_CORE("Connect::Close called fd:%d state:%d", m_fd, m_state);
         m_state = CLOSED;
         return close();
     }

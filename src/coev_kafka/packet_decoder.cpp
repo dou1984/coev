@@ -4,16 +4,17 @@
  *	Copyright (c) 2023-2026, Zhao Yun Shan
  *
  */
-#include "real_decoder.h"
-#include "response_header.h"
+
 #include <cstdint>
 #include <cstring>
 #include <limits>
 #include <coev/coev.h>
+#include "packet_decoder.h"
+#include "response_header.h"
 
 namespace coev::kafka
 {
-    int real_decoder::getInt8(int8_t &result)
+    int packet_decoder::getInt8(int8_t &result)
     {
         if (remaining() < 1)
         {
@@ -26,7 +27,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::getInt16(int16_t &result)
+    int packet_decoder::getInt16(int16_t &result)
     {
         if (remaining() < 2)
         {
@@ -39,7 +40,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::getInt32(int32_t &result)
+    int packet_decoder::getInt32(int32_t &result)
     {
         if (remaining() < 4)
         {
@@ -47,12 +48,16 @@ namespace coev::kafka
             result = -1;
             return ErrInsufficientData;
         }
-        result = static_cast<int32_t>((static_cast<uint8_t>(m_raw[m_offset]) << 24) | (static_cast<uint8_t>(m_raw[m_offset + 1]) << 16) | (static_cast<uint8_t>(m_raw[m_offset + 2]) << 8) | static_cast<uint8_t>(m_raw[m_offset + 3]));
+        result = static_cast<int32_t>(
+            (static_cast<uint8_t>(m_raw[m_offset]) << 24) |
+            (static_cast<uint8_t>(m_raw[m_offset + 1]) << 16) |
+            (static_cast<uint8_t>(m_raw[m_offset + 2]) << 8) |
+            static_cast<uint8_t>(m_raw[m_offset + 3]));
         m_offset += 4;
         return 0;
     }
 
-    int real_decoder::getInt64(int64_t &result)
+    int packet_decoder::getInt64(int64_t &result)
     {
         if (remaining() < 8)
         {
@@ -78,7 +83,7 @@ namespace coev::kafka
         return static_cast<int64_t>((x >> 1) ^ -(x & 1));
     }
 
-    int real_decoder::getVariant(int64_t &result)
+    int packet_decoder::getVariant(int64_t &result)
     {
         uint64_t ux = 0;
         int shift = 0;
@@ -111,7 +116,7 @@ namespace coev::kafka
         return ErrVariantOverflow;
     }
 
-    int real_decoder::getUVariant(uint64_t &result)
+    int packet_decoder::getUVariant(uint64_t &result)
     {
         result = 0;
         int shift = 0;
@@ -143,7 +148,7 @@ namespace coev::kafka
         return ErrUVariantOverflow;
     }
 
-    int real_decoder::getFloat64(double &result)
+    int packet_decoder::getFloat64(double &result)
     {
         if (remaining() < 8)
         {
@@ -164,7 +169,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::getArrayLength(int32_t &result)
+    int packet_decoder::getArrayLength(int32_t &result)
     {
         if (__is_fixed())
         {
@@ -205,7 +210,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::getBool(bool &result)
+    int packet_decoder::getBool(bool &result)
     {
         int8_t b;
         int err = getInt8(b);
@@ -223,7 +228,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::getKError(KError &result)
+    int packet_decoder::getKError(KError &result)
     {
         int16_t out;
         auto err = getInt16(out);
@@ -231,7 +236,7 @@ namespace coev::kafka
         return err;
     }
 
-    int real_decoder::getDurationMs(std::chrono::milliseconds &out)
+    int packet_decoder::getDurationMs(std::chrono::milliseconds &out)
     {
         int32_t t;
         int err = getInt32(t);
@@ -244,7 +249,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::getTaggedFieldArray(const taggedFieldDecoders &decoders)
+    int packet_decoder::getTaggedFieldArray(const taggedFieldDecoders &decoders)
     {
         if (__is_fixed())
         {
@@ -303,7 +308,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::getEmptyTaggedFieldArray(int32_t &result)
+    int packet_decoder::getEmptyTaggedFieldArray(int32_t &result)
     {
         if (__is_fixed())
         {
@@ -349,7 +354,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::getBytes(std::string_view &result)
+    int packet_decoder::getBytes(std::string_view &result)
     {
         if (__is_fixed())
         {
@@ -380,7 +385,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::getBytes(std::string &result)
+    int packet_decoder::getBytes(std::string &result)
     {
         std::string_view view;
         int err = getBytes(view);
@@ -392,7 +397,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::getVariantBytes(std::string_view &result)
+    int packet_decoder::getVariantBytes(std::string_view &result)
     {
         int64_t tmp;
         int err = getVariant(tmp);
@@ -408,7 +413,7 @@ namespace coev::kafka
         return getRawBytes(static_cast<int>(tmp), result);
     }
 
-    int real_decoder::getVariantBytes(std::string &result)
+    int packet_decoder::getVariantBytes(std::string &result)
     {
         int64_t tmp;
         int err = getVariant(tmp);
@@ -431,7 +436,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::getStringLength(int &result)
+    int packet_decoder::getStringLength(int &result)
     {
         if (__is_fixed())
         {
@@ -492,7 +497,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::getString(std::string_view &result)
+    int packet_decoder::getString(std::string_view &result)
     {
         if (__is_fixed())
         {
@@ -523,7 +528,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::getString(std::string &result)
+    int packet_decoder::getString(std::string &result)
     {
         std::string_view view;
         int err = getString(view);
@@ -535,7 +540,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::getNullableString(std::string_view &result)
+    int packet_decoder::getNullableString(std::string_view &result)
     {
         if (__is_fixed())
         {
@@ -566,7 +571,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::getNullableString(std::string &result)
+    int packet_decoder::getNullableString(std::string &result)
     {
         std::string_view view;
         int err = getNullableString(view);
@@ -578,7 +583,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::getInt32Array(std::vector<int32_t> &result)
+    int packet_decoder::getInt32Array(std::vector<int32_t> &result)
     {
         if (__is_fixed())
         {
@@ -631,7 +636,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::getInt64Array(std::vector<int64_t> &result)
+    int packet_decoder::getInt64Array(std::vector<int64_t> &result)
     {
         int32_t n;
         int err = getArrayLength(n);
@@ -666,7 +671,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::getStringArray(std::vector<std::string> &result)
+    int packet_decoder::getStringArray(std::vector<std::string> &result)
     {
         if (__is_fixed())
         {
@@ -723,12 +728,12 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::remaining()
+    int packet_decoder::remaining()
     {
         return static_cast<int>(m_raw.size()) - m_offset;
     }
 
-    int real_decoder::getSubset(int length, std::string_view &result)
+    int packet_decoder::getSubset(int length, std::string_view &result)
     {
         int err = getRawBytes(length, result);
         if (err != 0)
@@ -738,7 +743,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::getRawBytes(int length, std::string_view &result)
+    int packet_decoder::getRawBytes(int length, std::string_view &result)
     {
         if (length < 0)
         {
@@ -754,7 +759,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::peek(int offset, int length, std::string_view &result)
+    int packet_decoder::peek(int offset, int length, std::string_view &result)
     {
         if (remaining() < offset + length)
         {
@@ -766,7 +771,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::peekInt8(int offset, int8_t &result)
+    int packet_decoder::peekInt8(int offset, int8_t &result)
     {
         const int byte_len = 1;
         if (m_offset + offset >= m_raw.size())
@@ -778,7 +783,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::push(push_decoder &_in)
+    int packet_decoder::push(push_decoder &_in)
     {
         auto in = &_in;
         in->save_offset(m_offset);
@@ -806,18 +811,18 @@ namespace coev::kafka
         return 0;
     }
 
-    int real_decoder::pop()
+    int packet_decoder::pop()
     {
         auto in = m_stack.back();
         m_stack.pop_back();
         return in->check(m_offset, m_raw);
     }
-    real_decoder::real_decoder(const std::string &buf)
+    packet_decoder::packet_decoder(const std::string &buf)
     {
         m_raw = buf;
     }
 
-    real_decoder::real_decoder(std::string_view buf)
+    packet_decoder::packet_decoder(std::string_view buf)
     {
         m_raw = buf;
     }

@@ -7,7 +7,7 @@
 #include "fetch_request.h"
 #include <gtest/gtest.h>
 #include "real_encoder.h"
-#include "real_decoder.h"
+#include "packet_decoder.h"
 using namespace coev::kafka;
 TEST(FetchRequestTest, BasicFunctionality) {
     // Test with version 0
@@ -38,7 +38,7 @@ TEST(FetchRequestTest, VersionCompatibility) {
 TEST(FetchRequestTest, EncodeEmptyRequest) {
     FetchRequest request(0);
     
-    real_encoder encoder(1024);
+    packet_encoder encoder(packet_encoder::REAL, 1024);
     EXPECT_EQ(request.encode(encoder), 0);
 }
 
@@ -48,7 +48,7 @@ TEST(FetchRequestTest, EncodeWithBlocks) {
     // Add a block
     request.add_block("test-topic", 0, 100, 1024, 0);
     
-    real_encoder encoder(1024);
+    packet_encoder encoder(packet_encoder::REAL, 1024);
     EXPECT_EQ(request.encode(encoder), 0);
 }
 
@@ -61,6 +61,6 @@ TEST(FetchRequestTest, EncodeWithVersionSpecificFields) {
     // Add a block
     request.add_block("test-topic", 0, 100, 1024, 0);
     
-    real_encoder encoder(1024);
+    packet_encoder encoder(packet_encoder::REAL, 1024);
     EXPECT_EQ(request.encode(encoder), 0);
 }

@@ -10,7 +10,7 @@
 
 #include "control_record.h"
 #include "real_encoder.h"
-#include "real_decoder.h"
+#include "packet_decoder.h"
 #include "prep_encoder.h"
 
 using namespace coev::kafka;
@@ -36,8 +36,8 @@ const std::string unknownCtrlRecValue = ""; // empty value for unknown record
 TEST(ControlRecordTest, DecodingControlRecords)
 {
     // Test abort transaction control record
-    real_decoder keyDecoder(abortTxCtrlRecKey);
-    real_decoder valueDecoder(abortTxCtrlRecValue);
+    packet_decoder keyDecoder(abortTxCtrlRecKey);
+    packet_decoder valueDecoder(abortTxCtrlRecValue);
 
     ControlRecord abortRecord;
     int abortResult = abortRecord.decode(keyDecoder, valueDecoder);
@@ -46,8 +46,8 @@ TEST(ControlRecordTest, DecodingControlRecords)
     EXPECT_EQ(abortRecord.m_coordinator_epoch, 10) << "Abort coordinator epoch mismatch";
 
     // Test commit transaction control record
-    real_decoder keyDecoderCommit(commitTxCtrlRecKey);
-    real_decoder valueDecoderCommit(commitTxCtrlRecValue);
+    packet_decoder keyDecoderCommit(commitTxCtrlRecKey);
+    packet_decoder valueDecoderCommit(commitTxCtrlRecValue);
 
     ControlRecord commitRecord;
     int commitResult = commitRecord.decode(keyDecoderCommit, valueDecoderCommit);
@@ -56,8 +56,8 @@ TEST(ControlRecordTest, DecodingControlRecords)
     EXPECT_EQ(commitRecord.m_coordinator_epoch, 15) << "Commit coordinator epoch mismatch";
 
     // Test unknown control record
-    real_decoder keyDecoderUnknown(unknownCtrlRecKey);
-    real_decoder valueDecoderUnknown(unknownCtrlRecValue);
+    packet_decoder keyDecoderUnknown(unknownCtrlRecKey);
+    packet_decoder valueDecoderUnknown(unknownCtrlRecValue);
 
     ControlRecord unknownRecord;
     int unknownResult = unknownRecord.decode(keyDecoderUnknown, valueDecoderUnknown);
@@ -71,14 +71,14 @@ TEST(ControlRecordTest, EncodingControlRecords)
     ControlRecord abortRecord(0, 10, ControlRecordAbort);
 
     // First pass: calculate required size
-    prep_encoder keyPrepEnc;
-    prep_encoder valuePrepEnc;
+    packet_encoder keyPrepEnc(packet_encoder::PREP);
+    packet_encoder valuePrepEnc(packet_encoder::PREP);
     int prepResult = abortRecord.encode(keyPrepEnc, valuePrepEnc);
     ASSERT_EQ(prepResult, 0) << "Failed to prepare abort control record";
 
     // Resize buffers to required size
-    real_encoder keyEncoder;
-    real_encoder valueEncoder;
+    packet_encoder keyEncoder(packet_encoder::REAL, 1024);
+    packet_encoder valueEncoder(packet_encoder::REAL, 1024);
     keyEncoder.m_raw.resize(keyPrepEnc.offset());
     valueEncoder.m_raw.resize(valuePrepEnc.offset());
 
@@ -95,8 +95,8 @@ TEST(ControlRecordTest, EncodingControlRecords)
     ControlRecord commitRecord(0, 15, ControlRecordCommit);
 
     // First pass: calculate required size
-    prep_encoder commitKeyPrepEnc;
-    prep_encoder commitValuePrepEnc;
+    packet_encoder commitKeyPrepEnc(packet_encoder::PREP);
+    packet_encoder commitValuePrepEnc(packet_encoder::PREP);
     prepResult = commitRecord.encode(commitKeyPrepEnc, commitValuePrepEnc);
     ASSERT_EQ(prepResult, 0) << "Failed to prepare commit control record";
 
@@ -119,8 +119,8 @@ TEST(ControlRecordTest, EncodingControlRecords)
     ControlRecord unknownRecord(0, 0, ControlRecordUnknown);
 
     // First pass: calculate required size
-    prep_encoder unknownKeyPrepEnc;
-    prep_encoder unknownValuePrepEnc;
+    packet_encoder unknownKeyPrepEnc(packet_encoder::PREP);
+    packet_encoder unknownValuePrepEnc(packet_encoder::PREP);
     prepResult = unknownRecord.encode(unknownKeyPrepEnc, unknownValuePrepEnc);
     ASSERT_EQ(prepResult, 0) << "Failed to prepare unknown control record";
 
@@ -147,14 +147,14 @@ TEST(ControlRecordTest, VersionHandling)
     ControlRecord record(1, 20, ControlRecordCommit);
 
     // First pass: calculate required size
-    prep_encoder keyPrepEnc;
-    prep_encoder valuePrepEnc;
+    packet_encoder keyPrepEnc(packet_encoder::PREP);
+    packet_encoder valuePrepEnc(packet_encoder::PREP);
     int prepResult = record.encode(keyPrepEnc, valuePrepEnc);
     ASSERT_EQ(prepResult, 0) << "Failed to prepare control record with version 1";
 
     // Resize buffers to required size
-    real_encoder keyEncoder;
-    real_encoder valueEncoder;
+    packet_encoder keyEncoder(packet_encoder::REAL, 1024);
+    packet_encoder valueEncoder(packet_encoder::REAL, 1024);
     keyEncoder.m_raw.resize(keyPrepEnc.offset());
     valueEncoder.m_raw.resize(valuePrepEnc.offset());
 
@@ -163,8 +163,8 @@ TEST(ControlRecordTest, VersionHandling)
     ASSERT_EQ(encodeResult, 0) << "Failed to encode control record with version 1";
 
     // Decode the encoded record to verify version is preserved
-    real_decoder keyDecoder(keyEncoder.m_raw);
-    real_decoder valueDecoder(valueEncoder.m_raw);
+    packet_decoder keyDecoder(keyEncoder.m_raw);
+    packet_decoder valueDecoder(valueEncoder.m_raw);
 
     ControlRecord decodedRecord;
     int decodeResult = decodedRecord.decode(keyDecoder, valueDecoder);

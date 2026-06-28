@@ -11,18 +11,21 @@
 #include <string>
 #include <string_view>
 #include <memory>
+#include <chrono>
 #include "errors.h"
 #include "version.h"
 #include "encoder_decoder.h"
-#include "packet_encoder.h"
+#include "flexible_type.h"
+#include "dynamic_push_encoder.h"
 
 namespace coev::kafka
 {
 
-    struct real_encoder : packet_encoder
+    struct real_encoder : flexible_type
     {
         real_encoder() = default;
         real_encoder(size_t capacity);
+        real_encoder(std::string_view buf);
 
         void putInt8(int8_t in);
         void putInt16(int16_t in);
@@ -49,9 +52,9 @@ namespace coev::kafka
         void push(push_encoder &in);
         int pop();
 
-        std::string m_raw;
-        size_t m_offset = 0;
         std::vector<push_encoder *> m_stack;
+        size_t m_offset = 0;
+        std::string m_raw;
     };
 
 } // namespace coev::kafka

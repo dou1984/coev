@@ -10,13 +10,15 @@
 #include <vector>
 #include <memory>
 #include <string>
-
-#include "packet_encoder.h"
+#include <chrono>
+#include "errors.h"
+#include "flexible_type.h"
 #include "version.h"
+#include "dynamic_push_encoder.h"
 
 namespace coev::kafka
 {
-    struct prep_encoder : packet_encoder
+    struct prep_encoder : flexible_type
     {
         prep_encoder();
 

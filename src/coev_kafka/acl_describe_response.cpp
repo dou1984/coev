@@ -102,7 +102,7 @@ namespace coev::kafka
 
     int16_t DescribeAclsResponse::header_version() const
     {
-        return 0;
+        return m_version >= 1 ? 1 : 0;
     }
 
     bool DescribeAclsResponse::is_valid_version() const
@@ -115,9 +115,9 @@ namespace coev::kafka
         return is_flexible_version(m_version);
     }
 
-    bool DescribeAclsResponse::is_flexible_version(int16_t version) const
+    bool DescribeAclsResponse::is_flexible_version(int16_t /*version*/) const
     {
-        return version >= 1;
+        return false;
     }
 
     KafkaVersion DescribeAclsResponse::required_version() const

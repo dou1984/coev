@@ -21,7 +21,7 @@ namespace coev::kafka
 
     struct InitProducerIDResponse : protocol_body
     {
-        std::chrono::milliseconds m_throttle_time;
+        std::chrono::milliseconds m_throttle_time{0};
         KError m_err = ErrNoError;
         int16_t m_version = 0;
         int64_t m_producer_id = 0;

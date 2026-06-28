@@ -156,7 +156,7 @@ namespace coev::kafka
         }
         if (m_conn->IsOpened())
         {
-            LOG_CORE("conn is opened");
+            LOG_CORE("conn is opened, reusing");
             co_return 0;
         }
         if (m_conn->IsOpening())
@@ -164,7 +164,7 @@ namespace coev::kafka
             co_await m_opened.suspend();
             if (m_conn->IsClosed())
             {
-                LOG_CORE("conn is closed");
+                LOG_CORE("_Open: conn was closed while waiting");
                 co_return INVALID;
             }
         }
@@ -224,7 +224,7 @@ namespace coev::kafka
                 for (auto &key : apiVersionsResponse.m_response->m_api_keys)
                 {
                     m_broker_api_versions.emplace(key.m_api_key, ApiVersionRange(key.m_min_version, key.m_max_version));
-                                }
+                }
             }
         }
 
@@ -290,7 +290,8 @@ namespace coev::kafka
         }
         if (m_conn->IsOpened() || m_conn->IsOpening())
         {
-            return m_conn->Close();
+            int err = m_conn->Close();
+            return err;
         }
         return ErrNotConnected;
     }

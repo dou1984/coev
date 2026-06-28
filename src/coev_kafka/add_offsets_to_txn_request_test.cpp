@@ -11,7 +11,7 @@
 
 #include "add_offsets_to_txn_request.h"
 #include "real_encoder.h"
-#include "real_decoder.h"
+#include "packet_decoder.h"
 
 using namespace coev::kafka;
 
@@ -36,7 +36,7 @@ TEST(AddOffsetsToTxnRequestTest, BasicEncodingDecoding)
     request.m_group_id = "groupid";
 
     // Test encoding
-    real_encoder encoder(1024);
+    packet_encoder encoder(packet_encoder::REAL, 1024);
     int encodeResult = request.encode(encoder);
     ASSERT_EQ(encodeResult, 0) << "Failed to encode request";
 
@@ -51,7 +51,7 @@ TEST(AddOffsetsToTxnRequestTest, BasicEncodingDecoding)
     EXPECT_EQ(actualEncoded, addOffsetsToTxnRequestStr) << "Encoded data mismatch";
 
     // Test decoding
-    real_decoder decoder(actualEncoded);
+    packet_decoder decoder(actualEncoded);
 
     AddOffsetsToTxnRequest decoded;
     decoded.set_version(0);
@@ -115,7 +115,7 @@ TEST(AddOffsetsToTxnRequestTest, EncodingDifferentVersions)
     {
         request.set_version(version);
 
-        real_encoder encoder(1024);
+        packet_encoder encoder(packet_encoder::REAL, 1024);
         int encodeResult = request.encode(encoder);
         ASSERT_EQ(encodeResult, 0) << "Failed to encode request with version " << version;
 

@@ -7,7 +7,7 @@
 #include "describe_groups_response.h"
 #include <gtest/gtest.h>
 #include "real_encoder.h"
-#include "real_decoder.h"
+#include "packet_decoder.h"
 using namespace coev::kafka;
 TEST(DescribeGroupsResponseTest, BasicFunctionality)
 {
@@ -43,7 +43,7 @@ TEST(DescribeGroupsResponseTest, EncodeEmptyResponse)
     DescribeGroupsResponse response;
     response.set_version(0);
 
-    real_encoder encoder(1024);
+    packet_encoder encoder(packet_encoder::REAL, 1024);
     EXPECT_EQ(response.encode(encoder), ErrNoError);
 }
 
@@ -61,7 +61,7 @@ TEST(DescribeGroupsResponseTest, EncodeWithGroups)
     group.m_protocol = "range";
     response.m_groups.push_back(group);
 
-    real_encoder encoder(1024);
+    packet_encoder encoder(packet_encoder::REAL, 1024);
     EXPECT_EQ(response.encode(encoder), ErrNoError);
 }
 
@@ -82,6 +82,6 @@ TEST(DescribeGroupsResponseTest, EncodeWithVersionSpecificFields)
     group.m_authorized_operations = 0x0f; // All operations
     response.m_groups.push_back(group);
 
-    real_encoder encoder(1024);
+    packet_encoder encoder(packet_encoder::REAL, 1024);
     EXPECT_EQ(response.encode(encoder), ErrNoError);
 }

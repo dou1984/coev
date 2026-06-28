@@ -18,9 +18,10 @@ namespace coev::kafka
     inline constexpr int magic_offset = 16;
     int encode(const IEncoder &e, std::string &out)
     {
-        prep_encoder enc;
+        packet_encoder enc(packet_encoder::PREP);
         if (prepare_flexible_encoder(enc, e) != ErrNoError)
         {
+            LOG_ERR("encode PREP failed");
             return ErrEncodeError;
         }
 
@@ -29,7 +30,7 @@ namespace coev::kafka
             return ErrEncodeError;
         }
 
-        real_encoder real_enc;
+        packet_encoder real_enc(packet_encoder::REAL);
         real_enc.m_raw.resize(enc.m_length);
         if (prepare_flexible_encoder(real_enc, e) != ErrNoError)
         {
@@ -53,7 +54,7 @@ namespace coev::kafka
             return ErrNoError;
         }
 
-        real_decoder helper(buf);
+        packet_decoder helper(buf);
         if (in.decode(helper) != ErrNoError)
         {
             return ErrDecodeError;
@@ -74,7 +75,7 @@ namespace coev::kafka
             return ErrNoError;
         }
 
-        real_decoder helper(buf);
+        packet_decoder helper(buf);
 
         auto err = prepare_flexible_decoder(helper, in, version);
         if (err != ErrNoError)
@@ -85,9 +86,11 @@ namespace coev::kafka
         int remaining = helper.remaining();
         if (remaining != 0)
         {
+            LOG_DBG("decode_version remaining:%d offset:%d size:%ld version:%d", remaining, helper.m_offset, buf.size(), version);
             return ErrDecodeError;
         }
 
+        LOG_CORE("decode_version done remaining:%d offset:%d size:%ld version:%d", remaining, helper.m_offset, buf.size(), version);
         return ErrNoError;
     }
 

@@ -6,7 +6,7 @@
  */
 #include "response_header.h"
 #include <string>
-#include "real_decoder.h"
+#include "packet_decoder.h"
 
 namespace coev::kafka
 {
@@ -36,7 +36,7 @@ namespace coev::kafka
     {
         if (version >= 1)
         {
-            auto decoder = static_cast<real_decoder *>(&pd);
+            auto decoder = static_cast<packet_decoder *>(&pd);
             if (decoder != nullptr)
             {
                 decoder->__push_flexible();

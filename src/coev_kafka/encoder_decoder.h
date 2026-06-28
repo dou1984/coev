@@ -18,28 +18,6 @@ namespace coev::kafka
     struct packet_decoder;
     struct packet_encoder;
 
-    struct packet_type
-    {
-        uint16_t m_flexible = 0;
-        bool __is_fixed()
-        {
-            return m_flexible == 0;
-        }
-        bool __is_flexible()
-        {
-            return m_flexible > 0;
-        }
-        void __push_flexible()
-        {
-            m_flexible++;
-        }
-        void __pop_flexible()
-        {
-            assert(m_flexible > 0);
-            m_flexible--;
-        }
-    };
-
     struct IEncoder
     {
         virtual ~IEncoder() = default;

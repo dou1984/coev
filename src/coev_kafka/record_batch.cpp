@@ -12,7 +12,7 @@
 #include "length_field.h"
 #include "timestamp.h"
 #include "errors.h"
-#include "real_decoder.h"
+#include "packet_decoder.h"
 #include "packet_error.h"
 
 namespace coev::kafka
@@ -24,7 +24,7 @@ namespace coev::kafka
             return ErrNoError;
         }
 
-        real_decoder helper(buf);
+        packet_decoder helper(buf);
         for (auto &rec : inputs)
         {
             if (rec.decode(helper) != ErrNoError)
@@ -46,7 +46,7 @@ namespace coev::kafka
             return ErrNoError;
         }
 
-        real_decoder helper(buf);
+        packet_decoder helper(buf);
         for (auto i = 0; i < inputs.size(); ++i)
         {
             if (inputs[i] == nullptr)

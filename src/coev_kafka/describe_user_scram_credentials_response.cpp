@@ -86,9 +86,8 @@ namespace coev::kafka
 
         m_results.clear();
         m_results.resize(num_users);
-        for (int32_t i = 0; i < num_users; ++i)
+        for (auto &result : m_results)
         {
-            auto &result = m_results[i];
             if (pd.getString(result.m_user) != ErrNoError)
             {
                 return ErrDecodeError;

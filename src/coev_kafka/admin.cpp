@@ -424,9 +424,10 @@ namespace coev::kafka
         {
             co_return err;
         }
+        std::vector<int> errs;
+
         ResponsePromise<AlterPartitionReassignmentsResponse> response;
         err = co_await broker->AlterPartitionReassignments(request, response);
-        std::vector<int> errs;
         if (err != 0)
         {
             errs.push_back(err);
@@ -1121,6 +1122,7 @@ namespace coev::kafka
         }
         if (!local_out.m_response)
         {
+            LOG_CORE("_ListConsumerGroupOffsets no response group:%s", group.c_str());
             co_return ErrIncompleteResponse;
         }
         if (local_out.m_response->m_err != ErrNoError)
@@ -1362,12 +1364,14 @@ namespace coev::kafka
 
     awaitable<int> ClusterAdmin::UpsertUserScramCredentials(const std::vector<AlterUserScramCredentialsUpsert> &upsert_ops, std::vector<AlterUserScramCredentialsResult> &out)
     {
-        return AlterUserScramCredentials(upsert_ops, {}, out);
+        static std::vector<AlterUserScramCredentialsDelete> _ = {};
+        return AlterUserScramCredentials(upsert_ops, _, out);
     }
 
     awaitable<int> ClusterAdmin::DeleteUserScramCredentials(const std::vector<AlterUserScramCredentialsDelete> &delete_ops, std::vector<AlterUserScramCredentialsResult> &out)
     {
-        return AlterUserScramCredentials({}, delete_ops, out);
+        static std::vector<AlterUserScramCredentialsUpsert> _ = {};
+        return AlterUserScramCredentials(_, delete_ops, out);
     }
 
     awaitable<int> ClusterAdmin::_AlterUserScramCredentials(std::shared_ptr<AlterUserScramCredentialsRequest> req, ResponsePromise<AlterUserScramCredentialsResponse> &rsp)
@@ -1393,8 +1397,8 @@ namespace coev::kafka
     awaitable<int> ClusterAdmin::AlterUserScramCredentials(const std::vector<AlterUserScramCredentialsUpsert> &u, const std::vector<AlterUserScramCredentialsDelete> &d, std::vector<AlterUserScramCredentialsResult> &out_results)
     {
         auto req = std::make_shared<AlterUserScramCredentialsRequest>();
-        req->m_deletions = d;
         req->m_upsertions = u;
+        req->m_deletions = d;
 
         ResponsePromise<AlterUserScramCredentialsResponse> rsp;
         int err = co_await RetryOnError(isRetriableControllerError, &ClusterAdmin::_AlterUserScramCredentials, req, rsp);

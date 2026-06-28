@@ -29,7 +29,7 @@ namespace coev::kafka
         buf[n++] = static_cast<uint8_t>(x);
         return n;
     }
-    int encodeVariant(uint8_t *buf, int64_t x)
+    static int encodeVariant(uint8_t *buf, int64_t x)
     {
         return encodeUVariant(buf, zigzagEncode(x));
     }
@@ -37,7 +37,9 @@ namespace coev::kafka
     {
         m_raw.resize(capacity);
     }
-
+    real_encoder::real_encoder(std::string_view buf) : m_raw(buf)
+    {
+    }
     void real_encoder::putInt8(int8_t in)
     {
         assert(m_offset + 1 <= m_raw.size());
