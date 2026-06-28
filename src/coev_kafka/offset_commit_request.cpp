@@ -12,7 +12,7 @@
 namespace coev::kafka
 {
 
-    int OffsetCommitRequestBlock::encode(packet_encoder &pe, int16_t version) const
+    int OffsetCommitRequestBlock::encode(PacketEncoder &pe, int16_t version) const
     {
         pe.putInt64(m_offset);
 
@@ -30,7 +30,7 @@ namespace coev::kafka
         return pe.putString(m_metadata);
     }
 
-    int OffsetCommitRequestBlock::decode(packet_decoder &pd, int16_t version)
+    int OffsetCommitRequestBlock::decode(PacketDecoder &pd, int16_t version)
     {
         auto err = pd.getInt64(m_offset);
         if (err != 0)
@@ -62,7 +62,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int OffsetCommitRequest::encode(packet_encoder &pe) const
+    int OffsetCommitRequest::encode(PacketEncoder &pe) const
     {
         if (m_version < 0 || m_version > 7)
         {
@@ -115,7 +115,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int OffsetCommitRequest::decode(packet_decoder &pd, int16_t version)
+    int OffsetCommitRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
         auto err = pd.getString(m_consumer_group);

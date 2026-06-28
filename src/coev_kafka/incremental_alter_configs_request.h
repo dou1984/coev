@@ -27,8 +27,8 @@ namespace coev::kafka
         IncrementalAlterConfigsOperation m_operation;
         std::string m_value;
 
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
     };
 
     struct IncrementalAlterConfigsResource : IEncoder, VDecoder
@@ -38,8 +38,8 @@ namespace coev::kafka
         std::map<std::string, IncrementalAlterConfigsEntry> m_config_entries;
         IncrementalAlterConfigsResource(ConfigResourceType t, const std::string &, const std::map<std::string, IncrementalAlterConfigsEntry> &);
 
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
     };
 
     struct IncrementalAlterConfigsRequest : protocol_body
@@ -53,8 +53,8 @@ namespace coev::kafka
         {
         }
         void set_version(int16_t v);
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
         int16_t key() const;
         int16_t version() const;
         int16_t header_version() const;

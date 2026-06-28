@@ -24,7 +24,7 @@ namespace coev::kafka
             return ErrNoError;
         }
 
-        packet_decoder helper(buf);
+        PacketDecoder helper(buf);
         for (auto &rec : inputs)
         {
             if (rec.decode(helper) != ErrNoError)
@@ -46,7 +46,7 @@ namespace coev::kafka
             return ErrNoError;
         }
 
-        packet_decoder helper(buf);
+        PacketDecoder helper(buf);
         for (auto i = 0; i < inputs.size(); ++i)
         {
             if (inputs[i] == nullptr)
@@ -70,7 +70,7 @@ namespace coev::kafka
     RecordBatch::RecordBatch(int8_t v, bool, std::chrono::system_clock::time_point &first, std::chrono::system_clock::time_point &max) : m_version(v), m_first_timestamp(first), m_max_timestamp(max)
     {
     }
-    int RecordBatch::encode(packet_encoder &pe) const
+    int RecordBatch::encode(PacketEncoder &pe) const
     {
         if (m_version != 2)
         {
@@ -124,7 +124,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int RecordBatch::decode(packet_decoder &pd)
+    int RecordBatch::decode(PacketDecoder &pd)
     {
         int err = pd.getInt64(m_first_offset);
         if (err)
@@ -228,7 +228,7 @@ namespace coev::kafka
         return attr;
     }
 
-    void RecordBatch::encode_records(packet_encoder &pe)
+    void RecordBatch::encode_records(PacketEncoder &pe)
     {
 
         std::string raw;

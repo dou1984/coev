@@ -23,11 +23,11 @@
 
 namespace coev::kafka
 {
-    struct packet_decoder;
-    using taggedFieldDecoderFunc = std::function<int(packet_decoder &)>;
+    struct PacketDecoder;
+    using taggedFieldDecoderFunc = std::function<int(PacketDecoder &)>;
     using taggedFieldDecoders = std::unordered_map<uint64_t, taggedFieldDecoderFunc>;
 
-    struct packet_decoder : flexible_type
+    struct PacketDecoder : FlexibleType
     {
         int getInt8(int8_t &result);
         int getInt16(int16_t &result);
@@ -62,9 +62,9 @@ namespace coev::kafka
         int push(push_decoder &in);
         int pop();
 
-        packet_decoder() = default;
-        packet_decoder(const std::string &buf);
-        packet_decoder(std::string_view buf);
+        PacketDecoder() = default;
+        PacketDecoder(const std::string &buf);
+        PacketDecoder(std::string_view buf);
 
         int m_offset = 0;
         std::string_view m_raw;

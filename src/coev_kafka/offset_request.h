@@ -29,8 +29,8 @@ namespace coev::kafka
 
         OffsetRequestBlock();
 
-        int encode(packet_encoder &pe, int16_t version) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe, int16_t version) const;
+        int decode(PacketDecoder &pd, int16_t version);
     };
 
     struct OffsetRequest : protocol_body
@@ -49,8 +49,8 @@ namespace coev::kafka
         OffsetRequest(const KafkaVersion &version);
         OffsetRequest(std::shared_ptr<Config> &conf);
         void set_version(int16_t v);
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
         int16_t key() const;
         int16_t version() const;
         int16_t header_version() const;

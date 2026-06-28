@@ -37,7 +37,7 @@ namespace coev::kafka
         return single;
     }
 
-    int MessageBlock::encode(packet_encoder &pe) const
+    int MessageBlock::encode(PacketEncoder &pe) const
     {
         pe.putInt64(m_offset);
         LengthField length_field;
@@ -51,7 +51,7 @@ namespace coev::kafka
         return pe.pop();
     }
 
-    int MessageBlock::decode(packet_decoder &pd)
+    int MessageBlock::decode(PacketDecoder &pd)
     {
         int err = pd.getInt64(m_offset);
         if (err != 0)
@@ -77,7 +77,7 @@ namespace coev::kafka
         return err;
     }
 
-    int MessageSet::encode(packet_encoder &pe) const
+    int MessageSet::encode(PacketEncoder &pe) const
     {
         for (auto &block : m_messages)
         {
@@ -90,7 +90,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int MessageSet::decode(packet_decoder &pd)
+    int MessageSet::decode(PacketDecoder &pd)
     {
         m_messages.clear();
         m_partial_trailing_message = false;

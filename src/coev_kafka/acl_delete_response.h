@@ -29,8 +29,8 @@ namespace coev::kafka
         Resource m_resource;
         Acl m_acl;
 
-        int encode(packet_encoder &pe, int16_t version) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe, int16_t version) const;
+        int decode(PacketDecoder &pd, int16_t version);
     };
 
     struct FilterResponse : VEncoder, VDecoder
@@ -39,8 +39,8 @@ namespace coev::kafka
         std::string m_err_msg;
         std::vector<MatchingAcl> m_matching_acls;
 
-        int encode(packet_encoder &pe, int16_t version) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe, int16_t version) const;
+        int decode(PacketDecoder &pd, int16_t version);
     };
 
     struct DeleteAclsResponse : protocol_body
@@ -50,8 +50,8 @@ namespace coev::kafka
         std::vector<FilterResponse> m_filter_responses;
 
         void set_version(int16_t v);
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
         int16_t key() const;
         int16_t version() const;
         int16_t header_version() const;

@@ -15,7 +15,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int DescribeAclsResponse::encode(packet_encoder &pe) const
+    int DescribeAclsResponse::encode(PacketEncoder &pe) const
     {
         pe.putDurationMs(m_throttle_time);
         pe.putKError(m_err);
@@ -41,7 +41,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int DescribeAclsResponse::decode(packet_decoder &pd, int16_t version)
+    int DescribeAclsResponse::decode(PacketDecoder &pd, int16_t version)
     {
         if (pd.getDurationMs(m_throttle_time) != 0)
         {

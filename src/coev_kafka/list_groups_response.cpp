@@ -16,7 +16,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int ListGroupsResponse::encode(packet_encoder &pe) const
+    int ListGroupsResponse::encode(PacketEncoder &pe) const
     {
         if (m_version >= 1)
         {
@@ -65,7 +65,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int ListGroupsResponse::decode(packet_decoder &pd, int16_t version)
+    int ListGroupsResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

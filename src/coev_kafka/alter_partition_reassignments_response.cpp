@@ -11,7 +11,7 @@
 namespace coev::kafka
 {
 
-    int AlterPartitionReassignmentsErrorBlock::encode(packet_encoder &pe) const
+    int AlterPartitionReassignmentsErrorBlock::encode(PacketEncoder &pe) const
     {
         pe.putKError(m_code);
         if (pe.putNullableString(m_message) != ErrNoError)
@@ -22,7 +22,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int AlterPartitionReassignmentsErrorBlock::decode(packet_decoder &pd)
+    int AlterPartitionReassignmentsErrorBlock::decode(PacketDecoder &pd)
     {
         if (pd.getKError(m_code) != ErrNoError)
         {
@@ -46,7 +46,7 @@ namespace coev::kafka
         m_errors[topic][partition] = AlterPartitionReassignmentsErrorBlock(kerror, message);
     }
 
-    int AlterPartitionReassignmentsResponse::encode(packet_encoder &pe) const
+    int AlterPartitionReassignmentsResponse::encode(PacketEncoder &pe) const
     {
         pe.putDurationMs(m_throttle_time);
         pe.putKError(m_code);
@@ -88,7 +88,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int AlterPartitionReassignmentsResponse::decode(packet_decoder &pd, int16_t version)
+    int AlterPartitionReassignmentsResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

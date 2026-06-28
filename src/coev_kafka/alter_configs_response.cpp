@@ -20,7 +20,7 @@ namespace coev::kafka
         return text;
     }
 
-    int AlterConfigsResponse::encode(packet_encoder &pe) const
+    int AlterConfigsResponse::encode(PacketEncoder &pe) const
     {
         pe.putDurationMs(m_throttle_time);
 
@@ -40,7 +40,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int AlterConfigsResponse::decode(packet_decoder &pd, int16_t version)
+    int AlterConfigsResponse::decode(PacketDecoder &pd, int16_t version)
     {
         if (pd.getDurationMs(m_throttle_time) != ErrNoError)
         {
@@ -65,7 +65,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int AlterConfigsResourceResponse::encode(packet_encoder &pe) const
+    int AlterConfigsResourceResponse::encode(PacketEncoder &pe) const
     {
         pe.putInt16(m_code);
         if (pe.putString(m_message) != ErrNoError)
@@ -81,7 +81,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int AlterConfigsResourceResponse::decode(packet_decoder &pd, int16_t version)
+    int AlterConfigsResourceResponse::decode(PacketDecoder &pd, int16_t version)
     {
         int16_t errCode;
         if (pd.getInt16(errCode) != ErrNoError)

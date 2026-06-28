@@ -36,7 +36,7 @@ TEST(AddOffsetsToTxnRequestTest, BasicEncodingDecoding)
     request.m_group_id = "groupid";
 
     // Test encoding
-    packet_encoder encoder(packet_encoder::REAL, 1024);
+    PacketEncoder encoder(PacketEncoder::REAL, 1024);
     int encodeResult = request.encode(encoder);
     ASSERT_EQ(encodeResult, 0) << "Failed to encode request";
 
@@ -51,7 +51,7 @@ TEST(AddOffsetsToTxnRequestTest, BasicEncodingDecoding)
     EXPECT_EQ(actualEncoded, addOffsetsToTxnRequestStr) << "Encoded data mismatch";
 
     // Test decoding
-    packet_decoder decoder(actualEncoded);
+    PacketDecoder decoder(actualEncoded);
 
     AddOffsetsToTxnRequest decoded;
     decoded.set_version(0);
@@ -115,7 +115,7 @@ TEST(AddOffsetsToTxnRequestTest, EncodingDifferentVersions)
     {
         request.set_version(version);
 
-        packet_encoder encoder(packet_encoder::REAL, 1024);
+        PacketEncoder encoder(PacketEncoder::REAL, 1024);
         int encodeResult = request.encode(encoder);
         ASSERT_EQ(encodeResult, 0) << "Failed to encode request with version " << version;
 

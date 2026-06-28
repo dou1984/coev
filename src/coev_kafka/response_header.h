@@ -18,6 +18,6 @@ namespace coev::kafka
     {
         int32_t m_length = 0;
         int32_t m_correlation_id = 0;
-        int decode(packet_decoder &pd, int16_t version);
+        int decode(PacketDecoder &pd, int16_t version);
     };
 }

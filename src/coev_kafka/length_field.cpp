@@ -11,7 +11,7 @@
 
 namespace coev::kafka
 {
-    int LengthField::decode(packet_decoder &pd)
+    int LengthField::decode(PacketDecoder &pd)
     {
         int err = pd.getInt32(m_length);
         if (err != 0)

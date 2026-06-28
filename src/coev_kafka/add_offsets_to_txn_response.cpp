@@ -14,7 +14,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int AddOffsetsToTxnResponse::encode(packet_encoder &pe) const
+    int AddOffsetsToTxnResponse::encode(PacketEncoder &pe) const
     {
 
         pe.putDurationMs(m_throttle_time);
@@ -22,7 +22,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int AddOffsetsToTxnResponse::decode(packet_decoder &pd, int16_t version)
+    int AddOffsetsToTxnResponse::decode(PacketDecoder &pd, int16_t version)
     {
         int err;
         if ((err = pd.getDurationMs(m_throttle_time)) != 0)

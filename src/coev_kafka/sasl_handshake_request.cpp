@@ -15,12 +15,12 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int SaslHandshakeRequest::encode(packet_encoder &pe) const
+    int SaslHandshakeRequest::encode(PacketEncoder &pe) const
     {
         return pe.putString(m_mechanism);
     }
 
-    int SaslHandshakeRequest::decode(packet_decoder &pd, int16_t version)
+    int SaslHandshakeRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
         return pd.getString(m_mechanism);

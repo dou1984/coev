@@ -13,7 +13,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int DescribeClientQuotasRequest::encode(packet_encoder &pe) const
+    int DescribeClientQuotasRequest::encode(PacketEncoder &pe) const
     {
         if (pe.putArrayLength(static_cast<int32_t>(m_components.size())) != ErrNoError)
         {
@@ -32,7 +32,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int DescribeClientQuotasRequest::decode(packet_decoder &pd, int16_t version)
+    int DescribeClientQuotasRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 
@@ -67,7 +67,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int QuotaFilterComponent::encode(packet_encoder &pe) const
+    int QuotaFilterComponent::encode(PacketEncoder &pe) const
     {
         if (pe.putString(m_entity_type) != ErrNoError)
         {
@@ -95,7 +95,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int QuotaFilterComponent::decode(packet_decoder &pd, int16_t /*version*/)
+    int QuotaFilterComponent::decode(PacketDecoder &pd, int16_t /*version*/)
     {
         std::string entityType;
         if (pd.getString(entityType) != ErrNoError)

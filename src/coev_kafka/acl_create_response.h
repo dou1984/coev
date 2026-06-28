@@ -26,8 +26,8 @@ namespace coev::kafka
         std::string m_err_msg;
 
         AclCreationResponse() = default;
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
     };
 
     struct CreateAclsResponse : protocol_body
@@ -37,8 +37,8 @@ namespace coev::kafka
         std::vector<AclCreationResponse> m_acl_creation_responses;
 
         void set_version(int16_t v);
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
         int16_t key() const;
         int16_t version() const;
         int16_t header_version() const;

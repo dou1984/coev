@@ -19,7 +19,7 @@ namespace coev::kafka
 
         RecordHeader() = default;
         RecordHeader(const std::string &k, const std::string &v);
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd);
     };
 }

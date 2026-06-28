@@ -14,7 +14,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int DeleteGroupsRequest::encode(packet_encoder &pe) const
+    int DeleteGroupsRequest::encode(PacketEncoder &pe) const
     {
         if (pe.putStringArray(m_groups) != ErrNoError)
         {
@@ -24,7 +24,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int DeleteGroupsRequest::decode(packet_decoder &pd, int16_t version)
+    int DeleteGroupsRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
         if (pd.getStringArray(m_groups) != ErrNoError)

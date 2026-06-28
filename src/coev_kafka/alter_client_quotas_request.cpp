@@ -16,7 +16,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int AlterClientQuotasRequest::encode(packet_encoder &pe) const
+    int AlterClientQuotasRequest::encode(PacketEncoder &pe) const
     {
         // Entries
         if (pe.putArrayLength(static_cast<int32_t>(m_entries.size())) != ErrNoError)
@@ -37,7 +37,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int AlterClientQuotasRequest::decode(packet_decoder &pd, int16_t version)
+    int AlterClientQuotasRequest::decode(PacketDecoder &pd, int16_t version)
     {
         // Entries
         int32_t entryCount;
@@ -97,7 +97,7 @@ namespace coev::kafka
         return V2_6_0_0;
     }
 
-    int AlterClientQuotasEntry::encode(packet_encoder &pe) const
+    int AlterClientQuotasEntry::encode(PacketEncoder &pe) const
     {
         // Entity
         if (pe.putArrayLength(static_cast<int32_t>(m_entity.size())) != ErrNoError)
@@ -128,7 +128,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int AlterClientQuotasEntry::decode(packet_decoder &pd, int16_t version)
+    int AlterClientQuotasEntry::decode(PacketDecoder &pd, int16_t version)
     {
         // Entity
         int32_t componentCount;
@@ -177,7 +177,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int ClientQuotasOp::encode(packet_encoder &pe) const
+    int ClientQuotasOp::encode(PacketEncoder &pe) const
     {
         // Key
         if (pe.putString(m_key) != ErrNoError)
@@ -194,7 +194,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int ClientQuotasOp::decode(packet_decoder &pd, int16_t version)
+    int ClientQuotasOp::decode(PacketDecoder &pd, int16_t version)
     {
         // Key
         std::string key;

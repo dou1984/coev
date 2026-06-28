@@ -22,7 +22,7 @@ namespace coev::kafka
         return size;
     }
 
-    int VariantLengthField::decode(packet_decoder &pd)
+    int VariantLengthField::decode(PacketDecoder &pd)
     {
         int64_t val;
         int err = pd.getVariant(val);

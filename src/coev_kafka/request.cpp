@@ -19,7 +19,7 @@
 
 namespace coev::kafka
 {
-    int Request::encode(packet_encoder &pe) const
+    int Request::encode(PacketEncoder &pe) const
     {
 
         LengthField length_field;
@@ -64,11 +64,11 @@ namespace coev::kafka
             return pe.pop();
         }
     }
-    int Request::encode(packet_encoder &pe, int16_t version) const
+    int Request::encode(PacketEncoder &pe, int16_t version) const
     {
         return encode(pe);
     }
-    int Request::decode(packet_decoder &pd)
+    int Request::decode(PacketDecoder &pd)
     {
         int16_t key, version;
 

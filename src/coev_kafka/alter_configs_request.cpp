@@ -15,7 +15,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int AlterConfigsRequest::encode(packet_encoder &pe) const
+    int AlterConfigsRequest::encode(PacketEncoder &pe) const
     {
         if (pe.putArrayLength(static_cast<int32_t>(m_resources.size())) != ErrNoError)
         {
@@ -34,7 +34,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int AlterConfigsRequest::decode(packet_decoder &pd, int16_t version)
+    int AlterConfigsRequest::decode(PacketDecoder &pd, int16_t version)
     {
         int32_t resourceCount;
         if (pd.getArrayLength(resourceCount) != ErrNoError)
@@ -61,7 +61,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int AlterConfigsResource::encode(packet_encoder &pe) const
+    int AlterConfigsResource::encode(PacketEncoder &pe) const
     {
         pe.putInt8(static_cast<int8_t>(m_type));
 
@@ -90,7 +90,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int AlterConfigsResource::decode(packet_decoder &pd, int16_t version)
+    int AlterConfigsResource::decode(PacketDecoder &pd, int16_t version)
     {
         int8_t t;
         if (pd.getInt8(t) != ErrNoError)

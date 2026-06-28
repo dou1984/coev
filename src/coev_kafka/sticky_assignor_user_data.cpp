@@ -14,7 +14,7 @@ namespace coev::kafka
 
     const int defaultGeneration = 0;
 
-    int StickyAssignorUserDataV0::encode(packet_encoder &pe)
+    int StickyAssignorUserDataV0::encode(PacketEncoder &pe)
     {
         if (int err = pe.putArrayLength(static_cast<int>(m_topics.size())); err != 0)
         {
@@ -35,7 +35,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int StickyAssignorUserDataV0::decode(packet_decoder &pd)
+    int StickyAssignorUserDataV0::decode(PacketDecoder &pd)
     {
         int topicLen = 0;
         int err = pd.getArrayLength(topicLen);
@@ -78,7 +78,7 @@ namespace coev::kafka
         return defaultGeneration;
     }
 
-    int StickyAssignorUserDataV1::encode(packet_encoder &pe)
+    int StickyAssignorUserDataV1::encode(PacketEncoder &pe)
     {
         if (int err = pe.putArrayLength(static_cast<int>(m_topics.size())); err != 0)
         {
@@ -101,7 +101,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int StickyAssignorUserDataV1::decode(packet_decoder &pd)
+    int StickyAssignorUserDataV1::decode(PacketDecoder &pd)
     {
         int topicLen = 0;
         int err = pd.getArrayLength(topicLen);

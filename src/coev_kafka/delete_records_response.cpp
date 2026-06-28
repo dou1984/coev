@@ -11,14 +11,14 @@
 
 namespace coev::kafka
 {
-    int DeleteRecordsResponsePartition::encode(packet_encoder &pe) const
+    int DeleteRecordsResponsePartition::encode(PacketEncoder &pe) const
     {
         pe.putInt64(m_low_watermark);
         pe.putInt16(static_cast<int16_t>(m_err));
         return ErrNoError;
     }
 
-    int DeleteRecordsResponsePartition::decode(packet_decoder &pd, int16_t /*version*/)
+    int DeleteRecordsResponsePartition::decode(PacketDecoder &pd, int16_t /*version*/)
     {
         if (pd.getInt64(m_low_watermark) != ErrNoError)
         {
@@ -34,7 +34,7 @@ namespace coev::kafka
 
         return ErrNoError;
     }
-    int DeleteRecordsResponseTopic::encode(packet_encoder &pe) const
+    int DeleteRecordsResponseTopic::encode(PacketEncoder &pe) const
     {
         if (pe.putArrayLength(static_cast<int32_t>(m_partitions.size())) != ErrNoError)
         {
@@ -61,7 +61,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int DeleteRecordsResponseTopic::decode(packet_decoder &pd, int16_t version)
+    int DeleteRecordsResponseTopic::decode(PacketDecoder &pd, int16_t version)
     {
         int32_t n;
         if (pd.getArrayLength(n) != ErrNoError)
@@ -102,7 +102,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int DeleteRecordsResponse::encode(packet_encoder &pe) const
+    int DeleteRecordsResponse::encode(PacketEncoder &pe) const
     {
         pe.putDurationMs(m_throttle_time);
 
@@ -134,7 +134,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int DeleteRecordsResponse::decode(packet_decoder &pd, int16_t version)
+    int DeleteRecordsResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

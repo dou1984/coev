@@ -27,8 +27,8 @@ namespace coev::kafka
         std::map<std::string, std::string> m_config_entries;
 
         TopicDetail() = default;
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
     };
 
     struct CreateTopicsRequest : protocol_body
@@ -48,8 +48,8 @@ namespace coev::kafka
 
         void set_version(int16_t v);
 
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
         int16_t key() const;
         int16_t version() const;
         int16_t header_version() const;

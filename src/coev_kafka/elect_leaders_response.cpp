@@ -9,7 +9,7 @@
 #include <memory>
 namespace coev::kafka
 {
-    int PartitionResult::encode(packet_encoder &pe, int16_t /*version*/) const
+    int PartitionResult::encode(PacketEncoder &pe, int16_t /*version*/) const
     {
         pe.putKError(m_code);
         if (pe.putNullableString(m_message) != ErrNoError)
@@ -20,7 +20,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int PartitionResult::decode(packet_decoder &pd, int16_t /*version*/)
+    int PartitionResult::decode(PacketDecoder &pd, int16_t /*version*/)
     {
         if (pd.getKError(m_code) != ErrNoError)
         {
@@ -46,7 +46,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int ElectLeadersResponse::encode(packet_encoder &pe) const
+    int ElectLeadersResponse::encode(PacketEncoder &pe) const
     {
         pe.putDurationMs(m_throttle_time);
 
@@ -89,7 +89,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int ElectLeadersResponse::decode(packet_decoder &pd, int16_t version)
+    int ElectLeadersResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
         if (pd.getDurationMs(m_throttle_time) != ErrNoError)

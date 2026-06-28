@@ -10,7 +10,7 @@
 namespace coev::kafka
 {
 
-    int PartitionReplicaReassignmentsStatus::encode(packet_encoder &pe) const
+    int PartitionReplicaReassignmentsStatus::encode(PacketEncoder &pe) const
     {
         int err = pe.putInt32Array(m_replicas);
         if (err != 0)
@@ -28,7 +28,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int PartitionReplicaReassignmentsStatus::decode(packet_decoder &pd)
+    int PartitionReplicaReassignmentsStatus::decode(PacketDecoder &pd)
     {
         int err = pd.getInt32Array(m_replicas);
         if (err != 0)
@@ -58,7 +58,7 @@ namespace coev::kafka
         block.m_removing_replicas = removingReplicas;
     }
 
-    int ListPartitionReassignmentsResponse::encode(packet_encoder &pe) const
+    int ListPartitionReassignmentsResponse::encode(PacketEncoder &pe) const
     {
         pe.putDurationMs(m_throttle_time);
         pe.putKError(m_err);
@@ -96,7 +96,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int ListPartitionReassignmentsResponse::decode(packet_decoder &pd, int16_t version)
+    int ListPartitionReassignmentsResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

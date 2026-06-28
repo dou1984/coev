@@ -17,7 +17,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int CreateTopicsResponse::encode(packet_encoder &pe) const
+    int CreateTopicsResponse::encode(PacketEncoder &pe) const
     {
         if (m_version >= 2)
         {
@@ -62,7 +62,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int CreateTopicsResponse::decode(packet_decoder &pd, int16_t version)
+    int CreateTopicsResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 
@@ -186,7 +186,7 @@ namespace coev::kafka
         return oss.str();
     }
 
-    int TopicError::encode(packet_encoder &pe, int16_t version) const
+    int TopicError::encode(PacketEncoder &pe, int16_t version) const
     {
         pe.putInt16(m_err);
 
@@ -201,7 +201,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int TopicError::decode(packet_decoder &pd, int16_t version)
+    int TopicError::decode(PacketDecoder &pd, int16_t version)
     {
         int16_t errCode;
         if (pd.getInt16(errCode) != ErrNoError)
@@ -224,7 +224,7 @@ namespace coev::kafka
 
     // === CreatableTopicConfigs ===
 
-    int CreatableTopicConfigs::encode(packet_encoder &pe, int16_t /*version*/) const
+    int CreatableTopicConfigs::encode(PacketEncoder &pe, int16_t /*version*/) const
     {
         if (pe.putNullableString(m_value) != ErrNoError)
         {
@@ -237,7 +237,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int CreatableTopicConfigs::decode(packet_decoder &pd, int16_t /*version*/)
+    int CreatableTopicConfigs::decode(PacketDecoder &pd, int16_t /*version*/)
     {
 
         if (pd.getNullableString(m_value) != ErrNoError)
@@ -268,7 +268,7 @@ namespace coev::kafka
 
     // === CreatableTopicResult ===
 
-    int CreatableTopicResult::encode(packet_encoder &pe, int16_t /*version*/) const
+    int CreatableTopicResult::encode(PacketEncoder &pe, int16_t /*version*/) const
     {
         pe.putInt32(m_num_partitions);
         pe.putInt16(m_replication_factor);
@@ -303,7 +303,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int CreatableTopicResult::decode(packet_decoder &pd, int16_t /*version*/)
+    int CreatableTopicResult::decode(PacketDecoder &pd, int16_t /*version*/)
     {
         if (pd.getInt32(m_num_partitions) != ErrNoError)
         {
@@ -339,7 +339,7 @@ namespace coev::kafka
         bool hasTag0 = false;
 
         std::unordered_map<uint64_t, taggedFieldDecoderFunc> handler;
-        handler[0] = [&](packet_decoder &inner) -> int
+        handler[0] = [&](PacketDecoder &inner) -> int
         {
             int16_t err;
             if (inner.getInt16(err) != ErrNoError)

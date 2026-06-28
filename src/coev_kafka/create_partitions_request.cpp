@@ -15,7 +15,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int CreatePartitionsRequest::encode(packet_encoder &pe) const
+    int CreatePartitionsRequest::encode(PacketEncoder &pe) const
     {
         if (pe.putArrayLength(static_cast<int32_t>(m_topic_partitions.size())) != ErrNoError)
         {
@@ -40,7 +40,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int CreatePartitionsRequest::decode(packet_decoder &pd, int16_t version)
+    int CreatePartitionsRequest::decode(PacketDecoder &pd, int16_t version)
     {
         int32_t n;
         if (pd.getArrayLength(n) != ErrNoError)

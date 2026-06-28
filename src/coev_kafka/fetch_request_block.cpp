@@ -12,7 +12,7 @@ namespace coev::kafka
     FetchRequestBlock::FetchRequestBlock()
         : m_version(0), m_current_leader_epoch(0), m_fetch_offset(0), m_log_start_offset(0), m_max_bytes(0) {}
 
-    int FetchRequestBlock::encode(packet_encoder &pe, int16_t version) const
+    int FetchRequestBlock::encode(PacketEncoder &pe, int16_t version) const
     {
         if (version >= 9)
         {
@@ -27,7 +27,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int FetchRequestBlock::decode(packet_decoder &pd, int16_t version)
+    int FetchRequestBlock::decode(PacketDecoder &pd, int16_t version)
     {
         int err = 0;
         if (version >= 9)

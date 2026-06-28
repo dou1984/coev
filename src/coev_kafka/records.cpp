@@ -37,7 +37,7 @@ namespace coev::kafka
         other.m_records_type = UnknownRecords;
     }
 
-    int Records::encode(packet_encoder &pe) const
+    int Records::encode(PacketEncoder &pe) const
     {
         if (m_records_type == LegacyRecords && m_message_set)
         {
@@ -50,7 +50,7 @@ namespace coev::kafka
         return -1;
     }
 
-    int Records::set_type_from_magic(packet_decoder &pd)
+    int Records::set_type_from_magic(PacketDecoder &pd)
     {
         int8_t magic;
         int err = magic_value(pd, magic);
@@ -67,7 +67,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int Records::decode(packet_decoder &pd)
+    int Records::decode(PacketDecoder &pd)
     {
         if (m_records_type == UnknownRecords)
         {
@@ -185,8 +185,8 @@ namespace coev::kafka
         }
 
         const auto &record = m_record_batch->m_records[0];
-        packet_decoder key(record.m_key);
-        packet_decoder value(record.m_value);
+        PacketDecoder key(record.m_key);
+        PacketDecoder value(record.m_value);
 
         int err = out.decode(key, value);
         if (err != 0)

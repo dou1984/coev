@@ -24,8 +24,8 @@ namespace coev::kafka
         std::vector<QuotaEntityComponent> m_entity;
         std::vector<ClientQuotasOp> m_ops;
 
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
     };
 
     struct ClientQuotasOp : IEncoder, VDecoder
@@ -34,8 +34,8 @@ namespace coev::kafka
         double m_value;
         bool m_remove = false;
 
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
     };
 
     struct AlterClientQuotasRequest : protocol_body
@@ -49,8 +49,8 @@ namespace coev::kafka
         bool m_validate_only = false;
 
         void set_version(int16_t v);
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
 
         int16_t key() const;
         int16_t version() const;

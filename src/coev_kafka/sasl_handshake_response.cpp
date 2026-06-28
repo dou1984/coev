@@ -15,13 +15,13 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int SaslHandshakeResponse::encode(packet_encoder &pe) const
+    int SaslHandshakeResponse::encode(PacketEncoder &pe) const
     {
         pe.putKError(m_err);
         return pe.putStringArray(m_enabled_mechanisms);
     }
 
-    int SaslHandshakeResponse::decode(packet_decoder &pd, int16_t version)
+    int SaslHandshakeResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

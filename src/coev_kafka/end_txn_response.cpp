@@ -14,14 +14,14 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int EndTxnResponse::encode(packet_encoder &pe) const
+    int EndTxnResponse::encode(PacketEncoder &pe) const
     {
         pe.putDurationMs(m_throttle_time);
         pe.putKError(m_err);
         return 0;
     }
 
-    int EndTxnResponse::decode(packet_decoder &pd, int16_t)
+    int EndTxnResponse::decode(PacketDecoder &pd, int16_t)
     {
         if (pd.getDurationMs(m_throttle_time) != ErrNoError)
         {

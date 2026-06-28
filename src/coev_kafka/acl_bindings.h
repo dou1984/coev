@@ -23,8 +23,8 @@ namespace coev::kafka
         std::string m_resource_name;
         mutable AclResourcePatternType m_resource_pattern_type = AclResourcePatternTypeLiteral;
 
-        int encode(packet_encoder &pe, int16_t version) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe, int16_t version) const;
+        int decode(PacketDecoder &pd, int16_t version);
     };
 
     struct Acl : VDecoder, IEncoder
@@ -34,8 +34,8 @@ namespace coev::kafka
         AclOperation m_operation = AclOperationUnknown;
         AclPermissionType m_permission_type = AclPermissionTypeUnknown;
 
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
     };
 
     struct ResourceAcls : VDecoder, VEncoder
@@ -43,8 +43,8 @@ namespace coev::kafka
         Resource m_resource;
         std::vector<Acl> m_acls;
 
-        int encode(packet_encoder &pe, int16_t version) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe, int16_t version) const;
+        int decode(PacketDecoder &pd, int16_t version);
     };
 
 } // namespace coev::kafka

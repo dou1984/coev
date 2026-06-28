@@ -63,7 +63,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int OffsetFetchRequest::encode(packet_encoder &pe) const
+    int OffsetFetchRequest::encode(PacketEncoder &pe) const
     {
         if (m_version < 0 || m_version > 7)
         {
@@ -109,7 +109,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int OffsetFetchRequest::decode(packet_decoder &pd, int16_t version)
+    int OffsetFetchRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
         int err = pd.getString(m_consumer_group);

@@ -15,7 +15,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int CreateAclsRequest::encode(packet_encoder &pe) const
+    int CreateAclsRequest::encode(PacketEncoder &pe) const
     {
         if (pe.putArrayLength(static_cast<int32_t>(m_acl_creations.size())) != 0)
         {
@@ -33,7 +33,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int CreateAclsRequest::decode(packet_decoder &pd, int16_t version)
+    int CreateAclsRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
         int32_t n;
@@ -85,7 +85,7 @@ namespace coev::kafka
         }
     }
 
-    int AclCreation::encode(packet_encoder &pe, int16_t version) const
+    int AclCreation::encode(PacketEncoder &pe, int16_t version) const
     {
         if (m_resource.encode(pe, version) != 0)
         {
@@ -98,7 +98,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int AclCreation::decode(packet_decoder &pd, int16_t version)
+    int AclCreation::decode(PacketDecoder &pd, int16_t version)
     {
         if (m_resource.decode(pd, version) != 0)
         {

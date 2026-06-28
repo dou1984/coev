@@ -14,7 +14,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int ElectLeadersRequest::encode(packet_encoder &pe) const
+    int ElectLeadersRequest::encode(PacketEncoder &pe) const
     {
         if (m_version > 0)
         {
@@ -44,7 +44,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int ElectLeadersRequest::decode(packet_decoder &pd, int16_t version)
+    int ElectLeadersRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

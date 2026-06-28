@@ -14,7 +14,7 @@
 
 namespace coev::kafka
 {
-    int packet_decoder::getInt8(int8_t &result)
+    int PacketDecoder::getInt8(int8_t &result)
     {
         if (remaining() < 1)
         {
@@ -27,7 +27,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::getInt16(int16_t &result)
+    int PacketDecoder::getInt16(int16_t &result)
     {
         if (remaining() < 2)
         {
@@ -40,7 +40,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::getInt32(int32_t &result)
+    int PacketDecoder::getInt32(int32_t &result)
     {
         if (remaining() < 4)
         {
@@ -57,7 +57,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::getInt64(int64_t &result)
+    int PacketDecoder::getInt64(int64_t &result)
     {
         if (remaining() < 8)
         {
@@ -83,7 +83,7 @@ namespace coev::kafka
         return static_cast<int64_t>((x >> 1) ^ -(x & 1));
     }
 
-    int packet_decoder::getVariant(int64_t &result)
+    int PacketDecoder::getVariant(int64_t &result)
     {
         uint64_t ux = 0;
         int shift = 0;
@@ -116,7 +116,7 @@ namespace coev::kafka
         return ErrVariantOverflow;
     }
 
-    int packet_decoder::getUVariant(uint64_t &result)
+    int PacketDecoder::getUVariant(uint64_t &result)
     {
         result = 0;
         int shift = 0;
@@ -148,7 +148,7 @@ namespace coev::kafka
         return ErrUVariantOverflow;
     }
 
-    int packet_decoder::getFloat64(double &result)
+    int PacketDecoder::getFloat64(double &result)
     {
         if (remaining() < 8)
         {
@@ -169,7 +169,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::getArrayLength(int32_t &result)
+    int PacketDecoder::getArrayLength(int32_t &result)
     {
         if (__is_fixed())
         {
@@ -210,7 +210,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::getBool(bool &result)
+    int PacketDecoder::getBool(bool &result)
     {
         int8_t b;
         int err = getInt8(b);
@@ -228,7 +228,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::getKError(KError &result)
+    int PacketDecoder::getKError(KError &result)
     {
         int16_t out;
         auto err = getInt16(out);
@@ -236,7 +236,7 @@ namespace coev::kafka
         return err;
     }
 
-    int packet_decoder::getDurationMs(std::chrono::milliseconds &out)
+    int PacketDecoder::getDurationMs(std::chrono::milliseconds &out)
     {
         int32_t t;
         int err = getInt32(t);
@@ -249,7 +249,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::getTaggedFieldArray(const taggedFieldDecoders &decoders)
+    int PacketDecoder::getTaggedFieldArray(const taggedFieldDecoders &decoders)
     {
         if (__is_fixed())
         {
@@ -308,7 +308,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::getEmptyTaggedFieldArray(int32_t &result)
+    int PacketDecoder::getEmptyTaggedFieldArray(int32_t &result)
     {
         if (__is_fixed())
         {
@@ -354,7 +354,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::getBytes(std::string_view &result)
+    int PacketDecoder::getBytes(std::string_view &result)
     {
         if (__is_fixed())
         {
@@ -385,7 +385,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::getBytes(std::string &result)
+    int PacketDecoder::getBytes(std::string &result)
     {
         std::string_view view;
         int err = getBytes(view);
@@ -397,7 +397,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::getVariantBytes(std::string_view &result)
+    int PacketDecoder::getVariantBytes(std::string_view &result)
     {
         int64_t tmp;
         int err = getVariant(tmp);
@@ -413,7 +413,7 @@ namespace coev::kafka
         return getRawBytes(static_cast<int>(tmp), result);
     }
 
-    int packet_decoder::getVariantBytes(std::string &result)
+    int PacketDecoder::getVariantBytes(std::string &result)
     {
         int64_t tmp;
         int err = getVariant(tmp);
@@ -436,7 +436,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::getStringLength(int &result)
+    int PacketDecoder::getStringLength(int &result)
     {
         if (__is_fixed())
         {
@@ -497,7 +497,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::getString(std::string_view &result)
+    int PacketDecoder::getString(std::string_view &result)
     {
         if (__is_fixed())
         {
@@ -528,7 +528,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::getString(std::string &result)
+    int PacketDecoder::getString(std::string &result)
     {
         std::string_view view;
         int err = getString(view);
@@ -540,7 +540,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::getNullableString(std::string_view &result)
+    int PacketDecoder::getNullableString(std::string_view &result)
     {
         if (__is_fixed())
         {
@@ -571,7 +571,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::getNullableString(std::string &result)
+    int PacketDecoder::getNullableString(std::string &result)
     {
         std::string_view view;
         int err = getNullableString(view);
@@ -583,7 +583,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::getInt32Array(std::vector<int32_t> &result)
+    int PacketDecoder::getInt32Array(std::vector<int32_t> &result)
     {
         if (__is_fixed())
         {
@@ -636,7 +636,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::getInt64Array(std::vector<int64_t> &result)
+    int PacketDecoder::getInt64Array(std::vector<int64_t> &result)
     {
         int32_t n;
         int err = getArrayLength(n);
@@ -671,7 +671,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::getStringArray(std::vector<std::string> &result)
+    int PacketDecoder::getStringArray(std::vector<std::string> &result)
     {
         if (__is_fixed())
         {
@@ -728,12 +728,12 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::remaining()
+    int PacketDecoder::remaining()
     {
         return static_cast<int>(m_raw.size()) - m_offset;
     }
 
-    int packet_decoder::getSubset(int length, std::string_view &result)
+    int PacketDecoder::getSubset(int length, std::string_view &result)
     {
         int err = getRawBytes(length, result);
         if (err != 0)
@@ -743,7 +743,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::getRawBytes(int length, std::string_view &result)
+    int PacketDecoder::getRawBytes(int length, std::string_view &result)
     {
         if (length < 0)
         {
@@ -759,7 +759,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::peek(int offset, int length, std::string_view &result)
+    int PacketDecoder::peek(int offset, int length, std::string_view &result)
     {
         if (remaining() < offset + length)
         {
@@ -771,7 +771,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::peekInt8(int offset, int8_t &result)
+    int PacketDecoder::peekInt8(int offset, int8_t &result)
     {
         const int byte_len = 1;
         if (m_offset + offset >= m_raw.size())
@@ -783,7 +783,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::push(push_decoder &_in)
+    int PacketDecoder::push(push_decoder &_in)
     {
         auto in = &_in;
         in->save_offset(m_offset);
@@ -811,18 +811,18 @@ namespace coev::kafka
         return 0;
     }
 
-    int packet_decoder::pop()
+    int PacketDecoder::pop()
     {
         auto in = m_stack.back();
         m_stack.pop_back();
         return in->check(m_offset, m_raw);
     }
-    packet_decoder::packet_decoder(const std::string &buf)
+    PacketDecoder::PacketDecoder(const std::string &buf)
     {
         m_raw = buf;
     }
 
-    packet_decoder::packet_decoder(std::string_view buf)
+    PacketDecoder::PacketDecoder(std::string_view buf)
     {
         m_raw = buf;
     }

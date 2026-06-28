@@ -28,8 +28,8 @@ namespace coev::kafka
             return true;
         }
 
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd);
 
         bool operator==(const Uuid &other) const { return data == other.data; }
         bool operator!=(const Uuid &other) const { return data != other.data; }

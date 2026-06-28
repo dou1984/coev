@@ -14,7 +14,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int DescribeUserScramCredentialsResponse::encode(packet_encoder &pe) const
+    int DescribeUserScramCredentialsResponse::encode(PacketEncoder &pe) const
     {
         pe.putDurationMs(m_throttle_time);
         pe.putKError(m_code);
@@ -59,7 +59,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int DescribeUserScramCredentialsResponse::decode(packet_decoder &pd, int16_t version)
+    int DescribeUserScramCredentialsResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

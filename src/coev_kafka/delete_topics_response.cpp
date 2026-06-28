@@ -15,7 +15,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int DeleteTopicsResponse::encode(packet_encoder &pe) const
+    int DeleteTopicsResponse::encode(PacketEncoder &pe) const
     {
         if (m_version >= 1)
         {
@@ -40,7 +40,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int DeleteTopicsResponse::decode(packet_decoder &pd, int16_t version)
+    int DeleteTopicsResponse::decode(PacketDecoder &pd, int16_t version)
     {
         if (version >= 1)
         {

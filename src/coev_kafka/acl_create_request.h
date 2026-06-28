@@ -28,8 +28,8 @@ namespace coev::kafka
         AclCreation(Resource _resource, Acl _acl) : m_resource(_resource), m_acl(_acl)
         {
         }
-        int encode(packet_encoder &pe, int16_t version) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe, int16_t version) const;
+        int decode(PacketDecoder &pd, int16_t version);
     };
 
     struct CreateAclsRequest : protocol_body
@@ -43,8 +43,8 @@ namespace coev::kafka
         }
 
         void set_version(int16_t v);
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
         int16_t key() const;
         int16_t version() const;
         int16_t header_version() const;

@@ -32,8 +32,8 @@ namespace coev::kafka
 
         OffsetResponseBlock();
 
-        int decode(packet_decoder &pd, int16_t version);
-        int encode(packet_encoder &pe, int16_t version) const;
+        int decode(PacketDecoder &pd, int16_t version);
+        int encode(PacketEncoder &pe, int16_t version) const;
     };
 
     struct OffsetResponse : protocol_body
@@ -44,10 +44,10 @@ namespace coev::kafka
         std::unordered_map<std::string, std::unordered_map<int32_t, OffsetResponseBlock>> m_blocks;
 
         void set_version(int16_t v);
-        int decode(packet_decoder &pd, int16_t version);
+        int decode(PacketDecoder &pd, int16_t version);
         OffsetResponseBlock &get_block(const std::string &topic, int32_t partition);
         bool has_block(const std::string &topic, int32_t partition);
-        int encode(packet_encoder &pe) const;
+        int encode(PacketEncoder &pe) const;
         int16_t key() const;
         int16_t version() const;
         int16_t header_version() const;

@@ -17,7 +17,7 @@ namespace coev::kafka
     {
         return m_topic == other.m_topic && m_partition == other.m_partition;
     }
-    int TopicPartition::encode(packet_encoder &pe)
+    int TopicPartition::encode(PacketEncoder &pe)
     {
         pe.putInt32(m_count);
 
@@ -43,7 +43,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int TopicPartition::decode(packet_decoder &pd, int16_t version)
+    int TopicPartition::decode(PacketDecoder &pd, int16_t version)
     {
         if (pd.getInt32(m_count) != ErrNoError)
         {

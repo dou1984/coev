@@ -16,7 +16,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int CreatePartitionsResponse::encode(packet_encoder &pe) const
+    int CreatePartitionsResponse::encode(PacketEncoder &pe) const
     {
         pe.putDurationMs(m_throttle_time);
 
@@ -40,7 +40,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int CreatePartitionsResponse::decode(packet_decoder &pd, int16_t version)
+    int CreatePartitionsResponse::decode(PacketDecoder &pd, int16_t version)
     {
         if (pd.getDurationMs(m_throttle_time) != ErrNoError)
         {
@@ -118,7 +118,7 @@ namespace coev::kafka
         return text;
     }
 
-    int TopicPartitionError::encode(packet_encoder &pe) const
+    int TopicPartitionError::encode(PacketEncoder &pe) const
     {
         pe.putKError(m_err);
         if (pe.putNullableString(m_err_msg) != ErrNoError)
@@ -128,7 +128,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int TopicPartitionError::decode(packet_decoder &pd, int16_t version)
+    int TopicPartitionError::decode(PacketDecoder &pd, int16_t version)
     {
         if (pd.getKError(m_err) != ErrNoError)
         {

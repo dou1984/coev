@@ -15,7 +15,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int CreateTopicsRequest::encode(packet_encoder &pe) const
+    int CreateTopicsRequest::encode(PacketEncoder &pe) const
     {
         if (pe.putArrayLength(static_cast<int32_t>(m_topic_details.size())) != ErrNoError)
         {
@@ -45,7 +45,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int CreateTopicsRequest::decode(packet_decoder &pd, int16_t version)
+    int CreateTopicsRequest::decode(PacketDecoder &pd, int16_t version)
     {
         int32_t n;
         if (pd.getArrayLength(n) != ErrNoError)
@@ -136,7 +136,7 @@ namespace coev::kafka
         }
     }
 
-    int TopicDetail::encode(packet_encoder &pe) const
+    int TopicDetail::encode(PacketEncoder &pe) const
     {
         pe.putInt32(m_num_partitions);
         pe.putInt16(m_replication_factor);
@@ -176,7 +176,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int TopicDetail::decode(packet_decoder &pd, int16_t version)
+    int TopicDetail::decode(PacketDecoder &pd, int16_t version)
     {
         if (pd.getInt32(m_num_partitions) != ErrNoError)
         {

@@ -175,7 +175,7 @@ const unsigned char aclDeleteRequestv1[] = {
 TEST(DeleteAclsRequestTest, DecodeRequestNulls)
 {
     std::string rawData(reinterpret_cast<const char *>(aclDeleteRequestNulls), sizeof(aclDeleteRequestNulls));
-    packet_decoder decoder(rawData);
+    PacketDecoder decoder(rawData);
 
     DeleteAclsRequest request;
     int result = request.decode(decoder, 0);
@@ -194,7 +194,7 @@ TEST(DeleteAclsRequestTest, DecodeRequestNulls)
 TEST(DeleteAclsRequestTest, DecodeRequest)
 {
     std::string rawData(reinterpret_cast<const char *>(aclDeleteRequest), sizeof(aclDeleteRequest));
-    packet_decoder decoder(rawData);
+    PacketDecoder decoder(rawData);
 
     DeleteAclsRequest request;
     int result = request.decode(decoder, 0);
@@ -213,7 +213,7 @@ TEST(DeleteAclsRequestTest, DecodeRequest)
 TEST(DeleteAclsRequestTest, DecodeRequestArray)
 {
     std::string rawData(reinterpret_cast<const char *>(aclDeleteRequestArray), sizeof(aclDeleteRequestArray));
-    packet_decoder decoder(rawData);
+    PacketDecoder decoder(rawData);
 
     DeleteAclsRequest request;
     int result = request.decode(decoder, 0);
@@ -242,7 +242,7 @@ TEST(DeleteAclsRequestTest, DecodeRequestArray)
 TEST(DeleteAclsRequestTest, DecodeRequestNullsv1)
 {
     std::string rawData(reinterpret_cast<const char *>(aclDeleteRequestNullsv1), sizeof(aclDeleteRequestNullsv1));
-    packet_decoder decoder(rawData);
+    PacketDecoder decoder(rawData);
 
     DeleteAclsRequest request;
     int result = request.decode(decoder, 1);
@@ -262,7 +262,7 @@ TEST(DeleteAclsRequestTest, DecodeRequestNullsv1)
 TEST(DeleteAclsRequestTest, DecodeRequestv1)
 {
     std::string rawData(reinterpret_cast<const char *>(aclDeleteRequestv1), sizeof(aclDeleteRequestv1));
-    packet_decoder decoder(rawData);
+    PacketDecoder decoder(rawData);
 
     DeleteAclsRequest request;
     int result = request.decode(decoder, 1);
@@ -290,7 +290,7 @@ TEST(DeleteAclsRequestTest, EncodeRequestNulls)
     filter.m_permission_type = AclPermissionTypeAllow;
     request.m_filters.push_back(filter);
 
-    packet_encoder encoder(packet_encoder::REAL, 1024);
+    PacketEncoder encoder(PacketEncoder::REAL, 1024);
     int result = request.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode delete acls request with nulls";
 
@@ -313,7 +313,7 @@ TEST(DeleteAclsRequestTest, EncodeRequest)
     filter.m_permission_type = AclPermissionTypeAllow;
     request.m_filters.push_back(filter);
 
-    packet_encoder encoder(packet_encoder::REAL, 1024);
+    PacketEncoder encoder(PacketEncoder::REAL, 1024);
     int result = request.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode delete acls request";
 
@@ -345,7 +345,7 @@ TEST(DeleteAclsRequestTest, EncodeRequestArray)
     filter2.m_permission_type = AclPermissionTypeDeny;
     request.m_filters.push_back(filter2);
 
-    packet_encoder encoder(packet_encoder::REAL, 1024);
+    PacketEncoder encoder(PacketEncoder::REAL, 1024);
     int result = request.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode delete acls request array";
 
@@ -366,7 +366,7 @@ TEST(DeleteAclsRequestTest, EncodeRequestNullsv1)
     filter.m_permission_type = AclPermissionTypeAllow;
     request.m_filters.push_back(filter);
 
-    packet_encoder encoder(packet_encoder::REAL, 1024);
+    PacketEncoder encoder(PacketEncoder::REAL, 1024);
     int result = request.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode delete acls request nulls (version 1)";
 
@@ -390,7 +390,7 @@ TEST(DeleteAclsRequestTest, EncodeRequestv1)
     filter.m_permission_type = AclPermissionTypeAllow;
     request.m_filters.push_back(filter);
 
-    packet_encoder encoder(packet_encoder::REAL, 1024);
+    PacketEncoder encoder(PacketEncoder::REAL, 1024);
     int result = request.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode delete acls request (version 1)";
 
@@ -456,13 +456,13 @@ TEST(DeleteAclsRequestTest, RoundTripEncodingDecoding)
         originalRequest.m_filters.push_back(filter2);
 
         // Encode the request
-        packet_encoder encoder(packet_encoder::REAL, 1024);
+        PacketEncoder encoder(PacketEncoder::REAL, 1024);
         int result = originalRequest.encode(encoder);
         ASSERT_EQ(result, 0) << "Failed to encode request for round-trip test, version: " << version;
 
         // Decode the encoded request
         std::string encodedData = encoder.m_raw.substr(0, encoder.m_offset);
-        packet_decoder decoder(encodedData);
+        PacketDecoder decoder(encodedData);
 
         DeleteAclsRequest decodedRequest;
         result = decodedRequest.decode(decoder, version);

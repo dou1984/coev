@@ -25,8 +25,8 @@ namespace coev::kafka
         int16_t m_min_version = 0;
         int16_t m_max_version = 0;
 
-        int encode(packet_encoder &pe, int16_t version) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe, int16_t version) const;
+        int decode(PacketDecoder &pd, int16_t version);
     };
 
     struct ApiVersionsResponse : protocol_body
@@ -42,8 +42,8 @@ namespace coev::kafka
 
         void set_version(int16_t v);
 
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
 
         int16_t key() const;
         int16_t version() const;
@@ -54,7 +54,7 @@ namespace coev::kafka
         KafkaVersion required_version() const;
         std::chrono::milliseconds throttle_time() const;
 
-        static packet_decoder &downgrade_flexible_decoder(packet_decoder &pd);
+        static PacketDecoder &downgrade_flexible_decoder(PacketDecoder &pd);
     };
 
 } // namespace coev::kafka

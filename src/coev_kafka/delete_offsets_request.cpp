@@ -13,7 +13,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int DeleteOffsetsRequest::encode(packet_encoder &pe) const
+    int DeleteOffsetsRequest::encode(PacketEncoder &pe) const
     {
         if (pe.putString(m_group) != ErrNoError)
         {
@@ -46,7 +46,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int DeleteOffsetsRequest::decode(packet_decoder &pd, int16_t version)
+    int DeleteOffsetsRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

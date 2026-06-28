@@ -39,8 +39,8 @@ namespace coev::kafka
         PartitionMetadata(int16_t v) : m_version(v)
         {
         }
-        int decode(packet_decoder &pd, int16_t version);
-        int encode(packet_encoder &pe, int16_t version) const;
+        int decode(PacketDecoder &pd, int16_t version);
+        int encode(PacketEncoder &pe, int16_t version) const;
     };
 
     struct TopicMetadata : VDecoder, VEncoder
@@ -55,8 +55,8 @@ namespace coev::kafka
 
         TopicMetadata() : m_err(ErrNoError) {}
         TopicMetadata(const std::string &name, KError err) : m_err(err), m_name(name) {}
-        int decode(packet_decoder &pd, int16_t version);
-        int encode(packet_encoder &pe, int16_t version) const;
+        int decode(PacketDecoder &pd, int16_t version);
+        int encode(PacketEncoder &pe, int16_t version) const;
     };
 
     struct MetadataResponse : protocol_body
@@ -70,8 +70,8 @@ namespace coev::kafka
         int32_t m_cluster_authorized_operations;
 
         void set_version(int16_t v);
-        int decode(packet_decoder &pd, int16_t version);
-        int encode(packet_encoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
         int16_t key() const;
         int16_t version() const;
         int16_t header_version() const;

@@ -30,8 +30,8 @@ namespace coev::kafka
 
         int GetMemberAssignment(std::shared_ptr<ConsumerGroupMemberAssignment> &);
 
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
 
         void set_version(int16_t v);
         int16_t key() const;

@@ -53,11 +53,11 @@ namespace coev::kafka
         {
             return m_records.emplace_back(std::forward<Args>(args)...);
         }
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd);
 
         int16_t compute_attributes() const;
-        void encode_records(packet_encoder &pe);
+        void encode_records(PacketEncoder &pe);
     };
 
 }

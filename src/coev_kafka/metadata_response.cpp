@@ -11,7 +11,7 @@
 namespace coev::kafka
 {
 
-    int PartitionMetadata::decode(packet_decoder &pd, int16_t version)
+    int PartitionMetadata::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
         if (int err = pd.getKError(m_err); err != 0)
@@ -60,7 +60,7 @@ namespace coev::kafka
         return err;
     }
 
-    int PartitionMetadata::encode(packet_encoder &pe, int16_t version) const
+    int PartitionMetadata::encode(PacketEncoder &pe, int16_t version) const
     {
         m_version = version;
         pe.putKError(m_err);
@@ -96,7 +96,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int TopicMetadata::decode(packet_decoder &pd, int16_t version)
+    int TopicMetadata::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
         if (int err = pd.getKError(m_err); err != 0)
@@ -157,7 +157,7 @@ namespace coev::kafka
         return err;
     }
 
-    int TopicMetadata::encode(packet_encoder &pe, int16_t version) const
+    int TopicMetadata::encode(PacketEncoder &pe, int16_t version) const
     {
         m_version = version;
         pe.putKError(m_err);
@@ -207,7 +207,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int MetadataResponse::decode(packet_decoder &pd, int16_t version)
+    int MetadataResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 
@@ -280,7 +280,7 @@ namespace coev::kafka
         return err;
     }
 
-    int MetadataResponse::encode(packet_encoder &pe) const
+    int MetadataResponse::encode(PacketEncoder &pe) const
     {
         if (m_version >= 3)
         {

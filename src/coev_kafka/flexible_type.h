@@ -4,7 +4,7 @@
 
 namespace coev::kafka
 {
-    struct flexible_type
+    struct FlexibleType
     {
         uint16_t m_flexible = 0;
         bool __is_fixed();

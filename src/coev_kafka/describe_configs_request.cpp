@@ -14,7 +14,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int DescribeConfigsRequest::encode(packet_encoder &pe) const
+    int DescribeConfigsRequest::encode(PacketEncoder &pe) const
     {
         if (pe.putArrayLength(static_cast<int32_t>(m_resources.size())) != ErrNoError)
         {
@@ -49,7 +49,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int DescribeConfigsRequest::decode(packet_decoder &pd, int16_t version)
+    int DescribeConfigsRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

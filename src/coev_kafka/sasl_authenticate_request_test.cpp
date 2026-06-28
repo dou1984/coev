@@ -43,7 +43,7 @@ TEST(SaslAuthenticateRequestTest, EncodeWithAuthBytes)
     SaslAuthenticateRequest request(0);
     request.m_sasl_auth_bytes = "test-auth-bytes";
 
-    packet_encoder encoder(packet_encoder::REAL, 1024);
+    PacketEncoder encoder(PacketEncoder::REAL, 1024);
     EXPECT_EQ(request.encode(encoder), 0);
 }
 
@@ -52,6 +52,6 @@ TEST(SaslAuthenticateRequestTest, EncodeWithVersion1)
     SaslAuthenticateRequest request(1);
     request.m_sasl_auth_bytes = "test-auth-bytes";
 
-    packet_encoder encoder(packet_encoder::REAL, 1024);
+    PacketEncoder encoder(PacketEncoder::REAL, 1024);
     EXPECT_EQ(request.encode(encoder), 0);
 }

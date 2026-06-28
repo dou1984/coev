@@ -18,7 +18,7 @@ namespace coev::kafka
     {
     }
 
-    int Timestamp::encode(packet_encoder &pe) const
+    int Timestamp::encode(PacketEncoder &pe) const
     {
         int64_t timestamp = -1;
 
@@ -37,7 +37,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int Timestamp::decode(packet_decoder &pd)
+    int Timestamp::decode(PacketDecoder &pd)
     {
         int64_t millis;
         auto err = pd.getInt64(millis);

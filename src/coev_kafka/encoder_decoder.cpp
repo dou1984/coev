@@ -18,7 +18,7 @@ namespace coev::kafka
     inline constexpr int magic_offset = 16;
     int encode(const IEncoder &e, std::string &out)
     {
-        packet_encoder enc(packet_encoder::PREP);
+        PacketEncoder enc(PacketEncoder::PREP);
         if (prepare_flexible_encoder(enc, e) != ErrNoError)
         {
             LOG_ERR("encode PREP failed");
@@ -30,7 +30,7 @@ namespace coev::kafka
             return ErrEncodeError;
         }
 
-        packet_encoder real_enc(packet_encoder::REAL);
+        PacketEncoder real_enc(PacketEncoder::REAL);
         real_enc.m_raw.resize(enc.m_length);
         if (prepare_flexible_encoder(real_enc, e) != ErrNoError)
         {
@@ -54,7 +54,7 @@ namespace coev::kafka
             return ErrNoError;
         }
 
-        packet_decoder helper(buf);
+        PacketDecoder helper(buf);
         if (in.decode(helper) != ErrNoError)
         {
             return ErrDecodeError;
@@ -75,7 +75,7 @@ namespace coev::kafka
             return ErrNoError;
         }
 
-        packet_decoder helper(buf);
+        PacketDecoder helper(buf);
 
         auto err = prepare_flexible_decoder(helper, in, version);
         if (err != ErrNoError)
@@ -94,7 +94,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int prepare_flexible_decoder(packet_decoder &pd, VDecoder &req, int16_t version)
+    int prepare_flexible_decoder(PacketDecoder &pd, VDecoder &req, int16_t version)
     {
         auto body = dynamic_cast<protocol_body *>(&req);
         if (body != nullptr && body->is_flexible_version(version))
@@ -107,7 +107,7 @@ namespace coev::kafka
         return req.decode(pd, version);
     }
 
-    int prepare_flexible_encoder(packet_encoder &pe, const IEncoder &req)
+    int prepare_flexible_encoder(PacketEncoder &pe, const IEncoder &req)
     {
         auto body = dynamic_cast<const protocol_body *>(&req);
         if (body != nullptr && body->is_flexible())
@@ -118,7 +118,7 @@ namespace coev::kafka
         }
         return req.encode(pe);
     }
-    int magic_value(packet_decoder &pd, int8_t &magic)
+    int magic_value(PacketDecoder &pd, int8_t &magic)
     {
         return pd.peekInt8(magic_offset, magic);
     }

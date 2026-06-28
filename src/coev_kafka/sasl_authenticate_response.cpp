@@ -16,7 +16,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int SaslAuthenticateResponse::encode(packet_encoder &pe) const
+    int SaslAuthenticateResponse::encode(PacketEncoder &pe) const
     {
         pe.putKError(m_err);
 
@@ -36,7 +36,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int SaslAuthenticateResponse::decode(packet_decoder &pd, int16_t version)
+    int SaslAuthenticateResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

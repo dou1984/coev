@@ -45,8 +45,8 @@ namespace coev::kafka
         Message() = default;
 
         Message(const std::string &key, const std::string &value, bool logAppendTime, Timestamp msgTimestamp, int8_t version);
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd);
         int decode_set();
         void clear();
     };

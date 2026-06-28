@@ -40,7 +40,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int InitProducerIDRequest::encode(packet_encoder &pe) const
+    int InitProducerIDRequest::encode(PacketEncoder &pe) const
     {
 
         int err = pe.putNullableString(m_transactional_id);
@@ -59,7 +59,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int InitProducerIDRequest::decode(packet_decoder &pd, int16_t version)
+    int InitProducerIDRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

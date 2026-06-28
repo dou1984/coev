@@ -23,7 +23,7 @@ namespace coev::kafka
             : m_version(v), m_coordinator_epoch(c), m_type(t)
         {
         }
-        int decode(packet_decoder &key, packet_decoder &value);
-        int encode(packet_encoder &key, packet_encoder &value);
+        int decode(PacketDecoder &key, PacketDecoder &value);
+        int encode(PacketEncoder &key, PacketEncoder &value);
     };
 }

@@ -28,12 +28,12 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int SaslAuthenticateRequest::encode(packet_encoder &pe) const
+    int SaslAuthenticateRequest::encode(PacketEncoder &pe) const
     {
         return pe.putBytes(m_sasl_auth_bytes);
     }
 
-    int SaslAuthenticateRequest::decode(packet_decoder &pd, int16_t version)
+    int SaslAuthenticateRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
         return pd.getBytes(m_sasl_auth_bytes);

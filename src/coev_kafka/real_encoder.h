@@ -21,7 +21,7 @@
 namespace coev::kafka
 {
 
-    struct real_encoder : flexible_type
+    struct real_encoder : FlexibleType
     {
         real_encoder() = default;
         real_encoder(size_t capacity);

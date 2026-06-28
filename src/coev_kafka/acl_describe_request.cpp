@@ -16,12 +16,12 @@ namespace coev::kafka
         m_filter.m_version = m_version;
     }
 
-    int DescribeAclsRequest::encode(packet_encoder &pe) const
+    int DescribeAclsRequest::encode(PacketEncoder &pe) const
     {
         return m_filter.encode(pe);
     }
 
-    int DescribeAclsRequest::decode(packet_decoder &pd, int16_t version)
+    int DescribeAclsRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = static_cast<int>(version);
         m_filter.m_version = m_version;

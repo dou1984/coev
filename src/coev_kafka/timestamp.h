@@ -22,8 +22,8 @@ namespace coev::kafka
         Timestamp();
         Timestamp(const std::chrono::system_clock::time_point &t);
 
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd);
 
         std::chrono::system_clock::time_point get_time() const;
         void set_time(const std::chrono::system_clock::time_point &t);

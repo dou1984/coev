@@ -33,8 +33,8 @@ namespace coev::kafka
 
         GroupProtocol() = default;
         GroupProtocol(const std::string &name, const std::string &metadata);
-        int decode(packet_decoder &pd);
-        int encode(packet_encoder &pe) const;
+        int decode(PacketDecoder &pd);
+        int encode(PacketEncoder &pe) const;
     };
 
     struct JoinGroupRequest : protocol_body
@@ -54,8 +54,8 @@ namespace coev::kafka
         {
         }
         void set_version(int16_t v);
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
         int16_t key() const;
         int16_t version() const;
         int16_t header_version() const;

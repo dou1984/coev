@@ -25,9 +25,9 @@ namespace coev::kafka
         int32_t m_correlation_id = 0;
         std::string_view m_client_id;
         const protocol_body *m_body;
-        int encode(packet_encoder &pe) const;
-        int encode(packet_encoder &pe, int16_t version) const;
-        int decode(packet_decoder &pd);
+        int encode(PacketEncoder &pe) const;
+        int encode(PacketEncoder &pe, int16_t version) const;
+        int decode(PacketDecoder &pd);
         bool is_flexible() const;
     };
 }

@@ -56,7 +56,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int MetadataRequest::encode(packet_encoder &pe) const
+    int MetadataRequest::encode(PacketEncoder &pe) const
     {
         if (m_version < 0 || m_version > 10)
         {
@@ -117,7 +117,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int MetadataRequest::decode(packet_decoder &pd, int16_t version)
+    int MetadataRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
         int32_t size;

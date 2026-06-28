@@ -32,7 +32,7 @@ namespace coev::kafka
 
         Record() = default;
         Record(const std::string &key, const std::string &value, int64_t offset_delta, std::chrono::milliseconds timestamp_delta);
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd);
     };
 }

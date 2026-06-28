@@ -10,7 +10,7 @@
 
 namespace coev::kafka
 {
-    int IncrementalAlterConfigsEntry::encode(packet_encoder &pe) const
+    int IncrementalAlterConfigsEntry::encode(PacketEncoder &pe) const
     {
         pe.putInt8(static_cast<int8_t>(m_operation));
 
@@ -22,7 +22,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int IncrementalAlterConfigsEntry::decode(packet_decoder &pd, int16_t /*version*/)
+    int IncrementalAlterConfigsEntry::decode(PacketDecoder &pd, int16_t /*version*/)
     {
         int8_t op;
         int err = pd.getInt8(op);
@@ -40,7 +40,7 @@ namespace coev::kafka
     IncrementalAlterConfigsResource::IncrementalAlterConfigsResource(ConfigResourceType t, const std::string &name, const std::map<std::string, IncrementalAlterConfigsEntry> &_entries) : m_type(t), m_name(name), m_config_entries(_entries)
     {
     }
-    int IncrementalAlterConfigsResource::encode(packet_encoder &pe) const
+    int IncrementalAlterConfigsResource::encode(PacketEncoder &pe) const
     {
         pe.putInt8(m_type);
 
@@ -67,7 +67,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int IncrementalAlterConfigsResource::decode(packet_decoder &pd, int16_t version)
+    int IncrementalAlterConfigsResource::decode(PacketDecoder &pd, int16_t version)
     {
         int8_t t;
         int err = pd.getInt8(t);
@@ -111,7 +111,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int IncrementalAlterConfigsRequest::encode(packet_encoder &pe) const
+    int IncrementalAlterConfigsRequest::encode(PacketEncoder &pe) const
     {
         int err = pe.putArrayLength(static_cast<int32_t>(m_resources.size()));
         if (err != 0)
@@ -130,7 +130,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int IncrementalAlterConfigsRequest::decode(packet_decoder &pd, int16_t version)
+    int IncrementalAlterConfigsRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

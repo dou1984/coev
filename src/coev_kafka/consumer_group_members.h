@@ -31,8 +31,8 @@ namespace coev::kafka
         ConsumerGroupMemberMetadata() = default;
         ConsumerGroupMemberMetadata(int16_t v) : m_version(v) {}
 
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd);
     };
 
     struct OwnedPartition : IEncoder, IDecoder
@@ -43,8 +43,8 @@ namespace coev::kafka
         OwnedPartition() = default;
         OwnedPartition(const std::string &t, const std::vector<int32_t> &p) : topic(t), partitions(p) {}
 
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd);
     };
 
     struct ConsumerGroupMemberAssignment : IEncoder, IDecoder
@@ -56,8 +56,8 @@ namespace coev::kafka
         ConsumerGroupMemberAssignment() = default;
         ConsumerGroupMemberAssignment(int16_t v) : m_version(v) {}
 
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd);
     };
 
 } // namespace coev::kafka

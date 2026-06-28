@@ -11,7 +11,7 @@
 namespace coev::kafka
 {
 
-    int ApiVersionsResponseKey::encode(packet_encoder &pe, int16_t version) const
+    int ApiVersionsResponseKey::encode(PacketEncoder &pe, int16_t version) const
     {
         pe.putInt16(m_api_key);
         pe.putInt16(m_min_version);
@@ -25,7 +25,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int ApiVersionsResponseKey::decode(packet_decoder &pd, int16_t version)
+    int ApiVersionsResponseKey::decode(PacketDecoder &pd, int16_t version)
     {
         if (pd.getInt16(m_api_key) != ErrNoError)
             return ErrDecodeError;
@@ -49,7 +49,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int ApiVersionsResponse::encode(packet_encoder &pe) const
+    int ApiVersionsResponse::encode(PacketEncoder &pe) const
     {
         pe.putInt16(m_code);
 
@@ -79,7 +79,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    packet_decoder &ApiVersionsResponse::downgrade_flexible_decoder(packet_decoder &pd)
+    PacketDecoder &ApiVersionsResponse::downgrade_flexible_decoder(PacketDecoder &pd)
     {
         if (pd.__is_flexible())
         {
@@ -88,7 +88,7 @@ namespace coev::kafka
         return pd;
     }
 
-    int ApiVersionsResponse::decode(packet_decoder &pd, int16_t version)
+    int ApiVersionsResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

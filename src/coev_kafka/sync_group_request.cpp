@@ -11,7 +11,7 @@
 
 namespace coev::kafka
 {
-    int SyncGroupRequestAssignment::encode(packet_encoder &pe, int16_t version) const
+    int SyncGroupRequestAssignment::encode(PacketEncoder &pe, int16_t version) const
     {
         int err = pe.putString(m_member_id);
         if (err != 0)
@@ -29,7 +29,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int SyncGroupRequestAssignment::decode(packet_decoder &pd, int16_t version)
+    int SyncGroupRequestAssignment::decode(PacketDecoder &pd, int16_t version)
     {
         int err = pd.getString(m_member_id);
         if (err != 0)
@@ -52,7 +52,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int SyncGroupRequest::encode(packet_encoder &pe) const
+    int SyncGroupRequest::encode(PacketEncoder &pe) const
     {
         int err = pe.putString(m_group_id);
         if (err != 0)
@@ -96,7 +96,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int SyncGroupRequest::decode(packet_decoder &pd, int16_t version)
+    int SyncGroupRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

@@ -29,8 +29,8 @@ namespace coev::kafka
         SyncGroupRequestAssignment(const std::string &memberId, const std::string &assignment) : m_member_id(memberId), m_assignment(assignment)
         {
         }
-        int encode(packet_encoder &pe, int16_t version) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe, int16_t version) const;
+        int decode(PacketDecoder &pd, int16_t version);
     };
 
     struct SyncGroupRequest : protocol_body
@@ -46,8 +46,8 @@ namespace coev::kafka
         {
         }
         void set_version(int16_t v);
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
 
         int16_t key() const;
         int16_t version() const;

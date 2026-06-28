@@ -176,8 +176,8 @@ namespace coev::kafka
         awaitable<int> DescribeClientQuotas(std::shared_ptr<DescribeClientQuotasRequest> request, ResponsePromise<DescribeClientQuotasResponse> &response);
         awaitable<int> AlterClientQuotas(std::shared_ptr<AlterClientQuotasRequest> request, ResponsePromise<AlterClientQuotasResponse> &response);
 
-        int decode(packet_decoder &pd, int16_t version);
-        int encode(packet_encoder &pe, int16_t version) const;
+        int decode(PacketDecoder &pd, int16_t version);
+        int encode(PacketEncoder &pe, int16_t version) const;
 
         int32_t m_id;
         std::string m_rack;
@@ -299,7 +299,7 @@ namespace coev::kafka
                 LOG_CORE("Failed to read fixed header %d", err);
                 co_return err;
             }
-            packet_decoder hd(fixed_header);
+            PacketDecoder hd(fixed_header);
             ResponseHeader decoded_header;
             if (err = hd.getInt32(decoded_header.m_length); err != 0)
             {
@@ -332,7 +332,7 @@ namespace coev::kafka
             size_t body_offset = 0;
             if (promise.m_response->header_version() >= 1)
             {
-                packet_decoder tag_decoder(promise.m_body);
+                PacketDecoder tag_decoder(promise.m_body);
                 tag_decoder.__push_flexible();
                 finally(tag_decoder.__pop_flexible());
                 int32_t dummy = 0;

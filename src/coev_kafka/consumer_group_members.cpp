@@ -9,7 +9,7 @@
 namespace coev::kafka
 {
 
-    int ConsumerGroupMemberMetadata::encode(packet_encoder &pe) const
+    int ConsumerGroupMemberMetadata::encode(PacketEncoder &pe) const
     {
         pe.putInt16(m_version);
 
@@ -54,7 +54,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int ConsumerGroupMemberMetadata::decode(packet_decoder &pd)
+    int ConsumerGroupMemberMetadata::decode(PacketDecoder &pd)
     {
         int err;
         if ((err = pd.getInt16(m_version)) != 0)
@@ -116,7 +116,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int OwnedPartition::encode(packet_encoder &pe) const
+    int OwnedPartition::encode(PacketEncoder &pe) const
     {
         if (int err = pe.putString(topic); err != 0)
         {
@@ -129,7 +129,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int OwnedPartition::decode(packet_decoder &pd)
+    int OwnedPartition::decode(PacketDecoder &pd)
     {
         int err;
         if ((err = pd.getString(topic)) != 0)
@@ -144,7 +144,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int ConsumerGroupMemberAssignment::encode(packet_encoder &pe) const
+    int ConsumerGroupMemberAssignment::encode(PacketEncoder &pe) const
     {
         pe.putInt16(m_version);
 
@@ -173,7 +173,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int ConsumerGroupMemberAssignment::decode(packet_decoder &pd)
+    int ConsumerGroupMemberAssignment::decode(PacketDecoder &pd)
     {
         int err;
         if ((err = pd.getInt16(m_version)) != 0)

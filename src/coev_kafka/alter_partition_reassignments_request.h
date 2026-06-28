@@ -25,8 +25,8 @@ namespace coev::kafka
         AlterPartitionReassignmentsBlock(const std::vector<int32_t> &r) : m_replicas(r)
         {
         }
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd);
     };
 
     struct AlterPartitionReassignmentsRequest : protocol_body, throttle_support
@@ -39,8 +39,8 @@ namespace coev::kafka
         {
         }
         void set_version(int16_t v);
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
 
         int16_t key() const;
         int16_t version() const;

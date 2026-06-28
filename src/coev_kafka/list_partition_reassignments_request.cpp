@@ -16,7 +16,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int ListPartitionReassignmentsRequest::encode(packet_encoder &pe) const
+    int ListPartitionReassignmentsRequest::encode(PacketEncoder &pe) const
     {
         pe.putInt32(static_cast<int32_t>(m_timeout.count()));
 
@@ -44,7 +44,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int ListPartitionReassignmentsRequest::decode(packet_decoder &pd, int16_t version)
+    int ListPartitionReassignmentsRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

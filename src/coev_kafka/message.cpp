@@ -90,7 +90,7 @@ namespace coev::kafka
         : m_key(key), m_value(value), m_log_append_time(logAppendTime), m_timestamp(msgTimestamp), m_version(version)
     {
     }
-    int Message::encode(packet_encoder &pe) const
+    int Message::encode(PacketEncoder &pe) const
     {
         Crc32Field field(CrcCastagnoli);
         pe.push(field);
@@ -145,7 +145,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int Message::decode(packet_decoder &pd)
+    int Message::decode(PacketDecoder &pd)
     {
         auto field = acquire_crc32_field(CrcCastagnoli);
         int err = pd.push(*field);
@@ -227,7 +227,7 @@ namespace coev::kafka
         }
 
         m_message_set = std::make_shared<MessageSet>();
-        packet_decoder inner_decoder(m_value);
+        PacketDecoder inner_decoder(m_value);
         return m_message_set->decode(inner_decoder);
     }
 

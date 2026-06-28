@@ -23,7 +23,7 @@ namespace coev::kafka
         int32_t m_length = 0;
 
         LengthField() = default;
-        int decode(packet_decoder &pd);
+        int decode(PacketDecoder &pd);
         void save_offset(int in);
         int reserve_length();
 

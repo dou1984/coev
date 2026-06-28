@@ -15,7 +15,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int DeleteGroupsResponse::encode(packet_encoder &pe) const
+    int DeleteGroupsResponse::encode(PacketEncoder &pe) const
     {
         pe.putDurationMs(m_throttle_time);
 
@@ -38,7 +38,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int DeleteGroupsResponse::decode(packet_decoder &pd, int16_t version)
+    int DeleteGroupsResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

@@ -15,7 +15,7 @@
 namespace coev::kafka
 {
 
-    int ProduceResponseBlock::decode(packet_decoder &pd, int16_t version)
+    int ProduceResponseBlock::decode(PacketDecoder &pd, int16_t version)
     {
         if (int err = pd.getKError(m_err); err != 0)
             return err;
@@ -44,7 +44,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int ProduceResponseBlock::encode(packet_encoder &pe, int16_t version) const
+    int ProduceResponseBlock::encode(PacketEncoder &pe, int16_t version) const
     {
         pe.putKError(m_err);
         pe.putInt64(m_offset);
@@ -77,7 +77,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int ProduceResponse::decode(packet_decoder &pd, int16_t version)
+    int ProduceResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 
@@ -128,7 +128,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int ProduceResponse::encode(packet_encoder &pe) const
+    int ProduceResponse::encode(PacketEncoder &pe) const
     {
         if (int err = pe.putArrayLength(static_cast<int32_t>(m_blocks.size())); err != 0)
         {

@@ -18,7 +18,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int TxnOffsetCommitResponse::encode(packet_encoder &pe) const
+    int TxnOffsetCommitResponse::encode(PacketEncoder &pe) const
     {
         pe.putDurationMs(m_throttle_time);
         pe.putArrayLength(static_cast<int32_t>(m_topics.size()));
@@ -35,7 +35,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int TxnOffsetCommitResponse::decode(packet_decoder &pd, int16_t version)
+    int TxnOffsetCommitResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

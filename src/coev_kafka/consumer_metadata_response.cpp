@@ -23,7 +23,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int ConsumerMetadataResponse::decode(packet_decoder &pd, int16_t version)
+    int ConsumerMetadataResponse::decode(PacketDecoder &pd, int16_t version)
     {
         auto response = std::make_shared<FindCoordinatorResponse>();
 
@@ -64,7 +64,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int ConsumerMetadataResponse::encode(packet_encoder &pe) const
+    int ConsumerMetadataResponse::encode(PacketEncoder &pe) const
     {
         if (m_coordinator == nullptr)
         {

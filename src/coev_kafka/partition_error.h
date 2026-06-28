@@ -18,8 +18,8 @@ namespace coev::kafka
         int32_t m_partition;
         KError m_err;
 
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
     };
 
 } // namespace coev::kafka

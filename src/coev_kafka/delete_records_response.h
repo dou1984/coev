@@ -23,16 +23,16 @@ namespace coev::kafka
         int64_t m_low_watermark;
         KError m_err;
 
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
     };
 
     struct DeleteRecordsResponseTopic : VDecoder, IEncoder
     {
         std::map<int32_t, std::shared_ptr<DeleteRecordsResponsePartition>> m_partitions;
 
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
 
         ~DeleteRecordsResponseTopic();
     };
@@ -45,8 +45,8 @@ namespace coev::kafka
 
         ~DeleteRecordsResponse();
         void set_version(int16_t v);
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
         int16_t key() const;
         int16_t version() const;
         int16_t header_version() const;

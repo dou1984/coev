@@ -14,7 +14,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int DescribeConfigsResponse::encode(packet_encoder &pe) const
+    int DescribeConfigsResponse::encode(PacketEncoder &pe) const
     {
         pe.putDurationMs(m_throttle_time);
 
@@ -34,7 +34,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int DescribeConfigsResponse::decode(packet_decoder &pd, int16_t version)
+    int DescribeConfigsResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 
@@ -103,7 +103,7 @@ namespace coev::kafka
         return m_throttle_time;
     }
 
-    int ResourceResponse::encode(packet_encoder &pe, int16_t version) const
+    int ResourceResponse::encode(PacketEncoder &pe, int16_t version) const
     {
         pe.putInt16(m_code);
         if (pe.putString(m_message) != ErrNoError)
@@ -132,7 +132,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int ResourceResponse::decode(packet_decoder &pd, int16_t version)
+    int ResourceResponse::decode(PacketDecoder &pd, int16_t version)
     {
         if (pd.getInt16(m_code) != ErrNoError)
             return ErrDecodeError;
@@ -166,7 +166,7 @@ namespace coev::kafka
 
     // --- ConfigEntry ---
 
-    int ConfigEntry::encode(packet_encoder &pe, int16_t version) const
+    int ConfigEntry::encode(PacketEncoder &pe, int16_t version) const
     {
         if (pe.putString(m_name) != ErrNoError)
             return ErrEncodeError;
@@ -200,7 +200,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int ConfigEntry::decode(packet_decoder &pd, int16_t version)
+    int ConfigEntry::decode(PacketDecoder &pd, int16_t version)
     {
         if (version == 0)
         {
@@ -256,7 +256,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int ConfigSynonym::encode(packet_encoder &pe, int16_t /*version*/) const
+    int ConfigSynonym::encode(PacketEncoder &pe, int16_t /*version*/) const
     {
         if (pe.putString(m_config_name) != ErrNoError)
             return ErrEncodeError;
@@ -266,7 +266,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int ConfigSynonym::decode(packet_decoder &pd, int16_t /*version*/)
+    int ConfigSynonym::decode(PacketDecoder &pd, int16_t /*version*/)
     {
         if (pd.getString(m_config_name) != ErrNoError)
             return ErrDecodeError;

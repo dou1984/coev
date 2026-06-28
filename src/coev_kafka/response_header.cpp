@@ -32,11 +32,11 @@ namespace coev::kafka
         int32_t _;
         return pd.getEmptyTaggedFieldArray(_);
     }
-    int ResponseHeader::decode(packet_decoder &pd, int16_t version)
+    int ResponseHeader::decode(PacketDecoder &pd, int16_t version)
     {
         if (version >= 1)
         {
-            auto decoder = static_cast<packet_decoder *>(&pd);
+            auto decoder = static_cast<PacketDecoder *>(&pd);
             if (decoder != nullptr)
             {
                 decoder->__push_flexible();

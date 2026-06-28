@@ -17,7 +17,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int FindCoordinatorResponse::decode(packet_decoder &pd, int16_t version)
+    int FindCoordinatorResponse::decode(PacketDecoder &pd, int16_t version)
     {
         if (version >= 1)
         {
@@ -63,7 +63,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int FindCoordinatorResponse::encode(packet_encoder &pe) const
+    int FindCoordinatorResponse::encode(PacketEncoder &pe) const
     {
         if (m_version >= 1)
         {

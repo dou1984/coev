@@ -15,7 +15,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int DeleteAclsRequest::encode(packet_encoder &pe) const
+    int DeleteAclsRequest::encode(PacketEncoder &pe) const
     {
         if (pe.putArrayLength(static_cast<int32_t>(m_filters.size())) != 0)
         {
@@ -34,7 +34,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int DeleteAclsRequest::decode(packet_decoder &pd, int16_t version)
+    int DeleteAclsRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
         int32_t n;

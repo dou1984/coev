@@ -21,7 +21,7 @@ namespace coev::kafka
         return coev::kafka::decode(m_member_assignment, *assignment);
     }
 
-    int SyncGroupResponse::encode(packet_encoder &pe) const
+    int SyncGroupResponse::encode(PacketEncoder &pe) const
     {
         if (m_version >= 1)
         {
@@ -37,7 +37,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int SyncGroupResponse::decode(packet_decoder &pd, int16_t version)
+    int SyncGroupResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
         int err = 0;

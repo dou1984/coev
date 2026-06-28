@@ -17,7 +17,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int AddPartitionsToTxnResponse::encode(packet_encoder &pe) const
+    int AddPartitionsToTxnResponse::encode(PacketEncoder &pe) const
     {
         pe.putDurationMs(m_throttle_time);
 
@@ -51,7 +51,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int AddPartitionsToTxnResponse::decode(packet_decoder &pd, int16_t version)
+    int AddPartitionsToTxnResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

@@ -10,7 +10,7 @@
 namespace coev::kafka
 {
 
-    int AclFilter::encode(packet_encoder &pe) const
+    int AclFilter::encode(PacketEncoder &pe) const
     {
         pe.putInt8(static_cast<int8_t>(m_resource_type));
 
@@ -40,7 +40,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int AclFilter::decode(packet_decoder &pd, int16_t version)
+    int AclFilter::decode(PacketDecoder &pd, int16_t version)
     {
         int8_t resourceType;
         if (pd.getInt8(resourceType) != 0)

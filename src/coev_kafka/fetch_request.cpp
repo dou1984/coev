@@ -25,7 +25,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int FetchRequest::encode(packet_encoder &pe) const
+    int FetchRequest::encode(PacketEncoder &pe) const
     {
         pe.putInt32(-1);
         pe.putInt32(m_max_wait_time);
@@ -116,7 +116,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int FetchRequest::decode(packet_decoder &pd, int16_t version)
+    int FetchRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
         int err = 0;

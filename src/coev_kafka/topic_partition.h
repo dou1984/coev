@@ -23,8 +23,8 @@ namespace coev::kafka
         TopicPartition() = default;
         TopicPartition(const std::string &t, int32_t p);
         bool operator==(const TopicPartition &other) const;
-        int encode(packet_encoder &pe);
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe);
+        int decode(PacketDecoder &pd, int16_t version);
         struct Hash
         {
             std::size_t operator()(const TopicPartition &tp) const

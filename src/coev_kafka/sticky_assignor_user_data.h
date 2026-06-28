@@ -33,8 +33,8 @@ namespace coev::kafka
         std::map<std::string, std::vector<int32_t>> m_topics;
         std::vector<topic_t> m_topic_partitions;
 
-        int encode(packet_encoder &pe);
-        int decode(packet_decoder &pd);
+        int encode(PacketEncoder &pe);
+        int decode(PacketDecoder &pd);
 
         std::vector<topic_t> partitions();
         bool has_generation();
@@ -48,8 +48,8 @@ namespace coev::kafka
         int32_t m_generation = 0;
         std::vector<topic_t> m_topic_partitions;
 
-        int encode(packet_encoder &pe);
-        int decode(packet_decoder &pd);
+        int encode(PacketEncoder &pe);
+        int decode(PacketDecoder &pd);
 
         std::vector<topic_t> partitions();
         bool has_generation();

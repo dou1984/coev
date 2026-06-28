@@ -130,7 +130,7 @@ const std::string emptyBulkZSTDMessageStr(reinterpret_cast<const char *>(emptyBu
 
 TEST(MessageTest, DecodingEmptyMessage)
 {
-    packet_decoder decoder(emptyMessageStr);
+    PacketDecoder decoder(emptyMessageStr);
 
     Message message;
     int result = message.decode(decoder);
@@ -143,7 +143,7 @@ TEST(MessageTest, DecodingEmptyMessage)
 
 TEST(MessageTest, DecodingEmptyV1Message)
 {
-    packet_decoder decoder(emptyV1MessageStr);
+    PacketDecoder decoder(emptyV1MessageStr);
 
     Message message;
     int result = message.decode(decoder);
@@ -156,7 +156,7 @@ TEST(MessageTest, DecodingEmptyV1Message)
 
 TEST(MessageTest, DecodingEmptyV2Message)
 {
-    packet_decoder decoder(emptyV2MessageStr);
+    PacketDecoder decoder(emptyV2MessageStr);
 
     Message message;
     int result = message.decode(decoder);
@@ -183,9 +183,9 @@ TEST(MessageTest, DecodingCompressedMessages)
         original.m_timestamp = Timestamp(std::chrono::system_clock::from_time_t(1479847795));
 
         // Encode the message
-        packet_encoder encoder(packet_encoder::REAL);
+        PacketEncoder encoder(PacketEncoder::REAL);
         // First pass: calculate required size
-        packet_encoder prepEnc(packet_encoder::PREP);
+        PacketEncoder prepEnc(PacketEncoder::PREP);
         int prepResult = original.encode(prepEnc);
         ASSERT_EQ(prepResult, 0) << "Failed to prepare message with codec " << ToString(codec);
 
@@ -197,7 +197,7 @@ TEST(MessageTest, DecodingCompressedMessages)
         ASSERT_EQ(encodeResult, 0) << "Failed to encode message with codec " << ToString(codec);
 
         // Decode the encoded message
-        packet_decoder decoder(encoder.m_raw);
+        PacketDecoder decoder(encoder.m_raw);
 
         Message decoded;
         int decodeResult = decoded.decode(decoder);
@@ -232,9 +232,9 @@ TEST(MessageTest, DecodingEmptyCompressedMessages)
         original.m_timestamp = Timestamp(std::chrono::system_clock::from_time_t(1479847795));
 
         // Encode the message
-        packet_encoder encoder(packet_encoder::REAL);
+        PacketEncoder encoder(PacketEncoder::REAL);
         // First pass: calculate required size
-        packet_encoder prepEnc(packet_encoder::PREP);
+        PacketEncoder prepEnc(PacketEncoder::PREP);
         int prepResult = original.encode(prepEnc);
         ASSERT_EQ(prepResult, 0) << "Failed to prepare empty message with codec " << ToString(codec);
 
@@ -246,7 +246,7 @@ TEST(MessageTest, DecodingEmptyCompressedMessages)
         ASSERT_EQ(encodeResult, 0) << "Failed to encode empty message with codec " << ToString(codec);
 
         // Decode the encoded message
-        packet_decoder decoder(encoder.m_raw);
+        PacketDecoder decoder(encoder.m_raw);
 
         Message decoded;
         int decodeResult = decoded.decode(decoder);
@@ -267,9 +267,9 @@ TEST(MessageTest, EncodingEmptyMessage)
     original.m_version = 0;
     original.m_codec = CompressionCodec::None;
 
-    packet_encoder encoder(packet_encoder::REAL);
+    PacketEncoder encoder(PacketEncoder::REAL);
     // First pass: calculate required size
-    packet_encoder prepEnc(packet_encoder::PREP);
+    PacketEncoder prepEnc(PacketEncoder::PREP);
     int prepResult = original.encode(prepEnc);
     ASSERT_EQ(prepResult, 0) << "Failed to prepare empty message";
 
@@ -281,7 +281,7 @@ TEST(MessageTest, EncodingEmptyMessage)
     ASSERT_EQ(encodeResult, 0) << "Failed to encode empty message";
 
     // Decode the encoded message
-    packet_decoder decoder(encoder.m_raw);
+    PacketDecoder decoder(encoder.m_raw);
 
     Message decoded;
     int decodeResult = decoded.decode(decoder);
@@ -302,9 +302,9 @@ TEST(MessageTest, EncodingEmptyGzipMessage)
     original.m_codec = CompressionCodec::GZIP;
     original.m_value = "";
 
-    packet_encoder encoder(packet_encoder::REAL);
+    PacketEncoder encoder(PacketEncoder::REAL);
     // First pass: calculate required size
-    packet_encoder prepEnc(packet_encoder::PREP);
+    PacketEncoder prepEnc(PacketEncoder::PREP);
     int prepResult = original.encode(prepEnc);
     ASSERT_EQ(prepResult, 0) << "Failed to prepare empty gzip message";
 
@@ -316,7 +316,7 @@ TEST(MessageTest, EncodingEmptyGzipMessage)
     ASSERT_EQ(encodeResult, 0) << "Failed to encode empty gzip message";
 
     // Decode the encoded message
-    packet_decoder decoder(encoder.m_raw);
+    PacketDecoder decoder(encoder.m_raw);
 
     Message decoded;
     int decodeResult = decoded.decode(decoder);
@@ -338,9 +338,9 @@ TEST(MessageTest, EncodingEmptyLZ4Message)
     original.m_value = "";
     original.m_timestamp = Timestamp(std::chrono::system_clock::from_time_t(1479847795));
 
-    packet_encoder encoder(packet_encoder::REAL);
+    PacketEncoder encoder(PacketEncoder::REAL);
     // First pass: calculate required size
-    packet_encoder prepEnc(packet_encoder::PREP);
+    PacketEncoder prepEnc(PacketEncoder::PREP);
     int prepResult = original.encode(prepEnc);
     ASSERT_EQ(prepResult, 0) << "Failed to prepare empty lz4 message";
 
@@ -352,7 +352,7 @@ TEST(MessageTest, EncodingEmptyLZ4Message)
     ASSERT_EQ(encodeResult, 0) << "Failed to encode empty lz4 message";
 
     // Decode the encoded message
-    packet_decoder decoder(encoder.m_raw);
+    PacketDecoder decoder(encoder.m_raw);
 
     Message decoded;
     int decodeResult = decoded.decode(decoder);
@@ -374,9 +374,9 @@ TEST(MessageTest, EncodingEmptyZSTDMessage)
     original.m_value = "";
     original.m_timestamp = Timestamp(std::chrono::system_clock::from_time_t(1479847795));
 
-    packet_encoder encoder(packet_encoder::REAL);
+    PacketEncoder encoder(PacketEncoder::REAL);
     // First pass: calculate required size
-    packet_encoder prepEnc(packet_encoder::PREP);
+    PacketEncoder prepEnc(PacketEncoder::PREP);
     int prepResult = original.encode(prepEnc);
     ASSERT_EQ(prepResult, 0) << "Failed to prepare empty zstd message";
 
@@ -388,7 +388,7 @@ TEST(MessageTest, EncodingEmptyZSTDMessage)
     ASSERT_EQ(encodeResult, 0) << "Failed to encode empty zstd message";
 
     // Decode the encoded message
-    packet_decoder decoder(encoder.m_raw);
+    PacketDecoder decoder(encoder.m_raw);
 
     Message decoded;
     int decodeResult = decoded.decode(decoder);
@@ -409,9 +409,9 @@ TEST(MessageTest, VersionHandling)
     original.m_codec = CompressionCodec::None;
     original.m_value = "test version message";
 
-    packet_encoder encoder(packet_encoder::REAL);
+    PacketEncoder encoder(PacketEncoder::REAL);
     // First pass: calculate required size
-    packet_encoder prepEnc(packet_encoder::PREP);
+    PacketEncoder prepEnc(PacketEncoder::PREP);
     int prepResult = original.encode(prepEnc);
     ASSERT_EQ(prepResult, 0) << "Failed to prepare version 1 message";
 
@@ -423,7 +423,7 @@ TEST(MessageTest, VersionHandling)
     ASSERT_EQ(encodeResult, 0) << "Failed to encode version 1 message";
 
     // Decode the encoded message
-    packet_decoder decoder(encoder.m_raw);
+    PacketDecoder decoder(encoder.m_raw);
 
     Message decoded;
     int decodeResult = decoded.decode(decoder);

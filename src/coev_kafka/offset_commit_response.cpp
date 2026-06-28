@@ -27,7 +27,7 @@ namespace coev::kafka
         partitions[partition] = kerror;
     }
 
-    int OffsetCommitResponse::encode(packet_encoder &pe) const
+    int OffsetCommitResponse::encode(PacketEncoder &pe) const
     {
         if (m_version >= 3)
         {
@@ -50,7 +50,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int OffsetCommitResponse::decode(packet_decoder &pd, int16_t version)
+    int OffsetCommitResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

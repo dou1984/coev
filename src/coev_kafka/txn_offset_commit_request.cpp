@@ -16,7 +16,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int TxnOffsetCommitRequest::encode(packet_encoder &pe) const
+    int TxnOffsetCommitRequest::encode(PacketEncoder &pe) const
     {
         pe.putString(m_transactional_id);
         pe.putString(m_group_id);
@@ -36,7 +36,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int TxnOffsetCommitRequest::decode(packet_decoder &pd, int16_t version)
+    int TxnOffsetCommitRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
         pd.getString(m_transactional_id);

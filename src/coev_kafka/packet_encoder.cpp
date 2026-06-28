@@ -46,22 +46,22 @@ namespace coev::kafka
     {
         return encodeUVariant(buf, zigzagEncode(x));
     }
-    packet_encoder::packet_encoder(Type type) : m_type(type)
+    PacketEncoder::PacketEncoder(Type type) : m_type(type)
     {
     }
-    packet_encoder::packet_encoder(Type type, size_t l) : m_type(type)
+    PacketEncoder::PacketEncoder(Type type, size_t l) : m_type(type)
     {
         m_raw.resize(l);
     }
-    packet_encoder::packet_encoder(std::string_view buf)
+    PacketEncoder::PacketEncoder(std::string_view buf)
     {
         m_type = REAL;
         m_raw = buf;
     }
-    packet_encoder::~packet_encoder()
+    PacketEncoder::~PacketEncoder()
     {
     }
-    void packet_encoder::putInt8(int8_t in)
+    void PacketEncoder::putInt8(int8_t in)
     {
         if (m_type == PREP)
         {
@@ -77,7 +77,7 @@ namespace coev::kafka
             assert(false);
         }
     }
-    void packet_encoder::putInt16(int16_t in)
+    void PacketEncoder::putInt16(int16_t in)
     {
         if (m_type == PREP)
         {
@@ -95,7 +95,7 @@ namespace coev::kafka
             assert(false);
         }
     }
-    void packet_encoder::putInt32(int32_t in)
+    void PacketEncoder::putInt32(int32_t in)
     {
         if (m_type == PREP)
         {
@@ -115,7 +115,7 @@ namespace coev::kafka
             assert(false);
         }
     }
-    void packet_encoder::putInt64(int64_t in)
+    void PacketEncoder::putInt64(int64_t in)
     {
         if (m_type == PREP)
         {
@@ -139,7 +139,7 @@ namespace coev::kafka
             assert(false);
         }
     }
-    void packet_encoder::putVariant(int64_t in)
+    void PacketEncoder::putVariant(int64_t in)
     {
         if (m_type == PREP)
         {
@@ -155,7 +155,7 @@ namespace coev::kafka
             assert(false);
         }
     }
-    void packet_encoder::putUVarint(uint64_t in)
+    void PacketEncoder::putUVarint(uint64_t in)
     {
         if (m_type == PREP)
         {
@@ -171,7 +171,7 @@ namespace coev::kafka
             assert(false);
         }
     }
-    void packet_encoder::putFloat64(double in)
+    void PacketEncoder::putFloat64(double in)
     {
         if (m_type == PREP)
         {
@@ -188,7 +188,7 @@ namespace coev::kafka
         }
     }
 
-    int packet_encoder::putArrayLength(int32_t in)
+    int PacketEncoder::putArrayLength(int32_t in)
     {
         if (m_type == PREP)
         {
@@ -226,7 +226,7 @@ namespace coev::kafka
             return -1;
         }
     }
-    void packet_encoder::putBool(bool in)
+    void PacketEncoder::putBool(bool in)
     {
         if (m_type == PREP)
         {
@@ -241,7 +241,7 @@ namespace coev::kafka
             assert(false);
         }
     }
-    void packet_encoder::putKError(KError in)
+    void PacketEncoder::putKError(KError in)
     {
         if (m_type == PREP)
         {
@@ -256,7 +256,7 @@ namespace coev::kafka
             assert(false);
         }
     }
-    void packet_encoder::putDurationMs(std::chrono::milliseconds ms)
+    void PacketEncoder::putDurationMs(std::chrono::milliseconds ms)
     {
         if (m_type == PREP)
         {
@@ -271,7 +271,7 @@ namespace coev::kafka
             assert(false);
         }
     }
-    int packet_encoder::putRawBytes(const std::string_view &in)
+    int PacketEncoder::putRawBytes(const std::string_view &in)
     {
         if (m_type == PREP)
         {
@@ -295,7 +295,7 @@ namespace coev::kafka
             return -1;
         }
     }
-    int packet_encoder::putBytes(const std::string_view &in)
+    int PacketEncoder::putBytes(const std::string_view &in)
     {
         if (m_type == PREP)
         {
@@ -343,7 +343,7 @@ namespace coev::kafka
             return -1;
         }
     }
-    int packet_encoder::putVariantBytes(const std::string_view &in)
+    int PacketEncoder::putVariantBytes(const std::string_view &in)
     {
         if (m_type == PREP)
         {
@@ -373,7 +373,7 @@ namespace coev::kafka
         }
     }
 
-    int packet_encoder::putString(const std::string_view &in)
+    int PacketEncoder::putString(const std::string_view &in)
     {
         if (m_type == PREP)
         {
@@ -420,7 +420,7 @@ namespace coev::kafka
             return -1;
         }
     }
-    int packet_encoder::putNullableString(const std::string_view &in)
+    int PacketEncoder::putNullableString(const std::string_view &in)
     {
         if (m_type == PREP)
         {
@@ -473,7 +473,7 @@ namespace coev::kafka
             return -1;
         }
     }
-    int packet_encoder::putStringArray(const std::vector<std::string> &in)
+    int PacketEncoder::putStringArray(const std::vector<std::string> &in)
     {
         if (m_type == PREP)
         {
@@ -528,7 +528,7 @@ namespace coev::kafka
             return -1;
         }
     }
-    int packet_encoder::putInt32Array(const std::vector<int32_t> &in)
+    int PacketEncoder::putInt32Array(const std::vector<int32_t> &in)
     {
         if (m_type == PREP)
         {
@@ -573,7 +573,7 @@ namespace coev::kafka
             return -1;
         }
     }
-    int packet_encoder::putInt64Array(const std::vector<int64_t> &in)
+    int PacketEncoder::putInt64Array(const std::vector<int64_t> &in)
     {
         if (m_type == PREP)
         {
@@ -598,7 +598,7 @@ namespace coev::kafka
             return -1;
         }
     }
-    int packet_encoder::putNullableInt32Array(const std::vector<int32_t> &in)
+    int PacketEncoder::putNullableInt32Array(const std::vector<int32_t> &in)
     {
         if (m_type == PREP)
         {
@@ -666,7 +666,7 @@ namespace coev::kafka
             return -1;
         }
     }
-    void packet_encoder::putEmptyTaggedFieldArray()
+    void PacketEncoder::putEmptyTaggedFieldArray()
     {
         if (m_type == PREP)
         {
@@ -688,7 +688,7 @@ namespace coev::kafka
             assert(false);
         }
     }
-    int packet_encoder::offset() const
+    int PacketEncoder::offset() const
     {
         if (m_type == PREP)
         {
@@ -704,7 +704,7 @@ namespace coev::kafka
             return -1;
         }
     }
-    void packet_encoder::push(push_encoder &in)
+    void PacketEncoder::push(push_encoder &in)
     {
         if (m_type == PREP)
         {
@@ -725,7 +725,7 @@ namespace coev::kafka
             assert(false);
         }
     }
-    int packet_encoder::pop()
+    int PacketEncoder::pop()
     {
         if (m_type == PREP)
         {

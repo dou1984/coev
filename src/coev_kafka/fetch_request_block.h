@@ -21,8 +21,8 @@ namespace coev::kafka
         int32_t m_max_bytes;
 
         FetchRequestBlock();
-        int encode(packet_encoder &pe, int16_t version) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe, int16_t version) const;
+        int decode(PacketDecoder &pd, int16_t version);
     };
 
 }

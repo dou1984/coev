@@ -11,7 +11,7 @@
 namespace coev::kafka
 {
 
-    int AlterPartitionReassignmentsBlock::encode(packet_encoder &pe) const
+    int AlterPartitionReassignmentsBlock::encode(PacketEncoder &pe) const
     {
         if (pe.putNullableInt32Array(m_replicas) != ErrNoError)
         {
@@ -21,7 +21,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int AlterPartitionReassignmentsBlock::decode(packet_decoder &pd)
+    int AlterPartitionReassignmentsBlock::decode(PacketDecoder &pd)
     {
         if (pd.getInt32Array(m_replicas) != ErrNoError)
         {
@@ -36,7 +36,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int AlterPartitionReassignmentsRequest::encode(packet_encoder &pe) const
+    int AlterPartitionReassignmentsRequest::encode(PacketEncoder &pe) const
     {
         pe.putInt32(m_timeout.count());
 
@@ -73,7 +73,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int AlterPartitionReassignmentsRequest::decode(packet_decoder &pd, int16_t version)
+    int AlterPartitionReassignmentsRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
         int32_t timeout;

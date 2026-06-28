@@ -12,7 +12,7 @@ namespace coev::kafka
     OffsetResponseBlock::OffsetResponseBlock()
         : m_err(static_cast<KError>(0)), m_timestamp(0), m_offset(0), m_leader_epoch(-1) {}
 
-    int OffsetResponseBlock::decode(packet_decoder &pd, int16_t version)
+    int OffsetResponseBlock::decode(PacketDecoder &pd, int16_t version)
     {
         int err = pd.getKError(m_err);
         if (err != 0)
@@ -49,7 +49,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int OffsetResponseBlock::encode(packet_encoder &pe, int16_t version) const
+    int OffsetResponseBlock::encode(PacketEncoder &pe, int16_t version) const
     {
         pe.putKError(m_err);
 
@@ -77,7 +77,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int OffsetResponse::decode(packet_decoder &pd, int16_t version)
+    int OffsetResponse::decode(PacketDecoder &pd, int16_t version)
     {
         if (version >= 2)
         {
@@ -157,7 +157,7 @@ namespace coev::kafka
         }
         return false;
     }
-    int OffsetResponse::encode(packet_encoder &pe) const
+    int OffsetResponse::encode(PacketEncoder &pe) const
     {
         if (m_version >= 2)
         {

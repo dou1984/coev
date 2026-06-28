@@ -15,7 +15,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int LeaveGroupRequest::encode(packet_encoder &pe) const
+    int LeaveGroupRequest::encode(PacketEncoder &pe) const
     {
         int err = pe.putString(m_group_id);
         if (err != 0)
@@ -52,7 +52,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int LeaveGroupRequest::decode(packet_decoder &pd, int16_t version)
+    int LeaveGroupRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

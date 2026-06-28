@@ -15,7 +15,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int InitProducerIDResponse::encode(packet_encoder &pe) const
+    int InitProducerIDResponse::encode(PacketEncoder &pe) const
     {
         pe.putDurationMs(m_throttle_time);
         pe.putKError(m_err);
@@ -25,7 +25,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int InitProducerIDResponse::decode(packet_decoder &pd, int16_t version)
+    int InitProducerIDResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

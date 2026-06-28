@@ -15,7 +15,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int HeartbeatResponse::encode(packet_encoder &pe) const
+    int HeartbeatResponse::encode(PacketEncoder &pe) const
     {
         if (m_version >= 1)
         {
@@ -29,7 +29,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int HeartbeatResponse::decode(packet_decoder &pd, int16_t version)
+    int HeartbeatResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

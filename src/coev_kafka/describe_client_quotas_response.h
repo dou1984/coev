@@ -27,8 +27,8 @@ namespace coev::kafka
         QuotaMatchType m_match_type;
         std::string m_name;
 
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
     };
 
     struct DescribeClientQuotasEntry
@@ -36,8 +36,8 @@ namespace coev::kafka
         std::vector<QuotaEntityComponent> m_entity;
         std::map<std::string, double> m_values;
 
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
     };
 
     struct DescribeClientQuotasResponse : protocol_body
@@ -50,8 +50,8 @@ namespace coev::kafka
         std::vector<DescribeClientQuotasEntry> m_entries;
 
         void set_version(int16_t v);
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
         int16_t key() const;
         int16_t version() const;
         int16_t header_version() const;

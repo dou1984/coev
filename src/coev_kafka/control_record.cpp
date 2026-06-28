@@ -8,7 +8,7 @@
 
 namespace coev::kafka
 {
-    int ControlRecord::decode(packet_decoder &key, packet_decoder &value)
+    int ControlRecord::decode(PacketDecoder &key, PacketDecoder &value)
     {
         int success = 0;
         int16_t tempVersion;
@@ -65,7 +65,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int ControlRecord::encode(packet_encoder &key, packet_encoder &value)
+    int ControlRecord::encode(PacketEncoder &key, PacketEncoder &value)
     {
         key.putInt16(m_version);
 

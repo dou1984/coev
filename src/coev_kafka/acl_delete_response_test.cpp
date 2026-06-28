@@ -36,7 +36,7 @@ const unsigned char deleteAclsResponse[] = {
 TEST(DeleteAclsResponseTest, DecodeResponse)
 {
     std::string rawData(reinterpret_cast<const char *>(deleteAclsResponse), sizeof(deleteAclsResponse));
-    packet_decoder decoder(rawData);
+    PacketDecoder decoder(rawData);
 
     DeleteAclsResponse response;
     int result = response.decode(decoder, 0);
@@ -80,7 +80,7 @@ TEST(DeleteAclsResponseTest, EncodeResponse)
     matchingAcl.m_acl.m_permission_type = AclPermissionTypeAllow;
     response.m_filter_responses[0].m_matching_acls.push_back(matchingAcl);
 
-    packet_encoder encoder(packet_encoder::REAL, 1024);
+    PacketEncoder encoder(PacketEncoder::REAL, 1024);
     int result = response.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode delete acls response";
 
@@ -150,13 +150,13 @@ TEST(DeleteAclsResponseTest, RoundTripEncodingDecoding)
     originalResponse.m_filter_responses.push_back(filterResp2);
 
     // Encode the response
-    packet_encoder encoder(packet_encoder::REAL, 1024);
+    PacketEncoder encoder(PacketEncoder::REAL, 1024);
     int result = originalResponse.encode(encoder);
     ASSERT_EQ(result, 0) << "Failed to encode response for round-trip test";
 
     // Decode the response
     std::string encodedData = encoder.m_raw.substr(0, encoder.m_offset);
-    packet_decoder decoder(encodedData);
+    PacketDecoder decoder(encodedData);
 
     DeleteAclsResponse decodedResponse;
     result = decodedResponse.decode(decoder, 0);
@@ -204,7 +204,7 @@ TEST(DeleteAclsResponseTest, DecodeWithError)
     };
 
     std::string rawData(reinterpret_cast<const char *>(errorResponse), sizeof(errorResponse));
-    packet_decoder decoder(rawData);
+    PacketDecoder decoder(rawData);
 
     DeleteAclsResponse response;
     int result = response.decode(decoder, 0);

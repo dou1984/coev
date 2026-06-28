@@ -34,9 +34,9 @@ namespace coev::kafka
         Records(Records &&other);
         ~Records();
 
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd);
-        int set_type_from_magic(packet_decoder &pd);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd);
+        int set_type_from_magic(PacketDecoder &pd);
         int num_records(int &) const;
         int is_partial(bool &) const;
         int is_control(bool &) const;

@@ -14,7 +14,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int AlterUserScramCredentialsResponse::encode(packet_encoder &pe) const
+    int AlterUserScramCredentialsResponse::encode(PacketEncoder &pe) const
     {
         pe.putDurationMs(m_throttle_time);
 
@@ -41,7 +41,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int AlterUserScramCredentialsResponse::decode(packet_decoder &pd, int16_t version)
+    int AlterUserScramCredentialsResponse::decode(PacketDecoder &pd, int16_t version)
     {
         if (pd.getDurationMs(m_throttle_time) != ErrNoError)
         {

@@ -18,7 +18,7 @@
 
 namespace coev::kafka
 {
-    struct prep_encoder : flexible_type
+    struct prep_encoder : FlexibleType
     {
         prep_encoder();
 

@@ -14,7 +14,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int LeaveGroupResponse::encode(packet_encoder &pe) const
+    int LeaveGroupResponse::encode(PacketEncoder &pe) const
     {
         if (m_version >= 1)
         {
@@ -48,7 +48,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int LeaveGroupResponse::decode(packet_decoder &pd, int16_t version)
+    int LeaveGroupResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

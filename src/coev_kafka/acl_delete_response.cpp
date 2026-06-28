@@ -15,7 +15,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int DeleteAclsResponse::encode(packet_encoder &pe) const
+    int DeleteAclsResponse::encode(PacketEncoder &pe) const
     {
         pe.putDurationMs(m_throttle_time);
 
@@ -35,7 +35,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int DeleteAclsResponse::decode(packet_decoder &pd, int16_t version)
+    int DeleteAclsResponse::decode(PacketDecoder &pd, int16_t version)
     {
         if (pd.getDurationMs(m_throttle_time) != 0)
         {
@@ -96,7 +96,7 @@ namespace coev::kafka
         return m_throttle_time;
     }
 
-    int MatchingAcl::encode(packet_encoder &pe, int16_t version) const
+    int MatchingAcl::encode(PacketEncoder &pe, int16_t version) const
     {
         pe.putKError(m_err);
 
@@ -118,7 +118,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int MatchingAcl::decode(packet_decoder &pd, int16_t version)
+    int MatchingAcl::decode(PacketDecoder &pd, int16_t version)
     {
         if (pd.getKError(m_err) != 0)
         {
@@ -143,7 +143,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int FilterResponse::encode(packet_encoder &pe, int16_t version) const
+    int FilterResponse::encode(PacketEncoder &pe, int16_t version) const
     {
         pe.putKError(m_err);
 
@@ -168,7 +168,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int FilterResponse::decode(packet_decoder &pd, int16_t version)
+    int FilterResponse::decode(PacketDecoder &pd, int16_t version)
     {
         if (pd.getKError(m_err) != 0)
         {

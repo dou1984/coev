@@ -16,7 +16,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int IncrementalAlterConfigsResponse::encode(packet_encoder &pe) const
+    int IncrementalAlterConfigsResponse::encode(PacketEncoder &pe) const
     {
 
         pe.putDurationMs(m_throttle_time);
@@ -40,7 +40,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int IncrementalAlterConfigsResponse::decode(packet_decoder &pd, int16_t version)
+    int IncrementalAlterConfigsResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

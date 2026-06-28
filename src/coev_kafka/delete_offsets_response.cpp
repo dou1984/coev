@@ -20,7 +20,7 @@ namespace coev::kafka
         partitions[partition] = errorCode;
     }
 
-    int DeleteOffsetsResponse::encode(packet_encoder &pe) const
+    int DeleteOffsetsResponse::encode(PacketEncoder &pe) const
     {
         pe.putInt16(static_cast<int16_t>(m_code));
         pe.putDurationMs(m_throttle_time);
@@ -51,7 +51,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int DeleteOffsetsResponse::decode(packet_decoder &pd, int16_t version)
+    int DeleteOffsetsResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

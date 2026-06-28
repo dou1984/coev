@@ -49,7 +49,7 @@ namespace coev::kafka
     {
         return m_rack;
     }
-    int Broker::decode(packet_decoder &pd, int16_t version)
+    int Broker::decode(PacketDecoder &pd, int16_t version)
     {
         int32_t err = pd.getInt32(m_id);
         if (err)
@@ -100,7 +100,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int Broker::encode(packet_encoder &pe, int16_t version) const
+    int Broker::encode(PacketEncoder &pe, int16_t version) const
     {
 
         auto [host, port] = net::SplitHostPort(m_addr);

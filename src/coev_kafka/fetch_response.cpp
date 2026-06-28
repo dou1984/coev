@@ -18,7 +18,7 @@ namespace coev::kafka
     {
     }
 
-    int AbortedTransaction::decode(packet_decoder &pd)
+    int AbortedTransaction::decode(PacketDecoder &pd)
     {
         int err = 0;
         if ((err = pd.getInt64(m_producer_id)) != 0)
@@ -28,7 +28,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int AbortedTransaction::encode(packet_encoder &pe) const
+    int AbortedTransaction::encode(PacketEncoder &pe) const
     {
         pe.putInt64(m_producer_id);
         pe.putInt64(m_first_offset);
@@ -41,7 +41,7 @@ namespace coev::kafka
     {
     }
 
-    int FetchResponseBlock::decode(packet_decoder &pd, int16_t version)
+    int FetchResponseBlock::decode(PacketDecoder &pd, int16_t version)
     {
         int err = 0;
         if ((err = pd.getKError(m_err)) != 0)
@@ -109,7 +109,7 @@ namespace coev::kafka
             return err;
         }
 
-        packet_decoder records_decoder;
+        PacketDecoder records_decoder;
         if ((err = pd.getSubset(records_size, records_decoder.m_raw)) != 0)
         {
             LOG_CORE("FetchResponseBlock::decode %d", err);
@@ -180,7 +180,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int FetchResponseBlock::encode(packet_encoder &pe, int16_t version) const
+    int FetchResponseBlock::encode(PacketEncoder &pe, int16_t version) const
     {
         pe.putKError(m_err);
         pe.putInt64(m_high_water_mark_offset);
@@ -278,7 +278,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int FetchResponse::decode(packet_decoder &pd, int16_t version)
+    int FetchResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
         int err = 0;
@@ -351,7 +351,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int FetchResponse::encode(packet_encoder &pe) const
+    int FetchResponse::encode(PacketEncoder &pe) const
     {
         if (m_version >= 1)
         {
@@ -602,8 +602,8 @@ namespace coev::kafka
         batch->m_control = true;
 
         ControlRecord _abort(0, producer_id, record_type);
-        packet_encoder _key(packet_encoder::REAL);
-        packet_encoder _value(packet_encoder::REAL);
+        PacketEncoder _key(PacketEncoder::REAL);
+        PacketEncoder _value(PacketEncoder::REAL);
         _abort.encode(_key, _value);
 
         batch->emplace(_key.m_raw, _value.m_raw, 0, std::chrono::duration_cast<std::chrono::milliseconds>(timestamp - batch->m_first_timestamp));

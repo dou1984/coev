@@ -45,12 +45,12 @@ namespace coev::kafka
         return base64UrlEncodeWithoutPadding(data.data(), data.size());
     }
 
-    int Uuid::encode(packet_encoder &pe) const
+    int Uuid::encode(PacketEncoder &pe) const
     {
         return pe.putRawBytes(std::string_view(reinterpret_cast<const char *>(data.data()), 16));
     }
 
-    int Uuid::decode(packet_decoder &pd)
+    int Uuid::decode(PacketDecoder &pd)
     {
         std::string_view raw;
         int err = pd.getRawBytes(16, raw);

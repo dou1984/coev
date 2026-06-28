@@ -15,7 +15,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int AddOffsetsToTxnRequest::encode(packet_encoder &pe) const
+    int AddOffsetsToTxnRequest::encode(PacketEncoder &pe) const
     {
         if (pe.putString(m_transactional_id) != 0)
         {
@@ -33,7 +33,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int AddOffsetsToTxnRequest::decode(packet_decoder &pd, int16_t version)
+    int AddOffsetsToTxnRequest::decode(PacketDecoder &pd, int16_t version)
     {
         int err;
         if ((err = pd.getString(m_transactional_id)) != 0)

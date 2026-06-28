@@ -20,7 +20,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int ConsumerMetadataRequest::encode(packet_encoder &pe) const
+    int ConsumerMetadataRequest::encode(PacketEncoder &pe) const
     {
         int err = pe.putString(m_consumer_group);
         if (err != 0)
@@ -34,7 +34,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int ConsumerMetadataRequest::decode(packet_decoder &pd, int16_t version)
+    int ConsumerMetadataRequest::decode(PacketDecoder &pd, int16_t version)
     {
         FindCoordinatorRequest tmp;
         int err = tmp.decode(pd, version);

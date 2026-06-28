@@ -26,8 +26,8 @@ namespace coev::kafka
         MessageBlock() = default;
         MessageBlock(const Message &msg, int64_t offset);
         std::vector<MessageBlock> Messages();
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd);
     };
     struct MessageSet : IEncoder, IDecoder
     {
@@ -36,8 +36,8 @@ namespace coev::kafka
         std::vector<MessageBlock> m_messages;
         MessageSet() = default;
         MessageSet(const MessageSet &o);
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd);
 
         auto &emplace_message()
         {

@@ -13,7 +13,7 @@ namespace coev::kafka
     GroupProtocol::GroupProtocol(const std::string &name, const std::string &metadata) : m_name(name), m_metadata(metadata)
     {
     }
-    int GroupProtocol::decode(packet_decoder &pd)
+    int GroupProtocol::decode(PacketDecoder &pd)
     {
         int err = pd.getString(m_name);
         if (err != 0)
@@ -26,7 +26,7 @@ namespace coev::kafka
         return pd.getEmptyTaggedFieldArray(_);
     }
 
-    int GroupProtocol::encode(packet_encoder &pe) const
+    int GroupProtocol::encode(PacketEncoder &pe) const
     {
         int err = pe.putString(m_name);
         if (err != 0)
@@ -45,7 +45,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int JoinGroupRequest::encode(packet_encoder &pe) const
+    int JoinGroupRequest::encode(PacketEncoder &pe) const
     {
         int err = pe.putString(m_group_id);
         if (err != 0)
@@ -115,7 +115,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int JoinGroupRequest::decode(packet_decoder &pd, int16_t version)
+    int JoinGroupRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

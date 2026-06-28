@@ -29,7 +29,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int DeleteTopicsRequest::encode(packet_encoder &pe) const
+    int DeleteTopicsRequest::encode(PacketEncoder &pe) const
     {
         if (pe.putStringArray(m_topics) != ErrNoError)
         {
@@ -46,7 +46,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int DeleteTopicsRequest::decode(packet_decoder &pd, int16_t version)
+    int DeleteTopicsRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

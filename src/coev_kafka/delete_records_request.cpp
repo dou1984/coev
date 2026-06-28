@@ -11,7 +11,7 @@
 
 namespace coev::kafka
 {
-    int DeleteRecordsRequestTopic::encode(packet_encoder &pe) const
+    int DeleteRecordsRequestTopic::encode(PacketEncoder &pe) const
     {
         if (pe.putArrayLength(static_cast<int32_t>(m_partition_offsets.size())) != ErrNoError)
         {
@@ -35,7 +35,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int DeleteRecordsRequestTopic::decode(packet_decoder &pd, int16_t /*version*/)
+    int DeleteRecordsRequestTopic::decode(PacketDecoder &pd, int16_t /*version*/)
     {
         int32_t n;
         if (pd.getArrayLength(n) != ErrNoError)
@@ -68,7 +68,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int DeleteRecordsRequest::encode(packet_encoder &pe) const
+    int DeleteRecordsRequest::encode(PacketEncoder &pe) const
     {
         if (pe.putArrayLength(static_cast<int32_t>(m_topics.size())) != ErrNoError)
         {
@@ -99,7 +99,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int DeleteRecordsRequest::decode(packet_decoder &pd, int16_t version)
+    int DeleteRecordsRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
 

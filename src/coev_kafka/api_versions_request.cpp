@@ -28,7 +28,7 @@ namespace coev::kafka
         }
     }
 
-    int ApiVersionsRequest::encode(packet_encoder &pe) const
+    int ApiVersionsRequest::encode(PacketEncoder &pe) const
     {
         if (m_version >= 3)
         {
@@ -55,7 +55,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int ApiVersionsRequest::decode(packet_decoder &pd, int16_t version)
+    int ApiVersionsRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
         if (m_version >= 3)

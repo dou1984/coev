@@ -30,8 +30,8 @@ namespace coev::kafka
         ConfigResourceType m_type;
         std::string m_name;
 
-        int encode(class packet_encoder &pe) const;
-        int decode(class packet_decoder &pd, int16_t version);
+        int encode(class PacketEncoder &pe) const;
+        int decode(class PacketDecoder &pd, int16_t version);
     };
 
     struct AlterConfigsResponse : protocol_body
@@ -45,8 +45,8 @@ namespace coev::kafka
         {
         }
         void set_version(int16_t v);
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
 
         int16_t key() const;
         int16_t version() const;

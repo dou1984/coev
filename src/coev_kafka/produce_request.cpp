@@ -18,7 +18,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int ProduceRequest::encode(packet_encoder &pe) const
+    int ProduceRequest::encode(PacketEncoder &pe) const
     {
         if (m_version >= 3)
         {
@@ -68,7 +68,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int ProduceRequest::decode(packet_decoder &pd, int16_t version)
+    int ProduceRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
         if (version >= 3)
@@ -127,7 +127,7 @@ namespace coev::kafka
                 {
                     return err;
                 }
-                packet_decoder subset;
+                PacketDecoder subset;
                 if (int err = pd.getSubset(size, subset.m_raw); err != 0)
                 {
                     return err;

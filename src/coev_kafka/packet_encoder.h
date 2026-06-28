@@ -20,7 +20,7 @@
 
 namespace coev::kafka
 {
-    struct packet_encoder : flexible_type
+    struct PacketEncoder : FlexibleType
     {
         enum Type : uint8_t
         {
@@ -38,10 +38,10 @@ namespace coev::kafka
         std::vector<push_encoder *> m_stack;
         std::string m_raw;
 
-        packet_encoder(Type type);
-        packet_encoder(Type type, size_t l);
-        packet_encoder(std::string_view buf);
-        virtual ~packet_encoder();
+        PacketEncoder(Type type);
+        PacketEncoder(Type type, size_t l);
+        PacketEncoder(std::string_view buf);
+        virtual ~PacketEncoder();
 
         void putInt8(int8_t in);
         void putInt16(int16_t in);

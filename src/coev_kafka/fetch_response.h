@@ -36,8 +36,8 @@ namespace coev::kafka
         int64_t m_first_offset;
 
         AbortedTransaction();
-        int decode(packet_decoder &pd);
-        int encode(packet_encoder &pe) const;
+        int decode(PacketDecoder &pd);
+        int encode(PacketEncoder &pe) const;
     };
 
     struct FetchResponseBlock : VDecoder, VEncoder
@@ -53,8 +53,8 @@ namespace coev::kafka
         bool m_partial;
 
         FetchResponseBlock();
-        int decode(packet_decoder &pd, int16_t version);
-        int encode(packet_encoder &pe, int16_t version) const;
+        int decode(PacketDecoder &pd, int16_t version);
+        int encode(PacketEncoder &pe, int16_t version) const;
         int num_records() const;
         int is_partial(bool &partial) const;
         std::vector<AbortedTransaction> &get_aborted_transactions();
@@ -72,8 +72,8 @@ namespace coev::kafka
 
         FetchResponse();
         void set_version(int16_t v);
-        int decode(packet_decoder &pd, int16_t version);
-        int encode(packet_encoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
         int16_t key() const;
         int16_t version() const;
         int16_t header_version() const;

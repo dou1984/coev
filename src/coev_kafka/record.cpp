@@ -11,7 +11,7 @@ namespace coev::kafka
     RecordHeader::RecordHeader(const std::string &k, const std::string &v) : m_key(k), m_value(v)
     {
     }
-    int RecordHeader::decode(packet_decoder &pd)
+    int RecordHeader::decode(PacketDecoder &pd)
     {
         if (pd.getVariantBytes(m_key) != 0)
         {
@@ -24,7 +24,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int RecordHeader::encode(packet_encoder &pe) const
+    int RecordHeader::encode(PacketEncoder &pe) const
     {
         if (pe.putVariantBytes(m_key) != 0)
         {
@@ -39,7 +39,7 @@ namespace coev::kafka
     Record::Record(const std::string &key, const std::string &value, int64_t offset_delta, std::chrono::milliseconds timestamp_delta) : m_key(key), m_value(value), m_offset_delta(offset_delta), m_timestamp_delta(timestamp_delta)
     {
     }
-    int Record::encode(packet_encoder &pe) const
+    int Record::encode(PacketEncoder &pe) const
     {
         pe.push(m_length);
         pe.putInt8(m_attributes);
@@ -66,7 +66,7 @@ namespace coev::kafka
         return pe.pop();
     }
 
-    int Record::decode(packet_decoder &pd)
+    int Record::decode(PacketDecoder &pd)
     {
         if (pd.push(m_length) != 0)
         {

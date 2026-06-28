@@ -11,7 +11,7 @@
 namespace coev::kafka
 {
 
-    int Resource::encode(packet_encoder &pe, int16_t version) const
+    int Resource::encode(PacketEncoder &pe, int16_t version) const
     {
         pe.putInt8(static_cast<int8_t>(m_resource_type));
 
@@ -33,7 +33,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int Resource::decode(packet_decoder &pd, int16_t version)
+    int Resource::decode(PacketDecoder &pd, int16_t version)
     {
         int8_t resourceType;
         if (pd.getInt8(resourceType) != ErrNoError)
@@ -60,7 +60,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int Acl::encode(packet_encoder &pe) const
+    int Acl::encode(PacketEncoder &pe) const
     {
         if (pe.putString(m_principal) != ErrNoError)
         {
@@ -78,7 +78,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int Acl::decode(packet_decoder &pd, int16_t version)
+    int Acl::decode(PacketDecoder &pd, int16_t version)
     {
         if (pd.getString(m_principal) != ErrNoError)
         {
@@ -107,7 +107,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int ResourceAcls::encode(packet_encoder &pe, int16_t version) const
+    int ResourceAcls::encode(PacketEncoder &pe, int16_t version) const
     {
         if (m_resource.encode(pe, version) != ErrNoError)
         {
@@ -130,7 +130,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int ResourceAcls::decode(packet_decoder &pd, int16_t version)
+    int ResourceAcls::decode(PacketDecoder &pd, int16_t version)
     {
         if (m_resource.decode(pd, version) != ErrNoError)
         {

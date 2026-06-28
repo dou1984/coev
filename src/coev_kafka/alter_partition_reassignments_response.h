@@ -28,8 +28,8 @@ namespace coev::kafka
         AlterPartitionReassignmentsErrorBlock(KError err, const std::string &msg) : m_code(err), m_message(msg)
         {
         }
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd);
     };
 
     struct AlterPartitionReassignmentsResponse : protocol_body
@@ -47,8 +47,8 @@ namespace coev::kafka
         void set_version(int16_t v);
         void add_error(const std::string &topic, int32_t partition, KError kerror, std::string message);
 
-        int encode(packet_encoder &pe) const;
-        int decode(packet_decoder &pd, int16_t version);
+        int encode(PacketEncoder &pe) const;
+        int decode(PacketDecoder &pd, int16_t version);
 
         int16_t key() const;
         int16_t version() const;

@@ -14,7 +14,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int AlterClientQuotasResponse::encode(packet_encoder &pe) const
+    int AlterClientQuotasResponse::encode(PacketEncoder &pe) const
     {
         pe.putDurationMs(m_throttle_time);
 
@@ -33,7 +33,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int AlterClientQuotasResponse::decode(packet_decoder &pd, int16_t version)
+    int AlterClientQuotasResponse::decode(PacketDecoder &pd, int16_t version)
     {
         if (int16_t err = pd.getDurationMs(m_throttle_time); err != 0)
         {
@@ -96,7 +96,7 @@ namespace coev::kafka
         return m_throttle_time;
     }
 
-    int AlterClientQuotasEntryResponse::encode(packet_encoder &pe) const
+    int AlterClientQuotasEntryResponse::encode(PacketEncoder &pe) const
     {
         pe.putKError(m_code);
 
@@ -120,7 +120,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int AlterClientQuotasEntryResponse::decode(packet_decoder &pd, int16_t version)
+    int AlterClientQuotasEntryResponse::decode(PacketDecoder &pd, int16_t version)
     {
         int err = ErrNoError;
         if (err = pd.getKError(m_code); err != 0)

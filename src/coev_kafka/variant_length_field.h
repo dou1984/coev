@@ -19,7 +19,7 @@ namespace coev::kafka
         int m_start_offset = 0;
         int64_t m_length = 0;
 
-        int decode(packet_decoder &pd);
+        int decode(PacketDecoder &pd);
         void save_offset(int in);
         int reserve_length();
         int adjust_length(int currOffset);

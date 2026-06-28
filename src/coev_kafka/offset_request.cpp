@@ -12,7 +12,7 @@ namespace coev::kafka
     OffsetRequestBlock::OffsetRequestBlock()
         : m_leader_epoch(-1), m_timestamp(0), m_max_num_offsets(0) {}
 
-    int OffsetRequestBlock::encode(packet_encoder &pe, int16_t version) const
+    int OffsetRequestBlock::encode(PacketEncoder &pe, int16_t version) const
     {
         if (version >= 4)
         {
@@ -29,7 +29,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int OffsetRequestBlock::decode(packet_decoder &pd, int16_t version)
+    int OffsetRequestBlock::decode(PacketDecoder &pd, int16_t version)
     {
         m_leader_epoch = -1;
         int err = 0;
@@ -68,7 +68,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int OffsetRequest::encode(packet_encoder &pe) const
+    int OffsetRequest::encode(PacketEncoder &pe) const
     {
         if (m_is_replica_id_set)
         {
@@ -118,7 +118,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int OffsetRequest::decode(packet_decoder &pd, int16_t version)
+    int OffsetRequest::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
         int32_t replicaID_val;

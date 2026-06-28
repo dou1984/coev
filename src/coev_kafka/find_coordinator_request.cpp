@@ -32,7 +32,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int FindCoordinatorRequest::encode(packet_encoder &pe) const
+    int FindCoordinatorRequest::encode(PacketEncoder &pe) const
     {
         int err = pe.putString(m_coordinator_key);
         if (err != 0)
@@ -46,7 +46,7 @@ namespace coev::kafka
         return 0;
     }
 
-    int FindCoordinatorRequest::decode(packet_decoder &pd, int16_t version)
+    int FindCoordinatorRequest::decode(PacketDecoder &pd, int16_t version)
     {
         int err = pd.getString(m_coordinator_key);
         if (err != 0)

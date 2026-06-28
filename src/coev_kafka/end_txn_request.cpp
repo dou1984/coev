@@ -14,7 +14,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int EndTxnRequest::encode(packet_encoder &pe) const
+    int EndTxnRequest::encode(PacketEncoder &pe) const
     {
         if (pe.putString(m_transactional_id) != ErrNoError)
         {
@@ -26,7 +26,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int EndTxnRequest::decode(packet_decoder &pd, int16_t /*version*/)
+    int EndTxnRequest::decode(PacketDecoder &pd, int16_t /*version*/)
     {
         if (pd.getString(m_transactional_id) != ErrNoError)
         {

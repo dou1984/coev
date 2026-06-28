@@ -16,7 +16,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int AlterUserScramCredentialsRequest::encode(packet_encoder &pe) const
+    int AlterUserScramCredentialsRequest::encode(PacketEncoder &pe) const
     {
         if (pe.putArrayLength(static_cast<int32_t>(m_deletions.size())) != ErrNoError)
         {
@@ -69,7 +69,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int AlterUserScramCredentialsRequest::decode(packet_decoder &pd, int16_t version)
+    int AlterUserScramCredentialsRequest::decode(PacketDecoder &pd, int16_t version)
     {
         int32_t numDeletions;
         if (pd.getArrayLength(numDeletions) != ErrNoError)

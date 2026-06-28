@@ -13,7 +13,7 @@ namespace coev::kafka
         m_version = v;
     }
 
-    int DescribeGroupsResponse::encode(packet_encoder &pe) const
+    int DescribeGroupsResponse::encode(PacketEncoder &pe) const
     {
         if (m_version >= 1)
         {
@@ -36,7 +36,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int DescribeGroupsResponse::decode(packet_decoder &pd, int16_t version)
+    int DescribeGroupsResponse::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
         if (m_version >= 1)
@@ -134,7 +134,7 @@ namespace coev::kafka
         return m_throttle_time;
     }
 
-    int GroupDescription::encode(packet_encoder &pe, int16_t version) const
+    int GroupDescription::encode(PacketEncoder &pe, int16_t version) const
     {
         m_version = version;
         pe.putInt16(m_code);
@@ -170,7 +170,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int GroupDescription::decode(packet_decoder &pd, int16_t version)
+    int GroupDescription::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
         int16_t error_code;
@@ -221,7 +221,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int GroupMemberDescription::encode(packet_encoder &pe, int16_t version) const
+    int GroupMemberDescription::encode(PacketEncoder &pe, int16_t version) const
     {
         m_version = version;
         if (pe.putString(m_member_id) != ErrNoError)
@@ -246,7 +246,7 @@ namespace coev::kafka
         return ErrNoError;
     }
 
-    int GroupMemberDescription::decode(packet_decoder &pd, int16_t version)
+    int GroupMemberDescription::decode(PacketDecoder &pd, int16_t version)
     {
         m_version = version;
         if (pd.getString(m_member_id) != ErrNoError)
